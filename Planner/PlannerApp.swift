@@ -6,12 +6,18 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct PlannerApp: App {
+    let todaystampManager = TodaystampManager()
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .tint(.blue)
+                .environmentObject(todaystampManager)
         }
+        .modelContainer(for: PlannerEvent.self)
     }
 }

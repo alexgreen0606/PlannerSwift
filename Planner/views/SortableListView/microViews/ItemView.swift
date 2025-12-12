@@ -1,5 +1,5 @@
 //
-//  ListItemView.swift
+//  ItemView.swift
 //  Planner
 //
 //  Created by Alex Green on 12/1/25.
@@ -8,192 +8,218 @@
 import SwiftData
 import SwiftUI
 
-struct ListItemView<Item: ListItem>: View {
+struct ItemView<Item: ListItem, EndAdornment: View>: View {
     @Bindable var item: Item
-    let isSelected: Bool
+    let toggleType: ListToggleType
     let isSelectDisabled: Bool
     let accentColor: Color
     let textColor: Color
-
-    var onCreateItem:
+    let showUpperDivider: Bool
+    let endAdornment: ((_ item: Item) -> EndAdornment)?
+    let customToggleConfig: CustomIconConfig?
+    let onCreateItem:
         (_ baseId: ObjectIdentifier?, _ offset: Int?) ->
-            Void
-    var onToggleItem: (_ id: ObjectIdentifier) -> Void
-    var onValueChange: (_ id: ObjectIdentifier, _ value: String) -> Void
+    Void
+    let onTitleChange: (_ item: Item) -> Void
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var focusController: FocusController
+    @EnvironmentObject var listManager: ListManager
 
     // Will be updated dynamically within the NonBlurringTextfield.
     @State private var height: CGFloat = 0
 
     @State private var isFocused: Bool = false
+    @State private var opacity: Double = 1
     @State private var debounceTask: Task<Void, Never>? = nil
 
+    var isChecked: Bool {
+        if toggleType == .staging {
+            return listManager.selectedItemIds.contains(item.id)
+        }
+
+        if listManager.itemIdsToUncheck.contains(item.id) { return false }
+        if listManager.itemIdsToCheck.contains(item.id) { return true }
+
+        return item.isChecked
+    }
+
     var body: some View {
-        VStack(alignment: .center, spacing: 0) {
-            // Upper Item Trigger
-            NewItemTrigger(onCreateItem: {
-                onCreateItem(item.id, nil)
-            })
-
-            // Row Content
-            HStack(alignment: .top, spacing: 12) {
-                // Item Toggle
-                HStack(alignment: .center) {
-                    ListItemToggleView(
-                        isSelected: isSelected,
-                        isDisabled: isSelectDisabled,
-                        accentColor: accentColor
-                    ) {
-                        onToggleItem(item.id)
-                    }
-                }
-                .frame(height: 26)
-
-                // Text
-                ZStack(alignment: .leading) {
-                    Text(item.title)
-                        .foregroundColor(textColor)
-                        .opacity(isFocused ? 0 : 1)
-                        .font(.system(size: 14))
-                        .lineLimit(nil)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    ListTextfieldView(
-                        text: $item.title,
-                        isFocused: $isFocused,
-                        height: $height
-                    ) {
-                        if !item.title.isEmpty {
-                            onCreateItem(item.id, 1)
-                        } else {
-                            focusController.focusedId = nil
-                        }
-                    }
-                    .frame(height: height)
-                    .foregroundColor(textColor)
-                    .opacity(isFocused ? 1 : 0)
-                    .tint(accentColor)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .fixedSize(horizontal: false, vertical: true)
-                }
-                .padding(.vertical, 5)
-
-                // Optional Time Value TODO: move out of this file
-                //        if let timeValues = timeValues {
-                //          HStack(alignment: .center) {
-                //            TimeValue(
-                //              time: timeValues["time"] ?? "",
-                //              indicator: timeValues["indicator"] ?? "",
-                //              detail: timeValues["detail"] ?? "",
-                //              disabled: isSelected
-                //            ) {
-                //              onOpenTimeModal(["id": id])
-                //            }
-                //          }
-                //          .frame(height: 26)
-                //        }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
-            .alignmentGuide(.listRowSeparatorTrailing) {
-                $0[.trailing]
-            }
-            .onTapGesture {
-                if !isSelected {
+        rowContent
+            .frame(maxWidth: .infinity, alignment: .top)
+            .listRowInsets(EdgeInsets())
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+            .padding(.horizontal, 16)
+            // Trigger focus on render for new items.
+            .onAppear {
+                if item.title.isEmpty {
                     isFocused = true
                 }
             }
-            .onAppear {
-                // text = item.title
-                if item.title.isEmpty {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        isFocused = true
-                    }
-                }
-            }
-
-            // Debounce the external save each time the text changes.
-            //      .onChange(of: text) { newValue in
-            //          guard newValue != item.title else { return }
-            //
-            //          // TODO: update this to just trigger external save?
-            //
-            //        debounceTask?.cancel()
-            //
-            //        debounceTask = Task {
-            //          try? await Task.sleep(nanoseconds: 1_000_000_000)  // 1 second
-            //          guard !Task.isCancelled else { return }
-            //          onValueChange(["value": newValue, "id": id])
-            //        }
-            //      }
-
-            // TODO: test working with bindable now (time value update triggers update here?
-            // Sync text when value changes externally.
-            //      .onChange(of: item.title) { newValue in
-            //        if text != newValue {
-            //          text = newValue
-            //        }
-            //      }
-
-            // Blur the textfield when this item has been selected.
-            .onChange(of: isSelected) { _, newIsSelected in
-                if newIsSelected == true {
-                    isFocused = false
-                }
-            }
-
-            // Handle focus side effects.
-            .onChange(of: isFocused) { _, newIsFocused in
-                if newIsFocused {
-                    // Mark the global focused ID so other fields are blurred.
-                    focusController.focusedId = item.id
-                } else {
-                    let trimmed = item.title.trimmingCharacters(
-                        in: .whitespacesAndNewlines
-                    )
-
-                    // TODO: trigger external save immediately
-                    if trimmed.isEmpty {
-                        modelContext.delete(item)
-                    } else if trimmed != item.title {
-                        //  onValueChange(trimmed, id)
-                    }
-
-                    // Immediately trigger the item save.
-
-                    // TODO: trigger external save immediately
-                    //          debounceTask?.cancel()
-                    //
-                    //          let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-                    //
-                    //          if trimmed.isEmpty {
-                    //            onDeleteItem(["id": id])
-                    //          } else if trimmed != item.title {
-                    //            onValueChange(["value": trimmed, "id": id])
-                    //          }
-                }
-            }
-
             // Blur the textfield when a different field is focused.
             .onChange(of: focusController.focusedId) { _, newFocusedId in
                 if newFocusedId != item.id,
-                    isFocused == true
+                    isFocused
                 {
                     isFocused = false
                 }
             }
+            // Blur the textfield when this item has been selected.
+            .onChange(of: isChecked) { _, newIsSelected in
+                if newIsSelected == true {
+                    isFocused = false
+                }
+            }
+            // Animate the fading away of toggled completion/deletion items.
+            .onChange(of: listManager.fadeOutTrigger) {
+                if listManager.showChecked || toggleType == .staging { return }
 
-            // Lower Item Trigger
-            NewItemTrigger(onCreateItem: {
-                onCreateItem(item.id, 1)
-            })
+                withAnimation(.linear(duration: 0.5)) {
+                    opacity = 1
+                }
+
+                if listManager.itemIdsToCheck.contains(item.id)
+                    || listManager.itemIdsToUncheck.contains(item.id)
+                {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        withAnimation(.linear(duration: 2.5)) {
+                            opacity = 0
+                        }
+                    }
+                }
+            }
+            // Revert the fade animation when checked items are marked as visible.
+            .onChange(of: listManager.showChecked) { _, newShowChecked in
+                if newShowChecked {
+                    withAnimation(.linear(duration: 0.5)) {
+                        opacity = 1
+                    }
+                }
+            }
+    }
+
+    // Row Content
+    private var rowContent: some View {
+        HStack(alignment: .top, spacing: 12) {
+            toggle
+            textStack
         }
-        .frame(maxWidth: .infinity, alignment: .top)
-        .listRowInsets(EdgeInsets())
-        .listRowSeparatorTint(Color(uiColor: .quaternaryLabel))
-        .listRowBackground(Color.clear)
-        .padding(.horizontal, 16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // Item Toggle
+    private var toggle: some View {
+        VStack(alignment: .center) {
+            ItemToggleView(
+                type: toggleType,
+                isChecked: isChecked,
+                isDisabled: isSelectDisabled,
+                accentColor: accentColor,
+                opacity: opacity,
+                customIconConfig: customToggleConfig
+            ) {
+                listManager.toggleItem(item, type: toggleType)
+            }
+        }
+        .frame(height: 50)
+    }
+
+    // Item Text
+    private var textStack: some View {
+        VStack {
+            NewItemTriggerView(
+                showUpperDivider: showUpperDivider,
+                onCreateItem: {
+                    onCreateItem(item.id, nil)
+                }
+            )
+            HStack(alignment: .top) {
+                ZStack(alignment: .leading) {
+                    titleText
+                    editableField
+                }
+                if let adornment = endAdornment {
+                    adornment(item)
+                        .frame(height: 17)
+                        .opacity(opacity)
+                }
+            }
+            .frame(minHeight: 17)
+            NewItemTriggerView(
+                showLowerDivider: true,
+                onCreateItem: {
+                    onCreateItem(item.id, 1)
+                }
+            )
+        }
+        .opacity(opacity)
+    }
+
+    // Static Text
+    private var titleText: some View {
+        Text(item.title)
+            .foregroundColor(textColor)
+            .opacity(isFocused ? 0 : 1)
+            .font(.system(size: 14))
+            .lineLimit(nil)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                if !isChecked {
+                    isFocused = true
+                }
+            }
+    }
+
+    // Textfield
+    private var editableField: some View {
+        TextfieldView(
+            text: $item.title,
+            isFocused: $isFocused,
+            height: $height
+        ) {
+            if !item.title.isEmpty {
+                onCreateItem(item.id, 1)
+            } else {
+                focusController.focusedId = nil
+            }
+        }
+        .frame(height: height)
+        .foregroundColor(textColor)
+        .opacity(isFocused ? 1 : 0)
+        .tint(accentColor)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .fixedSize(horizontal: false, vertical: true)
+        // Debounce the external save each time the text changes.
+        .onChange(of: item.title) { _, newTitle in
+            debounceTask?.cancel()
+            debounceTask = Task {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)  // 1 second
+                guard !Task.isCancelled else { return }
+                onTitleChange(item)
+            }
+        }
+        // Handle focus side effects.
+        .onChange(of: isFocused) { oldIsFocused, newIsFocused in
+            if newIsFocused {
+                // Mark the global focused ID so other fields are blurred.
+                focusController.focusedId = item.id
+            } else if oldIsFocused {
+                debounceTask?.cancel()
+
+                let trimmed = item.title.trimmingCharacters(
+                    in: .whitespacesAndNewlines
+                )
+
+                if trimmed.isEmpty {
+                    modelContext.delete(item)
+                } else {
+                    item.title = trimmed
+                    onTitleChange(item)
+                }
+            }
+        }
     }
 }

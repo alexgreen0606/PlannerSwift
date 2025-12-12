@@ -1,5 +1,5 @@
 //
-//  ListController.swift
+//  ListManager.swift
 //  Planner
 //
 //  Created by Alex Green on 12/2/25.
@@ -9,39 +9,33 @@ import Combine
 import SwiftData
 import SwiftUI
 
-// TODO: add modelType to PlannerEvents to ensure that this controller can call the deletion handler functions as needed.
-
 @MainActor
-final class ListController<Item: ListItem>: ObservableObject {
+final class ListManager<Item: ListItem>: ObservableObject {
     @Environment(\.modelContext) private var modelContext
     
     // TODO: watch environment variable to know when the focused list has changed. When it has, immediately execute the task.
     
-    @Published var completingItems: [Item] = []
-    @Published var completingItemIds: Set<ObjectIdentifier> = []
-    
-    @Published var deletingItems: [Item] = []
-    @Published var deletingItemIds: Set<ObjectIdentifier> = []
-    
+    @Published var showChecked: Bool = false
+    @Published var itemIdsToCheck: Set<ObjectIdentifier> = []
+    @Published var itemIdsToUncheck: Set<ObjectIdentifier> = []
     @Published var selectedItems: [Item] = []
     @Published var selectedItemIds: Set<ObjectIdentifier> = []
     
-    // Triggers fade animations for deleting and completing items.
+    // Triggers fade animations for checking items.
     @Published var fadeOutTrigger: UUID? = nil
-
+    
+    private var itemsToCheck: [Item] = []
+    private var itemsToUncheck: [Item] = []
     private var task: Task<Void, Never>?
     private let delay: Duration = .seconds(3)
     
-    func toggleItem(_ item: Item, type: ToggleType) {
+    func toggleItem(_ item: Item, type: ListToggleType) {
         switch type {
-        case .select:
+        case .staging:
             toggleSelect(item)
             return;
-        case .delete:
-            toggleDelete(item)
-            return;
-        case .complete:
-            toggleComplete(item)
+        case .storage: // TODO: change to be local or global (check vs select vs action)
+            toggleChecked(for: item)
             return;
         }
     }
@@ -56,27 +50,29 @@ final class ListController<Item: ListItem>: ObservableObject {
         }
     }
 
-    private func toggleComplete(_ item: Item) {
-        if completingItemIds.contains(item.id) {
-            completingItemIds.remove(item.id)
-            completingItems.removeAll(where: { $0.id == item.id })
+    private func toggleChecked(for item: Item) {
+        if item.isChecked {
+            if itemIdsToUncheck.contains(item.id) {
+                // Cancel the unchecking.
+                itemIdsToUncheck.remove(item.id)
+                itemsToUncheck.removeAll(where: { $0.id == item.id })
+                item.isChecked = true
+            } else {
+                // Schedule the unchecking.
+                itemIdsToUncheck.insert(item.id)
+                itemsToUncheck.append(item)
+            }
         } else {
-            completingItemIds.insert(item.id)
-            completingItems.append(item)
-        }
-
-        startCountdown()
-    }
-    
-    private func toggleDelete(_ item: Item) {
-        if deletingItemIds.contains(item.id) {
-            deletingItemIds.remove(item.id)
-            deletingItems.removeAll(where: { $0.id == item.id })
-            item.isComplete = false
-        } else {
-            deletingItemIds.insert(item.id)
-            deletingItems.append(item)
-            item.isComplete = true
+            if itemIdsToCheck.contains(item.id) {
+                // Cancel the checking.
+                itemIdsToCheck.remove(item.id)
+                itemsToCheck.removeAll(where: { $0.id == item.id })
+                item.isChecked = false
+            } else {
+                // Schedule the checking.
+                itemIdsToCheck.insert(item.id)
+                itemsToCheck.append(item)
+            }
         }
 
         startCountdown()
@@ -89,28 +85,24 @@ final class ListController<Item: ListItem>: ObservableObject {
             do {
                 try await Task.sleep(for: delay)
             } catch { return }
-
-            // Delete queued items.
-            let toDelete = deletingItems
-            deletingItems.removeAll()
-            deletingItemIds.removeAll()
             
-            for item in toDelete {
-                modelContext.delete(item)
-                
-                // TODO: trigger side effects of deletion
+            // Check items.
+            let toCheck = itemsToCheck
+            for item in toCheck {
+                item.isChecked = true
             }
             
-            // Complete queued items.
-            let toComplete = completingItems
-            completingItems.removeAll()
-            completingItemIds.removeAll()
+            itemsToCheck.removeAll()
+            itemIdsToCheck.removeAll()
             
-            for item in toComplete {
-                item.isComplete = true
-                
-                // TODO: move all items to the bottom of their list, appending 8 to each sortIndex
+            // Uncheck items.
+            let toUncheck = itemsToUncheck
+            for item in toUncheck {
+                item.isChecked = false
             }
+            
+            itemsToUncheck.removeAll()
+            itemIdsToUncheck.removeAll()
         }
     }
 }

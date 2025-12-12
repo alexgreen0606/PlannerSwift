@@ -5,13 +5,14 @@
 //  Created by Alex Green on 12/1/25.
 //
 
+import Foundation
 import SwiftData
 
 @Model
 class MultiDayConfig {
     var startEventId: String
     var endEventId: String
-
+    
     init(startEventId: String, endEventId: String) {
         self.startEventId = startEventId
         self.endEventId = endEventId
@@ -26,13 +27,8 @@ class CalendarConfig {
     var isAllDay: Bool
     var multiDayConfig: MultiDayConfig?
 
-    init(
-        endIso: String,
-        calendarEventId: String,
-        calendarId: String,
-        isAllDay: Bool,
-        multiDayConfig: MultiDayConfig? = nil
-    ) {
+    init(endIso: String, calendarEventId: String, calendarId: String, isAllDay: Bool, multiDayConfig: MultiDayConfig? = nil
+    ){
         self.endIso = endIso
         self.calendarEventId = calendarEventId
         self.calendarId = calendarId
@@ -52,25 +48,15 @@ class TimeConfig {
     }
 }
 
+@available(iOS 26.0, *)
 @Model
-class PlannerEvent {
-    var id: String
-    var title: String
+class PlannerEvent: ListItem {
     var datestamp: String
-    var timeConfig: TimeConfig?
-    var recurringId: String?
-
-    init(
-        id: String,
-        title: String,
-        datestamp: String,
-        timeConfig: TimeConfig? = nil,
-        recurringId: String? = nil
-    ) {
-        self.id = id
-        self.title = title
+    var timeConfig: TimeConfig? = nil
+    var recurringId: String? = nil
+    
+    init(datestamp: String, sortIndex: Double) {
         self.datestamp = datestamp
-        self.timeConfig = timeConfig
-        self.recurringId = recurringId
+        super.init(sortIndex: sortIndex)
     }
 }
