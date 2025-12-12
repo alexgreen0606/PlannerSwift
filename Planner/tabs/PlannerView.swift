@@ -1,0 +1,24 @@
+//
+//  PlannerPage.swift
+//  Planner
+//
+//  Created by Alex Green on 12/1/25.
+//
+
+import SwiftUI
+
+struct PlannerPageView: View {
+    var body: some View {
+        VStack {
+            Image(systemName: "globe")
+                .imageScale(.large)
+                .foregroundStyle(.tint)
+            Text("Hello, world!")
+        }
+        .padding()
+    }
+}
+
+#Preview {
+    ContentView()
+}
