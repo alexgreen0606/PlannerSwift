@@ -56,7 +56,7 @@ extension String {
     }
 
     // Expect any lexographical time string format.
-    func isEarlierOrEqual(than other: String) -> Bool {
+    func isEarlierOrEqual(to other: String) -> Bool {
         return self <= other
     }
 

@@ -15,7 +15,6 @@ final class ListManager<Item: ListItem>: ObservableObject {
     
     // TODO: watch environment variable to know when the focused list has changed. When it has, immediately execute the task.
     
-    @Published var showChecked: Bool = false
     @Published var itemIdsToCheck: Set<ObjectIdentifier> = []
     @Published var itemIdsToUncheck: Set<ObjectIdentifier> = []
     @Published var selectedItems: [Item] = []
@@ -34,7 +33,7 @@ final class ListManager<Item: ListItem>: ObservableObject {
         case .staging:
             toggleSelect(item)
             return;
-        case .storage: // TODO: change to be local or global (check vs select vs action)
+        case .storage:
             toggleChecked(for: item)
             return;
         }

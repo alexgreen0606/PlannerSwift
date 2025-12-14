@@ -27,6 +27,8 @@ struct SortableListView<Item: ListItem, EndAdornment: View>: View {
     let onTitleChange: (_ item: Item) -> Void
     let onMoveUncheckedItem: (_ from: Int, _ to: Int) -> Void
     let onMoveCheckedItem: (_ from: Int, _ to: Int) -> Void
+    
+    @AppStorage("showChecked") var showChecked: Bool = false
 
     @EnvironmentObject var listManager: ListManager
 
@@ -82,7 +84,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View>: View {
             }
 
             // TODO: deselecting item and then focusing it loses focus after movement to new list
-            if listManager.showChecked {
+            if showChecked {
                 Section{
                     ForEach(checkedItems, id: \.self) { item in
                         ItemView(
@@ -130,7 +132,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View>: View {
 
     private func handleCreateItem(
         baseId: ObjectIdentifier?,
-        offset: Int?
+        offset: Int = 0
     ) {
         guard
             let baseIndex = uncheckedItems.firstIndex(where: {
@@ -139,7 +141,8 @@ struct SortableListView<Item: ListItem, EndAdornment: View>: View {
         else {
             return
         }
-        let finalIndex = baseIndex + (offset ?? 0)
+        
+        let finalIndex = baseIndex + offset
 
         // Don't create the new item if it is next to an empty item.
         let upperEvent = finalIndex > 0 ? uncheckedItems[finalIndex - 1] : nil

@@ -12,6 +12,8 @@ struct ContentView: View {
     @EnvironmentObject var todaystampManager: TodaystampManager
     
     @State var navigationManager = NavigationManager.shared
+    
+    @AppStorage("lastCleanedDatestamp") var lastCleanedDatestamp: String = ""
 
     // Set the styles for all of the tab headers.
     init() {

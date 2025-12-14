@@ -18,9 +18,11 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
     let endAdornment: ((_ item: Item) -> EndAdornment)?
     let customToggleConfig: CustomIconConfig?
     let onCreateItem:
-        (_ baseId: ObjectIdentifier?, _ offset: Int?) ->
+        (_ baseId: ObjectIdentifier?, _ offset: Int) ->
     Void
     let onTitleChange: (_ item: Item) -> Void
+    
+    @AppStorage("showChecked") var showChecked: Bool = false
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var focusController: FocusController
@@ -73,7 +75,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
             }
             // Animate the fading away of toggled completion/deletion items.
             .onChange(of: listManager.fadeOutTrigger) {
-                if listManager.showChecked || toggleType == .staging { return }
+                if showChecked || toggleType == .staging { return }
 
                 withAnimation(.linear(duration: 0.5)) {
                     opacity = 1
@@ -90,7 +92,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
                 }
             }
             // Revert the fade animation when checked items are marked as visible.
-            .onChange(of: listManager.showChecked) { _, newShowChecked in
+            .onChange(of: showChecked) { _, newShowChecked in
                 if newShowChecked {
                     withAnimation(.linear(duration: 0.5)) {
                         opacity = 1
@@ -131,7 +133,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
             NewItemTriggerView(
                 showUpperDivider: showUpperDivider,
                 onCreateItem: {
-                    onCreateItem(item.id, nil)
+                    onCreateItem(item.id, 0)
                 }
             )
             HStack(alignment: .top) {

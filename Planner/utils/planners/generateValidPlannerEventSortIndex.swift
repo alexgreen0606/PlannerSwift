@@ -11,65 +11,41 @@ func generateValidPlannerEventSortIndex(
 ) -> Double {
     let prevSortIndex = event.sortIndex
 
-    // Untimed event: maintain current position.
-    guard let eventTime = getPlannerEventTime(event: event), !event.isChecked else {
+    // Maintain current position.
+    guard let eventTime = getPlannerEventTime(event: event) else {
         return prevSortIndex
     }
-
+    
+    var eventWasFound = false
+    var eventNeedsMoving = false
+    
     var events = events
     events.sort { $0.sortIndex < $1.sortIndex }
-    let eventsWithoutEvent = events.filter { $0.id != event.id }
-    let eventsWithTime = events.filter { getPlannerEventTime(event: $0) != nil && !$0.isChecked }
-
-    guard
-        let timedIndex = eventsWithTime.firstIndex(where: { $0.id == event.id })
-    else {
-        return prevSortIndex
-    }
-
-    // First or last timed event: maintain current position.
-    guard timedIndex > 0 && timedIndex < eventsWithTime.count - 1 else {
-        return prevSortIndex
-    }
-
-    guard
-        let timeBeforeEvent = getPlannerEventTime(
-            event: eventsWithTime[timedIndex - 1]
-        )
-    else {
-        return prevSortIndex
-    }
-    guard
-        let timeAfterEvent = getPlannerEventTime(
-            event: eventsWithTime[timedIndex + 1]
-        )
-    else {
-        return prevSortIndex
-    }
-
-    // No conflicts: maintain current position.
-    if timeBeforeEvent.isEarlierOrEqual(than: eventTime)
-        && eventTime.isEarlierOrEqual(than: timeAfterEvent)
-    {
-        return prevSortIndex
-    }
-
-    // Traverse the list in reverse to find the last event that starts before or at the same time.
-    guard
-        let earlierEventIndex = eventsWithoutEvent.lastIndex(where: {
-            guard let time = getPlannerEventTime(event: $0) else {
-                return false
+    for (index, pointerEvent) in events.enumerated().reversed() {
+        guard let pointerEventTime = getPlannerEventTime(event: pointerEvent) else {
+            continue
+        }
+        
+        if pointerEvent.id == event.id {
+            // Mark the target event as found.
+            eventWasFound = true
+        } else if pointerEventTime.isEarlierOrEqual(to: eventTime) {
+            if !eventWasFound || eventNeedsMoving {
+                // Slide down to below this event.
+                return generateSortIndex(
+                    index: index + 1,
+                    items: events
+                )
+            } else {
+                // Maintain current position.
+                return prevSortIndex
             }
-            return time.isEarlierOrEqual(than: eventTime)
-        })
-    else {
-        // Earliest event: place it at the top of the list.
-        return (eventsWithoutEvent.first?.sortIndex ?? 0) / 2
+        } else if eventWasFound {
+            // Mark the target event as needing to move.
+            eventNeedsMoving = true
+        }
     }
-
-    // Found event that starts before or at the same time: place right below it.
-    return generateSortIndex(
-        index: earlierEventIndex + 1,
-        items: eventsWithoutEvent
-    )
+    
+    // Event is the earliest event.
+    return (events.first?.sortIndex ?? 8) / 2
 }

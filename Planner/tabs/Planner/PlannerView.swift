@@ -9,6 +9,8 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
+// TODO: when item is unchecked, re-evaluate its chronological ordering
+
 enum PlannerType: String {
     case pastOrPresent
     case future
@@ -24,26 +26,30 @@ enum PlannerType: String {
             )
         }
     }
-    
+
     var checkedHeader: String {
         switch self {
         case .pastOrPresent: "Completed plans"
         case .future: "Canceled plans"
         }
     }
-    
+
     func getCheckedFooter(for datestamp: String) -> String? {
         switch self {
         case .pastOrPresent:
             return nil
 
         case .future:
-            guard let date = datestamp.toDate("yyyy-MM-dd", region: .current)?.date else {
+            guard
+                let date = datestamp.toDate("yyyy-MM-dd", region: .current)?
+                    .date
+            else {
                 return nil
             }
 
             let formatted = date.longDate
-            return "These canceled plans will be deleted the morning of \(formatted)."
+            return
+                "These canceled plans will be deleted the morning of \(formatted)."
         }
     }
 
@@ -58,6 +64,8 @@ enum PlannerType: String {
 struct PlannerView: View {
     let datestamp: String
 
+    @AppStorage("showChecked") var showChecked: Bool = false
+
     @Environment(\.modelContext) private var modelContext
     @Query private var uncheckedEvents: [PlannerEvent]
     @Query private var checkedEvents: [PlannerEvent]
@@ -68,7 +76,7 @@ struct PlannerView: View {
     @State private var navigationManager = NavigationManager.shared
     @State private var scrollProxy: ScrollViewProxy?
     @State private var isCalendarPickerPresented = false
-    
+
     var plannerType: PlannerType {
         datestamp <= todaystampManager.todaystamp ? .pastOrPresent : .future
     }
@@ -94,7 +102,7 @@ struct PlannerView: View {
     var body: some View {
         ScrollViewReader { proxy in
             SortableListView(
-                uncheckedItems: uncheckedEvents,  // TODO: everything in this file must consider full list vs filtered. Decide which
+                uncheckedItems: uncheckedEvents,
                 checkedItems: checkedEvents,
                 endAdornment: timeValue,
                 customToggleConfig: plannerType.toggleEventIconConfig,
@@ -154,16 +162,16 @@ struct PlannerView: View {
                     Menu {
                         Button(
                             action: {
-                                plannerManager.showChecked.toggle()
+                                showChecked.toggle()
                             },
                             label: {
                                 Text(
                                     plannerType.getToggleVisibilityLabel(
-                                        plannerManager.showChecked
+                                        showChecked
                                     )
                                 )
                                 Image(
-                                    systemName: plannerManager.showChecked
+                                    systemName: showChecked
                                         ? "eye.slash.fill" : "eye.fill"
                                 )
                             }
@@ -180,10 +188,10 @@ struct PlannerView: View {
                         if let last = uncheckedEvents.last, last.title.isEmpty {
                             return
                         }
-                        
+
                         // TODO: doesnt work when the list is long and hasn't been scrolled down to yet (not mounted?)
                         slideTo("bottom", at: .top)
-                        handleCreateEvent(uncheckedEvents.count)
+                        handleCreateEvent(at: uncheckedEvents.count)
                     }
                     .tint(Color(uiColor: .label))
                 }
@@ -192,7 +200,7 @@ struct PlannerView: View {
                 scrollProxy = proxy
             }
             // Slide to the checked items when the user marks them visible.
-            .onChange(of: plannerManager.showChecked) { _, newShowChecked in
+            .onChange(of: showChecked) { _, newShowChecked in
                 if newShowChecked {
                     slideTo("checked", at: .top)
                 }
@@ -228,7 +236,7 @@ struct PlannerView: View {
         }
     }
 
-    private func handleCreateEvent(_ index: Int) {
+    private func handleCreateEvent(at index: Int) {
         let sortIndex = generateSortIndex(index: index, items: uncheckedEvents)
         let newEvent = PlannerEvent(datestamp: datestamp, sortIndex: sortIndex)
         modelContext.insert(newEvent)
@@ -264,7 +272,7 @@ struct PlannerView: View {
             }
         }
     }
-    
+
     private func handleMoveCheckedEvent(from: Int, to: Int) {
         guard from != to else { return }
 
@@ -329,33 +337,33 @@ struct PlannerView: View {
             event: event,
             events: uncheckedEvents
         )
-        if newSortIndex != event.sortIndex {
-            event.sortIndex = newSortIndex
+
+        guard newSortIndex != event.sortIndex else {
             try? modelContext.save()
-            snapToId(id: event.id)
+            return
         }
+
+        event.sortIndex = newSortIndex
+        slideTo(event.id, at: .bottom, withDelay: .seconds(3))
+        
+        try? modelContext.save()
     }
 
-    private func slideTo(_ id: String, at anchor: UnitPoint) {
+    private func slideTo(
+        _ id: any Hashable,
+        at anchor: UnitPoint,
+        withDelay delay: DispatchTimeInterval = .seconds(0)
+    ) {
         guard let proxy = scrollProxy
         else { return }
-        withAnimation(.linear(duration: 2)) {
-            proxy.scrollTo(id, anchor: anchor)
-        }
-    }
-
-    // TODO: test if this is needed due to animation of textfield to its new location
-    private func snapToId(id: ObjectIdentifier?) {
-        guard let id,
-            let proxy = scrollProxy
-        else { return }
         DispatchQueue.main.asyncAfter(
-            deadline: .now() + 1
+            deadline: .now() + delay
         ) {
-            proxy.scrollTo(id, anchor: .bottom)
+            withAnimation(.linear(duration: 2)) {
+                proxy.scrollTo(id, anchor: anchor)
+            }
         }
     }
-
 }
 
 #Preview {
