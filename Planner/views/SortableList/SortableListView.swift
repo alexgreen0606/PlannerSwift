@@ -16,7 +16,6 @@ struct SortableListView<Item: ListItem, EndAdornment: View>: View {
     let uncheckedItems: [Item]
     let checkedItems: [Item]
     let toggleType: ListToggleType = .storage
-    let accentColor: Color = .accentColor
     let itemTextColorsMap: [ObjectIdentifier: Color] = [:]  // TODO: is this prop needed?
     let disabledItemIds: Set<ObjectIdentifier> = []
     let endAdornment: ((_ item: Item) -> EndAdornment)?
@@ -26,7 +25,6 @@ struct SortableListView<Item: ListItem, EndAdornment: View>: View {
     let onCreateItem: (_ index: Int) -> Void
     let onTitleChange: (_ item: Item) -> Void
     let onMoveUncheckedItem: (_ from: Int, _ to: Int) -> Void
-    let onMoveCheckedItem: (_ from: Int, _ to: Int) -> Void
     
     @AppStorage("showChecked") var showChecked: Bool = false
 
@@ -62,7 +60,6 @@ struct SortableListView<Item: ListItem, EndAdornment: View>: View {
                         isSelectDisabled: disabledItemIds.contains(
                             item.id
                         ),
-                        accentColor: accentColor,
                         textColor: itemTextColorsMap[item.id]
                             ?? Color(uiColor: .label),
                         showUpperDivider: item.id == uncheckedItems.first?.id,
@@ -93,7 +90,6 @@ struct SortableListView<Item: ListItem, EndAdornment: View>: View {
                             isSelectDisabled: disabledItemIds.contains(
                                 item.id
                             ),
-                            accentColor: accentColor,
                             textColor: itemTextColorsMap[item.id]
                             ?? Color(uiColor: .label),
                             showUpperDivider: item.id
@@ -105,7 +101,6 @@ struct SortableListView<Item: ListItem, EndAdornment: View>: View {
                         )
                         .id(item.id)
                     }
-                    .onMove(perform: handleMoveCheckedItem)
                 } header: {
                     Text(checkedHeader)
                 } footer: {
@@ -167,18 +162,6 @@ struct SortableListView<Item: ListItem, EndAdornment: View>: View {
             }
 
             onMoveUncheckedItem(source, to)
-        }
-    }
-    
-    private func handleMoveCheckedItem(from sources: IndexSet, to destination: Int) {
-        for source in sources {
-            var to = destination
-
-            if to > source {
-                to -= 1
-            }
-
-            onMoveCheckedItem(source, to)
         }
     }
 

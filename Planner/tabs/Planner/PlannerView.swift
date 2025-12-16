@@ -110,8 +110,7 @@ struct PlannerView: View {
                 checkedFooter: plannerType.getCheckedFooter(for: datestamp),
                 onCreateItem: handleCreateEvent,
                 onTitleChange: handleEventTitleChange,
-                onMoveUncheckedItem: handleMoveUncheckedEvent,
-                onMoveCheckedItem: handleMoveCheckedEvent
+                onMoveUncheckedItem: handleMoveUncheckedEvent
             )
             .navigationTitle(navigationManager.selectedPlannerDate.dayName)
             .navigationSubtitle(navigationManager.selectedPlannerDate.longDate)
@@ -176,10 +175,8 @@ struct PlannerView: View {
                                 )
                             }
                         )
-                        .tint(Color(uiColor: .label))
                     } label: {
                         Image(systemName: "ellipsis")
-                            .foregroundStyle(Color(uiColor: .label))
                     }
                 }
 
@@ -193,7 +190,6 @@ struct PlannerView: View {
                         slideTo("bottom", at: .top)
                         handleCreateEvent(at: uncheckedEvents.count)
                     }
-                    .tint(Color(uiColor: .label))
                 }
             }
             .onAppear {
@@ -265,36 +261,6 @@ struct PlannerView: View {
             let validSortIndex = generateValidPlannerEventSortIndex(
                 event: movedEvent,
                 events: uncheckedEvents
-            )
-            if validSortIndex != newSortIndex {
-                movedEvent.sortIndex = validSortIndex
-                try! modelContext.save()
-            }
-        }
-    }
-
-    private func handleMoveCheckedEvent(from: Int, to: Int) {
-        guard from != to else { return }
-
-        // 1: Force-save the event to its new position.
-        let movedEvent = checkedEvents[from]
-        let eventsWithoutEvent = checkedEvents.filter {
-            $0.id != movedEvent.id
-        }
-        let newSortIndex = generateSortIndex(
-            index: to,
-            items: eventsWithoutEvent
-        )
-        movedEvent.sortIndex = newSortIndex
-        try! modelContext.save()
-
-        // 2: After UI settles, validate correct chronological insertion.
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 1_000_000_000)  // 1 sec
-
-            let validSortIndex = generateValidPlannerEventSortIndex(
-                event: movedEvent,
-                events: checkedEvents
             )
             if validSortIndex != newSortIndex {
                 movedEvent.sortIndex = validSortIndex

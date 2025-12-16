@@ -12,7 +12,6 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
     @Bindable var item: Item
     let toggleType: ListToggleType
     let isSelectDisabled: Bool
-    let accentColor: Color
     let textColor: Color
     let showUpperDivider: Bool
     let endAdornment: ((_ item: Item) -> EndAdornment)?
@@ -117,7 +116,6 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
                 type: toggleType,
                 isChecked: isChecked,
                 isDisabled: isSelectDisabled,
-                accentColor: accentColor,
                 opacity: opacity,
                 customIconConfig: customToggleConfig
             ) {
@@ -191,7 +189,6 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
         .frame(height: height)
         .foregroundColor(textColor)
         .opacity(isFocused ? 1 : 0)
-        .tint(accentColor)
         .frame(maxWidth: .infinity, alignment: .leading)
         .fixedSize(horizontal: false, vertical: true)
         // Debounce the external save each time the text changes.

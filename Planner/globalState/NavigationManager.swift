@@ -17,4 +17,5 @@ class NavigationManager {
     var selectedPlannerDate: Date = Date() // TODO: why store this here? Can I store the date in the navigation path?
     
     var plannerPath = NavigationPath()
+    var checklistsPath = NavigationPath()
 }

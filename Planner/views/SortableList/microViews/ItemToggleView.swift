@@ -22,7 +22,6 @@ struct ItemToggleView<Item: ListItem>: View {
     let type: ListToggleType
     let isChecked: Bool
     let isDisabled: Bool
-    let accentColor: Color
     let opacity: Double
     let customIconConfig: CustomIconConfig?
     let onToggleChecked: () -> Void
@@ -36,7 +35,7 @@ struct ItemToggleView<Item: ListItem>: View {
             ? Color(uiColor: .tertiaryLabel)
             : !isChecked
                 ? Color(uiColor: .secondaryLabel)
-                : customIconConfig?.primaryColor ?? accentColor
+        : customIconConfig?.primaryColor ?? .accentColor
     }
 
     var secondaryColor: Color {

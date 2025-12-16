@@ -15,9 +15,9 @@ struct PlannerApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .tint(.blue)
+                .accentColor(.blue)
                 .environmentObject(todaystampManager)
         }
-        .modelContainer(for: PlannerEvent.self)
+        .modelContainer(for: [PlannerEvent.self, ChecklistItem.self])
     }
 }
