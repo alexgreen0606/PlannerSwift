@@ -9,8 +9,6 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-// TODO: when item is unchecked, re-evaluate its chronological ordering
-
 enum PlannerType: String {
     case pastOrPresent
     case future
@@ -72,6 +70,7 @@ struct PlannerView: View {
 
     @EnvironmentObject var todaystampManager: TodaystampManager
     @EnvironmentObject var plannerManager: ListManager
+    @EnvironmentObject var calendarStore: CalendarEventStore
 
     @State private var navigationManager = NavigationManager.shared
     @State private var scrollProxy: ScrollViewProxy?
@@ -104,6 +103,10 @@ struct PlannerView: View {
             SortableListView(
                 uncheckedItems: uncheckedEvents,
                 checkedItems: checkedEvents,
+                floatingInfo: PlannerChipSpreadView(
+                    datestamp: datestamp,
+                    events: calendarStore.allDayEventsByDatestamp[datestamp] ?? []
+                ),
                 endAdornment: timeValue,
                 customToggleConfig: plannerType.toggleEventIconConfig,
                 checkedHeader: plannerType.checkedHeader,
@@ -115,48 +118,6 @@ struct PlannerView: View {
             .navigationTitle(navigationManager.selectedPlannerDate.dayName)
             .navigationSubtitle(navigationManager.selectedPlannerDate.longDate)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Calendar", systemImage: "calendar") {
-                        isCalendarPickerPresented = true
-                    }
-                    .tint(Color(uiColor: .label))
-                    .popover(isPresented: $isCalendarPickerPresented) {
-                        VStack {
-                            DatePicker(
-                                "Open a planner",
-                                selection: $navigationManager
-                                    .selectedPlannerDate,
-                                displayedComponents: .date
-                            )
-                            .frame(width: 290, height: 290)
-                            .clipped()
-                            .padding()
-                            .datePickerStyle(.graphical)
-                            .presentationCompactAdaptation(.popover)
-                            .onChange(of: navigationManager.selectedPlannerDate)
-                            { _, newDate in
-                                let newStamp = newDate.toFormat("yyyy-MM-dd")
-                                var transaction = Transaction(animation: .none)
-                                transaction.disablesAnimations = true
-                                withTransaction(transaction) {
-                                    if newStamp == todaystampManager.todaystamp
-                                    {
-                                        // Clear the navigation stack when going back to today's planner.
-                                        navigationManager.plannerPath =
-                                            NavigationPath()
-                                    } else {
-                                        navigationManager.plannerPath.append(
-                                            newStamp
-                                        )
-                                    }
-                                }
-                                isCalendarPickerPresented = false
-                            }
-                        }
-                        .presentationCompactAdaptation(.popover)
-                    }
-                }
-
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         Button(

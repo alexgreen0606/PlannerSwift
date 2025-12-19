@@ -12,12 +12,12 @@ class FocusController: ObservableObject {
     @Published var focusedId: ObjectIdentifier?
 }
 
-struct SortableListView<Item: ListItem, EndAdornment: View>: View {
+struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>: View {
     let uncheckedItems: [Item]
     let checkedItems: [Item]
     let toggleType: ListToggleType = .storage
-    let itemTextColorsMap: [ObjectIdentifier: Color] = [:]  // TODO: is this prop needed?
     let disabledItemIds: Set<ObjectIdentifier> = []
+    let floatingInfo: FloatingInfo?
     let endAdornment: ((_ item: Item) -> EndAdornment)?
     let customToggleConfig: CustomIconConfig?
     let checkedHeader: String
@@ -36,9 +36,10 @@ struct SortableListView<Item: ListItem, EndAdornment: View>: View {
         List {
             Section {
                 HStack {
-                    // TODO: add floating chips here
+                    floatingInfo
                 }
                 .opacity(0)
+                .padding(.horizontal, 16)
             }
             .listRowInsets(EdgeInsets())
             .listSectionSeparator(.hidden)
@@ -60,8 +61,6 @@ struct SortableListView<Item: ListItem, EndAdornment: View>: View {
                         isSelectDisabled: disabledItemIds.contains(
                             item.id
                         ),
-                        textColor: itemTextColorsMap[item.id]
-                            ?? Color(uiColor: .label),
                         showUpperDivider: item.id == uncheckedItems.first?.id,
                         endAdornment: endAdornment,
                         customToggleConfig: customToggleConfig,
@@ -90,8 +89,6 @@ struct SortableListView<Item: ListItem, EndAdornment: View>: View {
                             isSelectDisabled: disabledItemIds.contains(
                                 item.id
                             ),
-                            textColor: itemTextColorsMap[item.id]
-                            ?? Color(uiColor: .label),
                             showUpperDivider: item.id
                             == checkedItems.first?.id,
                             endAdornment: endAdornment,
@@ -117,7 +114,8 @@ struct SortableListView<Item: ListItem, EndAdornment: View>: View {
         .environmentObject(focusController)
         .refreshable {}
         .overlay(alignment: .top) {
-            // TODO: floating chips here
+            floatingInfo
+                .padding(.horizontal, 16)
         }
         .listStyle(.plain)
         .environment(\.defaultMinListRowHeight, 0)

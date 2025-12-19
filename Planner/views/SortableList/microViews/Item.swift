@@ -12,7 +12,6 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
     @Bindable var item: Item
     let toggleType: ListToggleType
     let isSelectDisabled: Bool
-    let textColor: Color
     let showUpperDivider: Bool
     let endAdornment: ((_ item: Item) -> EndAdornment)?
     let customToggleConfig: CustomIconConfig?
@@ -159,7 +158,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
     // Static Text
     private var titleText: some View {
         Text(item.title)
-            .foregroundColor(textColor)
+            .foregroundColor(Color(uiColor: .label))
             .opacity(isFocused ? 0 : 1)
             .font(.system(size: 14))
             .lineLimit(nil)
@@ -187,7 +186,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
             }
         }
         .frame(height: height)
-        .foregroundColor(textColor)
+        .foregroundColor(Color(uiColor: .label))
         .opacity(isFocused ? 1 : 0)
         .frame(maxWidth: .infinity, alignment: .leading)
         .fixedSize(horizontal: false, vertical: true)

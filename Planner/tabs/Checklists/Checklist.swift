@@ -35,6 +35,7 @@ struct ChecklistView: View {
             SortableListView(
                 uncheckedItems: sortedUncheckedItems,
                 checkedItems: sortedCheckedItems,
+                floatingInfo: EmptyView(),
                 endAdornment: { _ in EmptyView() },
                 customToggleConfig: nil,
                 checkedHeader: "Completed items",

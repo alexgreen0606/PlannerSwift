@@ -1,8 +1,8 @@
 //
-//  PlannerTabView.swift
+//  NewPlannerTabView.swift
 //  Planner
 //
-//  Created by Alex Green on 12/8/25.
+//  Created by Alex Green on 12/16/25.
 //
 
 import SwiftDate
@@ -18,10 +18,9 @@ struct PlannerTabView: View {
 
     var body: some View {
         NavigationStack(path: $navigationManager.plannerPath) {
-            PlannerView(datestamp: todaystampManager.todaystamp)
+            PlannerSelectView()
                 .navigationDestination(for: String.self) { datestamp in
                     PlannerView(datestamp: datestamp)
-                        .navigationBarBackButtonHidden(true)
                 }
         }
         .environmentObject(plannerManager)

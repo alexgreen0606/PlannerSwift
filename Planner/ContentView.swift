@@ -60,17 +60,11 @@ struct ContentView: View {
 
     var body: some View {
         TabView {
-            Tab(
-                "",
-                systemImage: todaystampManager.todaystamp.toCalendarSymbolName()
-            ) {
-                PlannerTabView()
+            Tab("", systemImage: "repeat") {
             }
 
             Tab("", systemImage: "calendar") {
-            }
-
-            Tab("", systemImage: "repeat") {
+                PlannerTabView()
             }
 
             Tab("", systemImage: "list.bullet") {

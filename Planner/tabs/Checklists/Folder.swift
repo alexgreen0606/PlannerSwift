@@ -11,10 +11,12 @@ import SwiftUI
 
 enum FormConfig: Identifiable {
     case add
+    case parent
     case edit(ChecklistItem)
 
     var id: String {
         switch self {
+        case .parent: return "parent"
         case .add: return "add"
         case .edit(let item): return String(describing: item.id)
         }
@@ -31,11 +33,11 @@ struct FolderView: View {
     @State var navigationManager = NavigationManager.shared
     @State private var formConfig: FormConfig?
     @State private var scrollProxy: ScrollViewProxy?
-    
+
     var sortedItems: [ChecklistItem] {
         folder.items.sorted { $0.sortIndex < $1.sortIndex }
     }
-    
+
     var body: some View {
         ScrollViewReader { proxy in
             List {
@@ -70,12 +72,12 @@ struct FolderView: View {
                             .lineLimit(nil)
                             .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            
+
                         HStack(alignment: .center) {
                             Text("\(item.items.count)")
                                 .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            
+                                .foregroundStyle(.secondary)
+
                             Image(systemName: "chevron.right")
                                 .foregroundColor(Color(uiColor: .tertiaryLabel))
                         }
@@ -91,10 +93,10 @@ struct FolderView: View {
             }
             .navigationTitle(folder.title)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
                     Menu {
                         Button {
-                            formConfig = .edit(folder)
+                            formConfig = .parent
                         } label: {
                             Text("Edit folder details")
                             Image(systemName: "pencil")
@@ -102,14 +104,12 @@ struct FolderView: View {
                     } label: {
                         Image(systemName: "ellipsis")
                     }
-                }
+                    .matchedTransitionSource(id: "ellipsis", in: nameSpace)
 
-                ToolbarItem(placement: .topBarTrailing) {
                     Button("Add", systemImage: "plus") {
                         formConfig = .add
                     }
-                    .matchedTransitionSource(id: "addButton", in: nameSpace)
-
+                    .matchedTransitionSource(id: "add", in: nameSpace)
                 }
             }
             .sheet(item: $formConfig) { destination in
@@ -118,7 +118,7 @@ struct FolderView: View {
                     ChecklistItemFormView(item: nil, parent: folder)
                         .presentationDetents([.height(250)])
                         .navigationTransition(
-                            .zoom(sourceID: "addButton", in: nameSpace)
+                            .zoom(sourceID: "add", in: nameSpace)
                         )
 
                 case .edit(let item):
@@ -130,11 +130,18 @@ struct FolderView: View {
                                 in: nameSpace
                             )
                         )
+
+                case .parent:
+                    ChecklistItemFormView(item: folder, parent: folder.parent)
+                        .presentationDetents([.height(250)])
+                        .navigationTransition(
+                            .zoom(sourceID: "ellipsis", in: nameSpace)
+                        )
                 }
             }
         }
     }
-    
+
     private func handleMoveItem(from sources: IndexSet, to destination: Int) {
         for source in sources {
             var targetIndex = destination
@@ -146,7 +153,10 @@ struct FolderView: View {
 
             let movedEvent = sortedItems[source]
             let remainingItems = sortedItems.filter { $0.id != movedEvent.id }
-            movedEvent.sortIndex = generateSortIndex(index: targetIndex, items: remainingItems)
+            movedEvent.sortIndex = generateSortIndex(
+                index: targetIndex,
+                items: remainingItems
+            )
         }
 
         try! modelContext.save()

@@ -16,4 +16,13 @@ extension Date {
     var longDate: String { // Ex: January 12, 2025
         DateInRegion(self, region: .current).toFormat("MMMM d, yyyy", locale: Locale.current)
     }
+    
+    var datestamp: String {
+            let formatter = DateFormatter()
+            formatter.calendar = Calendar(identifier: .gregorian)
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.timeZone = .current
+            formatter.dateFormat = "yyyy-MM-dd"
+            return formatter.string(from: self)
+        }
 }

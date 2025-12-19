@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		071E4F9E2EF220A300418F1A /* WrappingHStack in Frameworks */ = {isa = PBXBuildFile; productRef = 071E4F9D2EF220A300418F1A /* WrappingHStack */; };
 		07BB27E92EDDFF6900593DD0 /* SwiftFormat in Frameworks */ = {isa = PBXBuildFile; productRef = 07BB27E82EDDFF6900593DD0 /* SwiftFormat */; };
 		07DA27532EE28AC900265B25 /* SwiftDate in Frameworks */ = {isa = PBXBuildFile; productRef = 07DA27522EE28AC900265B25 /* SwiftDate */; };
 /* End PBXBuildFile section */
@@ -29,6 +30,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				07DA27532EE28AC900265B25 /* SwiftDate in Frameworks */,
+				071E4F9E2EF220A300418F1A /* WrappingHStack in Frameworks */,
 				07BB27E92EDDFF6900593DD0 /* SwiftFormat in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -74,6 +76,7 @@
 			packageProductDependencies = (
 				07BB27E82EDDFF6900593DD0 /* SwiftFormat */,
 				07DA27522EE28AC900265B25 /* SwiftDate */,
+				071E4F9D2EF220A300418F1A /* WrappingHStack */,
 			);
 			productName = Planner;
 			productReference = 07BB27D52EDDFB9400593DD0 /* Planner.app */;
@@ -106,6 +109,7 @@
 			packageReferences = (
 				07BB27E72EDDFF6900593DD0 /* XCRemoteSwiftPackageReference "SwiftFormat" */,
 				07DA27512EE28AC900265B25 /* XCRemoteSwiftPackageReference "SwiftDate" */,
+				071E4F9C2EF220A300418F1A /* XCRemoteSwiftPackageReference "WrappingHStack" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 07BB27D62EDDFB9400593DD0 /* Products */;
@@ -266,6 +270,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "This app displays your all-day calendar events.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -297,6 +302,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "This app displays your all-day calendar events.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -343,6 +349,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		071E4F9C2EF220A300418F1A /* XCRemoteSwiftPackageReference "WrappingHStack" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ksemianov/WrappingHStack";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.2.0;
+			};
+		};
 		07BB27E72EDDFF6900593DD0 /* XCRemoteSwiftPackageReference "SwiftFormat" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/nicklockwood/SwiftFormat";
@@ -362,6 +376,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		071E4F9D2EF220A300418F1A /* WrappingHStack */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 071E4F9C2EF220A300418F1A /* XCRemoteSwiftPackageReference "WrappingHStack" */;
+			productName = WrappingHStack;
+		};
 		07BB27E82EDDFF6900593DD0 /* SwiftFormat */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 07BB27E72EDDFF6900593DD0 /* XCRemoteSwiftPackageReference "SwiftFormat" */;
