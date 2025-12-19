@@ -27,6 +27,8 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
     let onMoveUncheckedItem: (_ from: Int, _ to: Int) -> Void
     
     @AppStorage("showChecked") var showChecked: Bool = false
+    
+    @Environment(\.colorScheme) private var colorScheme
 
     @EnvironmentObject var listManager: ListManager
 
@@ -42,6 +44,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                 .padding(.horizontal, 16)
             }
             .listRowInsets(EdgeInsets())
+            .listRowBackground(Color.clear)
             .listSectionSeparator(.hidden)
             Section {
                 NewItemTriggerView {
@@ -52,6 +55,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                 }
             }
             .listRowInsets(EdgeInsets())
+            .listRowBackground(Color.clear)
             .listSectionSeparator(.hidden)
             Section {
                 ForEach(uncheckedItems, id: \.self) { item in
@@ -74,6 +78,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                 NewItemTriggerView {
                     handleCreateLowerItem()
                 }
+                .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets())
                 .listRowSeparator(.hidden)
                 .id("bottom")
@@ -107,6 +112,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                             .foregroundStyle(Color(uiColor: .secondaryLabel))
                     }
                 }
+                .listRowBackground(Color.clear)
                 .listSectionSeparator(.hidden)
                 .id("checked")
             }
@@ -121,6 +127,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
         .environment(\.defaultMinListRowHeight, 0)
         .animation(.linear(duration: 0.2), value: uncheckedItems)
         .safeAreaPadding(.bottom, 20)
+        .background(Color.appBackground)
     }
 
     private func handleCreateItem(

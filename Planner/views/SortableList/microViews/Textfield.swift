@@ -19,7 +19,7 @@ struct TextfieldView: UIViewRepresentable {
         
         textField.delegate = context.coordinator
         textField.isEditable = true
-        textField.font = UIFont.systemFont(ofSize: 14)
+        textField.font = UIFont.systemFont(ofSize: 17)
         textField.isSelectable = true
         textField.backgroundColor = .clear
         textField.isUserInteractionEnabled = true

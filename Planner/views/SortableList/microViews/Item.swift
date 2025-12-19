@@ -17,9 +17,9 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
     let customToggleConfig: CustomIconConfig?
     let onCreateItem:
         (_ baseId: ObjectIdentifier?, _ offset: Int) ->
-    Void
+            Void
     let onTitleChange: (_ item: Item) -> Void
-    
+
     @AppStorage("showChecked") var showChecked: Bool = false
 
     @Environment(\.modelContext) private var modelContext
@@ -110,41 +110,40 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
 
     // Item Toggle
     private var toggle: some View {
-        VStack(alignment: .center) {
-            ItemToggleView(
-                type: toggleType,
-                isChecked: isChecked,
-                isDisabled: isSelectDisabled,
-                opacity: opacity,
-                customIconConfig: customToggleConfig
-            ) {
-                listManager.toggleItem(item, type: toggleType)
-            }
+        ItemToggleView(
+            type: toggleType,
+            isChecked: isChecked,
+            isDisabled: isSelectDisabled,
+            opacity: opacity,
+            customIconConfig: customToggleConfig
+        ) {
+            listManager.toggleItem(item, type: toggleType)
         }
-        .frame(height: 50)
+        .frame(height: 44, alignment: .center)
     }
 
     // Item Text
     private var textStack: some View {
-        VStack {
+        VStack(spacing: 0) {
             NewItemTriggerView(
                 showUpperDivider: showUpperDivider,
                 onCreateItem: {
                     onCreateItem(item.id, 0)
                 }
             )
-            HStack(alignment: .top) {
+            HStack(alignment: .top, spacing: 4) {
                 ZStack(alignment: .leading) {
                     titleText
                     editableField
                 }
+                .padding(.vertical, 3)
                 if let adornment = endAdornment {
                     adornment(item)
-                        .frame(height: 17)
                         .opacity(opacity)
+                        .frame(height: 28, alignment: .center)
                 }
             }
-            .frame(minHeight: 17)
+            .frame(minHeight: 28)
             NewItemTriggerView(
                 showLowerDivider: true,
                 onCreateItem: {
@@ -160,7 +159,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
         Text(item.title)
             .foregroundColor(Color(uiColor: .label))
             .opacity(isFocused ? 0 : 1)
-            .font(.system(size: 14))
+            .font(.system(size: 17))
             .lineLimit(nil)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)

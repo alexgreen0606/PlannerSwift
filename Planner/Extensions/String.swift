@@ -11,7 +11,7 @@ import SwiftDate
 extension String {
 
     // Expects YYYY-MM-DD format.
-    func toCalendarSymbolName() -> String {
+    var calendarSymbolName: String {
         let dd = self.suffix(2)
 
         let ddInt = Int(dd)

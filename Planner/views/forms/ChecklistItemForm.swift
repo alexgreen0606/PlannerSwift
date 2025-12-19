@@ -64,7 +64,7 @@ struct ChecklistItemFormView: View {
 
                 Section {
                     HStack {
-                        ForEach(ColorOption.allCases, id: \.self) { c in
+                        ForEach(ChecklistColorOption.allCases, id: \.self) { c in
                             Image(
                                 systemName: c == draft.color
                                     ? "circle.fill" : "circle"

@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import SwiftDate
 import EventKit
 import SwiftUI
 
@@ -88,8 +89,8 @@ final class CalendarEventStore: ObservableObject {
         let calendar = Calendar.current
 
         // Fetch window (adjust if needed)
-        let start = calendar.date(byAdding: .year, value: -1, to: Date())!
-        let end = calendar.date(byAdding: .year, value: 1, to: Date())!
+        let start = calendar.date(byAdding: .month, value: -1, to: Date())!
+        let end = calendar.date(byAdding: .year, value: 3, to: Date())!
 
         let predicate = eventStore.predicateForEvents(
             withStart: start,
@@ -115,17 +116,59 @@ final class CalendarEventStore: ObservableObject {
     // MARK: - Helpers
 
     /// Expands a multi-day all-day event into individual YYYY-MM-DD keys
+//    private func expandedDatestamps(for event: EKEvent) -> [String] {
+//        var calendar = Calendar.current
+//        var results: [String] = []
+//
+//        // Use the calendar in UTC to avoid TZ issues
+//        var current = calendar.startOfDay(for: event.startDate)
+//        let end = calendar.startOfDay(for: event.endDate.addingTimeInterval(-1)) // subtract 1 sec
+//
+//        while current <= end { // inclusive
+//            results.append(current.datestamp)
+//            current = calendar.date(byAdding: .day, value: 1, to: current)!
+//        }
+//
+//        return results
+//    }
+    
+//    private func expandedDatestamps(for event: EKEvent) -> [String] {
+//        var calendar = Calendar.current
+//        calendar.timeZone = .current   // 🔴 THIS is the real fix
+//
+//        var results: [String] = []
+//
+//        var current = calendar.startOfDay(for: event.startDate)
+//
+//        // Keep your inclusive end logic, but in local TZ
+//        let end = calendar.startOfDay(
+//            for: event.endDate.addingTimeInterval(-1)
+//        )
+//
+//        while current <= end {
+//            results.append(current.datestamp)
+//            current = calendar.date(byAdding: .day, value: 1, to: current)!
+//        }
+//
+//        return results
+//    }
+
+
     private func expandedDatestamps(for event: EKEvent) -> [String] {
-        let calendar = Calendar.current
         var results: [String] = []
 
-        // Use the calendar in UTC to avoid TZ issues
-        var current = calendar.startOfDay(for: event.startDate)
-        let end = calendar.startOfDay(for: event.endDate.addingTimeInterval(-1)) // subtract 1 sec
+        let start = event.startDate
+            .in(region: .current)
+            .dateAtStartOf(.day)
 
-        while current <= end { // inclusive
-            results.append(current.datestamp)
-            current = calendar.date(byAdding: .day, value: 1, to: current)!
+        let end = event.endDate
+            .in(region: .current)
+            .dateAtStartOf(.day)
+
+        var current = start
+        while current <= end {
+            results.append(current.date.datestamp)
+            current = current + 1.days
         }
 
         return results

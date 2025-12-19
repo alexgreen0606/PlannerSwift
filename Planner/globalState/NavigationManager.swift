@@ -7,13 +7,17 @@
 
 import SwiftUI
 
+enum AppTab: Hashable {
+    case recurring, planner, checklists
+}
+
 @Observable
 class NavigationManager {
     static let shared = NavigationManager()
     private init() {}
     
-    // This can be set to open a new planner.
-    // TODO: ensure the planner tab is opened when this changes
+    var selectedTab: AppTab = .planner
+    
     var selectedPlannerDate: Date = Date() // TODO: why store this here? Can I store the date in the navigation path?
     
     var plannerPath = NavigationPath()

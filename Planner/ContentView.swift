@@ -59,17 +59,28 @@ struct ContentView: View {
     }
 
     var body: some View {
-        TabView {
-            Tab("", systemImage: "repeat") {
-            }
+        TabView(selection: $navigationManager.selectedTab) {
+            VStack {}
+                .tabItem {
+                    Label("", systemImage: "repeat")
+                }
+                .tag(AppTab.recurring)
 
-            Tab("", systemImage: "calendar") {
-                PlannerTabView()
-            }
+            PlannerTabView()
+                .tabItem {
+                    Label(
+                        "",
+                        systemImage: todaystampManager.todaystamp
+                            .calendarSymbolName
+                    )
+                }
+                .tag(AppTab.planner)
 
-            Tab("", systemImage: "list.bullet") {
-                ChecklistsTabView()
-            }
+            ChecklistsTabView()
+                .tabItem {
+                    Label("", systemImage: "list.bullet")
+                }
+                .tag(AppTab.checklists)
 
         }
         .tabBarMinimizeBehavior(.onScrollDown)

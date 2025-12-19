@@ -22,7 +22,7 @@ enum ChecklistItemType: String, Codable {
     }
 }
 
-enum ColorOption: String, Codable, CaseIterable {
+enum ChecklistColorOption: String, Codable, CaseIterable {
     case red
     case orange
     case yellow
@@ -66,7 +66,7 @@ enum ColorOption: String, Codable, CaseIterable {
 @Model
 class ChecklistItem: ListItem {
     var type: ChecklistItemType
-    var color: ColorOption
+    var color: ChecklistColorOption
 
     @Relationship(deleteRule: .cascade)
     var items = [ChecklistItem]()
@@ -74,7 +74,7 @@ class ChecklistItem: ListItem {
     @Relationship(inverse: \ChecklistItem.items)
     var parent: ChecklistItem?
 
-    init(type: ChecklistItemType = .checklist, title: String = "", color: ColorOption = .red, sortIndex: Double, parent: ChecklistItem? = nil) {
+    init(type: ChecklistItemType = .checklist, title: String = "", color: ChecklistColorOption = .red, sortIndex: Double, parent: ChecklistItem? = nil) {
         self.type = type
         self.color = color
         self.parent = parent

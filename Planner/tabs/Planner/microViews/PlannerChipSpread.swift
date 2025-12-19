@@ -31,7 +31,7 @@ struct PlannerChipSpreadView: View {
     @State private var editConfig: EventEditConfig?
     @EnvironmentObject private var calendarStore: CalendarEventStore
     
-    @AppStorage("themeColor") var themeColor: ColorOption = ColorOption.green
+    @AppStorage("themeColor") var themeColor: ThemeColorOption = ThemeColorOption.blue
 
     @Namespace private var nameSpace
 
