@@ -15,6 +15,16 @@ struct ContentView: View {
     @State var calendarEventStore = CalendarEventStore.shared
 
     @AppStorage("lastCleanedDatestamp") var lastCleanedDatestamp: String = ""
+    @AppStorage("themeColor") var themeColor: ThemeColorOption =
+        ThemeColorOption.blue
+
+    @State private var searchText: String = ""
+
+    let plannerManager = ListManager()
+    
+    @State private var isPlannerOpen: Bool = false
+
+    @Namespace private var animation
 
     // Set the styles for all of the tab headers.
     init() {
@@ -61,29 +71,65 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: $navigationManager.selectedTab) {
-            VStack {}
-                .tabItem {
-                    Label("", systemImage: "repeat")
-                }
-                .tag(AppTab.recurring)
+            Tab(value: .checklists) {
+                ChecklistsTabView()
+            } label: {
+                Label(
+                    "",
+                    systemImage: "list.bullet"
+                )
+            }
 
-            PlannerTabView()
-                .tabItem {
-                    Label(
-                        "",
-                        systemImage: "note"
-                    )
-                }
-                .tag(AppTab.planner)
+            Tab(value: .recurring) {
+            } label: {
+                Label("", systemImage: "repeat")
+            }
 
-            ChecklistsTabView()
-                .tabItem {
-                    Label("", systemImage: "list.bullet")
+            Tab(value: .search, role: .search) {
+                NavigationStack {
+                    PlannerSelectView(isPlannerOpen: $isPlannerOpen)
                 }
-                .tag(AppTab.checklists)
+            } label: {
+                Label(
+                    "",
+                    systemImage: "calendar"
+                )
+            }
 
         }
+        .searchable(text: $searchText)
         .tabBarMinimizeBehavior(.onScrollDown)
+        .tabViewBottomAccessory {
+            HStack(spacing: 8) {
+                Image(
+                    systemName: todaystampManager.todaystamp.calendarSymbolName
+                )
+                .foregroundColor(themeColor.swiftUIColor)
+                .imageScale(.large)
+
+                VStack {
+                    Text(todaystampManager.todaystamp.date?.dayName ?? "")
+                }
+                .frame(maxHeight: .infinity, alignment: .top)
+
+                Spacer()
+            }
+            .padding(16)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                isPlannerOpen.toggle()
+            }
+            .matchedTransitionSource(id: "ACCESSORY", in: animation)
+        }
+        .fullScreenCover(isPresented: $isPlannerOpen) {
+            NavigationStack {
+                PlannerView(datestamp: navigationManager.plannerDatestamp, isPlannerOpen: $isPlannerOpen)
+            }
+            .environmentObject(plannerManager)
+            .navigationTransition(
+                .zoom(sourceID: "ACCESSORY", in: animation)
+            )
+        }
     }
 }
 

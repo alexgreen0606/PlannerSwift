@@ -71,6 +71,6 @@ struct PlannerApp: App {
 
     private func initializePlannerPathIfNeeded() {
         guard navigationManager.plannerPath.isEmpty else { return }
-        navigationManager.plannerPath.append(todaystampManager.todaystamp)
+        navigationManager.plannerDatestamp = todaystampManager.todaystamp
     }
 }

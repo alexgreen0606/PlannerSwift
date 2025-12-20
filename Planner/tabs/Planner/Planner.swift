@@ -60,9 +60,12 @@ enum PlannerType: String {
 }
 
 struct PlannerView: View {
+    @Binding var isPlannerOpen: Bool
     let datestamp: String
 
     @AppStorage("showChecked") var showChecked: Bool = false
+    @AppStorage("themeColor") var themeColor: ThemeColorOption =
+        ThemeColorOption.blue
 
     @Environment(\.modelContext) private var modelContext
     @Query private var uncheckedEvents: [PlannerEvent]
@@ -85,8 +88,9 @@ struct PlannerView: View {
     }
 
     // Query events matching the given datestamp.
-    init(datestamp: String) {
+    init(datestamp: String, isPlannerOpen: Binding<Bool>) {
         self.datestamp = datestamp
+        self._isPlannerOpen = isPlannerOpen
 
         _uncheckedEvents = Query(
             filter: #Predicate<PlannerEvent> {
@@ -123,6 +127,12 @@ struct PlannerView: View {
             .navigationTitle(date.dayName)
             .navigationSubtitle(date.longDate)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Back", systemImage: "chevron.left") {
+                        isPlannerOpen.toggle()
+                    }
+                }
+                
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         Button(
@@ -146,7 +156,9 @@ struct PlannerView: View {
                     }
                 }
 
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItemGroup(placement: .bottomBar) {
+                    Spacer()
+                    
                     Button("Add", systemImage: "plus") {
                         if let last = uncheckedEvents.last, last.title.isEmpty {
                             return
@@ -156,6 +168,8 @@ struct PlannerView: View {
                         slideTo("bottom", at: .top)
                         handleCreateEvent(at: uncheckedEvents.count)
                     }
+                    .buttonStyle(.glassProminent)
+                    .tint(themeColor.swiftUIColor)
                 }
             }
             .onAppear {
@@ -296,8 +310,4 @@ struct PlannerView: View {
             }
         }
     }
-}
-
-#Preview {
-    PlannerView(datestamp: "2025-12-10")
 }

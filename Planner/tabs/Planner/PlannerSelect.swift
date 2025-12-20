@@ -9,6 +9,8 @@ import SwiftDate
 import SwiftUI
 
 struct PlannerSelectView: View {
+    @Binding var isPlannerOpen: Bool
+    
     @EnvironmentObject var todaystampManager: TodaystampManager
 
     let plannerManager = ListManager()
@@ -33,9 +35,8 @@ struct PlannerSelectView: View {
                 .onChange(of: navigationManager.selectedPlannerDate) {
                     _,
                     targetPlannerDate in
-                    navigationManager.plannerPath.append(
-                        targetPlannerDate.datestamp
-                    )
+                    navigationManager.plannerDatestamp = targetPlannerDate.datestamp
+                    isPlannerOpen.toggle()
                 }
             }
 
@@ -45,7 +46,7 @@ struct PlannerSelectView: View {
                 ForEach(sortedDates, id: \.self) { datestamp in
                     let events =
                     calendarEventStore.allDayEventsByDatestamp[datestamp] ?? []
-                    PlannerCard(datestamp: datestamp, events: events)
+                    PlannerCard(isPlannerOpen: $isPlannerOpen, datestamp: datestamp, events: events)
                 }
             } header: {
                 Text("Upcoming dates")
@@ -85,8 +86,4 @@ struct PlannerSelectView: View {
         }
 
     }
-}
-
-#Preview {
-    PlannerTabView()
 }

@@ -11,6 +11,7 @@ import SwiftUI
 import WrappingHStack
 
 struct PlannerCard: View {
+    @Binding var isPlannerOpen: Bool
     let datestamp: String
     let events: [EKEvent]
 
@@ -56,11 +57,8 @@ struct PlannerCard: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            navigationManager.plannerPath.append(datestamp)
+            navigationManager.plannerDatestamp = datestamp
+            isPlannerOpen.toggle()
         }
     }
-}
-
-#Preview {
-    PlannerCard(datestamp: "2025-12-10", events: [])
 }
