@@ -70,14 +70,18 @@ struct PlannerView: View {
 
     @EnvironmentObject var todaystampManager: TodaystampManager
     @EnvironmentObject var plannerManager: ListManager
-    @EnvironmentObject var calendarStore: CalendarEventStore
-
+    
+    @State var calendarEventStore = CalendarEventStore.shared
     @State private var navigationManager = NavigationManager.shared
     @State private var scrollProxy: ScrollViewProxy?
     @State private var isCalendarPickerPresented = false
 
     var plannerType: PlannerType {
         datestamp <= todaystampManager.todaystamp ? .pastOrPresent : .future
+    }
+    
+    var date: Date {
+        datestamp.date ?? Date()
     }
 
     // Query events matching the given datestamp.
@@ -105,7 +109,8 @@ struct PlannerView: View {
                 checkedItems: checkedEvents,
                 floatingInfo: PlannerChipSpreadView(
                     datestamp: datestamp,
-                    events: calendarStore.allDayEventsByDatestamp[datestamp] ?? []
+                    events: calendarEventStore.allDayEventsByDatestamp[datestamp] ?? [],
+                    showCountdown: true
                 ),
                 endAdornment: timeValue,
                 customToggleConfig: plannerType.toggleEventIconConfig,
@@ -115,8 +120,8 @@ struct PlannerView: View {
                 onTitleChange: handleEventTitleChange,
                 onMoveUncheckedItem: handleMoveUncheckedEvent
             )
-            .navigationTitle(navigationManager.selectedPlannerDate.dayName)
-            .navigationSubtitle(navigationManager.selectedPlannerDate.longDate)
+            .navigationTitle(date.dayName)
+            .navigationSubtitle(date.longDate)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {

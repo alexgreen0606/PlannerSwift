@@ -5,31 +5,58 @@
 //  Created by Alex Green on 12/16/25.
 //
 
+import EventKit
 import SwiftDate
 import SwiftUI
-import EventKit
 import WrappingHStack
 
 struct PlannerCard: View {
     let datestamp: String
     let events: [EKEvent]
 
+    @State var navigationManager = NavigationManager.shared
+
     var date: Date? {
-        datestamp.toDate("yyyy-MM-dd", region: .current)?.date
+        datestamp.date
     }
 
+    // TODO: next
+    // 3. Add timed events below all-day spread and time values with them (match time colors with calendars too)
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading) {
-                Text(date?.longDate ?? datestamp)
-                    .font(.headline)
-                
-                Text(date?.dayName ?? "")
-                    .font(.subheadline)
-                    .foregroundStyle(Color(uiColor: .secondaryLabel))
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading) {
+                    HStack(alignment: .top) {
+                        Text(date?.longDate ?? datestamp)
+                            .font(.headline)
+
+                        Spacer()
+
+                        Text(date?.daysUntil ?? "")
+                            .font(.caption)
+                            .foregroundStyle(Color(uiColor: .secondaryLabel))
+                    }
+
+                    Text(date?.dayName ?? "")
+                        .font(.subheadline)
+                        .foregroundStyle(Color(uiColor: .secondaryLabel))
+                }
+
+                PlannerChipSpreadView(
+                    datestamp: datestamp,
+                    events: events,
+                    showCountdown: false
+                )
             }
 
-            PlannerChipSpreadView(datestamp: datestamp, events: events)
+            Image(systemName: "chevron.right")
+                .foregroundColor(Color(uiColor: .tertiaryLabel))
+                .imageScale(.medium)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            navigationManager.plannerPath.append(datestamp)
         }
     }
 }

@@ -21,6 +21,11 @@ extension String {
 
         return "\(dd).calendar"
     }
+    
+    // Expects YYYY-MM-DD
+    var date: Date? {
+        self.toDate("yyyy-MM-dd", region: .current)?.date
+    }
 
     // Expect ISO timestamp format.
     func toTimeValues() -> (time: String, indicator: String)? {

@@ -27,4 +27,29 @@ extension Date {
         let dateInRegion = DateInRegion(self, region: .local)
         return dateInRegion.toFormat("yyyy-MM-dd")
     }
+
+    var daysUntil: String? {  // Ex: Today, Tomorrow, 3 days away, 3 days ago
+        let region = Region.local
+
+        let target = DateInRegion(self, region: region).dateAt(.startOfDay)
+        let today = DateInRegion(Date(), region: region).dateAt(.startOfDay)
+
+        guard let diff = today.difference(in: .day, from: target) else {
+            return ""
+        }
+
+        if diff == 0 {
+            return "Today"
+        } else if today.isBeforeDate(target, granularity: .day) {
+            if diff == 1 {
+                return "Tomorrow"
+            }
+            return "\(diff) days away"
+        } else {
+            if diff == 1 {
+                return "Yesterday"
+            }
+            return "\(diff) days ago"
+        }
+    }
 }

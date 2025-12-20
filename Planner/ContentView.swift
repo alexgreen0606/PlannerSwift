@@ -12,6 +12,7 @@ struct ContentView: View {
     @EnvironmentObject var todaystampManager: TodaystampManager
 
     @State var navigationManager = NavigationManager.shared
+    @State var calendarEventStore = CalendarEventStore.shared
 
     @AppStorage("lastCleanedDatestamp") var lastCleanedDatestamp: String = ""
 
@@ -70,8 +71,7 @@ struct ContentView: View {
                 .tabItem {
                     Label(
                         "",
-                        systemImage: todaystampManager.todaystamp
-                            .calendarSymbolName
+                        systemImage: "note"
                     )
                 }
                 .tag(AppTab.planner)

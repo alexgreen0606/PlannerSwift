@@ -27,16 +27,29 @@ enum EventEditConfig: Identifiable {
 struct PlannerChipSpreadView: View {
     let datestamp: String
     let events: [EKEvent]
+    let showCountdown: Bool
 
     @State private var editConfig: EventEditConfig?
-    @EnvironmentObject private var calendarStore: CalendarEventStore
+    @State var calendarEventStore = CalendarEventStore.shared
     
     @AppStorage("themeColor") var themeColor: ThemeColorOption = ThemeColorOption.blue
 
     @Namespace private var nameSpace
+    
+    var daysUntil: String? {
+        let date = datestamp.date
+        return date?.daysUntil
+    }
 
     var body: some View {
         WrappingHStack(alignment: .leading) {
+            if showCountdown, daysUntil != nil {
+                PlannerChipView(
+                    title: daysUntil!,
+                    iconName: nil,
+                    color: Color(uiColor: .label)
+                )
+            }
             ForEach(events, id: \.eventIdentifier) { event in
                 PlannerChipView(
                     title: event.title,
@@ -62,9 +75,9 @@ struct PlannerChipSpreadView: View {
             case .edit(let event):
                 EditCalendarEventView(
                     event: event,
-                    eventStore: calendarStore.ekEventStore
+                    eventStore: calendarEventStore.ekEventStore
                 ) { action, updatedEvent in
-                    calendarStore.refresh()
+                    calendarEventStore.refresh()
                     editConfig = nil
                 }
                 .tint(themeColor.swiftUIColor)
@@ -79,7 +92,7 @@ struct PlannerChipSpreadView: View {
             case .view(let event):
                     ViewCalendarEventView(event: event)
                     .tint(themeColor.swiftUIColor)
-                    .presentationDetents([.height(280)])
+                    .presentationDetents([.height(340)])
                     .ignoresSafeArea()
                     .navigationTransition(
                         .zoom(

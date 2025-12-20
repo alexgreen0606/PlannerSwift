@@ -10,12 +10,12 @@ import SwiftUI
 
 struct PlannerSelectView: View {
     @EnvironmentObject var todaystampManager: TodaystampManager
-    @EnvironmentObject var calendarStore: CalendarEventStore
 
     let plannerManager = ListManager()
 
     @State private var isCalendarPickerOpen = false
     @State var navigationManager = NavigationManager.shared
+    @State var calendarEventStore = CalendarEventStore.shared
 
     @AppStorage("themeColor") private var themeColor: ThemeColorOption = .blue
 
@@ -40,11 +40,11 @@ struct PlannerSelectView: View {
             }
 
             Section {
-                let sortedDates = calendarStore.allDayEventsByDatestamp.keys
+                let sortedDates = calendarEventStore.allDayEventsByDatestamp.keys
                     .sorted()
                 ForEach(sortedDates, id: \.self) { datestamp in
                     let events =
-                        calendarStore.allDayEventsByDatestamp[datestamp] ?? []
+                    calendarEventStore.allDayEventsByDatestamp[datestamp] ?? []
                     PlannerCard(datestamp: datestamp, events: events)
                 }
             } header: {

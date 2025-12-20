@@ -9,7 +9,7 @@ import SwiftUI
 
 struct PlannerChipView: View {
     let title: String
-    let iconName: String
+    let iconName: String?
     let color: Color
 
     private let chipHeight: CGFloat = 28
@@ -17,11 +17,13 @@ struct PlannerChipView: View {
     var body: some View {
         GlassEffectContainer {
             HStack(spacing: 4) {
-                Image(systemName: iconName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 14, height: 14)
-                    .foregroundColor(color)
+                if iconName != nil {
+                    Image(systemName: iconName!)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 14, height: 14)
+                        .foregroundColor(color)
+                }
 
                 Text(title)
                     .font(.system(size: 14, weight: .medium))
@@ -30,8 +32,10 @@ struct PlannerChipView: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .frame(height: chipHeight)
-            .glassEffect(.regular.tint(color.opacity(0.05)), in: .rect(cornerRadius: chipHeight / 2))
+            .glassEffect(
+                .regular.tint(color.opacity(0.05)),
+                in: .rect(cornerRadius: chipHeight / 2)
+            )
         }
     }
 }
-
