@@ -53,7 +53,7 @@ struct PlannerChipSpreadView: View {
             ForEach(events, id: \.eventIdentifier) { event in
                 PlannerChipView(
                     title: event.title,
-                    iconName: "calendar",
+                    iconName: event.calendar.iconName,
                     color: Color(event.calendar.cgColor)
                 )
                 .contentShape(Rectangle())

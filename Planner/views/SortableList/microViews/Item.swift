@@ -141,7 +141,6 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
                     adornment(item)
                         .opacity(opacity)
                         .frame(height: 28, alignment: .center)
-                        .background(Color.yellow)
                 }
             }
             .frame(minHeight: 28)

@@ -51,7 +51,7 @@ struct PlannerApp: App {
     let todaystampManager = TodaystampManager()
 
     @State var navigationManager = NavigationManager.shared
-    @State var calendarEventStore = CalendarEventStore.shared
+    @EnvironmentObject var calendarEventStore: CalendarEventStore
 
     @AppStorage("themeColor") var themeColor: ThemeColorOption =
         ThemeColorOption.blue
@@ -61,8 +61,9 @@ struct PlannerApp: App {
             ContentView()
                 .accentColor(themeColor.swiftUIColor)
                 .environmentObject(todaystampManager)
+                .environmentObject(CalendarEventStore.shared)
                 .onAppear {
-                    calendarEventStore.requestAccessAndLoadIfNeeded()
+                    CalendarEventStore.shared.requestAccessAndLoadIfNeeded()
                     initializePlannerPathIfNeeded()
                 }
         }

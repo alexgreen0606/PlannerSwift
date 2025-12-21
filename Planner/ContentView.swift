@@ -5,6 +5,7 @@
 //  Created by Alex Green on 12/1/25.
 //
 
+import EventKit
 import SwiftDate
 import SwiftUI
 
@@ -12,7 +13,9 @@ struct ContentView: View {
     @EnvironmentObject var todaystampManager: TodaystampManager
 
     @State var navigationManager = NavigationManager.shared
-    @State var calendarEventStore = CalendarEventStore.shared
+    @EnvironmentObject var calendarEventStore: CalendarEventStore
+    
+    @Environment(\.tabViewBottomAccessoryPlacement) private var placement
 
     @AppStorage("lastCleanedDatestamp") var lastCleanedDatestamp: String = ""
     @AppStorage("themeColor") var themeColor: ThemeColorOption =
@@ -21,10 +24,16 @@ struct ContentView: View {
     @State private var searchText: String = ""
 
     let plannerManager = ListManager()
-    
+
     @State private var isPlannerOpen: Bool = false
 
     @Namespace private var animation
+
+    private var eventsForToday: [EKEvent] {
+        return calendarEventStore.allDayEventsByDatestamp[
+            todaystampManager.todaystamp
+        ] ?? []
+    }
 
     // Set the styles for all of the tab headers.
     init() {
@@ -95,35 +104,18 @@ struct ContentView: View {
                     systemImage: "calendar"
                 )
             }
-
         }
         .searchable(text: $searchText)
         .tabBarMinimizeBehavior(.onScrollDown)
         .tabViewBottomAccessory {
-            HStack(spacing: 8) {
-                Image(
-                    systemName: todaystampManager.todaystamp.calendarSymbolName
-                )
-                .foregroundColor(themeColor.swiftUIColor)
-                .imageScale(.large)
-
-                VStack {
-                    Text(todaystampManager.todaystamp.date?.dayName ?? "")
-                }
-                .frame(maxHeight: .infinity, alignment: .top)
-
-                Spacer()
-            }
-            .padding(16)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                isPlannerOpen.toggle()
-            }
-            .matchedTransitionSource(id: "ACCESSORY", in: animation)
+            PlannerAccessoryView(isPlannerOpen: $isPlannerOpen, animation: animation)
         }
         .fullScreenCover(isPresented: $isPlannerOpen) {
             NavigationStack {
-                PlannerView(datestamp: navigationManager.plannerDatestamp, isPlannerOpen: $isPlannerOpen)
+                PlannerView(
+                    datestamp: navigationManager.plannerDatestamp,
+                    isPlannerOpen: $isPlannerOpen
+                )
             }
             .environmentObject(plannerManager)
             .navigationTransition(

@@ -16,11 +16,21 @@ extension Date {
         )
     }
 
-    var longDate: String {  // Ex: January 12, 2025
-        DateInRegion(self, region: .current).toFormat(
-            "MMMM d, yyyy",
-            locale: Locale.current
-        )
+    var longDate: String {  // Ex: January 12 or January 12, 2025
+        let date = DateInRegion(self, region: .current)
+        let currentYear = DateInRegion(region: .current).year
+
+        if date.year == currentYear {
+            return date.toFormat(
+                "MMMM d",
+                locale: Locale.current
+            )
+        } else {
+            return date.toFormat(
+                "MMMM d, yyyy",
+                locale: Locale.current
+            )
+        }
     }
 
     var datestamp: String {  // Ex: 2025-12-31
