@@ -14,7 +14,7 @@ struct ChecklistView: View {
 
     @Environment(\.modelContext) private var modelContext
 
-    @AppStorage("showChecked") var showChecked: Bool = false
+    @AppStorage("showCheckedItems") var showCheckedItems: Bool = false
 
     @State private var scrollProxy: ScrollViewProxy?
 
@@ -35,6 +35,7 @@ struct ChecklistView: View {
             SortableListView(
                 uncheckedItems: sortedUncheckedItems,
                 checkedItems: sortedCheckedItems,
+                showChecked: showCheckedItems,
                 floatingInfo: EmptyView(),
                 endAdornment: { _ in EmptyView() },
                 customToggleConfig: nil,
@@ -50,14 +51,14 @@ struct ChecklistView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         Button {
-                            showChecked.toggle()
+                            showCheckedItems.toggle()
                         } label: {
                             Text(
-                                showChecked
+                                showCheckedItems
                                     ? "Hide complete" : "Show complete"
                             )
                             Image(
-                                systemName: showChecked
+                                systemName: showCheckedItems
                                     ? "eye.slash.fill" : "eye.fill"
                             )
                         }

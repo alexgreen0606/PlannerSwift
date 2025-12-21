@@ -18,4 +18,15 @@ extension Color {
             }
         )
     }
+    
+    static var calendarIconMonth: Color {
+        let light = UIColor.white
+        let dark = UIColor.black
+
+        return Color(
+            UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? dark : light
+            }
+        )
+    }
 }

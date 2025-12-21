@@ -10,6 +10,7 @@ import SwiftUI
 
 struct ItemView<Item: ListItem, EndAdornment: View>: View {
     @Bindable var item: Item
+    let showChecked: Bool
     let toggleType: ListToggleType
     let isSelectDisabled: Bool
     let showUpperDivider: Bool
@@ -19,8 +20,6 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
         (_ baseId: ObjectIdentifier?, _ offset: Int) ->
             Void
     let onTitleChange: (_ item: Item) -> Void
-
-    @AppStorage("showChecked") var showChecked: Bool = false
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var focusController: FocusController

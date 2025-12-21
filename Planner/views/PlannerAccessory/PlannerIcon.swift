@@ -25,7 +25,7 @@ struct PlannerIcon: View {
                 .font(.system(size: 6))
                 .fontWeight(.heavy)
                 .padding(.bottom, 18)
-                .foregroundStyle(Color.black)
+                .foregroundStyle(Color.calendarIconMonth)
         }
     }
 }

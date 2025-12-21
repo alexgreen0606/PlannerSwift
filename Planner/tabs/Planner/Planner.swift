@@ -63,7 +63,8 @@ struct PlannerView: View {
     @Binding var isPlannerOpen: Bool
     let datestamp: String
 
-    @AppStorage("showChecked") var showChecked: Bool = false
+    @AppStorage("showCompletedPlans") var showCompletedPlans: Bool = false
+    @AppStorage("showDeletedPlans") var showDeletedPlans: Bool = false
     @AppStorage("themeColor") var themeColor: ThemeColorOption =
         ThemeColorOption.blue
 
@@ -85,6 +86,10 @@ struct PlannerView: View {
     
     var date: Date {
         datestamp.date ?? Date()
+    }
+    
+    var showChecked: Bool {
+        plannerType == .future ? showDeletedPlans : showCompletedPlans
     }
 
     // Query events matching the given datestamp.
@@ -111,6 +116,7 @@ struct PlannerView: View {
             SortableListView(
                 uncheckedItems: uncheckedEvents,
                 checkedItems: checkedEvents,
+                showChecked: showChecked,
                 floatingInfo: PlannerChipSpreadView(
                     datestamp: datestamp,
                     events: calendarEventStore.allDayEventsByDatestamp[datestamp] ?? [],
@@ -137,7 +143,7 @@ struct PlannerView: View {
                     Menu {
                         Button(
                             action: {
-                                showChecked.toggle()
+                                plannerType == .future ? showDeletedPlans.toggle() : showCompletedPlans.toggle()
                             },
                             label: {
                                 Text(

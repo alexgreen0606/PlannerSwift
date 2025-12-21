@@ -15,6 +15,7 @@ class FocusController: ObservableObject {
 struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>: View {
     let uncheckedItems: [Item]
     let checkedItems: [Item]
+    let showChecked: Bool
     let toggleType: ListToggleType = .storage
     let disabledItemIds: Set<ObjectIdentifier> = []
     let floatingInfo: FloatingInfo?
@@ -25,8 +26,6 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
     let onCreateItem: (_ index: Int) -> Void
     let onTitleChange: (_ item: Item) -> Void
     let onMoveUncheckedItem: (_ from: Int, _ to: Int) -> Void
-    
-    @AppStorage("showChecked") var showChecked: Bool = false
     
     @Environment(\.colorScheme) private var colorScheme
 
@@ -61,6 +60,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                 ForEach(uncheckedItems, id: \.self) { item in
                     ItemView(
                         item: item,
+                        showChecked: showChecked,
                         toggleType: toggleType,
                         isSelectDisabled: disabledItemIds.contains(
                             item.id
@@ -90,6 +90,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                     ForEach(checkedItems, id: \.self) { item in
                         ItemView(
                             item: item,
+                            showChecked: true,
                             toggleType: toggleType,
                             isSelectDisabled: disabledItemIds.contains(
                                 item.id
