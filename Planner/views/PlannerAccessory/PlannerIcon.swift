@@ -17,8 +17,7 @@ struct PlannerIcon: View {
         Image(
             systemName: todaystampManager.todaystamp.calendarSymbolName
         )
-        .foregroundStyle(Color(uiColor: .label), Color.blue)
-        .foregroundColor(themeColor.swiftUIColor)
+        .foregroundStyle(Color(uiColor: .label), themeColor.swiftUIColor)
         .font(.system(size: 28))
         .overlay {
             Text("DEC")

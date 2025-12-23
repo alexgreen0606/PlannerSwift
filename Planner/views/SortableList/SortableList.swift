@@ -12,7 +12,16 @@ class FocusController: ObservableObject {
     @Published var focusedId: ObjectIdentifier?
 }
 
-struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>: View {
+private struct FloatingInfoHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
+
+struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
+    View
+{
     let uncheckedItems: [Item]
     let checkedItems: [Item]
     let showChecked: Bool
@@ -23,12 +32,13 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
     let customToggleConfig: CustomIconConfig?
     let checkedHeader: String
     let checkedFooter: String?
+    let emptyUncheckedLabel: String
+    let emptyCheckedLabel: String
     let onCreateItem: (_ index: Int) -> Void
     let onTitleChange: (_ item: Item) -> Void
     let onMoveUncheckedItem: (_ from: Int, _ to: Int) -> Void
-    
-    @Environment(\.colorScheme) private var colorScheme
 
+    @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject var listManager: ListManager
 
     @StateObject var focusController = FocusController()
@@ -36,27 +46,16 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
     var body: some View {
         List {
             Section {
-                HStack {
-                    floatingInfo
-                }
-                .opacity(0)
-                .padding(.horizontal, 16)
-            }
-            .listRowInsets(EdgeInsets())
-            .listRowBackground(Color.clear)
-            .listSectionSeparator(.hidden)
-            Section {
                 NewItemTriggerView {
                     handleCreateItem(
                         baseId: uncheckedItems.first?.id,
                         offset: 0
                     )
                 }
-            }
-            .listRowInsets(EdgeInsets())
-            .listRowBackground(Color.clear)
-            .listSectionSeparator(.hidden)
-            Section {
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+
                 ForEach(uncheckedItems, id: \.self) { item in
                     ItemView(
                         item: item,
@@ -74,19 +73,40 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                     .id(item.id)
                 }
                 .onMove(perform: handleMoveUncheckedItem)
-            } footer: {
+
                 NewItemTriggerView {
                     handleCreateLowerItem()
                 }
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets())
                 .listRowSeparator(.hidden)
-                .id("bottom")
+                .id("UNCHECKED")
+
+                if uncheckedItems.isEmpty && showChecked
+                    && !checkedItems.isEmpty
+                {
+                    VStack(alignment: .center) {
+                        Text(emptyUncheckedLabel)
+                            .font(
+                                .system(
+                                    size: 16,
+                                    weight: .heavy,
+                                    design: .rounded
+                                )
+                            )
+                            .foregroundStyle(Color(uiColor: .tertiaryLabel))
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .frame(height: 90, alignment: .center)
+                }
+            } header: {
+                floatingInfo
             }
+            .listSectionSeparator(.hidden)
 
             // TODO: deselecting item and then focusing it loses focus after movement to new list
-            if showChecked {
-                Section{
+            if showChecked && !checkedItems.isEmpty {
+                Section {
                     ForEach(checkedItems, id: \.self) { item in
                         ItemView(
                             item: item,
@@ -96,7 +116,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                                 item.id
                             ),
                             showUpperDivider: item.id
-                            == checkedItems.first?.id,
+                                == checkedItems.first?.id,
                             endAdornment: endAdornment,
                             customToggleConfig: customToggleConfig,
                             onCreateItem: { _, _ in },
@@ -115,20 +135,24 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                 }
                 .listRowBackground(Color.clear)
                 .listSectionSeparator(.hidden)
-                .id("checked")
+                .id("CHECKED")
             }
         }
         .environmentObject(focusController)
         .refreshable {}
-        .overlay(alignment: .top) {
-            floatingInfo
-                .padding(.horizontal, 16)
-        }
         .listStyle(.plain)
         .environment(\.defaultMinListRowHeight, 0)
         .animation(.linear(duration: 0.2), value: uncheckedItems)
         .safeAreaPadding(.bottom, 20)
         .background(Color.appBackground)
+        .overlay {
+            if uncheckedItems.isEmpty && (!showChecked || checkedItems.isEmpty)
+            {
+                Text(emptyUncheckedLabel)
+                    .font(.system(size: 16, weight: .heavy, design: .rounded))
+                    .foregroundStyle(Color(uiColor: .tertiaryLabel))
+            }
+        }
     }
 
     private func handleCreateItem(
@@ -142,7 +166,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
         else {
             return
         }
-        
+
         let finalIndex = baseIndex + offset
 
         // Don't create the new item if it is next to an empty item.
@@ -159,7 +183,10 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
         onCreateItem(finalIndex)
     }
 
-    private func handleMoveUncheckedItem(from sources: IndexSet, to destination: Int) {
+    private func handleMoveUncheckedItem(
+        from sources: IndexSet,
+        to destination: Int
+    ) {
         for source in sources {
             var to = destination
 

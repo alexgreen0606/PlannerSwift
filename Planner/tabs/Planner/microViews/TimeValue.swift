@@ -12,9 +12,17 @@ struct TimeValue: View {
     let indicator: String
     let detail: String?
     let disabled: Bool
+    let color: Color
     let onOpenTimeModal: () -> Void
 
     @State private var isVisible = false
+    
+    private var timeParts: (hour: String, minute: String)? {
+        let parts = time.split(separator: ":")
+        guard parts.count == 2 else { return nil }
+        return (String(parts[0]), String(parts[1]))
+    }
+
 
     var body: some View {
         HStack(alignment: .top, spacing: 1) {
@@ -23,8 +31,9 @@ struct TimeValue: View {
                 .font(.system(size: 14, weight: .black, design: .rounded))
                 .foregroundStyle(
                     disabled
-                    ? Color(uiColor: .tertiaryLabel) : .accentColor
+                    ? Color(uiColor: .tertiaryLabel) : color
                 )
+            
             // Indicator (PM / AM)
             Text(indicator)
                 .font(.system(size: 7, weight: .medium))

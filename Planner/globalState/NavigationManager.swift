@@ -6,9 +6,25 @@
 //
 
 import SwiftUI
+import EventKit
 
 enum AppTab: Hashable {
     case recurring, checklists, search
+}
+
+// TODO: move elsewhere
+enum CalendarEventEditConfig: Identifiable {
+    case edit(EKEvent)
+    case view(EKEvent)
+
+    var id: String {
+        switch self {
+        case .edit(let event):
+            String(describing: event.eventIdentifier)
+        case .view(let event):
+            String(describing: event.eventIdentifier)
+        }
+    }
 }
 
 @Observable
@@ -18,11 +34,7 @@ class NavigationManager {
     
     var selectedTab: AppTab = .search
     
-    var isPlannerOpen: Bool = false
-    var plannerDatestamp: String = ""
-    
     var selectedPlannerDate: Date = Date() // TODO: why store this here? Can I store the date in the navigation path?
     
-    var plannerPath = NavigationPath()
     var checklistsPath = NavigationPath()
 }

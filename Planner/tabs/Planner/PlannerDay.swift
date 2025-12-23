@@ -5,6 +5,7 @@
 //  Created by Alex Green on 12/1/25.
 //
 
+import EventKit
 import SwiftData
 import SwiftDate
 import SwiftUI
@@ -45,7 +46,7 @@ enum PlannerType: String {
                 return nil
             }
 
-            let formatted = date.longDate
+            let formatted = date.subHeader
             return
                 "These canceled plans will be deleted the morning of \(formatted)."
         }
@@ -60,8 +61,8 @@ enum PlannerType: String {
 }
 
 struct PlannerView: View {
-    @Binding var isPlannerOpen: Bool
     let datestamp: String
+    let closePlanner: () -> Void
 
     @AppStorage("showCompletedPlans") var showCompletedPlans: Bool = false
     @AppStorage("showDeletedPlans") var showDeletedPlans: Bool = false
@@ -69,45 +70,57 @@ struct PlannerView: View {
         ThemeColorOption.blue
 
     @Environment(\.modelContext) private var modelContext
-    @Query private var uncheckedEvents: [PlannerEvent]
-    @Query private var checkedEvents: [PlannerEvent]
+    @Query private var planners: [Planner]
+    @State private var planner: Planner?
 
     @EnvironmentObject var todaystampManager: TodaystampManager
     @EnvironmentObject var plannerManager: ListManager
-    
     @State var calendarEventStore = CalendarEventStore.shared
     @State private var navigationManager = NavigationManager.shared
+
+    @Namespace private var calendarEventSheetNamespace
+    @State private var calendarEventEditConfig: CalendarEventEditConfig?
+
     @State private var scrollProxy: ScrollViewProxy?
     @State private var isCalendarPickerPresented = false
 
     var plannerType: PlannerType {
         datestamp <= todaystampManager.todaystamp ? .pastOrPresent : .future
     }
-    
+
     var date: Date {
         datestamp.date ?? Date()
     }
-    
+
     var showChecked: Bool {
         plannerType == .future ? showDeletedPlans : showCompletedPlans
     }
 
-    // Query events matching the given datestamp.
-    init(datestamp: String, isPlannerOpen: Binding<Bool>) {
-        self.datestamp = datestamp
-        self._isPlannerOpen = isPlannerOpen
+    var uncheckedEvents: [PlannerEvent] {
+        planner != nil
+            ? planner!.events.filter {
+                !$0.isChecked
+            }.sorted { $0.sortIndex < $1.sortIndex }
+            : []
+    }
 
-        _uncheckedEvents = Query(
-            filter: #Predicate<PlannerEvent> {
-                $0.datestamp == datestamp && !$0.isChecked
-            },
-            sort: \.sortIndex
-        )
-        _checkedEvents = Query(
-            filter: #Predicate<PlannerEvent> {
-                $0.datestamp == datestamp && $0.isChecked
-            },
-            sort: \.sortIndex
+    var checkedEvents: [PlannerEvent] {
+        planner != nil
+            ? planner!.events.filter {
+                $0.isChecked
+            }.sorted { $0.sortIndex < $1.sortIndex }
+            : []
+    }
+
+    // Set the query to find this date's planner.
+    init(datestamp: String, closePlanner: @escaping () -> Void) {
+        self.datestamp = datestamp
+        self.closePlanner = closePlanner
+
+        _planners = Query(
+            filter: #Predicate<Planner> {
+                $0.datestamp == datestamp
+            }
         )
     }
 
@@ -119,31 +132,39 @@ struct PlannerView: View {
                 showChecked: showChecked,
                 floatingInfo: PlannerChipSpreadView(
                     datestamp: datestamp,
-                    events: calendarEventStore.allDayEventsByDatestamp[datestamp] ?? [],
-                    showCountdown: true
+                    events: calendarEventStore.allDayEventsByDatestamp[
+                        datestamp
+                    ] ?? [],
+                    showCountdown: true,
+                    chipAnimation: calendarEventSheetNamespace,
+                    openCalendarEvent: openCalendarEventModal
                 ),
                 endAdornment: timeValue,
                 customToggleConfig: plannerType.toggleEventIconConfig,
                 checkedHeader: plannerType.checkedHeader,
                 checkedFooter: plannerType.getCheckedFooter(for: datestamp),
+                emptyUncheckedLabel: "No plans",
+                emptyCheckedLabel: "No completed plans",
                 onCreateItem: handleCreateEvent,
                 onTitleChange: handleEventTitleChange,
                 onMoveUncheckedItem: handleMoveUncheckedEvent
             )
-            .navigationTitle(date.dayName)
-            .navigationSubtitle(date.longDate)
+            .navigationTitle(date.header)
+            .navigationSubtitle(date.subHeader)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Back", systemImage: "chevron.left") {
-                        isPlannerOpen.toggle()
+                    Button("Back", systemImage: "chevron.down") {
+                        closePlanner()
                     }
                 }
-                
+
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         Button(
                             action: {
-                                plannerType == .future ? showDeletedPlans.toggle() : showCompletedPlans.toggle()
+                                plannerType == .future
+                                    ? showDeletedPlans.toggle()
+                                    : showCompletedPlans.toggle()
                             },
                             label: {
                                 Text(
@@ -164,28 +185,64 @@ struct PlannerView: View {
 
                 ToolbarItemGroup(placement: .bottomBar) {
                     Spacer()
-                    
+
                     Button("Add", systemImage: "plus") {
                         if let last = uncheckedEvents.last, last.title.isEmpty {
                             return
                         }
 
                         // TODO: doesnt work when the list is long and hasn't been scrolled down to yet (not mounted?)
-                        slideTo("bottom", at: .top)
+                        slideTo("UNCHECKED", at: .bottom)
                         handleCreateEvent(at: uncheckedEvents.count)
                     }
                     .buttonStyle(.glassProminent)
                     .tint(themeColor.swiftUIColor)
                 }
             }
+
             .onAppear {
                 scrollProxy = proxy
             }
-            // Slide to the checked items when the user marks them visible.
-            .onChange(of: showChecked) { _, newShowChecked in
-                if newShowChecked {
-                    slideTo("checked", at: .top)
+        }
+        // Slide to the checked items when the user marks them visible.
+        .onChange(of: showChecked) { _, newShowChecked in
+            if newShowChecked {
+                slideTo("CHECKED", at: .top)
+            }
+        }
+        .task {
+            ensurePlanner()
+        }
+        .sheet(item: $calendarEventEditConfig) { destination in
+            switch destination {
+            case .edit(let event):
+                EditCalendarEventView(
+                    event: event,
+                    eventStore: calendarEventStore.ekEventStore
+                ) { action, updatedEvent in
+                    calendarEventStore.refresh()
+                    calendarEventEditConfig = nil
                 }
+                .tint(themeColor.swiftUIColor)
+                .ignoresSafeArea()
+                .navigationTransition(
+                    .zoom(
+                        sourceID: String(describing: event.eventIdentifier),
+                        in: calendarEventSheetNamespace
+                    )
+                )
+
+            case .view(let event):
+                ViewCalendarEventView(event: event)
+                    .tint(themeColor.swiftUIColor)
+                    .presentationDetents([.height(340)])
+                    .ignoresSafeArea()
+                    .navigationTransition(
+                        .zoom(
+                            sourceID: String(describing: event.eventIdentifier),
+                            in: calendarEventSheetNamespace
+                        )
+                    )
             }
         }
     }
@@ -209,7 +266,8 @@ struct PlannerView: View {
                 time: time,
                 indicator: indicator,
                 detail: detail,
-                disabled: false
+                disabled: false,
+                color: Color.blue
             ) {
                 // TODO: open time modal
             }
@@ -219,8 +277,9 @@ struct PlannerView: View {
     }
 
     private func handleCreateEvent(at index: Int) {
+        guard let planner = planner else { return }
         let sortIndex = generateSortIndex(index: index, items: uncheckedEvents)
-        let newEvent = PlannerEvent(datestamp: datestamp, sortIndex: sortIndex)
+        let newEvent = PlannerEvent(sortIndex: sortIndex, planner: planner)
         modelContext.insert(newEvent)
         try! modelContext.save()
     }
@@ -256,6 +315,8 @@ struct PlannerView: View {
     }
 
     private func handleEventTitleChange(event: PlannerEvent) {
+        guard let datestamp = event.planner?.datestamp else { return }
+
         // 1. Recurring event: delete and clone event.
         if event.recurringId != nil {
             // TODO: Handle recurring events in future
@@ -275,7 +336,7 @@ struct PlannerView: View {
         }
         guard
             let config = timeValue.toPlannerEventTimeConfig(
-                usingDate: event.datestamp
+                usingDate: datestamp
             )
         else {
             return
@@ -297,7 +358,7 @@ struct PlannerView: View {
 
         event.sortIndex = newSortIndex
         slideTo(event.id, at: .bottom, withDelay: .seconds(3))
-        
+
         try? modelContext.save()
     }
 
@@ -314,6 +375,30 @@ struct PlannerView: View {
             withAnimation(.linear(duration: 2)) {
                 proxy.scrollTo(id, anchor: anchor)
             }
+        }
+    }
+
+    private func openCalendarEventModal(for event: EKEvent) {
+        if event.calendar.allowsContentModifications {
+            calendarEventEditConfig = .edit(event)
+        } else {
+            calendarEventEditConfig = .view(event)
+        }
+    }
+
+    @MainActor
+    private func ensurePlanner() {
+        if let storagePlanner = planners.first {
+            planner = storagePlanner
+        } else if planner == nil {
+            // Only create if planner doesn't exist yet.
+            let newPlanner = Planner(
+                datestamp: datestamp
+            )
+            modelContext.insert(newPlanner)
+            try! modelContext.save()
+
+            planner = newPlanner
         }
     }
 }

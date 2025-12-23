@@ -9,8 +9,8 @@ import EventKit
 import SwiftUI
 
 struct PlannerAccessoryView: View {
-    @Binding var isPlannerOpen: Bool
     var animation: Namespace.ID
+    let openTodayPlanner: () -> Void
     
     @EnvironmentObject var todaystampManager: TodaystampManager
     @State var navigationManager = NavigationManager.shared
@@ -28,10 +28,10 @@ struct PlannerAccessoryView: View {
             PlannerIcon()
 
             VStack(alignment: .leading, spacing: 0) {
-                Text(todaystampManager.todaystamp.date?.dayName ?? "")
+                Text(todaystampManager.todaystamp.date?.header ?? "")
                     .font(.callout)
                     .matchedTransitionSource(
-                        id: "ACCESSORY",
+                        id: "PLANNER_ACCESSORY",
                         in: animation
                     )
 
@@ -91,11 +91,7 @@ struct PlannerAccessoryView: View {
         }
         .padding(.horizontal, 16)
         .contentShape(Rectangle())
-        .onTapGesture {
-            navigationManager.plannerDatestamp =
-                todaystampManager.todaystamp
-            isPlannerOpen.toggle()
-        }
+        .onTapGesture(perform: openTodayPlanner)
     }
 }
 

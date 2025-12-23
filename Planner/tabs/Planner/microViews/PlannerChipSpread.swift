@@ -10,31 +10,16 @@ import SwiftDate
 import SwiftUI
 import WrappingHStack
 
-enum EventEditConfig: Identifiable {
-    case edit(EKEvent)
-    case view(EKEvent)
-
-    var id: String {
-        switch self {
-        case .edit(let event):
-            String(describing: event.eventIdentifier)
-        case .view(let event):
-            String(describing: event.eventIdentifier)
-        }
-    }
-}
-
 struct PlannerChipSpreadView: View {
     let datestamp: String
     let events: [EKEvent]
     let showCountdown: Bool
-
-    @State private var editConfig: EventEditConfig?
-    @State var calendarEventStore = CalendarEventStore.shared
+    var chipAnimation: Namespace.ID
+    let openCalendarEvent: (EKEvent) -> Void
     
     @AppStorage("themeColor") var themeColor: ThemeColorOption = ThemeColorOption.blue
-
-    @Namespace private var nameSpace
+    
+    @State var calendarEventStore = CalendarEventStore.shared
     
     var daysUntil: String? {
         let date = datestamp.date
@@ -57,50 +42,14 @@ struct PlannerChipSpreadView: View {
                     color: Color(event.calendar.cgColor)
                 )
                 .contentShape(Rectangle())
-                .onTapGesture {
-                    if event.calendar.allowsContentModifications {
-                        editConfig = .edit(event)
-                    } else {
-                        editConfig = .view(event)
-                    }
+                .onTapGesture{
+                    openCalendarEvent(event)
                 }
                 .matchedTransitionSource(
                     id: String(describing: event.eventIdentifier),
-                    in: nameSpace
+                    in: chipAnimation
                 )
             }
         }
-        .sheet(item: $editConfig) { destination in
-            switch destination {
-            case .edit(let event):
-                EditCalendarEventView(
-                    event: event,
-                    eventStore: calendarEventStore.ekEventStore
-                ) { action, updatedEvent in
-                    calendarEventStore.refresh()
-                    editConfig = nil
-                }
-                .tint(themeColor.swiftUIColor)
-                .ignoresSafeArea()
-                .navigationTransition(
-                    .zoom(
-                        sourceID: String(describing: event.eventIdentifier),
-                        in: nameSpace
-                    )
-                )
-                
-            case .view(let event):
-                    ViewCalendarEventView(event: event)
-                    .tint(themeColor.swiftUIColor)
-                    .presentationDetents([.height(340)])
-                    .ignoresSafeArea()
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: String(describing: event.eventIdentifier),
-                            in: nameSpace
-                        )
-                    )
-                }
-            }
     }
 }

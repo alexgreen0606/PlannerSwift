@@ -24,6 +24,7 @@ class CalendarEventStore: ObservableObject {
 
     @Published private(set) var calendarsById: [String: EKCalendar] = [:]
     @Published private(set) var allDayEventsByDatestamp: [String: [EKEvent]] = [:]
+    @Published private(set) var singleDayEventsByDatestamp: [String: [EKEvent]] = [:]
 
     private var hasLoaded = false
 
@@ -58,6 +59,7 @@ class CalendarEventStore: ObservableObject {
 
         loadCalendars()
         loadAllDayEvents()
+        loadSingleDayEvents()
     }
 
     private func loadCalendars() {
@@ -94,6 +96,37 @@ class CalendarEventStore: ObservableObject {
         }
 
         allDayEventsByDatestamp = map
+    }
+    
+    private func loadSingleDayEvents() {
+        let calendar = Calendar.current
+
+        let start = calendar.date(byAdding: .month, value: -1, to: Date())!
+        let end = calendar.date(byAdding: .year, value: 3, to: Date())!
+
+        let predicate = eventStore.predicateForEvents(
+            withStart: start,
+            end: end,
+            calendars: nil
+        )
+
+        let events = eventStore
+            .events(matching: predicate)
+            .filter { !$0.isAllDay }
+
+        var map: [String: [EKEvent]] = [:]
+
+        for event in events {
+            let datestamp =
+                event.startDate
+                    .in(region: .current)
+                    .date
+                    .datestamp
+
+            map[datestamp, default: []].append(event)
+        }
+
+        singleDayEventsByDatestamp = map
     }
 
     private func expandedDatestamps(for event: EKEvent) -> [String] {

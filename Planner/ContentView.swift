@@ -14,7 +14,7 @@ struct ContentView: View {
 
     @State var navigationManager = NavigationManager.shared
     @EnvironmentObject var calendarEventStore: CalendarEventStore
-    
+
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
 
     @AppStorage("lastCleanedDatestamp") var lastCleanedDatestamp: String = ""
@@ -25,9 +25,12 @@ struct ContentView: View {
 
     let plannerManager = ListManager()
 
-    @State private var isPlannerOpen: Bool = false
+    // Tracks the previously opened today datestamp. Must be local so midnight update does not
+    // force the open planner to switch over.
+    @State private var todayDatestamp: String = ""
+    @State private var isTodayPlannerOpen: Bool = false
 
-    @Namespace private var animation
+    @Namespace private var todayPlannerCoverNamespace
 
     private var eventsForToday: [EKEvent] {
         return calendarEventStore.allDayEventsByDatestamp[
@@ -50,7 +53,7 @@ struct ContentView: View {
             ])
 
             // font size
-            let customSize: CGFloat = 28
+            let customSize: CGFloat = 32
             let font = UIFont(descriptor: descriptor, size: customSize)
             UINavigationBar.appearance().largeTitleTextAttributes = [
                 .font: font
@@ -70,7 +73,7 @@ struct ContentView: View {
             ])
 
             // font size
-            let customSize: CGFloat = 22
+            let customSize: CGFloat = 26
             let font = UIFont(descriptor: descriptor, size: customSize)
             UINavigationBar.appearance().titleTextAttributes = [
                 .font: font
@@ -96,8 +99,9 @@ struct ContentView: View {
 
             Tab(value: .search, role: .search) {
                 NavigationStack {
-                    PlannerSelectView(isPlannerOpen: $isPlannerOpen)
+                    PlannerSelectView()
                 }
+                .searchable(text: $searchText, prompt: "Search calendar events...")
             } label: {
                 Label(
                     "",
@@ -105,21 +109,24 @@ struct ContentView: View {
                 )
             }
         }
-        .searchable(text: $searchText)
         .tabBarMinimizeBehavior(.onScrollDown)
         .tabViewBottomAccessory {
-            PlannerAccessoryView(isPlannerOpen: $isPlannerOpen, animation: animation)
+            PlannerAccessoryView(animation: todayPlannerCoverNamespace) {
+                todayDatestamp = todaystampManager.todaystamp
+                isTodayPlannerOpen.toggle()
+            }
         }
-        .fullScreenCover(isPresented: $isPlannerOpen) {
+        .fullScreenCover(isPresented: $isTodayPlannerOpen) {
             NavigationStack {
                 PlannerView(
-                    datestamp: navigationManager.plannerDatestamp,
-                    isPlannerOpen: $isPlannerOpen
-                )
+                    datestamp: todayDatestamp
+                ) {
+                    isTodayPlannerOpen.toggle()
+                }
             }
             .environmentObject(plannerManager)
             .navigationTransition(
-                .zoom(sourceID: "ACCESSORY", in: animation)
+                .zoom(sourceID: "PLANNER_ACCESSORY", in: todayPlannerCoverNamespace)
             )
         }
     }

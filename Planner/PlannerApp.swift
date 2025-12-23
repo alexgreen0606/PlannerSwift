@@ -64,14 +64,9 @@ struct PlannerApp: App {
                 .environmentObject(CalendarEventStore.shared)
                 .onAppear {
                     CalendarEventStore.shared.requestAccessAndLoadIfNeeded()
-                    initializePlannerPathIfNeeded()
                 }
         }
-        .modelContainer(for: [PlannerEvent.self, ChecklistItem.self])
+        .modelContainer(for: [Planner.self, ChecklistItem.self])
     }
 
-    private func initializePlannerPathIfNeeded() {
-        guard navigationManager.plannerPath.isEmpty else { return }
-        navigationManager.plannerDatestamp = todaystampManager.todaystamp
-    }
 }

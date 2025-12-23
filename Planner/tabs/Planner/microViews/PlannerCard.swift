@@ -11,54 +11,84 @@ import SwiftUI
 import WrappingHStack
 
 struct PlannerCard: View {
-    @Binding var isPlannerOpen: Bool
     let datestamp: String
-    let events: [EKEvent]
-
-    @State var navigationManager = NavigationManager.shared
+    let allDayEvents: [EKEvent]
+    let singleDayEvents: [EKEvent]
+    var chipAnimation: Namespace.ID
+    let openCalendarEvent: (EKEvent) -> Void
+    let openPlanner: () -> Void
 
     var date: Date? {
         datestamp.date
     }
 
-    // TODO: next
-    // 3. Add timed events below all-day spread and time values with them (match time colors with calendars too)
-
     var body: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 12) {
-                VStack(alignment: .leading) {
-                    HStack(alignment: .top) {
-                        Text(date?.longDate ?? datestamp)
-                            .font(.headline)
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading) {
+                HStack(alignment: .top) {
+                    Text(date?.header ?? datestamp)
+                        .font(.headline)
+                        .fontWeight(.bold)
 
-                        Spacer()
+                    Spacer()
 
-                        Text(date?.daysUntil ?? "")
-                            .font(.caption)
-                            .foregroundStyle(Color(uiColor: .secondaryLabel))
-                    }
-
-                    Text(date?.dayName ?? "")
-                        .font(.subheadline)
+                    Text(date?.daysUntil ?? "")
+                        .font(.caption)
                         .foregroundStyle(Color(uiColor: .secondaryLabel))
                 }
 
+                Text(date?.subHeader ?? "")
+                    .font(.subheadline)
+                    .foregroundStyle(Color(uiColor: .secondaryLabel))
+            }
+
+            if !allDayEvents.isEmpty {
                 PlannerChipSpreadView(
                     datestamp: datestamp,
-                    events: events,
-                    showCountdown: false
+                    events: allDayEvents,
+                    showCountdown: false,
+                    chipAnimation: chipAnimation,
+                    openCalendarEvent: openCalendarEvent
                 )
             }
 
-            Image(systemName: "chevron.right")
-                .foregroundColor(Color(uiColor: .tertiaryLabel))
-                .imageScale(.medium)
+            if !singleDayEvents.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(singleDayEvents, id: \.self) { event in
+                        HStack(alignment: .top, spacing: 12) {
+                            Text(event.title)
+                                .font(.system(size: 15))
+                                .foregroundStyle(Color(uiColor: .label))
+
+                            Spacer()
+
+                            let (timeValue, indicator) = event.startDate
+                                .timeValues
+                            TimeValue(
+                                time: timeValue,
+                                indicator: indicator,
+                                detail: nil,
+                                disabled: false,
+                                color: Color(event.calendar.cgColor)
+                            ) {
+
+                            }
+                        }
+
+                        if event.eventIdentifier
+                            != singleDayEvents.last!.eventIdentifier
+                        {
+                            DashedDivider()
+                        }
+                    }
+                }
+            }
         }
         .contentShape(Rectangle())
-        .onTapGesture {
-            navigationManager.plannerDatestamp = datestamp
-            isPlannerOpen.toggle()
-        }
+        .onTapGesture(perform: openPlanner)
+        .padding(.vertical, 8)
+        .containerShape(
+            .rect(cornerRadius: 24)
+        )
     }
 }

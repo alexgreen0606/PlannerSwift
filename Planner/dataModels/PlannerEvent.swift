@@ -51,12 +51,15 @@ class TimeConfig {
 @available(iOS 26.0, *)
 @Model
 class PlannerEvent: ListItem {
-    var datestamp: String
     var timeConfig: TimeConfig? = nil
     var recurringId: String? = nil
     
-    init(datestamp: String, sortIndex: Double) {
-        self.datestamp = datestamp
+    @Relationship(inverse: \Planner.events)
+    var planner: Planner?
+    
+    init(sortIndex: Double, planner: Planner? = nil) {
         super.init(sortIndex: sortIndex)
+        
+        planner?.events.append(self)
     }
 }

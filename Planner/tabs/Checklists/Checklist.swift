@@ -41,6 +41,8 @@ struct ChecklistView: View {
                 customToggleConfig: nil,
                 checkedHeader: "Completed items",
                 checkedFooter: nil,
+                emptyUncheckedLabel: "No items",
+                emptyCheckedLabel: "No completed items",
                 onCreateItem: handleCreateEvent,
                 onTitleChange: { _ in },
                 onMoveUncheckedItem: handleMoveItem
@@ -70,7 +72,7 @@ struct ChecklistView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Add", systemImage: "plus") {
                         handleCreateEvent(at: sortedUncheckedItems.count)
-                        slideTo("bottom", at: .top, withDelay: .seconds(1))
+                        slideTo("UNCHECKED", at: .bottom, withDelay: .seconds(1))
                     }
                 }
             }
