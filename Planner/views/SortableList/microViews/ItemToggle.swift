@@ -25,6 +25,9 @@ struct ItemToggleView<Item: ListItem>: View {
     let opacity: Double
     let customIconConfig: CustomIconConfig?
     let onToggleChecked: () -> Void
+    
+    @AppStorage("themeColor") var themeColor: ThemeColorOption =
+        ThemeColorOption.blue
 
     var iconName: String {
         !isChecked ? "circle" : customIconConfig?.name ?? "circle.inset.filled"
@@ -35,7 +38,7 @@ struct ItemToggleView<Item: ListItem>: View {
             ? Color(uiColor: .tertiaryLabel)
             : !isChecked
                 ? Color(uiColor: .secondaryLabel)
-        : customIconConfig?.primaryColor ?? .accentColor
+        : customIconConfig?.primaryColor ?? themeColor.swiftUIColor
     }
 
     var secondaryColor: Color {

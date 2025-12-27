@@ -29,4 +29,15 @@ extension Color {
             }
         )
     }
+    
+    static var plannerCardVerticalBackground: Color {
+        let light = UIColor.systemBackground
+        let dark = UIColor.secondarySystemBackground
+
+        return Color(
+            UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? dark : light
+            }
+        )
+    }
 }

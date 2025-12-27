@@ -46,7 +46,7 @@ enum PlannerType: String {
                 return nil
             }
 
-            let formatted = date.subHeader
+            let formatted = date.dynamicSubheader
             return
                 "These canceled plans will be deleted the morning of \(formatted)."
         }
@@ -78,8 +78,8 @@ struct PlannerView: View {
     @State var calendarEventStore = CalendarEventStore.shared
     @State private var navigationManager = NavigationManager.shared
 
+    @State private var calendarEventEditConfig: CalendarEventSheetConfig?
     @Namespace private var calendarEventSheetNamespace
-    @State private var calendarEventEditConfig: CalendarEventEditConfig?
 
     @State private var scrollProxy: ScrollViewProxy?
     @State private var isCalendarPickerPresented = false
@@ -135,9 +135,12 @@ struct PlannerView: View {
                     events: calendarEventStore.allDayEventsByDatestamp[
                         datestamp
                     ] ?? [],
+                    key: "PlannerView",
                     showCountdown: true,
+                    showWeather: true,
+                    center: false,
                     chipAnimation: calendarEventSheetNamespace,
-                    openCalendarEvent: openCalendarEventModal
+                    openCalendarEventSheet: openCalendarEventSheet
                 ),
                 endAdornment: timeValue,
                 customToggleConfig: plannerType.toggleEventIconConfig,
@@ -149,8 +152,8 @@ struct PlannerView: View {
                 onTitleChange: handleEventTitleChange,
                 onMoveUncheckedItem: handleMoveUncheckedEvent
             )
-            .navigationTitle(date.header)
-            .navigationSubtitle(date.subHeader)
+            .navigationTitle(date.dynamicHeader)
+            .navigationSubtitle(date.dynamicSubheader)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Back", systemImage: "chevron.down") {
@@ -195,7 +198,6 @@ struct PlannerView: View {
                         slideTo("UNCHECKED", at: .bottom)
                         handleCreateEvent(at: uncheckedEvents.count)
                     }
-                    .buttonStyle(.glassProminent)
                     .tint(themeColor.swiftUIColor)
                 }
             }
@@ -215,7 +217,7 @@ struct PlannerView: View {
         }
         .sheet(item: $calendarEventEditConfig) { destination in
             switch destination {
-            case .edit(let event):
+            case .edit(let event, _):
                 EditCalendarEventView(
                     event: event,
                     eventStore: calendarEventStore.ekEventStore
@@ -227,23 +229,31 @@ struct PlannerView: View {
                 .ignoresSafeArea()
                 .navigationTransition(
                     .zoom(
-                        sourceID: String(describing: event.eventIdentifier),
+                        sourceID: destination.id,
                         in: calendarEventSheetNamespace
                     )
                 )
 
-            case .view(let event):
+            case .view(let event, _):
                 ViewCalendarEventView(event: event)
                     .tint(themeColor.swiftUIColor)
                     .presentationDetents([.height(340)])
                     .ignoresSafeArea()
                     .navigationTransition(
                         .zoom(
-                            sourceID: String(describing: event.eventIdentifier),
+                            sourceID: destination.id,
                             in: calendarEventSheetNamespace
                         )
                     )
             }
+        }
+    }
+    
+    private func openCalendarEventSheet(for event: EKEvent, from key: String) {
+        if event.calendar.allowsContentModifications {
+            calendarEventEditConfig = .edit(event, key)
+        } else {
+            calendarEventEditConfig = .view(event, key)
         }
     }
 
@@ -378,14 +388,7 @@ struct PlannerView: View {
         }
     }
 
-    private func openCalendarEventModal(for event: EKEvent) {
-        if event.calendar.allowsContentModifications {
-            calendarEventEditConfig = .edit(event)
-        } else {
-            calendarEventEditConfig = .view(event)
-        }
-    }
-
+    // TODO: move up in tree for PlannerCardVertical
     @MainActor
     private func ensurePlanner() {
         if let storagePlanner = planners.first {

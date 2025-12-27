@@ -9,17 +9,34 @@ import Foundation
 import SwiftDate
 
 extension String {
+    
+    // TODO: simplify
+    /// Returns short uppercase month abbreviation for a date string in "YYYY-MM-DD" format
+        var shortMonth: String {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+
+            guard let date = formatter.date(from: self) else {
+                return "???"
+            }
+
+            let monthFormatter = DateFormatter()
+            monthFormatter.dateFormat = "MMM"
+            monthFormatter.locale = Locale(identifier: "en_US_POSIX")
+
+            return monthFormatter.string(from: date).uppercased()
+        }
 
     // Expects YYYY-MM-DD format.
     var calendarSymbolName: String {
         let dd = self.suffix(2)
 
-        let ddInt = Int(dd)
-        if ddInt == nil || ddInt! < 1 || ddInt! > 31 {
+        guard let day = Int(dd), (1...31).contains(day) else {
             return "note"
         }
 
-        return "\(dd).calendar"
+        return "\(day).calendar"
     }
     
     // Expects YYYY-MM-DD

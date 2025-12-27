@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct PlannerIcon: View {
+    let datestamp: String
+    let scale: CGFloat
+    
     @EnvironmentObject var todaystampManager: TodaystampManager
     
     @AppStorage("themeColor") var themeColor: ThemeColorOption =
@@ -15,15 +18,15 @@ struct PlannerIcon: View {
 
     var body: some View {
         Image(
-            systemName: todaystampManager.todaystamp.calendarSymbolName
+            systemName: datestamp.calendarSymbolName
         )
         .foregroundStyle(Color(uiColor: .label), themeColor.swiftUIColor)
-        .font(.system(size: 28))
+        .font(.system(size: 28 * scale))
         .overlay {
-            Text("DEC")
-                .font(.system(size: 6))
+            Text(datestamp.shortMonth)
+                .font(.system(size: 6 * scale))
                 .fontWeight(.heavy)
-                .padding(.bottom, 18)
+                .padding(.bottom, 18 * scale)
                 .foregroundStyle(Color.calendarIconMonth)
         }
     }

@@ -28,6 +28,7 @@ class CalendarEventStore: ObservableObject {
 
     private var hasLoaded = false
 
+    @MainActor
     func requestAccessAndLoadIfNeeded() {
         guard !hasLoaded else { return }
 

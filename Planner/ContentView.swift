@@ -11,7 +11,6 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var todaystampManager: TodaystampManager
-
     @State var navigationManager = NavigationManager.shared
     @EnvironmentObject var calendarEventStore: CalendarEventStore
 

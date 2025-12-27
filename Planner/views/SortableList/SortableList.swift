@@ -12,13 +12,6 @@ class FocusController: ObservableObject {
     @Published var focusedId: ObjectIdentifier?
 }
 
-private struct FloatingInfoHeightKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
-    }
-}
-
 struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
     View
 {
@@ -83,7 +76,6 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                 .id("UNCHECKED")
 
                 if uncheckedItems.isEmpty && showChecked
-                    && !checkedItems.isEmpty
                 {
                     VStack(alignment: .center) {
                         Text(emptyUncheckedLabel)
@@ -101,11 +93,12 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                 }
             } header: {
                 floatingInfo
+                    .listRowInsets(.top, 0)
             }
             .listSectionSeparator(.hidden)
 
             // TODO: deselecting item and then focusing it loses focus after movement to new list
-            if showChecked && !checkedItems.isEmpty {
+            if showChecked {
                 Section {
                     ForEach(checkedItems, id: \.self) { item in
                         ItemView(
@@ -125,9 +118,9 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                         .id(item.id)
                     }
                 } header: {
-                    Text(checkedHeader)
+                    Text(checkedItems.isEmpty ? emptyCheckedLabel : checkedHeader)
                 } footer: {
-                    if checkedFooter != nil {
+                    if checkedFooter != nil && !checkedItems.isEmpty {
                         Text(checkedFooter!)
                             .font(.footnote)
                             .foregroundStyle(Color(uiColor: .secondaryLabel))
@@ -142,17 +135,17 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
         .refreshable {}
         .listStyle(.plain)
         .environment(\.defaultMinListRowHeight, 0)
-        .animation(.linear(duration: 0.2), value: uncheckedItems)
         .safeAreaPadding(.bottom, 20)
         .background(Color.appBackground)
         .overlay {
-            if uncheckedItems.isEmpty && (!showChecked || checkedItems.isEmpty)
+            if uncheckedItems.isEmpty && !showChecked
             {
                 Text(emptyUncheckedLabel)
                     .font(.system(size: 16, weight: .heavy, design: .rounded))
                     .foregroundStyle(Color(uiColor: .tertiaryLabel))
             }
         }
+        .animation(.linear(duration: 0.2), value: uncheckedItems)
     }
 
     private func handleCreateItem(

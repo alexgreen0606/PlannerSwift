@@ -11,8 +11,8 @@ import SwiftUI
 extension Date {
 
     // Shows day of week for the next week. Otherwise the full date is shown.
-    // TODO: not correct for before yesterday.
-    var header: String {
+    // TODO: not correct for before yesterday. DONT USE THESE. CONFUSING FOR USER
+    var dynamicHeader: String {
         let date = DateInRegion(self, region: .current)
         let today = DateInRegion(region: .current)
 
@@ -38,7 +38,7 @@ extension Date {
 
     // Shows the full date for the next week. Otherwise the day of week is shown.
     // TODO: not correct for before yesterday.
-    var subHeader: String {
+    var dynamicSubheader: String {
         let date = DateInRegion(self, region: .current)
         let today = DateInRegion(region: .current)
 
@@ -61,9 +61,22 @@ extension Date {
         return date.toFormat("EEEE", locale: Locale.current)
     }
 
+    var shortDate: String {  // Ex: May 12
+        DateInRegion(self, region: .current).toFormat(
+            "MMMM d",
+            locale: Locale.current
+        )
+    }
+
+    var weekday: String {  // Ex: Wednesday
+        DateInRegion(self, region: .current).toFormat(
+            "EEEE",
+            locale: Locale.current
+        )
+    }
+
     var datestamp: String {  // Ex: 2025-12-31
-        let dateInRegion = DateInRegion(self, region: .local)
-        return dateInRegion.toFormat("yyyy-MM-dd")
+        DateInRegion(self, region: .local).toFormat("yyyy-MM-dd")
     }
 
     var timeValues:
@@ -88,8 +101,8 @@ extension Date {
         return (timeValue: String(trimmed), indicator: indicator)
     }
 
-    var daysUntil: String? {  // Ex: Today, Tomorrow, 3 days away, 3 days ago
-        let region = Region.local
+    var countdown: String? {  // Ex: Today, Tomorrow, 3 days away, 3 days ago
+        let region = Region.current
 
         let target = DateInRegion(self, region: region).dateAt(.startOfDay)
         let today = DateInRegion(Date(), region: region).dateAt(.startOfDay)

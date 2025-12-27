@@ -12,21 +12,6 @@ enum AppTab: Hashable {
     case recurring, checklists, search
 }
 
-// TODO: move elsewhere
-enum CalendarEventEditConfig: Identifiable {
-    case edit(EKEvent)
-    case view(EKEvent)
-
-    var id: String {
-        switch self {
-        case .edit(let event):
-            String(describing: event.eventIdentifier)
-        case .view(let event):
-            String(describing: event.eventIdentifier)
-        }
-    }
-}
-
 @Observable
 class NavigationManager {
     static let shared = NavigationManager()

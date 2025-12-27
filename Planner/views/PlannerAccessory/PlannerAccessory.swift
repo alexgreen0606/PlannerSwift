@@ -6,29 +6,38 @@
 //
 
 import EventKit
+import SwiftData
 import SwiftUI
 
 struct PlannerAccessoryView: View {
     var animation: Namespace.ID
     let openTodayPlanner: () -> Void
-    
+
     @EnvironmentObject var todaystampManager: TodaystampManager
     @State var navigationManager = NavigationManager.shared
     @EnvironmentObject var calendarEventStore: CalendarEventStore
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
+
+    @Environment(\.modelContext) private var modelContext
+
+    @Query private var planners: [Planner]
 
     private var eventsForToday: [EKEvent] {
         return calendarEventStore.allDayEventsByDatestamp[
             todaystampManager.todaystamp
         ] ?? []
     }
+    
+    var eventCount: Int {
+        23
+    }
 
     var body: some View {
         HStack(spacing: 6) {
-            PlannerIcon()
+            PlannerIcon(datestamp: todaystampManager.todaystamp, scale: 1)
 
             VStack(alignment: .leading, spacing: 0) {
-                Text(todaystampManager.todaystamp.date?.header ?? "")
+                Text(todaystampManager.todaystamp.date?.dynamicHeader ?? "")
                     .font(.callout)
                     .matchedTransitionSource(
                         id: "PLANNER_ACCESSORY",
@@ -47,11 +56,11 @@ struct PlannerAccessoryView: View {
                                     )
                             }
                         }
-                        
+
                         Divider().frame(height: 10)
                     }
 
-                    Text("7 plans")
+                    Text(eventCount == 0 ? "No plans" : "\(eventCount) plan\(eventCount == 1 ? "" : "s")")
                         .font(.caption2)
                         .foregroundStyle(
                             Color(uiColor: .secondaryLabel)
@@ -67,13 +76,13 @@ struct PlannerAccessoryView: View {
                     VStack(alignment: .trailing, spacing: 0) {
                         Text("Sunny")
                             .font(.caption)
-                        
+
                         HStack(alignment: .center, spacing: 4) {
                             Text("76°")
                                 .font(.caption2)
-                            
+
                             Divider().frame(height: 10)
-                            
+
                             Text("64°")
                                 .font(.caption2)
                         }
