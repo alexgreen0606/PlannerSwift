@@ -18,10 +18,10 @@ extension Color {
             }
         )
     }
-    
-    static var calendarIconMonth: Color {
-        let light = UIColor.white
-        let dark = UIColor.black
+
+    static var cardBackground: Color {
+        let light = UIColor.systemBackground
+        let dark = UIColor.secondarySystemBackground
 
         return Color(
             UIColor { traitCollection in
@@ -29,10 +29,10 @@ extension Color {
             }
         )
     }
-    
-    static var plannerCardVerticalBackground: Color {
-        let light = UIColor.systemBackground
-        let dark = UIColor.secondarySystemBackground
+
+    static var calendarIconMonth: Color {
+        let light = UIColor.white
+        let dark = UIColor.black
 
         return Color(
             UIColor { traitCollection in

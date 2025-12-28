@@ -44,33 +44,6 @@ extension String {
         self.toDate("yyyy-MM-dd", region: .current)?.date
     }
 
-    // Expect ISO timestamp format.
-    func toTimeValues() -> (time: String, indicator: String)? {
-        guard let date = self.toISODate()?.convertTo(region: .current) else {
-            return nil
-        }
-
-        let formatted = date.toFormat("h:mm a")
-        let parts = formatted.split(separator: " ")
-        guard parts.count == 2 else { return nil }
-
-        return (String(parts[0]), String(parts[1]))
-    }
-
-    // Expect 24-hour HH:MM format.
-    func toIso(usingDate datestamp: String) -> String? {
-        let combined = "\(datestamp) \(self)"
-        guard
-            let localDate = combined.toDate(
-                "yyyy-MM-dd HH:mm",
-                region: .current
-            )
-        else { return nil }
-
-        // Convert to UTC ISO string
-        return localDate.convertTo(region: .UTC).toISO()
-    }
-
     // Expect 24-hour HH:MM format.
     func toDate(for datestamp: String) -> Date? {
         let dateTime = "\(datestamp) \(self)"

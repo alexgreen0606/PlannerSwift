@@ -158,7 +158,13 @@ struct PlannerView: View {
                     chipAnimation: calendarEventSheetNamespace,
                     openCalendarEventSheet: openCalendarEventSheet
                 ),
-                endAdornment: { $0.timeValueView(for: datestamp) },
+                endAdornment: { event in
+                    event.timeValueView(
+                        for: datestamp,
+                        openSheet: openPlannerEventSheet,
+                        animation: calendarEventSheetNamespace
+                    )
+                },
                 customToggleConfig: plannerType.toggleEventIconConfig,
                 checkedHeader: plannerType.checkedHeader,
                 checkedFooter: plannerType.getCheckedFooter(for: datestamp),
@@ -249,6 +255,7 @@ struct PlannerView: View {
                     eventStore: calendarEventStore.ekEventStore
                 ) { action, updatedEvent in
                     calendarEventStore.refresh()
+                    synchronizeCalendarEvents()
                     calendarEventEditConfig = nil
                 }
                 .tint(themeColor.swiftUIColor)
@@ -288,6 +295,17 @@ struct PlannerView: View {
                 for: calendarStoreEvents,
                 from: positions
             )
+    }
+
+    private func openPlannerEventSheet(
+        for event: PlannerEvent,
+        from key: String
+    ) {
+        if event.calendarEvent == nil {
+
+        } else {
+            openCalendarEventSheet(for: event.calendarEvent!, from: key)
+        }
     }
 
     private func openCalendarEventSheet(for event: EKEvent, from key: String) {
@@ -348,17 +366,14 @@ struct PlannerView: View {
                         movedEvent.calendarEvent!.eventIdentifier
                     ] = movedEvent.sortIndex
                 }
-                
+
                 try! modelContext.save()
             }
         }
     }
 
     private func handleEventTitleChange(event: PlannerEvent) {
-        // 1. Recurring event: delete and clone event.
-        //        if event.recurringId != nil {
-        //            // TODO: Handle recurring events in future
-        //        }
+        // 1. TODO: Recurring event: delete and clone event.
 
         // 2. Update the device calendar with the new title.
         guard event.calendarEvent == nil else {

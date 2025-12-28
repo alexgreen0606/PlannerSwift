@@ -10,7 +10,7 @@ import SwiftUI
 
 extension EKEvent {
     @ViewBuilder
-    func timeValueView(for datestamp: String) -> some View {
+    func timeValueView(for datestamp: String, openSheet: @escaping (EKEvent, String) -> Void, animation: Namespace.ID, key: String) -> some View {
         let (timeValue, indicator) = self.startDate
             .timeValues
 
@@ -23,7 +23,11 @@ extension EKEvent {
             disabled: false,
             color: Color(self.calendar.cgColor)
         ) {
-            // TODO: open calendar modal
+            openSheet(self, "TimeValue_\(key)")
         }
+        .matchedTransitionSource(
+            id: "\(String(describing: self.eventIdentifier))_TimeValue_\(key)",
+            in: animation
+        )
     }
 }

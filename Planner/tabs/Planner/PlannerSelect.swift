@@ -208,6 +208,9 @@ struct PlannerSelectView: View {
                 }
             }
         }
+        .refreshable{
+            calendarEventStore.refresh()
+        }
         .listStyle(.plain)
         .background(Color.appBackground)
         .navigationTitle("Planner")

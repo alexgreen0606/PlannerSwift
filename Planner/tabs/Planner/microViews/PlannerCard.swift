@@ -48,7 +48,12 @@ struct PlannerCard: View {
             }
             
             if !singleDayEvents.isEmpty {
-                CalendarEventList(datestamp: datestamp, events: singleDayEvents)
+                CalendarEventList(
+                    datestamp: datestamp,
+                    events: singleDayEvents,
+                    openCalendarEventSheet: openCalendarEventSheet,
+                    animation: chipAnimation
+                )
             }
         }
         .listRowBackground(Color.appBackground)

@@ -11,6 +11,8 @@ import SwiftUI
 struct CalendarEventList: View {
     let datestamp: String
     let events: [EKEvent]
+    let openCalendarEventSheet: (EKEvent, String) -> Void
+    let animation: Namespace.ID
 
     @Environment(\.displayScale) private var displayScale
 
@@ -24,7 +26,12 @@ struct CalendarEventList: View {
 
                     Spacer()
 
-                    event.timeValueView(for: datestamp)
+                    event.timeValueView(
+                        for: datestamp,
+                        openSheet: openCalendarEventSheet,
+                        animation: animation,
+                        key: "CalendarEventList"
+                    )
                 }
 
                 if event.eventIdentifier

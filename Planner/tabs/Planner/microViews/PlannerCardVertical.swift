@@ -24,7 +24,7 @@ struct PlannerCardVertical: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]
     @State private var planner: Planner?
-    
+
     var date: Date? {
         datestamp.date
     }
@@ -94,7 +94,12 @@ struct PlannerCardVertical: View {
             }
 
             if !singleDayEvents.isEmpty {
-                CalendarEventList(datestamp: datestamp, events: singleDayEvents)
+                CalendarEventList(
+                    datestamp: datestamp,
+                    events: singleDayEvents,
+                    openCalendarEventSheet: openCalendarEventSheet,
+                    animation: chipAnimation
+                )
             }
 
             VStack {
@@ -132,7 +137,7 @@ struct PlannerCardVertical: View {
         .contentShape(Rectangle())
         .background(
             RoundedRectangle(cornerRadius: 24)
-                .fill(Color.plannerCardVerticalBackground)
+                .fill(Color.cardBackground)
         )
         .onTapGesture(perform: openPlanner)
         .task {

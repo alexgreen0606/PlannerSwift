@@ -54,6 +54,7 @@ struct TimeValue: View {
             }
         }
         .contentShape(Rectangle())
+        .onTapGesture(perform: onOpenTimeModal)
         .opacity(!isVisible ? 0 : 1)
         .animation(.easeIn(duration: 0.25), value: isVisible)
         .onAppear { isVisible = true }

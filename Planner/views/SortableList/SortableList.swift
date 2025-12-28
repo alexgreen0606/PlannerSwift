@@ -133,7 +133,6 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
             }
         }
         .environmentObject(focusController)
-        .refreshable {}
         .listStyle(.plain)
         .environment(\.defaultMinListRowHeight, 0)
         .safeAreaPadding(.bottom, 20)
