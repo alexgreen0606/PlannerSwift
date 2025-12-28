@@ -27,13 +27,12 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
     let checkedFooter: String?
     let emptyUncheckedLabel: String
     let emptyCheckedLabel: String
+    let tint: Color
     let onCreateItem: (_ index: Int) -> Void
     let onTitleChange: (_ item: Item) -> Void
     let onMoveUncheckedItem: (_ from: Int, _ to: Int) -> Void
 
-    @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject var listManager: ListManager
-
     @StateObject var focusController = FocusController()
 
     var body: some View {
@@ -52,6 +51,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                 ForEach(uncheckedItems, id: \.self) { item in
                     ItemView(
                         item: item,
+                        tint: tint,
                         showChecked: showChecked,
                         toggleType: toggleType,
                         isSelectDisabled: disabledItemIds.contains(
@@ -103,6 +103,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                     ForEach(checkedItems, id: \.self) { item in
                         ItemView(
                             item: item,
+                            tint: tint,
                             showChecked: true,
                             toggleType: toggleType,
                             isSelectDisabled: disabledItemIds.contains(

@@ -20,14 +20,12 @@ enum ListToggleType: String {
 
 struct ItemToggleView<Item: ListItem>: View {
     let type: ListToggleType
+    let tint: Color
     let isChecked: Bool
     let isDisabled: Bool
     let opacity: Double
     let customIconConfig: CustomIconConfig?
     let onToggleChecked: () -> Void
-    
-    @AppStorage("themeColor") var themeColor: ThemeColorOption =
-        ThemeColorOption.blue
 
     var iconName: String {
         !isChecked ? "circle" : customIconConfig?.name ?? "circle.inset.filled"
@@ -38,7 +36,7 @@ struct ItemToggleView<Item: ListItem>: View {
             ? Color(uiColor: .tertiaryLabel)
             : !isChecked
                 ? Color(uiColor: .secondaryLabel)
-        : customIconConfig?.primaryColor ?? themeColor.swiftUIColor
+        : customIconConfig?.primaryColor ?? tint
     }
 
     var secondaryColor: Color {

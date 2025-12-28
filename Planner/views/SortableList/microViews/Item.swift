@@ -10,6 +10,7 @@ import SwiftUI
 
 struct ItemView<Item: ListItem, EndAdornment: View>: View {
     @Bindable var item: Item
+    let tint: Color
     let showChecked: Bool
     let toggleType: ListToggleType
     let isSelectDisabled: Bool
@@ -111,6 +112,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
     private var toggle: some View {
         ItemToggleView(
             type: toggleType,
+            tint: tint,
             isChecked: isChecked,
             isDisabled: isSelectDisabled,
             opacity: opacity,

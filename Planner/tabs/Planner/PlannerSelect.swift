@@ -110,7 +110,7 @@ struct PlannerSelectView: View {
                 .toFormat("yyyy-MM-dd")
         }.sorted()
     }
-    
+
     var sortedYears: [String] {
         Array(eventsByYear.keys).sorted()
     }
@@ -164,48 +164,52 @@ struct PlannerSelectView: View {
             .listRowBackground(Color.appBackground)
             .listRowInsets(.horizontal, 0)
 
-                ForEach(sortedYears, id: \.self) { year in
-                    Section {
-                        ForEach(eventsByYear[year] ?? [], id: \.self) { datestamp in
-                            PlannerCard(
-                                datestamp: datestamp,
-                                allDayEvents:
-                                    calendarEventStore.allDayEventsByDatestamp[
-                                        datestamp
-                                    ] ?? [],
-                                singleDayEvents:
-                                    calendarEventStore.singleDayEventsByDatestamp[
-                                        datestamp
-                                    ] ?? [],
-                                chipAnimation: calendarEventSheetNamespace,
-                                openCalendarEventSheet: openCalendarEventSheet
-                            ) {
-                                plannerCoverConfig = .card(datestamp)
-                            }
-                            .matchedTransitionSource(
-                                id: "\(datestamp)_PlannerCard",
-                                in: plannerAnimation
-                            )
-                            .overlay {
-                                if year == sortedYears.first! && datestamp == eventsByYear[year]!.first! {
-                                    HStack {
-                                            Text("Coming up")
-                                                .font(.headline)
-                                                .foregroundStyle(Color(uiColor: .secondaryLabel))
+            ForEach(sortedYears, id: \.self) { year in
+                Section {
+                    ForEach(eventsByYear[year] ?? [], id: \.self) { datestamp in
+                        PlannerCard(
+                            datestamp: datestamp,
+                            allDayEvents:
+                                calendarEventStore.allDayEventsByDatestamp[
+                                    datestamp
+                                ] ?? [],
+                            singleDayEvents:
+                                calendarEventStore.singleDayEventsByDatestamp[
+                                    datestamp
+                                ] ?? [],
+                            chipAnimation: calendarEventSheetNamespace,
+                            openCalendarEventSheet: openCalendarEventSheet
+                        ) {
+                            plannerCoverConfig = .card(datestamp)
+                        }
+                        .matchedTransitionSource(
+                            id: "\(datestamp)_PlannerCard",
+                            in: plannerAnimation
+                        )
+                        .overlay {
+                            if year == sortedYears.first!
+                                && datestamp == eventsByYear[year]!.first!
+                            {
+                                HStack {
+                                    Text("Coming up")
+                                        .font(.headline)
+                                        .foregroundStyle(
+                                            Color(uiColor: .secondaryLabel)
+                                        )
 
-                                            Spacer()
-                                        }
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(.bottom, 166)
-                                        .listRowInsets(EdgeInsets())
-                                        .listRowSeparator(.hidden)
+                                    Spacer()
                                 }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.bottom, 166)
+                                .listRowInsets(EdgeInsets())
+                                .listRowSeparator(.hidden)
                             }
                         }
-                    } header: {
-                        listSectionHeader(year)
                     }
+                } header: {
+                    listSectionHeader(year)
                 }
+            }
         }
         .listStyle(.plain)
         .background(Color.appBackground)
@@ -228,19 +232,23 @@ struct PlannerSelectView: View {
                         .onChange(of: navigationManager.selectedPlannerDate) {
                             _,
                             targetPlannerDate in
-                            plannerCoverConfig = .calendar(
-                                targetPlannerDate.datestamp
-                            )
+                            isCalendarPickerOpen = false
+
+                            DispatchQueue.main.async {
+                                plannerCoverConfig = .calendar(
+                                    targetPlannerDate.datestamp
+                                )
+                            }
                         }
-                        .matchedTransitionSource(
-                            id: "CALENDAR",
-                            in: plannerAnimation
-                        )
                     }
                     .frame(width: 340, height: 320)
                     .padding()
                     .presentationCompactAdaptation(.popover)
                 }
+                .matchedTransitionSource(
+                    id: "CALENDAR",
+                    in: plannerAnimation
+                )
             }
 
             ToolbarItem(placement: .topBarTrailing) {

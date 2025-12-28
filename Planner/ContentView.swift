@@ -24,9 +24,6 @@ struct ContentView: View {
 
     let plannerManager = ListManager()
 
-    // Tracks the previously opened today datestamp. Must be local so midnight update does not
-    // force the open planner to switch over.
-    @State private var todayDatestamp: String = ""
     @State private var isTodayPlannerOpen: Bool = false
 
     @Namespace private var todayPlannerCoverNamespace
@@ -110,15 +107,14 @@ struct ContentView: View {
         }
         .tabBarMinimizeBehavior(.onScrollDown)
         .tabViewBottomAccessory {
-            PlannerAccessoryView(animation: todayPlannerCoverNamespace) {
-                todayDatestamp = todaystampManager.todaystamp
+            PlannerAccessoryView(todaystamp: todaystampManager.todaystamp, animation: todayPlannerCoverNamespace) {
                 isTodayPlannerOpen.toggle()
             }
         }
         .fullScreenCover(isPresented: $isTodayPlannerOpen) {
             NavigationStack {
                 PlannerView(
-                    datestamp: todayDatestamp
+                    datestamp: todaystampManager.todaystamp
                 ) {
                     isTodayPlannerOpen.toggle()
                 }

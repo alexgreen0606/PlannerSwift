@@ -74,7 +74,7 @@ struct FolderView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
 
                         HStack(alignment: .center) {
-                            Text("\(item.items.count)")
+                            Text("\(item.items.filter{!$0.isChecked}.count)")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
 

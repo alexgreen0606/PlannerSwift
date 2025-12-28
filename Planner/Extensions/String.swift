@@ -9,24 +9,24 @@ import Foundation
 import SwiftDate
 
 extension String {
-    
+
     // TODO: simplify
     /// Returns short uppercase month abbreviation for a date string in "YYYY-MM-DD" format
-        var shortMonth: String {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd"
-            formatter.locale = Locale(identifier: "en_US_POSIX")
+    var shortMonth: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
 
-            guard let date = formatter.date(from: self) else {
-                return "???"
-            }
-
-            let monthFormatter = DateFormatter()
-            monthFormatter.dateFormat = "MMM"
-            monthFormatter.locale = Locale(identifier: "en_US_POSIX")
-
-            return monthFormatter.string(from: date).uppercased()
+        guard let date = formatter.date(from: self) else {
+            return "???"
         }
+
+        let monthFormatter = DateFormatter()
+        monthFormatter.dateFormat = "MMM"
+        monthFormatter.locale = Locale(identifier: "en_US_POSIX")
+
+        return monthFormatter.string(from: date).uppercased()
+    }
 
     // Expects YYYY-MM-DD format.
     var calendarSymbolName: String {
@@ -38,7 +38,7 @@ extension String {
 
         return "\(day).calendar"
     }
-    
+
     // Expects YYYY-MM-DD
     var date: Date? {
         self.toDate("yyyy-MM-dd", region: .current)?.date
@@ -72,14 +72,9 @@ extension String {
     }
 
     // Expect 24-hour HH:MM format.
-    func toPlannerEventTimeConfig(usingDate datestamp: String) -> TimeConfig? {
-        guard let iso = self.toIso(usingDate: datestamp) else { return nil }
-        return TimeConfig(startIso: iso)
-    }
-
-    // Expect any lexographical time string format.
-    func isEarlierOrEqual(to other: String) -> Bool {
-        return self <= other
+    func toDate(for datestamp: String) -> Date? {
+        let dateTime = "\(datestamp) \(self)"
+        return dateTime.toDate("yyyy-MM-dd HH:mm", region: .current)?.date
     }
 
     // Any user input expected.

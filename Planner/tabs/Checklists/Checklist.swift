@@ -43,6 +43,7 @@ struct ChecklistView: View {
                 checkedFooter: nil,
                 emptyUncheckedLabel: "No items",
                 emptyCheckedLabel: "No completed items",
+                tint: checklist.color.swiftUIColor,
                 onCreateItem: handleCreateEvent,
                 onTitleChange: { _ in },
                 onMoveUncheckedItem: handleMoveItem

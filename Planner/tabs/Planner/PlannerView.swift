@@ -26,10 +26,17 @@ enum PlannerType: String {
         }
     }
 
+    var emptyCheckedLabel: String {
+        switch self {
+        case .pastOrPresent: "No completed plans"
+        case .future: "No canceled plans"
+        }
+    }
+
     var checkedHeader: String {
         switch self {
         case .pastOrPresent: "Completed plans"
-        case .future: "Canceled plans"
+        case .future: "Cancelled plans"
         }
     }
 
@@ -71,7 +78,10 @@ struct PlannerView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]
+    @Query private var calendarEventPositions: [CalendarEventPosition]
     @State private var planner: Planner?
+
+    @State private var calendarEvents: [PlannerEvent] = []
 
     @EnvironmentObject var todaystampManager: TodaystampManager
     @EnvironmentObject var plannerManager: ListManager
@@ -97,11 +107,16 @@ struct PlannerView: View {
     }
 
     var uncheckedEvents: [PlannerEvent] {
-        planner != nil
+        let storageEvents =
+            planner != nil
             ? planner!.events.filter {
                 !$0.isChecked
-            }.sorted { $0.sortIndex < $1.sortIndex }
+            }
             : []
+
+        return (storageEvents + calendarEvents).sorted {
+            $0.sortIndex < $1.sortIndex
+        }
     }
 
     var checkedEvents: [PlannerEvent] {
@@ -142,12 +157,13 @@ struct PlannerView: View {
                     chipAnimation: calendarEventSheetNamespace,
                     openCalendarEventSheet: openCalendarEventSheet
                 ),
-                endAdornment: timeValue,
+                endAdornment: { $0.timeValueView(for: datestamp) },
                 customToggleConfig: plannerType.toggleEventIconConfig,
                 checkedHeader: plannerType.checkedHeader,
                 checkedFooter: plannerType.getCheckedFooter(for: datestamp),
                 emptyUncheckedLabel: "No plans",
-                emptyCheckedLabel: "No completed plans",
+                emptyCheckedLabel: plannerType.emptyCheckedLabel,
+                tint: themeColor.swiftUIColor,
                 onCreateItem: handleCreateEvent,
                 onTitleChange: handleEventTitleChange,
                 onMoveUncheckedItem: handleMoveUncheckedEvent
@@ -213,7 +229,14 @@ struct PlannerView: View {
             }
         }
         .task {
-            ensurePlanner()
+            guard planner == nil else { return }
+
+            planner = modelContext.ensurePlanner(
+                planners: planners,
+                datestamp: datestamp
+            )
+
+            synchronizeCalendarEvents()
         }
         .sheet(item: $calendarEventEditConfig) { destination in
             switch destination {
@@ -248,41 +271,29 @@ struct PlannerView: View {
             }
         }
     }
-    
+
+    // TODO: run this whenever the calendar events change
+    private func synchronizeCalendarEvents() {
+        guard let planner = planner else { return }
+        let calendarStoreEvents =
+            calendarEventStore.singleDayEventsByDatestamp[datestamp] ?? []
+        guard !calendarStoreEvents.isEmpty else { return }
+
+        let (events, positionMap) =
+            planner.synchronizeCalendarEventPositions(
+                for: calendarStoreEvents,
+                from: calendarEventPositions
+            )
+
+        calendarEvents = events
+        // TODO: set the new positions in storage
+    }
+
     private func openCalendarEventSheet(for event: EKEvent, from key: String) {
         if event.calendar.allowsContentModifications {
             calendarEventEditConfig = .edit(event, key)
         } else {
             calendarEventEditConfig = .view(event, key)
-        }
-    }
-
-    @ViewBuilder
-    private func timeValue(_ event: PlannerEvent) -> some View {
-        if let iso = getPlannerEventTime(event: event),
-            let (time, indicator) = iso.toTimeValues()
-        {
-            let isEnd =
-                event.timeConfig?.calendarConfig?.multiDayConfig?.endEventId
-                == String(describing: event.id)
-
-            let isStart =
-                event.timeConfig?.calendarConfig?.multiDayConfig?.startEventId
-                == String(describing: event.id)
-
-            let detail = isEnd ? "END" : isStart ? "START" : nil
-
-            TimeValue(
-                time: time,
-                indicator: indicator,
-                detail: detail,
-                disabled: false,
-                color: Color.blue
-            ) {
-                // TODO: open time modal
-            }
-        } else {
-            EmptyView()
         }
     }
 
@@ -325,18 +336,22 @@ struct PlannerView: View {
     }
 
     private func handleEventTitleChange(event: PlannerEvent) {
-        guard let datestamp = event.planner?.datestamp else { return }
-
         // 1. Recurring event: delete and clone event.
-        if event.recurringId != nil {
-            // TODO: Handle recurring events in future
-        }
+        //        if event.recurringId != nil {
+        //            // TODO: Handle recurring events in future
+        //        }
 
-        // 2. Only analyze text if event has no associated time config.
-        guard event.timeConfig == nil else {
-            // TODO: save to calendar here
+        // 2. Update the device calendar with the new title.
+        guard event.calendarEvent == nil else {
+            event.calendarEvent!.title = event.title
+            try! calendarEventStore.ekEventStore.save(
+                event.calendarEvent!,
+                span: .thisEvent
+            )
             return
         }
+
+        guard let datestamp = event.planner?.datestamp else { return }
 
         // 3. Build the data from the event title.
         guard
@@ -344,16 +359,17 @@ struct PlannerView: View {
         else {
             return
         }
+
         guard
-            let config = timeValue.toPlannerEventTimeConfig(
-                usingDate: datestamp
+            let date = timeValue.toDate(
+                for: datestamp
             )
         else {
             return
         }
 
         event.title = updatedText
-        event.timeConfig = config
+        event.date = date
 
         // 4. Validate sort order.
         let newSortIndex = generateValidPlannerEventSortIndex(
@@ -385,23 +401,6 @@ struct PlannerView: View {
             withAnimation(.linear(duration: 2)) {
                 proxy.scrollTo(id, anchor: anchor)
             }
-        }
-    }
-
-    // TODO: move up in tree for PlannerCardVertical
-    @MainActor
-    private func ensurePlanner() {
-        if let storagePlanner = planners.first {
-            planner = storagePlanner
-        } else if planner == nil {
-            // Only create if planner doesn't exist yet.
-            let newPlanner = Planner(
-                datestamp: datestamp
-            )
-            modelContext.insert(newPlanner)
-            try! modelContext.save()
-
-            planner = newPlanner
         }
     }
 }

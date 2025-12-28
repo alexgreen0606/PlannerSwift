@@ -46,37 +46,9 @@ struct PlannerCard: View {
                     openCalendarEventSheet: openCalendarEventSheet
                 )
             }
-
+            
             if !singleDayEvents.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    ForEach(singleDayEvents, id: \.self) { event in
-                        HStack(alignment: .top, spacing: 12) {
-                            Text(event.title)
-                                .font(.system(size: 15))
-                                .foregroundStyle(Color(uiColor: .label))
-
-                            Spacer()
-
-                            let (timeValue, indicator) = event.startDate
-                                .timeValues
-                            TimeValue(
-                                time: timeValue,
-                                indicator: indicator,
-                                detail: nil,
-                                disabled: false,
-                                color: Color(event.calendar.cgColor)
-                            ) {
-
-                            }
-                        }
-
-                        if event.eventIdentifier
-                            != singleDayEvents.last!.eventIdentifier
-                        {
-                            DashedDivider()
-                        }
-                    }
-                }
+                CalendarEventList(datestamp: datestamp, events: singleDayEvents)
             }
         }
         .listRowBackground(Color.appBackground)

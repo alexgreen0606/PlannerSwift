@@ -10,6 +10,7 @@ import SwiftData
 import SwiftUI
 
 struct PlannerAccessoryView: View {
+    let todaystamp: String
     var animation: Namespace.ID
     let openTodayPlanner: () -> Void
 
@@ -19,8 +20,8 @@ struct PlannerAccessoryView: View {
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
 
     @Environment(\.modelContext) private var modelContext
-
     @Query private var planners: [Planner]
+    @State private var planner: Planner?
 
     private var eventsForToday: [EKEvent] {
         return calendarEventStore.allDayEventsByDatestamp[
@@ -28,8 +29,29 @@ struct PlannerAccessoryView: View {
         ] ?? []
     }
     
-    var eventCount: Int {
-        23
+    var planCountLabel: String {
+        let planCount = planner?.events.filter{ !$0.isChecked }.count ?? 0
+
+        if planCount == 0 {
+            if eventsForToday.count > 0 {
+                return "No more plans"
+            }
+            return "No plans"
+        }
+
+        return "\(planCount) plan\(planCount == 1 ? "" : "s")"
+    }
+    
+    init(todaystamp: String, animation: Namespace.ID, openTodayPlanner: @escaping () -> Void) {
+        self.animation = animation
+        self.todaystamp = todaystamp
+        self.openTodayPlanner = openTodayPlanner
+        
+        _planners = Query(
+            filter: #Predicate<Planner> {
+                $0.datestamp == todaystamp
+            }
+        )
     }
 
     var body: some View {
@@ -60,7 +82,7 @@ struct PlannerAccessoryView: View {
                         Divider().frame(height: 10)
                     }
 
-                    Text(eventCount == 0 ? "No plans" : "\(eventCount) plan\(eventCount == 1 ? "" : "s")")
+                    Text(planCountLabel)
                         .font(.caption2)
                         .foregroundStyle(
                             Color(uiColor: .secondaryLabel)
@@ -101,9 +123,13 @@ struct PlannerAccessoryView: View {
         .padding(.horizontal, 16)
         .contentShape(Rectangle())
         .onTapGesture(perform: openTodayPlanner)
-    }
-}
+        .task {
+            guard planner == nil else { return }
 
-#Preview {
-    ContentView()
+            planner = modelContext.ensurePlanner(
+                planners: planners,
+                datestamp: todaystamp
+            )
+        }
+    }
 }

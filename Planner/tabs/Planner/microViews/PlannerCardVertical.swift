@@ -19,15 +19,15 @@ struct PlannerCardVertical: View {
     let openCalendarEventSheet: (EKEvent, String) -> Void
     let openPlanner: () -> Void
 
-    var date: Date? {
-        datestamp.date
-    }
-
     @EnvironmentObject var todaystampManager: TodaystampManager
 
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]
     @State private var planner: Planner?
+    
+    var date: Date? {
+        datestamp.date
+    }
 
     var planCountLabel: String {
         let planCount = planner?.events.filter { !$0.isChecked }.count ?? 0
@@ -75,6 +75,7 @@ struct PlannerCardVertical: View {
 
                     Text(datestamp.date?.countdown ?? "")
                         .font(.footnote)
+                        .foregroundStyle(Color(uiColor: .secondaryLabel))
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -93,35 +94,7 @@ struct PlannerCardVertical: View {
             }
 
             if !singleDayEvents.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    ForEach(singleDayEvents, id: \.self) { event in
-                        HStack(alignment: .top, spacing: 12) {
-                            Text(event.title)
-                                .font(.system(size: 15))
-                                .foregroundStyle(Color(uiColor: .label))
-
-                            Spacer()
-
-                            let (timeValue, indicator) = event.startDate
-                                .timeValues
-                            TimeValue(
-                                time: timeValue,
-                                indicator: indicator,
-                                detail: nil,
-                                disabled: false,
-                                color: Color(event.calendar.cgColor)
-                            ) {
-
-                            }
-                        }
-
-                        if event.eventIdentifier
-                            != singleDayEvents.last!.eventIdentifier
-                        {
-                            DashedDivider()
-                        }
-                    }
-                }
+                CalendarEventList(datestamp: datestamp, events: singleDayEvents)
             }
 
             VStack {
@@ -161,27 +134,14 @@ struct PlannerCardVertical: View {
             RoundedRectangle(cornerRadius: 24)
                 .fill(Color.plannerCardVerticalBackground)
         )
-        .opacity(todaystampManager.todaystamp == datestamp ? 1 : 0.84)
         .onTapGesture(perform: openPlanner)
         .task {
-            ensurePlanner()
-        }
-    }
+            guard planner == nil else { return }
 
-    // TODO: move up in tree for PlannerCardVertical
-    @MainActor
-    private func ensurePlanner() {
-        if let storagePlanner = planners.first {
-            planner = storagePlanner
-        } else if planner == nil {
-            // Only create if planner doesn't exist yet.
-            let newPlanner = Planner(
+            planner = modelContext.ensurePlanner(
+                planners: planners,
                 datestamp: datestamp
             )
-            modelContext.insert(newPlanner)
-            try! modelContext.save()
-
-            planner = newPlanner
         }
     }
 }

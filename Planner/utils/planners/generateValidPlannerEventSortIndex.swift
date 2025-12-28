@@ -12,7 +12,7 @@ func generateValidPlannerEventSortIndex(
     let prevSortIndex = event.sortIndex
 
     // Maintain current position.
-    guard let eventTime = getPlannerEventTime(event: event) else {
+    guard let eventDate = event.date else {
         return prevSortIndex
     }
     
@@ -22,14 +22,14 @@ func generateValidPlannerEventSortIndex(
     var events = events
     events.sort { $0.sortIndex < $1.sortIndex }
     for (index, pointerEvent) in events.enumerated().reversed() {
-        guard let pointerEventTime = getPlannerEventTime(event: pointerEvent) else {
+        guard let pointerEventDate = pointerEvent.date else {
             continue
         }
         
         if pointerEvent.id == event.id {
             // Mark the target event as found.
             eventWasFound = true
-        } else if pointerEventTime.isEarlierOrEqual(to: eventTime) {
+        } else if pointerEventDate <= eventDate {
             if !eventWasFound || eventNeedsMoving {
                 // Slide down to below this event.
                 return generateSortIndex(
