@@ -10,21 +10,20 @@ import EventKit
 extension Planner {
     func synchronizeCalendarEventPositions(
         for calendarEvents: [EKEvent],
-        from positions: [CalendarEventPosition]
-    ) -> ([PlannerEvent], [String: Double]) {
-
+        from positions: CalendarEventPositions
+    ) -> [PlannerEvent] {
         var sortedPlannerEvents = self.events.filter { !$0.isChecked }.sorted {
             $0.sortIndex < $1.sortIndex
         }
         let sortedCalendarEvents = calendarEvents.sorted {
             $0.startDate < $1.startDate
         }
+        
+        var plannerEvents: [PlannerEvent] = []
 
         for calEvent in sortedCalendarEvents {
-            let sortIndex =
-                positions.first(where: {
-                    $0.eventId == calEvent.eventIdentifier
-                })?.sortIndex ?? (sortedPlannerEvents.last?.sortIndex ?? 0 + 8)
+            let sortIndex = positions.values[calEvent.eventIdentifier]
+                ?? (sortedPlannerEvents.last?.sortIndex ?? 0 + 8)
 
             // Dummy event for UI representation. No persistence to storage.
             let plannerEvent = PlannerEvent(
@@ -33,11 +32,16 @@ extension Planner {
             )
             
             sortedPlannerEvents.append(plannerEvent)
-
-            // 4. Safety check for chronological ordering.
-            // 5. Add then planner event and its index to the map.
+            
+            plannerEvent.sortIndex = generateValidPlannerEventSortIndex(
+                event: plannerEvent,
+                events: sortedPlannerEvents
+            )
+            
+            plannerEvents.append(plannerEvent)
+            positions.values[calEvent.eventIdentifier] = plannerEvent.sortIndex
         }
 
-        return (sortedPlannerEvents, [:])
+        return plannerEvents
     }
 }

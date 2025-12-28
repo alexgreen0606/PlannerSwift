@@ -28,4 +28,24 @@ extension ModelContext {
 
         return planner
     }
+    
+    @MainActor
+    func ensureCalendarEventPositions(
+        positions: [CalendarEventPositions]
+    ) -> CalendarEventPositions {
+        if let existing = positions.first {
+            return existing
+        }
+
+        let newPositions = CalendarEventPositions()
+        insert(newPositions)
+
+        do {
+            try save()
+        } catch {
+            assertionFailure("Failed to save CalendarEventPositions: \(error)")
+        }
+
+        return newPositions
+    }
 }

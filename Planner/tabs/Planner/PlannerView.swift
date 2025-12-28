@@ -78,8 +78,9 @@ struct PlannerView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]
-    @Query private var calendarEventPositions: [CalendarEventPosition]
+    @Query private var calendarEventPositionsList: [CalendarEventPositions]
     @State private var planner: Planner?
+    @State private var calendarEventPositions: CalendarEventPositions?
 
     @State private var calendarEvents: [PlannerEvent] = []
 
@@ -229,11 +230,13 @@ struct PlannerView: View {
             }
         }
         .task {
-            guard planner == nil else { return }
-
             planner = modelContext.ensurePlanner(
                 planners: planners,
                 datestamp: datestamp
+            )
+
+            calendarEventPositions = modelContext.ensureCalendarEventPositions(
+                positions: calendarEventPositionsList
             )
 
             synchronizeCalendarEvents()
@@ -274,19 +277,17 @@ struct PlannerView: View {
 
     // TODO: run this whenever the calendar events change
     private func synchronizeCalendarEvents() {
-        guard let planner = planner else { return }
+        guard let planner = planner, let positions = calendarEventPositions
+        else { return }
         let calendarStoreEvents =
             calendarEventStore.singleDayEventsByDatestamp[datestamp] ?? []
         guard !calendarStoreEvents.isEmpty else { return }
 
-        let (events, positionMap) =
+        calendarEvents =
             planner.synchronizeCalendarEventPositions(
                 for: calendarStoreEvents,
-                from: calendarEventPositions
+                from: positions
             )
-
-        calendarEvents = events
-        // TODO: set the new positions in storage
     }
 
     private func openCalendarEventSheet(for event: EKEvent, from key: String) {
@@ -318,6 +319,14 @@ struct PlannerView: View {
             items: eventsWithoutEvent
         )
         movedEvent.sortIndex = newSortIndex
+
+        // Save the calendar event position.
+        if movedEvent.calendarEvent != nil && calendarEventPositions != nil {
+            calendarEventPositions!.values[
+                movedEvent.calendarEvent!.eventIdentifier
+            ] = movedEvent.sortIndex
+        }
+
         try! modelContext.save()
 
         // 2: After UI settles, validate correct chronological insertion.
@@ -330,6 +339,16 @@ struct PlannerView: View {
             )
             if validSortIndex != newSortIndex {
                 movedEvent.sortIndex = validSortIndex
+
+                // Save the calendar event position.
+                if movedEvent.calendarEvent != nil
+                    && calendarEventPositions != nil
+                {
+                    calendarEventPositions!.values[
+                        movedEvent.calendarEvent!.eventIdentifier
+                    ] = movedEvent.sortIndex
+                }
+                
                 try! modelContext.save()
             }
         }

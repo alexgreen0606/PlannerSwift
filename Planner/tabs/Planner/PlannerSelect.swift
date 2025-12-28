@@ -190,19 +190,16 @@ struct PlannerSelectView: View {
                             if year == sortedYears.first!
                                 && datestamp == eventsByYear[year]!.first!
                             {
-                                HStack {
+                                HStack(alignment: .top) {
                                     Text("Coming up")
                                         .font(.headline)
                                         .foregroundStyle(
                                             Color(uiColor: .secondaryLabel)
                                         )
-
-                                    Spacer()
+                                        .offset(y: -48)
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.bottom, 166)
-                                .listRowInsets(EdgeInsets())
-                                .listRowSeparator(.hidden)
+                                .frame(maxHeight: .infinity, alignment: .top)
                             }
                         }
                     }

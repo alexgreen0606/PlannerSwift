@@ -46,6 +46,11 @@ func generateValidPlannerEventSortIndex(
         }
     }
     
+    // No time conflicts found.
+    if !eventNeedsMoving {
+        return prevSortIndex
+    }
+    
     // Event is the earliest event.
     return (events.first?.sortIndex ?? 8) / 2
 }

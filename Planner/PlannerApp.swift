@@ -66,7 +66,7 @@ struct PlannerApp: App {
                     CalendarEventStore.shared.requestAccessAndLoadIfNeeded()
                 }
         }
-        .modelContainer(for: [Planner.self, ChecklistItem.self])
+        .modelContainer(for: [Planner.self, ChecklistItem.self, CalendarEventPositions.self])
     }
 
 }
