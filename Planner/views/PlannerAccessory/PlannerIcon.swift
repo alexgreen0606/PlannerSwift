@@ -11,7 +11,7 @@ struct PlannerIcon: View {
     let datestamp: String
     let scale: CGFloat
     
-    @EnvironmentObject var todaystampManager: TodaystampManager
+    @EnvironmentObject var todaystampManager: TodaystampWatcher
     
     @AppStorage("themeColor") var themeColor: ThemeColorOption =
         ThemeColorOption.blue

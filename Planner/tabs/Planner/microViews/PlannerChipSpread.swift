@@ -21,8 +21,7 @@ struct PlannerChipSpreadView: View {
     let openCalendarEventSheet: (EKEvent, String) -> Void
     
     @AppStorage("themeColor") var themeColor: ThemeColorOption = ThemeColorOption.blue
-    
-    @State var calendarEventStore = CalendarEventStore.shared
+    @EnvironmentObject var calendarStore: CalendarEventStore
     
     private let chipHeight: CGFloat = 28
     

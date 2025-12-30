@@ -78,21 +78,19 @@ struct PlannerView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]
-    @Query private var calendarEventPositionsList: [CalendarEventPositions]
     @State private var planner: Planner?
+    @Query private var calendarEventPositionsList: [CalendarEventPositions]
     @State private var calendarEventPositions: CalendarEventPositions?
 
-    @State private var calendarEvents: [PlannerEvent] = []
+    @EnvironmentObject var calendarEventStore: CalendarEventStore
+    @EnvironmentObject var todaystampManager: TodaystampWatcher
 
-    @EnvironmentObject var todaystampManager: TodaystampManager
-    @EnvironmentObject var plannerManager: ListManager
-    @State var calendarEventStore = CalendarEventStore.shared
-    @State private var navigationManager = NavigationManager.shared
-
+    @State private var calendarPlannerEvents: [PlannerEvent] = []
     @State private var calendarEventEditConfig: CalendarEventSheetConfig?
     @Namespace private var calendarEventSheetNamespace
 
     @State private var scrollProxy: ScrollViewProxy?
+
     @State private var isCalendarPickerPresented = false
 
     var plannerType: PlannerType {
@@ -115,7 +113,7 @@ struct PlannerView: View {
             }
             : []
 
-        return (storageEvents + calendarEvents).sorted {
+        return (storageEvents + calendarPlannerEvents).sorted {
             $0.sortIndex < $1.sortIndex
         }
     }
@@ -290,7 +288,7 @@ struct PlannerView: View {
             calendarEventStore.singleDayEventsByDatestamp[datestamp] ?? []
         guard !calendarStoreEvents.isEmpty else { return }
 
-        calendarEvents =
+        calendarPlannerEvents =
             planner.synchronizeCalendarEventPositions(
                 for: calendarStoreEvents,
                 from: positions

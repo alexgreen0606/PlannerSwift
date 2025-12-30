@@ -48,22 +48,21 @@ enum ThemeColorOption: String, Codable, CaseIterable {
 
 @main
 struct PlannerApp: App {
-    let todaystampManager = TodaystampManager()
-
-    @State var navigationManager = NavigationManager.shared
-    @EnvironmentObject var calendarEventStore: CalendarEventStore
-
     @AppStorage("themeColor") var themeColor: ThemeColorOption =
         ThemeColorOption.blue
+    
+    let calendarStore = CalendarEventStore.shared
+    @StateObject private var navigationManager = NavigationManager()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .accentColor(themeColor.swiftUIColor)
-                .environmentObject(todaystampManager)
-                .environmentObject(CalendarEventStore.shared)
+                .environmentObject(TodaystampWatcher.shared)
+                .environmentObject(calendarStore)
+                .environmentObject(navigationManager)
                 .onAppear {
-                    CalendarEventStore.shared.requestAccessAndLoadIfNeeded()
+                    calendarStore.requestAccessAndLoadIfNeeded()
                 }
         }
         .modelContainer(for: [Planner.self, ChecklistItem.self, CalendarEventPositions.self])

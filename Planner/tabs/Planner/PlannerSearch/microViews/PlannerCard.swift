@@ -52,7 +52,8 @@ struct PlannerCard: View {
                     datestamp: datestamp,
                     events: singleDayEvents,
                     openCalendarEventSheet: openCalendarEventSheet,
-                    animation: chipAnimation
+                    animation: chipAnimation,
+                    key: "PlannerCard"
                 )
             }
         }

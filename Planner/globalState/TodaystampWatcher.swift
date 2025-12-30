@@ -5,22 +5,30 @@
 //  Created by Alex Green on 12/5/25.
 //
 
+import Combine
 import Foundation
 import SwiftDate
-import Combine
 
 @MainActor
-class TodaystampManager: ObservableObject {
-    @Published private(set) var todaystamp: String = TodaystampManager.makeStamp()
-
-    private var timer: Timer?
-
-    init() {
+class TodaystampWatcher: ObservableObject {
+    static let shared = TodaystampWatcher()
+    private init() {
         scheduleMidnightUpdate()
     }
-    
+
+    @Published private(set) var todaystamp: String =
+        TodaystampWatcher.makeStamp()
+
+    private var timer: Timer?
+    deinit {
+        timer?.invalidate()
+    }
+
     private static func makeStamp() -> String {
-        DateInRegion(region: .current).toFormat("yyyy-MM-dd", locale: Locale.current)
+        DateInRegion(region: .current).toFormat(
+            "yyyy-MM-dd",
+            locale: Locale.current
+        )
     }
 
     private func scheduleMidnightUpdate() {
@@ -28,7 +36,7 @@ class TodaystampManager: ObservableObject {
 
         let now = DateInRegion(region: .current)
         let nextMidnight = now.dateAt(.tomorrowAtStart)
-        
+
         timer = Timer(
             fireAt: nextMidnight.date,
             interval: 0,
@@ -43,6 +51,6 @@ class TodaystampManager: ObservableObject {
 
     @objc private func updateStamp() {
         todaystamp = Self.makeStamp()
-        scheduleMidnightUpdate() // reschedule for tomorrow
+        scheduleMidnightUpdate()  // reschedule for tomorrow
     }
 }

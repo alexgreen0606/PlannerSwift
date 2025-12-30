@@ -28,7 +28,7 @@ extension ModelContext {
 
         return planner
     }
-    
+
     @MainActor
     func ensureCalendarEventPositions(
         positions: [CalendarEventPositions]
@@ -47,5 +47,30 @@ extension ModelContext {
         }
 
         return newPositions
+    }
+
+    @MainActor
+    func ensureRootFolder(
+        rootFolders: [ChecklistItem]
+    ) -> ChecklistItem {
+        if let storageRoot = rootFolders.first {
+            return storageRoot
+        }
+
+        let newRoot = ChecklistItem(
+            type: .folder,
+            title: "Checklists",
+            color: .label,
+            sortIndex: 0
+        )
+        insert(newRoot)
+
+        do {
+            try save()
+        } catch {
+            assertionFailure("Failed to save Root Folder: \(error)")
+        }
+
+        return newRoot
     }
 }

@@ -29,8 +29,9 @@ struct FolderView: View {
     @Environment(\.modelContext) private var modelContext
 
     @Namespace private var nameSpace
-
-    @State var navigationManager = NavigationManager.shared
+    
+    @EnvironmentObject var navigationManager: NavigationManager
+    
     @State private var formConfig: FormConfig?
     @State private var scrollProxy: ScrollViewProxy?
 

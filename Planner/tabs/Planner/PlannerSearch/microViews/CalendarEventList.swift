@@ -13,6 +13,7 @@ struct CalendarEventList: View {
     let events: [EKEvent]
     let openCalendarEventSheet: (EKEvent, String) -> Void
     let animation: Namespace.ID
+    let key: String
 
     @Environment(\.displayScale) private var displayScale
 
@@ -30,7 +31,7 @@ struct CalendarEventList: View {
                         for: datestamp,
                         openSheet: openCalendarEventSheet,
                         animation: animation,
-                        key: "CalendarEventList"
+                        key: "CalendarEventList_\(key)"
                     )
                 }
 

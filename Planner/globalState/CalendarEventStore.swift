@@ -61,6 +61,8 @@ class CalendarEventStore: ObservableObject {
         loadCalendars()
         loadAllDayEvents()
         loadSingleDayEvents()
+        
+        // TODO: cleanup positions object for sort indices
     }
 
     private func loadCalendars() {

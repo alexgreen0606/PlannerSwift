@@ -14,8 +14,8 @@ struct PlannerAccessoryView: View {
     var animation: Namespace.ID
     let openTodayPlanner: () -> Void
 
-    @EnvironmentObject var todaystampManager: TodaystampManager
-    @State var navigationManager = NavigationManager.shared
+    @EnvironmentObject var todaystampManager: TodaystampWatcher
+    @EnvironmentObject var navigationManager: NavigationManager
     @EnvironmentObject var calendarEventStore: CalendarEventStore
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
 

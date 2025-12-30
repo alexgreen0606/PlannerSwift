@@ -12,18 +12,18 @@ import SwiftUI
 struct ChecklistsTabView: View {
     @Environment(\.modelContext) private var modelContext
     @Query var rootFolders: [ChecklistItem]
-
-    let checklistsManager = ListManager()
-
-    @State var navigationManager = NavigationManager.shared
     @State private var root: ChecklistItem?
+
+    @EnvironmentObject var navigationManager: NavigationManager
+    
+    @StateObject private var checklistsManager = ListManager()
 
     var body: some View {
         NavigationStack(path: $navigationManager.checklistsPath) {
             if let root = root {
                 FolderView(folder: root)
                     .navigationDestination(for: ChecklistItem.self) { item in
-                        if item.type == .folder {
+                        if item.type == ChecklistItemType.folder {
                             FolderView(folder: item)
                         } else {
                             ChecklistView(checklist: item)
@@ -33,26 +33,7 @@ struct ChecklistsTabView: View {
         }
         .environmentObject(checklistsManager)
         .task {
-            ensureRootFolder()
-        }
-    }
-
-    @MainActor
-    private func ensureRootFolder() {
-        if let storageRoot = rootFolders.first {
-            root = storageRoot
-        } else if root == nil {
-            // Only create if root folder doesn't exist yet.
-            let newRoot = ChecklistItem(
-                type: .folder,
-                title: "Checklists",
-                color: .label,
-                sortIndex: 0
-            )
-            modelContext.insert(newRoot)
-            try! modelContext.save()
-
-            root = newRoot
+            root = modelContext.ensureRootFolder(rootFolders: rootFolders)
         }
     }
 }

@@ -12,9 +12,9 @@ import SwiftUI
 struct ChecklistView: View {
     let checklist: ChecklistItem
 
-    @Environment(\.modelContext) private var modelContext
-
     @AppStorage("showCheckedItems") var showCheckedItems: Bool = false
+
+    @Environment(\.modelContext) private var modelContext
 
     @State private var scrollProxy: ScrollViewProxy?
 
@@ -73,7 +73,11 @@ struct ChecklistView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Add", systemImage: "plus") {
                         handleCreateEvent(at: sortedUncheckedItems.count)
-                        slideTo("UNCHECKED", at: .bottom, withDelay: .seconds(1))
+                        slideTo(
+                            "UNCHECKED",
+                            at: .bottom,
+                            withDelay: .seconds(1)
+                        )
                     }
                 }
             }

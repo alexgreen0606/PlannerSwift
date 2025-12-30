@@ -7,19 +7,14 @@
 
 import SwiftUI
 import EventKit
+import Combine
 
 enum AppTab: Hashable {
-    case recurring, checklists, search
+    case routines, checklists, search
 }
 
-@Observable
-class NavigationManager {
-    static let shared = NavigationManager()
-    private init() {}
-    
-    var selectedTab: AppTab = .search
-    
-    var selectedPlannerDate: Date = Date() // TODO: why store this here? Can I store the date in the navigation path?
-    
-    var checklistsPath = NavigationPath()
+@MainActor
+class NavigationManager: ObservableObject {
+    @Published var selectedTab: AppTab = .search
+    @Published var checklistsPath = NavigationPath()
 }

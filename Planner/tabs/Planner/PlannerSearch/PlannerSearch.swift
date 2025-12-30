@@ -47,20 +47,22 @@ enum CalendarEventSheetConfig: Identifiable {
 }
 
 struct PlannerSelectView: View {
+    @AppStorage("themeColor") private var themeColor: ThemeColorOption = .blue
+    
+    @EnvironmentObject var navigationManager: NavigationManager
+    @EnvironmentObject var calendarEventStore: CalendarEventStore
+    @EnvironmentObject var todaystampManager: TodaystampWatcher
+    @StateObject private var plannerManager = ListManager<ChecklistItem>()
+    
     @State private var plannerCoverConfig: PlannerCoverConfig?
     @State private var calendarEventSheetConfig: CalendarEventSheetConfig?
+    
+    // TODO: use animations instead of keys for all the animators in the app
     @Namespace private var calendarEventSheetNamespace
     @Namespace private var plannerAnimation
 
     @State private var isCalendarPickerOpen = false
-
-    @State var navigationManager = NavigationManager.shared
-    @State var calendarEventStore = CalendarEventStore.shared
-    @EnvironmentObject var todaystampManager: TodaystampManager
-
-    let plannerManager = ListManager()
-
-    @AppStorage("themeColor") private var themeColor: ThemeColorOption = .blue
+    @State private var selectedCalendarDate: Date = Date()
 
     var eventsByYear: [String: [String]] {
         let today = todaystampManager.todaystamp
@@ -223,13 +225,12 @@ struct PlannerSelectView: View {
                     VStack {
                         DatePicker(
                             "Open a planner",
-                            selection: $navigationManager
-                                .selectedPlannerDate,
+                            selection: $selectedCalendarDate,
                             displayedComponents: .date
                         )
                         .datePickerStyle(.graphical)
                         .listRowBackground(Color.clear)
-                        .onChange(of: navigationManager.selectedPlannerDate) {
+                        .onChange(of: selectedCalendarDate) {
                             _,
                             targetPlannerDate in
                             isCalendarPickerOpen = false
@@ -277,6 +278,12 @@ struct PlannerSelectView: View {
                     }
                 } label: {
                     Image(systemName: "ellipsis")
+                }
+            }
+            
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Add", systemImage: "plus") {
+                    // TODO: open a modal for a new event
                 }
             }
         }

@@ -10,23 +10,21 @@ import SwiftDate
 import SwiftUI
 
 struct ContentView: View {
-    @EnvironmentObject var todaystampManager: TodaystampManager
-    @State var navigationManager = NavigationManager.shared
-    @EnvironmentObject var calendarEventStore: CalendarEventStore
-
-    @Environment(\.tabViewBottomAccessoryPlacement) private var placement
-
     @AppStorage("lastCleanedDatestamp") var lastCleanedDatestamp: String = ""
     @AppStorage("themeColor") var themeColor: ThemeColorOption =
         ThemeColorOption.blue
+    
+    @Environment(\.tabViewBottomAccessoryPlacement) private var placement
+    
+    @EnvironmentObject var todaystampManager: TodaystampWatcher
+    @EnvironmentObject var navigationManager: NavigationManager
+    @EnvironmentObject var calendarEventStore: CalendarEventStore
 
-    @State private var searchText: String = ""
-
-    let plannerManager = ListManager()
-
+    @StateObject private var todayPlannerManager = ListManager()
     @State private var isTodayPlannerOpen: Bool = false
-
     @Namespace private var todayPlannerCoverNamespace
+    
+    @State private var searchText: String = ""
 
     private var eventsForToday: [EKEvent] {
         return calendarEventStore.allDayEventsByDatestamp[
@@ -88,7 +86,7 @@ struct ContentView: View {
                 )
             }
 
-            Tab(value: .recurring) {
+            Tab(value: .routines) {
             } label: {
                 Label("", systemImage: "repeat")
             }
@@ -119,7 +117,7 @@ struct ContentView: View {
                     isTodayPlannerOpen.toggle()
                 }
             }
-            .environmentObject(plannerManager)
+            .environmentObject(todayPlannerManager)
             .navigationTransition(
                 .zoom(sourceID: "PLANNER_ACCESSORY", in: todayPlannerCoverNamespace)
             )

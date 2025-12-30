@@ -19,7 +19,7 @@ struct PlannerCardVertical: View {
     let openCalendarEventSheet: (EKEvent, String) -> Void
     let openPlanner: () -> Void
 
-    @EnvironmentObject var todaystampManager: TodaystampManager
+    @EnvironmentObject var todaystampManager: TodaystampWatcher
 
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]
@@ -98,7 +98,8 @@ struct PlannerCardVertical: View {
                     datestamp: datestamp,
                     events: singleDayEvents,
                     openCalendarEventSheet: openCalendarEventSheet,
-                    animation: chipAnimation
+                    animation: chipAnimation,
+                    key: "PlannerCardVertical"
                 )
             }
 
