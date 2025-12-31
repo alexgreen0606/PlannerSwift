@@ -15,15 +15,15 @@ struct PlannerCardVertical: View {
     let datestamp: String
     let allDayEvents: [EKEvent]
     let singleDayEvents: [EKEvent]
-    var chipAnimation: Namespace.ID
-    let openCalendarEventSheet: (EKEvent, String) -> Void
+    var animation: Namespace.ID
+    let openCalendarEventSheet: (EKEvent) -> Void
     let openPlanner: () -> Void
-
-    @EnvironmentObject var todaystampManager: TodaystampWatcher
 
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]
     @State private var planner: Planner?
+    
+    @EnvironmentObject var todaystampManager: TodaystampWatcher
 
     var date: Date? {
         datestamp.date
@@ -46,14 +46,14 @@ struct PlannerCardVertical: View {
         datestamp: String,
         allDayEvents: [EKEvent],
         singleDayEvents: [EKEvent],
-        chipAnimation: Namespace.ID,
-        openCalendarEventSheet: @escaping (EKEvent, String) -> Void,
+        animation: Namespace.ID,
+        openCalendarEventSheet: @escaping (EKEvent) -> Void,
         openPlanner: @escaping () -> Void
     ) {
         self.datestamp = datestamp
         self.allDayEvents = allDayEvents
         self.singleDayEvents = singleDayEvents
-        self.chipAnimation = chipAnimation
+        self.animation = animation
         self.openCalendarEventSheet = openCalendarEventSheet
         self.openPlanner = openPlanner
 
@@ -84,11 +84,10 @@ struct PlannerCardVertical: View {
                 PlannerChipSpreadView(
                     datestamp: datestamp,
                     events: allDayEvents,
-                    key: "PlannerCardVertical",
                     showCountdown: false,
                     showWeather: false,
                     center: false,
-                    chipAnimation: chipAnimation,
+                    animation: animation,
                     openCalendarEventSheet: openCalendarEventSheet
                 )
             }
@@ -98,8 +97,7 @@ struct PlannerCardVertical: View {
                     datestamp: datestamp,
                     events: singleDayEvents,
                     openCalendarEventSheet: openCalendarEventSheet,
-                    animation: chipAnimation,
-                    key: "PlannerCardVertical"
+                    animation: animation
                 )
             }
 

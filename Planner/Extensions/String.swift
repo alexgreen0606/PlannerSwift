@@ -9,23 +9,13 @@ import Foundation
 import SwiftDate
 
 extension String {
-
-    // TODO: simplify
-    /// Returns short uppercase month abbreviation for a date string in "YYYY-MM-DD" format
-    var shortMonth: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-
-        guard let date = formatter.date(from: self) else {
-            return "???"
-        }
-
-        let monthFormatter = DateFormatter()
-        monthFormatter.dateFormat = "MMM"
-        monthFormatter.locale = Locale(identifier: "en_US_POSIX")
-
-        return monthFormatter.string(from: date).uppercased()
+    // Expects YYYY-MM-DD format.
+    var shortMonth: String { // Ex: DEC
+        self
+            .toDate("yyyy-MM-dd", region: .local)?
+            .toFormat("MMM")
+            .uppercased()
+        ?? "???"
     }
 
     // Expects YYYY-MM-DD format.
@@ -39,21 +29,21 @@ extension String {
         return "\(day).calendar"
     }
 
-    // Expects YYYY-MM-DD
+    // Expects YYYY-MM-DD format.
     var date: Date? {
-        self.toDate("yyyy-MM-dd", region: .current)?.date
+        self.toDate("yyyy-MM-dd", region: .local)?.date
     }
 
     // Expect 24-hour HH:MM format.
     func toDate(for datestamp: String) -> Date? {
         let dateTime = "\(datestamp) \(self)"
-        return dateTime.toDate("yyyy-MM-dd HH:mm", region: .current)?.date
+        return dateTime.toDate("yyyy-MM-dd HH:mm", region: .local)?.date
     }
 
     // Any user input expected.
     func separateTimeValue() -> (
         timeValue24Hour: String, updatedText: String
-    )? {
+    )? { // Ex: (13:45, sample user input)
         // Regex to match times like "9 AM", "9:30 pm", "12:05 PM"
         let pattern = #"\s+(1[0-2]|[1-9])(?::([0-5][0-9]))?\s?(AM|PM|am|pm)\b"#
 
@@ -75,7 +65,7 @@ extension String {
         let periodPart = String(self[Range(match.range(at: 3), in: self)!])
             .uppercased()
         let timeString = "\(hourPart):\(minutePart) \(periodPart)"
-        guard let date = timeString.toDate("h:mm a", region: .current) else {
+        guard let date = timeString.toDate("h:mm a", region: .local) else {
             return nil
         }
 

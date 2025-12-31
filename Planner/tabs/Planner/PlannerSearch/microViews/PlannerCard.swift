@@ -14,8 +14,8 @@ struct PlannerCard: View {
     let datestamp: String
     let allDayEvents: [EKEvent]
     let singleDayEvents: [EKEvent]
-    var chipAnimation: Namespace.ID
-    let openCalendarEventSheet: (EKEvent, String) -> Void
+    var animation: Namespace.ID
+    let openCalendarEventSheet: (EKEvent) -> Void
     let openPlanner: () -> Void
 
     var date: Date? {
@@ -38,11 +38,10 @@ struct PlannerCard: View {
                 PlannerChipSpreadView(
                     datestamp: datestamp,
                     events: allDayEvents,
-                    key: "PlannerCard",
                     showCountdown: false,
                     showWeather: false,
                     center: false,
-                    chipAnimation: chipAnimation,
+                    animation: animation,
                     openCalendarEventSheet: openCalendarEventSheet
                 )
             }
@@ -52,8 +51,7 @@ struct PlannerCard: View {
                     datestamp: datestamp,
                     events: singleDayEvents,
                     openCalendarEventSheet: openCalendarEventSheet,
-                    animation: chipAnimation,
-                    key: "PlannerCard"
+                    animation: animation
                 )
             }
         }

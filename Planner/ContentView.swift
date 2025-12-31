@@ -93,7 +93,7 @@ struct ContentView: View {
 
             Tab(value: .search, role: .search) {
                 NavigationStack {
-                    PlannerSelectView()
+                    PlannerSearchView()
                 }
                 .searchable(text: $searchText, prompt: "Search calendar events...")
             } label: {

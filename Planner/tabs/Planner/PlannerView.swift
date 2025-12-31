@@ -47,7 +47,7 @@ enum PlannerType: String {
 
         case .future:
             guard
-                let date = datestamp.toDate("yyyy-MM-dd", region: .current)?
+                let date = datestamp.toDate("yyyy-MM-dd", region: .local)?
                     .date
             else {
                 return nil
@@ -86,8 +86,10 @@ struct PlannerView: View {
     @EnvironmentObject var todaystampManager: TodaystampWatcher
 
     @State private var calendarPlannerEvents: [PlannerEvent] = []
-    @State private var calendarEventEditConfig: CalendarEventSheetConfig?
-    @Namespace private var calendarEventSheetNamespace
+    
+    @State private var calendarEventSheetContext: CalendarEventSheetContext?
+    
+    @Namespace private var animation
 
     @State private var scrollProxy: ScrollViewProxy?
 
@@ -149,18 +151,22 @@ struct PlannerView: View {
                     events: calendarEventStore.allDayEventsByDatestamp[
                         datestamp
                     ] ?? [],
-                    key: "PlannerView",
                     showCountdown: true,
                     showWeather: true,
                     center: false,
-                    chipAnimation: calendarEventSheetNamespace,
-                    openCalendarEventSheet: openCalendarEventSheet
+                    animation: animation,
+                    openCalendarEventSheet: { event in
+                        calendarEventSheetContext = CalendarEventSheetContext(
+                            event: event,
+                            namespace: animation
+                        )
+                    }
                 ),
                 endAdornment: { event in
                     event.timeValueView(
                         for: datestamp,
                         openSheet: openPlannerEventSheet,
-                        animation: calendarEventSheetNamespace
+                        animation: animation
                     )
                 },
                 customToggleConfig: plannerType.toggleEventIconConfig,
@@ -245,35 +251,34 @@ struct PlannerView: View {
 
             synchronizeCalendarEvents()
         }
-        .sheet(item: $calendarEventEditConfig) { destination in
-            switch destination {
-            case .edit(let event, _):
+        .sheet(item: $calendarEventSheetContext) { context in
+            switch context.event.calendar.allowsContentModifications {
+            case true:
                 EditCalendarEventView(
-                    event: event,
+                    event: context.event,
                     eventStore: calendarEventStore.ekEventStore
                 ) { action, updatedEvent in
                     calendarEventStore.refresh()
-                    synchronizeCalendarEvents()
-                    calendarEventEditConfig = nil
+                    calendarEventSheetContext = nil
                 }
                 .tint(themeColor.swiftUIColor)
                 .ignoresSafeArea()
                 .navigationTransition(
                     .zoom(
-                        sourceID: destination.id,
-                        in: calendarEventSheetNamespace
+                        sourceID: String(describing: context.event.eventIdentifier),
+                        in: context.namespace
                     )
                 )
 
-            case .view(let event, _):
-                ViewCalendarEventView(event: event)
+            case false:
+                ViewCalendarEventView(event: context.event)
                     .tint(themeColor.swiftUIColor)
                     .presentationDetents([.height(340)])
                     .ignoresSafeArea()
                     .navigationTransition(
                         .zoom(
-                            sourceID: destination.id,
-                            in: calendarEventSheetNamespace
+                            sourceID: String(describing: context.event.eventIdentifier),
+                            in: context.namespace
                         )
                     )
             }
@@ -296,21 +301,15 @@ struct PlannerView: View {
     }
 
     private func openPlannerEventSheet(
-        for event: PlannerEvent,
-        from key: String
+        for event: PlannerEvent
     ) {
         if event.calendarEvent == nil {
 
         } else {
-            openCalendarEventSheet(for: event.calendarEvent!, from: key)
-        }
-    }
-
-    private func openCalendarEventSheet(for event: EKEvent, from key: String) {
-        if event.calendar.allowsContentModifications {
-            calendarEventEditConfig = .edit(event, key)
-        } else {
-            calendarEventEditConfig = .view(event, key)
+            calendarEventSheetContext = CalendarEventSheetContext(
+                event: event.calendarEvent!,
+                namespace: animation
+            )
         }
     }
 

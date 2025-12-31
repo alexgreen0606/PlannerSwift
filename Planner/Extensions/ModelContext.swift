@@ -23,7 +23,7 @@ extension ModelContext {
         do {
             try save()
         } catch {
-            assertionFailure("Failed to save Planner: \(error)")
+            assertionFailure("Failed to create Planner for \(datestamp): \(error)")
         }
 
         return planner
@@ -43,7 +43,7 @@ extension ModelContext {
         do {
             try save()
         } catch {
-            assertionFailure("Failed to save CalendarEventPositions: \(error)")
+            assertionFailure("Failed to create initial CalendarEventPositions: \(error)")
         }
 
         return newPositions
@@ -68,7 +68,7 @@ extension ModelContext {
         do {
             try save()
         } catch {
-            assertionFailure("Failed to save Root Folder: \(error)")
+            assertionFailure("Failed to create the Root Folder: \(error)")
         }
 
         return newRoot

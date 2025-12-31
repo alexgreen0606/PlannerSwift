@@ -1,5 +1,5 @@
 //
-//  PlannerSelector.swift
+//  PlannerSearch.swift
 //  Planner
 //
 //  Created by Alex Green on 12/16/25.
@@ -10,63 +10,47 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-enum PlannerCoverConfig: Identifiable {
-    case calendar(String)
-    case card(String)
-    case cardVertical(String)
-
-    var id: String {
-        switch self {
-        case .calendar: return "CALENDAR"
-        case .card(let datestamp): return "\(datestamp)_PlannerCard"
-        case .cardVertical(let datestamp):
-            return "\(datestamp)_PlannerCardVertical"
-        }
-    }
-
-    var datestamp: String {
-        switch self {
-        case .card(let datestamp),
-            .calendar(let datestamp),
-            .cardVertical(let datestamp):
-            return datestamp
-        }
-    }
-}
-
-enum CalendarEventSheetConfig: Identifiable {
-    case edit(EKEvent, String)
-    case view(EKEvent, String)
-
-    var id: String {
-        switch self {
-        case .edit(let event, let key), .view(let event, let key):
-            "\(String(describing: event.eventIdentifier))_\(key)"
-        }
-    }
-}
-
-struct PlannerSelectView: View {
-    @AppStorage("themeColor") private var themeColor: ThemeColorOption = .blue
+struct CalendarEventSheetContext: Identifiable {
+    var event: EKEvent
+    var namespace: Namespace.ID
     
+    var id: String {
+        "\(String(describing: event.eventIdentifier))-\(namespace)"
+    }
+}
+
+struct PlannerCoverContext: Identifiable {
+    var datestamp: String
+    var namespace: Namespace.ID
+    var fromCalendar: Bool?
+    
+    var id: String {
+        "\(datestamp)-\(namespace)"
+    }
+}
+
+struct PlannerSearchView: View {
+    @AppStorage("themeColor") private var themeColor: ThemeColorOption = .blue
+
     @EnvironmentObject var navigationManager: NavigationManager
     @EnvironmentObject var calendarEventStore: CalendarEventStore
     @EnvironmentObject var todaystampManager: TodaystampWatcher
-    @StateObject private var plannerManager = ListManager<ChecklistItem>()
+
+    @StateObject private var plannerManager = ListManager()
     
-    @State private var plannerCoverConfig: PlannerCoverConfig?
-    @State private var calendarEventSheetConfig: CalendarEventSheetConfig?
-    
-    // TODO: use animations instead of keys for all the animators in the app
-    @Namespace private var calendarEventSheetNamespace
-    @Namespace private var plannerAnimation
+    @State private var calendarEventSheetContext: CalendarEventSheetContext?
+    @State private var plannerCoverContext: PlannerCoverContext?
+
+    @Namespace private var thisWeekAnimation
+    @Namespace private var comingUpAnimation
+    @Namespace private var calendarAnimation
 
     @State private var isCalendarPickerOpen = false
     @State private var selectedCalendarDate: Date = Date()
 
     var eventsByYear: [String: [String]] {
         let today = todaystampManager.todaystamp
-        let todayDate = today.toDate("yyyy-MM-dd", region: .current)
+        let todayDate = today.toDate("yyyy-MM-dd", region: .local)
         let oneYearOut = todayDate?.dateByAdding(3, .year)
 
         // All upcoming datestamps.
@@ -80,7 +64,7 @@ struct PlannerSelectView: View {
         let filtered = eventDatestamps.compactMap {
             datestamp -> (year: String, datestamp: String)? in
             guard
-                let date = datestamp.toDate("yyyy-MM-dd", region: .current),
+                let date = datestamp.toDate("yyyy-MM-dd", region: .local),
                 let oneYearOut,
                 let todayDate,
                 date > todayDate,
@@ -103,7 +87,7 @@ struct PlannerSelectView: View {
     }
 
     var eventDatestamps: [String] {
-        let region = Region.current
+        let region = Region.local
         let today = DateInRegion(Date(), region: region)
 
         return (0..<7).map {
@@ -143,16 +127,21 @@ struct PlannerSelectView: View {
                                     .singleDayEventsByDatestamp[
                                         datestamp
                                     ] ?? [],
-                                chipAnimation:
-                                    calendarEventSheetNamespace,
-                                openCalendarEventSheet:
-                                    openCalendarEventSheet
+                                animation: thisWeekAnimation,
+                                openCalendarEventSheet: { event in
+                                    calendarEventSheetContext = CalendarEventSheetContext(
+                                        event: event,
+                                        namespace: thisWeekAnimation
+                                    )
+                                }
                             ) {
-                                plannerCoverConfig = .cardVertical(datestamp)
-                            }
+                                plannerCoverContext = PlannerCoverContext(
+                                    datestamp: datestamp,
+                                    namespace: thisWeekAnimation
+                                )                            }
                             .matchedTransitionSource(
-                                id: "\(datestamp)_PlannerCardVertical",
-                                in: plannerAnimation
+                                id: datestamp,
+                                in: thisWeekAnimation
                             )
                         }
                     }
@@ -179,14 +168,22 @@ struct PlannerSelectView: View {
                                 calendarEventStore.singleDayEventsByDatestamp[
                                     datestamp
                                 ] ?? [],
-                            chipAnimation: calendarEventSheetNamespace,
-                            openCalendarEventSheet: openCalendarEventSheet
+                            animation: comingUpAnimation,
+                            openCalendarEventSheet: { event in
+                                calendarEventSheetContext = CalendarEventSheetContext(
+                                    event: event,
+                                    namespace: comingUpAnimation
+                                )
+                            }
                         ) {
-                            plannerCoverConfig = .card(datestamp)
+                            plannerCoverContext = PlannerCoverContext(
+                                datestamp: datestamp,
+                                namespace: comingUpAnimation
+                            )
                         }
                         .matchedTransitionSource(
-                            id: "\(datestamp)_PlannerCard",
-                            in: plannerAnimation
+                            id: datestamp,
+                            in: comingUpAnimation
                         )
                         .overlay {
                             if year == sortedYears.first!
@@ -210,7 +207,7 @@ struct PlannerSelectView: View {
                 }
             }
         }
-        .refreshable{
+        .refreshable {
             calendarEventStore.refresh()
         }
         .listStyle(.plain)
@@ -236,8 +233,10 @@ struct PlannerSelectView: View {
                             isCalendarPickerOpen = false
 
                             DispatchQueue.main.async {
-                                plannerCoverConfig = .calendar(
-                                    targetPlannerDate.datestamp
+                                plannerCoverContext = PlannerCoverContext(
+                                    datestamp: targetPlannerDate.datestamp,
+                                    namespace: calendarAnimation,
+                                    fromCalendar: true
                                 )
                             }
                         }
@@ -248,7 +247,7 @@ struct PlannerSelectView: View {
                 }
                 .matchedTransitionSource(
                     id: "CALENDAR",
-                    in: plannerAnimation
+                    in: calendarAnimation
                 )
             }
 
@@ -280,66 +279,58 @@ struct PlannerSelectView: View {
                     Image(systemName: "ellipsis")
                 }
             }
-            
+
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Add", systemImage: "plus") {
                     // TODO: open a modal for a new event
                 }
             }
         }
-        .fullScreenCover(item: $plannerCoverConfig) { planner in
+        .fullScreenCover(item: $plannerCoverContext) { context in
             NavigationStack {
-                PlannerView(datestamp: planner.datestamp) {
-                    plannerCoverConfig = nil
+                PlannerView(datestamp: context.datestamp) {
+                    plannerCoverContext = nil
                 }
             }
             .environmentObject(plannerManager)
             .navigationTransition(
                 .zoom(
-                    sourceID: planner.id,
-                    in: plannerAnimation
+                    sourceID: context.fromCalendar == true ? "CALENDAR" : context.datestamp,
+                    in: context.namespace
                 )
             )
         }
-        .sheet(item: $calendarEventSheetConfig) { destination in
-            switch destination {
-            case .edit(let event, _):
+        .sheet(item: $calendarEventSheetContext) { context in
+            switch context.event.calendar.allowsContentModifications {
+            case true:
                 EditCalendarEventView(
-                    event: event,
+                    event: context.event,
                     eventStore: calendarEventStore.ekEventStore
                 ) { action, updatedEvent in
                     calendarEventStore.refresh()
-                    calendarEventSheetConfig = nil
+                    calendarEventSheetContext = nil
                 }
                 .tint(themeColor.swiftUIColor)
                 .ignoresSafeArea()
                 .navigationTransition(
                     .zoom(
-                        sourceID: destination.id,
-                        in: calendarEventSheetNamespace
+                        sourceID: String(describing: context.event.eventIdentifier),
+                        in: context.namespace
                     )
                 )
 
-            case .view(let event, _):
-                ViewCalendarEventView(event: event)
+            case false:
+                ViewCalendarEventView(event: context.event)
                     .tint(themeColor.swiftUIColor)
                     .presentationDetents([.height(340)])
                     .ignoresSafeArea()
                     .navigationTransition(
                         .zoom(
-                            sourceID: destination.id,
-                            in: calendarEventSheetNamespace
+                            sourceID: String(describing: context.event.eventIdentifier),
+                            in: context.namespace
                         )
                     )
             }
-        }
-    }
-
-    private func openCalendarEventSheet(for event: EKEvent, from key: String) {
-        if event.calendar.allowsContentModifications {
-            calendarEventSheetConfig = .edit(event, key)
-        } else {
-            calendarEventSheetConfig = .view(event, key)
         }
     }
 

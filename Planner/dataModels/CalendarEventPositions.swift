@@ -9,6 +9,8 @@ import SwiftData
 
 @Model
 class CalendarEventPositions {
+    
+    // Maps Calendar events IDs to sortIndex values for their planner references.
     var values: [String: Double]
     
     init() {

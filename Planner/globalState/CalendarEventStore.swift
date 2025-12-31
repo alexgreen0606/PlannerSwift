@@ -5,10 +5,9 @@
 //  Created by Alex Green on 12/16/25.
 //
 
-import Foundation
 import Combine
-import SwiftDate
 import EventKit
+import SwiftDate
 import SwiftUI
 
 @MainActor
@@ -17,16 +16,17 @@ class CalendarEventStore: ObservableObject {
     private init() {}
 
     private let eventStore = EKEventStore()
-    
+    private var hasLoaded = false
+
     var ekEventStore: EKEventStore {
-            eventStore
-        }
+        eventStore
+    }
 
     @Published private(set) var calendarsById: [String: EKCalendar] = [:]
-    @Published private(set) var allDayEventsByDatestamp: [String: [EKEvent]] = [:]
-    @Published private(set) var singleDayEventsByDatestamp: [String: [EKEvent]] = [:]
-
-    private var hasLoaded = false
+    @Published private(set) var allDayEventsByDatestamp: [String: [EKEvent]] =
+        [:]
+    @Published private(set) var singleDayEventsByDatestamp:
+        [String: [EKEvent]] = [:]
 
     @MainActor
     func requestAccessAndLoadIfNeeded() {
@@ -59,9 +59,8 @@ class CalendarEventStore: ObservableObject {
         hasLoaded = true
 
         loadCalendars()
-        loadAllDayEvents()
-        loadSingleDayEvents()
-        
+        loadEvents()
+
         // TODO: cleanup positions object for sort indices
     }
 
@@ -73,39 +72,14 @@ class CalendarEventStore: ObservableObject {
         )
     }
 
-    private func loadAllDayEvents() {
-        let calendar = Calendar.current
+    private func loadEvents() {
+        let start = DateInRegion(Date(), region: .local)
+            .dateByAdding(-1, .month)
+            .date
 
-        // Fetch window (adjust if needed)
-        let start = calendar.date(byAdding: .month, value: -1, to: Date())!
-        let end = calendar.date(byAdding: .year, value: 3, to: Date())!
-
-        let predicate = eventStore.predicateForEvents(
-            withStart: start,
-            end: end,
-            calendars: nil
-        )
-
-        let events = eventStore
-            .events(matching: predicate)
-            .filter { $0.isAllDay }
-
-        var map: [String: [EKEvent]] = [:]
-
-        for event in events {
-            for datestamp in expandedDatestamps(for: event) {
-                map[datestamp, default: []].append(event)
-            }
-        }
-
-        allDayEventsByDatestamp = map
-    }
-    
-    private func loadSingleDayEvents() {
-        let calendar = Calendar.current
-
-        let start = calendar.date(byAdding: .month, value: -1, to: Date())!
-        let end = calendar.date(byAdding: .year, value: 3, to: Date())!
+        let end = DateInRegion(Date(), region: .local)
+            .dateByAdding(3, .year)
+            .date
 
         let predicate = eventStore.predicateForEvents(
             withStart: start,
@@ -113,34 +87,43 @@ class CalendarEventStore: ObservableObject {
             calendars: nil
         )
 
-        let events = eventStore
-            .events(matching: predicate)
-            .filter { !$0.isAllDay }
+        let events = eventStore.events(matching: predicate)
 
-        var map: [String: [EKEvent]] = [:]
+        var allDayMap: [String: [EKEvent]] = [:]
+        var singleDayMap: [String: [EKEvent]] = [:]
 
         for event in events {
-            let datestamp =
-                event.startDate
-                    .in(region: .current)
+            if event.isAllDay {
+                // All-day events can span multiple days.
+                for datestamp in expandedDatestamps(for: event) {
+                    allDayMap[datestamp, default: []].append(event)
+                }
+            } else {
+                //TODO: handle MULTI_DAY. For now, Timed events belong only to their start day
+                let datestamp =
+                    event.startDate
+                    .in(region: .local)
                     .date
                     .datestamp
 
-            map[datestamp, default: []].append(event)
+                singleDayMap[datestamp, default: []].append(event)
+            }
         }
 
-        singleDayEventsByDatestamp = map
+        allDayEventsByDatestamp = allDayMap
+        singleDayEventsByDatestamp = singleDayMap
     }
 
+    // TODO: use this for ALL_DAY events, then create a new one for MULTI_DAY
     private func expandedDatestamps(for event: EKEvent) -> [String] {
         var results: [String] = []
 
         let start = event.startDate
-            .in(region: .current)
+            .in(region: .local)
             .dateAtStartOf(.day)
 
         let end = event.endDate
-            .in(region: .current)
+            .in(region: .local)
             .dateAtStartOf(.day)
 
         var current = start
@@ -151,5 +134,4 @@ class CalendarEventStore: ObservableObject {
 
         return results
     }
-
 }

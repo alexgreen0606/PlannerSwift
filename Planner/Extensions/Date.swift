@@ -9,67 +9,69 @@ import SwiftDate
 import SwiftUI
 
 extension Date {
-
     // Shows day of week for the next week. Otherwise the full date is shown.
-    // TODO: not correct for before yesterday. DONT USE THESE. CONFUSING FOR USER
     var dynamicHeader: String {
-        let date = DateInRegion(self, region: .current)
-        let today = DateInRegion(region: .current)
+        let date = DateInRegion(self, region: .local).dateAt(.startOfDay)
+        let today = DateInRegion(region: .local).dateAt(.startOfDay)
 
-        // Difference in whole days
+        if date < today {
+            // Past date.
+            let currentYear = today.year
+            return date.year == currentYear ? shortDate : longDate
+        }
+
         let daysFromToday =
-            date.dateAt(.startOfDay)
-            .difference(in: .day, from: today.dateAt(.startOfDay)) ?? 0
-
-        // 0...6 days in the future → weekday
-        if daysFromToday >= 0 && daysFromToday <= 6 {
-            return date.toFormat("EEEE", locale: Locale.current)
+            date
+            .difference(in: .day, from: today) ?? 0
+        if daysFromToday <= 6 {
+            // Within a week.
+            return weekday
         }
 
-        // Past (yesterday or earlier) → long date
+        // Future date.
         let currentYear = today.year
-
-        if date.year == currentYear {
-            return date.toFormat("MMMM d", locale: Locale.current)
-        } else {
-            return date.toFormat("MMMM d, yyyy", locale: Locale.current)
-        }
+        return date.year == currentYear ? shortDate : longDate
     }
 
     // Shows the full date for the next week. Otherwise the day of week is shown.
-    // TODO: not correct for before yesterday.
     var dynamicSubheader: String {
-        let date = DateInRegion(self, region: .current)
-        let today = DateInRegion(region: .current)
-
-        let daysFromToday =
-            date.dateAt(.startOfDay)
-            .difference(in: .day, from: today.dateAt(.startOfDay)) ?? 0
-
-        // 0...6 days in the future → date
-        if daysFromToday >= 0 && daysFromToday <= 6 {
-            let currentYear = today.year
-
-            if date.year == currentYear {
-                return date.toFormat("MMMM d", locale: Locale.current)
-            } else {
-                return date.toFormat("MMMM d, yyyy", locale: Locale.current)
-            }
+        let date = DateInRegion(self, region: .local).dateAt(.startOfDay)
+        let today = DateInRegion(region: .local).dateAt(.startOfDay)
+        
+        if date < today {
+            // Past date.
+            return weekday
         }
 
-        // Past (yesterday or earlier) → weekday
-        return date.toFormat("EEEE", locale: Locale.current)
+        let daysFromToday =
+            date
+            .difference(in: .day, from: today) ?? 0
+        if daysFromToday <= 6 {
+            // Within a week
+            let currentYear = today.year
+            return date.year == currentYear ? shortDate : longDate
+        }
+
+        // Future date.
+        return weekday
+    }
+
+    var longDate: String {  // Ex: May 12, 2025
+        DateInRegion(self, region: .local).toFormat(
+            "MMMM d, yyyy",
+            locale: Locale.current
+        )
     }
 
     var shortDate: String {  // Ex: May 12
-        DateInRegion(self, region: .current).toFormat(
+        DateInRegion(self, region: .local).toFormat(
             "MMMM d",
             locale: Locale.current
         )
     }
 
     var weekday: String {  // Ex: Wednesday
-        DateInRegion(self, region: .current).toFormat(
+        DateInRegion(self, region: .local).toFormat(
             "EEEE",
             locale: Locale.current
         )
@@ -83,8 +85,8 @@ extension Date {
         (
             timeValue: String, indicator: String
         )
-    {
-        let dateInRegion = DateInRegion(self, region: .current)
+    { // Ex: 12:37, PM
+        let dateInRegion = DateInRegion(self, region: .local)
 
         // Format hours and minutes in 12-hour clock
         let hour = dateInRegion.hour
@@ -102,10 +104,8 @@ extension Date {
     }
 
     var countdown: String? {  // Ex: Today, Tomorrow, 3 days away, 3 days ago
-        let region = Region.current
-
-        let target = DateInRegion(self, region: region).dateAt(.startOfDay)
-        let today = DateInRegion(Date(), region: region).dateAt(.startOfDay)
+        let target = DateInRegion(self, region: .local).dateAt(.startOfDay)
+        let today = DateInRegion(Date(), region: .local).dateAt(.startOfDay)
 
         guard let diff = today.difference(in: .day, from: target) else {
             return ""

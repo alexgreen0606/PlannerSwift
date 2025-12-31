@@ -25,7 +25,7 @@ class TodaystampWatcher: ObservableObject {
     }
 
     private static func makeStamp() -> String {
-        DateInRegion(region: .current).toFormat(
+        DateInRegion(region: .local).toFormat(
             "yyyy-MM-dd",
             locale: Locale.current
         )
@@ -34,7 +34,7 @@ class TodaystampWatcher: ObservableObject {
     private func scheduleMidnightUpdate() {
         timer?.invalidate()
 
-        let now = DateInRegion(region: .current)
+        let now = DateInRegion(region: .local)
         let nextMidnight = now.dateAt(.tomorrowAtStart)
 
         timer = Timer(

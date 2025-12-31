@@ -10,7 +10,11 @@ import SwiftUI
 
 extension EKEvent {
     @ViewBuilder
-    func timeValueView(for datestamp: String, openSheet: @escaping (EKEvent, String) -> Void, animation: Namespace.ID, key: String) -> some View {
+    func timeValueView(
+        for datestamp: String,
+        openSheet: @escaping (EKEvent) -> Void,
+        animation: Namespace.ID
+    ) -> some View {
         let (timeValue, indicator) = self.startDate
             .timeValues
 
@@ -23,10 +27,10 @@ extension EKEvent {
             disabled: false,
             color: Color(self.calendar.cgColor)
         ) {
-            openSheet(self, "TimeValue_\(key)")
+            openSheet(self)
         }
         .matchedTransitionSource(
-            id: "\(String(describing: self.eventIdentifier))_TimeValue_\(key)",
+            id: String(describing: self.eventIdentifier),
             in: animation
         )
     }

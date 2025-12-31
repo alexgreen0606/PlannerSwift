@@ -10,7 +10,11 @@ import SwiftUI
 
 extension PlannerEvent {
     @ViewBuilder
-    func timeValueView(for datestamp: String, openSheet: @escaping (PlannerEvent, String) -> Void, animation: Namespace.ID) -> some View {
+    func timeValueView(
+        for datestamp: String,
+        openSheet: @escaping (PlannerEvent) -> Void,
+        animation: Namespace.ID
+    ) -> some View {
         Group {
             if let date = self.date {
                 let (timeValue, indicator) = date.timeValues
@@ -19,9 +23,11 @@ extension PlannerEvent {
                 let color =
                     calendarEventColor != nil
                     ? Color(calendarEventColor!) : .blue
-                
-                let transitionId = self.calendarEvent != nil ? String(describing: self.calendarEvent!.eventIdentifier) : String(describing: self.id)
-                
+                let transitionId =
+                    self.calendarEvent != nil
+                    ? String(describing: self.calendarEvent!.eventIdentifier)
+                    : String(describing: self.id)
+
                 // TODO: determine start or end
 
                 TimeValue(
@@ -31,10 +37,10 @@ extension PlannerEvent {
                     disabled: false,
                     color: color
                 ) {
-                    openSheet(self, "TimeValue")
+                    openSheet(self)
                 }
                 .matchedTransitionSource(
-                    id: "\(transitionId)_TimeValue",
+                    id: transitionId,
                     in: animation
                 )
             } else {

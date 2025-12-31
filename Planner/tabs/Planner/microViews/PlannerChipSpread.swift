@@ -13,14 +13,14 @@ import WrappingHStack
 struct PlannerChipSpreadView: View {
     let datestamp: String
     let events: [EKEvent]
-    let key: String
     let showCountdown: Bool
     let showWeather: Bool
     let center: Bool
-    var chipAnimation: Namespace.ID
-    let openCalendarEventSheet: (EKEvent, String) -> Void
+    var animation: Namespace.ID
+    let openCalendarEventSheet: (EKEvent) -> Void
     
     @AppStorage("themeColor") var themeColor: ThemeColorOption = ThemeColorOption.blue
+    
     @EnvironmentObject var calendarStore: CalendarEventStore
     
     private let chipHeight: CGFloat = 28
@@ -49,11 +49,11 @@ struct PlannerChipSpreadView: View {
                 )
                 .contentShape(Rectangle())
                 .onTapGesture{
-                    openCalendarEventSheet(event, key)
+                    openCalendarEventSheet(event)
                 }
                 .matchedTransitionSource(
-                    id: "\(String(describing: event.eventIdentifier))_\(key)",
-                    in: chipAnimation
+                    id: String(describing: event.eventIdentifier),
+                    in: animation
                 )
             }
         }

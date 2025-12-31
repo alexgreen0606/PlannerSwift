@@ -20,7 +20,6 @@ extension Planner {
         }
         
         var plannerEvents: [PlannerEvent] = []
-
         for calEvent in sortedCalendarEvents {
             let sortIndex = positions.values[calEvent.eventIdentifier]
                 ?? (sortedPlannerEvents.last?.sortIndex ?? 0 + 8)
