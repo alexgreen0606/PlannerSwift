@@ -10,9 +10,21 @@ import SwiftUI
 
 struct PlannerCard: View {
     let datestamp: String
-    let allDayEvents: [EKEvent]
-    let singleDayEvents: [EKEvent]
     let openPlanner: () -> Void
+    
+    @EnvironmentObject var calendarEventStore: CalendarEventStore
+
+    private var allDayEvents: [EKEvent] {
+        calendarEventStore.allDayEventsByDatestamp[
+            datestamp
+        ] ?? []
+    }
+
+    private var singleDayEvents: [EKEvent] {
+        calendarEventStore.singleDayEventsByDatestamp[
+            datestamp
+        ] ?? []
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {

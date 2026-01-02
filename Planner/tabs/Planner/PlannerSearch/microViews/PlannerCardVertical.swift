@@ -9,12 +9,11 @@ import EventKit
 import SwiftData
 import SwiftDate
 import SwiftUI
+import WeatherKit
 import WrappingHStack
 
 struct PlannerCardVertical: View {
     private let datestamp: String
-    private let allDayEvents: [EKEvent]
-    private let singleDayEvents: [EKEvent]
     private let openPlanner: () -> Void
 
     @Environment(\.modelContext) private var modelContext
@@ -22,6 +21,24 @@ struct PlannerCardVertical: View {
     @State private var planner: Planner?
 
     @EnvironmentObject var todaystampManager: TodaystampWatcher
+    @ObservedObject var weatherStore = WeatherStore.shared
+    @EnvironmentObject var calendarEventStore: CalendarEventStore
+
+    private var allDayEvents: [EKEvent] {
+        calendarEventStore.allDayEventsByDatestamp[
+            datestamp
+        ] ?? []
+    }
+
+    private var singleDayEvents: [EKEvent] {
+        calendarEventStore.singleDayEventsByDatestamp[
+            datestamp
+        ] ?? []
+    }
+
+    private var weatherData: DayWeather? {
+        weatherStore.dayWeatherByDatestamp[datestamp]
+    }
 
     private var planCountLabel: String {
         let planCount = planner?.events.filter { !$0.isChecked }.count ?? 0
@@ -38,13 +55,9 @@ struct PlannerCardVertical: View {
 
     init(
         datestamp: String,
-        allDayEvents: [EKEvent],
-        singleDayEvents: [EKEvent],
         openPlanner: @escaping () -> Void
     ) {
         self.datestamp = datestamp
-        self.allDayEvents = allDayEvents
-        self.singleDayEvents = singleDayEvents
         self.openPlanner = openPlanner
 
         _planners = Query(
@@ -86,21 +99,21 @@ struct PlannerCardVertical: View {
 
             HStack(alignment: .bottom) {
                 HStack(alignment: .center, spacing: 6) {
-                    Image(systemName: "cloud.snow.fill")
+                    Image(systemName: weatherData?.symbolName ?? "")
                         .symbolRenderingMode(.multicolor)
                         .imageScale(.small)
 
-                    Text("Snow flurries")
+                    Text(weatherData?.condition.description ?? "")
                         .font(.caption2)
                 }
 
                 Spacer()
 
                 HStack(alignment: .center, spacing: 4) {
-                    Text("76°")
+                    Text(weatherData?.highTemperature.description ?? "")
                         .font(.caption2)
                     Divider().frame(height: 16)
-                    Text("62°")
+                    Text(weatherData?.lowTemperature.description ?? "")
                         .font(.caption2)
                 }
             }
@@ -121,6 +134,11 @@ struct PlannerCardVertical: View {
                 planners: planners,
                 datestamp: datestamp
             )
+        }
+        .onAppear {
+            Task {
+                await weatherStore.loadWeather(for: datestamp)
+            }
         }
     }
 }

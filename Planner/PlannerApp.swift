@@ -47,6 +47,7 @@ struct PlannerApp: App {
             ContentView()
                 .accentColor(themeColor.swiftUIColor)
                 .environmentObject(TodaystampWatcher.shared)
+                .environmentObject(WeatherStore.shared)
                 .environmentObject(calendarStore)
                 .environmentObject(navigationManager)
                 .onAppear {

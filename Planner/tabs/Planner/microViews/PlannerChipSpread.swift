@@ -9,6 +9,7 @@ import EventKit
 import SwiftDate
 import SwiftUI
 import WrappingHStack
+import WeatherKit
 
 struct PlannerChipSpreadView: View {
     let datestamp: String
@@ -21,10 +22,15 @@ struct PlannerChipSpreadView: View {
     @AppStorage("themeColor") var themeColor: ThemeColorOption =
         ThemeColorOption.blue
 
+    @ObservedObject var weatherStore = WeatherStore.shared
     @EnvironmentObject var calendarStore: CalendarEventStore
 
     private var daysUntil: String? {
         datestamp.date?.countdown
+    }
+    
+    private var weatherData: DayWeather? {
+        weatherStore.dayWeatherByDatestamp[datestamp]
     }
 
     var body: some View {
@@ -37,7 +43,7 @@ struct PlannerChipSpreadView: View {
                     disableInteraction: true
                 )
             }
-            if showWeather {
+            if showWeather && weatherData != nil {
                 weather
             }
             ForEach(events, id: \.eventIdentifier) { event in
@@ -63,31 +69,38 @@ struct PlannerChipSpreadView: View {
                 }
             }
         }
+        .onAppear {
+            if showWeather {
+                Task {
+                    await weatherStore.loadWeather(for: datestamp)
+                }
+            }
+        }
     }
 
     private var weather: some View {
         GlassEffectContainer {
             HStack(alignment: .center, spacing: 8) {
                 HStack(alignment: .center, spacing: 4) {
-                    Image(systemName: "sun.max.fill")
+                    Image(systemName: weatherData!.symbolName)
                         .symbolRenderingMode(.multicolor)
                         .resizable()
                         .scaledToFit()
                         .frame(width: 14, height: 14)
 
-                    Text("Mostly sunny")
+                    Text(weatherData!.condition.description)
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(Color(uiColor: .label))
                 }
 
                 HStack(alignment: .center, spacing: 4) {
-                    Text("76°")
+                    Text(weatherData?.highTemperature.description ?? "")
                         .font(.caption2)
                         .foregroundStyle(Color(uiColor: .label))
 
                     Divider().frame(height: 16)
 
-                    Text("62°")
+                    Text(weatherData?.lowTemperature.description ?? "")
                         .font(.caption2)
                         .foregroundStyle(Color(uiColor: .label))
                 }

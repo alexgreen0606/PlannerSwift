@@ -27,6 +27,7 @@ struct PlannerSearchView: View {
     @EnvironmentObject var navigationManager: NavigationManager
     @EnvironmentObject var calendarEventStore: CalendarEventStore
     @EnvironmentObject var todaystampManager: TodaystampWatcher
+    @ObservedObject var weatherStore = WeatherStore.shared
 
     @StateObject private var plannerManager = ListManager()
 
@@ -105,19 +106,7 @@ struct PlannerSearchView: View {
                     HStack(alignment: .top, spacing: 12) {
                         ForEach(thisWeekDatestamps, id: \.self) {
                             datestamp in
-                            PlannerCardVertical(
-                                datestamp: datestamp,
-                                allDayEvents:
-                                    calendarEventStore
-                                    .allDayEventsByDatestamp[
-                                        datestamp
-                                    ] ?? [],
-                                singleDayEvents:
-                                    calendarEventStore
-                                    .singleDayEventsByDatestamp[
-                                        datestamp
-                                    ] ?? []
-                            ) {
+                            PlannerCardVertical(datestamp: datestamp) {
                                 plannerCoverContext = PlannerCoverContext(
                                     datestamp: datestamp,
                                     namespace: thisWeekAnimation
@@ -143,17 +132,7 @@ struct PlannerSearchView: View {
                 Section {
                     ForEach(upcomingEventMap[year] ?? [], id: \.self) {
                         datestamp in
-                        PlannerCard(
-                            datestamp: datestamp,
-                            allDayEvents:
-                                calendarEventStore.allDayEventsByDatestamp[
-                                    datestamp
-                                ] ?? [],
-                            singleDayEvents:
-                                calendarEventStore.singleDayEventsByDatestamp[
-                                    datestamp
-                                ] ?? []
-                        ) {
+                        PlannerCard(datestamp: datestamp) {
                             plannerCoverContext = PlannerCoverContext(
                                 datestamp: datestamp,
                                 namespace: upcomingAnimation
@@ -187,6 +166,9 @@ struct PlannerSearchView: View {
         }
         .refreshable {
             calendarEventStore.refresh()
+            Task {
+                await weatherStore.refreshAllWeather()
+            }
         }
         .listStyle(.plain)
         .background(Color.appBackground)

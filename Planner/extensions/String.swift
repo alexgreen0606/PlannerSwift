@@ -31,7 +31,7 @@ extension String {
 
     // Expects YYYY-MM-DD format.
     var date: Date? {
-        self.toDate("yyyy-MM-dd", region: .local)?.date
+        self.toDate("yyyy-MM-dd", region: .local)?.date.dateAtStartOf(.day)
     }
 
     // Expect 24-hour HH:MM format.
