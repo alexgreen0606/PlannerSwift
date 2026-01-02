@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct NewItemTriggerView: View {
+    @AppStorage("showListSeparators") private var showListSeparators: Bool =
+        true
+
     private let showLowerDivider: Bool
     private let showUpperDivider: Bool
     private let onCreateItem: () -> Void
@@ -28,10 +31,10 @@ struct NewItemTriggerView: View {
             .frame(height: 8)
             .overlay(
                 VStack {
-                    if showLowerDivider == true {
+                    if showListSeparators && showLowerDivider == true {
                         Spacer()
                         Divider().background(Color(uiColor: .tertiaryLabel))
-                    } else if showUpperDivider == true {
+                    } else if showListSeparators && showUpperDivider == true {
                         Divider().background(Color(uiColor: .tertiaryLabel))
                         Spacer()
                     }

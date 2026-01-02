@@ -11,8 +11,6 @@ import SwiftUI
 struct ChecklistView: View {
     let checklist: ChecklistItem
 
-    @AppStorage("showCheckedItems") var showCheckedItems: Bool = false
-
     @Environment(\.modelContext) private var modelContext
 
     @State private var scrollProxy: ScrollViewProxy?
@@ -34,7 +32,7 @@ struct ChecklistView: View {
             SortableListView(
                 uncheckedItems: sortedUncheckedItems,
                 checkedItems: sortedCheckedItems,
-                showChecked: showCheckedItems,
+                showChecked: checklist.showCompleted,
                 floatingInfo: EmptyView(),
                 customToggleConfig: nil,
                 checkedHeader: "Completed items",
@@ -53,14 +51,14 @@ struct ChecklistView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         Button {
-                            showCheckedItems.toggle()
+                            checklist.showCompleted.toggle()
                         } label: {
                             Text(
-                                showCheckedItems
-                                    ? "Hide complete" : "Show complete"
+                                checklist.showCompleted
+                                    ? "Hide completed" : "Show completed"
                             )
                             Image(
-                                systemName: showCheckedItems
+                                systemName: checklist.showCompleted
                                     ? "eye.slash.fill" : "eye.fill"
                             )
                         }

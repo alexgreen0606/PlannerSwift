@@ -53,6 +53,7 @@ enum ChecklistColorOption: String, Codable, CaseIterable {
 class ChecklistItem: ListItem {
     var type: ChecklistItemType
     var color: ChecklistColorOption
+    var showCompleted: Bool = false
 
     @Relationship(deleteRule: .cascade)
     var items = [ChecklistItem]()

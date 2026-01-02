@@ -13,7 +13,6 @@ import SwiftUI
 struct PlannerCoverContext: Identifiable {
     var datestamp: String
     var namespace: Namespace.ID
-    var triggeredByCalendar: Bool?
 
     var id: String {
         "\(datestamp)-\(namespace)"
@@ -22,6 +21,8 @@ struct PlannerCoverContext: Identifiable {
 
 struct PlannerSearchView: View {
     @AppStorage("themeColor") private var themeColor: ThemeColorOption = .blue
+    @AppStorage("showListSeparators") private var showListSeparators: Bool =
+        true
 
     @EnvironmentObject var navigationManager: NavigationManager
     @EnvironmentObject var calendarEventStore: CalendarEventStore
@@ -30,7 +31,9 @@ struct PlannerSearchView: View {
     @StateObject private var plannerManager = ListManager()
 
     @State private var plannerCoverContext: PlannerCoverContext?
-    @Namespace private var plannerCoverAnimation
+    @Namespace private var calendarAnimation
+    @Namespace private var thisWeekAnimation
+    @Namespace private var upcomingAnimation
 
     @State private var isCalendarPickerOpen = false
     @State private var selectedCalendarDate: Date = Date()
@@ -117,12 +120,12 @@ struct PlannerSearchView: View {
                             ) {
                                 plannerCoverContext = PlannerCoverContext(
                                     datestamp: datestamp,
-                                    namespace: plannerCoverAnimation
+                                    namespace: thisWeekAnimation
                                 )
                             }
                             .matchedTransitionSource(
                                 id: datestamp,
-                                in: plannerCoverAnimation
+                                in: thisWeekAnimation
                             )
                         }
                     }
@@ -153,12 +156,12 @@ struct PlannerSearchView: View {
                         ) {
                             plannerCoverContext = PlannerCoverContext(
                                 datestamp: datestamp,
-                                namespace: plannerCoverAnimation
+                                namespace: upcomingAnimation
                             )
                         }
                         .matchedTransitionSource(
                             id: datestamp,
-                            in: plannerCoverAnimation
+                            in: upcomingAnimation
                         )
                         .overlay {
                             if year == sortedUpcomingYears.first!
@@ -210,8 +213,7 @@ struct PlannerSearchView: View {
                             DispatchQueue.main.async {
                                 plannerCoverContext = PlannerCoverContext(
                                     datestamp: targetPlannerDate.datestamp,
-                                    namespace: plannerCoverAnimation,
-                                    triggeredByCalendar: true
+                                    namespace: calendarAnimation
                                 )
                             }
                         }
@@ -222,7 +224,7 @@ struct PlannerSearchView: View {
                 }
                 .matchedTransitionSource(
                     id: "CALENDAR",
-                    in: plannerCoverAnimation
+                    in: calendarAnimation
                 )
             }
 
@@ -250,6 +252,25 @@ struct PlannerSearchView: View {
                     } label: {
                         Label("Theme Color", systemImage: "paintpalette.fill")
                     }
+
+                    Button {
+                        showListSeparators.toggle()
+                    } label: {
+                        Label {
+                            Text(
+                                showListSeparators
+                                    ? "Hide list separators"
+                                    : "Show list separators"
+                            )
+                        } icon: {
+                            Image(
+                                systemName:
+                                    showListSeparators
+                                    ? "eye.slash.fill"
+                                    : "eye.fill"
+                            )
+                        }
+                    }
                 } label: {
                     Image(systemName: "ellipsis")
                 }
@@ -270,7 +291,7 @@ struct PlannerSearchView: View {
             .environmentObject(plannerManager)
             .navigationTransition(
                 .zoom(
-                    sourceID: context.triggeredByCalendar == true
+                    sourceID: context.namespace == calendarAnimation
                         ? "CALENDAR" : context.datestamp,
                     in: context.namespace
                 )

@@ -10,6 +10,8 @@ import SwiftData
 @Model
 class Planner {
     @Attribute(.unique) var datestamp: String
+    var showCompleted: Bool = false
+    var showCanceled: Bool = false
 
     @Relationship(deleteRule: .cascade)
     var events = [PlannerEvent]()

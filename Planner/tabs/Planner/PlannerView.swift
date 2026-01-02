@@ -70,7 +70,7 @@ enum PlannerType: String {
 struct CalendarEventSheetContext: Identifiable {
     var event: EKEvent
     var namespace: Namespace.ID
-    
+
     var id: String {
         "\(String(describing: event.eventIdentifier))-\(namespace)"
     }
@@ -80,8 +80,6 @@ struct PlannerView: View {
     private let datestamp: String
     private let closePlanner: () -> Void
 
-    @AppStorage("showCompletedPlans") var showCompletedPlans: Bool = false
-    @AppStorage("showDeletedPlans") var showDeletedPlans: Bool = false
     @AppStorage("themeColor") var themeColor: ThemeColorOption =
         ThemeColorOption.blue
 
@@ -111,7 +109,8 @@ struct PlannerView: View {
     }
 
     private var showChecked: Bool {
-        plannerType == .future ? showDeletedPlans : showCompletedPlans
+        plannerType == .future
+            ? planner?.showCanceled == true : planner?.showCompleted == true
     }
 
     private var uncheckedEvents: [PlannerEvent] {
@@ -200,8 +199,8 @@ struct PlannerView: View {
                         Button(
                             action: {
                                 plannerType == .future
-                                    ? showDeletedPlans.toggle()
-                                    : showCompletedPlans.toggle()
+                                ? planner?.showCanceled.toggle()
+                                : planner?.showCompleted.toggle()
                             },
                             label: {
                                 Text(
@@ -328,7 +327,7 @@ struct PlannerView: View {
         guard let planner = planner else { return }
         let sortIndex = generateSortIndex(index: index, items: uncheckedEvents)
         let newEvent = PlannerEvent(sortIndex: sortIndex, planner: planner)
-        
+
         modelContext.insert(newEvent)
         try! modelContext.save()
     }
