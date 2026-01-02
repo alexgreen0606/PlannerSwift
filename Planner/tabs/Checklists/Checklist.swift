@@ -36,16 +36,16 @@ struct ChecklistView: View {
                 checkedItems: sortedCheckedItems,
                 showChecked: showCheckedItems,
                 floatingInfo: EmptyView(),
-                endAdornment: { _ in EmptyView() },
                 customToggleConfig: nil,
                 checkedHeader: "Completed items",
                 checkedFooter: nil,
                 emptyUncheckedLabel: "No items",
                 emptyCheckedLabel: "No completed items",
                 tint: checklist.color.swiftUIColor,
-                onCreateItem: createItem,
-                onTitleChange: { _ in },
-                onMoveUncheckedItem: moveItem
+                getEndAdornment: { _ in EmptyView() },
+                createItem: createItem,
+                handleTitleChange: { _ in },
+                moveItem: moveItem
             )
             .accentColor(checklist.color.swiftUIColor)
             .navigationTitle(checklist.title)

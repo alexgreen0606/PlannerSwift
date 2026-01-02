@@ -168,7 +168,13 @@ struct PlannerView: View {
                         )
                     }
                 ),
-                endAdornment: { event in
+                customToggleConfig: plannerType.toggleEventIconConfig,
+                checkedHeader: plannerType.checkedHeader,
+                checkedFooter: plannerType.getCheckedFooter(for: datestamp),
+                emptyUncheckedLabel: "No plans",
+                emptyCheckedLabel: plannerType.emptyCheckedLabel,
+                tint: themeColor.swiftUIColor,
+                getEndAdornment: { event in
                     event.timeValueView(
                         for: datestamp,
                         openPlannerEventSheet: openPlannerEventSheet,
@@ -176,15 +182,9 @@ struct PlannerView: View {
                         animation: sheetAnimation
                     )
                 },
-                customToggleConfig: plannerType.toggleEventIconConfig,
-                checkedHeader: plannerType.checkedHeader,
-                checkedFooter: plannerType.getCheckedFooter(for: datestamp),
-                emptyUncheckedLabel: "No plans",
-                emptyCheckedLabel: plannerType.emptyCheckedLabel,
-                tint: themeColor.swiftUIColor,
-                onCreateItem: handleCreateEvent,
-                onTitleChange: handleEventTitleChange,
-                onMoveUncheckedItem: handleMoveUncheckedEvent
+                createItem: handleCreateEvent,
+                handleTitleChange: handleEventTitleChange,
+                moveItem: handleMoveUncheckedEvent
             )
             .navigationTitle(date.dynamicHeader)
             .navigationSubtitle(date.dynamicSubheader)

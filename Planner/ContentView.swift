@@ -13,17 +13,18 @@ struct ContentView: View {
     @AppStorage("lastCleanedDatestamp") var lastCleanedDatestamp: String = ""
     @AppStorage("themeColor") var themeColor: ThemeColorOption =
         ThemeColorOption.blue
-    
+
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
-    
+
     @EnvironmentObject var todaystampManager: TodaystampWatcher
     @EnvironmentObject var navigationManager: NavigationManager
     @EnvironmentObject var calendarEventStore: CalendarEventStore
 
     @StateObject private var todayPlannerManager = ListManager()
+
     @State private var isTodayPlannerOpen: Bool = false
-    @Namespace private var todayPlannerCoverNamespace
-    
+    @Namespace private var todayPlannerCoverAnimation
+
     @State private var searchText: String = ""
 
     private var eventsForToday: [EKEvent] {
@@ -95,7 +96,10 @@ struct ContentView: View {
                 NavigationStack {
                     PlannerSearchView()
                 }
-                .searchable(text: $searchText, prompt: "Search calendar events...")
+                .searchable(
+                    text: $searchText,
+                    prompt: "Search calendar events..."
+                )
             } label: {
                 Label(
                     "",
@@ -105,7 +109,10 @@ struct ContentView: View {
         }
         .tabBarMinimizeBehavior(.onScrollDown)
         .tabViewBottomAccessory {
-            PlannerAccessoryView(todaystamp: todaystampManager.todaystamp, animation: todayPlannerCoverNamespace) {
+            PlannerAccessoryView(
+                todaystamp: todaystampManager.todaystamp,
+                animation: todayPlannerCoverAnimation
+            ) {
                 isTodayPlannerOpen.toggle()
             }
         }
@@ -119,7 +126,10 @@ struct ContentView: View {
             }
             .environmentObject(todayPlannerManager)
             .navigationTransition(
-                .zoom(sourceID: "PLANNER_ACCESSORY", in: todayPlannerCoverNamespace)
+                .zoom(
+                    sourceID: "PLANNER_ACCESSORY",
+                    in: todayPlannerCoverAnimation
+                )
             )
         }
     }

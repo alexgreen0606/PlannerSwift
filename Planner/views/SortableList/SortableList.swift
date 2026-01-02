@@ -21,18 +21,19 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
     let toggleType: ListToggleType = .storage
     let disabledItemIds: Set<ObjectIdentifier> = []
     let floatingInfo: FloatingInfo?
-    let endAdornment: ((_ item: Item) -> EndAdornment)?
     let customToggleConfig: CustomIconConfig?
     let checkedHeader: String
     let checkedFooter: String?
     let emptyUncheckedLabel: String
     let emptyCheckedLabel: String
     let tint: Color
-    let onCreateItem: (_ index: Int) -> Void
-    let onTitleChange: (_ item: Item) -> Void
-    let onMoveUncheckedItem: (_ from: Int, _ to: Int) -> Void
+    let getEndAdornment: ((_ item: Item) -> EndAdornment)?
+    let createItem: (_ index: Int) -> Void
+    let handleTitleChange: (_ item: Item) -> Void
+    let moveItem: (_ from: Int, _ to: Int) -> Void
 
     @EnvironmentObject var listManager: ListManager
+    
     @StateObject var focusController = FocusController()
 
     var body: some View {
@@ -58,17 +59,17 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                             item.id
                         ),
                         showUpperDivider: item.id == uncheckedItems.first?.id,
-                        endAdornment: endAdornment,
+                        endAdornment: getEndAdornment,
                         customToggleConfig: customToggleConfig,
                         onCreateItem: handleCreateItem,
-                        onTitleChange: onTitleChange,
+                        onTitleChange: handleTitleChange,
                     )
                     .id(item.id)
                 }
-                .onMove(perform: handleMoveUncheckedItem)
+                .onMove(perform: moveUncheckedItem)
 
                 NewItemTriggerView {
-                    handleCreateLowerItem()
+                    createLowerItem()
                 }
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets())
@@ -97,7 +98,6 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
             }
             .listSectionSeparator(.hidden)
 
-            // TODO: deselecting item and then focusing it loses focus after movement to new list
             if showChecked {
                 Section {
                     ForEach(checkedItems, id: \.self) { item in
@@ -111,7 +111,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                             ),
                             showUpperDivider: item.id
                                 == checkedItems.first?.id,
-                            endAdornment: endAdornment,
+                            endAdornment: getEndAdornment,
                             customToggleConfig: customToggleConfig,
                             onCreateItem: { _, _ in },
                             onTitleChange: { _ in },
@@ -173,10 +173,10 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
             return
         }
 
-        onCreateItem(finalIndex)
+        createItem(finalIndex)
     }
 
-    private func handleMoveUncheckedItem(
+    private func moveUncheckedItem(
         from sources: IndexSet,
         to destination: Int
     ) {
@@ -187,11 +187,11 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                 to -= 1
             }
 
-            onMoveUncheckedItem(source, to)
+            moveItem(source, to)
         }
     }
 
-    private func handleCreateLowerItem() {
+    private func createLowerItem() {
         let baseId = uncheckedItems.last?.id
         handleCreateItem(baseId: baseId, offset: 1)
     }

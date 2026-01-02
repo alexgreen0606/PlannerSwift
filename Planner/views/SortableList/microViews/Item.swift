@@ -33,7 +33,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
     @State private var opacity: Double = 1
     @State private var debounceTask: Task<Void, Never>? = nil
 
-    var isChecked: Bool {
+    private var isChecked: Bool {
         if toggleType == .staging {
             return listManager.selectedItemIds.contains(item.id)
         }
@@ -166,7 +166,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
             .onTapGesture {
-                if !isChecked {
+                if !isChecked && !item.isChecked {
                     isFocused = true
                 }
             }

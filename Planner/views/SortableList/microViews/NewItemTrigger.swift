@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct NewItemTriggerView: View {
-    let showLowerDivider: Bool
-    let showUpperDivider: Bool
-    let onCreateItem: () -> Void
+    private let showLowerDivider: Bool
+    private let showUpperDivider: Bool
+    private let onCreateItem: () -> Void
 
     init(
         showLowerDivider: Bool = false,

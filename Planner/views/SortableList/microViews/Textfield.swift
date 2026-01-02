@@ -94,7 +94,7 @@ struct TextfieldView: UIViewRepresentable {
         ) -> Bool {
             if replacement == "\n" {
                 parent.onSubmit()
-                return false  // Don’t insert a newline.
+                return false
             }
             return true
         }

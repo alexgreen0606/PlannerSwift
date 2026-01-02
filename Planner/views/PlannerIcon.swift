@@ -10,13 +10,13 @@ import SwiftUI
 struct PlannerIcon: View {
     let datestamp: String
     let scale: CGFloat
-
-    @EnvironmentObject var todaystampManager: TodaystampWatcher
-
+    
     @AppStorage("themeColor") var themeColor: ThemeColorOption =
         ThemeColorOption.blue
 
-    var iconColor: Color {
+    @EnvironmentObject var todaystampManager: TodaystampWatcher
+
+    private var iconColor: Color {
         datestamp == todaystampManager.todaystamp
         ? themeColor.swiftUIColor : Color(uiColor: .secondaryLabel)
     }

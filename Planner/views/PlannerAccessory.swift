@@ -10,30 +10,30 @@ import SwiftData
 import SwiftUI
 
 struct PlannerAccessoryView: View {
-    let todaystamp: String
-    var animation: Namespace.ID
-    let openTodayPlanner: () -> Void
+    private let todaystamp: String
+    private var animation: Namespace.ID
+    private let openTodayPlanner: () -> Void
+    
+    @Environment(\.modelContext) private var modelContext
+    @Query private var planners: [Planner]
+    @State private var planner: Planner?
 
     @EnvironmentObject var todaystampManager: TodaystampWatcher
     @EnvironmentObject var navigationManager: NavigationManager
     @EnvironmentObject var calendarEventStore: CalendarEventStore
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
 
-    @Environment(\.modelContext) private var modelContext
-    @Query private var planners: [Planner]
-    @State private var planner: Planner?
-
-    private var eventsForToday: [EKEvent] {
+    private var allDayEvents: [EKEvent] {
         return calendarEventStore.allDayEventsByDatestamp[
             todaystampManager.todaystamp
         ] ?? []
     }
     
-    var planCountLabel: String {
+    private var planCountLabel: String {
         let planCount = planner?.events.filter{ !$0.isChecked }.count ?? 0
 
         if planCount == 0 {
-            if eventsForToday.count > 0 {
+            if allDayEvents.count > 0 {
                 return "No more plans"
             }
             return "No plans"
@@ -67,9 +67,9 @@ struct PlannerAccessoryView: View {
                     )
 
                 HStack(alignment: .center, spacing: 6) {
-                    if !eventsForToday.isEmpty {
+                    if !allDayEvents.isEmpty {
                         HStack(alignment: .bottom, spacing: 2) {
-                            ForEach(eventsForToday, id: \.self) { event in
+                            ForEach(allDayEvents, id: \.self) { event in
                                 Image(systemName: event.calendar.iconName)
                                     .font(.caption)
                                     .imageScale(.small)
@@ -124,8 +124,6 @@ struct PlannerAccessoryView: View {
         .contentShape(Rectangle())
         .onTapGesture(perform: openTodayPlanner)
         .task {
-            guard planner == nil else { return }
-
             planner = modelContext.ensurePlanner(
                 planners: planners,
                 datestamp: todaystamp

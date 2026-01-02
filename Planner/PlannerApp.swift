@@ -29,18 +29,6 @@ enum ThemeColorOption: String, Codable, CaseIterable {
         }
     }
 
-    var uIColor: UIColor {
-        switch self {
-        case .red: return .systemRed
-        case .orange: return .systemOrange
-        case .yellow: return .systemYellow
-        case .green: return .systemGreen
-        case .blue: return .systemBlue
-        case .indigo: return .systemIndigo
-        case .purple: return .systemPurple
-        }
-    }
-
     var label: String {
         rawValue.capitalized
     }
@@ -50,7 +38,7 @@ enum ThemeColorOption: String, Codable, CaseIterable {
 struct PlannerApp: App {
     @AppStorage("themeColor") var themeColor: ThemeColorOption =
         ThemeColorOption.blue
-    
+
     let calendarStore = CalendarEventStore.shared
     @StateObject private var navigationManager = NavigationManager()
 
@@ -65,7 +53,9 @@ struct PlannerApp: App {
                     calendarStore.requestAccessAndLoadIfNeeded()
                 }
         }
-        .modelContainer(for: [Planner.self, ChecklistItem.self, CalendarEventPositions.self])
+        .modelContainer(for: [
+            Planner.self, ChecklistItem.self, CalendarEventPositions.self,
+        ])
     }
 
 }

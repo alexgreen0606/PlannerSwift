@@ -27,19 +27,19 @@ struct ItemToggleView<Item: ListItem>: View {
     let customIconConfig: CustomIconConfig?
     let onToggleChecked: () -> Void
 
-    var iconName: String {
+    private var iconName: String {
         !isChecked ? "circle" : customIconConfig?.name ?? "circle.inset.filled"
     }
 
-    var primaryColor: Color {
+    private var primaryColor: Color {
         isDisabled
             ? Color(uiColor: .tertiaryLabel)
             : !isChecked
                 ? Color(uiColor: .secondaryLabel)
-        : customIconConfig?.primaryColor ?? tint
+                : customIconConfig?.primaryColor ?? tint
     }
 
-    var secondaryColor: Color {
+    private var secondaryColor: Color {
         isDisabled
             ? Color(uiColor: .tertiaryLabel)
             : !isChecked
