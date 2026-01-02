@@ -13,7 +13,7 @@ struct ChecklistsTabView: View {
     @Environment(\.modelContext) private var modelContext
     @Query var rootFolders: [ChecklistItem]
     @State private var root: ChecklistItem?
-
+    
     @EnvironmentObject var navigationManager: NavigationManager
     
     @StateObject private var checklistsManager = ListManager()
@@ -36,8 +36,4 @@ struct ChecklistsTabView: View {
             root = modelContext.ensureRootFolder(rootFolders: rootFolders)
         }
     }
-}
-
-#Preview {
-    ChecklistsTabView()
 }

@@ -1,5 +1,5 @@
 //
-//  TodaystampManager.swift
+//  TodaystampWatcher.swift
 //  Planner
 //
 //  Created by Alex Green on 12/5/25.
@@ -20,6 +20,7 @@ class TodaystampWatcher: ObservableObject {
         TodaystampWatcher.makeStamp()
 
     private var timer: Timer?
+
     deinit {
         timer?.invalidate()
     }
@@ -51,6 +52,8 @@ class TodaystampWatcher: ObservableObject {
 
     @objc private func updateStamp() {
         todaystamp = Self.makeStamp()
-        scheduleMidnightUpdate()  // reschedule for tomorrow
+
+        // Reschedule for tomorrow.
+        scheduleMidnightUpdate()
     }
 }

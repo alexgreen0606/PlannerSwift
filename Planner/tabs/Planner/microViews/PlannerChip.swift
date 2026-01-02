@@ -11,8 +11,7 @@ struct PlannerChipView: View {
     let title: String
     let iconName: String?
     let color: Color
-
-    private let chipHeight: CGFloat = 28
+    let disableInteraction: Bool
 
     var body: some View {
         GlassEffectContainer {
@@ -31,10 +30,10 @@ struct PlannerChipView: View {
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .frame(height: chipHeight)
+            .frame(height: UIConstants.chipHeight)
             .glassEffect(
-                .regular.tint(color.opacity(0.05)),
-                in: .rect(cornerRadius: chipHeight / 2)
+                .regular.tint(color.opacity(0.05)).interactive(!disableInteraction),
+                in: .rect(cornerRadius: UIConstants.chipHeight / 2)
             )
         }
     }

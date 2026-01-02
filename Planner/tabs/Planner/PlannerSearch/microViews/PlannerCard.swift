@@ -6,33 +6,17 @@
 //
 
 import EventKit
-import SwiftDate
 import SwiftUI
-import WrappingHStack
 
 struct PlannerCard: View {
     let datestamp: String
     let allDayEvents: [EKEvent]
     let singleDayEvents: [EKEvent]
-    var animation: Namespace.ID
-    let openCalendarEventSheet: (EKEvent) -> Void
     let openPlanner: () -> Void
-
-    var date: Date? {
-        datestamp.date
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading) {
-                Text(date?.shortDate ?? datestamp)
-                    .font(.headline)
-                    .fontWeight(.bold)
-
-                Text(date?.weekday ?? "")
-                    .font(.subheadline)
-                    .foregroundStyle(Color(uiColor: .secondaryLabel))
-            }
+            PlannerDateInfo(datestamp: datestamp, iconScale: 1.4)
 
             if !allDayEvents.isEmpty {
                 PlannerChipSpreadView(
@@ -40,18 +24,15 @@ struct PlannerCard: View {
                     events: allDayEvents,
                     showCountdown: false,
                     showWeather: false,
-                    center: false,
-                    animation: animation,
-                    openCalendarEventSheet: openCalendarEventSheet
+                    animation: nil,
+                    openCalendarEventSheet: nil
                 )
             }
             
             if !singleDayEvents.isEmpty {
                 CalendarEventList(
                     datestamp: datestamp,
-                    events: singleDayEvents,
-                    openCalendarEventSheet: openCalendarEventSheet,
-                    animation: animation
+                    events: singleDayEvents
                 )
             }
         }

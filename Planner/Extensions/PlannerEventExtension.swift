@@ -12,37 +12,32 @@ extension PlannerEvent {
     @ViewBuilder
     func timeValueView(
         for datestamp: String,
-        openSheet: @escaping (PlannerEvent) -> Void,
+        openPlannerEventSheet: @escaping (PlannerEvent) -> Void,
+        openCalendarEventSheet: @escaping (EKEvent) -> Void,
         animation: Namespace.ID
     ) -> some View {
         Group {
-            if let date = self.date {
-                let (timeValue, indicator) = date.timeValues
+            if self.calendarEvent != nil {
+                self.calendarEvent!.timeValueView(
+                    for: datestamp,
+                    openEventSheet: openCalendarEventSheet,
+                    animation: animation
+                )
 
-                let calendarEventColor = self.calendarEvent?.calendar.cgColor
-                let color =
-                    calendarEventColor != nil
-                    ? Color(calendarEventColor!) : .blue
-                let transitionId =
-                    self.calendarEvent != nil
-                    ? String(describing: self.calendarEvent!.eventIdentifier)
-                    : String(describing: self.id)
-
-                // TODO: determine start or end
-
+            } else if let date = self.date {
                 TimeValue(
-                    time: timeValue,
-                    indicator: indicator,
-                    detail: nil,
+                    date: date,
+                    datestamp: datestamp,
                     disabled: false,
-                    color: color
+                    color: .blue
                 ) {
-                    openSheet(self)
+                    openPlannerEventSheet(self)
                 }
                 .matchedTransitionSource(
-                    id: transitionId,
+                    id: String(describing: self.id),
                     in: animation
                 )
+
             } else {
                 EmptyView()
             }

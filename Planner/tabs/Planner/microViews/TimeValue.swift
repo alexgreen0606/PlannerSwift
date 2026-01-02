@@ -8,41 +8,39 @@
 import SwiftUI
 
 struct TimeValue: View {
-    let time: String
-    let indicator: String
-    let detail: String?
+    let date: Date
+    let datestamp: String
     let disabled: Bool
     let color: Color
-    let onOpenTimeModal: () -> Void
+    let openEventSheet: (() -> Void)?
 
     @State private var isVisible = false
-    
-    private var timeParts: (hour: String, minute: String)? {
-        let parts = time.split(separator: ":")
-        guard parts.count == 2 else { return nil }
-        return (String(parts[0]), String(parts[1]))
+
+    private var timeInfo:
+        (timeValue: String, indicator: String, detail: String?)
+    {
+        date.timeValues(for: datestamp)
     }
 
-
     var body: some View {
-        HStack(alignment: .top, spacing: 1) {
+        let timeVal = HStack(alignment: .top, spacing: 1) {
             // Time Value (12:30)
-            Text(time)
+            Text(timeInfo.timeValue)
                 .font(.system(size: 14, weight: .black, design: .rounded))
                 .foregroundStyle(
                     disabled
-                    ? Color(uiColor: .tertiaryLabel) : color
+                        ? Color(uiColor: .tertiaryLabel) : color
                 )
-            
+
             // Indicator (PM / AM)
-            Text(indicator)
+            Text(timeInfo.indicator)
                 .font(.system(size: 7, weight: .medium))
                 .foregroundStyle(
                     disabled ? Color(uiColor: .tertiaryLabel) : Color.secondary
                 )
         }
         .overlay(alignment: .topLeading) {
-            if let detail = detail {
+            if let detail = timeInfo.detail {
                 // Multi-Day Detail (START / END)
                 Text(detail)
                     .font(.system(size: 7, weight: .medium))
@@ -53,10 +51,16 @@ struct TimeValue: View {
                     .offset(y: 16)
             }
         }
-        .contentShape(Rectangle())
-        .onTapGesture(perform: onOpenTimeModal)
         .opacity(!isVisible ? 0 : 1)
         .animation(.easeIn(duration: 0.25), value: isVisible)
         .onAppear { isVisible = true }
+
+        if openEventSheet == nil {
+            timeVal
+        } else {
+            timeVal
+                .contentShape(Rectangle())
+                .onTapGesture(perform: openEventSheet!)
+        }
     }
 }

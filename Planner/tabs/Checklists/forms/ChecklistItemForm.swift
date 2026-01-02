@@ -5,17 +5,17 @@
 //  Created by Alex Green on 12/14/25.
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct ChecklistItemFormView: View {
+    private let sourceItem: ChecklistItem?
+    private let parent: ChecklistItem?
+
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
     @State private var draft: ChecklistItem
-
-    private let sourceItem: ChecklistItem?
-    private let parent: ChecklistItem?
 
     init(item: ChecklistItem? = nil, parent: ChecklistItem? = nil) {
         self.sourceItem = item
@@ -64,17 +64,20 @@ struct ChecklistItemFormView: View {
 
                 Section {
                     HStack {
-                        ForEach(ChecklistColorOption.allCases, id: \.self) { c in
+                        ForEach(ChecklistColorOption.allCases, id: \.self) {
+                            c in
                             Image(
                                 systemName: c == draft.color
                                     ? "circle.fill" : "circle"
                             )
                             .foregroundColor(c.swiftUIColor)
                             .imageScale(.large)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .contentShape(Circle())
                             .onTapGesture {
                                 draft.color = c
+                            }
+
+                            if c != ChecklistColorOption.allCases.last {
+                                Spacer()
                             }
                         }
                     }
@@ -102,7 +105,9 @@ struct ChecklistItemFormView: View {
                             try! modelContext.save()
                         } else {
                             // Create the new item.
-                            let sorted = parent?.items.sorted { $0.sortIndex < $1.sortIndex }
+                            let sorted = parent?.items.sorted {
+                                $0.sortIndex < $1.sortIndex
+                            }
                             let sortIndex = (sorted?.last?.sortIndex ?? 0) + 8
                             let newItem = ChecklistItem(
                                 type: draft.type,

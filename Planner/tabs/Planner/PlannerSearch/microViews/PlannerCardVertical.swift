@@ -12,24 +12,18 @@ import SwiftUI
 import WrappingHStack
 
 struct PlannerCardVertical: View {
-    let datestamp: String
-    let allDayEvents: [EKEvent]
-    let singleDayEvents: [EKEvent]
-    var animation: Namespace.ID
-    let openCalendarEventSheet: (EKEvent) -> Void
-    let openPlanner: () -> Void
+    private let datestamp: String
+    private let allDayEvents: [EKEvent]
+    private let singleDayEvents: [EKEvent]
+    private let openPlanner: () -> Void
 
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]
     @State private var planner: Planner?
-    
+
     @EnvironmentObject var todaystampManager: TodaystampWatcher
 
-    var date: Date? {
-        datestamp.date
-    }
-
-    var planCountLabel: String {
+    private var planCountLabel: String {
         let planCount = planner?.events.filter { !$0.isChecked }.count ?? 0
 
         if planCount == 0 {
@@ -46,15 +40,11 @@ struct PlannerCardVertical: View {
         datestamp: String,
         allDayEvents: [EKEvent],
         singleDayEvents: [EKEvent],
-        animation: Namespace.ID,
-        openCalendarEventSheet: @escaping (EKEvent) -> Void,
         openPlanner: @escaping () -> Void
     ) {
         self.datestamp = datestamp
         self.allDayEvents = allDayEvents
         self.singleDayEvents = singleDayEvents
-        self.animation = animation
-        self.openCalendarEventSheet = openCalendarEventSheet
         self.openPlanner = openPlanner
 
         _planners = Query(
@@ -66,19 +56,7 @@ struct PlannerCardVertical: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                PlannerIcon(datestamp: datestamp, scale: 1.4)
-                VStack(alignment: .leading) {
-                    Text(date?.weekday ?? datestamp)
-                        .font(.headline)
-                        .fontWeight(.bold)
-
-                    Text(datestamp.date?.countdown ?? "")
-                        .font(.footnote)
-                        .foregroundStyle(Color(uiColor: .secondaryLabel))
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            PlannerDateInfo(datestamp: datestamp, iconScale: 1.4)
 
             if !allDayEvents.isEmpty {
                 PlannerChipSpreadView(
@@ -86,18 +64,15 @@ struct PlannerCardVertical: View {
                     events: allDayEvents,
                     showCountdown: false,
                     showWeather: false,
-                    center: false,
-                    animation: animation,
-                    openCalendarEventSheet: openCalendarEventSheet
+                    animation: nil,
+                    openCalendarEventSheet: nil
                 )
             }
 
             if !singleDayEvents.isEmpty {
                 CalendarEventList(
                     datestamp: datestamp,
-                    events: singleDayEvents,
-                    openCalendarEventSheet: openCalendarEventSheet,
-                    animation: animation
+                    events: singleDayEvents
                 )
             }
 

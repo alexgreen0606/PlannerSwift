@@ -6,18 +6,19 @@
 //
 
 import SwiftData
-import SwiftDate
 import SwiftUI
 
-enum FormConfig: Identifiable {
-    case add
+// TODO: slide to new items after creation
+
+enum ChecklistItemSheetContext: Identifiable {
+    case create
     case parent
     case edit(ChecklistItem)
 
     var id: String {
         switch self {
-        case .parent: return "parent"
-        case .add: return "add"
+        case .parent: return "PARENT"
+        case .create: return "CREATE"
         case .edit(let item): return String(describing: item.id)
         }
     }
@@ -27,12 +28,11 @@ struct FolderView: View {
     let folder: ChecklistItem
 
     @Environment(\.modelContext) private var modelContext
-
-    @Namespace private var nameSpace
     
     @EnvironmentObject var navigationManager: NavigationManager
     
-    @State private var formConfig: FormConfig?
+    @State private var sheetContext: ChecklistItemSheetContext?
+    @Namespace private var sheetAnimation
     @State private var scrollProxy: ScrollViewProxy?
 
     var sortedItems: [ChecklistItem] {
@@ -58,14 +58,14 @@ struct FolderView: View {
                                 )
                                 .contentShape(Rectangle())
                                 .onTapGesture {
-                                    formConfig = .edit(item)
+                                    sheetContext = .edit(item)
                                 }
 
                         }
                         .frame(height: 19)
                         .matchedTransitionSource(
                             id: String(describing: item.id),
-                            in: nameSpace
+                            in: sheetAnimation
                         )
 
                         Text(item.title)
@@ -90,14 +90,14 @@ struct FolderView: View {
                         navigationManager.checklistsPath.append(item)
                     }
                 }
-                .onMove(perform: handleMoveItem)
+                .onMove(perform: moveItem)
             }
             .navigationTitle(folder.title)
             .toolbar {
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     Menu {
                         Button {
-                            formConfig = .parent
+                            sheetContext = .parent
                         } label: {
                             Text("Edit folder details")
                             Image(systemName: "pencil")
@@ -105,21 +105,21 @@ struct FolderView: View {
                     } label: {
                         Image(systemName: "ellipsis")
                     }
-                    .matchedTransitionSource(id: "ellipsis", in: nameSpace)
+                    .matchedTransitionSource(id: "ellipsis", in: sheetAnimation)
 
                     Button("Add", systemImage: "plus") {
-                        formConfig = .add
+                        sheetContext = .create
                     }
-                    .matchedTransitionSource(id: "add", in: nameSpace)
+                    .matchedTransitionSource(id: "add", in: sheetAnimation)
                 }
             }
-            .sheet(item: $formConfig) { destination in
-                switch destination {
-                case .add:
+            .sheet(item: $sheetContext) { context in
+                switch context {
+                case .create:
                     ChecklistItemFormView(item: nil, parent: folder)
                         .presentationDetents([.height(250)])
                         .navigationTransition(
-                            .zoom(sourceID: "add", in: nameSpace)
+                            .zoom(sourceID: "add", in: sheetAnimation)
                         )
 
                 case .edit(let item):
@@ -128,7 +128,7 @@ struct FolderView: View {
                         .navigationTransition(
                             .zoom(
                                 sourceID: String(describing: item.id),
-                                in: nameSpace
+                                in: sheetAnimation
                             )
                         )
 
@@ -136,14 +136,14 @@ struct FolderView: View {
                     ChecklistItemFormView(item: folder, parent: folder.parent)
                         .presentationDetents([.height(250)])
                         .navigationTransition(
-                            .zoom(sourceID: "ellipsis", in: nameSpace)
+                            .zoom(sourceID: "ellipsis", in: sheetAnimation)
                         )
                 }
             }
         }
     }
 
-    private func handleMoveItem(from sources: IndexSet, to destination: Int) {
+    private func moveItem(from sources: IndexSet, to destination: Int) {
         for source in sources {
             var targetIndex = destination
             if targetIndex > source {
@@ -161,22 +161,5 @@ struct FolderView: View {
         }
 
         try! modelContext.save()
-    }
-
-    // TODO: slide to new items
-    private func slideTo(
-        _ id: any Hashable,
-        at anchor: UnitPoint,
-        withDelay delay: DispatchTimeInterval = .seconds(0)
-    ) {
-        guard let proxy = scrollProxy
-        else { return }
-        DispatchQueue.main.asyncAfter(
-            deadline: .now() + delay
-        ) {
-            withAnimation(.linear(duration: 2)) {
-                proxy.scrollTo(id, anchor: anchor)
-            }
-        }
     }
 }

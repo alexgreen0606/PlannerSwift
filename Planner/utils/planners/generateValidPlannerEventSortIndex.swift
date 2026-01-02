@@ -29,6 +29,7 @@ func generateValidPlannerEventSortIndex(
         if pointerEvent.id == event.id {
             // Mark the target event as found.
             eventWasFound = true
+            
         } else if pointerEventDate <= eventDate {
             if !eventWasFound || eventNeedsMoving {
                 // Slide down to below this event.
@@ -36,19 +37,23 @@ func generateValidPlannerEventSortIndex(
                     index: index + 1,
                     items: events
                 )
+                
             } else {
                 // Maintain current position.
                 return prevSortIndex
+                
             }
         } else if eventWasFound {
             // Mark the target event as needing to move.
             eventNeedsMoving = true
+            
         }
     }
     
     // No time conflicts found.
     if !eventNeedsMoving {
         return prevSortIndex
+        
     }
     
     // Event is the earliest event.

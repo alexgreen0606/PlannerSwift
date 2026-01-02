@@ -37,7 +37,7 @@ extension Date {
     var dynamicSubheader: String {
         let date = DateInRegion(self, region: .local).dateAt(.startOfDay)
         let today = DateInRegion(region: .local).dateAt(.startOfDay)
-        
+
         if date < today {
             // Past date.
             return weekday
@@ -56,20 +56,6 @@ extension Date {
         return weekday
     }
 
-    var longDate: String {  // Ex: May 12, 2025
-        DateInRegion(self, region: .local).toFormat(
-            "MMMM d, yyyy",
-            locale: Locale.current
-        )
-    }
-
-    var shortDate: String {  // Ex: May 12
-        DateInRegion(self, region: .local).toFormat(
-            "MMMM d",
-            locale: Locale.current
-        )
-    }
-
     var weekday: String {  // Ex: Wednesday
         DateInRegion(self, region: .local).toFormat(
             "EEEE",
@@ -81,11 +67,9 @@ extension Date {
         DateInRegion(self, region: .local).toFormat("yyyy-MM-dd")
     }
 
-    var timeValues:
-        (
-            timeValue: String, indicator: String
-        )
-    { // Ex: 12:37, PM
+    func timeValues(for datestamp: String) -> (
+        timeValue: String, indicator: String, detail: String?
+    ) {  // Ex: 12:37, PM, END
         let dateInRegion = DateInRegion(self, region: .local)
 
         // Format hours and minutes in 12-hour clock
@@ -100,7 +84,7 @@ extension Date {
         // Determine AM or PM
         let indicator = hour < 12 ? "AM" : "PM"
 
-        return (timeValue: String(trimmed), indicator: indicator)
+        return (timeValue: String(trimmed), indicator: indicator, detail: nil)
     }
 
     var countdown: String? {  // Ex: Today, Tomorrow, 3 days away, 3 days ago
@@ -124,5 +108,19 @@ extension Date {
             }
             return "\(diff) days ago"
         }
+    }
+
+    private var longDate: String {  // Ex: May 12, 2025
+        DateInRegion(self, region: .local).toFormat(
+            "MMMM d, yyyy",
+            locale: Locale.current
+        )
+    }
+
+    private var shortDate: String {  // Ex: May 12
+        DateInRegion(self, region: .local).toFormat(
+            "MMMM d",
+            locale: Locale.current
+        )
     }
 }

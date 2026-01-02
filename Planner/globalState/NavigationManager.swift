@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import EventKit
 import Combine
 
 enum AppTab: Hashable {

@@ -67,9 +67,18 @@ enum PlannerType: String {
     }
 }
 
+struct CalendarEventSheetContext: Identifiable {
+    var event: EKEvent
+    var namespace: Namespace.ID
+    
+    var id: String {
+        "\(String(describing: event.eventIdentifier))-\(namespace)"
+    }
+}
+
 struct PlannerView: View {
-    let datestamp: String
-    let closePlanner: () -> Void
+    private let datestamp: String
+    private let closePlanner: () -> Void
 
     @AppStorage("showCompletedPlans") var showCompletedPlans: Bool = false
     @AppStorage("showDeletedPlans") var showDeletedPlans: Bool = false
@@ -86,28 +95,26 @@ struct PlannerView: View {
     @EnvironmentObject var todaystampManager: TodaystampWatcher
 
     @State private var calendarPlannerEvents: [PlannerEvent] = []
-    
+
     @State private var calendarEventSheetContext: CalendarEventSheetContext?
-    
-    @Namespace private var animation
+    @Namespace private var sheetAnimation
 
     @State private var scrollProxy: ScrollViewProxy?
-
     @State private var isCalendarPickerPresented = false
 
-    var plannerType: PlannerType {
+    private var plannerType: PlannerType {
         datestamp <= todaystampManager.todaystamp ? .pastOrPresent : .future
     }
 
-    var date: Date {
+    private var date: Date {
         datestamp.date ?? Date()
     }
 
-    var showChecked: Bool {
+    private var showChecked: Bool {
         plannerType == .future ? showDeletedPlans : showCompletedPlans
     }
 
-    var uncheckedEvents: [PlannerEvent] {
+    private var uncheckedEvents: [PlannerEvent] {
         let storageEvents =
             planner != nil
             ? planner!.events.filter {
@@ -120,7 +127,7 @@ struct PlannerView: View {
         }
     }
 
-    var checkedEvents: [PlannerEvent] {
+    private var checkedEvents: [PlannerEvent] {
         planner != nil
             ? planner!.events.filter {
                 $0.isChecked
@@ -153,20 +160,20 @@ struct PlannerView: View {
                     ] ?? [],
                     showCountdown: true,
                     showWeather: true,
-                    center: false,
-                    animation: animation,
+                    animation: sheetAnimation,
                     openCalendarEventSheet: { event in
                         calendarEventSheetContext = CalendarEventSheetContext(
                             event: event,
-                            namespace: animation
+                            namespace: sheetAnimation
                         )
                     }
                 ),
                 endAdornment: { event in
                     event.timeValueView(
                         for: datestamp,
-                        openSheet: openPlannerEventSheet,
-                        animation: animation
+                        openPlannerEventSheet: openPlannerEventSheet,
+                        openCalendarEventSheet: openCalendarEventSheet,
+                        animation: sheetAnimation
                     )
                 },
                 customToggleConfig: plannerType.toggleEventIconConfig,
@@ -221,8 +228,7 @@ struct PlannerView: View {
                             return
                         }
 
-                        // TODO: doesnt work when the list is long and hasn't been scrolled down to yet (not mounted?)
-                        slideTo("UNCHECKED", at: .bottom)
+                        scrollProxy?.slideTo("UNCHECKED", at: .bottom)
                         handleCreateEvent(at: uncheckedEvents.count)
                     }
                     .tint(themeColor.swiftUIColor)
@@ -236,7 +242,7 @@ struct PlannerView: View {
         // Slide to the checked items when the user marks them visible.
         .onChange(of: showChecked) { _, newShowChecked in
             if newShowChecked {
-                slideTo("CHECKED", at: .top)
+                scrollProxy?.slideTo("CHECKED", at: .top)
             }
         }
         .task {
@@ -265,7 +271,9 @@ struct PlannerView: View {
                 .ignoresSafeArea()
                 .navigationTransition(
                     .zoom(
-                        sourceID: String(describing: context.event.eventIdentifier),
+                        sourceID: String(
+                            describing: context.event.eventIdentifier
+                        ),
                         in: context.namespace
                     )
                 )
@@ -277,7 +285,9 @@ struct PlannerView: View {
                     .ignoresSafeArea()
                     .navigationTransition(
                         .zoom(
-                            sourceID: String(describing: context.event.eventIdentifier),
+                            sourceID: String(
+                                describing: context.event.eventIdentifier
+                            ),
                             in: context.namespace
                         )
                     )
@@ -303,20 +313,22 @@ struct PlannerView: View {
     private func openPlannerEventSheet(
         for event: PlannerEvent
     ) {
-        if event.calendarEvent == nil {
+    }
 
-        } else {
-            calendarEventSheetContext = CalendarEventSheetContext(
-                event: event.calendarEvent!,
-                namespace: animation
-            )
-        }
+    private func openCalendarEventSheet(
+        for event: EKEvent
+    ) {
+        calendarEventSheetContext = CalendarEventSheetContext(
+            event: event,
+            namespace: sheetAnimation
+        )
     }
 
     private func handleCreateEvent(at index: Int) {
         guard let planner = planner else { return }
         let sortIndex = generateSortIndex(index: index, items: uncheckedEvents)
         let newEvent = PlannerEvent(sortIndex: sortIndex, planner: planner)
+        
         modelContext.insert(newEvent)
         try! modelContext.save()
     }
@@ -414,24 +426,8 @@ struct PlannerView: View {
         }
 
         event.sortIndex = newSortIndex
-        slideTo(event.id, at: .bottom, withDelay: .seconds(3))
+        scrollProxy?.slideTo(event.id, at: .bottom, withDelay: .seconds(3))
 
         try? modelContext.save()
-    }
-
-    private func slideTo(
-        _ id: any Hashable,
-        at anchor: UnitPoint,
-        withDelay delay: DispatchTimeInterval = .seconds(0)
-    ) {
-        guard let proxy = scrollProxy
-        else { return }
-        DispatchQueue.main.asyncAfter(
-            deadline: .now() + delay
-        ) {
-            withAnimation(.linear(duration: 2)) {
-                proxy.scrollTo(id, anchor: anchor)
-            }
-        }
     }
 }

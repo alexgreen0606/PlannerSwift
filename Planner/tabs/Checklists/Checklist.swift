@@ -6,7 +6,6 @@
 //
 
 import SwiftData
-import SwiftDate
 import SwiftUI
 
 struct ChecklistView: View {
@@ -18,13 +17,13 @@ struct ChecklistView: View {
 
     @State private var scrollProxy: ScrollViewProxy?
 
-    var sortedCheckedItems: [ChecklistItem] {
+    private var sortedCheckedItems: [ChecklistItem] {
         checklist.items
             .filter { $0.isChecked }
             .sorted { $0.sortIndex < $1.sortIndex }
     }
 
-    var sortedUncheckedItems: [ChecklistItem] {
+    private var sortedUncheckedItems: [ChecklistItem] {
         checklist.items
             .filter { !$0.isChecked }
             .sorted { $0.sortIndex < $1.sortIndex }
@@ -44,9 +43,9 @@ struct ChecklistView: View {
                 emptyUncheckedLabel: "No items",
                 emptyCheckedLabel: "No completed items",
                 tint: checklist.color.swiftUIColor,
-                onCreateItem: handleCreateEvent,
+                onCreateItem: createItem,
                 onTitleChange: { _ in },
-                onMoveUncheckedItem: handleMoveItem
+                onMoveUncheckedItem: moveItem
             )
             .accentColor(checklist.color.swiftUIColor)
             .navigationTitle(checklist.title)
@@ -72,8 +71,8 @@ struct ChecklistView: View {
 
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Add", systemImage: "plus") {
-                        handleCreateEvent(at: sortedUncheckedItems.count)
-                        slideTo(
+                        createItem(at: sortedUncheckedItems.count)
+                        scrollProxy?.slideTo(
                             "UNCHECKED",
                             at: .bottom,
                             withDelay: .seconds(1)
@@ -84,17 +83,18 @@ struct ChecklistView: View {
         }
     }
 
-    private func handleCreateEvent(at index: Int) {
+    private func createItem(at index: Int) {
         let sortIndex = generateSortIndex(
             index: index,
             items: sortedUncheckedItems
         )
         let newItem = ChecklistItem(sortIndex: sortIndex, parent: checklist)
+
         modelContext.insert(newItem)
         try! modelContext.save()
     }
 
-    private func handleMoveItem(from: Int, to: Int) {
+    private func moveItem(from: Int, to: Int) {
         guard from != to else { return }
 
         let movedEvent = sortedUncheckedItems[from]
@@ -107,21 +107,5 @@ struct ChecklistView: View {
         )
 
         try! modelContext.save()
-    }
-
-    private func slideTo(
-        _ id: any Hashable,
-        at anchor: UnitPoint,
-        withDelay delay: DispatchTimeInterval = .seconds(0)
-    ) {
-        guard let proxy = scrollProxy
-        else { return }
-        DispatchQueue.main.asyncAfter(
-            deadline: .now() + delay
-        ) {
-            withAnimation(.linear(duration: 2)) {
-                proxy.scrollTo(id, anchor: anchor)
-            }
-        }
     }
 }

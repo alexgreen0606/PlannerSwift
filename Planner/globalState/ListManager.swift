@@ -9,8 +9,6 @@ import Combine
 import SwiftData
 import SwiftUI
 
-// TODO: watch environment variable to know when the focused list has changed. When it has, immediately execute the task.
-
 @MainActor
 final class ListManager<Item: ListItem>: ObservableObject {
     @Published var itemIdsToCheck: Set<ObjectIdentifier> = []

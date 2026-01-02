@@ -10,20 +10,11 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-struct CalendarEventSheetContext: Identifiable {
-    var event: EKEvent
-    var namespace: Namespace.ID
-    
-    var id: String {
-        "\(String(describing: event.eventIdentifier))-\(namespace)"
-    }
-}
-
 struct PlannerCoverContext: Identifiable {
     var datestamp: String
     var namespace: Namespace.ID
-    var fromCalendar: Bool?
-    
+    var triggeredByCalendar: Bool?
+
     var id: String {
         "\(datestamp)-\(namespace)"
     }
@@ -37,18 +28,25 @@ struct PlannerSearchView: View {
     @EnvironmentObject var todaystampManager: TodaystampWatcher
 
     @StateObject private var plannerManager = ListManager()
-    
-    @State private var calendarEventSheetContext: CalendarEventSheetContext?
-    @State private var plannerCoverContext: PlannerCoverContext?
 
-    @Namespace private var thisWeekAnimation
-    @Namespace private var comingUpAnimation
-    @Namespace private var calendarAnimation
+    @State private var plannerCoverContext: PlannerCoverContext?
+    @Namespace private var plannerCoverAnimation
 
     @State private var isCalendarPickerOpen = false
     @State private var selectedCalendarDate: Date = Date()
 
-    var eventsByYear: [String: [String]] {
+    private var thisWeekDatestamps: [String] {
+        let region = Region.local
+        let today = DateInRegion(Date(), region: region)
+
+        return (0..<7).map {
+            today
+                .dateByAdding($0, .day)
+                .toFormat("yyyy-MM-dd")
+        }.sorted()
+    }
+
+    private var upcomingEventMap: [String: [String]] {
         let today = todaystampManager.todaystamp
         let todayDate = today.toDate("yyyy-MM-dd", region: .local)
         let oneYearOut = todayDate?.dateByAdding(3, .year)
@@ -60,7 +58,7 @@ struct PlannerSearchView: View {
             calendarEventStore.singleDayEventsByDatestamp.keys
         )
 
-        // Filter to next week → one year out
+        // Filter to show all future dates.
         let filtered = eventDatestamps.compactMap {
             datestamp -> (year: String, datestamp: String)? in
             guard
@@ -75,10 +73,10 @@ struct PlannerSearchView: View {
             return (year, datestamp)
         }
 
-        // Group by year
+        // Group by year.
         let grouped = Dictionary(grouping: filtered, by: { $0.year })
 
-        // Sort datestamps within each year
+        // Sort datestamps within each year.
         return grouped.mapValues { values in
             values
                 .map { $0.datestamp }
@@ -86,19 +84,8 @@ struct PlannerSearchView: View {
         }
     }
 
-    var eventDatestamps: [String] {
-        let region = Region.local
-        let today = DateInRegion(Date(), region: region)
-
-        return (0..<7).map {
-            today
-                .dateByAdding($0, .day)
-                .toFormat("yyyy-MM-dd")
-        }.sorted()
-    }
-
-    var sortedYears: [String] {
-        Array(eventsByYear.keys).sorted()
+    private var sortedUpcomingYears: [String] {
+        Array(upcomingEventMap.keys).sorted()
     }
 
     var body: some View {
@@ -113,7 +100,7 @@ struct PlannerSearchView: View {
 
                 ScrollView(.horizontal) {
                     HStack(alignment: .top, spacing: 12) {
-                        ForEach(eventDatestamps, id: \.self) {
+                        ForEach(thisWeekDatestamps, id: \.self) {
                             datestamp in
                             PlannerCardVertical(
                                 datestamp: datestamp,
@@ -126,22 +113,16 @@ struct PlannerSearchView: View {
                                     calendarEventStore
                                     .singleDayEventsByDatestamp[
                                         datestamp
-                                    ] ?? [],
-                                animation: thisWeekAnimation,
-                                openCalendarEventSheet: { event in
-                                    calendarEventSheetContext = CalendarEventSheetContext(
-                                        event: event,
-                                        namespace: thisWeekAnimation
-                                    )
-                                }
+                                    ] ?? []
                             ) {
                                 plannerCoverContext = PlannerCoverContext(
                                     datestamp: datestamp,
-                                    namespace: thisWeekAnimation
-                                )                            }
+                                    namespace: plannerCoverAnimation
+                                )
+                            }
                             .matchedTransitionSource(
                                 id: datestamp,
-                                in: thisWeekAnimation
+                                in: plannerCoverAnimation
                             )
                         }
                     }
@@ -155,9 +136,10 @@ struct PlannerSearchView: View {
             .listRowBackground(Color.appBackground)
             .listRowInsets(.horizontal, 0)
 
-            ForEach(sortedYears, id: \.self) { year in
+            ForEach(sortedUpcomingYears, id: \.self) { year in
                 Section {
-                    ForEach(eventsByYear[year] ?? [], id: \.self) { datestamp in
+                    ForEach(upcomingEventMap[year] ?? [], id: \.self) {
+                        datestamp in
                         PlannerCard(
                             datestamp: datestamp,
                             allDayEvents:
@@ -167,27 +149,20 @@ struct PlannerSearchView: View {
                             singleDayEvents:
                                 calendarEventStore.singleDayEventsByDatestamp[
                                     datestamp
-                                ] ?? [],
-                            animation: comingUpAnimation,
-                            openCalendarEventSheet: { event in
-                                calendarEventSheetContext = CalendarEventSheetContext(
-                                    event: event,
-                                    namespace: comingUpAnimation
-                                )
-                            }
+                                ] ?? []
                         ) {
                             plannerCoverContext = PlannerCoverContext(
                                 datestamp: datestamp,
-                                namespace: comingUpAnimation
+                                namespace: plannerCoverAnimation
                             )
                         }
                         .matchedTransitionSource(
                             id: datestamp,
-                            in: comingUpAnimation
+                            in: plannerCoverAnimation
                         )
                         .overlay {
-                            if year == sortedYears.first!
-                                && datestamp == eventsByYear[year]!.first!
+                            if year == sortedUpcomingYears.first!
+                                && datestamp == upcomingEventMap[year]!.first!
                             {
                                 HStack(alignment: .top) {
                                     Text("Coming up")
@@ -203,7 +178,7 @@ struct PlannerSearchView: View {
                         }
                     }
                 } header: {
-                    listSectionHeader(year)
+                    upcomingYearHeader(year)
                 }
             }
         }
@@ -235,8 +210,8 @@ struct PlannerSearchView: View {
                             DispatchQueue.main.async {
                                 plannerCoverContext = PlannerCoverContext(
                                     datestamp: targetPlannerDate.datestamp,
-                                    namespace: calendarAnimation,
-                                    fromCalendar: true
+                                    namespace: plannerCoverAnimation,
+                                    triggeredByCalendar: true
                                 )
                             }
                         }
@@ -247,7 +222,7 @@ struct PlannerSearchView: View {
                 }
                 .matchedTransitionSource(
                     id: "CALENDAR",
-                    in: calendarAnimation
+                    in: plannerCoverAnimation
                 )
             }
 
@@ -295,48 +270,16 @@ struct PlannerSearchView: View {
             .environmentObject(plannerManager)
             .navigationTransition(
                 .zoom(
-                    sourceID: context.fromCalendar == true ? "CALENDAR" : context.datestamp,
+                    sourceID: context.triggeredByCalendar == true
+                        ? "CALENDAR" : context.datestamp,
                     in: context.namespace
                 )
             )
         }
-        .sheet(item: $calendarEventSheetContext) { context in
-            switch context.event.calendar.allowsContentModifications {
-            case true:
-                EditCalendarEventView(
-                    event: context.event,
-                    eventStore: calendarEventStore.ekEventStore
-                ) { action, updatedEvent in
-                    calendarEventStore.refresh()
-                    calendarEventSheetContext = nil
-                }
-                .tint(themeColor.swiftUIColor)
-                .ignoresSafeArea()
-                .navigationTransition(
-                    .zoom(
-                        sourceID: String(describing: context.event.eventIdentifier),
-                        in: context.namespace
-                    )
-                )
-
-            case false:
-                ViewCalendarEventView(event: context.event)
-                    .tint(themeColor.swiftUIColor)
-                    .presentationDetents([.height(340)])
-                    .ignoresSafeArea()
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: String(describing: context.event.eventIdentifier),
-                            in: context.namespace
-                        )
-                    )
-            }
-        }
     }
 
-    @ViewBuilder
-    func listSectionHeader(_ title: String) -> some View {
-        Text(title)
+    private func upcomingYearHeader(_ year: String) -> some View {
+        Text(year)
             .font(.system(size: 22, weight: .heavy, design: .rounded))
             .foregroundColor(.secondary).frame(
                 maxWidth: .infinity,
