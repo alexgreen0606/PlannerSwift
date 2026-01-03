@@ -16,12 +16,11 @@ struct ContentView: View {
 
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
 
-    @EnvironmentObject var todaystampManager: TodaystampWatcher
+    @EnvironmentObject var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject var navigationManager: NavigationManager
     @EnvironmentObject var calendarEventStore: CalendarEventStore
 
     @StateObject private var todayPlannerManager = ListManager()
-
     @State private var isTodayPlannerOpen: Bool = false
     @Namespace private var todayPlannerCoverAnimation
 
@@ -29,7 +28,7 @@ struct ContentView: View {
 
     private var eventsForToday: [EKEvent] {
         return calendarEventStore.allDayEventsByDatestamp[
-            todaystampManager.todaystamp
+            todaystampWatcher.todaystamp
         ] ?? []
     }
 
@@ -109,8 +108,9 @@ struct ContentView: View {
         }
         .tabBarMinimizeBehavior(.onScrollDown)
         .tabViewBottomAccessory {
+            // TODO: this is re-rendered in each tab. Prevent this if possible.
             PlannerAccessoryView(
-                todaystamp: todaystampManager.todaystamp,
+                todaystamp: todaystampWatcher.todaystamp,
                 animation: todayPlannerCoverAnimation
             ) {
                 isTodayPlannerOpen.toggle()
@@ -119,7 +119,7 @@ struct ContentView: View {
         .fullScreenCover(isPresented: $isTodayPlannerOpen) {
             NavigationStack {
                 PlannerView(
-                    datestamp: todaystampManager.todaystamp
+                    datestamp: todaystampWatcher.todaystamp
                 ) {
                     isTodayPlannerOpen.toggle()
                 }
@@ -131,6 +131,11 @@ struct ContentView: View {
                     in: todayPlannerCoverAnimation
                 )
             )
+        }
+        .task {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                isTodayPlannerOpen = true
+            }
         }
     }
 }

@@ -14,8 +14,6 @@ struct TimeValue: View {
     let color: Color
     let openEventSheet: (() -> Void)?
 
-    @State private var isVisible = false
-
     private var timeInfo:
         (timeValue: String, indicator: String, detail: String?)
     {
@@ -51,9 +49,6 @@ struct TimeValue: View {
                     .offset(y: 16)
             }
         }
-        .opacity(!isVisible ? 0 : 1)
-        .animation(.easeIn(duration: 0.25), value: isVisible)
-        .onAppear { isVisible = true }
 
         if openEventSheet == nil {
             timeVal

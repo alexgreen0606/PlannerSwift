@@ -8,24 +8,30 @@
 import EventKit
 import SwiftData
 import SwiftUI
+import WeatherKit
 
 struct PlannerAccessoryView: View {
-    private let todaystamp: String
     private var animation: Namespace.ID
     private let openTodayPlanner: () -> Void
+    
+    @Environment(\.tabViewBottomAccessoryPlacement) private var placement
     
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]
     @State private var planner: Planner?
 
-    @EnvironmentObject var todaystampManager: TodaystampWatcher
+    @EnvironmentObject var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject var navigationManager: NavigationManager
     @EnvironmentObject var calendarEventStore: CalendarEventStore
-    @Environment(\.tabViewBottomAccessoryPlacement) private var placement
+    @ObservedObject var weatherStore = WeatherStore.shared
+    
+    private var weatherData: DayWeather? {
+        weatherStore.dayWeatherByDatestamp[todaystampWatcher.todaystamp]
+    }
 
     private var allDayEvents: [EKEvent] {
         return calendarEventStore.allDayEventsByDatestamp[
-            todaystampManager.todaystamp
+            todaystampWatcher.todaystamp
         ] ?? []
     }
     
@@ -44,7 +50,6 @@ struct PlannerAccessoryView: View {
     
     init(todaystamp: String, animation: Namespace.ID, openTodayPlanner: @escaping () -> Void) {
         self.animation = animation
-        self.todaystamp = todaystamp
         self.openTodayPlanner = openTodayPlanner
         
         _planners = Query(
@@ -56,10 +61,10 @@ struct PlannerAccessoryView: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            PlannerIcon(datestamp: todaystampManager.todaystamp, scale: 1)
+            PlannerIcon(datestamp: todaystampWatcher.todaystamp, scale: 1)
 
             VStack(alignment: .leading, spacing: 0) {
-                Text(todaystampManager.todaystamp.date?.dynamicHeader ?? "")
+                Text(todaystampWatcher.todaystamp.date?.weekday ?? "")
                     .font(.callout)
                     .matchedTransitionSource(
                         id: "PLANNER_ACCESSORY",
@@ -96,16 +101,16 @@ struct PlannerAccessoryView: View {
             HStack(alignment: .center) {
                 if placement != .inline {
                     VStack(alignment: .trailing, spacing: 0) {
-                        Text("Sunny")
+                        Text(weatherData?.condition.description ?? "")
                             .font(.caption)
 
                         HStack(alignment: .center, spacing: 4) {
-                            Text("76°")
+                            Text(weatherData?.highTempString ?? "")
                                 .font(.caption2)
 
                             Divider().frame(height: 10)
 
-                            Text("64°")
+                            Text(weatherData?.lowTempString ?? "")
                                 .font(.caption2)
                         }
                         .foregroundStyle(
@@ -114,7 +119,7 @@ struct PlannerAccessoryView: View {
                     }
                 }
 
-                Image(systemName: "sun.max.fill")
+                Image(systemName: weatherData?.symbolName ?? "")
                     .imageScale(.medium)
                     .foregroundStyle(.yellow)
             }
@@ -126,7 +131,7 @@ struct PlannerAccessoryView: View {
         .task {
             planner = modelContext.ensurePlanner(
                 planners: planners,
-                datestamp: todaystamp
+                datestamp: todaystampWatcher.todaystamp
             )
         }
     }

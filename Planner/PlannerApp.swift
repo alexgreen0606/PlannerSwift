@@ -40,6 +40,8 @@ struct PlannerApp: App {
         ThemeColorOption.blue
 
     let calendarStore = CalendarEventStore.shared
+    let weatherStore = WeatherStore.shared
+
     @StateObject private var navigationManager = NavigationManager()
 
     var body: some Scene {
@@ -47,11 +49,15 @@ struct PlannerApp: App {
             ContentView()
                 .accentColor(themeColor.swiftUIColor)
                 .environmentObject(TodaystampWatcher.shared)
-                .environmentObject(WeatherStore.shared)
+                .environmentObject(weatherStore)
                 .environmentObject(calendarStore)
                 .environmentObject(navigationManager)
                 .onAppear {
                     calendarStore.requestAccessAndLoadIfNeeded()
+
+                    Task {
+                        await weatherStore.loadWeather()
+                    }
                 }
         }
         .modelContainer(for: [

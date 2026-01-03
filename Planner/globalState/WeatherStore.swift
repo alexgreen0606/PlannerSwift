@@ -22,42 +22,28 @@ final class WeatherStore: ObservableObject {
     @Published private(set) var dayWeatherByDatestamp: [String: DayWeather] =
         [:]
 
-    func loadWeather(for datestamp: String) async {
-        guard let targetDay = datestamp.date?.in(region: .local) else { return }
+    func loadWeather() async -> Set<String> {
         guard let deviceLocation = locationManager.location else {
             print("Device location not available.")
-            return
+            return []
         }
+
+        var loadedDatestamps = Set<String>()
 
         do {
-            let weather = try await weatherService.weather(
-                for: deviceLocation
-            )
+            let weather = try await weatherService.weather(for: deviceLocation)
 
-            guard
-                let dayWeather = weather.dailyForecast.first(
-                    where: {
-                        $0.date
-                            .in(region: .local)
-                            .dateAtStartOf(.day)
-                            == targetDay
-                    }
-                )
-            else {
-                return
+            for dayWeather in weather.dailyForecast {
+                let currentDatestamp = dayWeather.date.datestamp
+                dayWeatherByDatestamp[currentDatestamp] = dayWeather
+                loadedDatestamps.insert(currentDatestamp)
             }
 
-            dayWeatherByDatestamp[datestamp] = dayWeather
+            return loadedDatestamps
         } catch {
             print("WeatherStore error:", error)
+            return []
         }
     }
 
-    // Refreshes all currently loaded weather data.
-    func refreshAllWeather() async {
-        let datestamps = dayWeatherByDatestamp.keys
-        for datestamp in datestamps {
-            await loadWeather(for: datestamp)
-        }
-    }
 }

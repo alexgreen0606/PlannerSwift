@@ -24,6 +24,14 @@ struct PlannerCardVertical: View {
     @ObservedObject var weatherStore = WeatherStore.shared
     @EnvironmentObject var calendarEventStore: CalendarEventStore
 
+    // MARK: - Weather Data
+    
+    private var weatherData: DayWeather? {
+        weatherStore.dayWeatherByDatestamp[datestamp]
+    }
+    
+    // MARK: - Event Data
+    
     private var allDayEvents: [EKEvent] {
         calendarEventStore.allDayEventsByDatestamp[
             datestamp
@@ -34,10 +42,6 @@ struct PlannerCardVertical: View {
         calendarEventStore.singleDayEventsByDatestamp[
             datestamp
         ] ?? []
-    }
-
-    private var weatherData: DayWeather? {
-        weatherStore.dayWeatherByDatestamp[datestamp]
     }
 
     private var planCountLabel: String {
@@ -110,10 +114,10 @@ struct PlannerCardVertical: View {
                 Spacer()
 
                 HStack(alignment: .center, spacing: 4) {
-                    Text(weatherData?.highTemperature.description ?? "")
+                    Text(weatherData?.highTempString ?? "")
                         .font(.caption2)
                     Divider().frame(height: 16)
-                    Text(weatherData?.lowTemperature.description ?? "")
+                    Text(weatherData?.lowTempString ?? "")
                         .font(.caption2)
                 }
             }
@@ -134,11 +138,6 @@ struct PlannerCardVertical: View {
                 planners: planners,
                 datestamp: datestamp
             )
-        }
-        .onAppear {
-            Task {
-                await weatherStore.loadWeather(for: datestamp)
-            }
         }
     }
 }

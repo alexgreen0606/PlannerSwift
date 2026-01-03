@@ -26,7 +26,7 @@ struct PlannerSearchView: View {
 
     @EnvironmentObject var navigationManager: NavigationManager
     @EnvironmentObject var calendarEventStore: CalendarEventStore
-    @EnvironmentObject var todaystampManager: TodaystampWatcher
+    @EnvironmentObject var todaystampWatcher: TodaystampWatcher
     @ObservedObject var weatherStore = WeatherStore.shared
 
     @StateObject private var plannerManager = ListManager()
@@ -51,7 +51,7 @@ struct PlannerSearchView: View {
     }
 
     private var upcomingEventMap: [String: [String]] {
-        let today = todaystampManager.todaystamp
+        let today = todaystampWatcher.todaystamp
         let todayDate = today.toDate("yyyy-MM-dd", region: .local)
         let oneYearOut = todayDate?.dateByAdding(3, .year)
 
@@ -167,7 +167,7 @@ struct PlannerSearchView: View {
         .refreshable {
             calendarEventStore.refresh()
             Task {
-                await weatherStore.refreshAllWeather()
+                await weatherStore.loadWeather()
             }
         }
         .listStyle(.plain)
@@ -246,10 +246,7 @@ struct PlannerSearchView: View {
                             )
                         } icon: {
                             Image(
-                                systemName:
-                                    showListSeparators
-                                    ? "eye.slash.fill"
-                                    : "eye.fill"
+                                systemName: "line.3.horizontal"
                             )
                         }
                     }

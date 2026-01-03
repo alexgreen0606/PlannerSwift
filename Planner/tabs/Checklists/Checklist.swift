@@ -59,7 +59,7 @@ struct ChecklistView: View {
                             )
                             Image(
                                 systemName: checklist.showCompleted
-                                    ? "eye.slash.fill" : "eye.fill"
+                                    ? "eye.slash" : "eye"
                             )
                         }
                     } label: {

@@ -45,6 +45,7 @@ struct PlannerChipSpreadView: View {
             }
             if showWeather && weatherData != nil {
                 weather
+                    .transition(.opacity)
             }
             ForEach(events, id: \.eventIdentifier) { event in
                 let chip = PlannerChipView(
@@ -69,13 +70,7 @@ struct PlannerChipSpreadView: View {
                 }
             }
         }
-        .onAppear {
-            if showWeather {
-                Task {
-                    await weatherStore.loadWeather(for: datestamp)
-                }
-            }
-        }
+        .animation(.easeInOut(duration: 0.5), value: weatherData != nil)
     }
 
     private var weather: some View {
@@ -94,13 +89,13 @@ struct PlannerChipSpreadView: View {
                 }
 
                 HStack(alignment: .center, spacing: 4) {
-                    Text(weatherData?.highTemperature.description ?? "")
+                    Text(weatherData?.highTempString ?? "")
                         .font(.caption2)
                         .foregroundStyle(Color(uiColor: .label))
 
                     Divider().frame(height: 16)
 
-                    Text(weatherData?.lowTemperature.description ?? "")
+                    Text(weatherData?.lowTempString ?? "")
                         .font(.caption2)
                         .foregroundStyle(Color(uiColor: .label))
                 }

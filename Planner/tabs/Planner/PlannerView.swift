@@ -210,7 +210,7 @@ struct PlannerView: View {
                                 )
                                 Image(
                                     systemName: showChecked
-                                        ? "eye.slash.fill" : "eye.fill"
+                                        ? "eye.slash" : "eye"
                                 )
                             }
                         )
