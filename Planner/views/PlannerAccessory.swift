@@ -22,7 +22,7 @@ struct PlannerAccessoryView: View {
     @State private var planner: Planner?
 
     @EnvironmentObject var navigationManager: NavigationManager
-    @EnvironmentObject var calendarEventStore: CalendarEventStore
+    @EnvironmentObject var calendarEventStore: CalendarStore
     @ObservedObject var weatherStore = WeatherStore.shared
 
     private var weatherData: DayWeather? {

@@ -13,7 +13,7 @@ struct PlannerCardView: View {
     let iconMap: [String: String]
     let openPlanner: () -> Void
     
-    @EnvironmentObject var calendarEventStore: CalendarEventStore
+    @EnvironmentObject var calendarEventStore: CalendarStore
 
     private var allDayEvents: [EKEvent] {
         calendarEventStore.allDayEventsByDatestamp[

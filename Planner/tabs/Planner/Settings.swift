@@ -15,12 +15,14 @@ import SwiftUI
 struct SettingsView: View {
     @AppStorage("themeColor") var themeColor: ThemeColorOption =
         ThemeColorOption.blue
+    @AppStorage("showListSeparators") private var showListSeparators: Bool =
+        true
 
     @Environment(\.modelContext) private var modelContext
     @Query private var settingList: [CalendarSettings]
     @State private var settings: CalendarSettings?
 
-    @EnvironmentObject var calendarEventStore: CalendarEventStore
+    @EnvironmentObject var calendarEventStore: CalendarStore
 
     var iconOptions: [String] = [
         "briefcase.fill",
@@ -43,7 +45,20 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section {
+                Picker("Accent Color", selection: $themeColor) {
+                    ForEach(ThemeColorOption.allCases, id: \.self) { option in
+                        Image(systemName: "circle.fill")
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(option.swiftUIColor)
+                            .tag(option)
+                    }
+                }
+                .pickerStyle(.menu)
 
+                Toggle("List separators", isOn: $showListSeparators)
+                    .tint(themeColor.swiftUIColor)
+            } header: {
+                Text("Style")
             }
 
             Section {
@@ -112,6 +127,7 @@ struct SettingsView: View {
                 Text("Calendars")
             }
         }
+        .navigationTitle("Settings")
         .task {
             settings = modelContext.ensureCalendarSettings(
                 settings: settingList

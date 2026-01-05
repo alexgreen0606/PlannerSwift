@@ -23,7 +23,7 @@ struct PlannerCardVerticalView: View {
 
     @EnvironmentObject var todaystampManager: TodaystampWatcher
     @ObservedObject var weatherStore = WeatherStore.shared
-    @EnvironmentObject var calendarEventStore: CalendarEventStore
+    @EnvironmentObject var calendarEventStore: CalendarStore
 
     // MARK: - Weather Data
 

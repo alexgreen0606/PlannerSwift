@@ -24,16 +24,12 @@ enum PlannerRoute: Hashable {
 }
 
 struct PlannerSearchView: View {
-    @AppStorage("themeColor") private var themeColor: ThemeColorOption = .blue
-    @AppStorage("showListSeparators") private var showListSeparators: Bool =
-        true
-
     @Environment(\.modelContext) private var modelContext
     @Query private var calendarSettingsList: [CalendarSettings]
     @State private var calendarSettings: CalendarSettings?
 
     @EnvironmentObject var navigationManager: NavigationManager
-    @EnvironmentObject var calendarEventStore: CalendarEventStore
+    @EnvironmentObject var calendarEventStore: CalendarStore
     @EnvironmentObject var todaystampWatcher: TodaystampWatcher
     @ObservedObject var weatherStore = WeatherStore.shared
 
@@ -187,14 +183,6 @@ struct PlannerSearchView: View {
                     }
                 }
             }
-            .refreshable {
-                calendarEventStore.refresh(
-                    hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? []
-                )
-                Task {
-                    await weatherStore.loadWeather()
-                }
-            }
             .listStyle(.plain)
             .background(Color.appBackground)
             .navigationTitle("Planner")
@@ -236,64 +224,18 @@ struct PlannerSearchView: View {
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        Menu {
-                            ForEach(ThemeColorOption.allCases, id: \.self) {
-                                option in
-                                Button {
-                                    themeColor = option
-                                } label: {
-                                    Label {
-                                        Text(option.label)
-                                    } icon: {
-                                        Image(
-                                            systemName:
-                                                themeColor == option
-                                                ? "circle.fill"
-                                                : "circle"
-                                        )
-                                    }
-                                    .tint(option.swiftUIColor)
-                                }
-                            }
-                        } label: {
-                            Label(
-                                "Theme Color",
-                                systemImage: "paintpalette.fill"
-                            )
-                        }
-
-                        Button {
-                            showListSeparators.toggle()
-                        } label: {
-                            Label {
-                                Text(
-                                    showListSeparators
-                                        ? "Hide list separators"
-                                        : "Show list separators"
-                                )
-                            } icon: {
-                                Image(
-                                    systemName: "line.3.horizontal"
-                                )
-                            }
-                        }
-
-                        Button {
-                            navigationManager.plannerPath.append(
-                                PlannerRoute.settings
-                            )
-                        } label: {
-                            Label {
-                                Text("Settings")
-                            } icon: {
-                                Image(
-                                    systemName: "gear"
-                                )
-                            }
-                        }
+                    Button {
+                        navigationManager.plannerPath.append(
+                            PlannerRoute.settings
+                        )
                     } label: {
-                        Image(systemName: "ellipsis")
+                        Label {
+                            Text("Settings")
+                        } icon: {
+                            Image(
+                                systemName: "gear"
+                            )
+                        }
                     }
                 }
 
@@ -328,8 +270,19 @@ struct PlannerSearchView: View {
                 calendarSettings = modelContext.ensureCalendarSettings(
                     settings: calendarSettingsList
                 )
+                
+                calendarEventStore.requestAccessAndLoadIfNeeded(
+                    hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? []
+                )
             }
-
+            .refreshable {
+                calendarEventStore.refresh(
+                    hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? []
+                )
+                Task {
+                    await weatherStore.loadWeather()
+                }
+            }
         }
         .searchable(
             text: $searchText,

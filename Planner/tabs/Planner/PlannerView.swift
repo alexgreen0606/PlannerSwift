@@ -89,7 +89,7 @@ struct PlannerView: View {
     @Query private var calendarSettingsList: [CalendarSettings]
     @State private var calendarSettings: CalendarSettings?
 
-    @EnvironmentObject var calendarEventStore: CalendarEventStore
+    @EnvironmentObject var calendarEventStore: CalendarStore
     @EnvironmentObject var todaystampManager: TodaystampWatcher
 
     @State private var calendarPlannerEvents: [PlannerEvent] = []

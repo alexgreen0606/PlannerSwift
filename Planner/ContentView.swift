@@ -18,7 +18,7 @@ struct ContentView: View {
 
     @EnvironmentObject var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject var navigationManager: NavigationManager
-    @EnvironmentObject var calendarEventStore: CalendarEventStore
+    @EnvironmentObject var calendarEventStore: CalendarStore
 
     @StateObject private var todayPlannerManager = ListManager()
     @State private var isTodayPlannerOpen: Bool = false

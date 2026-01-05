@@ -11,8 +11,8 @@ import SwiftDate
 import SwiftUI
 
 @MainActor
-class CalendarEventStore: ObservableObject {
-    static let shared = CalendarEventStore()
+class CalendarStore: ObservableObject {
+    static let shared = CalendarStore()
     private init() {}
 
     private let eventStore = EKEventStore()

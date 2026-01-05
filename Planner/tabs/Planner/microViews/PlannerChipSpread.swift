@@ -24,7 +24,7 @@ struct PlannerChipSpreadView: View {
         ThemeColorOption.blue
 
     @ObservedObject var weatherStore = WeatherStore.shared
-    @EnvironmentObject var calendarStore: CalendarEventStore
+    @EnvironmentObject var calendarStore: CalendarStore
 
     private var daysUntil: String? {
         datestamp.date?.countdown

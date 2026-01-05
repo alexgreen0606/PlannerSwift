@@ -39,10 +39,6 @@ struct PlannerApp: App {
     @AppStorage("themeColor") var themeColor: ThemeColorOption =
         ThemeColorOption.blue
 
-    @Environment(\.modelContext) private var modelContext
-    @Query private var calendarSettingsList: [CalendarSettings]
-
-    let calendarStore = CalendarEventStore.shared
     let weatherStore = WeatherStore.shared
 
     @StateObject private var navigationManager = NavigationManager()
@@ -53,17 +49,9 @@ struct PlannerApp: App {
                 .accentColor(themeColor.swiftUIColor)
                 .environmentObject(TodaystampWatcher.shared)
                 .environmentObject(weatherStore)
-                .environmentObject(calendarStore)
+                .environmentObject(CalendarStore.shared)
                 .environmentObject(navigationManager)
                 .onAppear {
-                    let calendarSettings = modelContext.ensureCalendarSettings(
-                        settings: calendarSettingsList
-                    )
-
-                    calendarStore.requestAccessAndLoadIfNeeded(
-                        hiddenCalendarIds: calendarSettings.hiddenCalendarIds
-                    )
-
                     Task {
                         await weatherStore.loadWeather()
                     }
