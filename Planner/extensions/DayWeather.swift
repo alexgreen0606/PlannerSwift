@@ -9,13 +9,13 @@ import WeatherKit
 import Foundation
 
 extension DayWeather {
-    var highTempString: String {
-        let temp = self.highTemperature
+    func highTempString(in unit: UnitTemperature) -> String {
+        let temp = self.highTemperature.converted(to: unit)
         return "\(Int(temp.value))°"
     }
 
-    var lowTempString: String {
-        let temp = self.lowTemperature
+    func lowTempString(in unit: UnitTemperature) -> String  {
+        let temp = self.lowTemperature.converted(to: unit)
         return "\(Int(temp.value))°"
     }
 }

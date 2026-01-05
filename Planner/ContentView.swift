@@ -88,6 +88,12 @@ struct ContentView: View {
             } label: {
                 Label("", systemImage: "repeat")
             }
+            
+            Tab(value: .settings) {
+                SettingsView()
+            } label: {
+                Label("", systemImage: "gear")
+            }
 
             Tab(value: .search, role: .search) {
                     PlannerSearchView()

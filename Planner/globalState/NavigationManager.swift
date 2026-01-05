@@ -9,12 +9,11 @@ import SwiftUI
 import Combine
 
 enum AppTab: Hashable {
-    case routines, checklists, search
+    case routines, checklists, search, settings
 }
 
 @MainActor
 class NavigationManager: ObservableObject {
     @Published var selectedTab: AppTab = .search
     @Published var checklistsPath = NavigationPath()
-    @Published var plannerPath = NavigationPath()
 }

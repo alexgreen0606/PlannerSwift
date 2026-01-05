@@ -28,7 +28,6 @@ struct PlannerSearchView: View {
     @Query private var calendarSettingsList: [CalendarSettings]
     @State private var calendarSettings: CalendarSettings?
 
-    @EnvironmentObject var navigationManager: NavigationManager
     @EnvironmentObject var calendarEventStore: CalendarStore
     @EnvironmentObject var todaystampWatcher: TodaystampWatcher
     @ObservedObject var weatherStore = WeatherStore.shared
@@ -98,7 +97,7 @@ struct PlannerSearchView: View {
     }
 
     var body: some View {
-        NavigationStack(path: $navigationManager.plannerPath) {
+        NavigationStack {
             List {
                 Section {
                     Text("This week")
@@ -224,31 +223,9 @@ struct PlannerSearchView: View {
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        navigationManager.plannerPath.append(
-                            PlannerRoute.settings
-                        )
-                    } label: {
-                        Label {
-                            Text("Settings")
-                        } icon: {
-                            Image(
-                                systemName: "gear"
-                            )
-                        }
-                    }
-                }
-
-                ToolbarItem(placement: .topBarTrailing) {
                     Button("Add", systemImage: "plus") {
                         // TODO: open a modal for a new event
                     }
-                }
-            }
-            .navigationDestination(for: PlannerRoute.self) { route in
-                switch route {
-                case .settings:
-                    SettingsView()
                 }
             }
             .fullScreenCover(item: $plannerCoverContext) { context in

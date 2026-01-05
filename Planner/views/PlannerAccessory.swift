@@ -24,6 +24,8 @@ struct PlannerAccessoryView: View {
     @EnvironmentObject var navigationManager: NavigationManager
     @EnvironmentObject var calendarEventStore: CalendarStore
     @ObservedObject var weatherStore = WeatherStore.shared
+    
+    let unit: UnitTemperature = Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
 
     private var weatherData: DayWeather? {
         weatherStore.dayWeatherByDatestamp[todaystamp]
@@ -110,12 +112,12 @@ struct PlannerAccessoryView: View {
                             .font(.caption)
 
                         HStack(alignment: .center, spacing: 4) {
-                            Text(weatherData?.highTempString ?? "")
+                            Text(weatherData?.highTempString(in: unit) ?? "")
                                 .font(.caption2)
 
                             Divider().frame(height: 10)
 
-                            Text(weatherData?.lowTempString ?? "")
+                            Text(weatherData?.lowTempString(in: unit) ?? "")
                                 .font(.caption2)
                         }
                         .foregroundStyle(
@@ -126,7 +128,7 @@ struct PlannerAccessoryView: View {
 
                 Image(systemName: weatherData?.symbolName ?? "")
                     .imageScale(.medium)
-                    .foregroundStyle(.yellow)
+                    .symbolRenderingMode(.multicolor)
             }
             .frame(maxHeight: .infinity)
         }

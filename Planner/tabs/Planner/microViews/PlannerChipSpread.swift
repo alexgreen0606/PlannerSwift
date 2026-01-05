@@ -25,6 +25,8 @@ struct PlannerChipSpreadView: View {
 
     @ObservedObject var weatherStore = WeatherStore.shared
     @EnvironmentObject var calendarStore: CalendarStore
+    
+    let unit: UnitTemperature = Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
 
     private var daysUntil: String? {
         datestamp.date?.countdown
@@ -90,13 +92,13 @@ struct PlannerChipSpreadView: View {
                 }
 
                 HStack(alignment: .center, spacing: 4) {
-                    Text(weatherData?.highTempString ?? "")
+                    Text(weatherData?.highTempString(in: unit) ?? "")
                         .font(.caption2)
                         .foregroundStyle(Color(uiColor: .label))
 
                     Divider().frame(height: 16)
 
-                    Text(weatherData?.lowTempString ?? "")
+                    Text(weatherData?.lowTempString(in: unit) ?? "")
                         .font(.caption2)
                         .foregroundStyle(Color(uiColor: .label))
                 }

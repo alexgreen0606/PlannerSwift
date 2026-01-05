@@ -24,6 +24,8 @@ struct PlannerCardVerticalView: View {
     @EnvironmentObject var todaystampManager: TodaystampWatcher
     @ObservedObject var weatherStore = WeatherStore.shared
     @EnvironmentObject var calendarEventStore: CalendarStore
+    
+    let unit: UnitTemperature = Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
 
     // MARK: - Weather Data
 
@@ -119,10 +121,10 @@ struct PlannerCardVerticalView: View {
                     Spacer()
 
                     HStack(alignment: .center, spacing: 4) {
-                        Text(weatherData?.highTempString ?? "")
+                        Text(weatherData?.highTempString(in: unit) ?? "")
                             .font(.caption2)
                         Divider().frame(height: 16)
-                        Text(weatherData?.lowTempString ?? "")
+                        Text(weatherData?.lowTempString(in: unit) ?? "")
                             .font(.caption2)
                     }
                 }
