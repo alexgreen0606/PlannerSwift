@@ -12,8 +12,9 @@ import SwiftUI
 import WeatherKit
 import WrappingHStack
 
-struct PlannerCardVertical: View {
+struct PlannerCardVerticalView: View {
     private let datestamp: String
+    private let iconMap: [String: String]
     private let openPlanner: () -> Void
 
     @Environment(\.modelContext) private var modelContext
@@ -59,10 +60,12 @@ struct PlannerCardVertical: View {
 
     init(
         datestamp: String,
+        iconMap: [String: String],
         openPlanner: @escaping () -> Void
     ) {
         self.datestamp = datestamp
         self.openPlanner = openPlanner
+        self.iconMap = iconMap
 
         _planners = Query(
             filter: #Predicate<Planner> {
@@ -73,7 +76,7 @@ struct PlannerCardVertical: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            PlannerDateInfo(datestamp: datestamp, iconScale: 1.4)
+            PlannerDateInfoView(datestamp: datestamp, iconScale: 1.4)
 
             if !allDayEvents.isEmpty {
                 PlannerChipSpreadView(
@@ -81,13 +84,14 @@ struct PlannerCardVertical: View {
                     events: allDayEvents,
                     showCountdown: false,
                     showWeather: false,
+                    iconMap: iconMap,
                     animation: nil,
                     openCalendarEventSheet: nil
                 )
             }
 
             if !singleDayEvents.isEmpty {
-                CalendarEventList(
+                CalendarEventListView(
                     datestamp: datestamp,
                     events: singleDayEvents
                 )

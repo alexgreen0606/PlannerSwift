@@ -29,37 +29,37 @@ class CalendarEventStore: ObservableObject {
         [String: [EKEvent]] = [:]
 
     @MainActor
-    func requestAccessAndLoadIfNeeded() {
+    func requestAccessAndLoadIfNeeded(hiddenCalendarIds: Set<String>) {
         guard !hasLoaded else { return }
 
         switch EKEventStore.authorizationStatus(for: .event) {
         case .authorized:
-            load()
+            load(hiddenCalendarIds: hiddenCalendarIds)
         case .notDetermined:
-            requestAccess()
+            requestAccess(hiddenCalendarIds: hiddenCalendarIds)
         default:
             break
         }
     }
 
-    func refresh() {
-        load()
+    func refresh(hiddenCalendarIds: Set<String>) {
+        load(hiddenCalendarIds: hiddenCalendarIds)
     }
 
-    private func requestAccess() {
+    private func requestAccess(hiddenCalendarIds: Set<String>) {
         eventStore.requestFullAccessToEvents { granted, error in
             guard granted else { return }
             Task { @MainActor in
-                self.load()
+                self.load(hiddenCalendarIds: hiddenCalendarIds)
             }
         }
     }
 
-    private func load() {
+    private func load(hiddenCalendarIds: Set<String>) {
         hasLoaded = true
 
         loadCalendars()
-        loadEvents()
+        loadEvents(hiddenCalendarIds: hiddenCalendarIds)
 
         // TODO: cleanup positions object for sort indices
     }
@@ -72,7 +72,7 @@ class CalendarEventStore: ObservableObject {
         )
     }
 
-    private func loadEvents() {
+    private func loadEvents(hiddenCalendarIds: Set<String>) {
         let start = DateInRegion(Date(), region: .local)
             .dateByAdding(-1, .month)
             .date
@@ -93,6 +93,10 @@ class CalendarEventStore: ObservableObject {
         var singleDayMap: [String: [EKEvent]] = [:]
 
         for event in events {
+            if hiddenCalendarIds.contains(event.calendar.calendarIdentifier) {
+                continue
+            }
+            
             if event.isAllDay {
                 // All-day events can span multiple days.
                 for datestamp in expandedDatestamps(for: event) {

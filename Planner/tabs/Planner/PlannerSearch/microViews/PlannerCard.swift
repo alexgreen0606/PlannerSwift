@@ -8,8 +8,9 @@
 import EventKit
 import SwiftUI
 
-struct PlannerCard: View {
+struct PlannerCardView: View {
     let datestamp: String
+    let iconMap: [String: String]
     let openPlanner: () -> Void
     
     @EnvironmentObject var calendarEventStore: CalendarEventStore
@@ -28,7 +29,7 @@ struct PlannerCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            PlannerDateInfo(datestamp: datestamp, iconScale: 1.4)
+            PlannerDateInfoView(datestamp: datestamp, iconScale: 1.4)
 
             if !allDayEvents.isEmpty {
                 PlannerChipSpreadView(
@@ -36,13 +37,14 @@ struct PlannerCard: View {
                     events: allDayEvents,
                     showCountdown: false,
                     showWeather: false,
+                    iconMap: iconMap,
                     animation: nil,
                     openCalendarEventSheet: nil
                 )
             }
             
             if !singleDayEvents.isEmpty {
-                CalendarEventList(
+                CalendarEventListView(
                     datestamp: datestamp,
                     events: singleDayEvents
                 )

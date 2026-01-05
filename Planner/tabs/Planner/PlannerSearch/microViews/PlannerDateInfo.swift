@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct PlannerDateInfo: View {
+struct PlannerDateInfoView: View {
     let datestamp: String
     let iconScale: Double
 

@@ -28,25 +28,25 @@ extension ModelContext {
 
         return planner
     }
-
+    
     @MainActor
-    func ensureCalendarEventPositions(
-        positions: [CalendarEventPositions]
-    ) -> CalendarEventPositions {
-        if let existing = positions.first {
+    func ensureCalendarSettings(
+        settings: [CalendarSettings]
+    ) -> CalendarSettings {
+        if let existing = settings.first {
             return existing
         }
 
-        let newPositions = CalendarEventPositions()
-        insert(newPositions)
+        let newSettings = CalendarSettings()
+        insert(newSettings)
 
         do {
             try save()
         } catch {
-            assertionFailure("Failed to create initial CalendarEventPositions: \(error)")
+            assertionFailure("Failed to create initial CalendarSettings: \(error)")
         }
 
-        return newPositions
+        return newSettings
     }
 
     @MainActor

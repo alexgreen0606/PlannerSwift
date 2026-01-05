@@ -19,10 +19,18 @@ struct PlannerCoverContext: Identifiable {
     }
 }
 
+enum PlannerRoute: Hashable {
+    case settings
+}
+
 struct PlannerSearchView: View {
     @AppStorage("themeColor") private var themeColor: ThemeColorOption = .blue
     @AppStorage("showListSeparators") private var showListSeparators: Bool =
         true
+
+    @Environment(\.modelContext) private var modelContext
+    @Query private var calendarSettingsList: [CalendarSettings]
+    @State private var calendarSettings: CalendarSettings?
 
     @EnvironmentObject var navigationManager: NavigationManager
     @EnvironmentObject var calendarEventStore: CalendarEventStore
@@ -36,6 +44,7 @@ struct PlannerSearchView: View {
     @Namespace private var thisWeekAnimation
     @Namespace private var upcomingAnimation
 
+    @State private var searchText: String = ""
     @State private var isCalendarPickerOpen = false
     @State private var selectedCalendarDate: Date = Date()
 
@@ -93,189 +102,239 @@ struct PlannerSearchView: View {
     }
 
     var body: some View {
-        List {
-            Section {
-                Text("This week")
-                    .padding(.leading, 16)
-                    .font(.headline)
-                    .foregroundStyle(Color(uiColor: .secondaryLabel))
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(.bottom, 0)
+        NavigationStack(path: $navigationManager.plannerPath) {
+            List {
+                Section {
+                    Text("This week")
+                        .padding(.leading, 16)
+                        .font(.headline)
+                        .foregroundStyle(Color(uiColor: .secondaryLabel))
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(.bottom, 0)
 
-                ScrollView(.horizontal) {
-                    HStack(alignment: .top, spacing: 12) {
-                        ForEach(thisWeekDatestamps, id: \.self) {
+                    ScrollView(.horizontal) {
+                        HStack(alignment: .top, spacing: 12) {
+                            ForEach(thisWeekDatestamps, id: \.self) {
+                                datestamp in
+                                PlannerCardVerticalView(
+                                    datestamp: datestamp,
+                                    iconMap: calendarSettings?.iconMap ?? [:]
+                                ) {
+                                    plannerCoverContext = PlannerCoverContext(
+                                        datestamp: datestamp,
+                                        namespace: thisWeekAnimation
+                                    )
+                                }
+                                .matchedTransitionSource(
+                                    id: datestamp,
+                                    in: thisWeekAnimation
+                                )
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                    }
+                    .scrollIndicators(.hidden)
+                    .horizontalEdgeFade(leading: 16, trailing: 16)
+                    .background(Color.appBackground)
+                }
+                .listSectionSeparator(.hidden)
+                .listRowBackground(Color.appBackground)
+                .listRowInsets(.horizontal, 0)
+
+                ForEach(sortedUpcomingYears, id: \.self) { year in
+                    Section {
+                        ForEach(upcomingEventMap[year] ?? [], id: \.self) {
                             datestamp in
-                            PlannerCardVertical(datestamp: datestamp) {
+                            PlannerCardView(
+                                datestamp: datestamp,
+                                iconMap: calendarSettings?.iconMap ?? [:]
+                            ) {
                                 plannerCoverContext = PlannerCoverContext(
                                     datestamp: datestamp,
-                                    namespace: thisWeekAnimation
+                                    namespace: upcomingAnimation
                                 )
                             }
                             .matchedTransitionSource(
                                 id: datestamp,
-                                in: thisWeekAnimation
+                                in: upcomingAnimation
                             )
-                        }
-                    }
-                    .padding(.horizontal, 16)
-                }
-                .scrollIndicators(.hidden)
-                .horizontalEdgeFade(leading: 16, trailing: 16)
-                .background(Color.appBackground)
-            }
-            .listSectionSeparator(.hidden)
-            .listRowBackground(Color.appBackground)
-            .listRowInsets(.horizontal, 0)
-
-            ForEach(sortedUpcomingYears, id: \.self) { year in
-                Section {
-                    ForEach(upcomingEventMap[year] ?? [], id: \.self) {
-                        datestamp in
-                        PlannerCard(datestamp: datestamp) {
-                            plannerCoverContext = PlannerCoverContext(
-                                datestamp: datestamp,
-                                namespace: upcomingAnimation
-                            )
-                        }
-                        .matchedTransitionSource(
-                            id: datestamp,
-                            in: upcomingAnimation
-                        )
-                        .overlay {
-                            if year == sortedUpcomingYears.first!
-                                && datestamp == upcomingEventMap[year]!.first!
-                            {
-                                HStack(alignment: .top) {
-                                    Text("Coming up")
-                                        .font(.headline)
-                                        .foregroundStyle(
-                                            Color(uiColor: .secondaryLabel)
-                                        )
-                                        .offset(y: -48)
+                            .overlay {
+                                if year == sortedUpcomingYears.first!
+                                    && datestamp == upcomingEventMap[year]!
+                                        .first!
+                                {
+                                    HStack(alignment: .top) {
+                                        Text("Coming up")
+                                            .font(.headline)
+                                            .foregroundStyle(
+                                                Color(uiColor: .secondaryLabel)
+                                            )
+                                            .offset(y: -48)
+                                    }
+                                    .frame(
+                                        maxWidth: .infinity,
+                                        alignment: .leading
+                                    )
+                                    .frame(
+                                        maxHeight: .infinity,
+                                        alignment: .top
+                                    )
                                 }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .frame(maxHeight: .infinity, alignment: .top)
                             }
                         }
+                    } header: {
+                        upcomingYearHeader(year)
                     }
-                } header: {
-                    upcomingYearHeader(year)
                 }
             }
-        }
-        .refreshable {
-            calendarEventStore.refresh()
-            Task {
-                await weatherStore.loadWeather()
-            }
-        }
-        .listStyle(.plain)
-        .background(Color.appBackground)
-        .navigationTitle("Planner")
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button("Calendar", systemImage: "calendar") {
-                    isCalendarPickerOpen = true
+            .refreshable {
+                calendarEventStore.refresh(
+                    hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? []
+                )
+                Task {
+                    await weatherStore.loadWeather()
                 }
-                .popover(isPresented: $isCalendarPickerOpen) {
-                    VStack {
-                        DatePicker(
-                            "Open a planner",
-                            selection: $selectedCalendarDate,
-                            displayedComponents: .date
-                        )
-                        .datePickerStyle(.graphical)
-                        .listRowBackground(Color.clear)
-                        .onChange(of: selectedCalendarDate) {
-                            _,
-                            targetPlannerDate in
-                            isCalendarPickerOpen = false
+            }
+            .listStyle(.plain)
+            .background(Color.appBackground)
+            .navigationTitle("Planner")
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Calendar", systemImage: "calendar") {
+                        isCalendarPickerOpen = true
+                    }
+                    .popover(isPresented: $isCalendarPickerOpen) {
+                        VStack {
+                            DatePicker(
+                                "Open a planner",
+                                selection: $selectedCalendarDate,
+                                displayedComponents: .date
+                            )
+                            .datePickerStyle(.graphical)
+                            .listRowBackground(Color.clear)
+                            .onChange(of: selectedCalendarDate) {
+                                _,
+                                targetPlannerDate in
+                                isCalendarPickerOpen = false
 
-                            DispatchQueue.main.async {
-                                plannerCoverContext = PlannerCoverContext(
-                                    datestamp: targetPlannerDate.datestamp,
-                                    namespace: calendarAnimation
+                                DispatchQueue.main.async {
+                                    plannerCoverContext = PlannerCoverContext(
+                                        datestamp: targetPlannerDate.datestamp,
+                                        namespace: calendarAnimation
+                                    )
+                                }
+                            }
+                        }
+                        .frame(width: 340, height: 320)
+                        .padding()
+                        .presentationCompactAdaptation(.popover)
+                    }
+                    .matchedTransitionSource(
+                        id: "CALENDAR",
+                        in: calendarAnimation
+                    )
+                }
+
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Menu {
+                            ForEach(ThemeColorOption.allCases, id: \.self) {
+                                option in
+                                Button {
+                                    themeColor = option
+                                } label: {
+                                    Label {
+                                        Text(option.label)
+                                    } icon: {
+                                        Image(
+                                            systemName:
+                                                themeColor == option
+                                                ? "circle.fill"
+                                                : "circle"
+                                        )
+                                    }
+                                    .tint(option.swiftUIColor)
+                                }
+                            }
+                        } label: {
+                            Label(
+                                "Theme Color",
+                                systemImage: "paintpalette.fill"
+                            )
+                        }
+
+                        Button {
+                            showListSeparators.toggle()
+                        } label: {
+                            Label {
+                                Text(
+                                    showListSeparators
+                                        ? "Hide list separators"
+                                        : "Show list separators"
+                                )
+                            } icon: {
+                                Image(
+                                    systemName: "line.3.horizontal"
                                 )
                             }
                         }
-                    }
-                    .frame(width: 340, height: 320)
-                    .padding()
-                    .presentationCompactAdaptation(.popover)
-                }
-                .matchedTransitionSource(
-                    id: "CALENDAR",
-                    in: calendarAnimation
-                )
-            }
 
-            ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Menu {
-                        ForEach(ThemeColorOption.allCases, id: \.self) {
-                            option in
-                            Button {
-                                themeColor = option
-                            } label: {
-                                Label {
-                                    Text(option.label)
-                                } icon: {
-                                    Image(
-                                        systemName:
-                                            themeColor == option
-                                            ? "circle.fill"
-                                            : "circle"
-                                    )
-                                }
-                                .tint(option.swiftUIColor)
+                        Button {
+                            navigationManager.plannerPath.append(
+                                PlannerRoute.settings
+                            )
+                        } label: {
+                            Label {
+                                Text("Settings")
+                            } icon: {
+                                Image(
+                                    systemName: "gear"
+                                )
                             }
                         }
                     } label: {
-                        Label("Theme Color", systemImage: "paintpalette.fill")
+                        Image(systemName: "ellipsis")
                     }
+                }
 
-                    Button {
-                        showListSeparators.toggle()
-                    } label: {
-                        Label {
-                            Text(
-                                showListSeparators
-                                    ? "Hide list separators"
-                                    : "Show list separators"
-                            )
-                        } icon: {
-                            Image(
-                                systemName: "line.3.horizontal"
-                            )
-                        }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Add", systemImage: "plus") {
+                        // TODO: open a modal for a new event
                     }
-                } label: {
-                    Image(systemName: "ellipsis")
                 }
             }
-
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Add", systemImage: "plus") {
-                    // TODO: open a modal for a new event
+            .navigationDestination(for: PlannerRoute.self) { route in
+                switch route {
+                case .settings:
+                    SettingsView()
                 }
             }
-        }
-        .fullScreenCover(item: $plannerCoverContext) { context in
-            NavigationStack {
-                PlannerView(datestamp: context.datestamp) {
-                    plannerCoverContext = nil
+            .fullScreenCover(item: $plannerCoverContext) { context in
+                NavigationStack {
+                    PlannerView(datestamp: context.datestamp) {
+                        plannerCoverContext = nil
+                    }
                 }
-            }
-            .environmentObject(plannerManager)
-            .navigationTransition(
-                .zoom(
-                    sourceID: context.namespace == calendarAnimation
-                        ? "CALENDAR" : context.datestamp,
-                    in: context.namespace
+                .environmentObject(plannerManager)
+                .navigationTransition(
+                    .zoom(
+                        sourceID: context.namespace == calendarAnimation
+                            ? "CALENDAR" : context.datestamp,
+                        in: context.namespace
+                    )
                 )
-            )
+            }
+            .task {
+                calendarSettings = modelContext.ensureCalendarSettings(
+                    settings: calendarSettingsList
+                )
+            }
+
         }
+        .searchable(
+            text: $searchText,
+            prompt: "Search calendar events..."
+        )
     }
 
     private func upcomingYearHeader(_ year: String) -> some View {

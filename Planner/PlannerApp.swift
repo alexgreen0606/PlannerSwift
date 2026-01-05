@@ -39,6 +39,9 @@ struct PlannerApp: App {
     @AppStorage("themeColor") var themeColor: ThemeColorOption =
         ThemeColorOption.blue
 
+    @Environment(\.modelContext) private var modelContext
+    @Query private var calendarSettingsList: [CalendarSettings]
+
     let calendarStore = CalendarEventStore.shared
     let weatherStore = WeatherStore.shared
 
@@ -53,7 +56,13 @@ struct PlannerApp: App {
                 .environmentObject(calendarStore)
                 .environmentObject(navigationManager)
                 .onAppear {
-                    calendarStore.requestAccessAndLoadIfNeeded()
+                    let calendarSettings = modelContext.ensureCalendarSettings(
+                        settings: calendarSettingsList
+                    )
+
+                    calendarStore.requestAccessAndLoadIfNeeded(
+                        hiddenCalendarIds: calendarSettings.hiddenCalendarIds
+                    )
 
                     Task {
                         await weatherStore.loadWeather()
@@ -61,7 +70,7 @@ struct PlannerApp: App {
                 }
         }
         .modelContainer(for: [
-            Planner.self, ChecklistItem.self, CalendarEventPositions.self,
+            Planner.self, ChecklistItem.self, CalendarSettings.self,
         ])
     }
 

@@ -16,6 +16,7 @@ struct PlannerChipSpreadView: View {
     let events: [EKEvent]
     let showCountdown: Bool
     let showWeather: Bool
+    let iconMap: [String: String]
     var animation: Namespace.ID?
     let openCalendarEventSheet: ((EKEvent) -> Void)?
 
@@ -50,7 +51,7 @@ struct PlannerChipSpreadView: View {
             ForEach(events, id: \.eventIdentifier) { event in
                 let chip = PlannerChipView(
                     title: event.title,
-                    iconName: event.calendar.iconName,
+                    iconName: iconMap[event.calendar.calendarIdentifier] ?? event.calendar.iconName,
                     color: Color(event.calendar.cgColor),
                     disableInteraction: openCalendarEventSheet == nil
                 )

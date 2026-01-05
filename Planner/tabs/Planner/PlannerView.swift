@@ -86,8 +86,8 @@ struct PlannerView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]
     @State private var planner: Planner?
-    @Query private var calendarEventPositionsList: [CalendarEventPositions]
-    @State private var calendarEventPositions: CalendarEventPositions?
+    @Query private var calendarSettingsList: [CalendarSettings]
+    @State private var calendarSettings: CalendarSettings?
 
     @EnvironmentObject var calendarEventStore: CalendarEventStore
     @EnvironmentObject var todaystampManager: TodaystampWatcher
@@ -159,6 +159,7 @@ struct PlannerView: View {
                     ] ?? [],
                     showCountdown: true,
                     showWeather: true,
+                    iconMap: calendarSettings?.iconMap ?? [:],
                     animation: sheetAnimation,
                     openCalendarEventSheet: { event in
                         calendarEventSheetContext = CalendarEventSheetContext(
@@ -199,8 +200,8 @@ struct PlannerView: View {
                         Button(
                             action: {
                                 plannerType == .future
-                                ? planner?.showCanceled.toggle()
-                                : planner?.showCompleted.toggle()
+                                    ? planner?.showCanceled.toggle()
+                                    : planner?.showCompleted.toggle()
                             },
                             label: {
                                 Text(
@@ -250,8 +251,8 @@ struct PlannerView: View {
                 datestamp: datestamp
             )
 
-            calendarEventPositions = modelContext.ensureCalendarEventPositions(
-                positions: calendarEventPositionsList
+            calendarSettings = modelContext.ensureCalendarSettings(
+                settings: calendarSettingsList
             )
 
             synchronizeCalendarEvents()
@@ -263,7 +264,10 @@ struct PlannerView: View {
                     event: context.event,
                     eventStore: calendarEventStore.ekEventStore
                 ) { action, updatedEvent in
-                    calendarEventStore.refresh()
+                    calendarEventStore.refresh(
+                        hiddenCalendarIds: calendarSettings?.hiddenCalendarIds
+                            ?? []
+                    )
                     calendarEventSheetContext = nil
                 }
                 .tint(themeColor.swiftUIColor)
@@ -296,7 +300,7 @@ struct PlannerView: View {
 
     // TODO: run this whenever the calendar events change
     private func synchronizeCalendarEvents() {
-        guard let planner = planner, let positions = calendarEventPositions
+        guard let planner = planner, let settings = calendarSettings
         else { return }
         let calendarStoreEvents =
             calendarEventStore.singleDayEventsByDatestamp[datestamp] ?? []
@@ -305,8 +309,10 @@ struct PlannerView: View {
         calendarPlannerEvents =
             planner.synchronizeCalendarEventPositions(
                 for: calendarStoreEvents,
-                from: positions
+                from: settings
             )
+
+        try! modelContext.save()
     }
 
     private func openPlannerEventSheet(
@@ -347,8 +353,8 @@ struct PlannerView: View {
         movedEvent.sortIndex = newSortIndex
 
         // Save the calendar event position.
-        if movedEvent.calendarEvent != nil && calendarEventPositions != nil {
-            calendarEventPositions!.values[
+        if movedEvent.calendarEvent != nil && calendarSettings != nil {
+            calendarSettings!.sortIndexMap[
                 movedEvent.calendarEvent!.eventIdentifier
             ] = movedEvent.sortIndex
         }
@@ -368,9 +374,9 @@ struct PlannerView: View {
 
                 // Save the calendar event position.
                 if movedEvent.calendarEvent != nil
-                    && calendarEventPositions != nil
+                    && calendarSettings != nil
                 {
-                    calendarEventPositions!.values[
+                    calendarSettings!.sortIndexMap[
                         movedEvent.calendarEvent!.eventIdentifier
                     ] = movedEvent.sortIndex
                 }

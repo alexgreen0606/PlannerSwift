@@ -24,8 +24,6 @@ struct ContentView: View {
     @State private var isTodayPlannerOpen: Bool = false
     @Namespace private var todayPlannerCoverAnimation
 
-    @State private var searchText: String = ""
-
     private var eventsForToday: [EKEvent] {
         return calendarEventStore.allDayEventsByDatestamp[
             todaystampWatcher.todaystamp
@@ -92,13 +90,7 @@ struct ContentView: View {
             }
 
             Tab(value: .search, role: .search) {
-                NavigationStack {
                     PlannerSearchView()
-                }
-                .searchable(
-                    text: $searchText,
-                    prompt: "Search calendar events..."
-                )
             } label: {
                 Label(
                     "",

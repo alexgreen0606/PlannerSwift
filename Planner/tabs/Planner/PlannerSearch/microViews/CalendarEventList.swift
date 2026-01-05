@@ -8,7 +8,7 @@
 import EventKit
 import SwiftUI
 
-struct CalendarEventList: View {
+struct CalendarEventListView: View {
     let datestamp: String
     let events: [EKEvent]
 

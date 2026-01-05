@@ -10,7 +10,7 @@ import EventKit
 extension Planner {
     func synchronizeCalendarEventPositions(
         for calendarEvents: [EKEvent],
-        from positions: CalendarEventPositions
+        from settings: CalendarSettings
     ) -> [PlannerEvent] {
         var sortedPlannerEvents = self.events.filter { !$0.isChecked }.sorted {
             $0.sortIndex < $1.sortIndex
@@ -21,7 +21,7 @@ extension Planner {
         
         var plannerEvents: [PlannerEvent] = []
         for calEvent in sortedCalendarEvents {
-            let sortIndex = positions.values[calEvent.eventIdentifier]
+            let sortIndex = settings.sortIndexMap[calEvent.eventIdentifier]
                 ?? (sortedPlannerEvents.last?.sortIndex ?? 0 + 8)
 
             // Dummy event for UI representation. No persistence to storage.
@@ -38,7 +38,7 @@ extension Planner {
             )
             
             plannerEvents.append(plannerEvent)
-            positions.values[calEvent.eventIdentifier] = plannerEvent.sortIndex
+            settings.sortIndexMap[calEvent.eventIdentifier] = plannerEvent.sortIndex
         }
 
         return plannerEvents

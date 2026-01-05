@@ -16,4 +16,5 @@ enum AppTab: Hashable {
 class NavigationManager: ObservableObject {
     @Published var selectedTab: AppTab = .search
     @Published var checklistsPath = NavigationPath()
+    @Published var plannerPath = NavigationPath()
 }
