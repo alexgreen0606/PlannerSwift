@@ -11,32 +11,32 @@ import SwiftUI
 import WeatherKit
 
 struct PlannerAccessoryView: View {
+    private var todaystamp: String
     private var animation: Namespace.ID
     private let openTodayPlanner: () -> Void
-    
+
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
-    
+
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]
     @State private var planner: Planner?
 
-    @EnvironmentObject var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject var navigationManager: NavigationManager
     @EnvironmentObject var calendarEventStore: CalendarEventStore
     @ObservedObject var weatherStore = WeatherStore.shared
-    
+
     private var weatherData: DayWeather? {
-        weatherStore.dayWeatherByDatestamp[todaystampWatcher.todaystamp]
+        weatherStore.dayWeatherByDatestamp[todaystamp]
     }
 
     private var allDayEvents: [EKEvent] {
         return calendarEventStore.allDayEventsByDatestamp[
-            todaystampWatcher.todaystamp
+            todaystamp
         ] ?? []
     }
-    
+
     private var planCountLabel: String {
-        let planCount = planner?.events.filter{ !$0.isChecked }.count ?? 0
+        let planCount = planner?.events.filter { !$0.isChecked }.count ?? 0
 
         if planCount == 0 {
             if allDayEvents.count > 0 {
@@ -47,11 +47,16 @@ struct PlannerAccessoryView: View {
 
         return "\(planCount) plan\(planCount == 1 ? "" : "s")"
     }
-    
-    init(todaystamp: String, animation: Namespace.ID, openTodayPlanner: @escaping () -> Void) {
+
+    init(
+        todaystamp: String,
+        animation: Namespace.ID,
+        openTodayPlanner: @escaping () -> Void
+    ) {
         self.animation = animation
+        self.todaystamp = todaystamp
         self.openTodayPlanner = openTodayPlanner
-        
+
         _planners = Query(
             filter: #Predicate<Planner> {
                 $0.datestamp == todaystamp
@@ -61,10 +66,10 @@ struct PlannerAccessoryView: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            PlannerIcon(datestamp: todaystampWatcher.todaystamp, scale: 1)
+            PlannerIcon(datestamp: todaystamp, scale: 1)
 
             VStack(alignment: .leading, spacing: 0) {
-                Text(todaystampWatcher.todaystamp.date?.weekday ?? "")
+                Text(todaystamp.date?.weekday ?? "")
                     .font(.callout)
                     .matchedTransitionSource(
                         id: "PLANNER_ACCESSORY",
@@ -99,7 +104,7 @@ struct PlannerAccessoryView: View {
             Spacer()
 
             HStack(alignment: .center) {
-                if placement != .inline {
+                if placement != .inline && weatherData != nil {
                     VStack(alignment: .trailing, spacing: 0) {
                         Text(weatherData?.condition.description ?? "")
                             .font(.caption)
@@ -131,7 +136,7 @@ struct PlannerAccessoryView: View {
         .task {
             planner = modelContext.ensurePlanner(
                 planners: planners,
-                datestamp: todaystampWatcher.todaystamp
+                datestamp: todaystamp
             )
         }
     }

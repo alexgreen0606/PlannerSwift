@@ -25,13 +25,13 @@ struct PlannerCardVertical: View {
     @EnvironmentObject var calendarEventStore: CalendarEventStore
 
     // MARK: - Weather Data
-    
+
     private var weatherData: DayWeather? {
         weatherStore.dayWeatherByDatestamp[datestamp]
     }
-    
+
     // MARK: - Event Data
-    
+
     private var allDayEvents: [EKEvent] {
         calendarEventStore.allDayEventsByDatestamp[
             datestamp
@@ -54,7 +54,7 @@ struct PlannerCardVertical: View {
             return "No plans"
         }
 
-        return "\(planCount) plan\(planCount == 1 ? "" : "s")"
+        return "\(planCount)\(singleDayEvents.count > 0 ? " more" : "") plan\(planCount == 1 ? "" : "s")"
     }
 
     init(
@@ -101,24 +101,26 @@ struct PlannerCardVertical: View {
             .frame(maxHeight: .infinity)
             .frame(maxWidth: .infinity, alignment: .center)
 
-            HStack(alignment: .bottom) {
-                HStack(alignment: .center, spacing: 6) {
-                    Image(systemName: weatherData?.symbolName ?? "")
-                        .symbolRenderingMode(.multicolor)
-                        .imageScale(.small)
+            if weatherData != nil {
+                HStack(alignment: .bottom) {
+                    HStack(alignment: .center, spacing: 6) {
+                        Image(systemName: weatherData?.symbolName ?? "")
+                            .symbolRenderingMode(.multicolor)
+                            .imageScale(.small)
 
-                    Text(weatherData?.condition.description ?? "")
-                        .font(.caption2)
-                }
+                        Text(weatherData?.condition.description ?? "")
+                            .font(.caption2)
+                    }
 
-                Spacer()
+                    Spacer()
 
-                HStack(alignment: .center, spacing: 4) {
-                    Text(weatherData?.highTempString ?? "")
-                        .font(.caption2)
-                    Divider().frame(height: 16)
-                    Text(weatherData?.lowTempString ?? "")
-                        .font(.caption2)
+                    HStack(alignment: .center, spacing: 4) {
+                        Text(weatherData?.highTempString ?? "")
+                            .font(.caption2)
+                        Divider().frame(height: 16)
+                        Text(weatherData?.lowTempString ?? "")
+                            .font(.caption2)
+                    }
                 }
             }
         }

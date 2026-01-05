@@ -114,7 +114,7 @@ class CalendarEventStore: ObservableObject {
         singleDayEventsByDatestamp = singleDayMap
     }
 
-    // TODO: use this for ALL_DAY events, then create a new one for MULTI_DAY
+    // TODO: use this for ALL-DAY events, then create a new one for MULTI_DAY
     private func expandedDatestamps(for event: EKEvent) -> [String] {
         var results: [String] = []
 

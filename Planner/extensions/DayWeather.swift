@@ -1,5 +1,5 @@
 //
-//  WeatherData.swift
+//  DayWeather.swift
 //  Planner
 //
 //  Created by Alex Green on 1/2/26.

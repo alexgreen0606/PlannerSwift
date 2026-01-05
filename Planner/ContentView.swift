@@ -108,6 +108,7 @@ struct ContentView: View {
         }
         .tabBarMinimizeBehavior(.onScrollDown)
         .tabViewBottomAccessory {
+            
             // TODO: this is re-rendered in each tab. Prevent this if possible.
             PlannerAccessoryView(
                 todaystamp: todaystampWatcher.todaystamp,
@@ -115,6 +116,7 @@ struct ContentView: View {
             ) {
                 isTodayPlannerOpen.toggle()
             }
+            
         }
         .fullScreenCover(isPresented: $isTodayPlannerOpen) {
             NavigationStack {
@@ -131,11 +133,6 @@ struct ContentView: View {
                     in: todayPlannerCoverAnimation
                 )
             )
-        }
-        .task {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                isTodayPlannerOpen = true
-            }
         }
     }
 }
