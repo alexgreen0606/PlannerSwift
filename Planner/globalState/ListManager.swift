@@ -16,8 +16,8 @@ final class ListManager<Item: ListItem>: ObservableObject {
     @Published var selectedItems: [Item] = []
     @Published var selectedItemIds: Set<ObjectIdentifier> = []
 
-    // Triggers fade animations for checking items.
-    @Published var fadeOutTrigger: UUID? = nil
+    // Controls fading of pending items.
+    @Published var pendingOpacity: Double = 1
 
     private var pendingChecks: [Item] = []
     private var pendingUnchecks: [Item] = []
@@ -38,6 +38,13 @@ final class ListManager<Item: ListItem>: ObservableObject {
             return
         }
     }
+    
+    private func clearPendingLists() {
+        pendingChecks.removeAll()
+        itemIdsToCheck.removeAll()
+        pendingUnchecks.removeAll()
+        itemIdsToUncheck.removeAll()
+    }
 
     private func toggleSelect(_ item: Item) {
         if selectedItemIds.contains(item.id) {
@@ -50,6 +57,8 @@ final class ListManager<Item: ListItem>: ObservableObject {
     }
 
     private func toggleChecked(for item: Item) {
+        pendingOpacity = 1
+        
         if item.isChecked {
             if itemIdsToUncheck.contains(item.id) {
                 // Cancel the unchecking.
@@ -79,7 +88,13 @@ final class ListManager<Item: ListItem>: ObservableObject {
 
     private func startCountdown() {
         task?.cancel()
-        fadeOutTrigger = UUID()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            withAnimation(.linear(duration: 2.5)) {
+                self.pendingOpacity = 0
+            }
+        }
+        
         task = Task {
             do {
                 try await Task.sleep(for: delay)
@@ -91,17 +106,13 @@ final class ListManager<Item: ListItem>: ObservableObject {
                 item.isChecked = true
             }
 
-            pendingChecks.removeAll()
-            itemIdsToCheck.removeAll()
-
             // Uncheck items.
             let toUncheck = pendingUnchecks
             for item in toUncheck {
                 item.isChecked = false
             }
-
-            pendingUnchecks.removeAll()
-            itemIdsToUncheck.removeAll()
+            
+            clearPendingLists()
         }
     }
 }

@@ -30,8 +30,17 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
     @State private var height: CGFloat = 0
 
     @State private var isFocused: Bool = false
-    @State private var opacity: Double = 1
     @State private var debounceTask: Task<Void, Never>? = nil
+    
+    private var opacity: Double {
+        guard !showChecked else { return 1 }
+
+        let isPending =
+            listManager.itemIdsToCheck.contains(item.id) ||
+            listManager.itemIdsToUncheck.contains(item.id)
+
+        return isPending ? listManager.pendingOpacity : 1
+    }
 
     private var isChecked: Bool {
         if toggleType == .staging {
@@ -69,32 +78,6 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
             .onChange(of: isChecked) { _, newIsSelected in
                 if newIsSelected == true {
                     isFocused = false
-                }
-            }
-            // Animate the fading away of toggled completion/deletion items.
-            .onChange(of: listManager.fadeOutTrigger) {
-                if showChecked || toggleType == .staging { return }
-
-                withAnimation(.linear(duration: 0.5)) {
-                    opacity = 1
-                }
-
-                if listManager.itemIdsToCheck.contains(item.id)
-                    || listManager.itemIdsToUncheck.contains(item.id)
-                {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        withAnimation(.linear(duration: 2.5)) {
-                            opacity = 0
-                        }
-                    }
-                }
-            }
-            // Revert the fade animation when checked items are marked as visible.
-            .onChange(of: showChecked) { _, newShowChecked in
-                if newShowChecked {
-                    withAnimation(.linear(duration: 0.5)) {
-                        opacity = 1
-                    }
                 }
             }
     }
