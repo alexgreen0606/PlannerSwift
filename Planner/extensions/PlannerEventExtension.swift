@@ -12,9 +12,9 @@ extension PlannerEvent {
     @ViewBuilder
     func timeValueView(
         for datestamp: String,
-        openPlannerEventSheet: @escaping (PlannerEvent) -> Void,
-        openCalendarEventSheet: @escaping (EKEvent) -> Void,
-        animation: Namespace.ID
+        openPlannerEventSheet: ((PlannerEvent) -> Void)?,
+        openCalendarEventSheet: ((EKEvent) -> Void)?,
+        animation: Namespace.ID?
     ) -> some View {
         Group {
             if self.calendarEvent != nil {
@@ -25,18 +25,29 @@ extension PlannerEvent {
                 )
 
             } else if let date = self.date {
-                TimeValue(
+                let validOpenEventSheet =
+                    openPlannerEventSheet != nil
+                    ? {
+                        openPlannerEventSheet!(self)
+                    } : nil
+
+                let timeVal = TimeValue(
                     date: date,
                     datestamp: datestamp,
                     disabled: false,
-                    color: .blue
-                ) {
-                    openPlannerEventSheet(self)
-                }
-                .matchedTransitionSource(
-                    id: String(describing: self.id),
-                    in: animation
+                    color: .blue,
+                    openEventSheet: validOpenEventSheet
                 )
+
+                if validOpenEventSheet == nil || animation == nil {
+                    timeVal
+                } else {
+                    timeVal
+                        .matchedTransitionSource(
+                            id: String(describing: self.id),
+                            in: animation!
+                        )
+                }
 
             } else {
                 EmptyView()

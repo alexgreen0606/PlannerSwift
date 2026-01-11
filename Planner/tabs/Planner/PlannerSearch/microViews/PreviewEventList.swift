@@ -1,5 +1,5 @@
 //
-//  CalendarEventList.swift
+//  PreviewEventList.swift
 //  Planner
 //
 //  Created by Alex Green on 12/27/25.
@@ -8,15 +8,15 @@
 import EventKit
 import SwiftUI
 
-struct CalendarEventListView: View {
+struct PreviewEventListView: View {
     let datestamp: String
-    let events: [EKEvent]
+    let events: [PlannerEvent]
 
     @Environment(\.displayScale) private var displayScale
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ForEach(events, id: \.self) { event in
+            ForEach(events, id: \.id) { event in
                 HStack(alignment: .top, spacing: 12) {
                     Text(event.title)
                         .font(.system(size: 15))
@@ -26,14 +26,13 @@ struct CalendarEventListView: View {
 
                     event.timeValueView(
                         for: datestamp,
-                                openEventSheet: nil,
+                        openPlannerEventSheet: nil,
+                        openCalendarEventSheet: nil,
                         animation: nil
                     )
                 }
 
-                if event.eventIdentifier
-                    != events.last!.eventIdentifier
-                {
+                if let last = events.last, event.id != last.id {
                     dashedDivider
                 }
             }

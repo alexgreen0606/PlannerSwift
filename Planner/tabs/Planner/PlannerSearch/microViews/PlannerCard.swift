@@ -12,7 +12,7 @@ struct PlannerCardView: View {
     let datestamp: String
     let iconMap: [String: String]
     let openPlanner: () -> Void
-    
+
     @EnvironmentObject var calendarEventStore: CalendarStore
 
     private var allDayEvents: [EKEvent] {
@@ -21,10 +21,17 @@ struct PlannerCardView: View {
         ] ?? []
     }
 
-    private var singleDayEvents: [EKEvent] {
-        calendarEventStore.singleDayEventsByDatestamp[
-            datestamp
-        ] ?? []
+    private var singleDayEvents: [PlannerEvent] {
+        let events =
+            calendarEventStore
+            .singleDayEventsByDatestamp[datestamp] ?? []
+
+        return events.enumerated().map { index, calEvent in
+            PlannerEvent(
+                sortIndex: Double(index),
+                calendarEvent: calEvent
+            )
+        }
     }
 
     var body: some View {
@@ -42,9 +49,9 @@ struct PlannerCardView: View {
                     openCalendarEventSheet: nil
                 )
             }
-            
+
             if !singleDayEvents.isEmpty {
-                CalendarEventListView(
+                PreviewEventListView(
                     datestamp: datestamp,
                     events: singleDayEvents
                 )

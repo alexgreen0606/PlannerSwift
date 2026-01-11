@@ -17,6 +17,8 @@ struct PlannerCardVerticalView: View {
     private let iconMap: [String: String]
     private let openPlanner: () -> Void
 
+    private let maxPreviewEvents = 4
+
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]
     @State private var planner: Planner?
@@ -24,8 +26,9 @@ struct PlannerCardVerticalView: View {
     @EnvironmentObject var todaystampManager: TodaystampWatcher
     @ObservedObject var weatherStore = WeatherStore.shared
     @EnvironmentObject var calendarEventStore: CalendarStore
-    
-    let unit: UnitTemperature = Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
+
+    let unit: UnitTemperature =
+        Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
 
     // MARK: - Weather Data
 
@@ -36,28 +39,68 @@ struct PlannerCardVerticalView: View {
     // MARK: - Event Data
 
     private var allDayEvents: [EKEvent] {
-        calendarEventStore.allDayEventsByDatestamp[
-            datestamp
-        ] ?? []
+        calendarEventStore.allDayEventsByDatestamp[datestamp]
+            ?? []
     }
 
     private var singleDayEvents: [EKEvent] {
-        calendarEventStore.singleDayEventsByDatestamp[
-            datestamp
-        ] ?? []
+        calendarEventStore.singleDayEventsByDatestamp[datestamp]
+            ?? []
     }
 
-    private var planCountLabel: String {
-        let planCount = planner?.events.filter { !$0.isChecked }.count ?? 0
+    private var plannerEvents: [PlannerEvent] {
+        planner?.events
+            .filter { !$0.isChecked }
+            .sorted { $0.sortIndex < $1.sortIndex }
+            ?? []
+    }
 
-        if planCount == 0 {
-            if singleDayEvents.count > 0 {
+    private var previewAllDayEvents: [EKEvent] {
+        Array(allDayEvents.prefix(maxPreviewEvents))
+    }
+
+    private var previewPlannerEvents: [PlannerEvent] {
+        let remainingSlots = max(
+            0,
+            maxPreviewEvents - previewAllDayEvents.count
+        )
+
+        let singleDayPlannerEvents =
+            singleDayEvents
+            .prefix(remainingSlots)
+            .enumerated()
+            .map { index, calEvent in
+                PlannerEvent(sortIndex: Double(index), calendarEvent: calEvent)
+            }
+
+        let slotsAfterSingleDay = max(
+            0,
+            remainingSlots - singleDayPlannerEvents.count
+        )
+
+        let plannerEventsToAdd =
+            plannerEvents
+            .prefix(slotsAfterSingleDay)
+
+        return singleDayPlannerEvents + plannerEventsToAdd
+    }
+
+    private var remainingPlansLabel: String {
+        let totalCount =
+            allDayEvents.count + singleDayEvents.count + plannerEvents.count
+
+        let previewCount = allDayEvents.count + previewPlannerEvents.count
+
+        let remainingCount = totalCount - previewCount
+
+        if remainingCount == 0 {
+            if previewCount > 0 {
                 return "No more plans"
             }
             return "No plans"
         }
 
-        return "\(planCount)\(singleDayEvents.count > 0 ? " more" : "") plan\(planCount == 1 ? "" : "s")"
+        return "\(remainingCount) more plan\(remainingCount == 1 ? "" : "s")"
     }
 
     init(
@@ -83,7 +126,7 @@ struct PlannerCardVerticalView: View {
             if !allDayEvents.isEmpty {
                 PlannerChipSpreadView(
                     datestamp: datestamp,
-                    events: allDayEvents,
+                    events: previewAllDayEvents,
                     showCountdown: false,
                     showWeather: false,
                     iconMap: iconMap,
@@ -92,23 +135,23 @@ struct PlannerCardVerticalView: View {
                 )
             }
 
-            if !singleDayEvents.isEmpty {
-                CalendarEventListView(
+            if !previewPlannerEvents.isEmpty {
+                PreviewEventListView(
                     datestamp: datestamp,
-                    events: singleDayEvents
+                    events: previewPlannerEvents
                 )
             }
 
             VStack {
-                Text(planCountLabel)
+                Text(remainingPlansLabel)
                     .font(.system(size: 12, weight: .heavy, design: .rounded))
                     .foregroundStyle(Color(uiColor: .tertiaryLabel))
             }
             .frame(maxHeight: .infinity)
             .frame(maxWidth: .infinity, alignment: .center)
 
-            if weatherData != nil {
-                HStack(alignment: .bottom) {
+            HStack(alignment: .bottom) {
+                if weatherData != nil {
                     HStack(alignment: .center, spacing: 6) {
                         Image(systemName: weatherData?.symbolName ?? "")
                             .symbolRenderingMode(.multicolor)
@@ -129,10 +172,11 @@ struct PlannerCardVerticalView: View {
                     }
                 }
             }
+            .frame(height: 16)
         }
         .padding()
         .frame(width: 220)
-        .frame(maxHeight: .infinity, alignment: .top)
+        .frame(height: 280, alignment: .top)
         .contentShape(Rectangle())
         .background(
             RoundedRectangle(cornerRadius: 24)
