@@ -89,6 +89,7 @@ struct PlannerView: View {
     @Query private var calendarSettingsList: [CalendarSettings]
     @State private var calendarSettings: CalendarSettings?
 
+    @EnvironmentObject var plannerManager: ListManager
     @EnvironmentObject var calendarEventStore: CalendarStore
     @EnvironmentObject var todaystampManager: TodaystampWatcher
 
@@ -117,7 +118,9 @@ struct PlannerView: View {
         let storageEvents =
             planner != nil
             ? planner!.events.filter {
-                !$0.isChecked
+                (!$0.isChecked
+                    && !plannerManager.newlyUncheckedIds.contains($0.id))
+                    || plannerManager.newlyCheckedIds.contains($0.id)
             }
             : []
 
@@ -129,7 +132,9 @@ struct PlannerView: View {
     private var checkedEvents: [PlannerEvent] {
         planner != nil
             ? planner!.events.filter {
-                $0.isChecked
+                ($0.isChecked
+                    && !plannerManager.newlyCheckedIds.contains($0.id))
+                    || plannerManager.newlyUncheckedIds.contains($0.id)
             }.sorted { $0.sortIndex < $1.sortIndex }
             : []
     }

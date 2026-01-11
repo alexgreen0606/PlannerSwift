@@ -11,18 +11,20 @@ import SwiftUI
 
 @MainActor
 final class ListManager<Item: ListItem>: ObservableObject {
-    @Published var itemIdsToCheck: Set<ObjectIdentifier> = []
-    @Published var itemIdsToUncheck: Set<ObjectIdentifier> = []
+    @Published var newlyCheckedIds: Set<ObjectIdentifier> = []
+    @Published var newlyUncheckedIds: Set<ObjectIdentifier> = []
+
+    // Keeps faded items hidden for 1 second after they have moved.
+    @Published var fadingItemIds: Set<ObjectIdentifier> = []
+
     @Published var selectedItems: [Item] = []
     @Published var selectedItemIds: Set<ObjectIdentifier> = []
 
-    // Controls fading of pending items.
-    @Published var pendingOpacity: Double = 1
+    // Controls fading of checked items.
+    @Published var fadingOpacity: Double = 1
 
-    private var pendingChecks: [Item] = []
-    private var pendingUnchecks: [Item] = []
     private var task: Task<Void, Never>?
-    private let delay: Duration = .seconds(3)
+    private let fadeDuration: Duration = .seconds(3)
 
     deinit {
         task?.cancel()
@@ -38,13 +40,6 @@ final class ListManager<Item: ListItem>: ObservableObject {
             return
         }
     }
-    
-    private func clearPendingLists() {
-        pendingChecks.removeAll()
-        itemIdsToCheck.removeAll()
-        pendingUnchecks.removeAll()
-        itemIdsToUncheck.removeAll()
-    }
 
     private func toggleSelect(_ item: Item) {
         if selectedItemIds.contains(item.id) {
@@ -57,62 +52,46 @@ final class ListManager<Item: ListItem>: ObservableObject {
     }
 
     private func toggleChecked(for item: Item) {
-        pendingOpacity = 1
-        
         if item.isChecked {
-            if itemIdsToUncheck.contains(item.id) {
-                // Cancel the unchecking.
-                itemIdsToUncheck.remove(item.id)
-                pendingUnchecks.removeAll(where: { $0.id == item.id })
-                item.isChecked = true
-            } else {
-                // Schedule the unchecking.
-                itemIdsToUncheck.insert(item.id)
-                pendingUnchecks.append(item)
-            }
+            newlyUncheckedIds.insert(item.id)
+            newlyCheckedIds.remove(item.id)
         } else {
-            if itemIdsToCheck.contains(item.id) {
-                // Cancel the checking.
-                itemIdsToCheck.remove(item.id)
-                pendingChecks.removeAll(where: { $0.id == item.id })
-                item.isChecked = false
-            } else {
-                // Schedule the checking.
-                itemIdsToCheck.insert(item.id)
-                pendingChecks.append(item)
-            }
+            newlyCheckedIds.insert(item.id)
+            newlyUncheckedIds.remove(item.id)
         }
 
-        startCountdown()
+        fadingItemIds = newlyCheckedIds
+
+        item.isChecked.toggle()
+        beginFade()
     }
 
-    private func startCountdown() {
+    private func beginFade() {
         task?.cancel()
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            withAnimation(.linear(duration: 2.5)) {
-                self.pendingOpacity = 0
-            }
-        }
-        
-        task = Task {
+        fadingOpacity = 1
+
+        task = Task { [weak self] in
+            guard let self else { return }
+
             do {
-                try await Task.sleep(for: delay)
-            } catch { return }
+                try await Task.sleep(for: .milliseconds(500))
 
-            // Check items.
-            let toCheck = pendingChecks
-            for item in toCheck {
-                item.isChecked = true
-            }
+                withAnimation(.linear(duration: fadeDuration.seconds)) {
+                    self.fadingOpacity = 0
+                }
 
-            // Uncheck items.
-            let toUncheck = pendingUnchecks
-            for item in toUncheck {
-                item.isChecked = false
+                // Keep items around as they fade away.
+                try await Task.sleep(for: fadeDuration)
+
+                self.newlyCheckedIds.removeAll()
+                self.newlyUncheckedIds.removeAll()
+
+                // Extra delay before displaying checked items in UI (allow time for them to leave the upper list).
+                try await Task.sleep(for: .seconds(1))
+                self.fadingItemIds.removeAll()
+
+            } catch {
             }
-            
-            clearPendingLists()
         }
     }
 }

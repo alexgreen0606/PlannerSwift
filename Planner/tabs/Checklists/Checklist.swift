@@ -13,17 +13,27 @@ struct ChecklistView: View {
 
     @Environment(\.modelContext) private var modelContext
 
-    @State private var scrollProxy: ScrollViewProxy?
+    @EnvironmentObject var listManager: ListManager
 
-    private var sortedCheckedItems: [ChecklistItem] {
-        checklist.items
-            .filter { $0.isChecked }
-            .sorted { $0.sortIndex < $1.sortIndex }
-    }
+    @State private var scrollProxy: ScrollViewProxy?
 
     private var sortedUncheckedItems: [ChecklistItem] {
         checklist.items
-            .filter { !$0.isChecked }
+            .filter {
+                (!$0.isChecked
+                    && !listManager.newlyUncheckedIds.contains($0.id))
+                    || listManager.newlyCheckedIds.contains($0.id)
+            }
+            .sorted { $0.sortIndex < $1.sortIndex }
+    }
+
+    private var sortedCheckedItems: [ChecklistItem] {
+        checklist.items
+            .filter {
+                ($0.isChecked
+                    && !listManager.newlyCheckedIds.contains($0.id))
+                    || listManager.newlyUncheckedIds.contains($0.id)
+            }
             .sorted { $0.sortIndex < $1.sortIndex }
     }
 

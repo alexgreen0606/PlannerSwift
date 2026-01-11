@@ -35,20 +35,15 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
     private var opacity: Double {
         guard !showChecked else { return 1 }
 
-        let isPending =
-            listManager.itemIdsToCheck.contains(item.id) ||
-            listManager.itemIdsToUncheck.contains(item.id)
+        let isPending = listManager.fadingItemIds.contains(item.id)
 
-        return isPending ? listManager.pendingOpacity : 1
+        return isPending ? listManager.fadingOpacity : 1
     }
 
     private var isChecked: Bool {
         if toggleType == .staging {
             return listManager.selectedItemIds.contains(item.id)
         }
-
-        if listManager.itemIdsToUncheck.contains(item.id) { return false }
-        if listManager.itemIdsToCheck.contains(item.id) { return true }
 
         return item.isChecked
     }

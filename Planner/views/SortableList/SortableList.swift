@@ -49,7 +49,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                 .listRowInsets(EdgeInsets())
                 .listRowSeparator(.hidden)
 
-                ForEach(uncheckedItems, id: \.self) { item in
+                ForEach(uncheckedItems) { item in
                     ItemView(
                         item: item,
                         tint: tint,
@@ -100,7 +100,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
 
             if showChecked {
                 Section {
-                    ForEach(checkedItems, id: \.self) { item in
+                    ForEach(checkedItems) { item in
                         ItemView(
                             item: item,
                             tint: tint,
@@ -146,6 +146,8 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
             }
         }
         .animation(.linear(duration: 0.2), value: uncheckedItems)
+        .animation(.linear(duration: 0.2), value: listManager.newlyCheckedIds)
+        .animation(.linear(duration: 0.2), value: listManager.newlyUncheckedIds)
     }
 
     private func handleCreateItem(
