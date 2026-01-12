@@ -53,11 +53,17 @@ final class ListManager<Item: ListItem>: ObservableObject {
 
     private func toggleChecked(for item: Item) {
         if item.isChecked {
-            newlyUncheckedIds.insert(item.id)
-            newlyCheckedIds.remove(item.id)
+            if !newlyCheckedIds.contains(item.id) {
+                newlyUncheckedIds.insert(item.id)
+            } else {
+                newlyCheckedIds.remove(item.id)
+            }
         } else {
-            newlyCheckedIds.insert(item.id)
-            newlyUncheckedIds.remove(item.id)
+            if !newlyUncheckedIds.contains(item.id) {
+                newlyCheckedIds.insert(item.id)
+            } else {
+                newlyUncheckedIds.remove(item.id)
+            }
         }
 
         fadingItemIds = newlyCheckedIds
