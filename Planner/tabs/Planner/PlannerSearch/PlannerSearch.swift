@@ -28,7 +28,7 @@ struct PlannerSearchView: View {
     @Query private var calendarSettingsList: [CalendarSettings]
     @State private var calendarSettings: CalendarSettings?
 
-    @EnvironmentObject var calendarEventStore: CalendarStore
+    @EnvironmentObject var calendarStore: CalendarStore
     @EnvironmentObject var todaystampWatcher: TodaystampWatcher
     @ObservedObject var weatherStore = WeatherStore.shared
 
@@ -42,6 +42,7 @@ struct PlannerSearchView: View {
     @State private var searchText: String = ""
     @State private var isCalendarPickerOpen = false
     @State private var selectedCalendarDate: Date = Date()
+    @State private var hiddenCalendarIds: Set<String> = []
 
     private var thisWeekDatestamps: [String] {
         let region = Region.local
@@ -61,9 +62,9 @@ struct PlannerSearchView: View {
 
         // All upcoming datestamps.
         let eventDatestamps = Set(
-            calendarEventStore.allDayEventsByDatestamp.keys
+            calendarStore.allDayEventsByDatestamp.keys
         ).union(
-            calendarEventStore.singleDayEventsByDatestamp.keys
+            calendarStore.singleDayEventsByDatestamp.keys
         )
 
         // Filter to show all future dates.
@@ -94,6 +95,15 @@ struct PlannerSearchView: View {
 
     private var sortedUpcomingYears: [String] {
         Array(upcomingEventMap.keys).sorted()
+    }
+
+    private var sortedCalendars: [EKCalendar] {
+        calendarStore.sortedCalendars.filter {
+            calendarSettings != nil
+                && !calendarSettings!.hiddenCalendarIds.contains(
+                    $0.calendarIdentifier
+                )
+        }
     }
 
     var body: some View {
@@ -223,6 +233,53 @@ struct PlannerSearchView: View {
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Text("Filter Calendars")
+                            .font(.footnote)
+
+                        Divider()
+
+                        ForEach(sortedCalendars, id: \.calendarIdentifier) {
+                            calendar in
+                            Toggle(
+                                isOn: Binding(
+                                    get: {
+                                        !hiddenCalendarIds.contains(
+                                            calendar.calendarIdentifier
+                                        )
+                                    },
+                                    set: { isOn in
+                                        if isOn {
+                                            hiddenCalendarIds.remove(
+                                                calendar.calendarIdentifier
+                                            )
+                                        } else {
+                                            hiddenCalendarIds.insert(
+                                                calendar.calendarIdentifier
+                                            )
+                                        }
+                                    }
+                                )
+                            ) {
+                                HStack(spacing: 8) {
+                                    Image(
+                                        systemName:
+                                            calendarSettings?.iconMap[
+                                                calendar.calendarIdentifier
+                                            ] ?? calendar.iconName
+                                    )
+                                    .tint(Color(cgColor: calendar.cgColor))
+
+                                    Text(calendar.title)
+                                }
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "line.3.horizontal.decrease")
+                    }
+                }
+
+                ToolbarItem(placement: .topBarTrailing) {
                     Button("Add", systemImage: "plus") {
                         // TODO: open a modal for a new event
                     }
@@ -247,13 +304,13 @@ struct PlannerSearchView: View {
                 calendarSettings = modelContext.ensureCalendarSettings(
                     settings: calendarSettingsList
                 )
-                
-                calendarEventStore.requestAccessAndLoadIfNeeded(
+
+                calendarStore.requestAccessAndLoadIfNeeded(
                     hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? []
                 )
             }
             .refreshable {
-                calendarEventStore.refresh(
+                calendarStore.refresh(
                     hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? []
                 )
                 Task {

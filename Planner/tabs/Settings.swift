@@ -22,9 +22,9 @@ struct SettingsView: View {
     @Query private var settingList: [CalendarSettings]
     @State private var settings: CalendarSettings?
 
-    @EnvironmentObject var calendarEventStore: CalendarStore
+    @EnvironmentObject var calendarStore: CalendarStore
 
-    var iconOptions: [String] = [
+    private var iconOptions: [String] = [
         "briefcase.fill",
         "airplane",
         "suitcase.fill",
@@ -33,14 +33,6 @@ struct SettingsView: View {
         "birthday.cake.fill",
         "calendar",
     ]
-
-    var sortedCalendars: [EKCalendar] {
-        Array(calendarEventStore.calendarsById.values)
-            .sorted {
-                $0.title.localizedCaseInsensitiveCompare($1.title)
-                    == .orderedAscending
-            }
-    }
 
     var body: some View {
         NavigationStack {
@@ -64,7 +56,7 @@ struct SettingsView: View {
                 
                 Section {
                     ForEach(
-                        sortedCalendars,
+                        calendarStore.sortedCalendars,
                         id: \.calendarIdentifier
                     ) { calendar in
                         HStack {

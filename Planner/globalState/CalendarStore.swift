@@ -18,15 +18,23 @@ class CalendarStore: ObservableObject {
     private let eventStore = EKEventStore()
     private var hasLoaded = false
 
-    var ekEventStore: EKEventStore {
-        eventStore
-    }
-
     @Published private(set) var calendarsById: [String: EKCalendar] = [:]
     @Published private(set) var allDayEventsByDatestamp: [String: [EKEvent]] =
         [:]
     @Published private(set) var singleDayEventsByDatestamp:
         [String: [EKEvent]] = [:]
+
+    var ekEventStore: EKEventStore {
+        eventStore
+    }
+
+    var sortedCalendars: [EKCalendar] {
+        Array(calendarsById.values)
+            .sorted {
+                $0.title.localizedCaseInsensitiveCompare($1.title)
+                    == .orderedAscending
+            }
+    }
 
     @MainActor
     func requestAccessAndLoadIfNeeded(hiddenCalendarIds: Set<String>) {
@@ -96,7 +104,7 @@ class CalendarStore: ObservableObject {
             if hiddenCalendarIds.contains(event.calendar.calendarIdentifier) {
                 continue
             }
-            
+
             if event.isAllDay {
                 // All-day events can span multiple days.
                 for datestamp in expandedDatestamps(for: event) {
