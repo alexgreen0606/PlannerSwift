@@ -16,6 +16,7 @@ struct ChecklistView: View {
     @EnvironmentObject var listManager: ListManager
 
     @State private var scrollProxy: ScrollViewProxy?
+    @State private var showDeleteConfirm = false
 
     private var sortedUncheckedItems: [ChecklistItem] {
         checklist.items
@@ -60,6 +61,7 @@ struct ChecklistView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
+                        
                         Button {
                             checklist.showCompleted.toggle()
                         } label: {
@@ -72,8 +74,31 @@ struct ChecklistView: View {
                                     ? "eye.slash" : "eye"
                             )
                         }
+                        
+                        Menu {
+                            Button(role: .destructive) {
+                                showDeleteConfirm = true
+                            } label: {
+                                Text("Delete completed items")
+                            }
+                            .disabled(sortedCheckedItems.isEmpty)
+                        } label: {
+                            Label("Delete options", systemImage: "trash")
+                        }
+                        
                     } label: {
                         Image(systemName: "ellipsis")
+                    }
+                    .confirmationDialog(
+                        "Delete completed items from this list?",
+                        isPresented: $showDeleteConfirm,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Confirm", role: .destructive) {
+                            deleteAllCompletedItems()
+                        }
+                    } message: {
+                        Text("This action is irreversible.")
                     }
                 }
 
@@ -115,5 +140,16 @@ struct ChecklistView: View {
         )
 
         try! modelContext.save()
+    }
+
+    private func deleteAllCompletedItems() {
+        sortedCheckedItems
+            .forEach { modelContext.delete($0) }
+
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to delete completed items:", error)
+        }
     }
 }
