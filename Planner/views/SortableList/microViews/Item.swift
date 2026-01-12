@@ -18,9 +18,11 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
     let endAdornment: ((_ item: Item) -> EndAdornment)?
     let customToggleConfig: CustomIconConfig?
     let onCreateItem:
-        (_ baseId: ObjectIdentifier?, _ offset: Int) ->
+        (_ baseId: PersistentIdentifier?, _ offset: Int) ->
             Void
     let onTitleChange: (_ item: Item) -> Void
+
+    @Environment(\.scenePhase) private var appPhase
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var focusController: FocusController
@@ -31,7 +33,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
 
     @State private var isFocused: Bool = false
     @State private var debounceTask: Task<Void, Never>? = nil
-    
+
     private var opacity: Double {
         guard !showChecked else { return 1 }
 
@@ -72,6 +74,12 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
             // Blur the textfield when this item has been selected.
             .onChange(of: isChecked) { _, newIsSelected in
                 if newIsSelected == true {
+                    isFocused = false
+                }
+            }
+            // Blur the textfield when the app exits focus.
+            .onChange(of: appPhase) { _, phase in
+                if phase == .inactive {
                     isFocused = false
                 }
             }

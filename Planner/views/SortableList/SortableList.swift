@@ -6,10 +6,11 @@
 //
 
 import Combine
+import SwiftData
 import SwiftUI
 
 class FocusController: ObservableObject {
-    @Published var focusedId: ObjectIdentifier?
+    @Published var focusedId: PersistentIdentifier?
 }
 
 struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
@@ -19,7 +20,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
     let checkedItems: [Item]
     let showChecked: Bool
     let toggleType: ListToggleType = .storage
-    let disabledItemIds: Set<ObjectIdentifier> = []
+    let disabledItemIds: Set<PersistentIdentifier> = []
     let floatingInfo: FloatingInfo?
     let customToggleConfig: CustomIconConfig?
     let checkedHeader: String
@@ -33,7 +34,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
     let moveItem: (_ from: Int, _ to: Int) -> Void
 
     @EnvironmentObject var listManager: ListManager
-    
+
     @StateObject var focusController = FocusController()
 
     var body: some View {
@@ -76,8 +77,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                 .listRowSeparator(.hidden)
                 .id("UNCHECKED")
 
-                if uncheckedItems.isEmpty && showChecked
-                {
+                if uncheckedItems.isEmpty && showChecked {
                     VStack(alignment: .center) {
                         Text(emptyUncheckedLabel)
                             .font(
@@ -119,7 +119,9 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                         .id(item.id)
                     }
                 } header: {
-                    Text(checkedItems.isEmpty ? emptyCheckedLabel : checkedHeader)
+                    Text(
+                        checkedItems.isEmpty ? emptyCheckedLabel : checkedHeader
+                    )
                 } footer: {
                     if checkedFooter != nil && !checkedItems.isEmpty {
                         Text(checkedFooter!)
@@ -138,8 +140,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
         .safeAreaPadding(.bottom, 20)
         .background(Color.appBackground)
         .overlay {
-            if uncheckedItems.isEmpty && !showChecked
-            {
+            if uncheckedItems.isEmpty && !showChecked {
                 Text(emptyUncheckedLabel)
                     .font(.system(size: 16, weight: .heavy, design: .rounded))
                     .foregroundStyle(Color(uiColor: .tertiaryLabel))
@@ -148,10 +149,14 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
         .animation(.linear(duration: 0.2), value: uncheckedItems)
         .animation(.linear(duration: 0.2), value: listManager.newlyCheckedIds)
         .animation(.linear(duration: 0.2), value: listManager.newlyUncheckedIds)
+        // Blur the textfield when the list unmounts (deletes empty items).
+        .onDisappear {
+            focusController.focusedId = nil
+        }
     }
 
     private func handleCreateItem(
-        baseId: ObjectIdentifier?,
+        baseId: PersistentIdentifier?,
         offset: Int = 0
     ) {
         guard

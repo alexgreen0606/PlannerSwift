@@ -11,14 +11,14 @@ import SwiftUI
 
 @MainActor
 final class ListManager<Item: ListItem>: ObservableObject {
-    @Published var newlyCheckedIds: Set<ObjectIdentifier> = []
-    @Published var newlyUncheckedIds: Set<ObjectIdentifier> = []
+    @Published var newlyCheckedIds: Set<PersistentIdentifier> = []
+    @Published var newlyUncheckedIds: Set<PersistentIdentifier> = []
 
     // Keeps faded items hidden for 1 second after they have moved.
-    @Published var fadingItemIds: Set<ObjectIdentifier> = []
+    @Published var fadingItemIds: Set<PersistentIdentifier> = []
 
     @Published var selectedItems: [Item] = []
-    @Published var selectedItemIds: Set<ObjectIdentifier> = []
+    @Published var selectedItemIds: Set<PersistentIdentifier> = []
 
     // Controls fading of checked items.
     @Published var fadingOpacity: Double = 1
