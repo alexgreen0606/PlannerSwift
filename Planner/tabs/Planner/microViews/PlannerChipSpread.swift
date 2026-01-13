@@ -8,8 +8,8 @@
 import EventKit
 import SwiftDate
 import SwiftUI
-import WrappingHStack
 import WeatherKit
+import WrappingHStack
 
 struct PlannerChipSpreadView: View {
     let datestamp: String
@@ -25,13 +25,14 @@ struct PlannerChipSpreadView: View {
 
     @ObservedObject var weatherStore = WeatherStore.shared
     @EnvironmentObject var calendarStore: CalendarStore
-    
-    let unit: UnitTemperature = Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
+
+    let unit: UnitTemperature =
+        Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
 
     private var daysUntil: String? {
         datestamp.date?.countdown
     }
-    
+
     private var weatherData: DayWeather? {
         weatherStore.dayWeatherByDatestamp[datestamp]
     }
@@ -48,12 +49,14 @@ struct PlannerChipSpreadView: View {
             }
             if showWeather && weatherData != nil {
                 weather
-                    .transition(.opacity)
+                    .contentShape(Rectangle())
+                    .onTapGesture(perform: openWeatherApp)
             }
             ForEach(events, id: \.eventIdentifier) { event in
                 let chip = PlannerChipView(
                     title: event.title,
-                    iconName: iconMap[event.calendar.calendarIdentifier] ?? event.calendar.iconName,
+                    iconName: iconMap[event.calendar.calendarIdentifier]
+                        ?? event.calendar.iconName,
                     color: Color(event.calendar.cgColor),
                     disableInteraction: openCalendarEventSheet == nil
                 )
@@ -107,8 +110,14 @@ struct PlannerChipSpreadView: View {
             .padding(.vertical, 4)
             .frame(height: UIConstants.chipHeight)
             .glassEffect(
+                .regular.interactive(),
                 in: .rect(cornerRadius: UIConstants.chipHeight / 2)
             )
         }
+    }
+
+    private func openWeatherApp() {
+        guard let url = URL(string: "weather://") else { return }
+        UIApplication.shared.open(url)
     }
 }
