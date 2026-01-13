@@ -38,24 +38,12 @@ struct PlannerCardView: View {
         VStack(alignment: .leading, spacing: 12) {
             PlannerDateInfoView(datestamp: datestamp, iconScale: 1.4)
 
-            if !allDayEvents.isEmpty {
-                PlannerChipSpreadView(
-                    datestamp: datestamp,
-                    events: allDayEvents,
-                    showCountdown: false,
-                    showWeather: false,
-                    iconMap: iconMap,
-                    animation: nil,
-                    openCalendarEventSheet: nil
-                )
-            }
+            PreviewCalendarEventListView(events: allDayEvents, iconMap: iconMap)
 
-            if !singleDayEvents.isEmpty {
-                PreviewEventListView(
-                    datestamp: datestamp,
-                    events: singleDayEvents
-                )
-            }
+            PreviewPlannerEventListView(
+                datestamp: datestamp,
+                events: singleDayEvents
+            )
         }
         .listRowBackground(Color.appBackground)
         .frame(maxWidth: .infinity, alignment: .leading)

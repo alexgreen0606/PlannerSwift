@@ -80,40 +80,38 @@ struct PlannerChipSpreadView: View {
     }
 
     private var weather: some View {
-        GlassEffectContainer {
-            HStack(alignment: .center, spacing: 8) {
-                HStack(alignment: .center, spacing: 4) {
-                    Image(systemName: weatherData!.symbolName)
-                        .symbolRenderingMode(.multicolor)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 14, height: 14)
+        HStack(alignment: .center, spacing: 8) {
+            HStack(alignment: .center, spacing: 4) {
+                Image(systemName: weatherData!.symbolName)
+                    .symbolRenderingMode(.multicolor)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 14, height: 14)
 
-                    Text(weatherData!.condition.description)
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(Color(uiColor: .label))
-                }
-
-                HStack(alignment: .center, spacing: 4) {
-                    Text(weatherData?.highTempString(in: unit) ?? "")
-                        .font(.caption2)
-                        .foregroundStyle(Color(uiColor: .label))
-
-                    Divider().frame(height: 16)
-
-                    Text(weatherData?.lowTempString(in: unit) ?? "")
-                        .font(.caption2)
-                        .foregroundStyle(Color(uiColor: .label))
-                }
+                Text(weatherData!.condition.description)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(Color(uiColor: .label))
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .frame(height: UIConstants.chipHeight)
-            .glassEffect(
-                .regular.interactive(),
-                in: .rect(cornerRadius: UIConstants.chipHeight / 2)
-            )
+
+            HStack(alignment: .center, spacing: 4) {
+                Text(weatherData?.highTempString(in: unit) ?? "")
+                    .font(.caption2)
+                    .foregroundStyle(Color(uiColor: .label))
+
+                Divider().frame(height: 16)
+
+                Text(weatherData?.lowTempString(in: unit) ?? "")
+                    .font(.caption2)
+                    .foregroundStyle(Color(uiColor: .label))
+            }
         }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .frame(height: UIConstants.chipHeight)
+        .glassEffect(
+            .regular.interactive(),
+            in: .rect(cornerRadius: UIConstants.chipHeight / 2)
+        )
     }
 
     private func openWeatherApp() {

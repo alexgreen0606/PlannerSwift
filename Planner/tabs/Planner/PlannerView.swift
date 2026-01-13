@@ -90,7 +90,7 @@ struct PlannerView: View {
     @State private var calendarSettings: CalendarSettings?
 
     @EnvironmentObject var plannerManager: ListManager
-    @EnvironmentObject var calendarEventStore: CalendarStore
+    @EnvironmentObject var calendarStore: CalendarStore
     @EnvironmentObject var todaystampManager: TodaystampWatcher
 
     @State private var calendarPlannerEvents: [PlannerEvent] = []
@@ -159,7 +159,7 @@ struct PlannerView: View {
                 showChecked: showChecked,
                 floatingInfo: PlannerChipSpreadView(
                     datestamp: datestamp,
-                    events: calendarEventStore.allDayEventsByDatestamp[
+                    events: calendarStore.allDayEventsByDatestamp[
                         datestamp
                     ] ?? [],
                     showCountdown: true,
@@ -262,14 +262,18 @@ struct PlannerView: View {
 
             synchronizeCalendarEvents()
         }
+        // Rebuild the planner when the calendar events change.
+        .onChange(of: calendarStore.refreshKey) { _, newKey in
+            synchronizeCalendarEvents()
+        }
         .sheet(item: $calendarEventSheetContext) { context in
             switch context.event.calendar.allowsContentModifications {
             case true:
                 EditCalendarEventView(
                     event: context.event,
-                    eventStore: calendarEventStore.ekEventStore
+                    eventStore: calendarStore.ekEventStore
                 ) { action, updatedEvent in
-                    calendarEventStore.refresh(
+                    calendarStore.refresh(
                         hiddenCalendarIds: calendarSettings?.hiddenCalendarIds
                             ?? []
                     )
@@ -303,13 +307,11 @@ struct PlannerView: View {
         }
     }
 
-    // TODO: run this whenever the calendar events change
     private func synchronizeCalendarEvents() {
         guard let planner = planner, let settings = calendarSettings
         else { return }
         let calendarStoreEvents =
-            calendarEventStore.singleDayEventsByDatestamp[datestamp] ?? []
-        guard !calendarStoreEvents.isEmpty else { return }
+            calendarStore.singleDayEventsByDatestamp[datestamp] ?? []
 
         calendarPlannerEvents =
             planner.synchronizeCalendarEventPositions(
@@ -397,7 +399,7 @@ struct PlannerView: View {
         // 2. Update the device calendar with the new title.
         guard event.calendarEvent == nil else {
             event.calendarEvent!.title = event.title
-            try! calendarEventStore.ekEventStore.save(
+            try! calendarStore.ekEventStore.save(
                 event.calendarEvent!,
                 span: .thisEvent
             )

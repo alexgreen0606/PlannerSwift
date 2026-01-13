@@ -123,24 +123,12 @@ struct PlannerCardVerticalView: View {
         VStack(alignment: .leading, spacing: 12) {
             PlannerDateInfoView(datestamp: datestamp, iconScale: 1.4)
 
-            if !allDayEvents.isEmpty {
-                PlannerChipSpreadView(
-                    datestamp: datestamp,
-                    events: previewAllDayEvents,
-                    showCountdown: false,
-                    showWeather: false,
-                    iconMap: iconMap,
-                    animation: nil,
-                    openCalendarEventSheet: nil
-                )
-            }
+            PreviewCalendarEventListView(events: allDayEvents, iconMap: iconMap)
 
-            if !previewPlannerEvents.isEmpty {
-                PreviewEventListView(
-                    datestamp: datestamp,
-                    events: previewPlannerEvents
-                )
-            }
+            PreviewPlannerEventListView(
+                datestamp: datestamp,
+                events: previewPlannerEvents
+            )
 
             VStack {
                 Text(remainingPlansLabel)

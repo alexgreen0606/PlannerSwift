@@ -23,6 +23,7 @@ class CalendarStore: ObservableObject {
         [:]
     @Published private(set) var singleDayEventsByDatestamp:
         [String: [EKEvent]] = [:]
+    @Published var refreshKey: UUID? = nil
 
     var ekEventStore: EKEventStore {
         eventStore
@@ -124,6 +125,7 @@ class CalendarStore: ObservableObject {
 
         allDayEventsByDatestamp = allDayMap
         singleDayEventsByDatestamp = singleDayMap
+        refreshKey = UUID()
     }
 
     // TODO: use this for ALL-DAY events, then create a new one for MULTI_DAY

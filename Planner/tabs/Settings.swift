@@ -24,6 +24,8 @@ struct SettingsView: View {
 
     @EnvironmentObject var calendarStore: CalendarStore
 
+    @State private var calendarRefreshDebounce: Task<Void, Never>?
+
     private var iconOptions: [String] = [
         "briefcase.fill",
         "airplane",
@@ -39,7 +41,8 @@ struct SettingsView: View {
             Form {
                 Section {
                     Picker("Accent Color", selection: $themeColor) {
-                        ForEach(ThemeColorOption.allCases, id: \.self) { option in
+                        ForEach(ThemeColorOption.allCases, id: \.self) {
+                            option in
                             Image(systemName: "circle.fill")
                                 .symbolRenderingMode(.palette)
                                 .foregroundStyle(option.swiftUIColor)
@@ -47,13 +50,13 @@ struct SettingsView: View {
                         }
                     }
                     .pickerStyle(.menu)
-                    
+
                     Toggle("List separators", isOn: $showListSeparators)
                         .tint(themeColor.swiftUIColor)
                 } header: {
                     Text("Style")
                 }
-                
+
                 Section {
                     ForEach(
                         calendarStore.sortedCalendars,
@@ -62,8 +65,9 @@ struct SettingsView: View {
                         HStack {
                             Image(
                                 systemName: settings?.hiddenCalendarIds
-                                    .contains(calendar.calendarIdentifier) == false
-                                ? "checkmark.circle" : "circle"
+                                    .contains(calendar.calendarIdentifier)
+                                    == false
+                                    ? "checkmark.circle" : "circle"
                             )
                             .foregroundStyle(Color(calendar.cgColor))
                             .contentShape(Rectangle())
@@ -74,7 +78,7 @@ struct SettingsView: View {
                             )
                             .onTapGesture {
                                 guard let settings else { return }
-                                
+
                                 if settings.hiddenCalendarIds.contains(
                                     calendar.calendarIdentifier
                                 ) {
@@ -86,23 +90,23 @@ struct SettingsView: View {
                                         calendar.calendarIdentifier
                                     )
                                 }
-                                
+
                                 try! modelContext.save()
                             }
-                            
+
                             Text(calendar.title)
-                            
+
                             Spacer()
-                            
+
                             Menu {
                                 ForEach(iconOptions, id: \.self) { iconName in
                                     Button("", systemImage: iconName) {
                                         guard let settings else { return }
-                                        
+
                                         settings.iconMap[
                                             calendar.calendarIdentifier
                                         ] = iconName
-                                        
+
                                         try! modelContext.save()
                                     }
                                 }
@@ -121,11 +125,35 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            // Load in the settings on mount.
             .task {
                 settings = modelContext.ensureCalendarSettings(
                     settings: settingList
                 )
             }
+            // Refresh the calendar when the hidden calendars change.
+            .onChange(of: settings?.hiddenCalendarIds) { _, _ in
+                scheduleCalendarRefreshDebounce()
+            }
         }
     }
+
+    private func scheduleCalendarRefreshDebounce() {
+        calendarRefreshDebounce?.cancel()
+
+        calendarRefreshDebounce = Task {
+            do {
+                try await Task.sleep(for: .milliseconds(500))
+                guard !Task.isCancelled else { return }
+
+                // Refresh the calendar data.
+                calendarStore.refresh(
+                    hiddenCalendarIds: settings?.hiddenCalendarIds ?? []
+                )
+            } catch {
+                // Task cancelled — do nothing.
+            }
+        }
+    }
+
 }
