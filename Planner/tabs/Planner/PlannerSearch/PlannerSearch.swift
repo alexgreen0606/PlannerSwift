@@ -42,7 +42,7 @@ struct PlannerSearchView: View {
     @State private var searchText: String = ""
     @State private var isCalendarPickerOpen = false
     @State private var selectedCalendarDate: Date = Date()
-    @State private var hiddenCalendarIds: Set<String> = []
+    @State private var filterCalendarIds: Set<String> = []
 
     private var thisWeekDatestamps: [String] {
         let region = Region.local
@@ -244,17 +244,17 @@ struct PlannerSearchView: View {
                             Toggle(
                                 isOn: Binding(
                                     get: {
-                                        !hiddenCalendarIds.contains(
+                                        filterCalendarIds.contains(
                                             calendar.calendarIdentifier
                                         )
                                     },
                                     set: { isOn in
                                         if isOn {
-                                            hiddenCalendarIds.remove(
+                                            filterCalendarIds.insert(
                                                 calendar.calendarIdentifier
                                             )
                                         } else {
-                                            hiddenCalendarIds.insert(
+                                            filterCalendarIds.remove(
                                                 calendar.calendarIdentifier
                                             )
                                         }
@@ -277,6 +277,7 @@ struct PlannerSearchView: View {
                     } label: {
                         Image(systemName: "line.3.horizontal.decrease")
                     }
+                    .menuActionDismissBehavior(.disabled)
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
