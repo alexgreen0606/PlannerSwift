@@ -14,7 +14,7 @@ struct PreviewCalendarEventListView: View {
 
     var body: some View {
         if !events.isEmpty {
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 8) {
                 ForEach(events, id: \.eventIdentifier) { event in
                     HStack(spacing: 4) {
                         Image(
@@ -32,9 +32,6 @@ struct PreviewCalendarEventListView: View {
                             .font(.system(size: 14, weight: .medium))
                             .foregroundStyle(Color(event.calendar.cgColor))
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .frame(height: UIConstants.chipHeight)
                 }
             }
         }

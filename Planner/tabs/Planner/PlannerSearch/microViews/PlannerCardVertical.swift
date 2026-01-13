@@ -121,7 +121,7 @@ struct PlannerCardVerticalView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            PlannerDateInfoView(datestamp: datestamp, iconScale: 1.4)
+            PlannerDateInfoView(datestamp: datestamp)
 
             PreviewCalendarEventListView(events: allDayEvents, iconMap: iconMap)
 

@@ -9,7 +9,6 @@ import SwiftUI
 
 struct PlannerDateInfoView: View {
     let datestamp: String
-    let iconScale: Double
 
     private var date: Date? {
         datestamp.date
@@ -17,7 +16,7 @@ struct PlannerDateInfoView: View {
 
     var body: some View {
         HStack {
-            PlannerIcon(datestamp: datestamp, scale: iconScale)
+            PlannerIcon(datestamp: datestamp, scale: 1.4)
             VStack(alignment: .leading) {
                 Text(date?.weekday ?? datestamp)
                     .font(.headline)
