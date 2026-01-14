@@ -35,7 +35,7 @@ struct PlannerSearchView: View {
     @StateObject private var plannerManager = ListManager()
 
     @State private var plannerCoverContext: PlannerCoverContext?
-    @Namespace private var calendarAnimation
+    @Namespace private var toolbarAnimation
     @Namespace private var thisWeekAnimation
     @Namespace private var upcomingAnimation
 
@@ -44,6 +44,7 @@ struct PlannerSearchView: View {
     @State private var isCalendarPickerOpen = false
     @State private var selectedCalendarDate: Date = Date()
     @State private var filterCalendarIds: Set<String> = []
+    @State private var isNewEventSheetOpen = false
 
     // Holds all calendar data displayed in the UI.
     @State private var eventMap: [String: [String]] = [:]
@@ -191,7 +192,7 @@ struct PlannerSearchView: View {
                                 DispatchQueue.main.async {
                                     plannerCoverContext = PlannerCoverContext(
                                         datestamp: targetPlannerDate.datestamp,
-                                        namespace: calendarAnimation
+                                        namespace: toolbarAnimation
                                     )
                                 }
                             }
@@ -202,7 +203,7 @@ struct PlannerSearchView: View {
                     }
                     .matchedTransitionSource(
                         id: "CALENDAR",
-                        in: calendarAnimation
+                        in: toolbarAnimation
                     )
                 }
 
@@ -255,9 +256,13 @@ struct PlannerSearchView: View {
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Add", systemImage: "plus") {
-                        // TODO: open a modal for a new event
+                    Button("New Event", systemImage: "plus") {
+                        isNewEventSheetOpen = true
                     }
+                    .matchedTransitionSource(
+                        id: "NEW_EVENT",
+                        in: toolbarAnimation
+                    )
                 }
             }
             .fullScreenCover(item: $plannerCoverContext) { context in
@@ -269,9 +274,27 @@ struct PlannerSearchView: View {
                 .environmentObject(plannerManager)
                 .navigationTransition(
                     .zoom(
-                        sourceID: context.namespace == calendarAnimation
+                        sourceID: context.namespace == toolbarAnimation
                             ? "CALENDAR" : context.datestamp,
                         in: context.namespace
+                    )
+                )
+            }
+            .sheet(isPresented: $isNewEventSheetOpen) {
+                EditCalendarEventView(
+                    event: EKEvent(eventStore: calendarStore.ekEventStore),
+                    eventStore: calendarStore.ekEventStore
+                ) { action, event in
+                    calendarStore.refresh(
+                        hiddenCalendarIds: calendarSettings?.hiddenCalendarIds
+                            ?? []
+                    )
+                    isNewEventSheetOpen = false
+                }
+                .navigationTransition(
+                    .zoom(
+                        sourceID: "NEW_EVENT",
+                        in: toolbarAnimation
                     )
                 )
             }
