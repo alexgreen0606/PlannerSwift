@@ -12,11 +12,13 @@ struct ChecklistView: View {
     let checklist: ChecklistItem
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
 
     @EnvironmentObject var listManager: ListManager
 
     @State private var scrollProxy: ScrollViewProxy?
-    @State private var showDeleteConfirm = false
+    @State private var showDeleteCompletedConfirm = false
+    @State private var showDeleteChecklistConfirm = false
 
     private var sortedUncheckedItems: [ChecklistItem] {
         checklist.items
@@ -77,11 +79,17 @@ struct ChecklistView: View {
                         
                         Menu {
                             Button(role: .destructive) {
-                                showDeleteConfirm = true
+                                showDeleteCompletedConfirm = true
                             } label: {
                                 Text("Delete completed items")
                             }
                             .disabled(sortedCheckedItems.isEmpty)
+                            
+                            Button(role: .destructive) {
+                                showDeleteChecklistConfirm = true
+                            } label: {
+                                Text("Delete list")
+                            }
                         } label: {
                             Label("Delete options", systemImage: "trash")
                         }
@@ -91,7 +99,7 @@ struct ChecklistView: View {
                     }
                     .confirmationDialog(
                         "Delete completed items from this list?",
-                        isPresented: $showDeleteConfirm,
+                        isPresented: $showDeleteCompletedConfirm,
                         titleVisibility: .visible
                     ) {
                         Button("Confirm", role: .destructive) {
@@ -99,6 +107,17 @@ struct ChecklistView: View {
                         }
                     } message: {
                         Text("This action is irreversible.")
+                    }
+                    .confirmationDialog(
+                        "Delete this entire list?",
+                        isPresented: $showDeleteChecklistConfirm,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Confirm", role: .destructive) {
+                            deleteEntireList()
+                        }
+                    } message: {
+                        Text("\(checklist.items.isEmpty ? "" : "All items will be lost. ")This action is irreversible.")
                     }
                 }
 
@@ -150,6 +169,18 @@ struct ChecklistView: View {
             try modelContext.save()
         } catch {
             print("Failed to delete completed items:", error)
+        }
+    }
+    
+    private func deleteEntireList() {
+        dismiss()
+        
+        modelContext.delete(checklist)
+
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to delete list:", error)
         }
     }
 }

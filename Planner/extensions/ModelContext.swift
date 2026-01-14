@@ -23,12 +23,14 @@ extension ModelContext {
         do {
             try save()
         } catch {
-            assertionFailure("Failed to create Planner for \(datestamp): \(error)")
+            assertionFailure(
+                "Failed to create Planner for \(datestamp): \(error)"
+            )
         }
 
         return planner
     }
-    
+
     @MainActor
     func ensureCalendarSettings(
         settings: [CalendarSettings]
@@ -43,7 +45,9 @@ extension ModelContext {
         do {
             try save()
         } catch {
-            assertionFailure("Failed to create initial CalendarSettings: \(error)")
+            assertionFailure(
+                "Failed to create initial CalendarSettings: \(error)"
+            )
         }
 
         return newSettings
@@ -52,9 +56,9 @@ extension ModelContext {
     @MainActor
     func ensureRootFolder(
         rootFolders: [ChecklistItem]
-    ) -> ChecklistItem {
-        if let storageRoot = rootFolders.first {
-            return storageRoot
+    ) {
+        if rootFolders.first != nil {
+            return
         }
 
         let newRoot = ChecklistItem(
@@ -70,7 +74,5 @@ extension ModelContext {
         } catch {
             assertionFailure("Failed to create the Root Folder: \(error)")
         }
-
-        return newRoot
     }
 }

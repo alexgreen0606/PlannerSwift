@@ -55,10 +55,12 @@ class ChecklistItem: ListItem {
     var color: ChecklistColorOption
     var showCompleted: Bool = false
 
-    @Relationship(deleteRule: .cascade)
+    @Relationship(
+        deleteRule: .cascade,
+        inverse: \ChecklistItem.parent
+    )
     var items = [ChecklistItem]()
 
-    @Relationship(inverse: \ChecklistItem.items)
     var parent: ChecklistItem?
 
     init(
@@ -74,7 +76,5 @@ class ChecklistItem: ListItem {
 
         super.init(sortIndex: sortIndex)
         self.title = title
-
-        parent?.items.append(self)
     }
 }

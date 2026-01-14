@@ -12,11 +12,14 @@ import SwiftUI
 struct ChecklistsTabView: View {
     @Environment(\.modelContext) private var modelContext
     @Query var rootFolders: [ChecklistItem]
-    @State private var root: ChecklistItem?
     
     @EnvironmentObject var navigationManager: NavigationManager
     
     @StateObject private var checklistsManager = ListManager()
+    
+    private var root: ChecklistItem? {
+        rootFolders.first
+    }
 
     var body: some View {
         NavigationStack(path: $navigationManager.checklistsPath) {
@@ -33,7 +36,7 @@ struct ChecklistsTabView: View {
         }
         .environmentObject(checklistsManager)
         .task {
-            root = modelContext.ensureRootFolder(rootFolders: rootFolders)
+            modelContext.ensureRootFolder(rootFolders: rootFolders)
         }
     }
 }

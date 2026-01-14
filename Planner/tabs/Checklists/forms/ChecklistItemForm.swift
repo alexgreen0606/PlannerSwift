@@ -100,7 +100,6 @@ struct ChecklistItemFormView: View {
                             sourceItem.title = draft.title
                             sourceItem.color = draft.color
                             sourceItem.type = draft.type
-                            try! modelContext.save()
                         } else {
                             // Create the new item.
                             let sorted = parent?.items.sorted {
@@ -115,8 +114,14 @@ struct ChecklistItemFormView: View {
                                 parent: parent
                             )
                             modelContext.insert(newItem)
-                            try! modelContext.save()
                         }
+                        
+                        do {
+                            try modelContext.save()
+                        } catch {
+                            print("Error saving checklist item:", error)
+                        }
+                        
                         dismiss()
                     }
                     .tint(

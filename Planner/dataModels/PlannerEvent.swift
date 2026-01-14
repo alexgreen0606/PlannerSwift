@@ -26,11 +26,10 @@ class PlannerEvent: ListItem {
         calendarEvent: EKEvent? = nil
     ) {
         super.init(sortIndex: sortIndex)
-
+        
+        self.planner = planner
         self.calendarEvent = calendarEvent
         self.title = calendarEvent?.title ?? ""
         date = calendarEvent?.startDate  // TODO: use end date if needed (MULTI_DAY)
-
-        planner?.events.append(self)
     }
 }
