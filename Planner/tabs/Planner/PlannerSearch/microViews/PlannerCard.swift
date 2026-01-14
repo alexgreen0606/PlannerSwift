@@ -50,5 +50,8 @@ struct PlannerCardView: View {
         .onTapGesture(perform: openPlanner)
         .padding(.vertical, 8)
         .listRowBackground(Color.clear)
+        .alignmentGuide(.listRowSeparatorLeading) { d in
+            d[.leading]
+        }
     }
 }
