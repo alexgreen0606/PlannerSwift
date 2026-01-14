@@ -80,8 +80,8 @@ struct PlannerSearchView: View {
                         .padding(.leading, 16)
                         .font(.headline)
                         .foregroundStyle(Color(uiColor: .secondaryLabel))
-                        .listRowSeparator(.hidden)
                         .listRowInsets(.bottom, 0)
+                        .discreetListItem()
 
                     ScrollView(.horizontal) {
                         HStack(alignment: .top, spacing: 12) {
@@ -105,12 +105,10 @@ struct PlannerSearchView: View {
                         .padding(.horizontal, 16)
                     }
                     .scrollIndicators(.hidden)
-                    .horizontalEdgeFade(leading: 16, trailing: 16)
-                    .background(Color.appBackground)
+                    .background(Color.clear)
                 }
-                .listSectionSeparator(.hidden)
-                .listRowBackground(Color.appBackground)
                 .listRowInsets(.horizontal, 0)
+                .discreetListItem()
 
                 if sortedUpcomingYears.isEmpty {
                     Text("No upcoming events")
@@ -120,7 +118,7 @@ struct PlannerSearchView: View {
                         .padding().foregroundStyle(
                             Color(uiColor: .secondaryLabel)
                         )
-                        .listRowSeparator(.hidden)
+                        .discreetListItem()
                 }
 
                 ForEach(sortedUpcomingYears, id: \.self) { year in
@@ -185,7 +183,6 @@ struct PlannerSearchView: View {
                                 displayedComponents: .date
                             )
                             .datePickerStyle(.graphical)
-                            .listRowBackground(Color.clear)
                             .onChange(of: selectedCalendarDate) {
                                 _,
                                 targetPlannerDate in

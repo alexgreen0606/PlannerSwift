@@ -46,9 +46,8 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                         offset: 0
                     )
                 }
-                .listRowBackground(Color.clear)
+                .discreetListItem()
                 .listRowInsets(EdgeInsets())
-                .listRowSeparator(.hidden)
 
                 ForEach(uncheckedItems) { item in
                     ItemView(
@@ -72,9 +71,8 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                 NewItemTriggerView {
                     createLowerItem()
                 }
-                .listRowBackground(Color.clear)
+                .discreetListItem()
                 .listRowInsets(EdgeInsets())
-                .listRowSeparator(.hidden)
                 .id("UNCHECKED")
 
                 if uncheckedItems.isEmpty && showChecked {
@@ -89,6 +87,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                             )
                             .foregroundStyle(Color(uiColor: .tertiaryLabel))
                     }
+                    .discreetListItem()
                     .frame(maxWidth: .infinity, alignment: .center)
                     .frame(height: 90, alignment: .center)
                 }
@@ -129,8 +128,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                             .foregroundStyle(Color(uiColor: .secondaryLabel))
                     }
                 }
-                .listRowBackground(Color.clear)
-                .listSectionSeparator(.hidden)
+                .discreetListItem()
                 .id("CHECKED")
             }
         }

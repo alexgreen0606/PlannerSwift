@@ -57,8 +57,7 @@ struct ChecklistItemFormView: View {
                         .pickerStyle(.segmented)
 
                     }
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
+                    .discreetListItem()
                     .listSectionMargins(.vertical, 0)
                 }
 
@@ -83,8 +82,7 @@ struct ChecklistItemFormView: View {
                     }
                     .frame(maxWidth: .infinity)
                 }
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
+                .discreetListItem()
                 .listSectionMargins(.top, 0)
             }
             .scrollDisabled(true)

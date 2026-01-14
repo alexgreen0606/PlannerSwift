@@ -45,10 +45,10 @@ struct PlannerCardView: View {
                 events: singleDayEvents
             )
         }
-        .listRowBackground(Color.appBackground)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .onTapGesture(perform: openPlanner)
         .padding(.vertical, 8)
+        .listRowBackground(Color.clear)
     }
 }

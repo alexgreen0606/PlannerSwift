@@ -54,8 +54,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
         rowContent
             .frame(maxWidth: .infinity, alignment: .top)
             .listRowInsets(EdgeInsets())
-            .listRowSeparator(.hidden)
-            .listRowBackground(Color.clear)
+            .discreetListItem()
             .padding(.horizontal, 16)
             // Trigger focus on render for new items.
             .onAppear {
