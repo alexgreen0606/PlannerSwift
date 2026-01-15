@@ -9,4 +9,5 @@ import SwiftUI
 
 enum UIConstants {
     static let chipHeight: CGFloat = 28
+    static let emptyLabelHeight: CGFloat = 40
 }

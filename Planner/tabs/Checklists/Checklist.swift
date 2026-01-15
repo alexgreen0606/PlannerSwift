@@ -88,7 +88,7 @@ struct ChecklistView: View {
                             Button(role: .destructive) {
                                 showDeleteChecklistConfirm = true
                             } label: {
-                                Text("Delete list")
+                                Text("Delete this list")
                             }
                         } label: {
                             Label("Delete options", systemImage: "trash")

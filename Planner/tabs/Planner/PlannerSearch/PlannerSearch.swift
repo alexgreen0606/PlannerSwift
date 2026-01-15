@@ -115,13 +115,8 @@ struct PlannerSearchView: View {
                 .discreetListItem()
 
                 if sortedUpcomingYears.isEmpty {
-                    Text("No upcoming events")
-                        .font(.headline)
+                    EmptyLabel("No upcoming events")
                         .frame(maxWidth: .infinity)
-                        .frame(height: 40)
-                        .padding().foregroundStyle(
-                            Color(uiColor: .secondaryLabel)
-                        )
                         .discreetListItem()
                 }
 

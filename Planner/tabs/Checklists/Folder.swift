@@ -28,12 +28,14 @@ struct FolderView: View {
     let folder: ChecklistItem
 
     @Environment(\.modelContext) private var modelContext
-    
+    @Environment(\.dismiss) private var dismiss
+
     @EnvironmentObject var navigationManager: NavigationManager
-    
+
     @State private var sheetContext: ChecklistItemSheetContext?
     @Namespace private var sheetAnimation
     @State private var scrollProxy: ScrollViewProxy?
+    @State private var showDeleteFolderConfirm = false
 
     var sortedItems: [ChecklistItem] {
         folder.items.sorted { $0.sortIndex < $1.sortIndex }
@@ -96,16 +98,40 @@ struct FolderView: View {
             .toolbar {
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     Menu {
+
                         Button {
                             sheetContext = .parent
                         } label: {
                             Text("Edit folder details")
                             Image(systemName: "pencil")
                         }
+
+                        if folder.parent != nil {
+                            Button(role: .destructive) {
+                                showDeleteFolderConfirm = true
+                            } label: {
+                                Text("Delete this folder")
+                                Image(systemName: "trash")
+                            }
+                        }
+
                     } label: {
                         Image(systemName: "ellipsis")
                     }
                     .matchedTransitionSource(id: "ellipsis", in: sheetAnimation)
+                    .confirmationDialog(
+                        "Delete this entire folder?",
+                        isPresented: $showDeleteFolderConfirm,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Confirm", role: .destructive) {
+                            deleteEntireFolder()
+                        }
+                    } message: {
+                        Text(
+                            "\(folder.items.isEmpty ? "" : "All contents will be lost. ")This action is irreversible."
+                        )
+                    }
 
                     Button("Add", systemImage: "plus") {
                         sheetContext = .create
@@ -141,6 +167,11 @@ struct FolderView: View {
                 }
             }
         }
+        .overlay {
+            if folder.items.isEmpty {
+                EmptyLabel("No contents")
+            }
+        }
     }
 
     private func moveItem(from sources: IndexSet, to destination: Int) {
@@ -162,4 +193,17 @@ struct FolderView: View {
 
         try! modelContext.save()
     }
+
+    private func deleteEntireFolder() {
+        dismiss()
+
+        modelContext.delete(folder)
+
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to delete folder:", error)
+        }
+    }
+
 }

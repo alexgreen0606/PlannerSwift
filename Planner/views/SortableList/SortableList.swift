@@ -76,21 +76,11 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                 .id("UNCHECKED")
 
                 if uncheckedItems.isEmpty && showChecked {
-                    VStack(alignment: .center) {
-                        Text(emptyUncheckedLabel)
-                            .font(
-                                .system(
-                                    size: 16,
-                                    weight: .heavy,
-                                    design: .rounded
-                                )
-                            )
-                            .foregroundStyle(Color(uiColor: .tertiaryLabel))
-                    }
-                    .discreetListItem()
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .frame(height: 90, alignment: .center)
+                    EmptyLabel(emptyUncheckedLabel)
+                        .discreetListItem()
+                        .frame(maxWidth: .infinity)
                 }
+                
             } header: {
                 floatingInfo
                     .listRowInsets(.top, 0)
@@ -123,9 +113,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                     )
                 } footer: {
                     if checkedFooter != nil && !checkedItems.isEmpty {
-                        Text(checkedFooter!)
-                            .font(.footnote)
-                            .foregroundStyle(Color(uiColor: .secondaryLabel))
+                        EmptyLabel(checkedFooter!)
                     }
                 }
                 .discreetListItem()
@@ -139,9 +127,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
         .background(Color.appBackground)
         .overlay {
             if uncheckedItems.isEmpty && !showChecked {
-                Text(emptyUncheckedLabel)
-                    .font(.system(size: 16, weight: .heavy, design: .rounded))
-                    .foregroundStyle(Color(uiColor: .tertiaryLabel))
+                EmptyLabel(emptyUncheckedLabel)
             }
         }
         .animation(.linear(duration: 0.2), value: uncheckedItems)

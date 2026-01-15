@@ -140,8 +140,7 @@ struct PlannerCardVerticalView: View {
                     .font(.system(size: 12, weight: .heavy, design: .rounded))
                     .foregroundStyle(Color(uiColor: .tertiaryLabel))
             }
-            .frame(maxHeight: .infinity)
-            .frame(maxWidth: .infinity, alignment: .center)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
 
             HStack(alignment: .bottom) {
                 if weatherData != nil {
