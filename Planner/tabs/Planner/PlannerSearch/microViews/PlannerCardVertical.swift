@@ -21,11 +21,15 @@ struct PlannerCardVerticalView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]
+    @Query private var calendarSettingsList: [CalendarSettings]
     @State private var planner: Planner?
+    @State private var calendarSettings: CalendarSettings?
+
+    @State private var calendarPlannerEvents: [PlannerEvent] = []
 
     @EnvironmentObject var todaystampManager: TodaystampWatcher
     @ObservedObject var weatherStore = WeatherStore.shared
-    @EnvironmentObject var calendarEventStore: CalendarStore
+    @EnvironmentObject var calendarStore: CalendarStore
 
     let unit: UnitTemperature =
         Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
@@ -39,12 +43,7 @@ struct PlannerCardVerticalView: View {
     // MARK: - Event Data
 
     private var allDayEvents: [EKEvent] {
-        calendarEventStore.allDayEventsByDatestamp[datestamp]
-            ?? []
-    }
-
-    private var singleDayEvents: [EKEvent] {
-        calendarEventStore.singleDayEventsByDatestamp[datestamp]
+        calendarStore.allDayEventsByDatestamp[datestamp]
             ?? []
     }
 
@@ -66,12 +65,8 @@ struct PlannerCardVerticalView: View {
         )
 
         let singleDayPlannerEvents =
-            singleDayEvents
-            .prefix(remainingSlots)
-            .enumerated()
-            .map { index, calEvent in
-                PlannerEvent(sortIndex: Double(index), calendarEvent: calEvent)
-            }
+            Array(calendarPlannerEvents
+            .prefix(remainingSlots))
 
         let slotsAfterSingleDay = max(
             0,
@@ -82,12 +77,13 @@ struct PlannerCardVerticalView: View {
             plannerEvents
             .prefix(slotsAfterSingleDay)
 
-        return singleDayPlannerEvents + plannerEventsToAdd
+        return (singleDayPlannerEvents + plannerEventsToAdd)
+                .sorted { $0.sortIndex < $1.sortIndex }
     }
 
     private var remainingPlansLabel: String {
         let totalCount =
-            allDayEvents.count + singleDayEvents.count + plannerEvents.count
+            allDayEvents.count + calendarPlannerEvents.count + plannerEvents.count
 
         let previewCount = allDayEvents.count + previewPlannerEvents.count
 
@@ -172,12 +168,32 @@ struct PlannerCardVerticalView: View {
         )
         .onTapGesture(perform: openPlanner)
         .task {
-            guard planner == nil else { return }
-
             planner = modelContext.ensurePlanner(
                 planners: planners,
                 datestamp: datestamp
             )
+
+            calendarSettings = modelContext.ensureCalendarSettings(
+                settings: calendarSettingsList
+            )
+
+            synchronizeCalendarEvents()
         }
     }
+
+    private func synchronizeCalendarEvents() {
+        guard let planner = planner, let settings = calendarSettings
+        else { return }
+        let calendarStoreEvents =
+            calendarStore.singleDayEventsByDatestamp[datestamp] ?? []
+
+        calendarPlannerEvents =
+            planner.synchronizeCalendarEventPositions(
+                for: calendarStoreEvents,
+                from: settings
+            )
+
+        try! modelContext.save()
+    }
+
 }
