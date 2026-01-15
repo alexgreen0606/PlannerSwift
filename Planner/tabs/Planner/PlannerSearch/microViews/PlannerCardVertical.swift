@@ -22,8 +22,6 @@ struct PlannerCardVerticalView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]
     @Query private var calendarSettingsList: [CalendarSettings]
-    @State private var planner: Planner?
-    @State private var calendarSettings: CalendarSettings?
 
     @State private var calendarPlannerEvents: [PlannerEvent] = []
 
@@ -33,6 +31,14 @@ struct PlannerCardVerticalView: View {
 
     let unit: UnitTemperature =
         Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
+
+    private var calendarSettings: CalendarSettings? {
+        calendarSettingsList.first
+    }
+
+    private var planner: Planner? {
+        planners.first
+    }
 
     // MARK: - Weather Data
 
@@ -65,8 +71,10 @@ struct PlannerCardVerticalView: View {
         )
 
         let singleDayPlannerEvents =
-            Array(calendarPlannerEvents
-            .prefix(remainingSlots))
+            Array(
+                calendarPlannerEvents
+                    .prefix(remainingSlots)
+            )
 
         let slotsAfterSingleDay = max(
             0,
@@ -78,12 +86,13 @@ struct PlannerCardVerticalView: View {
             .prefix(slotsAfterSingleDay)
 
         return (singleDayPlannerEvents + plannerEventsToAdd)
-                .sorted { $0.sortIndex < $1.sortIndex }
+            .sorted { $0.sortIndex < $1.sortIndex }
     }
 
     private var remainingPlansLabel: String {
         let totalCount =
-            allDayEvents.count + calendarPlannerEvents.count + plannerEvents.count
+            allDayEvents.count + calendarPlannerEvents.count
+            + plannerEvents.count
 
         let previewCount = allDayEvents.count + previewPlannerEvents.count
 
@@ -168,32 +177,24 @@ struct PlannerCardVerticalView: View {
         )
         .onTapGesture(perform: openPlanner)
         .task {
-            planner = modelContext.ensurePlanner(
+            modelContext.ensurePlanner(
                 planners: planners,
                 datestamp: datestamp
             )
 
-            calendarSettings = modelContext.ensureCalendarSettings(
+            modelContext.ensureCalendarSettings(
                 settings: calendarSettingsList
             )
 
-            synchronizeCalendarEvents()
+            calendarPlannerEvents =
+                modelContext.synchronize(
+                    calendarEvents: calendarStore.singleDayEventsByDatestamp[
+                        datestamp
+                    ] ?? [],
+                    into: planner,
+                    with: calendarSettings
+                ) ?? calendarPlannerEvents
         }
-    }
-
-    private func synchronizeCalendarEvents() {
-        guard let planner = planner, let settings = calendarSettings
-        else { return }
-        let calendarStoreEvents =
-            calendarStore.singleDayEventsByDatestamp[datestamp] ?? []
-
-        calendarPlannerEvents =
-            planner.synchronizeCalendarEventPositions(
-                for: calendarStoreEvents,
-                from: settings
-            )
-
-        try! modelContext.save()
     }
 
 }

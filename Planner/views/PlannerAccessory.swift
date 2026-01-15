@@ -19,13 +19,16 @@ struct PlannerAccessoryView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]
-    @State private var planner: Planner?
 
     @EnvironmentObject var navigationManager: NavigationManager
     @EnvironmentObject var calendarEventStore: CalendarStore
     @ObservedObject var weatherStore = WeatherStore.shared
     
     let unit: UnitTemperature = Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
+    
+    private var planner: Planner? {
+        planners.first
+    }
 
     private var weatherData: DayWeather? {
         weatherStore.dayWeatherByDatestamp[todaystamp]
@@ -136,7 +139,7 @@ struct PlannerAccessoryView: View {
         .contentShape(Rectangle())
         .onTapGesture(perform: openTodayPlanner)
         .task {
-            planner = modelContext.ensurePlanner(
+            modelContext.ensurePlanner(
                 planners: planners,
                 datestamp: todaystamp
             )

@@ -5,6 +5,7 @@
 //  Created by Alex Green on 12/27/25.
 //
 
+import EventKit
 import SwiftData
 
 extension ModelContext {
@@ -12,9 +13,9 @@ extension ModelContext {
     func ensurePlanner(
         planners: [Planner],
         datestamp: String
-    ) -> Planner {
-        if let existing = planners.first {
-            return existing
+    ) {
+        if planners.first != nil {
+            return
         }
 
         let planner = Planner(datestamp: datestamp)
@@ -28,15 +29,14 @@ extension ModelContext {
             )
         }
 
-        return planner
     }
 
     @MainActor
     func ensureCalendarSettings(
         settings: [CalendarSettings]
-    ) -> CalendarSettings {
-        if let existing = settings.first {
-            return existing
+    ) {
+        if settings.first != nil {
+            return
         }
 
         let newSettings = CalendarSettings()
@@ -50,7 +50,6 @@ extension ModelContext {
             )
         }
 
-        return newSettings
     }
 
     @MainActor
@@ -74,5 +73,32 @@ extension ModelContext {
         } catch {
             assertionFailure("Failed to create the Root Folder: \(error)")
         }
+
+    }
+
+    @MainActor
+    func synchronize(
+        calendarEvents events: [EKEvent],
+        into planner: Planner?,
+        with settings: CalendarSettings?
+    ) -> [PlannerEvent]? {
+        guard let planner = planner, let settings = settings
+        else { return nil }
+
+        let calendarPlannerEvents =
+            planner.synchronizeCalendarEventPositions(
+                for: events,
+                from: settings
+            )
+
+        do {
+            try save()
+        } catch {
+            assertionFailure(
+                "Failed to synchronize calendar events into planner: \(error)"
+            )
+        }
+
+        return calendarPlannerEvents
     }
 }

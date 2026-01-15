@@ -26,7 +26,6 @@ enum PlannerRoute: Hashable {
 struct PlannerSearchView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var calendarSettingsList: [CalendarSettings]
-    @State private var calendarSettings: CalendarSettings?
 
     @EnvironmentObject var calendarStore: CalendarStore
     @EnvironmentObject var todaystampWatcher: TodaystampWatcher
@@ -48,6 +47,10 @@ struct PlannerSearchView: View {
 
     // Holds all calendar data displayed in the UI.
     @State private var eventMap: [String: [String]] = [:]
+    
+    private var calendarSettings: CalendarSettings? {
+        calendarSettingsList.first
+    }
 
     private var thisWeekDatestamps: [String] {
         let region = Region.local
@@ -307,7 +310,7 @@ struct PlannerSearchView: View {
             }
             // Load in the calendar data and settings.
             .task {
-                calendarSettings = modelContext.ensureCalendarSettings(
+                modelContext.ensureCalendarSettings(
                     settings: calendarSettingsList
                 )
 

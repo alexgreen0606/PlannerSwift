@@ -85,9 +85,7 @@ struct PlannerView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]
-    @State private var planner: Planner?
     @Query private var calendarSettingsList: [CalendarSettings]
-    @State private var calendarSettings: CalendarSettings?
 
     @EnvironmentObject var plannerManager: ListManager
     @EnvironmentObject var calendarStore: CalendarStore
@@ -100,6 +98,14 @@ struct PlannerView: View {
 
     @State private var scrollProxy: ScrollViewProxy?
     @State private var isCalendarPickerPresented = false
+
+    private var calendarSettings: CalendarSettings? {
+        calendarSettingsList.first
+    }
+
+    private var planner: Planner? {
+        planners.first
+    }
 
     private var plannerType: PlannerType {
         datestamp <= todaystampManager.todaystamp ? .pastOrPresent : .future
@@ -251,20 +257,34 @@ struct PlannerView: View {
             }
         }
         .task {
-            planner = modelContext.ensurePlanner(
+            modelContext.ensurePlanner(
                 planners: planners,
                 datestamp: datestamp
             )
 
-            calendarSettings = modelContext.ensureCalendarSettings(
+            modelContext.ensureCalendarSettings(
                 settings: calendarSettingsList
             )
 
-            synchronizeCalendarEvents()
+            calendarPlannerEvents =
+                modelContext.synchronize(
+                    calendarEvents: calendarStore.singleDayEventsByDatestamp[
+                        datestamp
+                    ] ?? [],
+                    into: planner,
+                    with: calendarSettings
+                ) ?? calendarPlannerEvents
         }
         // Rebuild the planner when the calendar events change.
         .onChange(of: calendarStore.refreshKey) { _, newKey in
-            synchronizeCalendarEvents()
+            calendarPlannerEvents =
+                modelContext.synchronize(
+                    calendarEvents: calendarStore.singleDayEventsByDatestamp[
+                        datestamp
+                    ] ?? [],
+                    into: planner,
+                    with: calendarSettings
+                ) ?? calendarPlannerEvents
         }
         .sheet(item: $calendarEventSheetContext) { context in
             switch context.event.calendar.allowsContentModifications {
@@ -305,21 +325,6 @@ struct PlannerView: View {
                     )
             }
         }
-    }
-
-    private func synchronizeCalendarEvents() {
-        guard let planner = planner, let settings = calendarSettings
-        else { return }
-        let calendarStoreEvents =
-            calendarStore.singleDayEventsByDatestamp[datestamp] ?? []
-
-        calendarPlannerEvents =
-            planner.synchronizeCalendarEventPositions(
-                for: calendarStoreEvents,
-                from: settings
-            )
-
-        try! modelContext.save()
     }
 
     private func openPlannerEventSheet(

@@ -19,12 +19,15 @@ struct SettingsView: View {
         true
 
     @Environment(\.modelContext) private var modelContext
-    @Query private var settingList: [CalendarSettings]
-    @State private var settings: CalendarSettings?
+    @Query private var calendarSettingsList: [CalendarSettings]
 
     @EnvironmentObject var calendarStore: CalendarStore
 
     @State private var calendarRefreshDebounce: Task<Void, Never>?
+    
+    private var calendarSettings: CalendarSettings? {
+        calendarSettingsList.first
+    }
 
     private var iconOptions: [String] = [
         "briefcase.fill",
@@ -64,7 +67,7 @@ struct SettingsView: View {
                     ) { calendar in
                         HStack {
                             Image(
-                                systemName: settings?.hiddenCalendarIds
+                                systemName: calendarSettings?.hiddenCalendarIds
                                     .contains(calendar.calendarIdentifier)
                                     == false
                                     ? "checkmark.circle" : "circle"
@@ -77,16 +80,16 @@ struct SettingsView: View {
                                 )
                             )
                             .onTapGesture {
-                                guard let settings else { return }
+                                guard let calendarSettings else { return }
 
-                                if settings.hiddenCalendarIds.contains(
+                                if calendarSettings.hiddenCalendarIds.contains(
                                     calendar.calendarIdentifier
                                 ) {
-                                    settings.hiddenCalendarIds.remove(
+                                    calendarSettings.hiddenCalendarIds.remove(
                                         calendar.calendarIdentifier
                                     )
                                 } else {
-                                    settings.hiddenCalendarIds.insert(
+                                    calendarSettings.hiddenCalendarIds.insert(
                                         calendar.calendarIdentifier
                                     )
                                 }
@@ -101,9 +104,9 @@ struct SettingsView: View {
                             Menu {
                                 ForEach(iconOptions, id: \.self) { iconName in
                                     Button("", systemImage: iconName) {
-                                        guard let settings else { return }
+                                        guard let calendarSettings else { return }
 
-                                        settings.iconMap[
+                                        calendarSettings.iconMap[
                                             calendar.calendarIdentifier
                                         ] = iconName
 
@@ -112,7 +115,7 @@ struct SettingsView: View {
                                 }
                             } label: {
                                 Image(
-                                    systemName: settings?.iconMap[
+                                    systemName: calendarSettings?.iconMap[
                                         calendar.calendarIdentifier
                                     ] ?? calendar.iconName
                                 )
@@ -127,12 +130,12 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             // Load in the settings on mount.
             .task {
-                settings = modelContext.ensureCalendarSettings(
-                    settings: settingList
+                modelContext.ensureCalendarSettings(
+                    settings: calendarSettingsList
                 )
             }
             // Refresh the calendar when the hidden calendars change.
-            .onChange(of: settings?.hiddenCalendarIds) { _, _ in
+            .onChange(of: calendarSettings?.hiddenCalendarIds) { _, _ in
                 scheduleCalendarRefreshDebounce()
             }
         }
@@ -148,7 +151,7 @@ struct SettingsView: View {
 
                 // Refresh the calendar data.
                 calendarStore.refresh(
-                    hiddenCalendarIds: settings?.hiddenCalendarIds ?? []
+                    hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? []
                 )
             } catch {
                 // Task cancelled — do nothing.
