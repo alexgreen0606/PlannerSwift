@@ -19,6 +19,10 @@ struct ChecklistView: View {
     @State private var scrollProxy: ScrollViewProxy?
     @State private var showDeleteCompletedConfirm = false
     @State private var showDeleteChecklistConfirm = false
+    
+    private var hasCheckedItems: Bool {
+        checklist.items.contains(where: \.isChecked)
+    }
 
     private var sortedUncheckedItems: [ChecklistItem] {
         checklist.items
@@ -83,7 +87,7 @@ struct ChecklistView: View {
                             } label: {
                                 Text("Delete completed items")
                             }
-                            .disabled(sortedCheckedItems.isEmpty)
+                            .disabled(!hasCheckedItems)
                             
                             Button(role: .destructive) {
                                 showDeleteChecklistConfirm = true
@@ -98,17 +102,6 @@ struct ChecklistView: View {
                         Image(systemName: "ellipsis")
                     }
                     .confirmationDialog(
-                        "Delete completed items from this list?",
-                        isPresented: $showDeleteCompletedConfirm,
-                        titleVisibility: .visible
-                    ) {
-                        Button("Confirm", role: .destructive) {
-                            deleteAllCompletedItems()
-                        }
-                    } message: {
-                        Text("This action is irreversible.")
-                    }
-                    .confirmationDialog(
                         "Delete this entire list?",
                         isPresented: $showDeleteChecklistConfirm,
                         titleVisibility: .visible
@@ -118,6 +111,17 @@ struct ChecklistView: View {
                         }
                     } message: {
                         Text("\(checklist.items.isEmpty ? "" : "All items will be lost. ")This action is irreversible.")
+                    }
+                    .confirmationDialog(
+                        "Delete completed items from this list?",
+                        isPresented: $showDeleteCompletedConfirm,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Confirm", role: .destructive) {
+                            deleteAllCompletedItems()
+                        }
+                    } message: {
+                        Text("This action is irreversible.")
                     }
                 }
 

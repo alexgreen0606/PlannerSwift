@@ -40,6 +40,20 @@ enum PlannerType: String {
         }
     }
 
+    var deleteCheckedLabel: String {
+        switch self {
+        case .pastOrPresent: "Delete completed plans"
+        case .future: "Delete canceled plans"
+        }
+    }
+
+    var deleteCheckedConfirmationTitle: String {
+        switch self {
+        case .pastOrPresent: "Delete completed plans from this planner?"
+        case .future: "Delete canceled plans from this planner?"
+        }
+    }
+
     func getCheckedFooter(for datestamp: String) -> String? {
         switch self {
         case .pastOrPresent:
@@ -98,6 +112,7 @@ struct PlannerView: View {
 
     @State private var scrollProxy: ScrollViewProxy?
     @State private var isCalendarPickerPresented = false
+    @State private var isDeleteCheckedConfirmationOpen = false
 
     private var calendarSettings: CalendarSettings? {
         calendarSettingsList.first
@@ -118,6 +133,10 @@ struct PlannerView: View {
     private var showChecked: Bool {
         plannerType == .future
             ? planner?.showCanceled == true : planner?.showCompleted == true
+    }
+
+    private var hasCheckedEvents: Bool {
+        planner?.events.contains(where: \.isChecked) ?? false
     }
 
     private var uncheckedEvents: [PlannerEvent] {
@@ -226,8 +245,36 @@ struct PlannerView: View {
                                 )
                             }
                         )
+
+                        Menu {
+                            Button(role: .destructive) {
+                                isDeleteCheckedConfirmationOpen = true
+                            } label: {
+                                Text(plannerType.deleteCheckedLabel)
+                                Image(systemName: "trash")
+                            }
+                            .disabled(!hasCheckedEvents)
+
+                        } label: {
+                            Text("Delete options")
+                            Image(systemName: "trash")
+                        }
+
                     } label: {
                         Image(systemName: "ellipsis")
+                    }
+                    .confirmationDialog(
+                        plannerType.deleteCheckedConfirmationTitle,
+                        isPresented: $isDeleteCheckedConfirmationOpen,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Confirm", role: .destructive) {
+                            deleteAllCheckedEvents()
+                        }
+                    } message: {
+                        Text(
+                            "This action is irreversible."
+                        )
                     }
                 }
 
@@ -446,5 +493,17 @@ struct PlannerView: View {
         scrollProxy?.slideTo(event.id, at: .bottom, withDelay: .seconds(3))
 
         try? modelContext.save()
+    }
+
+    private func deleteAllCheckedEvents() {
+
+        checkedEvents
+            .forEach { modelContext.delete($0) }
+
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to delete checked events:", error)
+        }
     }
 }

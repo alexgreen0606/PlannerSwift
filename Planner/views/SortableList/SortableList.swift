@@ -80,7 +80,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                         .discreetListItem()
                         .frame(maxWidth: .infinity)
                 }
-                
+
             } header: {
                 floatingInfo
                     .listRowInsets(.top, 0)
@@ -113,7 +113,9 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                     )
                 } footer: {
                     if checkedFooter != nil && !checkedItems.isEmpty {
-                        EmptyLabel(checkedFooter!)
+                        Text(checkedFooter!)
+                            .font(.footnote)
+                            .foregroundStyle(Color(uiColor: .secondaryLabel))
                     }
                 }
                 .discreetListItem()

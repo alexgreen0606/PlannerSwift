@@ -21,11 +21,12 @@ struct PlannerAccessoryView: View {
     @Query private var planners: [Planner]
 
     @EnvironmentObject var navigationManager: NavigationManager
-    @EnvironmentObject var calendarEventStore: CalendarStore
+    @EnvironmentObject var calendarStore: CalendarStore
     @ObservedObject var weatherStore = WeatherStore.shared
-    
-    let unit: UnitTemperature = Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
-    
+
+    let unit: UnitTemperature =
+        Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
+
     private var planner: Planner? {
         planners.first
     }
@@ -35,13 +36,21 @@ struct PlannerAccessoryView: View {
     }
 
     private var allDayEvents: [EKEvent] {
-        return calendarEventStore.allDayEventsByDatestamp[
+        return calendarStore.allDayEventsByDatestamp[
             todaystamp
         ] ?? []
     }
 
     private var planCountLabel: String {
-        let planCount = planner?.events.filter { !$0.isChecked }.count ?? 0
+
+        let singleDayEvents =
+            calendarStore.singleDayEventsByDatestamp[
+                todaystamp
+            ] ?? []
+
+        let planCount =
+            (planner?.events.filter { !$0.isChecked }.count ?? 0)
+            + singleDayEvents.count
 
         if planCount == 0 {
             if allDayEvents.count > 0 {
