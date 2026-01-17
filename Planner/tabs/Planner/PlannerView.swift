@@ -212,7 +212,7 @@ struct PlannerView: View {
                         animation: sheetAnimation
                     )
                 },
-                createItem: handleCreateEvent,
+                createItem: createEvent,
                 handleTitleChange: handleEventTitleChange,
                 moveItem: handleMoveUncheckedEvent
             )
@@ -358,6 +358,35 @@ struct PlannerView: View {
                     )
             }
         }
+    }
+
+    private func createEvent(
+        near baseId: PersistentIdentifier?,
+        offset: Int = 0
+    ) {
+        guard
+            let baseIndex = uncheckedEvents.firstIndex(where: {
+                $0.id == baseId
+            })
+        else {
+            return
+        }
+
+        let finalIndex = baseIndex + offset
+
+        // Don't create the new item if it is next to an empty item.
+        let upperEvent = finalIndex > 0 ? uncheckedEvents[finalIndex - 1] : nil
+        let lowerEvent =
+            finalIndex < uncheckedEvents.count
+            ? uncheckedEvents[finalIndex] : nil
+        if let upper = upperEvent, upper.title.isEmpty {
+            return
+        }
+        if let lower = lowerEvent, lower.title.isEmpty {
+            return
+        }
+
+        handleCreateEvent(at: finalIndex)
     }
 
     private func openPlannerEventSheet(

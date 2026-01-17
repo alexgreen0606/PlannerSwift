@@ -138,6 +138,35 @@ struct ChecklistView: View {
             }
         }
     }
+    
+    private func createItem(
+        near baseId: PersistentIdentifier?,
+        offset: Int = 0
+    ) {
+        guard
+            let baseIndex = sortedUncheckedItems.firstIndex(where: {
+                $0.id == baseId
+            })
+        else {
+            return
+        }
+
+        let finalIndex = baseIndex + offset
+
+        // Don't create the new item if it is next to an empty item.
+        let upperEvent = finalIndex > 0 ? sortedUncheckedItems[finalIndex - 1] : nil
+        let lowerEvent =
+            finalIndex < sortedUncheckedItems.count
+            ? sortedUncheckedItems[finalIndex] : nil
+        if let upper = upperEvent, upper.title.isEmpty {
+            return
+        }
+        if let lower = lowerEvent, lower.title.isEmpty {
+            return
+        }
+
+        createItem(at: finalIndex)
+    }
 
     private func createItem(at index: Int) {
         let sortIndex = generateSortIndex(

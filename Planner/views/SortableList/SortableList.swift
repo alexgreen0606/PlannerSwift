@@ -29,7 +29,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
     let emptyCheckedLabel: String
     let tint: Color
     let getEndAdornment: ((_ item: Item) -> EndAdornment)?
-    let createItem: (_ index: Int) -> Void
+    let createItem: (_ baseId: PersistentIdentifier?, _ offset: Int) -> Void
     let handleTitleChange: (_ item: Item) -> Void
     let moveItem: (_ from: Int, _ to: Int) -> Void
 
@@ -41,9 +41,9 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
         List {
             Section {
                 NewItemTriggerView {
-                    handleCreateItem(
-                        baseId: uncheckedItems.first?.id,
-                        offset: 0
+                    createItem(
+                        uncheckedItems.first?.id,
+                        0
                     )
                 }
                 .discreetListItem()
@@ -61,7 +61,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                         showUpperDivider: item.id == uncheckedItems.first?.id,
                         endAdornment: getEndAdornment,
                         customToggleConfig: customToggleConfig,
-                        onCreateItem: handleCreateItem,
+                        onCreateItem: createItem,
                         onTitleChange: handleTitleChange,
                     )
                     .id(item.id)
@@ -69,7 +69,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                 .onMove(perform: moveUncheckedItem)
 
                 NewItemTriggerView {
-                    createLowerItem()
+                    createItem(uncheckedItems.last?.id, 1)
                 }
                 .discreetListItem()
                 .listRowInsets(EdgeInsets())
@@ -141,34 +141,6 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
         }
     }
 
-    private func handleCreateItem(
-        baseId: PersistentIdentifier?,
-        offset: Int = 0
-    ) {
-        guard
-            let baseIndex = uncheckedItems.firstIndex(where: {
-                $0.id == baseId
-            })
-        else {
-            return
-        }
-
-        let finalIndex = baseIndex + offset
-
-        // Don't create the new item if it is next to an empty item.
-        let upperEvent = finalIndex > 0 ? uncheckedItems[finalIndex - 1] : nil
-        let lowerEvent =
-            finalIndex < uncheckedItems.count ? uncheckedItems[finalIndex] : nil
-        if let upper = upperEvent, upper.title.isEmpty {
-            return
-        }
-        if let lower = lowerEvent, lower.title.isEmpty {
-            return
-        }
-
-        createItem(finalIndex)
-    }
-
     private func moveUncheckedItem(
         from sources: IndexSet,
         to destination: Int
@@ -184,8 +156,4 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
         }
     }
 
-    private func createLowerItem() {
-        let baseId = uncheckedItems.last?.id
-        handleCreateItem(baseId: baseId, offset: 1)
-    }
 }
