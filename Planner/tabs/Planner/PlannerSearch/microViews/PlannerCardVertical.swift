@@ -60,6 +60,14 @@ struct PlannerCardVerticalView: View {
             ?? []
     }
 
+    private var timedPlannerEvents: [PlannerEvent] {
+        plannerEvents.filter { $0.date != nil }
+    }
+
+    private var untimedPlannerEvents: [PlannerEvent] {
+        plannerEvents.filter { $0.date == nil }
+    }
+
     private var previewAllDayEvents: [EKEvent] {
         Array(allDayEvents.prefix(maxPreviewEvents))
     }
@@ -81,11 +89,23 @@ struct PlannerCardVerticalView: View {
             remainingSlots - singleDayPlannerEvents.count
         )
 
-        let plannerEventsToAdd =
-            plannerEvents
+        let timedPlannerEventsToAdd =
+            timedPlannerEvents
             .prefix(slotsAfterSingleDay)
 
-        return (singleDayPlannerEvents + plannerEventsToAdd)
+        let slotsAfterTimed = max(
+            0,
+            remainingSlots - singleDayPlannerEvents.count
+                - timedPlannerEventsToAdd.count
+        )
+
+        let untimedPlannerEventsToAdd =
+            untimedPlannerEvents
+            .prefix(slotsAfterTimed)
+
+        return
+            (singleDayPlannerEvents + timedPlannerEventsToAdd
+            + untimedPlannerEventsToAdd)
             .sorted { $0.sortIndex < $1.sortIndex }
     }
 
@@ -140,7 +160,11 @@ struct PlannerCardVerticalView: View {
                     .font(.system(size: 12, weight: .heavy, design: .rounded))
                     .foregroundStyle(Color(uiColor: .tertiaryLabel))
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity,
+                alignment: .center
+            )
 
             HStack(alignment: .bottom) {
                 if weatherData != nil {
@@ -185,15 +209,22 @@ struct PlannerCardVerticalView: View {
                 settings: calendarSettingsList
             )
 
-            calendarPlannerEvents =
-                modelContext.synchronize(
-                    calendarEvents: calendarStore.singleDayEventsByDatestamp[
-                        datestamp
-                    ] ?? [],
-                    into: planner,
-                    with: calendarSettings
-                ) ?? calendarPlannerEvents
+            synchronizeCalendarEvents()
         }
+        .onChange(of: calendarStore.refreshKey) { _, newKey in
+            synchronizeCalendarEvents()
+        }
+    }
+
+    private func synchronizeCalendarEvents() {
+        calendarPlannerEvents =
+            modelContext.synchronize(
+                calendarEvents: calendarStore.singleDayEventsByDatestamp[
+                    datestamp
+                ] ?? [],
+                into: planner,
+                with: calendarSettings
+            ) ?? calendarPlannerEvents
     }
 
 }

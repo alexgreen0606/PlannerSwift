@@ -313,25 +313,11 @@ struct PlannerView: View {
                 settings: calendarSettingsList
             )
 
-            calendarPlannerEvents =
-                modelContext.synchronize(
-                    calendarEvents: calendarStore.singleDayEventsByDatestamp[
-                        datestamp
-                    ] ?? [],
-                    into: planner,
-                    with: calendarSettings
-                ) ?? calendarPlannerEvents
+            synchronizeCalendarEvents()
         }
         // Rebuild the planner when the calendar events change.
         .onChange(of: calendarStore.refreshKey) { _, newKey in
-            calendarPlannerEvents =
-                modelContext.synchronize(
-                    calendarEvents: calendarStore.singleDayEventsByDatestamp[
-                        datestamp
-                    ] ?? [],
-                    into: planner,
-                    with: calendarSettings
-                ) ?? calendarPlannerEvents
+            synchronizeCalendarEvents()
         }
         .sheet(item: $calendarEventSheetContext) { context in
             switch context.event.calendar.allowsContentModifications {
@@ -505,5 +491,16 @@ struct PlannerView: View {
         } catch {
             print("Failed to delete checked events:", error)
         }
+    }
+
+    private func synchronizeCalendarEvents() {
+        calendarPlannerEvents =
+            modelContext.synchronize(
+                calendarEvents: calendarStore.singleDayEventsByDatestamp[
+                    datestamp
+                ] ?? [],
+                into: planner,
+                with: calendarSettings
+            ) ?? calendarPlannerEvents
     }
 }
