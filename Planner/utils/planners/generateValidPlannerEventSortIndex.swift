@@ -6,8 +6,8 @@
 //
 
 func generateValidPlannerEventSortIndex(
-    event: PlannerEvent,
-    events: [PlannerEvent]  // Must contain the event.
+    for event: PlannerEvent,
+    in events: [PlannerEvent]  // Must contain the event.
 ) -> Double {
     let prevSortIndex = event.sortIndex
 

@@ -425,8 +425,8 @@ struct PlannerView: View {
             try? await Task.sleep(nanoseconds: 1_000_000_000)  // 1 sec
 
             let validSortIndex = generateValidPlannerEventSortIndex(
-                event: movedEvent,
-                events: uncheckedEvents
+                for: movedEvent,
+                in: uncheckedEvents
             )
             if validSortIndex != newSortIndex {
                 movedEvent.sortIndex = validSortIndex
@@ -480,8 +480,8 @@ struct PlannerView: View {
 
         // 4. Validate sort order.
         let newSortIndex = generateValidPlannerEventSortIndex(
-            event: event,
-            events: uncheckedEvents
+            for: event,
+            in: uncheckedEvents
         )
 
         guard newSortIndex != event.sortIndex else {
