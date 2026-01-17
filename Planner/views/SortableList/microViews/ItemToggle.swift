@@ -57,7 +57,7 @@ struct ItemToggleView<Item: ListItem>: View {
             )
             .opacity(opacity)
             .contentTransition(
-                .symbolEffect(.replace.magic(fallback: .replace))
+                .symbolEffect(.replace.downUp)
             )
             .contentShape(Circle())
             .onTapGesture(perform: onToggleChecked)
