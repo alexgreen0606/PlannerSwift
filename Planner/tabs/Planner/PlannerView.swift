@@ -505,7 +505,7 @@ struct PlannerView: View {
         }
 
         event.sortIndex = newSortIndex
-        scrollProxy?.slideTo(event.id, at: .bottom, withDelay: .seconds(3))
+        scrollProxy?.slideTo(event.id, at: .bottom, withDelay: .seconds(1))
 
         try? modelContext.save()
     }
