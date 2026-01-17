@@ -126,7 +126,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
         .listStyle(.plain)
         .environment(\.defaultMinListRowHeight, 0)
         .safeAreaPadding(.bottom, 20)
-        .background(Color.appBackground)
+        .background(Color.appBackground.edgesIgnoringSafeArea(.all))
         .overlay {
             if uncheckedItems.isEmpty && !showChecked {
                 EmptyLabel(emptyUncheckedLabel)

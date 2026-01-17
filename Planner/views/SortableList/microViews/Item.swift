@@ -162,14 +162,19 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
         TextfieldView(
             text: $item.title,
             isFocused: $isFocused,
-            height: $height
-        ) {
-            if !item.title.isEmpty {
-                onCreateItem(item.id, 1)
-            } else {
+            height: $height,
+            accentColor: tint,
+            onEnter: {
+                if !item.title.isEmpty {
+                    onCreateItem(item.id, 1)
+                } else {
+                    focusController.focusedId = nil
+                }
+            },
+            onDone: {
                 focusController.focusedId = nil
             }
-        }
+        )
         .frame(height: height)
         .foregroundColor(Color(uiColor: .label))
         .opacity(isFocused ? 1 : 0)

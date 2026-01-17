@@ -12,12 +12,17 @@ struct TextfieldView: UIViewRepresentable {
     @Binding var text: String
     @Binding var isFocused: Bool
     @Binding var height: CGFloat
-    var onSubmit: () -> Void
+    var accentColor: Color
+    var onEnter: () -> Void
+    var onDone: () -> Void
 
     func makeUIView(context: Context) -> UITextView {
         let textField = UITextView()
-        
+
         textField.delegate = context.coordinator
+        context.coordinator.textView = textField
+        context.coordinator.configureKeyboardToolbar(for: textField)
+
         textField.isEditable = true
         textField.font = UIFont.systemFont(ofSize: 17)
         textField.isSelectable = true
@@ -26,8 +31,11 @@ struct TextfieldView: UIViewRepresentable {
         textField.isScrollEnabled = false
         textField.textContainerInset = .zero
         textField.textContainer.lineFragmentPadding = 0
-        textField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        
+        textField.setContentCompressionResistancePriority(
+            .defaultLow,
+            for: .horizontal
+        )
+
         return textField
     }
 
@@ -67,6 +75,7 @@ struct TextfieldView: UIViewRepresentable {
 
     final class Coordinator: NSObject, UITextViewDelegate {
         let parent: TextfieldView
+        weak var textView: UITextView?
 
         init(_ parent: TextfieldView) {
             self.parent = parent
@@ -93,10 +102,57 @@ struct TextfieldView: UIViewRepresentable {
             replacementText replacement: String
         ) -> Bool {
             if replacement == "\n" {
-                parent.onSubmit()
+                parent.onEnter()
                 return false
             }
             return true
         }
+
+        func configureKeyboardToolbar(for textView: UITextView) {
+            let toolbarHeight: CGFloat = 44
+            let extraHeight: CGFloat = 8
+
+            let container = UIView()
+            container.translatesAutoresizingMaskIntoConstraints = false
+            container.frame.size.height = toolbarHeight + extraHeight
+
+            let toolbar = UIToolbar()
+            toolbar.translatesAutoresizingMaskIntoConstraints = false
+
+            let flexibleSpace = UIBarButtonItem(
+                barButtonSystemItem: .flexibleSpace,
+                target: nil,
+                action: nil
+            )
+            let done = UIBarButtonItem(
+                image: UIImage(systemName: "checkmark"),
+                style: .prominent,
+                target: self,
+                action: #selector(doneButtonTapped)
+            )
+            done.tintColor = UIColor(parent.accentColor)
+            
+            toolbar.items = [flexibleSpace, done]
+
+            container.addSubview(toolbar)
+
+            NSLayoutConstraint.activate([
+                toolbar.leadingAnchor.constraint(
+                    equalTo: container.leadingAnchor
+                ),
+                toolbar.trailingAnchor.constraint(
+                    equalTo: container.trailingAnchor
+                ),
+                toolbar.topAnchor.constraint(equalTo: container.topAnchor),
+                toolbar.heightAnchor.constraint(equalToConstant: toolbarHeight),
+            ])
+
+            textView.inputAccessoryView = container
+        }
+
+        @objc private func doneButtonTapped() {
+            parent.onDone()
+        }
+
     }
 }
