@@ -21,12 +21,13 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
         (_ baseId: PersistentIdentifier?, _ offset: Int) ->
             Void
     let onTitleChange: (_ item: Item) -> Void
+    let isItemChecked: ((_ item: Item) -> Bool)?
 
     @Environment(\.scenePhase) private var appPhase
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var focusController: FocusController
-    @EnvironmentObject var listManager: ListManager
+    @EnvironmentObject var listManager: ListManager<Item>
 
     // Will be updated dynamically within the NonBlurringTextfield.
     @State private var height: CGFloat = 0
@@ -47,7 +48,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
             return listManager.selectedItemIds.contains(item.id)
         }
 
-        return item.isChecked
+        return isItemChecked?(item) == true || item.isChecked
     }
 
     var body: some View {

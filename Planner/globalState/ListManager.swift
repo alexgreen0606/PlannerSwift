@@ -9,8 +9,23 @@ import Combine
 import SwiftData
 import SwiftUI
 
+typealias StatusGuard<Item> = (_ item: Item) -> Bool
+
 @MainActor
 final class ListManager<Item: ListItem>: ObservableObject {
+    private var toggleItem: StatusGuard<Item>?
+    private var isItemChecked: StatusGuard<Item>?
+
+    func setToggleItem(_ toggleItem: @escaping StatusGuard<Item>) {
+        self.toggleItem = toggleItem
+    }
+    
+    func setStatusChecker(_ isItemChecked: @escaping StatusGuard<Item>) {
+        self.isItemChecked = isItemChecked
+    }
+
+    init() {}
+
     @Published var newlyCheckedIds: Set<PersistentIdentifier> = []
     @Published var newlyUncheckedIds: Set<PersistentIdentifier> = []
 
@@ -34,10 +49,8 @@ final class ListManager<Item: ListItem>: ObservableObject {
         switch type {
         case .staging:
             toggleSelect(item)
-            return
         case .storage:
             toggleChecked(for: item)
-            return
         }
     }
 
@@ -52,7 +65,9 @@ final class ListManager<Item: ListItem>: ObservableObject {
     }
 
     private func toggleChecked(for item: Item) {
-        if item.isChecked {
+        let isChecked = isItemChecked?(item) ?? item.isChecked
+        
+        if isChecked {
             if !newlyCheckedIds.contains(item.id) {
                 newlyUncheckedIds.insert(item.id)
             } else {
@@ -66,9 +81,12 @@ final class ListManager<Item: ListItem>: ObservableObject {
             }
         }
 
+        if toggleItem?(item) != true {
+            item.isChecked.toggle()
+        }
+
         fadingItemIds = newlyCheckedIds
 
-        item.isChecked.toggle()
         beginFade()
     }
 

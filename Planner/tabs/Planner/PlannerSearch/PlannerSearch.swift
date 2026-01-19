@@ -31,8 +31,6 @@ struct PlannerSearchView: View {
     @EnvironmentObject var todaystampWatcher: TodaystampWatcher
     @ObservedObject var weatherStore = WeatherStore.shared
 
-    @StateObject private var plannerManager = ListManager()
-
     @State private var plannerCoverContext: PlannerCoverContext?
     @Namespace private var toolbarAnimation
     @Namespace private var thisWeekAnimation
@@ -47,7 +45,7 @@ struct PlannerSearchView: View {
 
     // Holds all calendar data displayed in the UI.
     @State private var eventMap: [String: [String]] = [:]
-    
+
     private var calendarSettings: CalendarSettings? {
         calendarSettingsList.first
     }
@@ -93,7 +91,8 @@ struct PlannerSearchView: View {
                                 datestamp in
                                 PlannerCardVerticalView(
                                     datestamp: datestamp,
-                                    iconMap: calendarSettings?.iconMap ?? [:]
+                                    iconMap: calendarSettings?.iconMap ?? [:],
+                                    isCalendarEventChecked: isCalendarEventChecked
                                 ) {
                                     plannerCoverContext = PlannerCoverContext(
                                         datestamp: datestamp,
@@ -126,7 +125,8 @@ struct PlannerSearchView: View {
                             datestamp in
                             PlannerCardView(
                                 datestamp: datestamp,
-                                iconMap: calendarSettings?.iconMap ?? [:]
+                                iconMap: calendarSettings?.iconMap ?? [:],
+                                isEventChecked: isCalendarEventChecked,
                             ) {
                                 plannerCoverContext = PlannerCoverContext(
                                     datestamp: datestamp,
@@ -269,7 +269,6 @@ struct PlannerSearchView: View {
                         plannerCoverContext = nil
                     }
                 }
-                .environmentObject(plannerManager)
                 .navigationTransition(
                     .zoom(
                         sourceID: context.namespace == toolbarAnimation
@@ -326,6 +325,16 @@ struct PlannerSearchView: View {
         .searchable(
             text: $searchText,
             prompt: "Search calendar events..."
+        )
+    }
+
+    private func isCalendarEventChecked(event: EKEvent?) -> Bool {
+        guard let calendarSettings, let event else {
+            return false
+        }
+
+        return calendarSettings.checkedCalendarEventIds.contains(
+            event.eventIdentifier
         )
     }
 

@@ -11,6 +11,7 @@ import SwiftUI
 struct PlannerCardView: View {
     let datestamp: String
     let iconMap: [String: String]
+    let isEventChecked: (EKEvent?) -> Bool
     let openPlanner: () -> Void
 
     @EnvironmentObject var calendarEventStore: CalendarStore
@@ -23,8 +24,10 @@ struct PlannerCardView: View {
 
     private var singleDayEvents: [PlannerEvent] {
         let events =
-            calendarEventStore
-            .singleDayEventsByDatestamp[datestamp] ?? []
+            (calendarEventStore
+            .singleDayEventsByDatestamp[datestamp] ?? []).filter {
+                !isEventChecked($0)
+            }
 
         return events.enumerated().map { index, calEvent in
             PlannerEvent(

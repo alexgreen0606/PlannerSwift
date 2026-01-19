@@ -101,19 +101,20 @@ struct PlannerView: View {
     @Query private var planners: [Planner]
     @Query private var calendarSettingsList: [CalendarSettings]
 
-    @EnvironmentObject var plannerManager: ListManager
     @EnvironmentObject var calendarStore: CalendarStore
     @EnvironmentObject var todaystampManager: TodaystampWatcher
 
-    @State private var calendarPlannerEvents: [PlannerEvent] = []
+    @StateObject private var plannerManager = ListManager<PlannerEvent>()
 
+    @State private var calendarPlannerEvents: [PlannerEvent] = []
     @State private var calendarEventSheetContext: CalendarEventSheetContext?
     @Namespace private var sheetAnimation
 
+    @State private var calendarEventToggler: CalendarEventToggler?
     @State private var scrollProxy: ScrollViewProxy?
     @State private var isCalendarPickerPresented = false
     @State private var isDeleteCheckedConfirmationOpen = false
-
+    
     private var calendarSettings: CalendarSettings? {
         calendarSettingsList.first
     }
@@ -140,28 +141,38 @@ struct PlannerView: View {
     }
 
     private var uncheckedEvents: [PlannerEvent] {
-        let storageEvents =
-            planner != nil
-            ? planner!.events.filter {
-                (!$0.isChecked
+        guard let planner, let calendarEventToggler else {
+            return []
+        }
+
+        let combinedEvents = planner.events + calendarPlannerEvents
+
+        return
+            combinedEvents
+            .filter {
+                (!(calendarEventToggler.isPlannerEventChecked($0))
                     && !plannerManager.newlyUncheckedIds.contains($0.id))
                     || plannerManager.newlyCheckedIds.contains($0.id)
             }
-            : []
-
-        return (storageEvents + calendarPlannerEvents).sorted {
-            $0.sortIndex < $1.sortIndex
-        }
+            .sorted {
+                $0.sortIndex < $1.sortIndex
+            }
     }
 
     private var checkedEvents: [PlannerEvent] {
-        planner != nil
-            ? planner!.events.filter {
-                ($0.isChecked
+        guard let planner, let calendarEventToggler else {
+            return []
+        }
+
+        let combinedEvents = planner.events + calendarPlannerEvents
+
+        return combinedEvents
+            .filter {
+                (calendarEventToggler.isPlannerEventChecked($0)
                     && !plannerManager.newlyCheckedIds.contains($0.id))
                     || plannerManager.newlyUncheckedIds.contains($0.id)
-            }.sorted { $0.sortIndex < $1.sortIndex }
-            : []
+            }
+            .sorted { $0.sortIndex < $1.sortIndex }
     }
 
     // Set the query to find this date's planner.
@@ -178,7 +189,9 @@ struct PlannerView: View {
 
     var body: some View {
         ScrollViewReader { proxy in
-            SortableListView(
+            SortableListView<
+                PlannerEvent, AnyView, PlannerChipSpreadView
+            >(
                 uncheckedItems: uncheckedEvents,
                 checkedItems: checkedEvents,
                 showChecked: showChecked,
@@ -205,17 +218,21 @@ struct PlannerView: View {
                 emptyCheckedLabel: plannerType.emptyCheckedLabel,
                 tint: themeColor.swiftUIColor,
                 getEndAdornment: { event in
-                    event.timeValueView(
-                        for: datestamp,
-                        openPlannerEventSheet: openPlannerEventSheet,
-                        openCalendarEventSheet: openCalendarEventSheet,
-                        animation: sheetAnimation
+                    AnyView(
+                        event.timeValueView(
+                            for: datestamp,
+                            openPlannerEventSheet: openPlannerEventSheet,
+                            openCalendarEventSheet: openCalendarEventSheet,
+                            animation: sheetAnimation
+                        )
                     )
                 },
                 createItem: createEvent,
                 handleTitleChange: handleEventTitleChange,
-                moveItem: handleMoveUncheckedEvent
+                moveItem: handleMoveUncheckedEvent,
+                isItemChecked: calendarEventToggler?.isPlannerEventChecked
             )
+            .environmentObject(plannerManager)
             .navigationTitle(date.dynamicHeader)
             .navigationSubtitle(date.dynamicSubheader)
             .toolbar {
@@ -314,6 +331,14 @@ struct PlannerView: View {
             )
 
             synchronizeCalendarEvents()
+
+            // Setup the calendar event handler.
+            calendarEventToggler = CalendarEventToggler(
+                calendarSettings: calendarSettings
+            )
+
+            plannerManager.setToggleItem(calendarEventToggler!.toggleEvent)
+            plannerManager.setStatusChecker(calendarEventToggler!.isPlannerEventChecked)
         }
         // Rebuild the planner when the calendar events change.
         .onChange(of: calendarStore.refreshKey) { _, newKey in
@@ -392,6 +417,7 @@ struct PlannerView: View {
     private func openPlannerEventSheet(
         for event: PlannerEvent
     ) {
+        // TODO: open custom sheet
     }
 
     private func openCalendarEventSheet(

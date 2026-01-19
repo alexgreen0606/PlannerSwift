@@ -60,7 +60,8 @@ struct ChecklistView: View {
                 getEndAdornment: { _ in EmptyView() },
                 createItem: createItem,
                 handleTitleChange: { _ in },
-                moveItem: moveItem
+                moveItem: moveItem,
+                isItemChecked: nil
             )
             .accentColor(checklist.color.swiftUIColor)
             .navigationTitle(checklist.title)

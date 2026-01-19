@@ -15,6 +15,7 @@ import WrappingHStack
 struct PlannerCardVerticalView: View {
     private let datestamp: String
     private let iconMap: [String: String]
+    private let isCalendarEventChecked: (EKEvent?) -> Bool
     private let openPlanner: () -> Void
 
     private let maxPreviewEvents = 4
@@ -73,6 +74,7 @@ struct PlannerCardVerticalView: View {
     }
 
     private var previewPlannerEvents: [PlannerEvent] {
+        
         let remainingSlots = max(
             0,
             maxPreviewEvents - previewAllDayEvents.count
@@ -81,6 +83,7 @@ struct PlannerCardVerticalView: View {
         let singleDayPlannerEvents =
             Array(
                 calendarPlannerEvents
+                    .filter { !isCalendarEventChecked($0.calendarEvent) }
                     .prefix(remainingSlots)
             )
 
@@ -131,11 +134,13 @@ struct PlannerCardVerticalView: View {
     init(
         datestamp: String,
         iconMap: [String: String],
+        isCalendarEventChecked: @escaping (EKEvent?) -> Bool,
         openPlanner: @escaping () -> Void
     ) {
         self.datestamp = datestamp
         self.openPlanner = openPlanner
         self.iconMap = iconMap
+        self.isCalendarEventChecked = isCalendarEventChecked
 
         _planners = Query(
             filter: #Predicate<Planner> {
@@ -210,6 +215,7 @@ struct PlannerCardVerticalView: View {
             )
 
             synchronizeCalendarEvents()
+            
         }
         .onChange(of: calendarStore.refreshKey) { _, newKey in
             synchronizeCalendarEvents()

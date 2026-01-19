@@ -32,8 +32,9 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
     let createItem: (_ baseId: PersistentIdentifier?, _ offset: Int) -> Void
     let handleTitleChange: (_ item: Item) -> Void
     let moveItem: (_ from: Int, _ to: Int) -> Void
+    let isItemChecked: ((_ item: Item) -> Bool)?
 
-    @EnvironmentObject var listManager: ListManager
+    @EnvironmentObject var listManager: ListManager<Item>
 
     @StateObject var focusController = FocusController()
 
@@ -63,6 +64,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                         customToggleConfig: customToggleConfig,
                         onCreateItem: createItem,
                         onTitleChange: handleTitleChange,
+                        isItemChecked: isItemChecked
                     )
                     .id(item.id)
                 }
@@ -104,6 +106,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                             customToggleConfig: customToggleConfig,
                             onCreateItem: { _, _ in },
                             onTitleChange: { _ in },
+                            isItemChecked: isItemChecked
                         )
                         .id(item.id)
                     }

@@ -18,6 +18,9 @@ class CalendarSettings {
 
     // Maps Calendar events IDs to sortIndex values for their planner references.
     var sortIndexMap: [String: Double] = [:]
+    
+    // Set of event IDs that have been checked within their planner.
+    var checkedCalendarEventIds: Set<String> = []
 
     init() {}
 }
