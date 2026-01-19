@@ -61,6 +61,12 @@ struct PlannerCardVerticalView: View {
             ?? []
     }
 
+    private var uncheckedCalendarPlannerEvents: [PlannerEvent] {
+        calendarPlannerEvents.filter {
+            !isCalendarEventChecked($0.calendarEvent)
+        }
+    }
+
     private var timedPlannerEvents: [PlannerEvent] {
         plannerEvents.filter { $0.date != nil }
     }
@@ -74,7 +80,7 @@ struct PlannerCardVerticalView: View {
     }
 
     private var previewPlannerEvents: [PlannerEvent] {
-        
+
         let remainingSlots = max(
             0,
             maxPreviewEvents - previewAllDayEvents.count
@@ -82,8 +88,7 @@ struct PlannerCardVerticalView: View {
 
         let singleDayPlannerEvents =
             Array(
-                calendarPlannerEvents
-                    .filter { !isCalendarEventChecked($0.calendarEvent) }
+                uncheckedCalendarPlannerEvents
                     .prefix(remainingSlots)
             )
 
@@ -114,7 +119,7 @@ struct PlannerCardVerticalView: View {
 
     private var remainingPlansLabel: String {
         let totalCount =
-            allDayEvents.count + calendarPlannerEvents.count
+            allDayEvents.count + uncheckedCalendarPlannerEvents.count
             + plannerEvents.count
 
         let previewCount = allDayEvents.count + previewPlannerEvents.count
@@ -215,7 +220,7 @@ struct PlannerCardVerticalView: View {
             )
 
             synchronizeCalendarEvents()
-            
+
         }
         .onChange(of: calendarStore.refreshKey) { _, newKey in
             synchronizeCalendarEvents()
