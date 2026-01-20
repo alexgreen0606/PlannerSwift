@@ -92,7 +92,8 @@ struct PlannerSearchView: View {
                                 PlannerCardVerticalView(
                                     datestamp: datestamp,
                                     iconMap: calendarSettings?.iconMap ?? [:],
-                                    isCalendarEventChecked: isCalendarEventChecked
+                                    isCalendarEventChecked:
+                                        isCalendarEventChecked
                                 ) {
                                     plannerCoverContext = PlannerCoverContext(
                                         datestamp: datestamp,
@@ -302,6 +303,9 @@ struct PlannerSearchView: View {
             .onChange(of: calendarStore.refreshKey) { _, newKey in
                 computeFilteredEventMap()
             }
+            .onChange(of: calendarSettings?.checkedCalendarEventIds) { _, _ in
+                scheduleFilterDebounce()
+            }
             // Load in the calendar data and settings.
             .task {
                 modelContext.ensureCalendarSettings(
@@ -380,7 +384,8 @@ struct PlannerSearchView: View {
         // ------------------------------------------------------------------
         // 3. Filter events by:
         //    a) calendar IDs (if provided)
-        //    b) search text in title (if provided)
+        //    b) checked status
+        //    c) search text in title (if provided)
         //    Remove datestamps with zero remaining events
         // ------------------------------------------------------------------
         let filteredDatestamps = dateRangeFiltered.compactMap {
@@ -400,6 +405,16 @@ struct PlannerSearchView: View {
                     filterCalendarIds.contains($0.calendar.calendarIdentifier)
                 }
 
+            // Filter out checked events
+            let checkedFiltered =
+                calendarSettings == nil
+                ? calendarFiltered
+                : calendarFiltered.filter {
+                    !calendarSettings!.checkedCalendarEventIds.contains(
+                        $0.eventIdentifier
+                    )
+                }
+
             let trimmedSearchText = searchText.trimmingCharacters(
                 in: .whitespacesAndNewlines
             )
@@ -407,8 +422,8 @@ struct PlannerSearchView: View {
             // Filter by search text in title (skip if empty)
             let searchFiltered =
                 trimmedSearchText.isEmpty
-                ? calendarFiltered
-                : calendarFiltered.filter {
+                ? checkedFiltered
+                : checkedFiltered.filter {
                     $0.title.localizedCaseInsensitiveContains(
                         trimmedSearchText
                     )

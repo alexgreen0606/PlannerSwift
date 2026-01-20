@@ -10,65 +10,6 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-enum PlannerType: String {
-    case pastOrPresent
-    case future
-
-    var emptyCheckedLabel: String {
-        switch self {
-        case .pastOrPresent: "No completed plans"
-        case .future: "No canceled plans"
-        }
-    }
-
-    var checkedHeader: String {
-        switch self {
-        case .pastOrPresent: "Completed plans"
-        case .future: "Cancelled plans"
-        }
-    }
-
-    var deleteCheckedLabel: String {
-        switch self {
-        case .pastOrPresent: "Delete completed plans"
-        case .future: "Delete canceled plans"
-        }
-    }
-
-    var deleteCheckedConfirmationTitle: String {
-        switch self {
-        case .pastOrPresent: "Delete completed plans from this planner?"
-        case .future: "Delete canceled plans from this planner?"
-        }
-    }
-
-    func getCheckedFooter(for datestamp: String) -> String? {
-        switch self {
-        case .pastOrPresent:
-            return nil
-
-        case .future:
-            guard
-                let date = datestamp.toDate("yyyy-MM-dd", region: .local)?
-                    .date
-            else {
-                return nil
-            }
-
-            let formatted = date.dynamicSubheader
-            return
-                "These canceled plans will be deleted the morning of \(formatted)."
-        }
-    }
-
-    func getToggleVisibilityLabel(_ showHidden: Bool) -> String {
-        switch self {
-        case .pastOrPresent: showHidden ? "Hide completed" : "Show completed"
-        case .future: showHidden ? "Hide canceled" : "Show canceled"
-        }
-    }
-}
-
 struct CalendarEventSheetContext: Identifiable {
     var event: EKEvent
     var namespace: Namespace.ID
