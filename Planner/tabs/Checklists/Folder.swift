@@ -10,20 +10,6 @@ import SwiftUI
 
 // TODO: slide to new items after creation
 
-enum ChecklistItemSheetContext: Identifiable {
-    case create
-    case parent
-    case edit(ChecklistItem)
-
-    var id: String {
-        switch self {
-        case .parent: return "PARENT"
-        case .create: return "CREATE"
-        case .edit(let item): return String(describing: item.id)
-        }
-    }
-}
-
 struct FolderView: View {
     let folder: ChecklistItem
 
@@ -71,7 +57,7 @@ struct FolderView: View {
                         )
 
                         Text(item.title)
-                            .font(.system(size: 17))
+                            .font(.system(size: UIConstants.listItemFontSize))
                             .lineLimit(nil)
                             .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, alignment: .leading)

@@ -23,8 +23,8 @@ struct PlannerView: View {
     private let datestamp: String
     private let closePlanner: () -> Void
 
-    @AppStorage("themeColor") var themeColor: ThemeColorOption =
-        ThemeColorOption.blue
+    @AppStorage("themeColor") var themeColor: ThemeColor =
+        ThemeColor.blue
 
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]

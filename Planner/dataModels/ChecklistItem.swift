@@ -8,51 +8,11 @@
 import SwiftData
 import SwiftUI
 
-enum ChecklistItemType: String, Codable {
-    case folder
-    case checklist
-    case item
-
-    var iconName: String {
-        switch self {
-        case .folder: return "folder.fill"
-        case .checklist: return "list.bullet"
-        case .item: return "exclamationmark"
-        }
-    }
-}
-
-enum ChecklistColorOption: String, Codable, CaseIterable {
-    case red
-    case orange
-    case yellow
-    case green
-    case cyan
-    case indigo
-    case purple
-    case brown
-    case label
-
-    var swiftUIColor: Color {
-        switch self {
-        case .red: return .red
-        case .orange: return .orange
-        case .yellow: return .yellow
-        case .green: return .green
-        case .cyan: return .cyan
-        case .indigo: return .indigo
-        case .purple: return .purple
-        case .brown: return .brown
-        case .label: return Color(uiColor: .label)
-        }
-    }
-}
-
 @available(iOS 26.0, *)
 @Model
 class ChecklistItem: ListItem {
     var type: ChecklistItemType
-    var color: ChecklistColorOption
+    var color: ChecklistItemColor
     var showCompleted: Bool = false
 
     @Relationship(
@@ -66,7 +26,7 @@ class ChecklistItem: ListItem {
     init(
         type: ChecklistItemType = .checklist,
         title: String = "",
-        color: ChecklistColorOption = .red,
+        color: ChecklistItemColor = .red,
         sortIndex: Double,
         parent: ChecklistItem? = nil
     ) {

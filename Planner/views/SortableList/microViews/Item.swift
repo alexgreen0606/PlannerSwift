@@ -147,7 +147,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
         Text(item.title)
             .foregroundColor(Color(uiColor: .label))
             .opacity(isFocused ? 0 : 1)
-            .font(.system(size: 17))
+            .font(.system(size: UIConstants.listItemFontSize))
             .lineLimit(nil)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)

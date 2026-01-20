@@ -14,8 +14,8 @@ struct PreviewPlannerEventListView: View {
 
     @Environment(\.displayScale) private var displayScale
     
-    @AppStorage("themeColor") var themeColor: ThemeColorOption =
-        ThemeColorOption.blue
+    @AppStorage("themeColor") var themeColor: ThemeColor =
+        ThemeColor.blue
 
     var body: some View {
         if !events.isEmpty {

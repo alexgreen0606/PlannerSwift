@@ -24,7 +24,7 @@ struct TextfieldView: UIViewRepresentable {
         context.coordinator.configureKeyboardToolbar(for: textField)
 
         textField.isEditable = true
-        textField.font = UIFont.systemFont(ofSize: 17)
+        textField.font = UIFont.systemFont(ofSize: UIConstants.listItemFontSize)
         textField.isSelectable = true
         textField.backgroundColor = .clear
         textField.isUserInteractionEnabled = true

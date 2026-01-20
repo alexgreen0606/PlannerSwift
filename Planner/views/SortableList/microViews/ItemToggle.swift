@@ -24,11 +24,6 @@ struct CustomIconConfig<Item: ListItem> {
     let confirmation: ConfirmationConfig<Item>?
 }
 
-enum ListToggleType: String {
-    case storage
-    case staging
-}
-
 struct ItemToggleView<Item: ListItem>: View {
     let item: Item
     let type: ListToggleType

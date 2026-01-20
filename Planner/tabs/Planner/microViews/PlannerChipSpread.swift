@@ -20,8 +20,8 @@ struct PlannerChipSpreadView: View {
     var animation: Namespace.ID?
     let openCalendarEventSheet: ((EKEvent) -> Void)?
 
-    @AppStorage("themeColor") var themeColor: ThemeColorOption =
-        ThemeColorOption.blue
+    @AppStorage("themeColor") var themeColor: ThemeColor =
+        ThemeColor.blue
 
     @ObservedObject var weatherStore = WeatherStore.shared
     @EnvironmentObject var calendarStore: CalendarStore

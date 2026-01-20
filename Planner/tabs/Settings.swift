@@ -13,8 +13,8 @@ import SwiftUI
 // TODO: debounce re-load the calendar store when the settings change
 
 struct SettingsView: View {
-    @AppStorage("themeColor") var themeColor: ThemeColorOption =
-        ThemeColorOption.blue
+    @AppStorage("themeColor") var themeColor: ThemeColor =
+        ThemeColor.blue
     @AppStorage("showListSeparators") private var showListSeparators: Bool =
         true
 
@@ -48,7 +48,7 @@ struct SettingsView: View {
             Form {
                 Section {
                     Picker("Accent Color", selection: $themeColor) {
-                        ForEach(ThemeColorOption.allCases, id: \.self) {
+                        ForEach(ThemeColor.allCases, id: \.self) {
                             option in
                             Image(systemName: "circle.fill")
                                 .symbolRenderingMode(.palette)

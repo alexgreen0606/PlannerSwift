@@ -11,8 +11,8 @@ import SwiftUI
 
 struct ContentView: View {
     @AppStorage("lastCleanedDatestamp") var lastCleanedDatestamp: String = ""
-    @AppStorage("themeColor") var themeColor: ThemeColorOption =
-        ThemeColorOption.blue
+    @AppStorage("themeColor") var themeColor: ThemeColor =
+        ThemeColor.blue
 
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
 

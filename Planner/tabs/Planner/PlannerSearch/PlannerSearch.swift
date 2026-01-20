@@ -19,10 +19,6 @@ struct PlannerCoverContext: Identifiable {
     }
 }
 
-enum PlannerRoute: Hashable {
-    case settings
-}
-
 struct PlannerSearchView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var calendarSettingsList: [CalendarSettings]
