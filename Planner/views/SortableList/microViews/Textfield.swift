@@ -64,8 +64,6 @@ struct TextfieldView: UIViewRepresentable {
 
         if isFocused && !uiView.isFirstResponder {
             uiView.becomeFirstResponder()
-        } else if !isFocused && uiView.isFirstResponder {
-            uiView.resignFirstResponder()
         }
     }
 
@@ -124,14 +122,14 @@ struct TextfieldView: UIViewRepresentable {
                 target: nil,
                 action: nil
             )
+
             let done = UIBarButtonItem(
-                image: UIImage(systemName: "checkmark"),
-                style: .prominent,
+                barButtonSystemItem: .done,
                 target: self,
                 action: #selector(doneButtonTapped)
             )
             done.tintColor = UIColor(parent.accentColor)
-            
+
             toolbar.items = [flexibleSpace, done]
 
             container.addSubview(toolbar)
@@ -152,6 +150,7 @@ struct TextfieldView: UIViewRepresentable {
 
         @objc private func doneButtonTapped() {
             parent.onDone()
+            textView?.resignFirstResponder()
         }
 
     }
