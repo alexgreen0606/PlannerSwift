@@ -100,9 +100,9 @@ struct PlannerView: View {
 
     @State private var calendarEventToggler = CalendarEventToggler()
     @State private var scrollProxy: ScrollViewProxy?
-    @State private var isCalendarPickerPresented = false
     @State private var isDeleteCheckedConfirmationOpen = false
 
+    // Toggle confirmation config for calendar events.
     private var toggleEventIconConfig: CustomIconConfig<PlannerEvent>? {
         switch plannerType {
         case .pastOrPresent: return nil
@@ -134,18 +134,15 @@ struct PlannerView: View {
 
                             calendarStore.delete(event: calEvent)
 
-                            calendarStore.refresh(
-                                hiddenCalendarIds: calendarSettings?
-                                    .hiddenCalendarIds ?? []
-                            )
-
-                            synchronizeCalendarEvents()
+                            reloadCalendarAndSynchronize()
                         }
                     ]
                 )
             )
         }
     }
+    
+    // MARK: - Swift Data
 
     private var calendarSettings: CalendarSettings? {
         calendarSettingsList.first
@@ -154,25 +151,39 @@ struct PlannerView: View {
     private var planner: Planner? {
         planners.first
     }
+    
+    // MARK: - Helper Variables
+    
+    private var date: Date {
+        datestamp.date ?? Date()
+    }
 
     private var plannerType: PlannerType {
         datestamp <= todaystampManager.todaystamp ? .pastOrPresent : .future
-    }
-
-    private var date: Date {
-        datestamp.date ?? Date()
     }
 
     private var showChecked: Bool {
         plannerType == .future
             ? planner?.showCanceled == true : planner?.showCompleted == true
     }
+    
+    private var rawCheckedEvents: [PlannerEvent] {
+        guard let planner else {
+            return []
+        }
 
-    private var hasCheckedEvents: Bool {
-        planner?.events.contains(where: \.isChecked) ?? false
+        let combinedEvents = planner.events + calendarPlannerEvents
+
+        return
+            combinedEvents
+            .filter {
+                calendarEventToggler.isPlannerEventChecked($0)
+            }
     }
+    
+    // MARK: - UI Lists
 
-    private var uncheckedEvents: [PlannerEvent] {
+    private var sortedOpenPlans: [PlannerEvent] {
         guard let planner else {
             return []
         }
@@ -191,7 +202,7 @@ struct PlannerView: View {
             }
     }
 
-    private var checkedEvents: [PlannerEvent] {
+    private var sortedCheckedPlans: [PlannerEvent] {
         guard let planner else {
             return []
         }
@@ -225,8 +236,8 @@ struct PlannerView: View {
             SortableListView<
                 PlannerEvent, AnyView, PlannerChipSpreadView
             >(
-                uncheckedItems: uncheckedEvents,
-                checkedItems: checkedEvents,
+                uncheckedItems: sortedOpenPlans,
+                checkedItems: sortedCheckedPlans,
                 showChecked: showChecked,
                 floatingInfo: PlannerChipSpreadView(
                     datestamp: datestamp,
@@ -304,7 +315,7 @@ struct PlannerView: View {
                                 Text(plannerType.deleteCheckedLabel)
                                 Image(systemName: "trash")
                             }
-                            .disabled(!hasCheckedEvents)
+                            .disabled(rawCheckedEvents.isEmpty)
 
                         } label: {
                             Text("Delete options")
@@ -333,12 +344,12 @@ struct PlannerView: View {
                     Spacer()
 
                     Button("Add", systemImage: "plus") {
-                        if let last = uncheckedEvents.last, last.title.isEmpty {
+                        if let last = sortedOpenPlans.last, last.title.isEmpty {
                             return
                         }
 
                         scrollProxy?.slideTo("UNCHECKED", at: .bottom)
-                        handleCreateEvent(at: uncheckedEvents.count)
+                        createEvent(at: sortedOpenPlans.count)
                     }
                     .tint(themeColor.swiftUIColor)
                 }
@@ -418,13 +429,37 @@ struct PlannerView: View {
             }
         }
     }
+    
+    // MARK: - Data Handlers
+    
+    private func synchronizeCalendarEvents() {
+        calendarPlannerEvents =
+            modelContext.synchronize(
+                calendarEvents: calendarStore.singleDayEventsByDatestamp[
+                    datestamp
+                ] ?? [],
+                into: planner,
+                with: calendarSettings
+            ) ?? calendarPlannerEvents
+    }
+    
+    private func reloadCalendarAndSynchronize() {
+        calendarStore.refresh(
+            hiddenCalendarIds: calendarSettings?
+                .hiddenCalendarIds ?? []
+        )
+
+        synchronizeCalendarEvents()
+    }
+    
+    // MARK: - List Actions
 
     private func createEvent(
         near baseId: PersistentIdentifier?,
         offset: Int = 0
     ) {
         guard
-            let baseIndex = uncheckedEvents.firstIndex(where: {
+            let baseIndex = sortedOpenPlans.firstIndex(where: {
                 $0.id == baseId
             })
         else {
@@ -434,10 +469,10 @@ struct PlannerView: View {
         let finalIndex = baseIndex + offset
 
         // Don't create the new item if it is next to an empty item.
-        let upperEvent = finalIndex > 0 ? uncheckedEvents[finalIndex - 1] : nil
+        let upperEvent = finalIndex > 0 ? sortedOpenPlans[finalIndex - 1] : nil
         let lowerEvent =
-            finalIndex < uncheckedEvents.count
-            ? uncheckedEvents[finalIndex] : nil
+            finalIndex < sortedOpenPlans.count
+            ? sortedOpenPlans[finalIndex] : nil
         if let upper = upperEvent, upper.title.isEmpty {
             return
         }
@@ -445,27 +480,12 @@ struct PlannerView: View {
             return
         }
 
-        handleCreateEvent(at: finalIndex)
+        createEvent(at: finalIndex)
     }
 
-    private func openPlannerEventSheet(
-        for event: PlannerEvent
-    ) {
-        // TODO: open custom sheet
-    }
-
-    private func openCalendarEventSheet(
-        for event: EKEvent
-    ) {
-        calendarEventSheetContext = CalendarEventSheetContext(
-            event: event,
-            namespace: sheetAnimation
-        )
-    }
-
-    private func handleCreateEvent(at index: Int) {
+    private func createEvent(at index: Int) {
         guard let planner = planner else { return }
-        let sortIndex = generateSortIndex(index: index, items: uncheckedEvents)
+        let sortIndex = generateSortIndex(index: index, items: sortedOpenPlans)
         let newEvent = PlannerEvent(sortIndex: sortIndex, planner: planner)
 
         modelContext.insert(newEvent)
@@ -476,8 +496,8 @@ struct PlannerView: View {
         guard from != to else { return }
 
         // 1: Force-save the event to its new position.
-        let movedEvent = uncheckedEvents[from]
-        let eventsWithoutEvent = uncheckedEvents.filter {
+        let movedEvent = sortedOpenPlans[from]
+        let eventsWithoutEvent = sortedOpenPlans.filter {
             $0.id != movedEvent.id
         }
         let newSortIndex = generateSortIndex(
@@ -501,7 +521,7 @@ struct PlannerView: View {
 
             let validSortIndex = generateValidPlannerEventSortIndex(
                 for: movedEvent,
-                in: uncheckedEvents
+                in: sortedOpenPlans
             )
             if validSortIndex != newSortIndex {
                 movedEvent.sortIndex = validSortIndex
@@ -556,7 +576,7 @@ struct PlannerView: View {
         // 4. Validate sort order.
         let newSortIndex = generateValidPlannerEventSortIndex(
             for: event,
-            in: uncheckedEvents
+            in: sortedOpenPlans
         )
 
         guard newSortIndex != event.sortIndex else {
@@ -569,27 +589,44 @@ struct PlannerView: View {
 
         try? modelContext.save()
     }
+    
+    // MARK: - Sheet Handlers
+    
+    private func openPlannerEventSheet(
+        for event: PlannerEvent
+    ) {
+        // TODO: open custom sheet
+    }
+
+    private func openCalendarEventSheet(
+        for event: EKEvent
+    ) {
+        calendarEventSheetContext = CalendarEventSheetContext(
+            event: event,
+            namespace: sheetAnimation
+        )
+    }
+    
+    // MARK: - Overflow Actions
 
     private func deleteAllCheckedEvents() {
 
-        checkedEvents
-            .forEach { modelContext.delete($0) }
+        rawCheckedEvents
+            .forEach {
+                guard let calendarEvent = $0.calendarEvent else {
+                    modelContext.delete($0)
+                    return
+                }
+                
+                calendarStore.delete(event: calendarEvent)
+            }
+        
+        reloadCalendarAndSynchronize()
 
         do {
             try modelContext.save()
         } catch {
             print("Failed to delete checked events:", error)
         }
-    }
-
-    private func synchronizeCalendarEvents() {
-        calendarPlannerEvents =
-            modelContext.synchronize(
-                calendarEvents: calendarStore.singleDayEventsByDatestamp[
-                    datestamp
-                ] ?? [],
-                into: planner,
-                with: calendarSettings
-            ) ?? calendarPlannerEvents
     }
 }
