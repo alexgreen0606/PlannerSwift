@@ -22,7 +22,7 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
     let toggleType: ListToggleType = .storage
     let disabledItemIds: Set<PersistentIdentifier> = []
     let floatingInfo: FloatingInfo?
-    let customToggleConfig: CustomIconConfig?
+    let customToggleConfig: CustomIconConfig<Item>?
     let checkedHeader: String
     let checkedFooter: String?
     let emptyUncheckedLabel: String

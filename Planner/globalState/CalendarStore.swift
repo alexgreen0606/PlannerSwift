@@ -148,4 +148,19 @@ class CalendarStore: ObservableObject {
 
         return results
     }
+
+    @MainActor
+    func delete(event: EKEvent) {
+        guard event.calendar.allowsContentModifications else {
+            print("Cannot delete event. Calendar is read-only.")
+            return
+        }
+
+        do {
+            try eventStore.remove(event, span: .thisEvent, commit: true)
+        } catch {
+            print("Failed to delete event: \(error)")
+        }
+    }
+
 }

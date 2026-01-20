@@ -8,14 +8,11 @@
 import EventKit
 import SwiftData
 import SwiftUI
+import Combine
 
 @MainActor
 final class CalendarEventToggler {
-    private let calendarSettings: CalendarSettings?
-
-    init(calendarSettings: CalendarSettings?) {
-        self.calendarSettings = calendarSettings
-    }
+    var calendarSettings: CalendarSettings? = nil
 
     func isPlannerEventChecked(_ event: PlannerEvent) -> Bool {
         guard

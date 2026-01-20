@@ -16,7 +16,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
     let isSelectDisabled: Bool
     let showUpperDivider: Bool
     let endAdornment: ((_ item: Item) -> EndAdornment)?
-    let customToggleConfig: CustomIconConfig?
+    let customToggleConfig: CustomIconConfig<Item>?
     let onCreateItem:
         (_ baseId: PersistentIdentifier?, _ offset: Int) ->
             Void
@@ -97,6 +97,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
     // Item Toggle
     private var toggle: some View {
         ItemToggleView(
+            item: item,
             type: toggleType,
             tint: tint,
             isChecked: isChecked,

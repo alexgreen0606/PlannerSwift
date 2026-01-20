@@ -14,18 +14,6 @@ enum PlannerType: String {
     case pastOrPresent
     case future
 
-    var toggleEventIconConfig: CustomIconConfig? {
-        switch self {
-        case .pastOrPresent: nil
-        case .future:
-            CustomIconConfig(
-                name: "circle.slash",
-                primaryColor: .red,
-                secondaryColor: Color(uiColor: .secondaryLabel)
-            )
-        }
-    }
-
     var emptyCheckedLabel: String {
         switch self {
         case .pastOrPresent: "No completed plans"
@@ -110,11 +98,55 @@ struct PlannerView: View {
     @State private var calendarEventSheetContext: CalendarEventSheetContext?
     @Namespace private var sheetAnimation
 
-    @State private var calendarEventToggler: CalendarEventToggler?
+    @State private var calendarEventToggler = CalendarEventToggler()
     @State private var scrollProxy: ScrollViewProxy?
     @State private var isCalendarPickerPresented = false
     @State private var isDeleteCheckedConfirmationOpen = false
-    
+
+    private var toggleEventIconConfig: CustomIconConfig<PlannerEvent>? {
+        switch plannerType {
+        case .pastOrPresent: return nil
+        case .future:
+            return CustomIconConfig(
+                name: "circle.slash",
+                primaryColor: .red,
+                secondaryColor: Color(uiColor: .secondaryLabel),
+                confirmation: ConfirmationConfig(
+                    title: "Delete from calendar?",
+                    message: "Hiding only affects visibility in this planner.",
+                    destructiveKeys: ["Delete"],
+                    needsConfirmation: { event in
+                        event.calendarEvent != nil
+                            && !calendarEventToggler.isPlannerEventChecked(
+                                event
+                            )
+                    },
+                    actions: [
+                        "Hide": { event in
+                            let _ = calendarEventToggler.toggleEvent(event)
+                        }
+                    ],
+                    destructiveActions: [
+                        "Delete": { event in
+                            guard let calEvent = event.calendarEvent else {
+                                return
+                            }
+
+                            calendarStore.delete(event: calEvent)
+
+                            calendarStore.refresh(
+                                hiddenCalendarIds: calendarSettings?
+                                    .hiddenCalendarIds ?? []
+                            )
+
+                            synchronizeCalendarEvents()
+                        }
+                    ]
+                )
+            )
+        }
+    }
+
     private var calendarSettings: CalendarSettings? {
         calendarSettingsList.first
     }
@@ -141,7 +173,7 @@ struct PlannerView: View {
     }
 
     private var uncheckedEvents: [PlannerEvent] {
-        guard let planner, let calendarEventToggler else {
+        guard let planner else {
             return []
         }
 
@@ -160,13 +192,14 @@ struct PlannerView: View {
     }
 
     private var checkedEvents: [PlannerEvent] {
-        guard let planner, let calendarEventToggler else {
+        guard let planner else {
             return []
         }
 
         let combinedEvents = planner.events + calendarPlannerEvents
 
-        return combinedEvents
+        return
+            combinedEvents
             .filter {
                 (calendarEventToggler.isPlannerEventChecked($0)
                     && !plannerManager.newlyCheckedIds.contains($0.id))
@@ -211,7 +244,7 @@ struct PlannerView: View {
                         )
                     }
                 ),
-                customToggleConfig: plannerType.toggleEventIconConfig,
+                customToggleConfig: toggleEventIconConfig,
                 checkedHeader: plannerType.checkedHeader,
                 checkedFooter: plannerType.getCheckedFooter(for: datestamp),
                 emptyUncheckedLabel: "No plans",
@@ -231,7 +264,7 @@ struct PlannerView: View {
                 createItem: createEvent,
                 handleTitleChange: handleEventTitleChange,
                 moveItem: handleMoveUncheckedEvent,
-                isItemChecked: calendarEventToggler?.isPlannerEventChecked
+                isItemChecked: calendarEventToggler.isPlannerEventChecked
             )
             .environmentObject(plannerManager)
             .navigationTitle(date.dynamicHeader)
@@ -334,12 +367,12 @@ struct PlannerView: View {
             synchronizeCalendarEvents()
 
             // Setup the calendar event handler.
-            calendarEventToggler = CalendarEventToggler(
-                calendarSettings: calendarSettings
-            )
+            calendarEventToggler.calendarSettings = calendarSettings
 
-            plannerManager.setToggleItem(calendarEventToggler!.toggleEvent)
-            plannerManager.setStatusChecker(calendarEventToggler!.isPlannerEventChecked)
+            plannerManager.setToggleItem(calendarEventToggler.toggleEvent)
+            plannerManager.setStatusChecker(
+                calendarEventToggler.isPlannerEventChecked
+            )
         }
         // Rebuild the planner when the calendar events change.
         .onChange(of: calendarStore.refreshKey) { _, newKey in
