@@ -14,7 +14,7 @@ struct ChecklistView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @EnvironmentObject var listManager: ListManager
+    @EnvironmentObject var listManager: ListManager<ChecklistItem>
 
     @State private var scrollProxy: ScrollViewProxy?
     @State private var showDeleteCompletedConfirm = false

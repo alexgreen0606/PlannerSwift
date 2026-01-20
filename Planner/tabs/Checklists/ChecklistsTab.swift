@@ -15,7 +15,7 @@ struct ChecklistsTabView: View {
     
     @EnvironmentObject var navigationManager: NavigationManager
     
-    @StateObject private var checklistsManager = ListManager()
+    @StateObject private var checklistsManager = ListManager<ChecklistItem>()
     
     private var root: ChecklistItem? {
         rootFolders.first
