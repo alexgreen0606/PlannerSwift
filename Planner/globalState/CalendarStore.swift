@@ -16,7 +16,6 @@ class CalendarStore: ObservableObject {
     private init() {}
 
     private let eventStore = EKEventStore()
-    private var hasLoaded = false
 
     @Published private(set) var calendarsById: [String: EKCalendar] = [:]
     @Published private(set) var allDayEventsByDatestamp: [String: [EKEvent]] =
@@ -39,8 +38,6 @@ class CalendarStore: ObservableObject {
 
     @MainActor
     func requestAccessAndLoadIfNeeded(hiddenCalendarIds: Set<String>) {
-        guard !hasLoaded else { return }
-
         switch EKEventStore.authorizationStatus(for: .event) {
         case .authorized:
             load(hiddenCalendarIds: hiddenCalendarIds)
@@ -54,6 +51,15 @@ class CalendarStore: ObservableObject {
     func refresh(hiddenCalendarIds: Set<String>) {
         load(hiddenCalendarIds: hiddenCalendarIds)
     }
+    
+    // More up-to-date than using event.calendar.cgColor directly.
+    func calendarColor(for id: String) -> Color {
+        guard let calendar = calendarsById[id] else {
+            return Color(uiColor: .secondaryLabel)
+        }
+        
+        return Color(calendar.cgColor)
+    }
 
     private func requestAccess(hiddenCalendarIds: Set<String>) {
         eventStore.requestFullAccessToEvents { granted, error in
@@ -65,12 +71,8 @@ class CalendarStore: ObservableObject {
     }
 
     private func load(hiddenCalendarIds: Set<String>) {
-        hasLoaded = true
-
         loadCalendars()
         loadEvents(hiddenCalendarIds: hiddenCalendarIds)
-
-        // TODO: cleanup positions object for sort indices
     }
 
     private func loadCalendars() {

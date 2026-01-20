@@ -75,7 +75,7 @@ struct PlannerView: View {
 
                             calendarStore.delete(event: calEvent)
 
-                            reloadCalendarAndSynchronize()
+                            reloadCalendar()
                         }
                     ]
                 )
@@ -337,10 +337,7 @@ struct PlannerView: View {
                     event: context.event,
                     eventStore: calendarStore.ekEventStore
                 ) { action, updatedEvent in
-                    calendarStore.refresh(
-                        hiddenCalendarIds: calendarSettings?.hiddenCalendarIds
-                            ?? []
-                    )
+                    reloadCalendar()
                     calendarEventSheetContext = nil
                 }
                 .tint(themeColor.swiftUIColor)
@@ -384,13 +381,11 @@ struct PlannerView: View {
             ) ?? calendarPlannerEvents
     }
     
-    private func reloadCalendarAndSynchronize() {
+    private func reloadCalendar() {
         calendarStore.refresh(
             hiddenCalendarIds: calendarSettings?
                 .hiddenCalendarIds ?? []
         )
-
-        synchronizeCalendarEvents()
     }
     
     // MARK: - List Actions
@@ -562,7 +557,7 @@ struct PlannerView: View {
                 calendarStore.delete(event: calendarEvent)
             }
         
-        reloadCalendarAndSynchronize()
+        reloadCalendar()
 
         do {
             try modelContext.save()

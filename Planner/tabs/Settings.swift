@@ -37,6 +37,10 @@ struct SettingsView: View {
         "globe.americas.fill",
         "birthday.cake.fill",
         "calendar",
+        "dollarsign",
+        "mountain.2.fill",
+        "dog.fill",
+        "basketball.fill"
     ]
 
     var body: some View {
