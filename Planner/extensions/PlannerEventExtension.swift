@@ -14,7 +14,8 @@ extension PlannerEvent {
         for datestamp: String,
         openPlannerEventSheet: ((PlannerEvent) -> Void)?,
         openCalendarEventSheet: ((EKEvent) -> Void)?,
-        animation: Namespace.ID?
+        animation: Namespace.ID?,
+        accentColor: Color
     ) -> some View {
         Group {
             if self.calendarEvent != nil {
@@ -35,7 +36,7 @@ extension PlannerEvent {
                     date: date,
                     datestamp: datestamp,
                     disabled: false,
-                    color: .blue,
+                    color: accentColor,
                     openEventSheet: validOpenEventSheet
                 )
 

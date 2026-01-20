@@ -223,7 +223,8 @@ struct PlannerView: View {
                             for: datestamp,
                             openPlannerEventSheet: openPlannerEventSheet,
                             openCalendarEventSheet: openCalendarEventSheet,
-                            animation: sheetAnimation
+                            animation: sheetAnimation,
+                            accentColor: themeColor.swiftUIColor
                         )
                     )
                 },
