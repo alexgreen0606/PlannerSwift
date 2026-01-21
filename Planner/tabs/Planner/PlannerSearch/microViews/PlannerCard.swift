@@ -39,7 +39,7 @@ struct PlannerCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            PlannerDateInfoView(datestamp: datestamp)
+            PlannerDateInfoView(datestamp: datestamp, isSoon: false)
 
             PreviewCalendarEventListView(events: allDayEvents, iconMap: iconMap)
 
