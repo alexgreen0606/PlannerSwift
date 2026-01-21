@@ -5,6 +5,8 @@
 //  Created by Alex Green on 12/1/25.
 //
 
+import Contacts
+import ContactsUI
 import EventKit
 import SwiftData
 import SwiftDate
@@ -23,6 +25,8 @@ struct ContentView: View {
     @EnvironmentObject var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject var navigationManager: NavigationManager
     @EnvironmentObject var calendarStore: CalendarStore
+
+    let contactsStore = CNContactStore()
 
     @StateObject private var todayPlannerManager = ListManager()
     @State private var isTodayPlannerOpen: Bool = false
@@ -151,6 +155,14 @@ struct ContentView: View {
             )
 
             cleanseStorage()
+
+            do {
+                try await contactsStore.requestAccess(for: .contacts)
+            } catch {
+                assertionFailure(
+                    "Failed to request contacts access: \(error)"
+                )
+            }
         }
     }
 

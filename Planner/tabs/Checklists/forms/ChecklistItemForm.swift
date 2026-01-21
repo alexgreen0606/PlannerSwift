@@ -119,7 +119,9 @@ struct ChecklistItemFormView: View {
                         do {
                             try modelContext.save()
                         } catch {
-                            print("Error saving checklist item:", error)
+                            assertionFailure(
+                                "Error saving checklist item: \(error)"
+                            )
                         }
                         
                         dismiss()

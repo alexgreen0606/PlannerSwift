@@ -18,14 +18,15 @@ extension PlannerEvent {
         accentColor: Color
     ) -> some View {
         Group {
-            if self.calendarEvent != nil {
-                self.calendarEvent!.timeValueView(
+            if let calendarEvent = self.calendarEvent {
+                calendarEvent.timeValueView(
                     for: datestamp,
                     openEventSheet: openCalendarEventSheet,
                     animation: animation
                 )
 
             } else if let date = self.date {
+                
                 let validOpenEventSheet =
                     openPlannerEventSheet != nil
                     ? {
@@ -40,14 +41,14 @@ extension PlannerEvent {
                     openEventSheet: validOpenEventSheet
                 )
 
-                if validOpenEventSheet == nil || animation == nil {
-                    timeVal
-                } else {
+                if validOpenEventSheet != nil, let animation {
                     timeVal
                         .matchedTransitionSource(
                             id: String(describing: self.id),
-                            in: animation!
+                            in: animation
                         )
+                } else {
+                    timeVal
                 }
 
             } else {

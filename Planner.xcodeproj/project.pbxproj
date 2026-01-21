@@ -288,6 +288,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Planner/Info.plist;
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "This app displays your all-day calendar events.";
+				INFOPLIST_KEY_NSContactsUsageDescription = "Planner needs access to your contacts to show birthday information inline.\nPlanner needs access to your contacts to show birthday information inline.\nPlanner needs access to your contacts to show birthday information inline.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Planner needs your location to show local weather and events.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -326,6 +327,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Planner/Info.plist;
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "This app displays your all-day calendar events.";
+				INFOPLIST_KEY_NSContactsUsageDescription = "Planner needs access to your contacts to show birthday information inline.\nPlanner needs access to your contacts to show birthday information inline.\nPlanner needs access to your contacts to show birthday information inline.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Planner needs your location to show local weather and events.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

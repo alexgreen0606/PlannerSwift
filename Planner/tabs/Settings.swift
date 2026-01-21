@@ -189,7 +189,6 @@ struct SettingsView: View {
                     hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? []
                 )
             } catch {
-                // Task cancelled — do nothing.
             }
         }
     }

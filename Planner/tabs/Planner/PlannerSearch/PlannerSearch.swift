@@ -275,7 +275,7 @@ struct PlannerSearchView: View {
                 )
             }
             .sheet(isPresented: $isNewEventSheetOpen) {
-                EditCalendarEventView(
+                EditCalendarEventFormView(
                     event: EKEvent(eventStore: calendarStore.ekEventStore),
                     eventStore: calendarStore.ekEventStore
                 ) { action, event in
@@ -453,7 +453,6 @@ struct PlannerSearchView: View {
                 // Recompute filtered event map.
                 computeFilteredEventMap()
             } catch {
-                // Task cancelled — do nothing.
             }
         }
     }

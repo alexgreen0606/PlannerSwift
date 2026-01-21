@@ -202,7 +202,9 @@ struct ChecklistView: View {
         do {
             try modelContext.save()
         } catch {
-            print("Failed to delete completed items:", error)
+            assertionFailure(
+                "Failed to delete completed items: \(error)"
+            )
         }
     }
     
@@ -214,7 +216,9 @@ struct ChecklistView: View {
         do {
             try modelContext.save()
         } catch {
-            print("Failed to delete list:", error)
+            assertionFailure(
+                "Failed to delete list: \(error)"
+            )
         }
     }
 }

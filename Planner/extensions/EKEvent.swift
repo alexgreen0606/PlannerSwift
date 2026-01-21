@@ -15,6 +15,7 @@ extension EKEvent {
         openEventSheet: ((EKEvent) -> Void)?,
         animation: Namespace.ID?
     ) -> some View {
+        
         let validOpenEventSheet =
             openEventSheet != nil
             ? {
@@ -31,14 +32,15 @@ extension EKEvent {
             openEventSheet: validOpenEventSheet
         )
 
-        if openEventSheet == nil || animation == nil {
-            timeVal
-        } else {
+        if openEventSheet != nil, let animation {
             timeVal
                 .matchedTransitionSource(
-                    id: String(describing: self.eventIdentifier),
-                    in: animation!
+                    id:
+                        "\(String(describing: self.eventIdentifier))-\(animation)-\(self.isAllDay)",
+                    in: animation
                 )
+        } else {
+            timeVal
         }
     }
 }

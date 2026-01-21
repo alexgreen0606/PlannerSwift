@@ -188,7 +188,9 @@ struct FolderView: View {
         do {
             try modelContext.save()
         } catch {
-            print("Failed to delete folder:", error)
+            assertionFailure(
+                "Failed to delete folder: \(error)"
+            )
         }
     }
 

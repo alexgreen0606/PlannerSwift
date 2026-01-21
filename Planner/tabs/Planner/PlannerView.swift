@@ -5,6 +5,8 @@
 //  Created by Alex Green on 12/1/25.
 //
 
+import Contacts
+import ContactsUI
 import EventKit
 import SwiftData
 import SwiftDate
@@ -13,9 +15,10 @@ import SwiftUI
 struct CalendarEventSheetContext: Identifiable {
     var event: EKEvent
     var namespace: Namespace.ID
+    var contact: CNContact?
 
     var id: String {
-        "\(String(describing: event.eventIdentifier))-\(namespace)"
+        "\(String(describing: event.eventIdentifier))-\(namespace)-\(event.isAllDay)"
     }
 }
 
@@ -82,7 +85,7 @@ struct PlannerView: View {
             )
         }
     }
-    
+
     // MARK: - Swift Data
 
     private var calendarSettings: CalendarSettings? {
@@ -92,9 +95,9 @@ struct PlannerView: View {
     private var planner: Planner? {
         planners.first
     }
-    
+
     // MARK: - Helper Variables
-    
+
     private var date: Date {
         datestamp.date ?? Date()
     }
@@ -107,7 +110,7 @@ struct PlannerView: View {
         plannerType == .future
             ? planner?.showCanceled == true : planner?.showCompleted == true
     }
-    
+
     private var rawCheckedEvents: [PlannerEvent] {
         guard let planner else {
             return []
@@ -121,7 +124,7 @@ struct PlannerView: View {
                 calendarEventToggler.isPlannerEventChecked($0)
             }
     }
-    
+
     // MARK: - UI Lists
 
     private var sortedOpenPlans: [PlannerEvent] {
@@ -189,12 +192,7 @@ struct PlannerView: View {
                     showWeather: true,
                     iconMap: calendarSettings?.iconMap ?? [:],
                     animation: sheetAnimation,
-                    openCalendarEventSheet: { event in
-                        calendarEventSheetContext = CalendarEventSheetContext(
-                            event: event,
-                            namespace: sheetAnimation
-                        )
-                    }
+                    openCalendarEventSheet: openCalendarEventSheet
                 ),
                 customToggleConfig: toggleEventIconConfig,
                 checkedHeader: plannerType.checkedHeader,
@@ -331,45 +329,39 @@ struct PlannerView: View {
             synchronizeCalendarEvents()
         }
         .sheet(item: $calendarEventSheetContext) { context in
-            switch context.event.calendar.allowsContentModifications {
-            case true:
-                EditCalendarEventView(
-                    event: context.event,
-                    eventStore: calendarStore.ekEventStore
-                ) { action, updatedEvent in
-                    reloadCalendar()
-                    calendarEventSheetContext = nil
-                }
-                .tint(themeColor.swiftUIColor)
-                .ignoresSafeArea()
-                .navigationTransition(
-                    .zoom(
-                        sourceID: String(
-                            describing: context.event.eventIdentifier
-                        ),
-                        in: context.namespace
-                    )
-                )
+            Group {
+                if let contact = context.contact {
+                    ContactFormView(contact: contact)
+                } else {
+                    switch context.event.calendar.allowsContentModifications {
+                    case true:
+                        EditCalendarEventFormView(
+                            event: context.event,
+                            eventStore: calendarStore.ekEventStore
+                        ) { action, updatedEvent in
+                            reloadCalendar()
+                            calendarEventSheetContext = nil
+                        }
 
-            case false:
-                ViewCalendarEventView(event: context.event)
-                    .tint(themeColor.swiftUIColor)
-                    .presentationDetents([.height(340)])
-                    .ignoresSafeArea()
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: String(
-                                describing: context.event.eventIdentifier
-                            ),
-                            in: context.namespace
-                        )
-                    )
+                    case false:
+                        ViewCalendarEventFormView(event: context.event)
+                            .presentationDetents([.height(340)])
+                    }
+                }
             }
+            .tint(themeColor.swiftUIColor)
+            .ignoresSafeArea()
+            .navigationTransition(
+                .zoom(
+                    sourceID: context.id,
+                    in: context.namespace
+                )
+            )
         }
     }
-    
+
     // MARK: - Data Handlers
-    
+
     private func synchronizeCalendarEvents() {
         calendarPlannerEvents =
             modelContext.synchronize(
@@ -380,14 +372,14 @@ struct PlannerView: View {
                 with: calendarSettings
             ) ?? calendarPlannerEvents
     }
-    
+
     private func reloadCalendar() {
         calendarStore.refresh(
             hiddenCalendarIds: calendarSettings?
                 .hiddenCalendarIds ?? []
         )
     }
-    
+
     // MARK: - List Actions
 
     private func createEvent(
@@ -525,9 +517,9 @@ struct PlannerView: View {
 
         try? modelContext.save()
     }
-    
+
     // MARK: - Sheet Handlers
-    
+
     private func openPlannerEventSheet(
         for event: PlannerEvent
     ) {
@@ -537,12 +529,33 @@ struct PlannerView: View {
     private func openCalendarEventSheet(
         for event: EKEvent
     ) {
+        // Open the contact for birthday events.
+        var contact: CNContact? = nil
+        if event.calendar.type == .birthday,
+            let contactId = event.birthdayContactIdentifier
+        {
+
+            let store = CNContactStore()
+
+            do {
+                contact = try store.unifiedContact(
+                    withIdentifier: contactId,
+                    keysToFetch: [
+                        CNContactViewController.descriptorForRequiredKeys()
+                    ] as [CNKeyDescriptor]
+                )
+            } catch {
+                assertionFailure("Failed to fetch birthday contact: \(error)")
+            }
+        }
+
         calendarEventSheetContext = CalendarEventSheetContext(
             event: event,
-            namespace: sheetAnimation
+            namespace: sheetAnimation,
+            contact: contact
         )
     }
-    
+
     // MARK: - Overflow Actions
 
     private func deleteAllCheckedEvents() {
@@ -553,16 +566,18 @@ struct PlannerView: View {
                     modelContext.delete($0)
                     return
                 }
-                
+
                 calendarStore.delete(event: calendarEvent)
             }
-        
+
         reloadCalendar()
 
         do {
             try modelContext.save()
         } catch {
-            print("Failed to delete checked events:", error)
+            assertionFailure(
+                "Failed to delete checked events: \(error)"
+            )
         }
     }
 }

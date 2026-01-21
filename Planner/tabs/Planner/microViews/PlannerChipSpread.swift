@@ -61,18 +61,19 @@ struct PlannerChipSpreadView: View {
                     disableInteraction: openCalendarEventSheet == nil
                 )
 
-                if openCalendarEventSheet == nil || animation == nil {
-                    chip
-                } else {
+                if let openCalendarEventSheet, let animation {
                     chip
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            openCalendarEventSheet!(event)
+                            openCalendarEventSheet(event)
                         }
                         .matchedTransitionSource(
-                            id: String(describing: event.eventIdentifier),
-                            in: animation!
+                            id:
+                                "\(String(describing: event.eventIdentifier))-\(animation)-\(event.isAllDay)",
+                            in: animation
                         )
+                } else {
+                    chip
                 }
             }
         }

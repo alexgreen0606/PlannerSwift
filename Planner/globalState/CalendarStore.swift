@@ -166,7 +166,7 @@ class CalendarStore: ObservableObject {
         do {
             try eventStore.remove(event, span: .thisEvent, commit: true)
         } catch {
-            print("Failed to delete event: \(error)")
+            assertionFailure("Failed to delete event: \(error)")
         }
     }
 
