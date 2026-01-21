@@ -17,6 +17,9 @@ struct SettingsView: View {
         ThemeColor.blue
     @AppStorage("showListSeparators") private var showListSeparators: Bool =
         true
+    @AppStorage("deletePlansDelay") private var deletePlansDelay:
+        DeletePlansDelay =
+            DeletePlansDelay.oneMonth
 
     @Environment(\.modelContext) private var modelContext
     @Query private var calendarSettingsList: [CalendarSettings]
@@ -24,7 +27,7 @@ struct SettingsView: View {
     @EnvironmentObject var calendarStore: CalendarStore
 
     @State private var calendarRefreshDebounce: Task<Void, Never>?
-    
+
     private var calendarSettings: CalendarSettings? {
         calendarSettingsList.first
     }
@@ -40,7 +43,7 @@ struct SettingsView: View {
         "dollarsign",
         "mountain.2.fill",
         "dog.fill",
-        "basketball.fill"
+        "basketball.fill",
     ]
 
     var body: some View {
@@ -63,6 +66,32 @@ struct SettingsView: View {
                 } header: {
                     Text("Style")
                 }
+
+                Section {
+                    
+                    Picker("Delete Past Plans", selection: $deletePlansDelay) {
+                        ForEach(DeletePlansDelay.allCases, id: \.self) {
+                            option in
+                            Text(option.label)
+                                .tag(option)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    
+                    Picker("Fade Checked Items", selection: $deletePlansDelay) {
+                        
+                    }
+                    .pickerStyle(.menu)
+                    
+                    Picker("Delete Canceled Plans", selection: $deletePlansDelay) {
+                        
+                    }
+                    .pickerStyle(.menu)
+                    
+                } header: {
+                    Text("Timing")
+                }
+                .tint(themeColor.swiftUIColor)
 
                 Section {
                     ForEach(
@@ -108,7 +137,9 @@ struct SettingsView: View {
                             Menu {
                                 ForEach(iconOptions, id: \.self) { iconName in
                                     Button("", systemImage: iconName) {
-                                        guard let calendarSettings else { return }
+                                        guard let calendarSettings else {
+                                            return
+                                        }
 
                                         calendarSettings.iconMap[
                                             calendar.calendarIdentifier
@@ -128,7 +159,7 @@ struct SettingsView: View {
                         }
                     }
                 } header: {
-                    Text("Calendars")
+                    Text("Visible Calendars")
                 }
             }
             .navigationTitle("Settings")

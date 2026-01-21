@@ -302,14 +302,10 @@ struct PlannerSearchView: View {
             .onChange(of: calendarSettings?.checkedCalendarEventIds) { _, _ in
                 scheduleFilterDebounce()
             }
-            // Load in the calendar data and settings.
+            // Load in the calendar settings.
             .task {
                 modelContext.ensureCalendarSettings(
                     settings: calendarSettingsList
-                )
-
-                calendarStore.requestAccessAndLoadIfNeeded(
-                    hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? []
                 )
             }
             // Reload the data from the page.

@@ -76,6 +76,30 @@ extension ModelContext {
 
     }
 
+    // TODO: this should NOT run if the user has the delete planners after... set to never.
+    @MainActor
+    func deleteStaleCalendarEventPositions(
+        in settings: CalendarSettings,
+        with eventIds: Set<String>
+    ) {
+
+        // Remove any sort index whose event ID no longer exists in the calendar.
+        settings.sortIndexMap.keys
+            .filter { !eventIds.contains($0) }
+            .forEach { staleKey in
+                print("deleting \(staleKey)")
+                settings.sortIndexMap.removeValue(forKey: staleKey)
+            }
+
+        do {
+            try save()
+        } catch {
+            assertionFailure(
+                "Failed to clean calendar event sort indices: \(error)"
+            )
+        }
+    }
+
     @MainActor
     func synchronize(
         calendarEvents events: [EKEvent],

@@ -23,6 +23,7 @@ class CalendarStore: ObservableObject {
     @Published private(set) var singleDayEventsByDatestamp:
         [String: [EKEvent]] = [:]
     @Published var refreshKey: UUID? = nil
+    @Published private(set) var existingEventIds: Set<String> = []
 
     var ekEventStore: EKEventStore {
         eventStore
@@ -85,7 +86,7 @@ class CalendarStore: ObservableObject {
 
     private func loadEvents(hiddenCalendarIds: Set<String>) {
         let start = DateInRegion(Date(), region: .local)
-            .dateByAdding(-1, .month)
+            .dateByAdding(-1, .month) // TODO: use the user setting here
             .date
 
         let end = DateInRegion(Date(), region: .local)
@@ -102,8 +103,11 @@ class CalendarStore: ObservableObject {
 
         var allDayMap: [String: [EKEvent]] = [:]
         var singleDayMap: [String: [EKEvent]] = [:]
+        var eventIds: Set<String> = []
 
         for event in events {
+            eventIds.insert(event.eventIdentifier)
+            
             if hiddenCalendarIds.contains(event.calendar.calendarIdentifier) {
                 continue
             }
@@ -125,6 +129,7 @@ class CalendarStore: ObservableObject {
             }
         }
 
+        existingEventIds = eventIds
         allDayEventsByDatestamp = allDayMap
         singleDayEventsByDatestamp = singleDayMap
         refreshKey = UUID()
