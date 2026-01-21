@@ -11,7 +11,7 @@ import SwiftDate
 import SwiftUI
 
 struct ContentView: View {
-    @AppStorage("lastCleanedDatestamp") var lastCleanedDatestamp: String = ""
+    @AppStorage("lastCleansedDatestamp") var lastCleansedDatestamp: String = ""
     @AppStorage("themeColor") var themeColor: ThemeColor =
         ThemeColor.blue
 
@@ -156,11 +156,11 @@ struct ContentView: View {
 
     // Runs once at the start of every day to cleanup old data.
     private func cleanseStorage() {
-        guard lastCleanedDatestamp != todaystampWatcher.todaystamp else {
+        guard lastCleansedDatestamp != todaystampWatcher.todaystamp else {
             return
         }
 
-        lastCleanedDatestamp = todaystampWatcher.todaystamp
+        lastCleansedDatestamp = todaystampWatcher.todaystamp
         print("Running app cleanup...")
 
         // Delete sort indices for events that no longer exist in the calendar.
