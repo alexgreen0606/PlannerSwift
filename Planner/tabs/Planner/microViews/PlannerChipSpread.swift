@@ -21,7 +21,6 @@ struct PlannerChipSpreadView: View {
     let openCalendarEventSheet: ((EKEvent) -> Void)?
 
     @ObservedObject var weatherStore = WeatherStore.shared
-    @EnvironmentObject var calendarStore: CalendarStore
 
     let unit: UnitTemperature =
         Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit

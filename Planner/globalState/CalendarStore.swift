@@ -15,6 +15,10 @@ class CalendarStore: ObservableObject {
     static let shared = CalendarStore()
     private init() {}
 
+    @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
+        KeepPastPlansDuration =
+            KeepPastPlansDuration.oneMonth
+
     private let eventStore = EKEventStore()
 
     @Published private(set) var calendarsById: [String: EKCalendar] = [:]
@@ -39,29 +43,25 @@ class CalendarStore: ObservableObject {
 
     @MainActor
     func requestAccessAndLoadIfNeeded(
-        hiddenCalendarIds: Set<String>,
-        minCalendarDate: Date
+        hiddenCalendarIds: Set<String>
     ) {
         switch EKEventStore.authorizationStatus(for: .event) {
         case .authorized:
             load(
-                hiddenCalendarIds: hiddenCalendarIds,
-                minCalendarDate: minCalendarDate
+                hiddenCalendarIds: hiddenCalendarIds
             )
         case .notDetermined:
             requestAccess(
-                hiddenCalendarIds: hiddenCalendarIds,
-                minCalendarDate: minCalendarDate
+                hiddenCalendarIds: hiddenCalendarIds
             )
         default:
             break
         }
     }
 
-    func refresh(hiddenCalendarIds: Set<String>, minCalendarDate: Date) {
+    func refresh(hiddenCalendarIds: Set<String>) {
         load(
-            hiddenCalendarIds: hiddenCalendarIds,
-            minCalendarDate: minCalendarDate
+            hiddenCalendarIds: hiddenCalendarIds
         )
     }
 
@@ -75,25 +75,22 @@ class CalendarStore: ObservableObject {
     }
 
     private func requestAccess(
-        hiddenCalendarIds: Set<String>,
-        minCalendarDate: Date
+        hiddenCalendarIds: Set<String>
     ) {
         eventStore.requestFullAccessToEvents { granted, error in
             guard granted else { return }
             Task { @MainActor in
                 self.load(
-                    hiddenCalendarIds: hiddenCalendarIds,
-                    minCalendarDate: minCalendarDate
+                    hiddenCalendarIds: hiddenCalendarIds
                 )
             }
         }
     }
 
-    private func load(hiddenCalendarIds: Set<String>, minCalendarDate: Date) {
+    private func load(hiddenCalendarIds: Set<String>) {
         loadCalendars()
         loadEvents(
-            hiddenCalendarIds: hiddenCalendarIds,
-            minCalendarDate: minCalendarDate
+            hiddenCalendarIds: hiddenCalendarIds
         )
     }
 
@@ -106,9 +103,10 @@ class CalendarStore: ObservableObject {
     }
 
     private func loadEvents(
-        hiddenCalendarIds: Set<String>,
-        minCalendarDate: Date
+        hiddenCalendarIds: Set<String>
     ) {
+        let minCalendarDate = keepPastPlansDuration.cutoffDate
+
         let start =
             minCalendarDate == .distantPast
             ? DateInRegion(Date(), region: .local)

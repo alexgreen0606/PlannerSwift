@@ -11,15 +11,23 @@ import SwiftData
 import SwiftUI
 
 struct SettingsView: View {
+    
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
         .system
+    
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
+    
     @AppStorage("showListSeparators") private var showListSeparators: Bool =
         true
+    
     @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
         KeepPastPlansDuration =
             KeepPastPlansDuration.oneMonth
+    
+    @AppStorage("completionTransitionDuration") private var completionTransitionDuration:
+        CompletionTransitionDuration =
+    CompletionTransitionDuration.threeSeconds
 
     var body: some View {
         NavigationStack {
@@ -38,10 +46,14 @@ struct SettingsView: View {
                     .pickerStyle(.menu)
 
                     Picker(
-                        "Completed Item Fade Duration",
-                        selection: $keepPastPlansDuration
+                        "Completion Transition",
+                        selection: $completionTransitionDuration
                     ) {
-                        // TODO: 2 sec, 3sec, 6sec, Instant
+                        ForEach(CompletionTransitionDuration.allCases, id: \.self) {
+                            scheme in
+                            Text(scheme.label)
+                                .tag(scheme)
+                        }
                     }
                     .pickerStyle(.menu)
 

@@ -289,8 +289,7 @@ struct PlannerSearchView: View {
                 ) { action, event in
                     calendarStore.refresh(
                         hiddenCalendarIds: calendarSettings?.hiddenCalendarIds
-                            ?? [],
-                        minCalendarDate: keepPastPlansDuration.cutoffDate
+                            ?? []
                     )
                     isNewEventSheetOpen = false
                 }
@@ -320,8 +319,7 @@ struct PlannerSearchView: View {
             // Reload the data from the page.
             .refreshable {
                 calendarStore.refresh(
-                    hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? [],
-                    minCalendarDate: keepPastPlansDuration.cutoffDate
+                    hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? []
                 )
                 Task {
                     await weatherStore.loadWeather()

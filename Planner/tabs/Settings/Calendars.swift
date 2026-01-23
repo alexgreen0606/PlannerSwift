@@ -11,10 +11,6 @@ import SwiftData
 import SwiftUI
 
 struct CalendarsView: View {
-    
-    @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
-        KeepPastPlansDuration =
-            KeepPastPlansDuration.oneMonth
 
     @Environment(\.modelContext) private var modelContext
     @Query private var calendarSettingsList: [CalendarSettings]
@@ -130,8 +126,7 @@ struct CalendarsView: View {
 
                 // Refresh the calendar data.
                 calendarStore.refresh(
-                    hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? [],
-                    minCalendarDate: keepPastPlansDuration.cutoffDate
+                    hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? []
                 )
             } catch {
             }

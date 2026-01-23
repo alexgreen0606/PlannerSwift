@@ -152,8 +152,7 @@ struct ContentView: View {
             )
 
             calendarStore.requestAccessAndLoadIfNeeded(
-                hiddenCalendarIds: calendarSettings!.hiddenCalendarIds,
-                minCalendarDate: keepPastPlansDuration.cutoffDate
+                hiddenCalendarIds: calendarSettings!.hiddenCalendarIds
             )
 
             cleanseStorage()
@@ -183,10 +182,11 @@ struct ContentView: View {
                 in: calendarSettings,
                 with: calendarStore.existingEventIds
             )
+        } else {
+            // TODO: delete past planners
         }
 
-        // 1: Delete canceled plans. First: add setting "Delete canceled plans: Never/Start of day"
-        // 2: Delete planners older than chosen delay. First: add setting "Delete planners after: 1 month/3 months/6 months/Never"
+        // TODO: Delete canceled plans. First: add setting "Delete canceled plans: Never/Start of day"
     }
 }
 
