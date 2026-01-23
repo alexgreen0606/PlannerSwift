@@ -11,29 +11,33 @@ import SwiftData
 import SwiftUI
 
 struct SettingsView: View {
-    
+
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
         .system
-    
+
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
-    
+
     @AppStorage("showListSeparators") private var showListSeparators: Bool =
         true
-    
+
     @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
         KeepPastPlansDuration =
             KeepPastPlansDuration.oneMonth
-    
-    @AppStorage("toggleTransitionDuration") private var toggleTransitionDuration:
-        ToggleTransitionDuration =
-    ToggleTransitionDuration.threeSeconds
+
+    @AppStorage("keepCanceledPlansDuration") private
+        var keepCanceledPlansDuration: KeepCanceledPlansDuration =
+            KeepCanceledPlansDuration.startOfDay
+
+    @AppStorage("toggleTransitionDuration") private
+        var toggleTransitionDuration: ToggleTransitionDuration =
+            ToggleTransitionDuration.threeSeconds
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    
+
                     Picker(accentColor.title, selection: $accentColor) {
                         ForEach(AccentColor.allCases, id: \.self) {
                             option in
@@ -59,12 +63,12 @@ struct SettingsView: View {
 
                     Toggle("Show List Separators", isOn: $showListSeparators)
                         .tint(accentColor.swiftUIColor)
-                    
+
                 } header: {
                     Text("Appearance")
                 }
                 .listSectionMargins(.bottom, 0)
-                
+
                 Picker("App Theme", selection: $appColorScheme) {
                     ForEach(AppColorScheme.allCases, id: \.rawValue) {
                         scheme in
@@ -77,8 +81,10 @@ struct SettingsView: View {
                 .listSectionMargins(.all, 0)
 
                 Section {
-                    Picker(keepPastPlansDuration.title, selection: $keepPastPlansDuration)
-                    {
+                    Picker(
+                        keepPastPlansDuration.title,
+                        selection: $keepPastPlansDuration
+                    ) {
                         ForEach(KeepPastPlansDuration.allCases, id: \.self) {
                             option in
                             Text(option.label)
@@ -88,10 +94,17 @@ struct SettingsView: View {
                     .pickerStyle(.menu)
 
                     Picker(
-                        "Keep Canceled Plans",
-                        selection: $keepPastPlansDuration
+                        keepCanceledPlansDuration.title,
+                        selection: $keepCanceledPlansDuration
                     ) {
-                        // TODO
+                        ForEach(
+                            KeepCanceledPlansDuration.allCases,
+                            id: \.self
+                        ) {
+                            option in
+                            Text(option.label)
+                                .tag(option)
+                        }
                     }
                     .pickerStyle(.menu)
 
@@ -110,7 +123,7 @@ struct SettingsView: View {
                     Text("Planner")
                 }
                 .listSectionMargins(.top, 0)
-                
+
             }
             .navigationTitle("Settings")
         }

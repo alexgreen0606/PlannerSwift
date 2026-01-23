@@ -94,7 +94,7 @@ extension ModelContext {
         // Sepcial case: do NOT save the context here. This will be done in the parent
         // function that called this.
     }
-    
+
     @MainActor
     func deleteOldPlanners(
         from planners: [Planner],
@@ -102,7 +102,7 @@ extension ModelContext {
     ) {
 
         let cutoffDatestamp = cutoffDate.toFormat("yyyy-MM-dd")
-        
+
         for planner in planners {
             if planner.datestamp < cutoffDatestamp {
                 print("Deleting planner: \(planner.datestamp)")
@@ -112,6 +112,28 @@ extension ModelContext {
 
         // Sepcial case: do NOT save the context here. This will be done in the parent
         // function that called this.
+    }
+
+    @MainActor
+    func deleteCheckedPlans(
+        from planner: Planner
+    ) {
+
+        for event in planner.events {
+            print("\(event.title) \(event.isChecked)")
+            if event.isChecked {
+                print("Deleting checked event: \(event.id)")
+                delete(event)
+            }
+        }
+
+        do {
+            try save()
+        } catch {
+            assertionFailure(
+                "Failed to delete checked plans: \(error)"
+            )
+        }
     }
 
     @MainActor

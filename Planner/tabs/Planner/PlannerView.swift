@@ -274,7 +274,7 @@ struct PlannerView: View {
                         }
                     } message: {
                         Text(
-                            "This action is irreversible."
+                            "Calendar events will not be deleted. This action is irreversible."
                         )
                     }
                 }
@@ -308,7 +308,7 @@ struct PlannerView: View {
             modelContext.ensureCalendarSettings(
                 settings: calendarSettingsList
             )
-            
+
             modelContext.ensurePlanner(
                 planners: planners,
                 datestamp: datestamp
@@ -564,25 +564,12 @@ struct PlannerView: View {
     // MARK: - Overflow Actions
 
     private func deleteAllCheckedEvents() {
+        guard let planner else {
+            return
+        }
 
-        rawCheckedEvents
-            .forEach {
-                guard let calendarEvent = $0.calendarEvent else {
-                    modelContext.delete($0)
-                    return
-                }
-
-                calendarStore.delete(event: calendarEvent)
-            }
+        modelContext.deleteCheckedPlans(from: planner)
 
         reloadCalendar()
-
-        do {
-            try modelContext.save()
-        } catch {
-            assertionFailure(
-                "Failed to delete checked events: \(error)"
-            )
-        }
     }
 }

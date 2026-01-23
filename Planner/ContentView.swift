@@ -13,7 +13,13 @@ import SwiftDate
 import SwiftUI
 
 struct ContentView: View {
+    
+    @AppStorage("keepCanceledPlansDuration") private
+        var keepCanceledPlansDuration: KeepCanceledPlansDuration =
+            KeepCanceledPlansDuration.startOfDay
+    
     @AppStorage("lastCleansedDatestamp") var lastCleansedDatestamp: String = ""
+    
     @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
         KeepPastPlansDuration =
             KeepPastPlansDuration.oneMonth
@@ -168,7 +174,7 @@ struct ContentView: View {
         }
     }
 
-    // Runs once at the start of every day to cleanup old data.
+    // Runs once at the start of every day to delete old data.
     private func cleanseStorage() {
         guard lastCleansedDatestamp != todaystampWatcher.todaystamp else {
             return
@@ -177,27 +183,43 @@ struct ContentView: View {
         print("Sanitizing app storage...")
         lastCleansedDatestamp = todaystampWatcher.todaystamp
 
-        // Delete sort indices for events that no longer exist in the calendar.
-        if let calendarSettings, keepPastPlansDuration != .forever {
-            modelContext.deleteStaleCalendarEventPositions(
-                in: calendarSettings,
-                with: calendarStore.existingEventIds
-            )
+        if keepPastPlansDuration != .forever {
+            
+            // Delete sort indices for events that no longer exist in the calendar.
+            if let calendarSettings {
+                modelContext.deleteStaleCalendarEventPositions(
+                    in: calendarSettings,
+                    with: calendarStore.existingEventIds
+                )
+            }
 
+            // Delete old planners.
             modelContext.deleteOldPlanners(
                 from: planners,
                 before: keepPastPlansDuration.cutoffDate
             )
         }
+        
+        if keepCanceledPlansDuration != .forever {
+            
+            let todaystamp = todaystampWatcher.todaystamp
+            let descriptor = FetchDescriptor<Planner>(
+                    predicate: #Predicate { planner in
+                        planner.datestamp == todaystamp
+                    }
+                )
 
-        // TODO: Delete canceled plans. First: add setting "Delete canceled plans: Never/Start of day"
-
-        do {
-            try modelContext.save()
-        } catch {
-            assertionFailure(
-                "Failed to save the sanitized model context: \(error)"
-            )
+            do {
+                if let todayPlanner = try modelContext.fetch(descriptor).first {
+                    
+                    // Delete canceled plans from today's planner.
+                    modelContext.deleteCheckedPlans(from: todayPlanner)
+                }
+            } catch {
+                assertionFailure(
+                    "Failed to delete canceled plans: \(error)"
+                )
+            }
         }
     }
 }
