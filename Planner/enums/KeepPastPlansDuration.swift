@@ -17,11 +17,11 @@ enum KeepPastPlansDuration: String, Codable, CaseIterable {
     var label: String {
         switch self {
         case .oneMonth:
-            return "For 1 Month"
+            return "1 Month"
         case .threeMonths:
-            return "For 3 Months"
+            return "3 Months"
         case .sixMonths:
-            return "For 6 Months"
+            return "6 Months"
         case .forever:
             return "Forever"
         }
