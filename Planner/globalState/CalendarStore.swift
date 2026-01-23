@@ -160,6 +160,61 @@ class CalendarStore: ObservableObject {
         refreshKey = UUID()
     }
 
+    @MainActor
+    func ensureCalendarEvents(
+        for datestamp: String,
+        hiddenCalendarIds: Set<String>
+    ) {
+        // Already loaded for this day.
+        if allDayEventsByDatestamp[datestamp] != nil
+            || singleDayEventsByDatestamp[datestamp] != nil
+        {
+            return
+        }
+
+        guard let date = datestamp.date else {
+            assertionFailure("Invalid datestamp: \(datestamp)")
+            return
+        }
+
+        let start =
+            date
+            .in(region: .local)
+            .dateAtStartOf(.day)
+            .date
+
+        let end = start + 1.days
+
+        let predicate = eventStore.predicateForEvents(
+            withStart: start,
+            end: end,
+            calendars: nil
+        )
+
+        let events = eventStore.events(matching: predicate)
+
+        var allDayEvents: [EKEvent] = []
+        var singleDayEvents: [EKEvent] = []
+
+        for event in events {
+            existingEventIds.insert(event.eventIdentifier)
+
+            if hiddenCalendarIds.contains(event.calendar.calendarIdentifier) {
+                continue
+            }
+
+            if event.isAllDay {
+                allDayEvents.append(event)
+            } else {
+                singleDayEvents.append(event)
+            }
+        }
+
+        allDayEventsByDatestamp[datestamp] = allDayEvents
+        singleDayEventsByDatestamp[datestamp] = singleDayEvents
+        refreshKey = UUID()
+    }
+
     // TODO: use this for ALL-DAY events, then create a new one for MULTI_DAY
     private func expandedDatestamps(for event: EKEvent) -> [String] {
         var results: [String] = []

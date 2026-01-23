@@ -29,7 +29,7 @@ struct PlannerView: View {
     @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
         KeepPastPlansDuration =
             KeepPastPlansDuration.oneMonth
-    
+
     @AppStorage("themeColor") var themeColor: ThemeColor =
         ThemeColor.blue
 
@@ -309,13 +309,18 @@ struct PlannerView: View {
             }
         }
         .task {
+            modelContext.ensureCalendarSettings(
+                settings: calendarSettingsList
+            )
+            
             modelContext.ensurePlanner(
                 planners: planners,
                 datestamp: datestamp
             )
 
-            modelContext.ensureCalendarSettings(
-                settings: calendarSettingsList
+            calendarStore.ensureCalendarEvents(
+                for: datestamp,
+                hiddenCalendarIds: calendarSettings!.hiddenCalendarIds
             )
 
             synchronizeCalendarEvents()
