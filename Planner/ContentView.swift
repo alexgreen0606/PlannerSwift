@@ -16,6 +16,9 @@ struct ContentView: View {
     @AppStorage("lastCleansedDatestamp") var lastCleansedDatestamp: String = ""
     @AppStorage("themeColor") var themeColor: ThemeColor =
         ThemeColor.blue
+    @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
+        KeepPastPlansDuration =
+            KeepPastPlansDuration.oneMonth
 
     @Environment(\.modelContext) private var modelContext
     @Query private var calendarSettingsList: [CalendarSettings]
@@ -151,7 +154,8 @@ struct ContentView: View {
             )
 
             calendarStore.requestAccessAndLoadIfNeeded(
-                hiddenCalendarIds: calendarSettings!.hiddenCalendarIds
+                hiddenCalendarIds: calendarSettings!.hiddenCalendarIds,
+                minCalendarDate: keepPastPlansDuration.cutoffDate
             )
 
             cleanseStorage()
@@ -176,7 +180,7 @@ struct ContentView: View {
         print("Running app cleanup...")
 
         // Delete sort indices for events that no longer exist in the calendar.
-        if let calendarSettings {
+        if let calendarSettings, keepPastPlansDuration != .forever {
             modelContext.deleteStaleCalendarEventPositions(
                 in: calendarSettings,
                 with: calendarStore.existingEventIds

@@ -20,6 +20,11 @@ struct PlannerCoverContext: Identifiable {
 }
 
 struct PlannerSearchView: View {
+
+    @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
+        KeepPastPlansDuration =
+            KeepPastPlansDuration.oneMonth
+
     @Environment(\.modelContext) private var modelContext
     @Query private var calendarSettingsList: [CalendarSettings]
 
@@ -176,6 +181,9 @@ struct PlannerSearchView: View {
                             DatePicker(
                                 "Open a planner",
                                 selection: $selectedCalendarDate,
+                                in: keepPastPlansDuration
+                                    .cutoffDate...todaystampWatcher
+                                    .maxCalendarDate,
                                 displayedComponents: .date
                             )
                             .datePickerStyle(.graphical)
@@ -281,7 +289,8 @@ struct PlannerSearchView: View {
                 ) { action, event in
                     calendarStore.refresh(
                         hiddenCalendarIds: calendarSettings?.hiddenCalendarIds
-                            ?? []
+                            ?? [],
+                        minCalendarDate: keepPastPlansDuration.cutoffDate
                     )
                     isNewEventSheetOpen = false
                 }
@@ -311,7 +320,8 @@ struct PlannerSearchView: View {
             // Reload the data from the page.
             .refreshable {
                 calendarStore.refresh(
-                    hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? []
+                    hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? [],
+                    minCalendarDate: keepPastPlansDuration.cutoffDate
                 )
                 Task {
                     await weatherStore.loadWeather()
@@ -345,8 +355,8 @@ struct PlannerSearchView: View {
 
     private func computeFilteredEventMap() {
         let today = todaystampWatcher.todaystamp
-        let todayDate = today.toDate("yyyy-MM-dd", region: .local)
-        let oneYearOut = todayDate?.dateByAdding(3, .year)
+        let todayDate = today.toDate("yyyy-MM-dd", region: .local)?.date
+        let maxDate = todaystampWatcher.maxCalendarDate
 
         // ------------------------------------------------------------------
         // 1. Collect all datestamps that have events (all-day + single-day)
@@ -363,11 +373,11 @@ struct PlannerSearchView: View {
         let dateRangeFiltered: [(year: String, datestamp: String)] =
             eventDatestamps.compactMap { datestamp in
                 guard
-                    let date = datestamp.toDate("yyyy-MM-dd", region: .local),
+                    let date = datestamp.toDate("yyyy-MM-dd", region: .local)?
+                        .date,
                     let todayDate,
-                    let oneYearOut,
                     date > todayDate,
-                    date < oneYearOut
+                    date < maxDate
                 else { return nil }
 
                 return (String(date.year), datestamp)

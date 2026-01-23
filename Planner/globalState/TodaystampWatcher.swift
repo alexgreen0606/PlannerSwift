@@ -18,6 +18,9 @@ class TodaystampWatcher: ObservableObject {
 
     @Published private(set) var todaystamp: String =
         TodaystampWatcher.makeStamp()
+    
+    @Published private(set) var maxCalendarDate: Date =
+        TodaystampWatcher.makeMaxCalendarDate()
 
     private var timer: Timer?
 
@@ -30,6 +33,12 @@ class TodaystampWatcher: ObservableObject {
             "yyyy-MM-dd",
             locale: Locale.current
         )
+    }
+    
+    private static func makeMaxCalendarDate() -> Date {
+        DateInRegion(Date(), region: .local)
+            .dateByAdding(3, .year)
+            .date
     }
 
     private func scheduleMidnightUpdate() {
@@ -52,6 +61,7 @@ class TodaystampWatcher: ObservableObject {
 
     @objc private func updateStamp() {
         todaystamp = Self.makeStamp()
+        maxCalendarDate = Self.makeMaxCalendarDate()
 
         // Reschedule for tomorrow.
         scheduleMidnightUpdate()

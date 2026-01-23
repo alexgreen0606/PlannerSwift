@@ -26,6 +26,10 @@ struct PlannerView: View {
     private let datestamp: String
     private let closePlanner: () -> Void
 
+    @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
+        KeepPastPlansDuration =
+            KeepPastPlansDuration.oneMonth
+    
     @AppStorage("themeColor") var themeColor: ThemeColor =
         ThemeColor.blue
 
@@ -376,7 +380,8 @@ struct PlannerView: View {
     private func reloadCalendar() {
         calendarStore.refresh(
             hiddenCalendarIds: calendarSettings?
-                .hiddenCalendarIds ?? []
+                .hiddenCalendarIds ?? [],
+            minCalendarDate: keepPastPlansDuration.cutoffDate
         )
     }
 

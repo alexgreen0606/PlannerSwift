@@ -76,7 +76,6 @@ extension ModelContext {
 
     }
 
-    // TODO: this should NOT run if the user has the delete planners after... set to never.
     @MainActor
     func deleteStaleCalendarEventPositions(
         in settings: CalendarSettings,

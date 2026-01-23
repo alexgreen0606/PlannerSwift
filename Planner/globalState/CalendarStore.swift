@@ -38,42 +38,63 @@ class CalendarStore: ObservableObject {
     }
 
     @MainActor
-    func requestAccessAndLoadIfNeeded(hiddenCalendarIds: Set<String>) {
+    func requestAccessAndLoadIfNeeded(
+        hiddenCalendarIds: Set<String>,
+        minCalendarDate: Date
+    ) {
         switch EKEventStore.authorizationStatus(for: .event) {
         case .authorized:
-            load(hiddenCalendarIds: hiddenCalendarIds)
+            load(
+                hiddenCalendarIds: hiddenCalendarIds,
+                minCalendarDate: minCalendarDate
+            )
         case .notDetermined:
-            requestAccess(hiddenCalendarIds: hiddenCalendarIds)
+            requestAccess(
+                hiddenCalendarIds: hiddenCalendarIds,
+                minCalendarDate: minCalendarDate
+            )
         default:
             break
         }
     }
 
-    func refresh(hiddenCalendarIds: Set<String>) {
-        load(hiddenCalendarIds: hiddenCalendarIds)
+    func refresh(hiddenCalendarIds: Set<String>, minCalendarDate: Date) {
+        load(
+            hiddenCalendarIds: hiddenCalendarIds,
+            minCalendarDate: minCalendarDate
+        )
     }
-    
+
     // More up-to-date than using event.calendar.cgColor directly.
     func calendarColor(for id: String) -> Color {
         guard let calendar = calendarsById[id] else {
             return Color(uiColor: .secondaryLabel)
         }
-        
+
         return Color(calendar.cgColor)
     }
 
-    private func requestAccess(hiddenCalendarIds: Set<String>) {
+    private func requestAccess(
+        hiddenCalendarIds: Set<String>,
+        minCalendarDate: Date
+    ) {
         eventStore.requestFullAccessToEvents { granted, error in
             guard granted else { return }
             Task { @MainActor in
-                self.load(hiddenCalendarIds: hiddenCalendarIds)
+                self.load(
+                    hiddenCalendarIds: hiddenCalendarIds,
+                    minCalendarDate: minCalendarDate
+                )
             }
         }
     }
 
-    private func load(hiddenCalendarIds: Set<String>) {
+    private func load(hiddenCalendarIds: Set<String>, minCalendarDate: Date) {
         loadCalendars()
-        loadEvents(hiddenCalendarIds: hiddenCalendarIds)
+        loadEvents(
+            hiddenCalendarIds: hiddenCalendarIds,
+            minCalendarDate: minCalendarDate
+        )
     }
 
     private func loadCalendars() {
@@ -84,10 +105,14 @@ class CalendarStore: ObservableObject {
         )
     }
 
-    private func loadEvents(hiddenCalendarIds: Set<String>) {
-        let start = DateInRegion(Date(), region: .local)
-            .dateByAdding(-1, .month) // TODO: use the user setting here
-            .date
+    private func loadEvents(
+        hiddenCalendarIds: Set<String>,
+        minCalendarDate: Date
+    ) {
+        let start =
+            minCalendarDate == .distantPast
+            ? DateInRegion(Date(), region: .local)
+                .date : minCalendarDate
 
         let end = DateInRegion(Date(), region: .local)
             .dateByAdding(3, .year)
@@ -107,7 +132,7 @@ class CalendarStore: ObservableObject {
 
         for event in events {
             eventIds.insert(event.eventIdentifier)
-            
+
             if hiddenCalendarIds.contains(event.calendar.calendarIdentifier) {
                 continue
             }
