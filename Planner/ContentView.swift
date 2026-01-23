@@ -20,6 +20,7 @@ struct ContentView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Query private var calendarSettingsList: [CalendarSettings]
+    @Query private var planners: [Planner]
 
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
 
@@ -173,8 +174,8 @@ struct ContentView: View {
             return
         }
 
+        print("Sanitizing app storage...")
         lastCleansedDatestamp = todaystampWatcher.todaystamp
-        print("Running app cleanup...")
 
         // Delete sort indices for events that no longer exist in the calendar.
         if let calendarSettings, keepPastPlansDuration != .forever {
@@ -182,11 +183,22 @@ struct ContentView: View {
                 in: calendarSettings,
                 with: calendarStore.existingEventIds
             )
-        } else {
-            // TODO: delete past planners
+
+            modelContext.deleteOldPlanners(
+                from: planners,
+                before: keepPastPlansDuration.cutoffDate
+            )
         }
 
         // TODO: Delete canceled plans. First: add setting "Delete canceled plans: Never/Start of day"
+
+        do {
+            try modelContext.save()
+        } catch {
+            assertionFailure(
+                "Failed to save the sanitized model context: \(error)"
+            )
+        }
     }
 }
 

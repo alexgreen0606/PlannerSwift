@@ -7,6 +7,7 @@
 
 import EventKit
 import SwiftData
+import SwiftDate
 
 extension ModelContext {
     @MainActor
@@ -86,17 +87,31 @@ extension ModelContext {
         settings.sortIndexMap.keys
             .filter { !eventIds.contains($0) }
             .forEach { staleKey in
-                print("deleting \(staleKey)")
+                print("Deleting sort index for calendar event: \(staleKey)")
                 settings.sortIndexMap.removeValue(forKey: staleKey)
             }
 
-        do {
-            try save()
-        } catch {
-            assertionFailure(
-                "Failed to clean calendar event sort indices: \(error)"
-            )
+        // Sepcial case: do NOT save the context here. This will be done in the parent
+        // function that called this.
+    }
+    
+    @MainActor
+    func deleteOldPlanners(
+        from planners: [Planner],
+        before cutoffDate: Date
+    ) {
+
+        let cutoffDatestamp = cutoffDate.toFormat("yyyy-MM-dd")
+        
+        for planner in planners {
+            if planner.datestamp < cutoffDatestamp {
+                print("Deleting planner: \(planner.datestamp)")
+                delete(planner)
+            }
         }
+
+        // Sepcial case: do NOT save the context here. This will be done in the parent
+        // function that called this.
     }
 
     @MainActor
