@@ -30,8 +30,8 @@ struct PlannerView: View {
         KeepPastPlansDuration =
             KeepPastPlansDuration.oneMonth
 
-    @AppStorage("themeColor") var themeColor: ThemeColor =
-        ThemeColor.blue
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        AccentColor.blue
 
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]
@@ -203,7 +203,7 @@ struct PlannerView: View {
                 checkedFooter: plannerType.getCheckedFooter(for: datestamp),
                 emptyUncheckedLabel: "No plans",
                 emptyCheckedLabel: plannerType.emptyCheckedLabel,
-                tint: themeColor.swiftUIColor,
+                tint: accentColor.swiftUIColor,
                 getEndAdornment: { event in
                     AnyView(
                         event.timeValueView(
@@ -211,7 +211,7 @@ struct PlannerView: View {
                             openPlannerEventSheet: openPlannerEventSheet,
                             openCalendarEventSheet: openCalendarEventSheet,
                             animation: sheetAnimation,
-                            accentColor: themeColor.swiftUIColor
+                            accentColor: accentColor.swiftUIColor
                         )
                     )
                 },
@@ -294,7 +294,7 @@ struct PlannerView: View {
                         scrollProxy?.slideTo("UNCHECKED", at: .bottom)
                         createEvent(at: sortedOpenPlans.count)
                     }
-                    .tint(themeColor.swiftUIColor)
+                    .tint(accentColor.swiftUIColor)
                 }
             }
 
@@ -358,7 +358,7 @@ struct PlannerView: View {
                     }
                 }
             }
-            .tint(themeColor.swiftUIColor)
+            .tint(accentColor.swiftUIColor)
             .ignoresSafeArea()
             .navigationTransition(
                 .zoom(

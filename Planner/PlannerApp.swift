@@ -10,8 +10,12 @@ import SwiftUI
 
 @main
 struct PlannerApp: App {
-    @AppStorage("themeColor") var themeColor: ThemeColor =
-        ThemeColor.blue
+    
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        AccentColor.blue
+    
+    @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
+        .system
 
     let weatherStore = WeatherStore.shared
     let todaystampWatcher = TodaystampWatcher.shared
@@ -22,7 +26,8 @@ struct PlannerApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .accentColor(themeColor.swiftUIColor)
+                .preferredColorScheme(appColorScheme.colorScheme)
+                .accentColor(accentColor.swiftUIColor)
                 .environmentObject(todaystampWatcher)
                 .environmentObject(weatherStore)
                 .environmentObject(calendarStore)

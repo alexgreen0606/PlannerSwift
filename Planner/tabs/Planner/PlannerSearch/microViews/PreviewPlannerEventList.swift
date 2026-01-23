@@ -14,8 +14,8 @@ struct PreviewPlannerEventListView: View {
 
     @Environment(\.displayScale) private var displayScale
     
-    @AppStorage("themeColor") var themeColor: ThemeColor =
-        ThemeColor.blue
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        AccentColor.blue
 
     var body: some View {
         if !events.isEmpty {
@@ -33,7 +33,7 @@ struct PreviewPlannerEventListView: View {
                             openPlannerEventSheet: nil,
                             openCalendarEventSheet: nil,
                             animation: nil,
-                            accentColor: themeColor.swiftUIColor
+                            accentColor: accentColor.swiftUIColor
                         )
                     }
 

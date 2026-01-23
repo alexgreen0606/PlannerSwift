@@ -11,14 +11,14 @@ struct PlannerIcon: View {
     let datestamp: String
     let scale: CGFloat
 
-    @AppStorage("themeColor") var themeColor: ThemeColor =
-        ThemeColor.blue
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        AccentColor.blue
 
     @EnvironmentObject var todaystampManager: TodaystampWatcher
 
     private var iconColor: Color {
         datestamp == todaystampManager.todaystamp
-            ? themeColor.swiftUIColor : Color(uiColor: .secondaryLabel)
+            ? accentColor.swiftUIColor : Color(uiColor: .secondaryLabel)
     }
 
     var body: some View {

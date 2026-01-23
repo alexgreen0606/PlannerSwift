@@ -1,5 +1,5 @@
 //
-//  ThemeColor.swift
+//  AccentColor.swift
 //  Planner
 //
 //  Created by Alex Green on 1/20/26.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-enum ThemeColor: String, Codable, CaseIterable {
+enum AccentColor: String, Codable, CaseIterable {
     case red
     case orange
     case yellow

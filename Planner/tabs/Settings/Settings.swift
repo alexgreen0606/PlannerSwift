@@ -11,8 +11,10 @@ import SwiftData
 import SwiftUI
 
 struct SettingsView: View {
-    @AppStorage("themeColor") var themeColor: ThemeColor =
-        ThemeColor.blue
+    @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
+        .system
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        AccentColor.blue
     @AppStorage("showListSeparators") private var showListSeparators: Bool =
         true
     @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
@@ -23,19 +25,9 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section {
-                    Picker("App Theme", selection: $keepPastPlansDuration) {
-                        // TODO:
-
-                        // System
-
-                        // Light
-
-                        // Dark
-                    }
-                    .pickerStyle(.menu)
-
-                    Picker("Accent Color", selection: $themeColor) {
-                        ForEach(ThemeColor.allCases, id: \.self) {
+                    
+                    Picker("Accent Color", selection: $accentColor) {
+                        ForEach(AccentColor.allCases, id: \.self) {
                             option in
                             Image(systemName: "circle.fill")
                                 .symbolRenderingMode(.palette)
@@ -54,10 +46,23 @@ struct SettingsView: View {
                     .pickerStyle(.menu)
 
                     Toggle("Show List Separators", isOn: $showListSeparators)
-                        .tint(themeColor.swiftUIColor)
+                        .tint(accentColor.swiftUIColor)
+                    
                 } header: {
                     Text("Appearance")
                 }
+                .listSectionMargins(.bottom, 0)
+                
+                Picker("App Theme", selection: $appColorScheme) {
+                    ForEach(AppColorScheme.allCases, id: \.rawValue) {
+                        scheme in
+                        Text(scheme.rawValue.capitalized)
+                            .tag(scheme)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .listRowBackground(Color.clear)
+                .listSectionMargins(.all, 0)
 
                 Section {
                     Picker("Keep Past Plans", selection: $keepPastPlansDuration)
@@ -92,6 +97,8 @@ struct SettingsView: View {
                 } header: {
                     Text("Planner")
                 }
+                .listSectionMargins(.top, 0)
+                
             }
             .navigationTitle("Settings")
         }

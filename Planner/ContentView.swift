@@ -14,8 +14,6 @@ import SwiftUI
 
 struct ContentView: View {
     @AppStorage("lastCleansedDatestamp") var lastCleansedDatestamp: String = ""
-    @AppStorage("themeColor") var themeColor: ThemeColor =
-        ThemeColor.blue
     @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
         KeepPastPlansDuration =
             KeepPastPlansDuration.oneMonth
