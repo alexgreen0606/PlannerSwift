@@ -15,6 +15,10 @@ enum AccentColor: String, Codable, CaseIterable {
     case blue
     case indigo
     case purple
+    
+    var title: String {
+        "Accent Color"
+    }
 
     var swiftUIColor: Color {
         switch self {

@@ -8,11 +8,15 @@
 import SwiftDate
 import SwiftUI
 
-enum CompletionTransitionDuration: String, Codable, CaseIterable {
+enum ToggleTransitionDuration: String, Codable, CaseIterable {
     case twoSeconds
     case threeSeconds
     case sixSeconds
     case instant
+    
+    var title: String {
+        "Toggle Transition"
+    }
 
     var label: String {
         switch self {

@@ -13,6 +13,10 @@ enum KeepPastPlansDuration: String, Codable, CaseIterable {
     case threeMonths
     case sixMonths
     case forever
+    
+    var title: String {
+        "Keep Past Plans"
+    }
 
     var label: String {
         switch self {

@@ -25,16 +25,16 @@ struct SettingsView: View {
         KeepPastPlansDuration =
             KeepPastPlansDuration.oneMonth
     
-    @AppStorage("completionTransitionDuration") private var completionTransitionDuration:
-        CompletionTransitionDuration =
-    CompletionTransitionDuration.threeSeconds
+    @AppStorage("toggleTransitionDuration") private var toggleTransitionDuration:
+        ToggleTransitionDuration =
+    ToggleTransitionDuration.threeSeconds
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
                     
-                    Picker("Accent Color", selection: $accentColor) {
+                    Picker(accentColor.title, selection: $accentColor) {
                         ForEach(AccentColor.allCases, id: \.self) {
                             option in
                             Image(systemName: "circle.fill")
@@ -46,10 +46,10 @@ struct SettingsView: View {
                     .pickerStyle(.menu)
 
                     Picker(
-                        "Completion Transition",
-                        selection: $completionTransitionDuration
+                        toggleTransitionDuration.title,
+                        selection: $toggleTransitionDuration
                     ) {
-                        ForEach(CompletionTransitionDuration.allCases, id: \.self) {
+                        ForEach(ToggleTransitionDuration.allCases, id: \.self) {
                             scheme in
                             Text(scheme.label)
                                 .tag(scheme)
@@ -77,7 +77,7 @@ struct SettingsView: View {
                 .listSectionMargins(.all, 0)
 
                 Section {
-                    Picker("Keep Past Plans", selection: $keepPastPlansDuration)
+                    Picker(keepPastPlansDuration.title, selection: $keepPastPlansDuration)
                     {
                         ForEach(KeepPastPlansDuration.allCases, id: \.self) {
                             option in
