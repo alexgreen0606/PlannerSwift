@@ -36,6 +36,7 @@ final class ListManager<Item: ListItem>: ObservableObject {
     // Keeps faded items hidden for 1 second after they have moved.
     @Published var fadingItemIds: Set<PersistentIdentifier> = []
 
+    @Published var toggleType: ListToggleType = .storage
     @Published var selectedItems: [Item] = []
     @Published var selectedItemIds: Set<PersistentIdentifier> = []
 
@@ -47,9 +48,19 @@ final class ListManager<Item: ListItem>: ObservableObject {
     deinit {
         task?.cancel()
     }
+    
+    var isSelectMode: Bool {
+        toggleType == .staging
+    }
+    
+    func cancelSelectMode() {
+        toggleType = .storage
+        selectedItems = []
+        selectedItemIds = []
+    }
 
-    func toggleItem(_ item: Item, type: ListToggleType) {
-        switch type {
+    func toggleItem(_ item: Item) {
+        switch toggleType {
         case .staging:
             toggleSelect(item)
         case .storage:

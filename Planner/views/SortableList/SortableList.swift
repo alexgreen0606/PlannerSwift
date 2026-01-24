@@ -19,7 +19,6 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
     let uncheckedItems: [Item]
     let checkedItems: [Item]
     let showChecked: Bool
-    let toggleType: ListToggleType = .storage
     let disabledItemIds: Set<PersistentIdentifier> = []
     let floatingInfo: FloatingInfo?
     let customToggleConfig: CustomIconConfig<Item>?
@@ -55,7 +54,6 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                         item: item,
                         tint: tint,
                         showChecked: showChecked,
-                        toggleType: toggleType,
                         isSelectDisabled: disabledItemIds.contains(
                             item.id
                         ),
@@ -96,7 +94,6 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                             item: item,
                             tint: tint,
                             showChecked: true,
-                            toggleType: toggleType,
                             isSelectDisabled: disabledItemIds.contains(
                                 item.id
                             ),

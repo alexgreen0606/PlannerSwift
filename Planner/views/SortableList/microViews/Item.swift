@@ -12,7 +12,6 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
     @Bindable var item: Item
     let tint: Color
     let showChecked: Bool
-    let toggleType: ListToggleType
     let isSelectDisabled: Bool
     let showUpperDivider: Bool
     let endAdornment: ((_ item: Item) -> EndAdornment)?
@@ -44,7 +43,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
     }
 
     private var isChecked: Bool {
-        if toggleType == .staging {
+        if listManager.toggleType == .staging {
             return listManager.selectedItemIds.contains(item.id)
         }
 
@@ -98,14 +97,13 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
     private var toggle: some View {
         ItemToggleView(
             item: item,
-            type: toggleType,
             tint: tint,
             isChecked: isChecked,
             isDisabled: isSelectDisabled,
             opacity: opacity,
             customIconConfig: customToggleConfig
         ) {
-            listManager.toggleItem(item, type: toggleType)
+            listManager.toggleItem(item)
         }
         .frame(height: 44, alignment: .center)
     }

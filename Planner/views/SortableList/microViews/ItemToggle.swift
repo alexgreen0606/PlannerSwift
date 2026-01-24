@@ -26,7 +26,6 @@ struct CustomIconConfig<Item: ListItem> {
 
 struct ItemToggleView<Item: ListItem>: View {
     let item: Item
-    let type: ListToggleType
     let tint: Color
     let isChecked: Bool
     let isDisabled: Bool
