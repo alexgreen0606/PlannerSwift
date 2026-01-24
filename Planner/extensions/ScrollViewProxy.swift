@@ -11,12 +11,9 @@ extension ScrollViewProxy {
     func slideTo(
         _ id: some Hashable,
         at anchor: UnitPoint,
-        withDelay delay: DispatchTimeInterval = .seconds(0)
     ) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-            withAnimation(.linear(duration: 3)) {
-                self.scrollTo(id, anchor: anchor)
-            }
+        withAnimation(.linear(duration: 0.5)) {
+            self.scrollTo(id, anchor: anchor)
         }
     }
 }

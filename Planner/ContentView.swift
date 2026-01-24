@@ -31,11 +31,11 @@ struct ContentView: View {
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
 
     @EnvironmentObject var todaystampWatcher: TodaystampWatcher
-    @EnvironmentObject var navigationManager: NavigationManager
     @EnvironmentObject var calendarStore: CalendarStore
 
     let contactsStore = CNContactStore()
 
+    @State private var selectedTab: AppTab = .search
     @StateObject private var todayPlannerManager = ListManager()
     @State private var isTodayPlannerOpen: Bool = false
     @Namespace private var todayPlannerCoverAnimation
@@ -94,7 +94,7 @@ struct ContentView: View {
     }
 
     var body: some View {
-        TabView(selection: $navigationManager.selectedTab) {
+        TabView(selection: $selectedTab) {
             Tab(value: .checklists) {
                 ChecklistsTabView()
             } label: {

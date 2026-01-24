@@ -11,15 +11,21 @@ import SwiftUI
 struct ChecklistItemFormView: View {
     private let sourceItem: ChecklistItem?
     private let parent: ChecklistItem?
+    private let onCreated: (ChecklistItem) -> Void
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
     @State private var draft: ChecklistItem
 
-    init(item: ChecklistItem? = nil, parent: ChecklistItem? = nil) {
+    init(
+        item: ChecklistItem? = nil,
+        parent: ChecklistItem? = nil,
+        onCreated: @escaping (ChecklistItem) -> Void
+    ) {
         self.sourceItem = item
         self.parent = parent
+        self.onCreated = onCreated
 
         if let item {
             _draft = State(
@@ -95,36 +101,7 @@ struct ChecklistItemFormView: View {
 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Submit", systemImage: "checkmark") {
-                        if let sourceItem {
-                            // Edit the existing item.
-                            sourceItem.title = draft.title
-                            sourceItem.color = draft.color
-                            sourceItem.type = draft.type
-                        } else {
-                            // Create the new item.
-                            let sorted = parent?.items.sorted {
-                                $0.sortIndex < $1.sortIndex
-                            }
-                            let sortIndex = (sorted?.last?.sortIndex ?? 0) + 8
-                            let newItem = ChecklistItem(
-                                type: draft.type,
-                                title: draft.title,
-                                color: draft.color,
-                                sortIndex: sortIndex,
-                                parent: parent
-                            )
-                            modelContext.insert(newItem)
-                        }
-                        
-                        do {
-                            try modelContext.save()
-                        } catch {
-                            assertionFailure(
-                                "Error saving checklist item: \(error)"
-                            )
-                        }
-                        
-                        dismiss()
+                        handleSave()
                     }
                     .tint(
                         draft.title.isEmpty
@@ -134,5 +111,40 @@ struct ChecklistItemFormView: View {
                 }
             }
         }
+    }
+
+    private func handleSave() {
+        if let sourceItem {
+            // Edit the existing item.
+            sourceItem.title = draft.title
+            sourceItem.color = draft.color
+            sourceItem.type = draft.type
+        } else {
+            // Create the new item.
+            let sorted = parent?.items.sorted {
+                $0.sortIndex < $1.sortIndex
+            }
+            let sortIndex = (sorted?.last?.sortIndex ?? 0) + 8
+            let newItem = ChecklistItem(
+                type: draft.type,
+                title: draft.title,
+                color: draft.color,
+                sortIndex: sortIndex,
+                parent: parent
+            )
+            modelContext.insert(newItem)
+            
+            onCreated(newItem)
+        }
+
+        do {
+            try modelContext.save()
+        } catch {
+            assertionFailure(
+                "Error saving checklist item: \(error)"
+            )
+        }
+
+        dismiss()
     }
 }

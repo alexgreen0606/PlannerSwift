@@ -21,17 +21,16 @@ struct ChecklistCoverContext: Identifiable {
 
 struct FolderView: View {
     let folder: ChecklistItem
+    let openFolder: (ChecklistItem) -> Void
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @EnvironmentObject var navigationManager: NavigationManager
-
     @State private var sheetContext: ChecklistItemSheetContext?
     @Namespace private var sheetAnimation
-    @State private var scrollProxy: ScrollViewProxy?
     @State private var showDeleteFolderConfirm = false
     @State private var checklistCoverContext: ChecklistCoverContext?
+    @State private var pendingScrollItem: ChecklistItem?
 
     var sortedItems: [ChecklistItem] {
         folder.items.sorted { $0.sortIndex < $1.sortIndex }
@@ -79,16 +78,19 @@ struct FolderView: View {
 
                             if item.type == .folder {
                                 Image(systemName: "chevron.right")
-                                    .foregroundColor(Color(uiColor: .tertiaryLabel))
+                                    .foregroundColor(
+                                        Color(uiColor: .tertiaryLabel)
+                                    )
                             }
                         }
                         .frame(height: 19)
                     }
+                    .id(item.id)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(Rectangle())
                     .onTapGesture {
                         if item.type == .folder {
-                            navigationManager.checklistsPath.append(item)
+                            openFolder(item)
                         } else {
                             checklistCoverContext = ChecklistCoverContext(
                                 checklistId: item.id,
@@ -104,6 +106,13 @@ struct FolderView: View {
                 .onMove(perform: moveItem)
             }
             .navigationTitle(folder.title)
+            // Scroll to new items.
+            .onChange(of: sortedItems.map(\.id)) { _, _ in
+                guard let item = pendingScrollItem else { return }
+
+                proxy.slideTo(item.id, at: .top)
+                pendingScrollItem = nil
+            }
             .toolbar {
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     Menu {
@@ -151,14 +160,16 @@ struct FolderView: View {
             .sheet(item: $sheetContext) { context in
                 switch context {
                 case .create:
-                    ChecklistItemFormView(item: nil, parent: folder)
-                        .presentationDetents([.height(250)])
-                        .navigationTransition(
-                            .zoom(sourceID: "add", in: sheetAnimation)
-                        )
+                    ChecklistItemFormView(item: nil, parent: folder) { id in
+                        pendingScrollItem = id
+                    }
+                    .presentationDetents([.height(250)])
+                    .navigationTransition(
+                        .zoom(sourceID: "add", in: sheetAnimation)
+                    )
 
                 case .edit(let item):
-                    ChecklistItemFormView(item: item, parent: folder)
+                    ChecklistItemFormView(item: item, parent: folder) { _ in }
                         .presentationDetents([.height(250)])
                         .navigationTransition(
                             .zoom(
@@ -168,11 +179,13 @@ struct FolderView: View {
                         )
 
                 case .parent:
-                    ChecklistItemFormView(item: folder, parent: folder.parent)
-                        .presentationDetents([.height(250)])
-                        .navigationTransition(
-                            .zoom(sourceID: "ellipsis", in: sheetAnimation)
-                        )
+                    ChecklistItemFormView(item: folder, parent: folder.parent) {
+                        _ in
+                    }
+                    .presentationDetents([.height(250)])
+                    .navigationTransition(
+                        .zoom(sourceID: "ellipsis", in: sheetAnimation)
+                    )
                 }
             }
             .fullScreenCover(item: $checklistCoverContext) { context in
@@ -227,5 +240,4 @@ struct FolderView: View {
             )
         }
     }
-
 }

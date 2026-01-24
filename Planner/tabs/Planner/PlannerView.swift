@@ -43,8 +43,8 @@ struct PlannerView: View {
     @Namespace private var sheetAnimation
 
     @State private var calendarEventToggler = CalendarEventToggler()
-    @State private var scrollProxy: ScrollViewProxy?
     @State private var isDeleteCheckedConfirmationOpen = false
+    @State private var pendingScrollId: PersistentIdentifier?
 
     // Toggle confirmation config for calendar events.
     private var toggleEventIconConfig: CustomIconConfig<PlannerEvent>? {
@@ -290,21 +290,24 @@ struct PlannerView: View {
                                 return
                             }
 
-                            scrollProxy?.slideTo("UNCHECKED", at: .bottom)
+                            proxy.slideTo("UNCHECKED", at: .bottom)
                             createEvent(at: sortedOpenPlans.count)
                         }
                         .tint(accentColor.swiftUIColor)
                     }
                 }
-
-                .onAppear {
-                    scrollProxy = proxy
+                // Slide to the checked items when the user marks them visible.
+                .onChange(of: showChecked) { _, newShowChecked in
+                    if newShowChecked {
+                        proxy.slideTo("CHECKED", at: .top)
+                    }
                 }
-            }
-            // Slide to the checked items when the user marks them visible.
-            .onChange(of: showChecked) { _, newShowChecked in
-                if newShowChecked {
-                    scrollProxy?.slideTo("CHECKED", at: .top)
+                // Scroll to moved items after time smart-detect.
+                .onChange(of: sortedOpenPlans.map(\.id)) { _, _ in
+                    guard let id = pendingScrollId else { return }
+
+                    proxy.slideTo(id, at: .top)
+                    pendingScrollId = nil
                 }
             }
             .task {
@@ -518,14 +521,22 @@ struct PlannerView: View {
         )
 
         guard newSortIndex != event.sortIndex else {
-            try? modelContext.save()
+            do {
+                try modelContext.save()
+            } catch {
+                assertionFailure("Failed to save new item after time smart-detect: \(error)")
+            }
             return
         }
 
         event.sortIndex = newSortIndex
-        scrollProxy?.slideTo(event.id, at: .bottom, withDelay: .seconds(1))
+        pendingScrollId = event.id
 
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            assertionFailure("Failed to save new item after time smart-detect: \(error)")
+        }
     }
 
     // MARK: - Sheet Handlers

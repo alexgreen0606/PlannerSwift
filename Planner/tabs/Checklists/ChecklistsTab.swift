@@ -12,26 +12,21 @@ import SwiftUI
 struct ChecklistsTabView: View {
     @Environment(\.modelContext) private var modelContext
     @Query var rootFolders: [ChecklistItem]
-    
-    @EnvironmentObject var navigationManager: NavigationManager
-    
+
     @StateObject private var checklistsManager = ListManager<ChecklistItem>()
-    
+    @State private var folderPath = NavigationPath()
+
     private var root: ChecklistItem? {
         rootFolders.first
     }
 
     var body: some View {
-        NavigationStack(path: $navigationManager.checklistsPath) {
+        NavigationStack(path: $folderPath) {
             if let root = root {
-                FolderView(folder: root)
+                FolderView(folder: root, openFolder: openFolder)
                     .navigationDestination(for: ChecklistItem.self) { item in
-                        if item.type == ChecklistItemType.folder {
-                            FolderView(folder: item)
-                        } else {
-                            // TODO: migrate to item IDs in each item, not whole objects.
-                            // Then this wont be needed
-                            Text("Error. Please reach out to admin.")
+                        if item.type == .folder {
+                            FolderView(folder: item, openFolder: openFolder)
                         }
                     }
             }
@@ -40,5 +35,9 @@ struct ChecklistsTabView: View {
         .task {
             modelContext.ensureRootFolder(rootFolders: rootFolders)
         }
+    }
+
+    private func openFolder(folder: ChecklistItem) {
+        folderPath.append(folder)
     }
 }

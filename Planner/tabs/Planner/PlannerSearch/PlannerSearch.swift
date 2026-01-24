@@ -32,10 +32,10 @@ struct PlannerSearchView: View {
     @EnvironmentObject var todaystampWatcher: TodaystampWatcher
     @ObservedObject var weatherStore = WeatherStore.shared
 
-    @State private var plannerCoverContext: PlannerCoverContext?
     @Namespace private var toolbarAnimation
     @Namespace private var thisWeekAnimation
     @Namespace private var upcomingAnimation
+    @State private var plannerCoverContext: PlannerCoverContext?
 
     @State private var searchText: String = ""
     @State private var filterDebounce: Task<Void, Never>?

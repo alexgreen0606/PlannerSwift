@@ -16,14 +16,13 @@ struct ChecklistView: View {
     @EnvironmentObject var listManager: ListManager<ChecklistItem>
     @Query private var checklists: [ChecklistItem]
 
-    @State private var scrollProxy: ScrollViewProxy?
     @State private var showDeleteCompletedConfirm = false
     @State private var showDeleteChecklistConfirm = false
-    
+
     private var checklist: ChecklistItem? {
         checklists.first
     }
-    
+
     private var hasCheckedItems: Bool {
         checklist?.items.contains(where: \.isChecked) ?? false
     }
@@ -47,11 +46,14 @@ struct ChecklistView: View {
             }
             .sorted { $0.sortIndex < $1.sortIndex } ?? []
     }
-    
-    init(checklistId: PersistentIdentifier, closeChecklist: @escaping () -> Void) {
+
+    init(
+        checklistId: PersistentIdentifier,
+        closeChecklist: @escaping () -> Void
+    ) {
         self.checklistId = checklistId
         self.closeChecklist = closeChecklist
-        
+
         _checklists = Query(
             filter: #Predicate<ChecklistItem> {
                 $0.id == checklistId
@@ -82,29 +84,29 @@ struct ChecklistView: View {
                 .accentColor(checklist?.color.swiftUIColor ?? .blue)
                 .navigationTitle(checklist?.title ?? "")
                 .toolbar {
-                    
+
                     ToolbarItem(placement: .topBarLeading) {
                         Button("Back", systemImage: "chevron.down") {
                             closeChecklist()
                         }
                     }
-                    
+
                     ToolbarItem(placement: .topBarTrailing) {
                         Menu {
-                            
+
                             Button {
                                 checklist?.showCompleted.toggle()
                             } label: {
                                 Text(
                                     checklist?.showCompleted == true
-                                    ? "Hide completed" : "Show completed"
+                                        ? "Hide completed" : "Show completed"
                                 )
                                 Image(
                                     systemName: checklist?.showCompleted == true
-                                    ? "eye.slash" : "eye"
+                                        ? "eye.slash" : "eye"
                                 )
                             }
-                            
+
                             Menu {
                                 Button(role: .destructive) {
                                     showDeleteCompletedConfirm = true
@@ -112,7 +114,7 @@ struct ChecklistView: View {
                                     Text("Delete completed items")
                                 }
                                 .disabled(!hasCheckedItems)
-                                
+
                                 Button(role: .destructive) {
                                     showDeleteChecklistConfirm = true
                                 } label: {
@@ -121,7 +123,7 @@ struct ChecklistView: View {
                             } label: {
                                 Label("Delete options", systemImage: "trash")
                             }
-                            
+
                         } label: {
                             Image(systemName: "ellipsis")
                         }
@@ -134,7 +136,9 @@ struct ChecklistView: View {
                                 deleteEntireList()
                             }
                         } message: {
-                            Text("\(checklist?.items.isEmpty == true ? "" : "All items will be lost. ")This action is irreversible.")
+                            Text(
+                                "\(checklist?.items.isEmpty == true ? "" : "All items will be lost. ")This action is irreversible."
+                            )
                         }
                         .confirmationDialog(
                             "Delete completed items from this list?",
@@ -148,16 +152,15 @@ struct ChecklistView: View {
                             Text("This action is irreversible.")
                         }
                     }
-                    
+
                     ToolbarItemGroup(placement: .bottomBar) {
                         Spacer()
-                        
+
                         Button("Add", systemImage: "plus") {
                             createItem(at: sortedUncheckedItems.count)
-                            scrollProxy?.slideTo(
+                            proxy.slideTo(
                                 "UNCHECKED",
-                                at: .bottom,
-                                withDelay: .seconds(1)
+                                at: .bottom
                             )
                         }
                     }
@@ -165,7 +168,7 @@ struct ChecklistView: View {
             }
         }
     }
-    
+
     private func createItem(
         near baseId: PersistentIdentifier?,
         offset: Int = 0
@@ -181,7 +184,8 @@ struct ChecklistView: View {
         let finalIndex = baseIndex + offset
 
         // Don't create the new item if it is next to an empty item.
-        let upperEvent = finalIndex > 0 ? sortedUncheckedItems[finalIndex - 1] : nil
+        let upperEvent =
+            finalIndex > 0 ? sortedUncheckedItems[finalIndex - 1] : nil
         let lowerEvent =
             finalIndex < sortedUncheckedItems.count
             ? sortedUncheckedItems[finalIndex] : nil
@@ -233,14 +237,14 @@ struct ChecklistView: View {
             )
         }
     }
-    
+
     private func deleteEntireList() {
         guard let checklist else {
             return
         }
-        
+
         closeChecklist()
-        
+
         modelContext.delete(checklist)
 
         do {

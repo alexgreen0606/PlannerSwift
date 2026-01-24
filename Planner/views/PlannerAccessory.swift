@@ -19,8 +19,7 @@ struct PlannerAccessoryView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]
-
-    @EnvironmentObject var navigationManager: NavigationManager
+    
     @EnvironmentObject var calendarStore: CalendarStore
     @ObservedObject var weatherStore = WeatherStore.shared
 

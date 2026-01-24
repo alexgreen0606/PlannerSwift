@@ -21,8 +21,6 @@ struct PlannerApp: App {
     let todaystampWatcher = TodaystampWatcher.shared
     let calendarStore = CalendarStore.shared
 
-    @StateObject private var navigationManager = NavigationManager()
-
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -31,7 +29,6 @@ struct PlannerApp: App {
                 .environmentObject(todaystampWatcher)
                 .environmentObject(weatherStore)
                 .environmentObject(calendarStore)
-                .environmentObject(navigationManager)
                 .task {
                     Task {
                         await weatherStore.loadWeather()
