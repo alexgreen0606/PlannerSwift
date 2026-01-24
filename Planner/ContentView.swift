@@ -125,18 +125,17 @@ struct ContentView: View {
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
-        .tabViewBottomAccessory {
-
-            // TODO: this is re-rendered in each tab. Prevent this if possible.
-            // Pending Apple fix.
-            PlannerAccessoryView(
-                todaystamp: todaystampWatcher.todaystamp,
-                animation: todayPlannerCoverAnimation
-            ) {
-                isTodayPlannerOpen.toggle()
-            }
-
-        }
+//        .tabViewBottomAccessory {
+//
+//            // May want to add this in futue. For now it is too bulky and not useful enough to justify.
+//            PlannerAccessoryView(
+//                todaystamp: todaystampWatcher.todaystamp,
+//                animation: todayPlannerCoverAnimation
+//            ) {
+//                isTodayPlannerOpen.toggle()
+//            }
+//
+//        }
         .fullScreenCover(isPresented: $isTodayPlannerOpen) {
             NavigationStack {
                 PlannerView(
