@@ -442,7 +442,7 @@ struct PlannerView: View {
         // Save the calendar event position.
         if movedEvent.calendarEvent != nil && calendarSettings != nil {
             calendarSettings!.sortIndexMap[
-                movedEvent.calendarEvent!.eventIdentifier
+                movedEvent.calendarEvent!.calendarItemExternalIdentifier
             ] = movedEvent.sortIndex
         }
 
@@ -464,7 +464,7 @@ struct PlannerView: View {
                     && calendarSettings != nil
                 {
                     calendarSettings!.sortIndexMap[
-                        movedEvent.calendarEvent!.eventIdentifier
+                        movedEvent.calendarEvent!.calendarItemExternalIdentifier
                     ] = movedEvent.sortIndex
                 }
 

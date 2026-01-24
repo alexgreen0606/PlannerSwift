@@ -338,7 +338,7 @@ struct PlannerSearchView: View {
         }
 
         return calendarSettings.checkedCalendarEventIds.contains(
-            event.eventIdentifier
+            event.calendarItemExternalIdentifier
         )
     }
 
@@ -411,7 +411,7 @@ struct PlannerSearchView: View {
                 ? calendarFiltered
                 : calendarFiltered.filter {
                     !calendarSettings!.checkedCalendarEventIds.contains(
-                        $0.eventIdentifier
+                        $0.calendarItemExternalIdentifier
                     )
                 }
 

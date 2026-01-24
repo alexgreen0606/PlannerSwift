@@ -129,7 +129,7 @@ class CalendarStore: ObservableObject {
         var eventIds: Set<String> = []
 
         for event in events {
-            eventIds.insert(event.eventIdentifier)
+            eventIds.insert(event.calendarItemExternalIdentifier)
 
             if hiddenCalendarIds.contains(event.calendar.calendarIdentifier) {
                 continue
@@ -195,7 +195,7 @@ class CalendarStore: ObservableObject {
         var singleDayEvents: [EKEvent] = []
 
         for event in events {
-            existingEventIds.insert(event.eventIdentifier)
+            existingEventIds.insert(event.calendarItemExternalIdentifier)
 
             if hiddenCalendarIds.contains(event.calendar.calendarIdentifier) {
                 continue

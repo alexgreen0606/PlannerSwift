@@ -25,7 +25,7 @@ extension Planner {
 
         for calEvent in sortedCalendarEvents {
             let sortIndex =
-                settings.sortIndexMap[calEvent.eventIdentifier]
+                settings.sortIndexMap[calEvent.calendarItemExternalIdentifier]
                 ?? ((sortedPlannerEvents.last?.sortIndex ?? 0) + 8)
 
             // Dummy event for UI representation. No persistence to storage.
@@ -42,7 +42,7 @@ extension Planner {
             )
 
             plannerEvents.append(plannerEvent)
-            settings.sortIndexMap[calEvent.eventIdentifier] =
+            settings.sortIndexMap[calEvent.calendarItemExternalIdentifier] =
                 plannerEvent.sortIndex
         }
 

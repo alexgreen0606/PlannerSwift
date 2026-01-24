@@ -22,7 +22,7 @@ final class CalendarEventToggler {
             return event.isChecked
         }
 
-        return settings.checkedCalendarEventIds.contains(calendarEvent.eventIdentifier)
+        return settings.checkedCalendarEventIds.contains(calendarEvent.calendarItemExternalIdentifier)
     }
 
     func toggleEvent(_ event: PlannerEvent) -> Bool {
@@ -34,14 +34,14 @@ final class CalendarEventToggler {
         }
 
         if settings.checkedCalendarEventIds.contains(
-            calendarEvent.eventIdentifier
+            calendarEvent.calendarItemExternalIdentifier
         ) {
             settings.checkedCalendarEventIds.remove(
-                calendarEvent.eventIdentifier
+                calendarEvent.calendarItemExternalIdentifier
             )
         } else {
             settings.checkedCalendarEventIds.insert(
-                calendarEvent.eventIdentifier
+                calendarEvent.calendarItemExternalIdentifier
             )
         }
 
