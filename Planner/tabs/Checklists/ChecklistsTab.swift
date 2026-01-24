@@ -29,7 +29,9 @@ struct ChecklistsTabView: View {
                         if item.type == ChecklistItemType.folder {
                             FolderView(folder: item)
                         } else {
-                            ChecklistView(checklist: item)
+                            // TODO: migrate to item IDs in each item, not whole objects.
+                            // Then this wont be needed
+                            Text("Error. Please reach out to admin.")
                         }
                     }
             }

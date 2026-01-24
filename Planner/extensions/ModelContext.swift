@@ -10,6 +10,7 @@ import SwiftData
 import SwiftDate
 
 extension ModelContext {
+    
     @MainActor
     func ensurePlanner(
         planners: [Planner],
@@ -29,7 +30,6 @@ extension ModelContext {
                 "Failed to create Planner for \(datestamp): \(error)"
             )
         }
-
     }
 
     @MainActor

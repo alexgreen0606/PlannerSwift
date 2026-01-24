@@ -9,131 +9,157 @@ import SwiftData
 import SwiftUI
 
 struct ChecklistView: View {
-    let checklist: ChecklistItem
+    private let checklistId: PersistentIdentifier
+    private let closeChecklist: () -> Void
 
     @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss
-
     @EnvironmentObject var listManager: ListManager<ChecklistItem>
+    @Query private var checklists: [ChecklistItem]
 
     @State private var scrollProxy: ScrollViewProxy?
     @State private var showDeleteCompletedConfirm = false
     @State private var showDeleteChecklistConfirm = false
     
+    private var checklist: ChecklistItem? {
+        checklists.first
+    }
+    
     private var hasCheckedItems: Bool {
-        checklist.items.contains(where: \.isChecked)
+        checklist?.items.contains(where: \.isChecked) ?? false
     }
 
     private var sortedUncheckedItems: [ChecklistItem] {
-        checklist.items
+        checklist?.items
             .filter {
                 (!$0.isChecked
                     && !listManager.newlyUncheckedIds.contains($0.id))
                     || listManager.newlyCheckedIds.contains($0.id)
             }
-            .sorted { $0.sortIndex < $1.sortIndex }
+            .sorted { $0.sortIndex < $1.sortIndex } ?? []
     }
 
     private var sortedCheckedItems: [ChecklistItem] {
-        checklist.items
+        checklist?.items
             .filter {
                 ($0.isChecked
                     && !listManager.newlyCheckedIds.contains($0.id))
                     || listManager.newlyUncheckedIds.contains($0.id)
             }
-            .sorted { $0.sortIndex < $1.sortIndex }
+            .sorted { $0.sortIndex < $1.sortIndex } ?? []
+    }
+    
+    init(checklistId: PersistentIdentifier, closeChecklist: @escaping () -> Void) {
+        self.checklistId = checklistId
+        self.closeChecklist = closeChecklist
+        
+        _checklists = Query(
+            filter: #Predicate<ChecklistItem> {
+                $0.id == checklistId
+            }
+        )
     }
 
     var body: some View {
-        ScrollViewReader { proxy in
-            SortableListView(
-                uncheckedItems: sortedUncheckedItems,
-                checkedItems: sortedCheckedItems,
-                showChecked: checklist.showCompleted,
-                floatingInfo: EmptyView(),
-                customToggleConfig: nil,
-                checkedHeader: "Completed items",
-                checkedFooter: nil,
-                emptyUncheckedLabel: "No items",
-                emptyCheckedLabel: "No completed items",
-                tint: checklist.color.swiftUIColor,
-                getEndAdornment: { _ in EmptyView() },
-                createItem: createItem,
-                handleTitleChange: { _ in },
-                moveItem: moveItem,
-                isItemChecked: nil
-            )
-            .accentColor(checklist.color.swiftUIColor)
-            .navigationTitle(checklist.title)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        
-                        Button {
-                            checklist.showCompleted.toggle()
-                        } label: {
-                            Text(
-                                checklist.showCompleted
-                                    ? "Hide completed" : "Show completed"
-                            )
-                            Image(
-                                systemName: checklist.showCompleted
-                                    ? "eye.slash" : "eye"
-                            )
+        NavigationStack {
+            ScrollViewReader { proxy in
+                SortableListView(
+                    uncheckedItems: sortedUncheckedItems,
+                    checkedItems: sortedCheckedItems,
+                    showChecked: checklist?.showCompleted ?? false,
+                    floatingInfo: EmptyView(),
+                    customToggleConfig: nil,
+                    checkedHeader: "Completed items",
+                    checkedFooter: nil,
+                    emptyUncheckedLabel: "No items",
+                    emptyCheckedLabel: "No completed items",
+                    tint: checklist?.color.swiftUIColor ?? .blue,
+                    getEndAdornment: { _ in EmptyView() },
+                    createItem: createItem,
+                    handleTitleChange: { _ in },
+                    moveItem: moveItem,
+                    isItemChecked: nil
+                )
+                .accentColor(checklist?.color.swiftUIColor ?? .blue)
+                .navigationTitle(checklist?.title ?? "")
+                .toolbar {
+                    
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Back", systemImage: "chevron.down") {
+                            closeChecklist()
                         }
-                        
+                    }
+                    
+                    ToolbarItem(placement: .topBarTrailing) {
                         Menu {
-                            Button(role: .destructive) {
-                                showDeleteCompletedConfirm = true
-                            } label: {
-                                Text("Delete completed items")
-                            }
-                            .disabled(!hasCheckedItems)
                             
-                            Button(role: .destructive) {
-                                showDeleteChecklistConfirm = true
+                            Button {
+                                checklist?.showCompleted.toggle()
                             } label: {
-                                Text("Delete this list")
+                                Text(
+                                    checklist?.showCompleted == true
+                                    ? "Hide completed" : "Show completed"
+                                )
+                                Image(
+                                    systemName: checklist?.showCompleted == true
+                                    ? "eye.slash" : "eye"
+                                )
                             }
+                            
+                            Menu {
+                                Button(role: .destructive) {
+                                    showDeleteCompletedConfirm = true
+                                } label: {
+                                    Text("Delete completed items")
+                                }
+                                .disabled(!hasCheckedItems)
+                                
+                                Button(role: .destructive) {
+                                    showDeleteChecklistConfirm = true
+                                } label: {
+                                    Text("Delete this list")
+                                }
+                            } label: {
+                                Label("Delete options", systemImage: "trash")
+                            }
+                            
                         } label: {
-                            Label("Delete options", systemImage: "trash")
+                            Image(systemName: "ellipsis")
                         }
+                        .confirmationDialog(
+                            "Delete this entire list?",
+                            isPresented: $showDeleteChecklistConfirm,
+                            titleVisibility: .visible
+                        ) {
+                            Button("Confirm", role: .destructive) {
+                                deleteEntireList()
+                            }
+                        } message: {
+                            Text("\(checklist?.items.isEmpty == true ? "" : "All items will be lost. ")This action is irreversible.")
+                        }
+                        .confirmationDialog(
+                            "Delete completed items from this list?",
+                            isPresented: $showDeleteCompletedConfirm,
+                            titleVisibility: .visible
+                        ) {
+                            Button("Confirm", role: .destructive) {
+                                deleteAllCompletedItems()
+                            }
+                        } message: {
+                            Text("This action is irreversible.")
+                        }
+                    }
+                    
+                    ToolbarItemGroup(placement: .bottomBar) {
+                        Spacer()
                         
-                    } label: {
-                        Image(systemName: "ellipsis")
-                    }
-                    .confirmationDialog(
-                        "Delete this entire list?",
-                        isPresented: $showDeleteChecklistConfirm,
-                        titleVisibility: .visible
-                    ) {
-                        Button("Confirm", role: .destructive) {
-                            deleteEntireList()
+                        Button("Add", systemImage: "plus") {
+                            createItem(at: sortedUncheckedItems.count)
+                            scrollProxy?.slideTo(
+                                "UNCHECKED",
+                                at: .bottom,
+                                withDelay: .seconds(1)
+                            )
                         }
-                    } message: {
-                        Text("\(checklist.items.isEmpty ? "" : "All items will be lost. ")This action is irreversible.")
-                    }
-                    .confirmationDialog(
-                        "Delete completed items from this list?",
-                        isPresented: $showDeleteCompletedConfirm,
-                        titleVisibility: .visible
-                    ) {
-                        Button("Confirm", role: .destructive) {
-                            deleteAllCompletedItems()
-                        }
-                    } message: {
-                        Text("This action is irreversible.")
-                    }
-                }
-
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Add", systemImage: "plus") {
-                        createItem(at: sortedUncheckedItems.count)
-                        scrollProxy?.slideTo(
-                            "UNCHECKED",
-                            at: .bottom,
-                            withDelay: .seconds(1)
-                        )
                     }
                 }
             }
@@ -209,7 +235,11 @@ struct ChecklistView: View {
     }
     
     private func deleteEntireList() {
-        dismiss()
+        guard let checklist else {
+            return
+        }
+        
+        closeChecklist()
         
         modelContext.delete(checklist)
 

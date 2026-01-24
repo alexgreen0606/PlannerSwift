@@ -10,6 +10,15 @@ import SwiftUI
 
 // TODO: slide to new items after creation
 
+struct ChecklistCoverContext: Identifiable {
+    var checklistId: PersistentIdentifier
+    var namespace: Namespace.ID
+
+    var id: String {
+        "\(checklistId)-\(namespace)"
+    }
+}
+
 struct FolderView: View {
     let folder: ChecklistItem
 
@@ -22,6 +31,7 @@ struct FolderView: View {
     @Namespace private var sheetAnimation
     @State private var scrollProxy: ScrollViewProxy?
     @State private var showDeleteFolderConfirm = false
+    @State private var checklistCoverContext: ChecklistCoverContext?
 
     var sortedItems: [ChecklistItem] {
         folder.items.sorted { $0.sortIndex < $1.sortIndex }
@@ -67,16 +77,29 @@ struct FolderView: View {
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
 
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(Color(uiColor: .tertiaryLabel))
+                            if item.type == .folder {
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(Color(uiColor: .tertiaryLabel))
+                            }
                         }
                         .frame(height: 19)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        navigationManager.checklistsPath.append(item)
+                        if item.type == .folder {
+                            navigationManager.checklistsPath.append(item)
+                        } else {
+                            checklistCoverContext = ChecklistCoverContext(
+                                checklistId: item.id,
+                                namespace: sheetAnimation
+                            )
+                        }
                     }
+                    .matchedTransitionSource(
+                        id: "\(item.id)-\(sheetAnimation)",
+                        in: sheetAnimation
+                    )
                 }
                 .onMove(perform: moveItem)
             }
@@ -151,6 +174,17 @@ struct FolderView: View {
                             .zoom(sourceID: "ellipsis", in: sheetAnimation)
                         )
                 }
+            }
+            .fullScreenCover(item: $checklistCoverContext) { context in
+                ChecklistView(checklistId: context.checklistId) {
+                    checklistCoverContext = nil
+                }
+                .navigationTransition(
+                    .zoom(
+                        sourceID: "\(context.checklistId)-\(context.namespace)",
+                        in: context.namespace
+                    )
+                )
             }
         }
         .overlay {

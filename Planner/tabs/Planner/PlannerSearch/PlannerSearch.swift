@@ -269,10 +269,8 @@ struct PlannerSearchView: View {
                 }
             }
             .fullScreenCover(item: $plannerCoverContext) { context in
-                NavigationStack {
-                    PlannerView(datestamp: context.datestamp) {
-                        plannerCoverContext = nil
-                    }
+                PlannerView(datestamp: context.datestamp) {
+                    plannerCoverContext = nil
                 }
                 .navigationTransition(
                     .zoom(
