@@ -222,7 +222,7 @@ struct PlannerView: View {
                 .navigationSubtitle(date.dynamicSubheader)
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
-                        Button("Back", systemImage: "chevron.down") {
+                        Button("Back", systemImage: "arrow.down.right.and.arrow.up.left") {
                             closePlanner()
                         }
                     }

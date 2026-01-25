@@ -18,6 +18,7 @@ struct ChecklistView: View {
 
     @State private var showDeleteCompletedConfirm = false
     @State private var showDeleteChecklistConfirm = false
+    @State private var showDeleteSelectedConfirm = false
 
     private var checklist: ChecklistItem? {
         checklists.first
@@ -45,6 +46,31 @@ struct ChecklistView: View {
                     || listManager.newlyUncheckedIds.contains($0.id)
             }
             .sorted { $0.sortIndex < $1.sortIndex } ?? []
+    }
+
+    private var visibleItems: [ChecklistItem] {
+        var allVisibleItems = sortedUncheckedItems
+
+        if checklist?.showCompleted == true {
+            allVisibleItems.append(
+                contentsOf: sortedCheckedItems
+            )
+        }
+
+        return allVisibleItems
+    }
+
+    private var isAllSelected: Bool {
+        listManager.selectedItemIds.count == visibleItems.count
+    }
+    
+    private var subtitle: String {
+        if listManager.isSelectMode {
+            let count = listManager.selectedItems.count
+            return "Select Mode  |  \(count == 0 ? "No" : String(count)) items selected"
+        }
+        
+        return checklist?.itemPath ?? ""
     }
 
     init(
@@ -83,128 +109,172 @@ struct ChecklistView: View {
                 )
                 .accentColor(checklist?.color.swiftUIColor ?? .blue)
                 .navigationTitle(checklist?.title ?? "")
+                .navigationSubtitle(subtitle)
                 .toolbar {
-
-                    ToolbarItem(placement: .topBarLeading) {
-                        if !listManager.isSelectMode {
-                            Button("Back", systemImage: "chevron.down") {
-                                closeChecklist()
-                            }
-                        }
-                        Button("Cancel", systemImage: "xmark") {
-                            listManager.cancelSelectMode()
-                        }
-                    }
-
-                    ToolbarItemGroup(placement: .topBarTrailing) {
-                        if !listManager.isSelectMode {
-                            Button("Select") {
-                                listManager.toggleType = .staging
-                            }
-
-                            Menu {
-
-                                Button {
-                                    checklist?.showCompleted.toggle()
-                                } label: {
-                                    Text(
-                                        checklist?.showCompleted == true
-                                            ? "Hide completed"
-                                            : "Show completed"
-                                    )
-                                    Image(
-                                        systemName: checklist?.showCompleted
-                                            == true
-                                            ? "eye.slash" : "eye"
-                                    )
-                                }
-
-                                Menu {
-                                    Button(role: .destructive) {
-                                        showDeleteCompletedConfirm = true
-                                    } label: {
-                                        Text("Delete completed items")
-                                    }
-                                    .disabled(!hasCheckedItems)
-
-                                    Button(role: .destructive) {
-                                        showDeleteChecklistConfirm = true
-                                    } label: {
-                                        Text("Delete this list")
-                                    }
-                                } label: {
-                                    Label(
-                                        "Delete options",
-                                        systemImage: "trash"
-                                    )
-                                }
-
-                            } label: {
-                                Image(systemName: "ellipsis")
-                            }
-                            .confirmationDialog(
-                                "Delete this entire list?",
-                                isPresented: $showDeleteChecklistConfirm,
-                                titleVisibility: .visible
-                            ) {
-                                Button("Confirm", role: .destructive) {
-                                    deleteEntireList()
-                                }
-                            } message: {
-                                Text(
-                                    "\(checklist?.items.isEmpty == true ? "" : "All items will be lost. ")This action is irreversible."
-                                )
-                            }
-                            .confirmationDialog(
-                                "Delete completed items from this list?",
-                                isPresented: $showDeleteCompletedConfirm,
-                                titleVisibility: .visible
-                            ) {
-                                Button("Confirm", role: .destructive) {
-                                    deleteAllCompletedItems()
-                                }
-                            } message: {
-                                Text("This action is irreversible.")
-                            }
-                        } else {
-                            Button("Select All") {
-                                // TODO: select all
-                            }
-                        }
-                    }
-
-                    ToolbarItemGroup(placement: .bottomBar) {
-                        if !listManager.isSelectMode {
-                            Spacer()
-
-                            Button("Add", systemImage: "plus") {
-                                createItem(at: sortedUncheckedItems.count)
-                                proxy.slideTo(
-                                    "UNCHECKED",
-                                    at: .bottom
-                                )
-                            }
-                        } else {
-                            Button("Delete", systemImage: "trash") {
-
-                            }
-                            .disabled(listManager.selectedItemIds.isEmpty)
-
-                            Spacer()
-
-                            Button(
-                                "Transfer",
-                                systemImage: "arrow.forward.folder"
-                            ) {
-
-                            }
-                            .disabled(listManager.selectedItemIds.isEmpty)
-                        }
-                    }
+                    topLeftToolbar
+                    topRightToolbar
+                    bottomToolbar(proxy)
                 }
             }
         }
     }
+
+    // MARK: - Helper Views
+
+    private var topLeftToolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            if !listManager.isSelectMode {
+                Button("Back", systemImage: "arrow.down.right.and.arrow.up.left") {
+                    closeChecklist()
+                }
+            }
+            Button("Cancel", systemImage: "xmark") {
+                listManager.exitSelectMode()
+            }
+        }
+    }
+
+    private var topRightToolbar: some ToolbarContent {
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            if !listManager.isSelectMode {
+                Button("Select") {
+                    listManager.toggleType = .staging
+                }
+
+                Menu {
+                    showCompletedToggle
+
+                    Menu {
+                        Button(role: .destructive) {
+                            showDeleteCompletedConfirm = true
+                        } label: {
+                            Text("Delete completed items")
+                        }
+                        .disabled(!hasCheckedItems)
+
+                        Button(role: .destructive) {
+                            showDeleteChecklistConfirm = true
+                        } label: {
+                            Text("Delete this list")
+                        }
+                    } label: {
+                        Label(
+                            "Delete options",
+                            systemImage: "trash"
+                        )
+                    }
+
+                } label: {
+                    Image(systemName: "ellipsis")
+                }
+                .confirmationDialog(
+                    "Delete this entire list?",
+                    isPresented: $showDeleteChecklistConfirm,
+                    titleVisibility: .visible
+                ) {
+                    Button("Confirm", role: .destructive) {
+                        deleteEntireList()
+                    }
+                } message: {
+                    Text(
+                        "\(checklist?.items.isEmpty == true ? "" : "All items will be lost. ")This action is irreversible."
+                    )
+                }
+                .confirmationDialog(
+                    "Delete completed items from this list?",
+                    isPresented: $showDeleteCompletedConfirm,
+                    titleVisibility: .visible
+                ) {
+                    Button("Confirm", role: .destructive) {
+                        deleteAllCompletedItems()
+                    }
+                } message: {
+                    Text("This action is irreversible.")
+                }
+            } else {
+                Button(isAllSelected ? "Deselect All" : "Select All") {
+                    if isAllSelected {
+                        listManager.selectedItemIds = []
+                        listManager.selectedItems = []
+                    } else {
+                        listManager.selectedItems = visibleItems
+                        listManager.selectedItemIds = Set(
+                            visibleItems.map { $0.id }
+                        )
+                    }
+                }
+                .disabled(visibleItems.isEmpty)
+            }
+        }
+    }
+
+    @ToolbarContentBuilder
+    private func bottomToolbar(
+        _ proxy: ScrollViewProxy
+    ) -> some ToolbarContent {
+        ToolbarItemGroup(placement: .bottomBar) {
+            if !listManager.isSelectMode {
+                Spacer()
+
+                Button("Add", systemImage: "plus") {
+                    createItem(at: sortedUncheckedItems.count)
+                    proxy.slideTo(
+                        "UNCHECKED",
+                        at: .bottom
+                    )
+                }
+            } else {
+
+                Button("Delete", systemImage: "trash") {
+                    showDeleteSelectedConfirm = true
+                }
+                .disabled(listManager.selectedItemIds.isEmpty)
+                .confirmationDialog(
+                    "Delete selected items?",
+                    isPresented: $showDeleteSelectedConfirm,
+                    titleVisibility: .visible
+                ) {
+                    Button("Confirm", role: .destructive) {
+                        deleteItems(listManager.selectedItems)
+                        listManager.exitSelectMode()
+                    }
+                } message: {
+                    Text(
+                        "This action is irreversible."
+                    )
+                }
+
+                Spacer()
+
+                Button(
+                    "Transfer",
+                    systemImage: "arrow.forward.folder"
+                ) {
+
+                }
+                .disabled(listManager.selectedItemIds.isEmpty)
+            }
+        }
+    }
+
+    private var showCompletedToggle: some View {
+        Button {
+            checklist?.showCompleted.toggle()
+        } label: {
+            Image(
+                systemName: checklist?.showCompleted
+                    == true
+                    ? "eye.slash" : "eye"
+            )
+            Text(
+                checklist?.showCompleted == true
+                    ? "Hide completed"
+                    : "Show completed"
+            )
+        }
+    }
+
+    // MARK: - Helper Functions
 
     private func createItem(
         near baseId: PersistentIdentifier?,
@@ -263,16 +333,7 @@ struct ChecklistView: View {
     }
 
     private func deleteAllCompletedItems() {
-        sortedCheckedItems
-            .forEach { modelContext.delete($0) }
-
-        do {
-            try modelContext.save()
-        } catch {
-            assertionFailure(
-                "Failed to delete completed items: \(error)"
-            )
-        }
+        deleteItems(sortedCheckedItems)
     }
 
     private func deleteEntireList() {
@@ -289,6 +350,18 @@ struct ChecklistView: View {
         } catch {
             assertionFailure(
                 "Failed to delete list: \(error)"
+            )
+        }
+    }
+
+    private func deleteItems(_ items: [ChecklistItem]) {
+        items.forEach { modelContext.delete($0) }
+
+        do {
+            try modelContext.save()
+        } catch {
+            assertionFailure(
+                "Failed to delete items: \(error)"
             )
         }
     }

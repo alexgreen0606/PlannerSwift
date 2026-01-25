@@ -53,7 +53,7 @@ final class ListManager<Item: ListItem>: ObservableObject {
         toggleType == .staging
     }
     
-    func cancelSelectMode() {
+    func exitSelectMode() {
         toggleType = .storage
         selectedItems = []
         selectedItemIds = []
