@@ -63,13 +63,14 @@ struct ChecklistView: View {
     private var isAllSelected: Bool {
         listManager.selectedItemIds.count == visibleItems.count
     }
-    
+
     private var subtitle: String {
         if listManager.isSelectMode {
             let count = listManager.selectedItems.count
-            return "Select Mode  |  \(count == 0 ? "No" : String(count)) items selected"
+            return
+                "Select Mode  |  \(count == 0 ? "No" : String(count)) items selected"
         }
-        
+
         return checklist?.itemPath ?? ""
     }
 
@@ -124,7 +125,10 @@ struct ChecklistView: View {
     private var topLeftToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             if !listManager.isSelectMode {
-                Button("Back", systemImage: "arrow.down.right.and.arrow.up.left") {
+                Button(
+                    "Back",
+                    systemImage: "arrow.down.right.and.arrow.up.left"
+                ) {
                     closeChecklist()
                 }
             }
@@ -134,13 +138,18 @@ struct ChecklistView: View {
         }
     }
 
+    @ToolbarContentBuilder
     private var topRightToolbar: some ToolbarContent {
-        ToolbarItemGroup(placement: .topBarTrailing) {
-            if !listManager.isSelectMode {
+        if !listManager.isSelectMode {
+            ToolbarItem(placement: .topBarTrailing) {
                 Button("Select") {
                     listManager.toggleType = .staging
                 }
+            }
 
+            ToolbarSpacer(.fixed, placement: .topBarTrailing)
+
+            ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     showCompletedToggle
 
@@ -191,7 +200,9 @@ struct ChecklistView: View {
                 } message: {
                     Text("This action is irreversible.")
                 }
-            } else {
+            }
+        } else {
+            ToolbarItem(placement: .topBarTrailing) {
                 Button(isAllSelected ? "Deselect All" : "Select All") {
                     if isAllSelected {
                         listManager.selectedItemIds = []
@@ -236,7 +247,8 @@ struct ChecklistView: View {
                 ) {
                     Button("Confirm", role: .destructive) {
                         deleteItems(listManager.selectedItems)
-                        listManager.exitSelectMode()
+                        listManager.selectedItemIds = []
+                        listManager.selectedItems = []
                     }
                 } message: {
                     Text(
