@@ -134,7 +134,7 @@ struct ChecklistView: View {
                 }
             }
             Button("Cancel", systemImage: "xmark") {
-                listManager.exitSelectMode()
+                listManager.toggleSelectMode()
             }
         }
     }
@@ -143,8 +143,11 @@ struct ChecklistView: View {
     private var topRightToolbar: some ToolbarContent {
         if !listManager.isSelectMode {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Select") {
-                    listManager.toggleType = .select
+                Button {
+                    listManager.toggleSelectMode()
+                } label: {
+                    Text("Select")
+                        .fontWeight(.semibold)
                 }
                 .disabled(visibleItems.isEmpty)
             }
@@ -205,7 +208,7 @@ struct ChecklistView: View {
             }
         } else {
             ToolbarItem(placement: .topBarTrailing) {
-                Button(isAllSelected ? "Deselect All" : "Select All") {
+                Button {
                     if isAllSelected {
                         listManager.selectedItemIds = []
                         listManager.selectedItems = []
@@ -215,6 +218,9 @@ struct ChecklistView: View {
                             visibleItems.map { $0.id }
                         )
                     }
+                } label: {
+                    Text(isAllSelected ? "Deselect All" : "Select All")
+                        .fontWeight(.semibold)
                 }
                 .disabled(visibleItems.isEmpty)
             }

@@ -43,7 +43,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
     }
 
     private var isChecked: Bool {
-        if listManager.toggleType == .select {
+        if listManager.isSelectMode {
             return listManager.selectedItemIds.contains(item.id)
         }
 
