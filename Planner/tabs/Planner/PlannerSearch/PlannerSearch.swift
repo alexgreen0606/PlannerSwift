@@ -172,101 +172,8 @@ struct PlannerSearchView: View {
             .background(Color.appBackground)
             .navigationTitle("Planner")
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Calendar", systemImage: "calendar") {
-                        isCalendarPickerOpen = true
-                    }
-                    .popover(isPresented: $isCalendarPickerOpen) {
-                        VStack {
-                            DatePicker(
-                                "Open a planner",
-                                selection: $selectedCalendarDate,
-                                in: keepPastPlansDuration
-                                    .cutoffDate...todaystampWatcher
-                                    .maxCalendarDate,
-                                displayedComponents: .date
-                            )
-                            .datePickerStyle(.graphical)
-                            .onChange(of: selectedCalendarDate) {
-                                _,
-                                targetPlannerDate in
-                                isCalendarPickerOpen = false
-
-                                DispatchQueue.main.async {
-                                    plannerCoverContext = PlannerCoverContext(
-                                        datestamp: targetPlannerDate.datestamp,
-                                        namespace: toolbarAnimation
-                                    )
-                                }
-                            }
-                        }
-                        .frame(width: 340, height: 320)
-                        .padding()
-                        .presentationCompactAdaptation(.popover)
-                    }
-                    .matchedTransitionSource(
-                        id: "CALENDAR",
-                        in: toolbarAnimation
-                    )
-                }
-
-                ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        Text("Filter Calendars")
-                            .font(.footnote)
-
-                        Divider()
-
-                        ForEach(sortedCalendars, id: \.calendarIdentifier) {
-                            calendar in
-                            Toggle(
-                                isOn: Binding(
-                                    get: {
-                                        filterCalendarIds.contains(
-                                            calendar.calendarIdentifier
-                                        )
-                                    },
-                                    set: { isOn in
-                                        if isOn {
-                                            filterCalendarIds.insert(
-                                                calendar.calendarIdentifier
-                                            )
-                                        } else {
-                                            filterCalendarIds.remove(
-                                                calendar.calendarIdentifier
-                                            )
-                                        }
-                                    }
-                                )
-                            ) {
-                                HStack(spacing: 8) {
-                                    Image(
-                                        systemName:
-                                            calendarSettings?.iconMap[
-                                                calendar.calendarIdentifier
-                                            ] ?? calendar.iconName
-                                    )
-                                    .tint(Color(cgColor: calendar.cgColor))
-
-                                    Text(calendar.title)
-                                }
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "line.3.horizontal.decrease")
-                    }
-                    .menuActionDismissBehavior(.disabled)
-                }
-
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("New Event", systemImage: "plus") {
-                        isNewEventSheetOpen = true
-                    }
-                    .matchedTransitionSource(
-                        id: "NEW_EVENT",
-                        in: toolbarAnimation
-                    )
-                }
+                topLeftToolbar
+                topRightToolbar
             }
             .fullScreenCover(item: $plannerCoverContext) { context in
                 PlannerView(datestamp: context.datestamp) {
@@ -277,24 +184,6 @@ struct PlannerSearchView: View {
                         sourceID: context.namespace == toolbarAnimation
                             ? "CALENDAR" : context.datestamp,
                         in: context.namespace
-                    )
-                )
-            }
-            .sheet(isPresented: $isNewEventSheetOpen) {
-                EditCalendarEventFormView(
-                    event: EKEvent(eventStore: calendarStore.ekEventStore),
-                    eventStore: calendarStore.ekEventStore
-                ) { action, event in
-                    calendarStore.refresh(
-                        hiddenCalendarIds: calendarSettings?.hiddenCalendarIds
-                            ?? []
-                    )
-                    isNewEventSheetOpen = false
-                }
-                .navigationTransition(
-                    .zoom(
-                        sourceID: "NEW_EVENT",
-                        in: toolbarAnimation
                     )
                 )
             }
@@ -328,6 +217,121 @@ struct PlannerSearchView: View {
             text: $searchText,
             prompt: "Search calendar events..."
         )
+    }
+
+    private var topLeftToolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button("Calendar", systemImage: "calendar") {
+                isCalendarPickerOpen = true
+            }
+            .popover(isPresented: $isCalendarPickerOpen) {
+                VStack {
+                    DatePicker(
+                        "Open a planner",
+                        selection: $selectedCalendarDate,
+                        in: keepPastPlansDuration
+                            .cutoffDate...todaystampWatcher
+                            .maxCalendarDate,
+                        displayedComponents: .date
+                    )
+                    .datePickerStyle(.graphical)
+                    .onChange(of: selectedCalendarDate) {
+                        _,
+                        targetPlannerDate in
+                        isCalendarPickerOpen = false
+
+                        DispatchQueue.main.async {
+                            plannerCoverContext = PlannerCoverContext(
+                                datestamp: targetPlannerDate.datestamp,
+                                namespace: toolbarAnimation
+                            )
+                        }
+                    }
+                }
+                .frame(width: 340, height: 320)
+                .padding()
+                .presentationCompactAdaptation(.popover)
+            }
+            .matchedTransitionSource(
+                id: "CALENDAR",
+                in: toolbarAnimation
+            )
+        }
+    }
+
+    private var topRightToolbar: some ToolbarContent {
+        ToolbarItemGroup(placement: .topBarTrailing) {
+
+            Menu {
+                Text("Filter Calendars")
+                    .font(.footnote)
+                Divider()
+                ForEach(sortedCalendars, id: \.calendarIdentifier) {
+                    calendar in
+                    Toggle(
+                        isOn: Binding(
+                            get: {
+                                filterCalendarIds.contains(
+                                    calendar.calendarIdentifier
+                                )
+                            },
+                            set: { isOn in
+                                if isOn {
+                                    filterCalendarIds.insert(
+                                        calendar.calendarIdentifier
+                                    )
+                                } else {
+                                    filterCalendarIds.remove(
+                                        calendar.calendarIdentifier
+                                    )
+                                }
+                            }
+                        )
+                    ) {
+                        HStack(spacing: 8) {
+                            Image(
+                                systemName:
+                                    calendarSettings?.iconMap[
+                                        calendar.calendarIdentifier
+                                    ] ?? calendar.iconName
+                            )
+                            .tint(Color(cgColor: calendar.cgColor))
+
+                            Text(calendar.title)
+                        }
+                    }
+                }
+            } label: {
+                Image(systemName: "line.3.horizontal.decrease")
+            }
+            .menuActionDismissBehavior(.disabled)
+
+            Button("New Event", systemImage: "plus") {
+                isNewEventSheetOpen = true
+            }
+            .matchedTransitionSource(
+                id: "NEW_EVENT",
+                in: toolbarAnimation
+            )
+            .sheet(isPresented: $isNewEventSheetOpen) {
+                EditCalendarEventFormView(
+                    event: EKEvent(eventStore: calendarStore.ekEventStore),
+                    eventStore: calendarStore.ekEventStore
+                ) { action, event in
+                    calendarStore.refresh(
+                        hiddenCalendarIds: calendarSettings?.hiddenCalendarIds
+                            ?? []
+                    )
+                    isNewEventSheetOpen = false
+                }
+                .navigationTransition(
+                    .zoom(
+                        sourceID: "NEW_EVENT",
+                        in: toolbarAnimation
+                    )
+                )
+            }
+        }
     }
 
     private func isCalendarEventChecked(event: EKEvent?) -> Bool {

@@ -62,6 +62,7 @@ struct ChecklistView: View {
 
     private var isAllSelected: Bool {
         listManager.selectedItemIds.count == visibleItems.count
+            && !visibleItems.isEmpty
     }
 
     private var subtitle: String {
@@ -143,8 +144,9 @@ struct ChecklistView: View {
         if !listManager.isSelectMode {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Select") {
-                    listManager.toggleType = .staging
+                    listManager.toggleType = .select
                 }
+                .disabled(visibleItems.isEmpty)
             }
 
             ToolbarSpacer(.fixed, placement: .topBarTrailing)
@@ -177,7 +179,7 @@ struct ChecklistView: View {
                     Image(systemName: "ellipsis")
                 }
                 .confirmationDialog(
-                    "Delete this entire list?",
+                    checklist?.deleteConfirmation ?? "",
                     isPresented: $showDeleteChecklistConfirm,
                     titleVisibility: .visible
                 ) {
@@ -186,7 +188,7 @@ struct ChecklistView: View {
                     }
                 } message: {
                     Text(
-                        "\(checklist?.items.isEmpty == true ? "" : "All items will be lost. ")This action is irreversible."
+                        checklist?.deleteWarning ?? ""
                     )
                 }
                 .confirmationDialog(
@@ -235,7 +237,6 @@ struct ChecklistView: View {
                     )
                 }
             } else {
-
                 Button("Delete", systemImage: "trash") {
                     showDeleteSelectedConfirm = true
                 }

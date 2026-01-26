@@ -23,12 +23,12 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
     let isItemChecked: ((_ item: Item) -> Bool)?
 
     @Environment(\.scenePhase) private var appPhase
-
     @Environment(\.modelContext) private var modelContext
+
     @EnvironmentObject var focusController: FocusController
     @EnvironmentObject var listManager: ListManager<Item>
 
-    // Will be updated dynamically within the NonBlurringTextfield.
+    // Will be updated dynamically within the TextfieldView.
     @State private var height: CGFloat = 0
 
     @State private var isFocused: Bool = false
@@ -43,7 +43,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
     }
 
     private var isChecked: Bool {
-        if listManager.toggleType == .staging {
+        if listManager.toggleType == .select {
             return listManager.selectedItemIds.contains(item.id)
         }
 
@@ -56,12 +56,14 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
             .listRowInsets(EdgeInsets())
             .discreetListItem()
             .padding(.horizontal, 16)
-            // Trigger focus on render for new items.
+
+            // Trigger focus on render for empty items (new items).
             .onAppear {
                 if item.title.isEmpty {
                     isFocused = true
                 }
             }
+
             // Blur the textfield when a different field is focused.
             .onChange(of: focusController.focusedId) { _, newFocusedId in
                 if newFocusedId != item.id,
@@ -70,12 +72,22 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
                     isFocused = false
                 }
             }
+
             // Blur the textfield when this item has been selected.
             .onChange(of: isChecked) { _, newIsSelected in
                 if newIsSelected == true {
                     isFocused = false
                 }
             }
+
+            // Blur the textfield when select mode begins.
+            .onChange(of: listManager.isSelectMode) { _, isSelectMode in
+                if isSelectMode {
+                    isFocused = false
+                    dismissKeyboard()
+                }
+            }
+
             // Blur the textfield when the app exits focus.
             .onChange(of: appPhase) { _, phase in
                 if phase == .inactive {
@@ -114,6 +126,11 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
             NewItemTriggerView(
                 showUpperDivider: showUpperDivider,
                 onCreateItem: {
+                    guard !listManager.isSelectMode else {
+                        listManager.toggleItem(item)
+                        return
+                    }
+                    
                     onCreateItem(item.id, 0)
                 }
             )
@@ -133,6 +150,11 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
             NewItemTriggerView(
                 showLowerDivider: true,
                 onCreateItem: {
+                    guard !listManager.isSelectMode else {
+                        listManager.toggleItem(item)
+                        return
+                    }
+                    
                     onCreateItem(item.id, 1)
                 }
             )
@@ -151,6 +173,11 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
             .onTapGesture {
+                guard !listManager.isSelectMode else {
+                    listManager.toggleItem(item)
+                    return
+                }
+
                 if !isChecked && !item.isChecked {
                     isFocused = true
                 }
@@ -180,6 +207,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
         .opacity(isFocused ? 1 : 0)
         .frame(maxWidth: .infinity, alignment: .leading)
         .fixedSize(horizontal: false, vertical: true)
+
         // Debounce the external save each time the text changes.
         .onChange(of: item.title) { _, newTitle in
             debounceTask?.cancel()
@@ -189,6 +217,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
                 onTitleChange(item)
             }
         }
+
         // Handle focus side effects.
         .onChange(of: isFocused) { oldIsFocused, newIsFocused in
             if newIsFocused {
@@ -210,4 +239,14 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
             }
         }
     }
+    
+    func dismissKeyboard() {
+        UIApplication.shared.sendAction(
+            #selector(UIResponder.resignFirstResponder),
+            to: nil,
+            from: nil,
+            for: nil
+        )
+    }
+
 }

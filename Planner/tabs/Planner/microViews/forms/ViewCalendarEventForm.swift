@@ -22,8 +22,6 @@ struct ViewCalendarEventFormView: UIViewControllerRepresentable {
 
         let nav = UINavigationController(rootViewController: vc)
         nav.setNavigationBarHidden(true, animated: false)
-        
-        // TODO: disable scroll and make background clear for glass effect
 
         return nav
     }

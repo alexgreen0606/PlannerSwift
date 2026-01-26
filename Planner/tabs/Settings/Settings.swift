@@ -112,7 +112,7 @@ struct SettingsView: View {
                         "Show End Events",
                         selection: $keepPastPlansDuration
                     ) {
-                        // TODO: For multi-day only, always
+                        // TODO: multi-day only / always
                     }
                     .pickerStyle(.menu)
 

@@ -6,6 +6,6 @@
 //
 
 enum ListToggleType: String {
-    case storage
-    case staging
+    case check
+    case select
 }

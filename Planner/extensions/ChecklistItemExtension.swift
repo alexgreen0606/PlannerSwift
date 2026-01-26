@@ -21,4 +21,16 @@ extension ChecklistItem {
         return components.reversed().joined(separator: " / ")
     }
     
+    var childrenLabel: String {
+        self.type == .checklist ? "items" : "contents"
+    }
+    
+    var deleteConfirmation: String {
+        "Delete this entire \(self.type.rawValue)?"
+    }
+    
+    var deleteWarning: String {
+        "\(self.items.isEmpty ? "" : "All \(childrenLabel) will be lost. ")This action is irreversible."
+    }
+    
 }

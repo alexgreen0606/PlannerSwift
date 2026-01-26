@@ -8,8 +8,6 @@
 import SwiftData
 import SwiftUI
 
-// TODO: slide to new items after creation
-
 struct ChecklistCoverContext: Identifiable {
     var checklistId: PersistentIdentifier
     var namespace: Namespace.ID
@@ -43,121 +41,17 @@ struct FolderView: View {
                     sortedItems,
                     id: \.self
                 ) { item in
-                    HStack(alignment: .top, spacing: 12) {
-                        VStack(alignment: .leading) {
-                            Image(systemName: item.type.iconName)
-                                .foregroundColor(item.color.swiftUIColor)
-                                .imageScale(.medium)
-                                .frame(
-                                    width: 26,
-                                    height: 53,
-                                    alignment: .center
-                                )
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    sheetContext = .edit(item)
-                                }
-
-                        }
-                        .frame(height: 19)
-                        .matchedTransitionSource(
-                            id: String(describing: item.id),
-                            in: sheetAnimation
-                        )
-
-                        Text(item.title)
-                            .font(.system(size: UIConstants.listItemFontSize))
-                            .lineLimit(nil)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-
-                        HStack(alignment: .center) {
-                            Text("\(item.items.filter{!$0.isChecked}.count)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-
-                            if item.type == .folder {
-                                Image(systemName: "chevron.right")
-                                    .foregroundColor(
-                                        Color(uiColor: .tertiaryLabel)
-                                    )
-                            }
-                        }
-                        .frame(height: 19)
-                    }
-                    .id(item.id)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        if item.type == .folder {
-                            openFolder(item)
-                        } else {
-                            checklistCoverContext = ChecklistCoverContext(
-                                checklistId: item.id,
-                                namespace: sheetAnimation
-                            )
-                        }
-                    }
-                    .matchedTransitionSource(
-                        id: "\(item.id)-\(sheetAnimation)",
-                        in: sheetAnimation
-                    )
+                    itemRow(item)
                 }
                 .onMove(perform: moveItem)
             }
             .navigationTitle(folder.title)
             .navigationSubtitle(folder.itemPath)
-            // Scroll to new items.
-            .onChange(of: sortedItems.map(\.id)) { _, _ in
-                guard let item = pendingScrollItem else { return }
-
-                proxy.slideTo(item.id, at: .top)
-                pendingScrollItem = nil
-            }
             .toolbar {
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    Menu {
-
-                        Button {
-                            sheetContext = .parent
-                        } label: {
-                            Text("Edit folder details")
-                            Image(systemName: "pencil")
-                        }
-
-                        if folder.parent != nil {
-                            Button(role: .destructive) {
-                                showDeleteFolderConfirm = true
-                            } label: {
-                                Text("Delete this folder")
-                                Image(systemName: "trash")
-                            }
-                        }
-
-                    } label: {
-                        Image(systemName: "ellipsis")
-                    }
-                    .matchedTransitionSource(id: "ellipsis", in: sheetAnimation)
-                    .confirmationDialog(
-                        "Delete this entire folder?",
-                        isPresented: $showDeleteFolderConfirm,
-                        titleVisibility: .visible
-                    ) {
-                        Button("Confirm", role: .destructive) {
-                            deleteEntireFolder()
-                        }
-                    } message: {
-                        Text(
-                            "\(folder.items.isEmpty ? "" : "All contents will be lost. ")This action is irreversible."
-                        )
-                    }
-
-                    Button("Add", systemImage: "plus") {
-                        sheetContext = .create
-                    }
-                    .matchedTransitionSource(id: "add", in: sheetAnimation)
-                }
+                topRightToolbar
             }
+
+            // Create/Edit Checklist Form
             .sheet(item: $sheetContext) { context in
                 switch context {
                 case .create:
@@ -189,6 +83,8 @@ struct FolderView: View {
                     )
                 }
             }
+
+            // Checklist Page
             .fullScreenCover(item: $checklistCoverContext) { context in
                 ChecklistView(checklistId: context.checklistId) {
                     checklistCoverContext = nil
@@ -200,11 +96,127 @@ struct FolderView: View {
                     )
                 )
             }
+
+            // Scroll to new items.
+            .onChange(of: sortedItems.map(\.id)) { _, _ in
+                guard let item = pendingScrollItem else { return }
+
+                proxy.slideTo(item.id, at: .top)
+                pendingScrollItem = nil
+            }
         }
+
+        // Empty Folder Label
         .overlay {
             if folder.items.isEmpty {
                 EmptyLabel("No contents")
             }
+        }
+    }
+
+    private func itemRow(_ item: ChecklistItem) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading) {
+                Image(systemName: item.type.iconName)
+                    .foregroundColor(item.color.swiftUIColor)
+                    .imageScale(.medium)
+                    .frame(
+                        width: 26,
+                        height: 53,
+                        alignment: .center
+                    )
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        sheetContext = .edit(item)
+                    }
+
+            }
+            .frame(height: 19)
+            .matchedTransitionSource(
+                id: String(describing: item.id),
+                in: sheetAnimation
+            )
+
+            Text(item.title)
+                .font(.system(size: UIConstants.listItemFontSize))
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack(alignment: .center) {
+                Text("\(item.items.filter{!$0.isChecked}.count)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                if item.type == .folder {
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(
+                            Color(uiColor: .tertiaryLabel)
+                        )
+                }
+            }
+            .frame(height: 19)
+        }
+        .id(item.id)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if item.type == .folder {
+                openFolder(item)
+            } else {
+                checklistCoverContext = ChecklistCoverContext(
+                    checklistId: item.id,
+                    namespace: sheetAnimation
+                )
+            }
+        }
+        .matchedTransitionSource(
+            id: "\(item.id)-\(sheetAnimation)",
+            in: sheetAnimation
+        )
+    }
+
+    private var topRightToolbar: some ToolbarContent {
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            Menu {
+                Button {
+                    sheetContext = .parent
+                } label: {
+                    Text("Edit folder details")
+                    Image(systemName: "pencil")
+                }
+
+                if folder.parent != nil {
+                    Button(role: .destructive) {
+                        showDeleteFolderConfirm = true
+                    } label: {
+                        Text("Delete this folder")
+                        Image(systemName: "trash")
+                    }
+                }
+
+            } label: {
+                Image(systemName: "ellipsis")
+            }
+            .matchedTransitionSource(id: "ellipsis", in: sheetAnimation)
+            .confirmationDialog(
+                folder.deleteConfirmation,
+                isPresented: $showDeleteFolderConfirm,
+                titleVisibility: .visible
+            ) {
+                Button("Confirm", role: .destructive) {
+                    deleteEntireFolder()
+                }
+            } message: {
+                Text(
+                    folder.deleteWarning
+                )
+            }
+
+            Button("Add", systemImage: "plus") {
+                sheetContext = .create
+            }
+            .matchedTransitionSource(id: "add", in: sheetAnimation)
         }
     }
 
