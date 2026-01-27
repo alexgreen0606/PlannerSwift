@@ -46,7 +46,7 @@ struct FolderView: View {
                 .onMove(perform: moveItem)
             }
             .navigationTitle(folder.title)
-            .navigationSubtitle(folder.itemPath)
+            .navigationSubtitle(folder.path)
             .toolbar {
                 topRightToolbar
             }

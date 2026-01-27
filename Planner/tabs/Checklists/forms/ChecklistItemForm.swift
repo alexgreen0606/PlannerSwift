@@ -18,6 +18,11 @@ struct ChecklistItemFormView: View {
 
     @State private var draft: ChecklistItem
 
+    var isDirty: Bool {
+        draft.title != sourceItem?.title || draft.color != sourceItem?.color
+            || draft.type != sourceItem?.type
+    }
+
     init(
         item: ChecklistItem? = nil,
         parent: ChecklistItem? = nil,
@@ -93,12 +98,6 @@ struct ChecklistItemFormView: View {
             }
             .scrollDisabled(true)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", systemImage: "xmark") {
-                        dismiss()
-                    }
-                }
-
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Submit", systemImage: "checkmark") {
                         handleSave()
@@ -107,7 +106,7 @@ struct ChecklistItemFormView: View {
                         draft.title.isEmpty
                             ? Color(uiColor: .label) : draft.color.swiftUIColor
                     )
-                    .disabled(draft.title.isEmpty)
+                    .disabled(draft.title.isEmpty || !isDirty)
                 }
             }
         }
@@ -133,7 +132,7 @@ struct ChecklistItemFormView: View {
                 parent: parent
             )
             modelContext.insert(newItem)
-            
+
             onCreated(newItem)
         }
 

@@ -19,6 +19,7 @@ struct ChecklistView: View {
     @State private var showDeleteCompletedConfirm = false
     @State private var showDeleteChecklistConfirm = false
     @State private var showDeleteSelectedConfirm = false
+    @State private var isTransferSheetOpen = false
 
     private var checklist: ChecklistItem? {
         checklists.first
@@ -72,7 +73,7 @@ struct ChecklistView: View {
                 "Select Mode  |  \(count == 0 ? "No" : String(count)) items selected"
         }
 
-        return checklist?.itemPath ?? ""
+        return checklist?.path ?? ""
     }
 
     init(
@@ -265,13 +266,20 @@ struct ChecklistView: View {
 
                 Spacer()
 
+                // TODO: hide this if there are no other lists to transfer to
                 Button(
                     "Transfer",
                     systemImage: "arrow.forward.folder"
                 ) {
-
+                    isTransferSheetOpen = true
                 }
                 .disabled(listManager.selectedItemIds.isEmpty)
+                .sheet(isPresented: $isTransferSheetOpen) {
+                    if let checklist {
+                        TransferItemsFormView(currentItem: checklist)
+                            .presentationDetents([.height(600)])
+                    }
+                }
             }
         }
     }
