@@ -11,7 +11,7 @@ import SwiftUI
 struct ChecklistItemFormView: View {
     private let sourceItem: ChecklistItem?
     private let parent: ChecklistItem?
-    private let onCreated: (ChecklistItem) -> Void
+    private let onCreated: ((ChecklistItem) -> Void)?
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -26,7 +26,7 @@ struct ChecklistItemFormView: View {
     init(
         item: ChecklistItem? = nil,
         parent: ChecklistItem? = nil,
-        onCreated: @escaping (ChecklistItem) -> Void
+        onCreated: ((ChecklistItem) -> Void)? = nil
     ) {
         self.sourceItem = item
         self.parent = parent
@@ -133,7 +133,7 @@ struct ChecklistItemFormView: View {
             )
             modelContext.insert(newItem)
 
-            onCreated(newItem)
+            onCreated?(newItem)
         }
 
         do {

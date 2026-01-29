@@ -103,6 +103,7 @@ struct ChecklistView: View {
                     checkedFooter: nil,
                     emptyUncheckedLabel: "No items",
                     emptyCheckedLabel: "No completed items",
+                    animation: nil,
                     tint: { _ in checklist?.color.swiftUIColor ?? .blue },
                     startAdornment: { _ in EmptyView() },
                     endAdornment: { _ in EmptyView() },

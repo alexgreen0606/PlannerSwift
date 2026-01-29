@@ -24,13 +24,15 @@ struct FolderView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @State private var sheetContext: ChecklistItemSheetContext?
-    @Namespace private var sheetAnimation
-    @State private var showDeleteFolderConfirm = false
     @State private var checklistCoverContext: ChecklistCoverContext?
+    @Namespace private var sheetAnimation
     @State private var pendingScrollItem: ChecklistItem?
+
+    @State private var showDeleteFolderConfirm = false
     @State private var showDeleteSelectedConfirm = false
     @State private var isTransferSheetOpen = false
+    @State private var isCreateItemSheetOpen = false
+    @State private var isEditFormOpen = false
 
     @StateObject private var selectManager = ListManager<ChecklistItem>()
 
@@ -71,37 +73,24 @@ struct FolderView: View {
                 topRightToolbar
             }
 
-            // Create/Edit Checklist Form
-            .sheet(item: $sheetContext) { context in
-                switch context {
-                case .create:
-                    ChecklistItemFormView(item: nil, parent: folder) { id in
-                        pendingScrollItem = id
-                    }
-                    .presentationDetents([.height(250)])
-                    .navigationTransition(
-                        .zoom(sourceID: "add", in: sheetAnimation)
-                    )
-
-                case .edit(let item):
-                    ChecklistItemFormView(item: item, parent: folder) { _ in }
-                        .presentationDetents([.height(250)])
-                        .navigationTransition(
-                            .zoom(
-                                sourceID: String(describing: item.id),
-                                in: sheetAnimation
-                            )
-                        )
-
-                case .parent:
-                    ChecklistItemFormView(item: folder, parent: folder.parent) {
-                        _ in
-                    }
-                    .presentationDetents([.height(250)])
-                    .navigationTransition(
-                        .zoom(sourceID: "ellipsis", in: sheetAnimation)
-                    )
+            // Create Item Form
+            .sheet(isPresented: $isCreateItemSheetOpen) {
+                ChecklistItemFormView(item: nil, parent: folder) { id in
+                    pendingScrollItem = id
                 }
+                .presentationDetents([.height(250)])
+                .navigationTransition(
+                    .zoom(sourceID: "ADD_BUTTON", in: sheetAnimation)
+                )
+            }
+
+            // Edit Form
+            .sheet(isPresented: $isEditFormOpen) {
+                ChecklistItemFormView(item: folder, parent: folder.parent)
+                .presentationDetents([.height(250)])
+                .navigationTransition(
+                    .zoom(sourceID: "ELLIPSIS", in: sheetAnimation)
+                )
             }
 
             // Checklist Page
@@ -165,13 +154,7 @@ struct FolderView: View {
                 }
 
                 itemIcon(for: item)
-                    .contentShape(Rectangle())
                     .opacity(selectManager.isSelectMode ? 0.5 : 1)
-                    .onTapGesture {
-                        guard !selectManager.isSelectMode else { return }
-
-                        sheetContext = .edit(item)
-                    }
             }
             .frame(height: 19)
             .matchedTransitionSource(
@@ -274,7 +257,7 @@ struct FolderView: View {
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     Menu {
                         Button {
-                            sheetContext = .parent
+                            isEditFormOpen = true
                         } label: {
                             Text("Edit folder details")
                             Image(systemName: "pencil")
@@ -301,7 +284,7 @@ struct FolderView: View {
                     } label: {
                         Image(systemName: "ellipsis")
                     }
-                    .matchedTransitionSource(id: "ellipsis", in: sheetAnimation)
+                    .matchedTransitionSource(id: "ELLIPSIS", in: sheetAnimation)
                     .confirmationDialog(
                         folder.deleteConfirmation,
                         isPresented: $showDeleteFolderConfirm,
@@ -317,9 +300,12 @@ struct FolderView: View {
                     }
 
                     Button("Add", systemImage: "plus") {
-                        sheetContext = .create
+                        isCreateItemSheetOpen = true
                     }
-                    .matchedTransitionSource(id: "add", in: sheetAnimation)
+                    .matchedTransitionSource(
+                        id: "ADD_BUTTON",
+                        in: sheetAnimation
+                    )
                 }
             } else {
                 ToolbarItem(placement: .topBarTrailing) {

@@ -26,6 +26,7 @@ struct SortableListView<Item: ListItem, StartAdornment: View, EndAdornment: View
     let checkedFooter: String?
     let emptyUncheckedLabel: String
     let emptyCheckedLabel: String
+    let animation: Namespace.ID?
     let tint: (_ item: Item) -> Color
     let startAdornment: ((_ item: Item) -> StartAdornment)?
     let endAdornment: ((_ item: Item) -> EndAdornment)?
@@ -61,6 +62,7 @@ struct SortableListView<Item: ListItem, StartAdornment: View, EndAdornment: View
                         showUpperDivider: item.id == uncheckedItems.first?.id,
                         startAdornment: startAdornment,
                         endAdornment: endAdornment,
+                        animation: animation,
                         customToggleConfig: customToggleConfig,
                         onCreateItem: createItem,
                         onTitleChange: handleTitleChange,
@@ -103,6 +105,7 @@ struct SortableListView<Item: ListItem, StartAdornment: View, EndAdornment: View
                                 == checkedItems.first?.id,
                             startAdornment: startAdornment,
                             endAdornment: endAdornment,
+                            animation: animation,
                             customToggleConfig: customToggleConfig,
                             onCreateItem: { _, _ in },
                             onTitleChange: { _ in },

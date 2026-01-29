@@ -15,11 +15,8 @@ import SwiftUI
 struct CalendarEventSheetContext: Identifiable {
     var event: EKEvent
     var namespace: Namespace.ID
+    var id: String
     var contact: CNContact?
-
-    var id: String {
-        "\(String(describing: event.eventIdentifier))-\(namespace)-\(event.isAllDay)"
-    }
 }
 
 struct PlannerView: View {
@@ -193,13 +190,16 @@ struct PlannerView: View {
                         showWeather: true,
                         iconMap: calendarSettings?.iconMap ?? [:],
                         animation: sheetAnimation,
-                        openCalendarEventSheet: openCalendarEventSheet
+                        openCalendarEventSheet: { calEvent in
+                            openCalendarEventSheet(for: calEvent, from: "\(String(describing: calEvent.eventIdentifier))")
+                        }
                     ),
                     customToggleConfig: toggleEventIconConfig,
                     checkedHeader: plannerType.checkedHeader,
                     checkedFooter: plannerType.getCheckedFooter(for: datestamp),
                     emptyUncheckedLabel: "No plans",
                     emptyCheckedLabel: plannerType.emptyCheckedLabel,
+                    animation: sheetAnimation,
                     tint: { event in
                         if let calendar = event.calendarEvent?.calendar {
                             return Color(cgColor: calendar.cgColor)
@@ -230,8 +230,9 @@ struct PlannerView: View {
                             event.timeValueView(
                                 for: datestamp,
                                 openPlannerEventSheet: openPlannerEventSheet,
-                                openCalendarEventSheet: openCalendarEventSheet,
-                                animation: sheetAnimation,
+                                openCalendarEventSheet: { calEvent in
+                                    openCalendarEventSheet(for: calEvent, from: "\(event.id)")
+                                },
                                 accentColor: accentColor.swiftUIColor
                             )
                         )
@@ -595,7 +596,8 @@ struct PlannerView: View {
     }
 
     private func openCalendarEventSheet(
-        for event: EKEvent
+        for event: EKEvent,
+        from id: String
     ) {
         // Open the contact for birthday events.
         var contact: CNContact? = nil
@@ -620,6 +622,7 @@ struct PlannerView: View {
         calendarEventSheetContext = CalendarEventSheetContext(
             event: event,
             namespace: sheetAnimation,
+            id: id,
             contact: contact
         )
     }

@@ -65,7 +65,7 @@ struct PlannerChipSpreadView: View {
                         }
                         .matchedTransitionSource(
                             id:
-                                "\(String(describing: event.eventIdentifier))-\(animation)-\(event.isAllDay)",
+                                "\(String(describing: event.eventIdentifier))",
                             in: animation
                         )
                 } else {

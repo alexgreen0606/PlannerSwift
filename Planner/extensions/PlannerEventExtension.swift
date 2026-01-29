@@ -14,41 +14,24 @@ extension PlannerEvent {
         for datestamp: String,
         openPlannerEventSheet: ((PlannerEvent) -> Void)?,
         openCalendarEventSheet: ((EKEvent) -> Void)?,
-        animation: Namespace.ID?,
         accentColor: Color
     ) -> some View {
         Group {
             if let calendarEvent = self.calendarEvent {
                 calendarEvent.timeValueView(
                     for: datestamp,
-                    openEventSheet: openCalendarEventSheet,
-                    animation: animation
+                    openEventSheet: openCalendarEventSheet
                 )
 
             } else if let date = self.date {
-                
-                let validOpenEventSheet =
-                    openPlannerEventSheet != nil
-                    ? {
-                        openPlannerEventSheet!(self)
-                    } : nil
 
-                let timeVal = TimeValue(
+                TimeValue(
                     date: date,
                     datestamp: datestamp,
                     disabled: false,
-                    color: accentColor,
-                    openEventSheet: validOpenEventSheet
-                )
-
-                if validOpenEventSheet != nil, let animation {
-                    timeVal
-                        .matchedTransitionSource(
-                            id: String(describing: self.id),
-                            in: animation
-                        )
-                } else {
-                    timeVal
+                    color: accentColor
+                ) {
+                    openPlannerEventSheet?(self)
                 }
 
             } else {

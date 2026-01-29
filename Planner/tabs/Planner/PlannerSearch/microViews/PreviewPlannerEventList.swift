@@ -32,7 +32,6 @@ struct PreviewPlannerEventListView: View {
                             for: datestamp,
                             openPlannerEventSheet: nil,
                             openCalendarEventSheet: nil,
-                            animation: nil,
                             accentColor: accentColor.swiftUIColor
                         )
                     }

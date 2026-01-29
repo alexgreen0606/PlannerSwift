@@ -8,7 +8,8 @@
 import SwiftData
 import SwiftUI
 
-struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View {
+struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View
+{
     @Bindable var item: Item
     let tint: (_ item: Item) -> Color
     let showChecked: Bool
@@ -16,6 +17,7 @@ struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View 
     let showUpperDivider: Bool
     let startAdornment: ((_ item: Item) -> StartAdornment)?
     let endAdornment: ((_ item: Item) -> EndAdornment)?
+    let animation: Namespace.ID?
     let customToggleConfig: CustomIconConfig<Item>?
     let onCreateItem:
         (_ baseId: PersistentIdentifier?, _ offset: Int) ->
@@ -34,7 +36,7 @@ struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View 
 
     @State private var isFocused: Bool = false
     @State private var debounceTask: Task<Void, Never>? = nil
-    
+
     private var tintColor: Color {
         tint(item)
     }
@@ -56,7 +58,8 @@ struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View 
     }
 
     var body: some View {
-        rowContent
+        let row =
+            rowContent
             .frame(maxWidth: .infinity, alignment: .top)
             .listRowInsets(EdgeInsets())
             .discreetListItem()
@@ -99,6 +102,13 @@ struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View 
                     isFocused = false
                 }
             }
+
+        if let animation {
+            row
+                .matchedTransitionSource(id: "\(item.id)", in: animation)
+        } else {
+            row
+        }
     }
 
     // Row Content
@@ -135,7 +145,7 @@ struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View 
                         listManager.toggleItem(item)
                         return
                     }
-                    
+
                     onCreateItem(item.id, 0)
                 }
             )
@@ -164,7 +174,7 @@ struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View 
                         listManager.toggleItem(item)
                         return
                     }
-                    
+
                     onCreateItem(item.id, 1)
                 }
             )
@@ -250,7 +260,7 @@ struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View 
             }
         }
     }
-    
+
     func dismissKeyboard() {
         UIApplication.shared.sendAction(
             #selector(UIResponder.resignFirstResponder),

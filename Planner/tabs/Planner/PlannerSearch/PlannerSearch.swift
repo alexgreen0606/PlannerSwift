@@ -175,6 +175,28 @@ struct PlannerSearchView: View {
                 topLeftToolbar
                 topRightToolbar
             }
+
+            // Create new event.
+            .sheet(isPresented: $isNewEventSheetOpen) {
+                EditCalendarEventFormView(
+                    event: EKEvent(eventStore: calendarStore.ekEventStore),
+                    eventStore: calendarStore.ekEventStore
+                ) { action, event in
+                    calendarStore.refresh(
+                        hiddenCalendarIds: calendarSettings?.hiddenCalendarIds
+                            ?? []
+                    )
+                    isNewEventSheetOpen = false
+                }
+                .navigationTransition(
+                    .zoom(
+                        sourceID: "ADD_EVENT",
+                        in: toolbarAnimation
+                    )
+                )
+            }
+
+            // Open a planner.
             .fullScreenCover(item: $plannerCoverContext) { context in
                 PlannerView(datestamp: context.datestamp) {
                     plannerCoverContext = nil
@@ -187,6 +209,7 @@ struct PlannerSearchView: View {
                     )
                 )
             }
+
             // Debounce the filtering of calendar events when needed.
             .onChange(of: searchText) { _, _ in scheduleFilterDebounce() }
             .onChange(of: filterCalendarIds) { _, _ in scheduleFilterDebounce()
@@ -197,6 +220,7 @@ struct PlannerSearchView: View {
             .onChange(of: calendarSettings?.checkedCalendarEventIds) { _, _ in
                 scheduleFilterDebounce()
             }
+
             // Load in the calendar settings.
             .task {
                 modelContext.ensureCalendarSettings(
@@ -310,27 +334,9 @@ struct PlannerSearchView: View {
                 isNewEventSheetOpen = true
             }
             .matchedTransitionSource(
-                id: "NEW_EVENT",
+                id: "ADD_EVENT",
                 in: toolbarAnimation
             )
-            .sheet(isPresented: $isNewEventSheetOpen) {
-                EditCalendarEventFormView(
-                    event: EKEvent(eventStore: calendarStore.ekEventStore),
-                    eventStore: calendarStore.ekEventStore
-                ) { action, event in
-                    calendarStore.refresh(
-                        hiddenCalendarIds: calendarSettings?.hiddenCalendarIds
-                            ?? []
-                    )
-                    isNewEventSheetOpen = false
-                }
-                .navigationTransition(
-                    .zoom(
-                        sourceID: "NEW_EVENT",
-                        in: toolbarAnimation
-                    )
-                )
-            }
         }
     }
 

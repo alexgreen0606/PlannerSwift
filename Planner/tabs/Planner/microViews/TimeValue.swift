@@ -12,7 +12,7 @@ struct TimeValue: View {
     let datestamp: String
     let disabled: Bool
     let color: Color
-    let openEventSheet: (() -> Void)?
+    let openEventSheet: () -> Void
 
     private var timeInfo:
         (timeValue: String, indicator: String, detail: String?)
@@ -55,7 +55,7 @@ struct TimeValue: View {
         } else {
             timeVal
                 .contentShape(Rectangle())
-                .onTapGesture(perform: openEventSheet!)
+                .onTapGesture(perform: openEventSheet)
         }
     }
 }
