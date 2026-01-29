@@ -70,7 +70,7 @@ struct ChecklistView: View {
         if listManager.isSelectMode {
             let count = listManager.selectedItems.count
             return
-                "Select Mode  |  \(count == 0 ? "No" : String(count)) items selected"
+                "\(count == 0 ? "No" : String(count)) items selected"
         }
 
         return checklist?.path ?? ""
@@ -103,8 +103,9 @@ struct ChecklistView: View {
                     checkedFooter: nil,
                     emptyUncheckedLabel: "No items",
                     emptyCheckedLabel: "No completed items",
-                    tint: checklist?.color.swiftUIColor ?? .blue,
-                    getEndAdornment: { _ in EmptyView() },
+                    tint: { _ in checklist?.color.swiftUIColor ?? .blue },
+                    startAdornment: { _ in EmptyView() },
+                    endAdornment: { _ in EmptyView() },
                     createItem: createItem,
                     handleTitleChange: { _ in },
                     moveItem: moveItem,
@@ -254,9 +255,15 @@ struct ChecklistView: View {
                     titleVisibility: .visible
                 ) {
                     Button("Confirm", role: .destructive) {
-                        deleteItems(listManager.selectedItems)
-                        listManager.selectedItemIds = []
-                        listManager.selectedItems = []
+                        modelContext.deleteChecklistItems(
+                            listManager.selectedItems
+                        )
+                        
+                        DispatchQueue.main.asyncAfter(
+                            deadline: .now() + .milliseconds(750)
+                        ) {
+                            listManager.toggleSelectMode()
+                        }
                     }
                 } message: {
                     Text(
@@ -360,7 +367,7 @@ struct ChecklistView: View {
     }
 
     private func deleteAllCompletedItems() {
-        deleteItems(sortedCheckedItems)
+        modelContext.deleteChecklistItems(sortedCheckedItems)
     }
 
     private func deleteEntireList() {
@@ -381,15 +388,4 @@ struct ChecklistView: View {
         }
     }
 
-    private func deleteItems(_ items: [ChecklistItem]) {
-        items.forEach { modelContext.delete($0) }
-
-        do {
-            try modelContext.save()
-        } catch {
-            assertionFailure(
-                "Failed to delete items: \(error)"
-            )
-        }
-    }
 }

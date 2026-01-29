@@ -87,8 +87,10 @@ struct TransferItemsFormView: View {
             .navigationTitle("Transfer Items")
             .navigationSubtitle(selectionLabel)
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
             .toolbar {
                 topRightToolbar
+                topLeftToolbar(folder)
             }
     }
 
@@ -99,7 +101,12 @@ struct TransferItemsFormView: View {
                 ForEach(
                     folder.items
                         .filter { item in
-                            guard item.id != currentItemId else { return false }
+                            guard
+                                item.id != currentItemId
+                                    && !listManager.selectedItemIds.contains(
+                                        item.id
+                                    )
+                            else { return false }
 
                             // If in folder mode, only show folders.
                             if mode == .folder {
@@ -126,6 +133,23 @@ struct TransferItemsFormView: View {
         }
         .scrollContentBackground(.hidden)
         .background(Color(.systemBackground))
+    }
+
+    private func topLeftToolbar(_ folder: ChecklistItem) -> some ToolbarContent {
+        Group {
+            if folder.parent != nil {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Back", systemImage: "chevron.left") {
+                        folderPath.removeLast()
+                        
+                        if mode == .folder {
+                            // Select the folder we are navigating back to.
+                            selectedItem = folder.parent
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private var topRightToolbar: some ToolbarContent {

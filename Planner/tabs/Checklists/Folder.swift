@@ -29,9 +29,27 @@ struct FolderView: View {
     @State private var showDeleteFolderConfirm = false
     @State private var checklistCoverContext: ChecklistCoverContext?
     @State private var pendingScrollItem: ChecklistItem?
+    @State private var showDeleteSelectedConfirm = false
+    @State private var isTransferSheetOpen = false
+
+    @StateObject private var selectManager = ListManager<ChecklistItem>()
 
     var sortedItems: [ChecklistItem] {
         folder.items.sorted { $0.sortIndex < $1.sortIndex }
+    }
+
+    var isAllSelected: Bool {
+        selectManager.selectedItemIds.count == sortedItems.count
+    }
+
+    private var subtitle: String {
+        if selectManager.isSelectMode {
+            let count = selectManager.selectedItems.count
+            return
+                "\(count == 0 ? "No" : String(count)) items selected"
+        }
+
+        return folder.path
     }
 
     var body: some View {
@@ -46,8 +64,10 @@ struct FolderView: View {
                 .onMove(perform: moveItem)
             }
             .navigationTitle(folder.title)
-            .navigationSubtitle(folder.path)
+            .navigationSubtitle(subtitle)
+            .navigationBarBackButtonHidden(true)
             .toolbar {
+                topLeftToolbar
                 topRightToolbar
             }
 
@@ -116,20 +136,42 @@ struct FolderView: View {
 
     private func itemRow(_ item: ChecklistItem) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading) {
-                Image(systemName: item.type.iconName)
-                    .foregroundColor(item.color.swiftUIColor)
-                    .imageScale(.medium)
-                    .frame(
-                        width: 26,
-                        height: 53,
-                        alignment: .center
+            HStack(spacing: selectManager.isSelectMode ? 16 : 0) {
+
+                Image(
+                    systemName: selectManager.selectedItemIds.contains(
+                        item.id
+                    ) ? "circle.inset.filled" : "circle"
+                )
+                .foregroundStyle(
+                    selectManager.selectedItemIds.contains(
+                        item.id
                     )
+                        ? folder.color.swiftUIColor
+                        : Color(uiColor: .secondaryLabel)
+                )
+                .contentTransition(
+                    .symbolEffect(
+                        .replace
+                    )
+                )
+                .imageScale(.large)
+                .opacity(selectManager.isSelectMode ? 1 : 0)
+                .frame(width: selectManager.isSelectMode ? 22 : 0)
+                .allowsHitTesting(selectManager.isSelectMode)
+                .contentShape(Circle())
+                .onTapGesture {
+                    selectManager.toggleItem(item)
+                }
+
+                itemIcon(for: item)
                     .contentShape(Rectangle())
+                    .opacity(selectManager.isSelectMode ? 0.5 : 1)
                     .onTapGesture {
+                        guard !selectManager.isSelectMode else { return }
+
                         sheetContext = .edit(item)
                     }
-
             }
             .frame(height: 19)
             .matchedTransitionSource(
@@ -156,11 +198,21 @@ struct FolderView: View {
                 }
             }
             .frame(height: 19)
+            .opacity(selectManager.isSelectMode ? 0 : 1)
         }
+        .animation(
+            .easeInOut(duration: 0.2),
+            value: selectManager.isSelectMode
+        )
         .id(item.id)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .onTapGesture {
+            if selectManager.isSelectMode {
+                selectManager.toggleItem(item)
+                return
+            }
+
             if item.type == .folder {
                 openFolder(item)
             } else {
@@ -176,48 +228,162 @@ struct FolderView: View {
         )
     }
 
-    private var topRightToolbar: some ToolbarContent {
-        ToolbarItemGroup(placement: .topBarTrailing) {
-            Menu {
-                Button {
-                    sheetContext = .parent
-                } label: {
-                    Text("Edit folder details")
-                    Image(systemName: "pencil")
-                }
-
+    private var topLeftToolbar: some ToolbarContent {
+        Group {
+            if !selectManager.isSelectMode {
                 if folder.parent != nil {
-                    Button(role: .destructive) {
-                        showDeleteFolderConfirm = true
-                    } label: {
-                        Text("Delete this folder")
-                        Image(systemName: "trash")
+                    ToolbarItemGroup(placement: .topBarLeading) {
+                        Button("Back", systemImage: "chevron.left") {
+                            dismiss()
+                        }
+                    }
+                }
+            } else {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Close", systemImage: "xmark") {
+                        selectManager.toggleSelectMode()
                     }
                 }
 
-            } label: {
-                Image(systemName: "ellipsis")
-            }
-            .matchedTransitionSource(id: "ellipsis", in: sheetAnimation)
-            .confirmationDialog(
-                folder.deleteConfirmation,
-                isPresented: $showDeleteFolderConfirm,
-                titleVisibility: .visible
-            ) {
-                Button("Confirm", role: .destructive) {
-                    deleteEntireFolder()
-                }
-            } message: {
-                Text(
-                    folder.deleteWarning
-                )
-            }
+                ToolbarSpacer(.fixed, placement: .topBarLeading)
 
-            Button("Add", systemImage: "plus") {
-                sheetContext = .create
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        if isAllSelected {
+                            selectManager.selectedItemIds = []
+                            selectManager.selectedItems = []
+                        } else {
+                            selectManager.selectedItems = sortedItems
+                            selectManager.selectedItemIds = Set(
+                                sortedItems.map { $0.id }
+                            )
+                        }
+                    } label: {
+                        Text(isAllSelected ? "Deselect All" : "Select All")
+                            .fontWeight(.semibold)
+                    }
+                    .disabled(sortedItems.isEmpty)
+                }
             }
-            .matchedTransitionSource(id: "add", in: sheetAnimation)
         }
+    }
+
+    private var topRightToolbar: some ToolbarContent {
+        Group {
+            if !selectManager.isSelectMode {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Menu {
+                        Button {
+                            sheetContext = .parent
+                        } label: {
+                            Text("Edit folder details")
+                            Image(systemName: "pencil")
+                        }
+
+                        Button {
+                            selectManager.toggleSelectMode()
+                        } label: {
+                            Image(systemName: "checkmark.circle")
+                            Text("Select contents")
+                                .fontWeight(.semibold)
+                        }
+                        .disabled(sortedItems.isEmpty)
+
+                        if folder.parent != nil {
+                            Button(role: .destructive) {
+                                showDeleteFolderConfirm = true
+                            } label: {
+                                Text("Delete this folder")
+                                Image(systemName: "trash")
+                            }
+                        }
+
+                    } label: {
+                        Image(systemName: "ellipsis")
+                    }
+                    .matchedTransitionSource(id: "ellipsis", in: sheetAnimation)
+                    .confirmationDialog(
+                        folder.deleteConfirmation,
+                        isPresented: $showDeleteFolderConfirm,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Confirm", role: .destructive) {
+                            deleteEntireFolder()
+                        }
+                    } message: {
+                        Text(
+                            folder.deleteWarning
+                        )
+                    }
+
+                    Button("Add", systemImage: "plus") {
+                        sheetContext = .create
+                    }
+                    .matchedTransitionSource(id: "add", in: sheetAnimation)
+                }
+            } else {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Delete", systemImage: "trash") {
+                        showDeleteSelectedConfirm = true
+                    }
+                    .disabled(selectManager.selectedItemIds.isEmpty)
+                    .confirmationDialog(
+                        "Delete selected contents?",
+                        isPresented: $showDeleteSelectedConfirm,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Confirm", role: .destructive) {
+                            withAnimation(.easeInOut) {
+                                modelContext.deleteChecklistItems(
+                                    selectManager.selectedItems
+                                )
+                            }
+
+                            DispatchQueue.main.asyncAfter(
+                                deadline: .now() + .milliseconds(750)
+                            ) {
+                                selectManager.toggleSelectMode()
+                            }
+                        }
+                    } message: {
+                        Text(
+                            "This action is irreversible."
+                        )
+                    }
+                }
+
+                ToolbarSpacer(.fixed, placement: .topBarTrailing)
+
+                ToolbarItem(placement: .topBarTrailing) {
+                    // TODO: hide this if there are no other folders to transfer to
+                    Button(
+                        "Transfer",
+                        systemImage: "arrow.forward.folder"
+                    ) {
+                        isTransferSheetOpen = true
+                    }
+                    .disabled(selectManager.selectedItemIds.isEmpty)
+                    .sheet(isPresented: $isTransferSheetOpen) {
+                        TransferItemsFormView(currentItem: folder)
+                            .presentationDetents([.height(600)])
+                            .environmentObject(selectManager)
+                    }
+                }
+            }
+        }
+    }
+
+    private func itemIcon(for item: ChecklistItem) -> some View {
+        Image(
+            systemName: item.type.iconName
+        )
+        .foregroundColor(item.color.swiftUIColor)
+        .imageScale(.medium)
+        .frame(
+            width: 26,
+            height: 53,
+            alignment: .center
+        )
     }
 
     private func moveItem(from sources: IndexSet, to destination: Int) {
@@ -253,4 +419,5 @@ struct FolderView: View {
             )
         }
     }
+
 }

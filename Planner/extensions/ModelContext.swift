@@ -161,4 +161,17 @@ extension ModelContext {
 
         return calendarPlannerEvents
     }
+    
+    @MainActor
+    func deleteChecklistItems(_ items: [ChecklistItem]) {
+        items.forEach { delete($0) }
+
+        do {
+            try save()
+        } catch {
+            assertionFailure(
+                "Failed to delete checklist items: \(error)"
+            )
+        }
+    }
 }

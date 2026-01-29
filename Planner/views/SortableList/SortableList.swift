@@ -13,7 +13,7 @@ class FocusController: ObservableObject {
     @Published var focusedId: PersistentIdentifier?
 }
 
-struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
+struct SortableListView<Item: ListItem, StartAdornment: View, EndAdornment: View, FloatingInfo: View>:
     View
 {
     let uncheckedItems: [Item]
@@ -26,8 +26,9 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
     let checkedFooter: String?
     let emptyUncheckedLabel: String
     let emptyCheckedLabel: String
-    let tint: Color
-    let getEndAdornment: ((_ item: Item) -> EndAdornment)?
+    let tint: (_ item: Item) -> Color
+    let startAdornment: ((_ item: Item) -> StartAdornment)?
+    let endAdornment: ((_ item: Item) -> EndAdornment)?
     let createItem: (_ baseId: PersistentIdentifier?, _ offset: Int) -> Void
     let handleTitleChange: (_ item: Item) -> Void
     let moveItem: (_ from: Int, _ to: Int) -> Void
@@ -58,7 +59,8 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                             item.id
                         ),
                         showUpperDivider: item.id == uncheckedItems.first?.id,
-                        endAdornment: getEndAdornment,
+                        startAdornment: startAdornment,
+                        endAdornment: endAdornment,
                         customToggleConfig: customToggleConfig,
                         onCreateItem: createItem,
                         onTitleChange: handleTitleChange,
@@ -99,7 +101,8 @@ struct SortableListView<Item: ListItem, EndAdornment: View, FloatingInfo: View>:
                             ),
                             showUpperDivider: item.id
                                 == checkedItems.first?.id,
-                            endAdornment: getEndAdornment,
+                            startAdornment: startAdornment,
+                            endAdornment: endAdornment,
                             customToggleConfig: customToggleConfig,
                             onCreateItem: { _, _ in },
                             onTitleChange: { _ in },

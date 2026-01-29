@@ -8,12 +8,13 @@
 import SwiftData
 import SwiftUI
 
-struct ItemView<Item: ListItem, EndAdornment: View>: View {
+struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View {
     @Bindable var item: Item
-    let tint: Color
+    let tint: (_ item: Item) -> Color
     let showChecked: Bool
     let isSelectDisabled: Bool
     let showUpperDivider: Bool
+    let startAdornment: ((_ item: Item) -> StartAdornment)?
     let endAdornment: ((_ item: Item) -> EndAdornment)?
     let customToggleConfig: CustomIconConfig<Item>?
     let onCreateItem:
@@ -33,6 +34,10 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
 
     @State private var isFocused: Bool = false
     @State private var debounceTask: Task<Void, Never>? = nil
+    
+    private var tintColor: Color {
+        tint(item)
+    }
 
     private var opacity: Double {
         guard !showChecked else { return 1 }
@@ -109,7 +114,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
     private var toggle: some View {
         ItemToggleView(
             item: item,
-            tint: tint,
+            tint: tintColor,
             isChecked: isChecked,
             isDisabled: isSelectDisabled,
             opacity: opacity,
@@ -135,13 +140,18 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
                 }
             )
             HStack(alignment: .top, spacing: 4) {
+                if let startAdornment = startAdornment {
+                    startAdornment(item)
+                        .opacity(opacity)
+                        .frame(height: 28, alignment: .center)
+                }
                 ZStack(alignment: .leading) {
                     titleText
                     editableField
                 }
                 .padding(.vertical, 3)
-                if let adornment = endAdornment {
-                    adornment(item)
+                if let endAdornment = endAdornment {
+                    endAdornment(item)
                         .opacity(opacity)
                         .frame(height: 28, alignment: .center)
                 }
@@ -190,7 +200,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
             text: $item.title,
             isFocused: $isFocused,
             height: $height,
-            accentColor: tint,
+            accentColor: tintColor,
             onEnter: {
                 if !item.title.isEmpty {
                     onCreateItem(item.id, 1)
@@ -202,6 +212,7 @@ struct ItemView<Item: ListItem, EndAdornment: View>: View {
                 focusController.focusedId = nil
             }
         )
+        .tint(tintColor)
         .frame(height: height)
         .foregroundColor(Color(uiColor: .label))
         .opacity(isFocused ? 1 : 0)

@@ -179,7 +179,7 @@ struct PlannerView: View {
         NavigationStack {
             ScrollViewReader { proxy in
                 SortableListView<
-                    PlannerEvent, AnyView, PlannerChipSpreadView
+                    PlannerEvent, AnyView, AnyView, PlannerChipSpreadView
                 >(
                     uncheckedItems: sortedOpenPlans,
                     checkedItems: sortedCheckedPlans,
@@ -200,8 +200,32 @@ struct PlannerView: View {
                     checkedFooter: plannerType.getCheckedFooter(for: datestamp),
                     emptyUncheckedLabel: "No plans",
                     emptyCheckedLabel: plannerType.emptyCheckedLabel,
-                    tint: accentColor.swiftUIColor,
-                    getEndAdornment: { event in
+                    tint: { event in
+                        if let calendar = event.calendarEvent?.calendar {
+                            return Color(cgColor: calendar.cgColor)
+                        }
+                        
+                        return accentColor.swiftUIColor
+                    },
+                    startAdornment: { event in
+                        if let calendar = event.calendarEvent?.calendar {
+                            AnyView(
+                                Image(
+                                    systemName:
+                                        calendarSettings?.iconMap[
+                                            calendar.calendarIdentifier
+                                        ] ?? calendar.iconName
+                                )
+                                .foregroundStyle(Color(cgColor: calendar.cgColor))
+                                .padding(.trailing, 6)
+                            )
+                        } else {
+                            AnyView(
+                                EmptyView()
+                            )
+                        }
+                    },
+                    endAdornment: { event in
                         AnyView(
                             event.timeValueView(
                                 for: datestamp,
@@ -306,7 +330,7 @@ struct PlannerView: View {
             }
         }
     }
-    
+
     // MARK: - Toolbars
 
     private var topLeftToolbar: some ToolbarContent {
