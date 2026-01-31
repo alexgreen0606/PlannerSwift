@@ -20,6 +20,9 @@ struct ChecklistView: View {
     @State private var showDeleteChecklistConfirm = false
     @State private var showDeleteSelectedConfirm = false
     @State private var isTransferSheetOpen = false
+    @State private var isEditFormOpen = false
+
+    @Namespace private var sheetAnimation
 
     private var checklist: ChecklistItem? {
         checklists.first
@@ -106,7 +109,7 @@ struct ChecklistView: View {
                     animation: nil,
                     tint: { _ in checklist?.color.swiftUIColor ?? .blue },
                     toolbarIcons: [],
-                    tapToolbar: {_, _ in },
+                    tapToolbar: { _, _ in },
                     startAdornment: { _ in EmptyView() },
                     endAdornment: { _ in EmptyView() },
                     createItem: createItem,
@@ -122,6 +125,16 @@ struct ChecklistView: View {
                     topRightToolbar
                     bottomToolbar(proxy)
                 }
+            }
+        }
+
+        // Edit Form
+        .sheet(isPresented: $isEditFormOpen) {
+            if let checklist {
+                ChecklistItemFormView(item: checklist, parent: checklist.parent)
+                    .navigationTransition(
+                        .zoom(sourceID: "ELLIPSIS", in: sheetAnimation)
+                    )
             }
         }
     }
@@ -148,20 +161,24 @@ struct ChecklistView: View {
     private var topRightToolbar: some ToolbarContent {
         if !listManager.isSelectMode {
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    listManager.toggleSelectMode()
-                } label: {
-                    Text("Select")
-                        .fontWeight(.semibold)
-                }
-                .disabled(visibleItems.isEmpty)
-            }
-
-            ToolbarSpacer(.fixed, placement: .topBarTrailing)
-
-            ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     showCompletedToggle
+
+                    Button {
+                        isEditFormOpen = true
+                    } label: {
+                        Text("Edit checklist details")
+                        Image(systemName: "pencil")
+                    }
+
+                    Button {
+                        listManager.toggleSelectMode()
+                    } label: {
+                        Image(systemName: "checkmark.circle")
+                        Text("Select items")
+                            .fontWeight(.semibold)
+                    }
+                    .disabled(visibleItems.isEmpty)
 
                     Menu {
                         Button(role: .destructive) {
@@ -186,6 +203,10 @@ struct ChecklistView: View {
                 } label: {
                     Image(systemName: "ellipsis")
                 }
+                .matchedTransitionSource(
+                    id: "ELLIPSIS",
+                    in: sheetAnimation
+                )
                 .confirmationDialog(
                     checklist?.deleteConfirmation ?? "",
                     isPresented: $showDeleteChecklistConfirm,
@@ -261,7 +282,7 @@ struct ChecklistView: View {
                         modelContext.deleteChecklistItems(
                             listManager.selectedItems
                         )
-                        
+
                         DispatchQueue.main.asyncAfter(
                             deadline: .now() + .milliseconds(750)
                         ) {
@@ -287,7 +308,6 @@ struct ChecklistView: View {
                 .sheet(isPresented: $isTransferSheetOpen) {
                     if let checklist {
                         TransferItemsFormView(currentItem: checklist)
-                            .presentationDetents([.height(600)])
                     }
                 }
             }

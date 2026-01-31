@@ -179,16 +179,10 @@ struct PlannerSearchView: View {
 
             // Create new event.
             .sheet(isPresented: $isNewEventSheetOpen) {
-                EditCalendarEventFormView(
-                    event: EKEvent(eventStore: calendarStore.ekEventStore),
-                    eventStore: calendarStore.ekEventStore
-                ) { action, event in
-                    calendarStore.refresh(
-                        hiddenCalendarIds: calendarSettings?.hiddenCalendarIds
-                            ?? []
-                    )
-                    isNewEventSheetOpen = false
-                }
+                EventFormView(
+                    plannerEvent: nil,
+                    calendarEvent: nil
+                )
                 .navigationTransition(
                     .zoom(
                         sourceID: "ADD_EVENT",
@@ -210,12 +204,15 @@ struct PlannerSearchView: View {
                     )
                 )
             }
-            
+
             // Auto-open the today planner on app entry.
             .task {
                 if !navigator.wasTodayPlannerAutoOpened {
                     navigator.wasTodayPlannerAutoOpened = true
-                    plannerCoverContext = PlannerCoverContext(datestamp: todaystampWatcher.todaystamp, namespace: thisWeekAnimation)
+                    plannerCoverContext = PlannerCoverContext(
+                        datestamp: todaystampWatcher.todaystamp,
+                        namespace: thisWeekAnimation
+                    )
                 }
             }
 

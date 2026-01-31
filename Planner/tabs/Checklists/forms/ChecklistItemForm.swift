@@ -110,6 +110,7 @@ struct ChecklistItemFormView: View {
                 }
             }
         }
+        .presentationDetents([.height(250)])
     }
 
     private func handleSave() {

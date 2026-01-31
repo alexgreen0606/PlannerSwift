@@ -5,17 +5,17 @@
 //  Created by Alex Green on 1/29/26.
 //
 
+import Contacts
+import ContactsUI
 import EventKit
 import EventKitUI
 import SwiftData
 import SwiftUI
-import Contacts
-import ContactsUI
 
-struct EventForm: View {
+struct EventFormView: View {
     private let initialPlannerEvent: PlannerEvent?
     private let initialCalendarEvent: EKEvent?
-    
+
     // Overrides all other behavior in this sheet and displays the Contact form.
     private let contact: CNContact?
 
@@ -47,11 +47,16 @@ struct EventForm: View {
         calendarSettingsList.first
     }
 
-    private var isDirty: Bool {
-        date != initialPlannerEvent?.date
-            || title != initialPlannerEvent?.title
-            || draftCalendarEvent
-                != initialPlannerEvent?.calendarEvent
+    private var isValid: Bool {
+        !title.isEmpty
+            && (date != initialPlannerEvent?.date
+                || title != initialPlannerEvent?.title
+                || draftCalendarEvent
+                    != initialPlannerEvent?.calendarEvent)
+    }
+
+    private var isCreateForm: Bool {
+        initialPlannerEvent == nil && initialCalendarEvent == nil
     }
 
     init(plannerEvent: PlannerEvent?, calendarEvent: EKEvent?) {
@@ -65,7 +70,7 @@ struct EventForm: View {
 
         if let calEvent = plannerEvent?.calendarEvent ?? calendarEvent {
             _draftCalendarEvent = State(initialValue: calEvent)
-            
+
             if calEvent.calendar.allowsContentModifications {
                 _selectedDetent = State(initialValue: .height(2600))
             }
@@ -80,7 +85,7 @@ struct EventForm: View {
                 hasTime = false
             }
         }
-        
+
         // Open the contact for birthday events.
         if calendarEvent?.calendar.type == .birthday,
             let contactId = calendarEvent?.birthdayContactIdentifier
@@ -95,7 +100,7 @@ struct EventForm: View {
                         CNContactViewController.descriptorForRequiredKeys()
                     ] as [CNKeyDescriptor]
                 )
-                
+
                 _selectedDetent = State(initialValue: .height(2600))
             } catch {
                 assertionFailure("Failed to fetch birthday contact: \(error)")
@@ -118,7 +123,6 @@ struct EventForm: View {
                 plannerEventForm
             }
         }
-        .ignoresSafeArea()
         .presentationDragIndicator(.hidden)
         .presentationDetents(
             [.height(340), .height(2600)],
@@ -155,7 +159,7 @@ struct EventForm: View {
                 Toggle("Schedule a time", isOn: $hasTime)
                     .tint(accentColor.swiftUIColor)
             }
-            .navigationTitle("Edit Plan")
+            .navigationTitle(isCreateForm ? "Create Plan" : "Edit Plan")
             .navigationBarTitleDisplayMode(.inline)
             .scrollDisabled(true)
             .toolbar {
@@ -176,17 +180,17 @@ struct EventForm: View {
                         switch action {
                         case .saved:
                             handleCalendarSave()
-                            
+
                         case .deleted:
                             handleCalendarSave()
-                            
+
                         case .canceled:
                             print("User canceled. Do nothing.")
-                            
+
                         @unknown default:
                             break
                         }
-                        
+
                         dismiss()
                     }
                     .tint(accentColor.swiftUIColor)
@@ -208,7 +212,7 @@ struct EventForm: View {
             Button("Save", systemImage: "checkmark") {
                 savePlannerEvent()
             }
-            .disabled(!isDirty)
+            .disabled(!isValid)
             .tint(accentColor.swiftUIColor)
         }
     }
@@ -219,7 +223,8 @@ struct EventForm: View {
 
                 // Create a new calendar event to represent the form values.
                 let event = EKEvent(eventStore: calendarStore.ekEventStore)
-                event.calendar = calendarStore.ekEventStore.defaultCalendarForNewEvents
+                event.calendar =
+                    calendarStore.ekEventStore.defaultCalendarForNewEvents
                 event.title = title
                 event.startDate = date
                 event.endDate = Calendar.current.date(

@@ -78,7 +78,6 @@ struct FolderView: View {
                 ChecklistItemFormView(item: nil, parent: folder) { id in
                     pendingScrollItem = id
                 }
-                .presentationDetents([.height(250)])
                 .navigationTransition(
                     .zoom(sourceID: "ADD_BUTTON", in: sheetAnimation)
                 )
@@ -87,7 +86,6 @@ struct FolderView: View {
             // Edit Form
             .sheet(isPresented: $isEditFormOpen) {
                 ChecklistItemFormView(item: folder, parent: folder.parent)
-                .presentationDetents([.height(250)])
                 .navigationTransition(
                     .zoom(sourceID: "ELLIPSIS", in: sheetAnimation)
                 )
@@ -351,7 +349,6 @@ struct FolderView: View {
                     .disabled(selectManager.selectedItemIds.isEmpty)
                     .sheet(isPresented: $isTransferSheetOpen) {
                         TransferItemsFormView(currentItem: folder)
-                            .presentationDetents([.height(600)])
                             .environmentObject(selectManager)
                     }
                 }

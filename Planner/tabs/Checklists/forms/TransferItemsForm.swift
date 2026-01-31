@@ -79,6 +79,7 @@ struct TransferItemsFormView: View {
                     folderView(folder)
                 }
         }
+        .presentationDetents([.height(380), .height(2600)])
     }
 
     @ViewBuilder

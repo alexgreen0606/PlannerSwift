@@ -283,7 +283,7 @@ struct PlannerView: View {
 
                 // Event Sheet
                 .sheet(item: $plannerEventSheetContext) { context in
-                    EventForm(
+                    EventFormView(
                         plannerEvent: context.plannerEvent,
                         calendarEvent: context.calendarEvent
                     )
