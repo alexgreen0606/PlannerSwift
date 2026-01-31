@@ -13,7 +13,12 @@ class FocusController: ObservableObject {
     @Published var focusedId: PersistentIdentifier?
 }
 
-struct SortableListView<Item: ListItem, StartAdornment: View, EndAdornment: View, FloatingInfo: View>:
+struct SortableListView<
+    Item: ListItem,
+    StartAdornment: View,
+    EndAdornment: View,
+    FloatingInfo: View
+>:
     View
 {
     let uncheckedItems: [Item]
@@ -28,6 +33,8 @@ struct SortableListView<Item: ListItem, StartAdornment: View, EndAdornment: View
     let emptyCheckedLabel: String
     let animation: Namespace.ID?
     let tint: (_ item: Item) -> Color
+    let toolbarIcons: [String]
+    let tapToolbar: ((String, Item) -> Void)?
     let startAdornment: ((_ item: Item) -> StartAdornment)?
     let endAdornment: ((_ item: Item) -> EndAdornment)?
     let createItem: (_ baseId: PersistentIdentifier?, _ offset: Int) -> Void
@@ -60,6 +67,8 @@ struct SortableListView<Item: ListItem, StartAdornment: View, EndAdornment: View
                             item.id
                         ),
                         showUpperDivider: item.id == uncheckedItems.first?.id,
+                        toolbarIcons: toolbarIcons,
+                        tapToolbar: handleToolbarPress,
                         startAdornment: startAdornment,
                         endAdornment: endAdornment,
                         animation: animation,
@@ -103,6 +112,8 @@ struct SortableListView<Item: ListItem, StartAdornment: View, EndAdornment: View
                             ),
                             showUpperDivider: item.id
                                 == checkedItems.first?.id,
+                            toolbarIcons: toolbarIcons,
+                            tapToolbar: { _, _ in },
                             startAdornment: startAdornment,
                             endAdornment: endAdornment,
                             animation: animation,
@@ -160,6 +171,21 @@ struct SortableListView<Item: ListItem, StartAdornment: View, EndAdornment: View
 
             moveItem(source, to)
         }
+    }
+
+    private func handleToolbarPress(_ iconName: String, _ item: Item) {
+        tapToolbar?(iconName, item)
+        focusController.focusedId = nil
+        dismissKeyboard()
+    }
+
+    func dismissKeyboard() {
+        UIApplication.shared.sendAction(
+            #selector(UIResponder.resignFirstResponder),
+            to: nil,
+            from: nil,
+            for: nil
+        )
     }
 
 }

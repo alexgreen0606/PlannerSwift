@@ -31,6 +31,7 @@ struct PlannerSearchView: View {
     @EnvironmentObject var calendarStore: CalendarStore
     @EnvironmentObject var todaystampWatcher: TodaystampWatcher
     @ObservedObject var weatherStore = WeatherStore.shared
+    @EnvironmentObject var navigator: NavigationManager
 
     @Namespace private var toolbarAnimation
     @Namespace private var thisWeekAnimation
@@ -208,6 +209,14 @@ struct PlannerSearchView: View {
                         in: context.namespace
                     )
                 )
+            }
+            
+            // Auto-open the today planner on app entry.
+            .task {
+                if !navigator.wasTodayPlannerAutoOpened {
+                    navigator.wasTodayPlannerAutoOpened = true
+                    plannerCoverContext = PlannerCoverContext(datestamp: todaystampWatcher.todaystamp, namespace: thisWeekAnimation)
+                }
             }
 
             // Debounce the filtering of calendar events when needed.

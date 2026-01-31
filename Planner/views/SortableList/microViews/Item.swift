@@ -15,6 +15,8 @@ struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View
     let showChecked: Bool
     let isSelectDisabled: Bool
     let showUpperDivider: Bool
+    let toolbarIcons: [String]
+    let tapToolbar: ((String, Item) -> Void)?
     let startAdornment: ((_ item: Item) -> StartAdornment)?
     let endAdornment: ((_ item: Item) -> EndAdornment)?
     let animation: Namespace.ID?
@@ -210,7 +212,11 @@ struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View
             text: $item.title,
             isFocused: $isFocused,
             height: $height,
+            toolbarIcons: toolbarIcons,
             accentColor: tintColor,
+            onTapToolbar: { iconName in
+                tapToolbar?(iconName, item)
+            },
             onEnter: {
                 if !item.title.isEmpty {
                     onCreateItem(item.id, 1)

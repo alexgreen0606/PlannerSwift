@@ -19,8 +19,7 @@ func generateValidPlannerEventSortIndex(
     var eventWasFound = false
     var eventNeedsMoving = false
     
-    var events = events
-    events.sort { $0.sortIndex < $1.sortIndex }
+    let events = events.sorted { $0.sortIndex < $1.sortIndex }
     for (index, pointerEvent) in events.enumerated().reversed() {
         guard let pointerEventDate = pointerEvent.date else {
             continue

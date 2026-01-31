@@ -17,6 +17,7 @@ struct PlannerApp: App {
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
         .system
 
+    @State private var navigator = NavigationManager()
     let weatherStore = WeatherStore.shared
     let todaystampWatcher = TodaystampWatcher.shared
     let calendarStore = CalendarStore.shared
@@ -29,6 +30,7 @@ struct PlannerApp: App {
                 .environmentObject(todaystampWatcher)
                 .environmentObject(weatherStore)
                 .environmentObject(calendarStore)
+                .environmentObject(navigator)
                 .task {
                     Task {
                         await weatherStore.loadWeather()

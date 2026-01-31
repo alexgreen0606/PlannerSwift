@@ -12,15 +12,16 @@ extension PlannerEvent {
     @ViewBuilder
     func timeValueView(
         for datestamp: String,
-        openPlannerEventSheet: ((PlannerEvent) -> Void)?,
-        openCalendarEventSheet: ((EKEvent) -> Void)?,
+        openSheet: ((PlannerEvent) -> Void)?,
         accentColor: Color
     ) -> some View {
         Group {
             if let calendarEvent = self.calendarEvent {
                 calendarEvent.timeValueView(
                     for: datestamp,
-                    openEventSheet: openCalendarEventSheet
+                    openSheet: {
+                        openSheet?(self)
+                    }
                 )
 
             } else if let date = self.date {
@@ -31,7 +32,7 @@ extension PlannerEvent {
                     disabled: false,
                     color: accentColor
                 ) {
-                    openPlannerEventSheet?(self)
+                    openSheet?(self)
                 }
 
             } else {

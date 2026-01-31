@@ -12,7 +12,7 @@ extension EKEvent {
     @ViewBuilder
     func timeValueView(
         for datestamp: String,
-        openEventSheet: ((EKEvent) -> Void)?
+        openSheet: (() -> Void)?
     ) -> some View {
 
         // TODO: determine if start or end date
@@ -23,7 +23,7 @@ extension EKEvent {
             disabled: false,
             color: Color(self.calendar.cgColor)
         ) {
-            openEventSheet?(self)
+            openSheet?()
         }
         
     }

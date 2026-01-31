@@ -105,6 +105,8 @@ struct ChecklistView: View {
                     emptyCheckedLabel: "No completed items",
                     animation: nil,
                     tint: { _ in checklist?.color.swiftUIColor ?? .blue },
+                    toolbarIcons: [],
+                    tapToolbar: {_, _ in },
                     startAdornment: { _ in EmptyView() },
                     endAdornment: { _ in EmptyView() },
                     createItem: createItem,
@@ -131,7 +133,7 @@ struct ChecklistView: View {
             if !listManager.isSelectMode {
                 Button(
                     "Back",
-                    systemImage: "arrow.down.right.and.arrow.up.left"
+                    systemImage: "chevron.left"
                 ) {
                     closeChecklist()
                 }

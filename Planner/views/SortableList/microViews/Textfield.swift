@@ -12,7 +12,9 @@ struct TextfieldView: UIViewRepresentable {
     @Binding var text: String
     @Binding var isFocused: Bool
     @Binding var height: CGFloat
+    var toolbarIcons: [String]
     var accentColor: Color
+    var onTapToolbar: (String) -> Void
     var onEnter: () -> Void
     var onDone: () -> Void
 
@@ -123,6 +125,26 @@ struct TextfieldView: UIViewRepresentable {
                 action: nil
             )
 
+            let iconButtons: [UIBarButtonItem] = parent.toolbarIcons.map {
+                iconName in
+                let image = UIImage(systemName: iconName)
+                let button = UIBarButtonItem(
+                    image: image,
+                    style: .plain,
+                    target: self,
+                    action: #selector(toolbarButtonTapped(sender:))
+                )
+
+                objc_setAssociatedObject(
+                    button,
+                    AssociatedKeys.keyPointer,
+                    iconName,
+                    .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+                )
+
+                return button
+            }
+
             let done = UIBarButtonItem(
                 barButtonSystemItem: .done,
                 target: self,
@@ -130,7 +152,7 @@ struct TextfieldView: UIViewRepresentable {
             )
             done.tintColor = UIColor(parent.accentColor)
 
-            toolbar.items = [flexibleSpace, done]
+            toolbar.items = iconButtons + [flexibleSpace] + [done]
 
             container.addSubview(toolbar)
 
@@ -146,6 +168,22 @@ struct TextfieldView: UIViewRepresentable {
             ])
 
             textView.inputAccessoryView = container
+        }
+
+        private struct AssociatedKeys {
+            static var iconNameKey = "iconNameKey"
+            static var keyPointer: UnsafeRawPointer = {
+                return UnsafeRawPointer(bitPattern: "iconNameKey".hashValue)!
+            }()
+        }
+
+        @objc private func toolbarButtonTapped(sender: UIButton) {
+            if let iconName = objc_getAssociatedObject(
+                sender,
+                AssociatedKeys.keyPointer
+            ) as? String {
+                parent.onTapToolbar(iconName)
+            }
         }
 
         @objc private func doneButtonTapped() {

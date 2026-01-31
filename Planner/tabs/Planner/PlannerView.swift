@@ -5,18 +5,26 @@
 //  Created by Alex Green on 12/1/25.
 //
 
-import Contacts
-import ContactsUI
 import EventKit
 import SwiftData
 import SwiftDate
 import SwiftUI
 
-struct CalendarEventSheetContext: Identifiable {
-    var event: EKEvent
-    var namespace: Namespace.ID
-    var id: String
-    var contact: CNContact?
+struct EventSheetContext: Identifiable {
+    var plannerEvent: PlannerEvent?
+    var calendarEvent: EKEvent?
+
+    var id: String {
+        if let plannerEventId = plannerEvent?.id {
+            return "\(plannerEventId)"
+        }
+
+        if let calEvent = calendarEvent {
+            return "\(String(describing: calEvent.eventIdentifier))"
+        }
+
+        return "FALLBACK_NO_EVENT"
+    }
 }
 
 struct PlannerView: View {
@@ -34,12 +42,12 @@ struct PlannerView: View {
     @EnvironmentObject var todaystampManager: TodaystampWatcher
 
     @StateObject private var plannerManager = ListManager<PlannerEvent>()
+    @State private var calendarEventToggler = CalendarEventToggler()
 
-    @State private var calendarPlannerEvents: [PlannerEvent] = []
-    @State private var calendarEventSheetContext: CalendarEventSheetContext?
+    @State private var plannerEventSheetContext: EventSheetContext?
     @Namespace private var sheetAnimation
 
-    @State private var calendarEventToggler = CalendarEventToggler()
+    @State private var calendarPlannerEvents: [PlannerEvent] = []
     @State private var isDeleteCheckedConfirmationOpen = false
     @State private var pendingScrollId: PersistentIdentifier?
 
@@ -191,7 +199,10 @@ struct PlannerView: View {
                         iconMap: calendarSettings?.iconMap ?? [:],
                         animation: sheetAnimation,
                         openCalendarEventSheet: { calEvent in
-                            openCalendarEventSheet(for: calEvent, from: "\(String(describing: calEvent.eventIdentifier))")
+                            plannerEventSheetContext = EventSheetContext(
+                                plannerEvent: nil,
+                                calendarEvent: calEvent
+                            )
                         }
                     ),
                     customToggleConfig: toggleEventIconConfig,
@@ -204,11 +215,20 @@ struct PlannerView: View {
                         if let calendar = event.calendarEvent?.calendar {
                             return Color(cgColor: calendar.cgColor)
                         }
-                        
+
                         return accentColor.swiftUIColor
                     },
+                    toolbarIcons: ["clock"],
+                    tapToolbar: { icon, event in
+                        plannerEventSheetContext = EventSheetContext(
+                            plannerEvent: event,
+                            calendarEvent: nil
+                        )
+                    },
                     startAdornment: { event in
-                        if let calendar = event.calendarEvent?.calendar {
+                        if let calendarEvent = event.calendarEvent,
+                            let calendar = calendarEvent.calendar
+                        {
                             AnyView(
                                 Image(
                                     systemName:
@@ -216,8 +236,17 @@ struct PlannerView: View {
                                             calendar.calendarIdentifier
                                         ] ?? calendar.iconName
                                 )
-                                .foregroundStyle(Color(cgColor: calendar.cgColor))
+                                .foregroundStyle(
+                                    Color(cgColor: calendar.cgColor)
+                                )
                                 .padding(.trailing, 6)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    plannerEventSheetContext = EventSheetContext(
+                                        plannerEvent: event,
+                                        calendarEvent: nil
+                                    )
+                                }
                             )
                         } else {
                             AnyView(
@@ -229,9 +258,11 @@ struct PlannerView: View {
                         AnyView(
                             event.timeValueView(
                                 for: datestamp,
-                                openPlannerEventSheet: openPlannerEventSheet,
-                                openCalendarEventSheet: { calEvent in
-                                    openCalendarEventSheet(for: calEvent, from: "\(event.id)")
+                                openSheet: { event in
+                                    plannerEventSheetContext = EventSheetContext(
+                                        plannerEvent: event,
+                                        calendarEvent: nil
+                                    )
                                 },
                                 accentColor: accentColor.swiftUIColor
                             )
@@ -250,36 +281,16 @@ struct PlannerView: View {
                     bottomToolbar(proxy)
                 }
 
-                // Calendar Event Sheet
-                .sheet(item: $calendarEventSheetContext) { context in
-                    Group {
-                        if let contact = context.contact {
-                            ContactFormView(contact: contact)
-                        } else {
-                            switch context.event.calendar
-                                .allowsContentModifications
-                            {
-                            case true:
-                                EditCalendarEventFormView(
-                                    event: context.event,
-                                    eventStore: calendarStore.ekEventStore
-                                ) { action, updatedEvent in
-                                    reloadCalendar()
-                                    calendarEventSheetContext = nil
-                                }
-
-                            case false:
-                                ViewCalendarEventFormView(event: context.event)
-                                    .presentationDetents([.height(340)])
-                            }
-                        }
-                    }
-                    .tint(accentColor.swiftUIColor)
-                    .ignoresSafeArea()
+                // Event Sheet
+                .sheet(item: $plannerEventSheetContext) { context in
+                    EventForm(
+                        plannerEvent: context.plannerEvent,
+                        calendarEvent: context.calendarEvent
+                    )
                     .navigationTransition(
                         .zoom(
                             sourceID: context.id,
-                            in: context.namespace
+                            in: sheetAnimation
                         )
                     )
                 }
@@ -327,6 +338,7 @@ struct PlannerView: View {
 
             // Rebuild the planner when the calendar events change.
             .onChange(of: calendarStore.refreshKey) { _, newKey in
+                print("New refresh key")
                 synchronizeCalendarEvents()
             }
         }
@@ -336,7 +348,7 @@ struct PlannerView: View {
 
     private var topLeftToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
-            Button("Back", systemImage: "arrow.down.right.and.arrow.up.left") {
+            Button("Back", systemImage: "chevron.left") {
                 closePlanner()
             }
         }
@@ -585,46 +597,6 @@ struct PlannerView: View {
                 "Failed to save new item after time smart-detect: \(error)"
             )
         }
-    }
-
-    // MARK: - Sheet Handlers
-
-    private func openPlannerEventSheet(
-        for event: PlannerEvent
-    ) {
-        // TODO: open custom sheet
-    }
-
-    private func openCalendarEventSheet(
-        for event: EKEvent,
-        from id: String
-    ) {
-        // Open the contact for birthday events.
-        var contact: CNContact? = nil
-        if event.calendar.type == .birthday,
-            let contactId = event.birthdayContactIdentifier
-        {
-
-            let store = CNContactStore()
-
-            do {
-                contact = try store.unifiedContact(
-                    withIdentifier: contactId,
-                    keysToFetch: [
-                        CNContactViewController.descriptorForRequiredKeys()
-                    ] as [CNKeyDescriptor]
-                )
-            } catch {
-                assertionFailure("Failed to fetch birthday contact: \(error)")
-            }
-        }
-
-        calendarEventSheetContext = CalendarEventSheetContext(
-            event: event,
-            namespace: sheetAnimation,
-            id: id,
-            contact: contact
-        )
     }
 
     // MARK: - Overflow Actions

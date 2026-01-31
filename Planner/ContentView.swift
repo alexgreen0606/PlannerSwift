@@ -13,13 +13,13 @@ import SwiftDate
 import SwiftUI
 
 struct ContentView: View {
-    
+
     @AppStorage("keepCanceledPlansDuration") private
         var keepCanceledPlansDuration: KeepCanceledPlansDuration =
             KeepCanceledPlansDuration.startOfDay
-    
+
     @AppStorage("lastCleansedDatestamp") var lastCleansedDatestamp: String = ""
-    
+
     @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
         KeepPastPlansDuration =
             KeepPastPlansDuration.oneMonth
@@ -28,17 +28,12 @@ struct ContentView: View {
     @Query private var calendarSettingsList: [CalendarSettings]
     @Query private var planners: [Planner]
 
-    @Environment(\.tabViewBottomAccessoryPlacement) private var placement
-
     @EnvironmentObject var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject var calendarStore: CalendarStore
 
     let contactsStore = CNContactStore()
 
     @State private var selectedTab: AppTab = .search
-    @StateObject private var todayPlannerManager = ListManager()
-    @State private var isTodayPlannerOpen: Bool = false
-    @Namespace private var todayPlannerCoverAnimation
 
     private var eventsForToday: [EKEvent] {
         return calendarStore.allDayEventsByDatestamp[
@@ -95,16 +90,33 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
+            Tab(value: .trips) {
+                NavigationStack {
+                    VStack {
+                        
+                    }
+                    .navigationTitle("Trips")
+                }
+            } label: {
+                Label("", systemImage: "suitcase")
+            }
+
             Tab(value: .checklists) {
                 ChecklistsTabView()
             } label: {
                 Label(
                     "",
-                    systemImage: "list.bullet"
+                    systemImage: "checklist"
                 )
             }
 
             Tab(value: .routines) {
+                NavigationStack {
+                    VStack {
+                        
+                    }
+                    .navigationTitle("Routines")
+                }
             } label: {
                 Label("", systemImage: "repeat")
             }
@@ -120,11 +132,12 @@ struct ContentView: View {
             } label: {
                 Label(
                     "",
-                    systemImage: "calendar"
+                    systemImage: todaystampWatcher.todaystamp.calendarSymbolName
                 )
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
+
         .task {
             modelContext.ensureCalendarSettings(
                 settings: calendarSettingsList
@@ -144,8 +157,63 @@ struct ContentView: View {
                 )
             }
         }
-        
-        // NOTE: May want to add this in futue. For now it is too bulky and not useful enough to justify.
+    }
+
+    // Runs once at the start of every day to delete old data.
+    private func cleanseStorage() {
+        guard lastCleansedDatestamp != todaystampWatcher.todaystamp else {
+            return
+        }
+
+        print("Sanitizing app storage...")
+        lastCleansedDatestamp = todaystampWatcher.todaystamp
+
+        if keepPastPlansDuration != .forever {
+
+            // Delete sort indices for events that no longer exist in the calendar.
+            if let calendarSettings {
+                modelContext.deleteStaleCalendarEventPositions(
+                    in: calendarSettings,
+                    with: calendarStore.existingEventIds
+                )
+            }
+
+            // Delete old planners.
+            modelContext.deleteOldPlanners(
+                from: planners,
+                before: keepPastPlansDuration.cutoffDate
+            )
+        }
+
+        if keepCanceledPlansDuration != .forever {
+
+            let todaystamp = todaystampWatcher.todaystamp
+            let descriptor = FetchDescriptor<Planner>(
+                predicate: #Predicate { planner in
+                    planner.datestamp == todaystamp
+                }
+            )
+
+            do {
+                if let todayPlanner = try modelContext.fetch(descriptor).first {
+
+                    // Delete canceled plans from today's planner.
+                    modelContext.deleteCheckedPlans(from: todayPlanner)
+                }
+            } catch {
+                assertionFailure(
+                    "Failed to delete canceled plans: \(error)"
+                )
+            }
+        }
+    }
+}
+
+#Preview {
+    ContentView()
+}
+
+// NOTE: May want to add this in futue. For now it is too bulky and not useful enough to justify.
 //        .tabViewBottomAccessory {
 //
 //            PlannerAccessoryView(
@@ -172,58 +240,3 @@ struct ContentView: View {
 //                )
 //            )
 //        }
-    }
-
-    // Runs once at the start of every day to delete old data.
-    private func cleanseStorage() {
-        guard lastCleansedDatestamp != todaystampWatcher.todaystamp else {
-            return
-        }
-
-        print("Sanitizing app storage...")
-        lastCleansedDatestamp = todaystampWatcher.todaystamp
-
-        if keepPastPlansDuration != .forever {
-            
-            // Delete sort indices for events that no longer exist in the calendar.
-            if let calendarSettings {
-                modelContext.deleteStaleCalendarEventPositions(
-                    in: calendarSettings,
-                    with: calendarStore.existingEventIds
-                )
-            }
-
-            // Delete old planners.
-            modelContext.deleteOldPlanners(
-                from: planners,
-                before: keepPastPlansDuration.cutoffDate
-            )
-        }
-        
-        if keepCanceledPlansDuration != .forever {
-            
-            let todaystamp = todaystampWatcher.todaystamp
-            let descriptor = FetchDescriptor<Planner>(
-                    predicate: #Predicate { planner in
-                        planner.datestamp == todaystamp
-                    }
-                )
-
-            do {
-                if let todayPlanner = try modelContext.fetch(descriptor).first {
-                    
-                    // Delete canceled plans from today's planner.
-                    modelContext.deleteCheckedPlans(from: todayPlanner)
-                }
-            } catch {
-                assertionFailure(
-                    "Failed to delete canceled plans: \(error)"
-                )
-            }
-        }
-    }
-}
-
-#Preview {
-    ContentView()
-}
