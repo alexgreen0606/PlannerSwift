@@ -86,7 +86,7 @@ struct PlannerSearchView: View {
                         .foregroundStyle(Color(uiColor: .secondaryLabel))
                         .listRowInsets(.bottom, 0)
                         .discreetListItem()
-
+                    
                     ScrollView(.horizontal) {
                         HStack(alignment: .top, spacing: 12) {
                             ForEach(thisWeekDatestamps, id: \.self) {
@@ -115,13 +115,13 @@ struct PlannerSearchView: View {
                 }
                 .listRowInsets(.horizontal, 0)
                 .discreetListItem()
-
+                
                 if sortedUpcomingYears.isEmpty {
                     EmptyLabel("No upcoming events")
                         .frame(maxWidth: .infinity)
                         .discreetListItem()
                 }
-
+                
                 ForEach(sortedUpcomingYears, id: \.self) { year in
                     Section {
                         ForEach(eventMap[year] ?? [], id: \.self) {
@@ -143,7 +143,7 @@ struct PlannerSearchView: View {
                             .overlay {
                                 if year == sortedUpcomingYears.first!
                                     && datestamp == eventMap[year]!
-                                        .first!
+                                    .first!
                                 {
                                     HStack(alignment: .top) {
                                         Text("Coming up")
@@ -176,13 +176,15 @@ struct PlannerSearchView: View {
                 topLeftToolbar
                 topRightToolbar
             }
-
+            
             // Create new event.
             .sheet(isPresented: $isNewEventSheetOpen) {
                 EventFormView(
                     plannerEvent: nil,
                     calendarEvent: nil
-                )
+                ) { _ in
+                    // TODO: show indiactor of event creation
+                }
                 .navigationTransition(
                     .zoom(
                         sourceID: "ADD_EVENT",
@@ -190,7 +192,7 @@ struct PlannerSearchView: View {
                     )
                 )
             }
-
+            
             // Open a planner.
             .fullScreenCover(item: $plannerCoverContext) { context in
                 PlannerView(datestamp: context.datestamp) {
@@ -199,23 +201,12 @@ struct PlannerSearchView: View {
                 .navigationTransition(
                     .zoom(
                         sourceID: context.namespace == toolbarAnimation
-                            ? "CALENDAR" : context.datestamp,
+                        ? "CALENDAR" : context.datestamp,
                         in: context.namespace
                     )
                 )
             }
-
-            // Auto-open the today planner on app entry.
-            .task {
-                if !navigator.wasTodayPlannerAutoOpened {
-                    navigator.wasTodayPlannerAutoOpened = true
-                    plannerCoverContext = PlannerCoverContext(
-                        datestamp: todaystampWatcher.todaystamp,
-                        namespace: thisWeekAnimation
-                    )
-                }
-            }
-
+            
             // Debounce the filtering of calendar events when needed.
             .onChange(of: searchText) { _, _ in scheduleFilterDebounce() }
             .onChange(of: filterCalendarIds) { _, _ in scheduleFilterDebounce()
@@ -226,13 +217,14 @@ struct PlannerSearchView: View {
             .onChange(of: calendarSettings?.checkedCalendarEventIds) { _, _ in
                 scheduleFilterDebounce()
             }
-
-            // Load in the calendar settings.
+            
+            // Load in the calendar settings and open today's planner on app-entry.
             .task {
                 modelContext.ensureCalendarSettings(
                     settings: calendarSettingsList
                 )
             }
+            
             // Reload the data from the page.
             .refreshable {
                 calendarStore.refresh(
@@ -245,7 +237,7 @@ struct PlannerSearchView: View {
         }
         .searchable(
             text: $searchText,
-            prompt: "Search calendar events..."
+            prompt: "Search planner..."
         )
     }
 
@@ -292,49 +284,51 @@ struct PlannerSearchView: View {
     private var topRightToolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .topBarTrailing) {
 
-            Menu {
-                Text("Filter Calendars")
-                    .font(.footnote)
-                Divider()
-                ForEach(sortedCalendars, id: \.calendarIdentifier) {
-                    calendar in
-                    Toggle(
-                        isOn: Binding(
-                            get: {
-                                filterCalendarIds.contains(
-                                    calendar.calendarIdentifier
-                                )
-                            },
-                            set: { isOn in
-                                if isOn {
-                                    filterCalendarIds.insert(
+            if !calendarStore.accessDenied {
+                Menu {
+                    Text("Filter Calendars")
+                        .font(.footnote)
+                    Divider()
+                    ForEach(sortedCalendars, id: \.calendarIdentifier) {
+                        calendar in
+                        Toggle(
+                            isOn: Binding(
+                                get: {
+                                    filterCalendarIds.contains(
                                         calendar.calendarIdentifier
                                     )
-                                } else {
-                                    filterCalendarIds.remove(
-                                        calendar.calendarIdentifier
-                                    )
+                                },
+                                set: { isOn in
+                                    if isOn {
+                                        filterCalendarIds.insert(
+                                            calendar.calendarIdentifier
+                                        )
+                                    } else {
+                                        filterCalendarIds.remove(
+                                            calendar.calendarIdentifier
+                                        )
+                                    }
                                 }
-                            }
-                        )
-                    ) {
-                        HStack(spacing: 8) {
-                            Image(
-                                systemName:
-                                    calendarSettings?.iconMap[
-                                        calendar.calendarIdentifier
-                                    ] ?? calendar.iconName
                             )
-                            .tint(Color(cgColor: calendar.cgColor))
+                        ) {
+                            HStack(spacing: 8) {
+                                Image(
+                                    systemName:
+                                        calendarSettings?.iconMap[
+                                            calendar.calendarIdentifier
+                                        ] ?? calendar.iconName
+                                )
+                                .tint(Color(cgColor: calendar.cgColor))
 
-                            Text(calendar.title)
+                                Text(calendar.title)
+                            }
                         }
                     }
+                } label: {
+                    Image(systemName: "line.3.horizontal.decrease")
                 }
-            } label: {
-                Image(systemName: "line.3.horizontal.decrease")
+                .menuActionDismissBehavior(.disabled)
             }
-            .menuActionDismissBehavior(.disabled)
 
             Button("New Event", systemImage: "plus") {
                 isNewEventSheetOpen = true

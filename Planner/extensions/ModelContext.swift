@@ -120,7 +120,6 @@ extension ModelContext {
     ) {
 
         for event in planner.events {
-            print("\(event.title) \(event.isChecked)")
             if event.isChecked {
                 print("Deleting checked event: \(event.id)")
                 delete(event)

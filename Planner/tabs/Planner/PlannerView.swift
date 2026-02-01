@@ -49,7 +49,7 @@ struct PlannerView: View {
 
     @State private var calendarPlannerEvents: [PlannerEvent] = []
     @State private var isDeleteCheckedConfirmationOpen = false
-    @State private var pendingScrollId: PersistentIdentifier?
+    @State private var pendingScroll: EventChange?
 
     // Toggle confirmation config for calendar events.
     private var toggleEventIconConfig: CustomIconConfig<PlannerEvent>? {
@@ -242,10 +242,11 @@ struct PlannerView: View {
                                 .padding(.trailing, 6)
                                 .contentShape(Rectangle())
                                 .onTapGesture {
-                                    plannerEventSheetContext = EventSheetContext(
-                                        plannerEvent: event,
-                                        calendarEvent: nil
-                                    )
+                                    plannerEventSheetContext =
+                                        EventSheetContext(
+                                            plannerEvent: event,
+                                            calendarEvent: nil
+                                        )
                                 }
                             )
                         } else {
@@ -259,10 +260,11 @@ struct PlannerView: View {
                             event.timeValueView(
                                 for: datestamp,
                                 openSheet: { event in
-                                    plannerEventSheetContext = EventSheetContext(
-                                        plannerEvent: event,
-                                        calendarEvent: nil
-                                    )
+                                    plannerEventSheetContext =
+                                        EventSheetContext(
+                                            plannerEvent: event,
+                                            calendarEvent: nil
+                                        )
                                 },
                                 accentColor: accentColor.swiftUIColor
                             )
@@ -286,7 +288,9 @@ struct PlannerView: View {
                     EventFormView(
                         plannerEvent: context.plannerEvent,
                         calendarEvent: context.calendarEvent
-                    )
+                    ) { change in
+                        pendingScroll = change
+                    }
                     .navigationTransition(
                         .zoom(
                             sourceID: context.id,
@@ -302,12 +306,30 @@ struct PlannerView: View {
                     }
                 }
 
-                // Slide to moved events after position change (due to time-detect).
+                // Slide to moved events after position change.
                 .onChange(of: sortedOpenPlans.map(\.id)) { _, _ in
-                    guard let id = pendingScrollId else { return }
-
-                    proxy.slideTo(id, at: .top)
-                    pendingScrollId = nil
+                    if let pending = pendingScroll {
+                        var scrollId: String? = nil
+                        
+                        switch pending {
+                        case .planner(let id):
+                            scrollId = "\(id)"
+                            
+                        case .calendar(let id):
+                            if let planEvent = sortedOpenPlans.first(where: { $0.calendarEvent?.eventIdentifier == id}) {
+                                scrollId = "\(planEvent.id)"
+                            }
+                            
+                        case .transfer:
+                            return
+                        }
+                        
+                        if let scrollId {
+                            proxy.slideTo(scrollId, at: .top)
+                        }
+                        
+                        pendingScroll = nil
+                    }
                 }
             }
             .environmentObject(plannerManager)
@@ -338,7 +360,6 @@ struct PlannerView: View {
 
             // Rebuild the planner when the calendar events change.
             .onChange(of: calendarStore.refreshKey) { _, newKey in
-                print("New refresh key")
                 synchronizeCalendarEvents()
             }
         }
@@ -588,7 +609,7 @@ struct PlannerView: View {
         }
 
         event.sortIndex = newSortIndex
-        pendingScrollId = event.id
+        pendingScroll = .planner(id: event.id)
 
         do {
             try modelContext.save()

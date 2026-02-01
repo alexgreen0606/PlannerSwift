@@ -28,6 +28,7 @@ class CalendarStore: ObservableObject {
         [String: [EKEvent]] = [:]
     @Published var refreshKey: UUID? = nil
     @Published private(set) var existingEventIds: Set<String> = []
+    @Published var accessDenied: Bool = true
 
     var ekEventStore: EKEventStore {
         eventStore
@@ -42,11 +43,12 @@ class CalendarStore: ObservableObject {
     }
 
     @MainActor
-    func requestAccessAndLoadIfNeeded(
+    func requestAccessAndLoad(
         hiddenCalendarIds: Set<String>
     ) {
         switch EKEventStore.authorizationStatus(for: .event) {
         case .authorized:
+            accessDenied = false
             load(
                 hiddenCalendarIds: hiddenCalendarIds
             )
@@ -54,15 +56,16 @@ class CalendarStore: ObservableObject {
             requestAccess(
                 hiddenCalendarIds: hiddenCalendarIds
             )
+        case .denied:
+            accessDenied = true
         default:
             break
         }
     }
 
+    @MainActor
     func refresh(hiddenCalendarIds: Set<String>) {
-        load(
-            hiddenCalendarIds: hiddenCalendarIds
-        )
+        requestAccessAndLoad(hiddenCalendarIds: hiddenCalendarIds)
     }
 
     // More up-to-date than using event.calendar.cgColor directly.
@@ -74,15 +77,15 @@ class CalendarStore: ObservableObject {
         return Color(calendar.cgColor)
     }
 
-    private func requestAccess(
-        hiddenCalendarIds: Set<String>
-    ) {
+    private func requestAccess(hiddenCalendarIds: Set<String>) {
         eventStore.requestFullAccessToEvents { granted, error in
-            guard granted else { return }
             Task { @MainActor in
-                self.load(
-                    hiddenCalendarIds: hiddenCalendarIds
-                )
+                if granted {
+                    self.accessDenied = false
+                    self.load(hiddenCalendarIds: hiddenCalendarIds)
+                } else {
+                    self.accessDenied = true
+                }
             }
         }
     }

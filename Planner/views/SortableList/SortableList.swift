@@ -77,7 +77,7 @@ struct SortableListView<
                         onTitleChange: handleTitleChange,
                         isItemChecked: isItemChecked
                     )
-                    .id(item.id)
+                    .id("\(item.id)")
                 }
                 .onMove(perform: moveUncheckedItem)
 
@@ -152,6 +152,7 @@ struct SortableListView<
         .animation(.linear(duration: 0.2), value: uncheckedItems)
         .animation(.linear(duration: 0.2), value: listManager.newlyCheckedIds)
         .animation(.linear(duration: 0.2), value: listManager.newlyUncheckedIds)
+        
         // Blur the textfield when the list unmounts (deletes empty items).
         .onDisappear {
             focusController.focusedId = nil

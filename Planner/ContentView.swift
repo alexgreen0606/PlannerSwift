@@ -33,7 +33,7 @@ struct ContentView: View {
 
     let contactsStore = CNContactStore()
 
-    @State private var selectedTab: AppTab = .search
+    @State private var selectedTab: AppTab = .planner
 
     private var eventsForToday: [EKEvent] {
         return calendarStore.allDayEventsByDatestamp[
@@ -93,7 +93,7 @@ struct ContentView: View {
             Tab(value: .trips) {
                 NavigationStack {
                     VStack {
-                        
+
                     }
                     .navigationTitle("Trips")
                 }
@@ -113,7 +113,7 @@ struct ContentView: View {
             Tab(value: .routines) {
                 NavigationStack {
                     VStack {
-                        
+
                     }
                     .navigationTitle("Routines")
                 }
@@ -127,7 +127,7 @@ struct ContentView: View {
                 Label("", systemImage: "gear")
             }
 
-            Tab(value: .search, role: .search) {
+            Tab(value: .planner, role: .search) {
                 PlannerSearchView()
             } label: {
                 Label(
@@ -143,7 +143,7 @@ struct ContentView: View {
                 settings: calendarSettingsList
             )
 
-            calendarStore.requestAccessAndLoadIfNeeded(
+            calendarStore.requestAccessAndLoad(
                 hiddenCalendarIds: calendarSettings!.hiddenCalendarIds
             )
 

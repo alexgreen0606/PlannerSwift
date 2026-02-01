@@ -15,6 +15,7 @@ import SwiftUI
 struct EventFormView: View {
     private let initialPlannerEvent: PlannerEvent?
     private let initialCalendarEvent: EKEvent?
+    private let handleEventChange: (EventChange) -> Void
 
     // Overrides all other behavior in this sheet and displays the Contact form.
     private let contact: CNContact?
@@ -59,9 +60,14 @@ struct EventFormView: View {
         initialPlannerEvent == nil && initialCalendarEvent == nil
     }
 
-    init(plannerEvent: PlannerEvent?, calendarEvent: EKEvent?) {
+    init(
+        plannerEvent: PlannerEvent?,
+        calendarEvent: EKEvent?,
+        handleEventChange: @escaping (EventChange) -> Void
+    ) {
         self.initialPlannerEvent = plannerEvent
         self.initialCalendarEvent = plannerEvent?.calendarEvent ?? calendarEvent
+        self.handleEventChange = handleEventChange
 
         var title = ""
         var hasTime = false
@@ -179,19 +185,35 @@ struct EventFormView: View {
                     ) { action, _ in
                         switch action {
                         case .saved:
+
+                            let targetPlanner = event.startDate.datestamp
+
+                            let initialPlanner =
+                                initialPlannerEvent?.planner?.datestamp
+                                ?? initialCalendarEvent?.startDate.datestamp
+
+                            if initialPlanner != targetPlanner {
+                                handleEventChange(.transfer)
+                            } else {
+                                handleEventChange(
+                                    .calendar(id: event.eventIdentifier)
+                                )
+                            }
+
                             handleCalendarSave()
+                            dismiss()
 
                         case .deleted:
                             handleCalendarSave()
+                            dismiss()
 
                         case .canceled:
                             print("User canceled. Do nothing.")
+                            dismiss()
 
                         @unknown default:
                             break
                         }
-
-                        dismiss()
                     }
                     .tint(accentColor.swiftUIColor)
                     .ignoresSafeArea()
@@ -218,38 +240,50 @@ struct EventFormView: View {
     }
 
     private var plannerEventBottomToolbar: some ToolbarContent {
-        ToolbarItem(placement: .bottomBar) {
-            Button {
+        Group {
+            if !calendarStore.accessDenied {
+                ToolbarItem(placement: .bottomBar) {
+                    Button {
 
-                // Create a new calendar event to represent the form values.
-                let event = EKEvent(eventStore: calendarStore.ekEventStore)
-                event.calendar =
-                    calendarStore.ekEventStore.defaultCalendarForNewEvents
-                event.title = title
-                event.startDate = date
-                event.endDate = Calendar.current.date(
-                    byAdding: .hour,
-                    value: 1,
-                    to: date
-                )
+                        // Create a new calendar event to represent the form values.
+                        let event = EKEvent(
+                            eventStore: calendarStore.ekEventStore
+                        )
+                        event.calendar =
+                            calendarStore.ekEventStore
+                            .defaultCalendarForNewEvents
+                        event.title = title
+                        event.startDate = date
+                        event.endDate = Calendar.current.date(
+                            byAdding: .hour,
+                            value: 1,
+                            to: date
+                        )
 
-                draftCalendarEvent = event
-                selectedDetent = .height(2600)
-            } label: {
-                HStack(alignment: .center) {
-                    Image(systemName: "calendar.badge.plus")
-                    Text("Add to calendar")
+                        draftCalendarEvent = event
+                        selectedDetent = .height(2600)
+                    } label: {
+                        HStack(alignment: .center) {
+                            Image(systemName: "calendar.badge.plus")
+                            Text("Add to calendar")
+                        }
+                    }
+                    .tint(accentColor.swiftUIColor)
                 }
+                .sharedBackgroundVisibility(.hidden)
             }
-            .tint(accentColor.swiftUIColor)
         }
-        .sharedBackgroundVisibility(.hidden)
     }
 
-    // TODO: move this to the UIKit Controller to pass back the edited event.
     private var calendarEventBottomToolbar: some ToolbarContent {
         ToolbarItem(placement: .bottomBar) {
             Button {
+                guard let calEvent = draftCalendarEvent else { return }
+
+                title = calEvent.title
+                date = calEvent.startDate
+                hasTime = true
+
                 draftCalendarEvent = nil
                 selectedDetent = .height(340)
             } label: {
@@ -308,6 +342,7 @@ struct EventFormView: View {
         )
 
         if validSortIndex != event.sortIndex {
+            handleEventChange(.planner(id: event.id))
             event.sortIndex = validSortIndex
         }
 
