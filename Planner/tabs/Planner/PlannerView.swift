@@ -290,6 +290,9 @@ struct PlannerView: View {
                         calendarEvent: context.calendarEvent
                     ) { change in
                         pendingScroll = change
+                        
+                        // TODO: add safety check. If the sortedOpenPlans has already updated (sortIndex matches target), scroll now.
+                        // TODO: maybe this safety check goes in the onchange, and the onchange runs when both the sort order AND the pending changes?
                     }
                     .navigationTransition(
                         .zoom(

@@ -185,23 +185,11 @@ struct EventFormView: View {
                     ) { action, _ in
                         switch action {
                         case .saved:
-
-                            let targetPlanner = event.startDate.datestamp
-
-                            let initialPlanner =
-                                initialPlannerEvent?.planner?.datestamp
-                                ?? initialCalendarEvent?.startDate.datestamp
-
-                            if initialPlanner != targetPlanner {
-                                handleEventChange(.transfer)
-                            } else {
-                                handleEventChange(
-                                    .calendar(id: event.eventIdentifier)
-                                )
-                            }
-
                             handleCalendarSave()
                             dismiss()
+                            handleEventChange(
+                                .calendar(id: event.eventIdentifier)
+                            )
 
                         case .deleted:
                             handleCalendarSave()
@@ -342,7 +330,6 @@ struct EventFormView: View {
         )
 
         if validSortIndex != event.sortIndex {
-            handleEventChange(.planner(id: event.id))
             event.sortIndex = validSortIndex
         }
 
@@ -353,6 +340,7 @@ struct EventFormView: View {
         }
 
         dismiss()
+        handleEventChange(.planner(id: event.id))
     }
 
     private func handleCalendarSave() {
