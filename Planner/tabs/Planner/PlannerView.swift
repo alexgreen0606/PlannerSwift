@@ -49,7 +49,7 @@ struct PlannerView: View {
 
     @State private var calendarPlannerEvents: [PlannerEvent] = []
     @State private var isDeleteCheckedConfirmationOpen = false
-    @State private var pendingScroll: EventChange?
+    @State private var pendingScroll: PlannerEventPositionChange?
 
     // Toggle confirmation config for calendar events.
     private var toggleEventIconConfig: CustomIconConfig<PlannerEvent>? {
@@ -290,9 +290,6 @@ struct PlannerView: View {
                         calendarEvent: context.calendarEvent
                     ) { change in
                         pendingScroll = change
-                        
-                        // TODO: add safety check. If the sortedOpenPlans has already updated (sortIndex matches target), scroll now.
-                        // TODO: maybe this safety check goes in the onchange, and the onchange runs when both the sort order AND the pending changes?
                     }
                     .navigationTransition(
                         .zoom(
@@ -308,31 +305,17 @@ struct PlannerView: View {
                         proxy.slideTo("CHECKED", at: .top)
                     }
                 }
-
-                // Slide to moved events after position change.
+                
+                // Slide to modified events once the UI has settled.
                 .onChange(of: sortedOpenPlans.map(\.id)) { _, _ in
-                    if let pending = pendingScroll {
-                        var scrollId: String? = nil
-                        
-                        switch pending {
-                        case .planner(let id):
-                            scrollId = "\(id)"
-                            
-                        case .calendar(let id):
-                            if let planEvent = sortedOpenPlans.first(where: { $0.calendarEvent?.eventIdentifier == id}) {
-                                scrollId = "\(planEvent.id)"
-                            }
-                            
-                        case .transfer:
-                            return
-                        }
-                        
-                        if let scrollId {
-                            proxy.slideTo(scrollId, at: .top)
-                        }
-                        
-                        pendingScroll = nil
-                    }
+                    attemptScrollToEvent(
+                        proxy: proxy
+                    )
+                }
+                .onChange(of: pendingScroll) { _, _ in
+                    attemptScrollToEvent(
+                        proxy: proxy
+                    )
                 }
             }
             .environmentObject(plannerManager)
@@ -612,7 +595,7 @@ struct PlannerView: View {
         }
 
         event.sortIndex = newSortIndex
-        pendingScroll = .planner(id: event.id)
+        pendingScroll = .planner(id: event.id, sortIndex: newSortIndex)
 
         do {
             try modelContext.save()
@@ -634,4 +617,41 @@ struct PlannerView: View {
 
         reloadCalendar()
     }
+    
+    // MARK: - Helpers
+    
+    private func attemptScrollToEvent(
+        proxy: ScrollViewProxy
+    ) {
+        guard let pending = pendingScroll, pending.isScrollable else {
+            return
+        }
+
+        let targetEvent: PlannerEvent? = {
+            if let plannerId = pending.plannerId {
+                return sortedOpenPlans.first(where: { $0.id == plannerId })
+            }
+
+            if let calendarId = pending.calendarId {
+                return sortedOpenPlans.first(
+                    where: { $0.calendarEvent?.eventIdentifier == calendarId }
+                )
+            }
+
+            return nil
+        }()
+
+        guard
+            let event = targetEvent,
+            let targetSortIndex = pending.targetSortIndex,
+            event.sortIndex == targetSortIndex
+        else {
+            // List not ready yet. Wait for next change.
+            return
+        }
+
+        proxy.slideTo("\(event.id)", at: .center)
+        pendingScroll = nil
+    }
+
 }

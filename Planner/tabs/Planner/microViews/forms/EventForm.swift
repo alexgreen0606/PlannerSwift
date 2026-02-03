@@ -15,7 +15,7 @@ import SwiftUI
 struct EventFormView: View {
     private let initialPlannerEvent: PlannerEvent?
     private let initialCalendarEvent: EKEvent?
-    private let handleEventChange: (EventChange) -> Void
+    private let handleEventChange: (PlannerEventPositionChange) -> Void
 
     // Overrides all other behavior in this sheet and displays the Contact form.
     private let contact: CNContact?
@@ -63,7 +63,7 @@ struct EventFormView: View {
     init(
         plannerEvent: PlannerEvent?,
         calendarEvent: EKEvent?,
-        handleEventChange: @escaping (EventChange) -> Void
+        handleEventChange: @escaping (PlannerEventPositionChange) -> Void
     ) {
         self.initialPlannerEvent = plannerEvent
         self.initialCalendarEvent = plannerEvent?.calendarEvent ?? calendarEvent
@@ -182,26 +182,19 @@ struct EventFormView: View {
                     EditCalendarEventFormView(
                         event: event,
                         eventStore: calendarStore.ekEventStore
-                    ) { action, _ in
-                        switch action {
-                        case .saved:
-                            handleCalendarSave()
+                    ) { action, event in
+                        guard action != .canceled else {
                             dismiss()
-                            handleEventChange(
-                                .calendar(id: event.eventIdentifier)
-                            )
-
-                        case .deleted:
-                            handleCalendarSave()
-                            dismiss()
-
-                        case .canceled:
-                            print("User canceled. Do nothing.")
-                            dismiss()
-
-                        @unknown default:
-                            break
+                            return
                         }
+
+                        if let event, action == .saved {
+                            handleCalendarEventChange(event)
+                            return
+                        }
+
+                        syncLocalCalendarData()
+                        dismiss()
                     }
                     .tint(accentColor.swiftUIColor)
                     .ignoresSafeArea()
@@ -340,10 +333,47 @@ struct EventFormView: View {
         }
 
         dismiss()
-        handleEventChange(.planner(id: event.id))
+        handleEventChange(.planner(id: event.id, sortIndex: validSortIndex))
     }
 
-    private func handleCalendarSave() {
+    private func handleCalendarEventChange(_ event: EKEvent) {
+        syncLocalCalendarData()
+
+        let targetDatestamp = event.startDate.datestamp
+        let planner = loadPlanner(for: targetDatestamp)
+
+        // Rebuild planner events using the same pipeline as the list
+        let rebuiltEvents = getPlannerEvents(for: planner)
+
+        guard
+            let plannerEvent = rebuiltEvents.first(
+                where: {
+                    $0.calendarEvent?.calendarItemExternalIdentifier
+                        == event.calendarItemExternalIdentifier
+                }
+            )
+        else {
+            assertionFailure(
+                "Saved calendar event not found in rebuilt planner."
+            )
+            dismiss()
+            return
+        }
+
+        let finalSortIndex = plannerEvent.sortIndex
+
+        dismiss()
+
+        handleEventChange(
+            .calendar(
+                id: event.eventIdentifier,
+                sortIndex: finalSortIndex
+            )
+        )
+    }
+
+    // Deletes stale planner event and reloads the calendar.
+    private func syncLocalCalendarData() {
         if let initialPlannerEvent, initialPlannerEvent.calendarEvent == nil {
             modelContext.delete(initialPlannerEvent)
         }
