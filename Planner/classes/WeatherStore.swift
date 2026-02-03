@@ -41,7 +41,7 @@ final class WeatherStore: ObservableObject {
 
             return loadedDatestamps
         } catch {
-            assertionFailure(
+            print(
                 "Failed to load weather: \(error)"
             )
             return []

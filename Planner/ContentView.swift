@@ -91,15 +91,10 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            Tab(value: .trips) {
-                NavigationStack {
-                    VStack {
-
-                    }
-                    .navigationTitle("Trips")
-                }
+            Tab(value: .planner) {
+                PlannerTabView()
             } label: {
-                Label("", systemImage: "suitcase")
+                Label("", systemImage: todaystampWatcher.todaystamp.calendarSymbolName)
             }
 
             Tab(value: .checklists) {
@@ -123,22 +118,17 @@ struct ContentView: View {
             }
 
             Tab(value: .settings) {
-                SettingsView()
+                SettingsTabView()
             } label: {
                 Label("", systemImage: "gear")
             }
 
-            Tab(value: .planner, role: .search) {
-                PlannerSearchView(searchText: $plannerSearchText)
+            Tab(value: .search, role: .search) {
+                PlannerSearchTabView(searchText: $plannerSearchText)
                     .searchable(
                         text: $plannerSearchText,
                         prompt: "Search planner..."
                     )
-            } label: {
-                Label(
-                    "",
-                    systemImage: todaystampWatcher.todaystamp.calendarSymbolName
-                )
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)

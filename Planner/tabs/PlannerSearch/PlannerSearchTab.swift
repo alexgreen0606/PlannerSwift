@@ -1,0 +1,326 @@
+//
+//  PlannerSearch.swift
+//  Planner
+//
+//  Created by Alex Green on 12/16/25.
+//
+
+import EventKit
+import SwiftData
+import SwiftDate
+import SwiftUI
+
+struct PlannerSearchTabView: View {
+    @Binding var searchText: String
+
+    @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
+        KeepPastPlansDuration =
+            KeepPastPlansDuration.oneMonth
+
+    @Environment(\.isSearching) private var isSearching
+    @Environment(\.modelContext) private var modelContext
+    @Query private var calendarSettingsList: [CalendarSettings]
+
+    @EnvironmentObject var calendarStore: CalendarStore
+    @EnvironmentObject var todaystampWatcher: TodaystampWatcher
+    @ObservedObject var weatherStore = WeatherStore.shared
+
+    @State private var plannerCoverContext: PlannerCoverContext?
+    @Namespace private var sheetAnimation
+
+    @State private var filterDebounce: Task<Void, Never>?
+    @State private var filterCalendarIds: Set<String> = []
+
+    // Holds all calendar data displayed in the UI.
+    @State private var eventMap: [String: [String]] = [:]
+
+    private var calendarSettings: CalendarSettings? {
+        calendarSettingsList.first
+    }
+
+    private var sortedUpcomingYears: [String] {
+        Array(eventMap.keys).sorted()
+    }
+
+    private var sortedCalendars: [EKCalendar] {
+        calendarStore.sortedCalendars.filter {
+            calendarSettings != nil
+                && !calendarSettings!.hiddenCalendarIds.contains(
+                    $0.calendarIdentifier
+                )
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                if sortedUpcomingYears.isEmpty {
+                    EmptyLabel("No upcoming events")
+                        .frame(maxWidth: .infinity)
+                        .discreetListItem()
+                }
+
+                ForEach(sortedUpcomingYears, id: \.self) { year in
+                    Section {
+                        ForEach(eventMap[year] ?? [], id: \.self) {
+                            datestamp in
+                            PlannerCardView(
+                                datestamp: datestamp,
+                                iconMap: calendarSettings?.iconMap ?? [:],
+                                isEventChecked: isCalendarEventChecked,
+                            ) {
+                                plannerCoverContext = PlannerCoverContext(
+                                    datestamp: datestamp
+                                )
+                            }
+                            .matchedTransitionSource(
+                                id: datestamp,
+                                in: sheetAnimation
+                            )
+                        }
+                    } header: {
+                        upcomingYearHeader(year)
+                    }
+                }
+            }
+            .listStyle(.plain)
+            .safeAreaInset(edge: .bottom) {
+                Color.clear.frame(height: isSearching ? 80 : 0)
+            }
+            .background(Color.appBackground)
+            .toolbar {
+                topLeftToolbar
+            }
+
+            // Open a planner.
+            .fullScreenCover(item: $plannerCoverContext) { context in
+                PlannerView(datestamp: context.datestamp) {
+                    plannerCoverContext = nil
+                }
+                .navigationTransition(
+                    .zoom(
+                        sourceID: context.datestamp,
+                        in: sheetAnimation
+                    )
+                )
+            }
+
+            // Debounce the filtering of calendar events when needed.
+            .onChange(of: searchText) { _, _ in scheduleFilterDebounce() }
+            .onChange(of: filterCalendarIds) { _, _ in scheduleFilterDebounce()
+            }
+            .onChange(of: calendarStore.refreshKey) { _, newKey in
+                computeFilteredEventMap()
+            }
+            .onChange(of: calendarSettings?.checkedCalendarEventIds) { _, _ in
+                scheduleFilterDebounce()
+            }
+
+            // Load in the calendar settings.
+            .task {
+                modelContext.ensureCalendarSettings(
+                    settings: calendarSettingsList
+                )
+                
+                computeFilteredEventMap()
+            }
+
+            // Reload the data from the page.
+            .refreshable {
+                calendarStore.refresh(
+                    hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? []
+                )
+                Task {
+                    await weatherStore.loadWeather()
+                }
+            }
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var topLeftToolbar: some ToolbarContent {
+        Group {
+            if !calendarStore.accessDenied {
+                ToolbarItemGroup(placement: .topBarLeading) {
+                    Menu {
+                        Text("Filter Calendars")
+                            .font(.footnote)
+                        Divider()
+                        ForEach(sortedCalendars, id: \.calendarIdentifier) {
+                            calendar in
+                            Toggle(
+                                isOn: Binding(
+                                    get: {
+                                        filterCalendarIds.contains(
+                                            calendar.calendarIdentifier
+                                        )
+                                    },
+                                    set: { isOn in
+                                        if isOn {
+                                            filterCalendarIds.insert(
+                                                calendar.calendarIdentifier
+                                            )
+                                        } else {
+                                            filterCalendarIds.remove(
+                                                calendar.calendarIdentifier
+                                            )
+                                        }
+                                    }
+                                )
+                            ) {
+                                HStack(spacing: 8) {
+                                    Image(
+                                        systemName:
+                                            calendarSettings?.iconMap[
+                                                calendar.calendarIdentifier
+                                            ] ?? calendar.iconName
+                                    )
+                                    .tint(Color(cgColor: calendar.cgColor))
+
+                                    Text(calendar.title)
+                                }
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "line.3.horizontal.decrease")
+                    }
+                    .menuActionDismissBehavior(.disabled)
+                }
+            }
+        }
+    }
+
+    private func isCalendarEventChecked(event: EKEvent?) -> Bool {
+        guard let calendarSettings, let event else {
+            return false
+        }
+
+        return calendarSettings.checkedCalendarEventIds.contains(
+            event.calendarItemExternalIdentifier
+        )
+    }
+
+    private func upcomingYearHeader(_ year: String) -> some View {
+        Text(year)
+            .font(.system(size: 22, weight: .heavy, design: .rounded))
+            .foregroundColor(.secondary).frame(
+                maxWidth: .infinity,
+                alignment: .trailing
+            )
+    }
+
+    private func computeFilteredEventMap() {
+        let today = todaystampWatcher.todaystamp
+        let todayDate = today.toDate("yyyy-MM-dd", region: .local)?.date
+        let maxDate = todaystampWatcher.maxCalendarDate
+
+        // ------------------------------------------------------------------
+        // 1. Collect all datestamps that have events (all-day + single-day)
+        // ------------------------------------------------------------------
+        let eventDatestamps = Set(
+            calendarStore.allDayEventsByDatestamp.keys
+        ).union(
+            calendarStore.singleDayEventsByDatestamp.keys
+        )
+
+        // ------------------------------------------------------------------
+        // 2. Trim datestamps to the desired date range
+        // ------------------------------------------------------------------
+        let dateRangeFiltered: [(year: String, datestamp: String)] =
+            eventDatestamps.compactMap { datestamp in
+                guard
+                    let date = datestamp.toDate("yyyy-MM-dd", region: .local)?
+                        .date,
+                    let todayDate,
+                    date > todayDate,
+                    date < maxDate
+                else { return nil }
+
+                return (String(date.year), datestamp)
+            }
+
+        // ------------------------------------------------------------------
+        // 3. Filter events by:
+        //    a) calendar IDs (if provided)
+        //    b) checked status
+        //    c) search text in title (if provided)
+        //    Remove datestamps with zero remaining events
+        // ------------------------------------------------------------------
+        let filteredDatestamps = dateRangeFiltered.compactMap {
+            entry -> (year: String, datestamp: String)? in
+            let datestamp = entry.datestamp
+
+            // Combine all events for this datestamp
+            let events =
+                (calendarStore.allDayEventsByDatestamp[datestamp] ?? [])
+                + (calendarStore.singleDayEventsByDatestamp[datestamp] ?? [])
+
+            // Filter by calendar identifiers (skip if none selected)
+            let calendarFiltered =
+                filterCalendarIds.isEmpty
+                ? events
+                : events.filter {
+                    filterCalendarIds.contains($0.calendar.calendarIdentifier)
+                }
+
+            // Filter out checked events
+            let checkedFiltered =
+                calendarSettings == nil
+                ? calendarFiltered
+                : calendarFiltered.filter {
+                    !calendarSettings!.checkedCalendarEventIds.contains(
+                        $0.calendarItemExternalIdentifier
+                    )
+                }
+
+            let trimmedSearchText = searchText.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            )
+
+            // Filter by search text in title (skip if empty)
+            let searchFiltered =
+                trimmedSearchText.isEmpty
+                ? checkedFiltered
+                : checkedFiltered.filter {
+                    $0.title.localizedCaseInsensitiveContains(
+                        trimmedSearchText
+                    )
+                }
+
+            // Remove this datestamp entirely if no events remain
+            guard !searchFiltered.isEmpty else { return nil }
+
+            return entry
+        }
+
+        // ------------------------------------------------------------------
+        // 4. Group remaining datestamps by year
+        // ------------------------------------------------------------------
+        let grouped = Dictionary(grouping: filteredDatestamps, by: { $0.year })
+
+        // ------------------------------------------------------------------
+        // 5. Sort datestamps within each year
+        // ------------------------------------------------------------------
+        eventMap = grouped.mapValues { values in
+            values
+                .map { $0.datestamp }
+                .sorted()
+        }
+    }
+
+    private func scheduleFilterDebounce() {
+        filterDebounce?.cancel()
+
+        filterDebounce = Task {
+            do {
+                try await Task.sleep(for: .milliseconds(500))
+                guard !Task.isCancelled else { return }
+
+                // Recompute filtered event map.
+                computeFilteredEventMap()
+            } catch {
+            }
+        }
+    }
+
+}

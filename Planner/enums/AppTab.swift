@@ -6,5 +6,5 @@
 //
 
 enum AppTab: Hashable {
-    case routines, checklists, planner, settings, trips
+    case routines, checklists, planner, settings, search
 }

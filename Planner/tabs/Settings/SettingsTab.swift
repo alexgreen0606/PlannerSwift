@@ -10,7 +10,7 @@ import EventKit
 import SwiftData
 import SwiftUI
 
-struct SettingsView: View {
+struct SettingsTabView: View {
 
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
         .system
