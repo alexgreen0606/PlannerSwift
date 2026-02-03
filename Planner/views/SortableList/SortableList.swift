@@ -37,6 +37,7 @@ struct SortableListView<
     let tapToolbar: ((String, Item) -> Void)?
     let startAdornment: ((_ item: Item) -> StartAdornment)?
     let endAdornment: ((_ item: Item) -> EndAdornment)?
+    let proxy: ScrollViewProxy
     let createItem: (_ baseId: PersistentIdentifier?, _ offset: Int) -> Void
     let handleTitleChange: (_ item: Item) -> Void
     let moveItem: (_ from: Int, _ to: Int) -> Void
@@ -152,6 +153,13 @@ struct SortableListView<
         .animation(.linear(duration: 0.2), value: uncheckedItems)
         .animation(.linear(duration: 0.2), value: listManager.newlyCheckedIds)
         .animation(.linear(duration: 0.2), value: listManager.newlyUncheckedIds)
+        
+        // Slide to checked items when the user marks them visible.
+        .onChange(of: showChecked) { _, newShowChecked in
+            if newShowChecked {
+                proxy.scrollTo("UNCHECKED", anchor: .top)
+            }
+        }
         
         // Blur the textfield when the list unmounts (deletes empty items).
         .onDisappear {

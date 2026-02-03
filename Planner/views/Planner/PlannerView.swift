@@ -10,23 +10,6 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-struct EventSheetContext: Identifiable {
-    var plannerEvent: PlannerEvent?
-    var calendarEvent: EKEvent?
-
-    var id: String {
-        if let plannerEventId = plannerEvent?.id {
-            return "\(plannerEventId)"
-        }
-
-        if let calEvent = calendarEvent {
-            return "\(String(describing: calEvent.eventIdentifier))"
-        }
-
-        return "FALLBACK_NO_EVENT"
-    }
-}
-
 struct PlannerView: View {
     private let datestamp: String
     private let closePlanner: () -> Void
@@ -270,6 +253,7 @@ struct PlannerView: View {
                             )
                         )
                     },
+                    proxy: proxy,
                     createItem: createEvent,
                     handleTitleChange: handleEventTitleChange,
                     moveItem: handleMoveUncheckedEvent,
@@ -297,13 +281,6 @@ struct PlannerView: View {
                             in: sheetAnimation
                         )
                     )
-                }
-
-                // Slide to checked events when the user marks them visible.
-                .onChange(of: showChecked) { _, newShowChecked in
-                    if newShowChecked {
-                        proxy.scrollTo("UNCHECKED", anchor: .bottom)
-                    }
                 }
 
                 // Slide to modified events once the UI has settled.

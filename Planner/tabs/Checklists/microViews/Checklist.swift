@@ -99,7 +99,7 @@ struct ChecklistView: View {
                 SortableListView(
                     uncheckedItems: sortedUncheckedItems,
                     checkedItems: sortedCheckedItems,
-                    showChecked: checklist?.showCompleted ?? false,
+                    showChecked: checklist?.showCompleted == true,
                     floatingInfo: EmptyView(),
                     customToggleConfig: nil,
                     checkedHeader: "Completed items",
@@ -112,6 +112,7 @@ struct ChecklistView: View {
                     tapToolbar: { _, _ in },
                     startAdornment: { _ in EmptyView() },
                     endAdornment: { _ in EmptyView() },
+                    proxy: proxy,
                     createItem: createItem,
                     handleTitleChange: { _ in },
                     moveItem: moveItem,
