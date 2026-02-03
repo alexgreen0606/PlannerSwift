@@ -34,6 +34,7 @@ struct ContentView: View {
     let contactsStore = CNContactStore()
 
     @State private var selectedTab: AppTab = .planner
+    @State private var plannerSearchText: String = ""
 
     private var eventsForToday: [EKEvent] {
         return calendarStore.allDayEventsByDatestamp[
@@ -128,7 +129,11 @@ struct ContentView: View {
             }
 
             Tab(value: .planner, role: .search) {
-                PlannerSearchView()
+                PlannerSearchView(searchText: $plannerSearchText)
+                    .searchable(
+                        text: $plannerSearchText,
+                        prompt: "Search planner..."
+                    )
             } label: {
                 Label(
                     "",

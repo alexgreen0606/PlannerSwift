@@ -20,11 +20,13 @@ struct PlannerCoverContext: Identifiable {
 }
 
 struct PlannerSearchView: View {
+    @Binding var searchText: String
 
     @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
         KeepPastPlansDuration =
             KeepPastPlansDuration.oneMonth
 
+    @Environment(\.isSearching) private var isSearching
     @Environment(\.modelContext) private var modelContext
     @Query private var calendarSettingsList: [CalendarSettings]
 
@@ -38,7 +40,6 @@ struct PlannerSearchView: View {
     @Namespace private var upcomingAnimation
     @State private var plannerCoverContext: PlannerCoverContext?
 
-    @State private var searchText: String = ""
     @State private var filterDebounce: Task<Void, Never>?
     @State private var isCalendarPickerOpen = false
     @State private var selectedCalendarDate: Date = Date()
@@ -78,167 +79,173 @@ struct PlannerSearchView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    Text("This week")
-                        .padding(.leading, 16)
-                        .font(.headline)
-                        .foregroundStyle(Color(uiColor: .secondaryLabel))
-                        .listRowInsets(.bottom, 0)
-                        .discreetListItem()
+            ScrollViewReader { proxy in
+                List {
+                    Section {
+                        Text("This week")
+                            .padding(.leading, 16)
+                            .font(.headline)
+                            .foregroundStyle(Color(uiColor: .secondaryLabel))
+                            .listRowInsets(.bottom, 0)
+                            .discreetListItem()
+                        
+                        ScrollView(.horizontal) {
+                            HStack(alignment: .top, spacing: 12) {
+                                ForEach(thisWeekDatestamps, id: \.self) {
+                                    datestamp in
+                                    PlannerCardVerticalView(
+                                        datestamp: datestamp,
+                                        iconMap: calendarSettings?.iconMap ?? [:],
+                                        isCalendarEventChecked:
+                                            isCalendarEventChecked
+                                    ) {
+                                        plannerCoverContext = PlannerCoverContext(
+                                            datestamp: datestamp,
+                                            namespace: thisWeekAnimation
+                                        )
+                                    }
+                                    .matchedTransitionSource(
+                                        id: datestamp,
+                                        in: thisWeekAnimation
+                                    )
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                        }
+                        .scrollIndicators(.hidden)
+                        .background(Color.clear)
+                    }
+                    .listRowInsets(.horizontal, 0)
+                    .discreetListItem()
                     
-                    ScrollView(.horizontal) {
-                        HStack(alignment: .top, spacing: 12) {
-                            ForEach(thisWeekDatestamps, id: \.self) {
+                    if sortedUpcomingYears.isEmpty {
+                        EmptyLabel("No upcoming events")
+                            .frame(maxWidth: .infinity)
+                            .discreetListItem()
+                    }
+                    
+                    ForEach(sortedUpcomingYears, id: \.self) { year in
+                        Section {
+                            ForEach(eventMap[year] ?? [], id: \.self) {
                                 datestamp in
-                                PlannerCardVerticalView(
+                                PlannerCardView(
                                     datestamp: datestamp,
                                     iconMap: calendarSettings?.iconMap ?? [:],
-                                    isCalendarEventChecked:
-                                        isCalendarEventChecked
+                                    isEventChecked: isCalendarEventChecked,
                                 ) {
                                     plannerCoverContext = PlannerCoverContext(
                                         datestamp: datestamp,
-                                        namespace: thisWeekAnimation
+                                        namespace: upcomingAnimation
                                     )
                                 }
                                 .matchedTransitionSource(
                                     id: datestamp,
-                                    in: thisWeekAnimation
+                                    in: upcomingAnimation
                                 )
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                    }
-                    .scrollIndicators(.hidden)
-                    .background(Color.clear)
-                }
-                .listRowInsets(.horizontal, 0)
-                .discreetListItem()
-                
-                if sortedUpcomingYears.isEmpty {
-                    EmptyLabel("No upcoming events")
-                        .frame(maxWidth: .infinity)
-                        .discreetListItem()
-                }
-                
-                ForEach(sortedUpcomingYears, id: \.self) { year in
-                    Section {
-                        ForEach(eventMap[year] ?? [], id: \.self) {
-                            datestamp in
-                            PlannerCardView(
-                                datestamp: datestamp,
-                                iconMap: calendarSettings?.iconMap ?? [:],
-                                isEventChecked: isCalendarEventChecked,
-                            ) {
-                                plannerCoverContext = PlannerCoverContext(
-                                    datestamp: datestamp,
-                                    namespace: upcomingAnimation
-                                )
-                            }
-                            .matchedTransitionSource(
-                                id: datestamp,
-                                in: upcomingAnimation
-                            )
-                            .overlay {
-                                if year == sortedUpcomingYears.first!
-                                    && datestamp == eventMap[year]!
-                                    .first!
-                                {
-                                    HStack(alignment: .top) {
-                                        Text("Coming up")
-                                            .font(.headline)
-                                            .foregroundStyle(
-                                                Color(uiColor: .secondaryLabel)
-                                            )
-                                            .offset(y: -48)
+                                .overlay {
+                                    if year == sortedUpcomingYears.first!
+                                        && datestamp == eventMap[year]!
+                                        .first!
+                                    {
+                                        HStack(alignment: .top) {
+                                            Text("Coming up")
+                                                .font(.headline)
+                                                .foregroundStyle(
+                                                    Color(uiColor: .secondaryLabel)
+                                                )
+                                                .offset(y: -48)
+                                        }
+                                        .frame(
+                                            maxWidth: .infinity,
+                                            alignment: .leading
+                                        )
+                                        .frame(
+                                            maxHeight: .infinity,
+                                            alignment: .top
+                                        )
                                     }
-                                    .frame(
-                                        maxWidth: .infinity,
-                                        alignment: .leading
-                                    )
-                                    .frame(
-                                        maxHeight: .infinity,
-                                        alignment: .top
-                                    )
                                 }
                             }
+                        } header: {
+                            upcomingYearHeader(year)
                         }
-                    } header: {
-                        upcomingYearHeader(year)
+                        .id("UPCOMING_EVENTS")
                     }
                 }
-            }
-            .listStyle(.plain)
-            .background(Color.appBackground)
-            .navigationTitle("Planner")
-            .toolbar {
-                topLeftToolbar
-                topRightToolbar
-            }
-            
-            // Create new event.
-            .sheet(isPresented: $isNewEventSheetOpen) {
-                EventFormView(
-                    plannerEvent: nil,
-                    calendarEvent: nil
-                ) { _ in
-                    // TODO: show indiactor of event creation
+                .listStyle(.plain)
+                .background(Color.appBackground)
+                .navigationTitle("Planner")
+                .toolbar {
+                    topLeftToolbar
+                    topRightToolbar
                 }
-                .navigationTransition(
-                    .zoom(
-                        sourceID: "ADD_EVENT",
-                        in: toolbarAnimation
+                
+                // Create new event.
+                .sheet(isPresented: $isNewEventSheetOpen) {
+                    EventFormView(
+                        plannerEvent: nil,
+                        calendarEvent: nil
+                    ) { _ in
+                        // TODO: show indiactor of event creation
+                    }
+                    .navigationTransition(
+                        .zoom(
+                            sourceID: "ADD_EVENT",
+                            in: toolbarAnimation
+                        )
                     )
-                )
-            }
-            
-            // Open a planner.
-            .fullScreenCover(item: $plannerCoverContext) { context in
-                PlannerView(datestamp: context.datestamp) {
-                    plannerCoverContext = nil
                 }
-                .navigationTransition(
-                    .zoom(
-                        sourceID: context.namespace == toolbarAnimation
-                        ? "CALENDAR" : context.datestamp,
-                        in: context.namespace
+                
+                // Open a planner.
+                .fullScreenCover(item: $plannerCoverContext) { context in
+                    PlannerView(datestamp: context.datestamp) {
+                        plannerCoverContext = nil
+                    }
+                    .navigationTransition(
+                        .zoom(
+                            sourceID: context.namespace == toolbarAnimation
+                            ? "CALENDAR" : context.datestamp,
+                            in: context.namespace
+                        )
                     )
-                )
-            }
-            
-            // Debounce the filtering of calendar events when needed.
-            .onChange(of: searchText) { _, _ in scheduleFilterDebounce() }
-            .onChange(of: filterCalendarIds) { _, _ in scheduleFilterDebounce()
-            }
-            .onChange(of: calendarStore.refreshKey) { _, newKey in
-                computeFilteredEventMap()
-            }
-            .onChange(of: calendarSettings?.checkedCalendarEventIds) { _, _ in
-                scheduleFilterDebounce()
-            }
-            
-            // Load in the calendar settings and open today's planner on app-entry.
-            .task {
-                modelContext.ensureCalendarSettings(
-                    settings: calendarSettingsList
-                )
-            }
-            
-            // Reload the data from the page.
-            .refreshable {
-                calendarStore.refresh(
-                    hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? []
-                )
-                Task {
-                    await weatherStore.loadWeather()
+                }
+                
+                // Debounce the filtering of calendar events when needed.
+                .onChange(of: searchText) { _, _ in scheduleFilterDebounce() }
+                .onChange(of: filterCalendarIds) { _, _ in scheduleFilterDebounce()
+                }
+                .onChange(of: calendarStore.refreshKey) { _, newKey in
+                    computeFilteredEventMap()
+                }
+                .onChange(of: calendarSettings?.checkedCalendarEventIds) { _, _ in
+                    scheduleFilterDebounce()
+                }
+                
+                // Load in the calendar settings and open today's planner on app-entry.
+                .task {
+                    modelContext.ensureCalendarSettings(
+                        settings: calendarSettingsList
+                    )
+                }
+                
+                // Reload the data from the page.
+                .refreshable {
+                    calendarStore.refresh(
+                        hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? []
+                    )
+                    Task {
+                        await weatherStore.loadWeather()
+                    }
+                }
+                .onChange(of: isSearching) { _, newIsSearching in
+                    // TODO: also call this when the data re-loads on the page.
+                    proxy.scrollTo("UPCOMING_EVENTS", anchor: .top)
+                }
+                .safeAreaInset(edge: .bottom) {
+                    Color.clear.frame(height: isSearching ? 80 : 0)
                 }
             }
         }
-        .searchable(
-            text: $searchText,
-            prompt: "Search planner..."
-        )
     }
 
     private var topLeftToolbar: some ToolbarContent {

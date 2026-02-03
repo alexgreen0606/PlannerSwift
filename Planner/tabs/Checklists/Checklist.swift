@@ -263,9 +263,9 @@ struct ChecklistView: View {
 
                 Button("Add", systemImage: "plus") {
                     createItem(at: sortedUncheckedItems.count)
-                    proxy.slideTo(
+                    proxy.scrollTo(
                         "UNCHECKED",
-                        at: .bottom
+                        anchor: .top
                     )
                 }
             } else {

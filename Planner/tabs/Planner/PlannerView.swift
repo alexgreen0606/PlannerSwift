@@ -302,10 +302,10 @@ struct PlannerView: View {
                 // Slide to checked events when the user marks them visible.
                 .onChange(of: showChecked) { _, newShowChecked in
                     if newShowChecked {
-                        proxy.slideTo("CHECKED", at: .top)
+                        proxy.scrollTo("UNCHECKED", anchor: .bottom)
                     }
                 }
-                
+
                 // Slide to modified events once the UI has settled.
                 .onChange(of: sortedOpenPlans.map(\.id)) { _, _ in
                     attemptScrollToEvent(
@@ -353,6 +353,7 @@ struct PlannerView: View {
 
     // MARK: - Toolbars
 
+    @ToolbarContentBuilder
     private var topLeftToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             Button("Back", systemImage: "chevron.left") {
@@ -361,6 +362,7 @@ struct PlannerView: View {
         }
     }
 
+    @ToolbarContentBuilder
     private var topRightToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Menu {
@@ -429,7 +431,7 @@ struct PlannerView: View {
                     return
                 }
 
-                proxy.slideTo("UNCHECKED", at: .bottom)
+                proxy.scrollTo("UNCHECKED", anchor: .bottom)
                 createEvent(at: sortedOpenPlans.count)
             }
             .tint(accentColor.swiftUIColor)
@@ -617,9 +619,9 @@ struct PlannerView: View {
 
         reloadCalendar()
     }
-    
+
     // MARK: - Helpers
-    
+
     private func attemptScrollToEvent(
         proxy: ScrollViewProxy
     ) {
@@ -650,7 +652,7 @@ struct PlannerView: View {
             return
         }
 
-        proxy.slideTo("\(event.id)", at: .center)
+        proxy.scrollTo("\(event.id)", anchor: .center)
         pendingScroll = nil
     }
 
