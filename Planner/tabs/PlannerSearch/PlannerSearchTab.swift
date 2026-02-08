@@ -30,6 +30,8 @@ struct PlannerSearchTabView: View {
     @State private var filterDebounce: Task<Void, Never>?
     @State private var filterCalendarIds: Set<String> = []
 
+    @State private var pendingScrollDatestamp: String?
+
     // Holds all calendar data displayed in the UI.
     @State private var eventMap: [String: [String]] = [:]
 
@@ -52,86 +54,106 @@ struct PlannerSearchTabView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                if sortedUpcomingYears.isEmpty {
-                    EmptyLabel("No upcoming events")
-                        .frame(maxWidth: .infinity)
-                        .discreetListItem()
-                }
+            ScrollViewReader { proxy in
+                List {
+                    if sortedUpcomingYears.isEmpty {
+                        EmptyLabel("No upcoming events")
+                            .frame(maxWidth: .infinity)
+                            .discreetListItem()
+                    }
 
-                ForEach(sortedUpcomingYears, id: \.self) { year in
-                    Section {
-                        ForEach(eventMap[year] ?? [], id: \.self) {
-                            datestamp in
-                            PlannerCardView(
-                                datestamp: datestamp,
-                                iconMap: calendarSettings?.iconMap ?? [:],
-                                isEventChecked: isCalendarEventChecked,
-                            ) {
-                                plannerCoverContext = PlannerCoverContext(
-                                    datestamp: datestamp
+                    ForEach(sortedUpcomingYears, id: \.self) { year in
+                        Section {
+                            ForEach(eventMap[year] ?? [], id: \.self) {
+                                datestamp in
+                                PlannerCardView(
+                                    datestamp: datestamp,
+                                    iconMap: calendarSettings?.iconMap ?? [:],
+                                    isEventChecked: isCalendarEventChecked,
+                                ) {
+                                    plannerCoverContext = PlannerCoverContext(
+                                        datestamp: datestamp
+                                    )
+                                }
+                                .matchedTransitionSource(
+                                    id: datestamp,
+                                    in: sheetAnimation
                                 )
+                                .id(datestamp)
                             }
-                            .matchedTransitionSource(
-                                id: datestamp,
-                                in: sheetAnimation
-                            )
+                        } header: {
+                            upcomingYearHeader(year)
                         }
-                    } header: {
-                        upcomingYearHeader(year)
                     }
                 }
-            }
-            .listStyle(.plain)
-            .safeAreaInset(edge: .bottom) {
-                Color.clear.frame(height: isSearching ? 80 : 0)
-            }
-            .background(Color.appBackground)
-            .toolbar {
-                topLeftToolbar
-            }
-
-            // Open a planner.
-            .fullScreenCover(item: $plannerCoverContext) { context in
-                PlannerView(datestamp: context.datestamp) {
-                    plannerCoverContext = nil
+                .listStyle(.plain)
+                .safeAreaInset(edge: .bottom) {
+                    Color.clear.frame(height: isSearching ? 80 : 0)
                 }
-                .navigationTransition(
-                    .zoom(
-                        sourceID: context.datestamp,
-                        in: sheetAnimation
+                .background(Color.appBackground)
+                .toolbar {
+                    topLeftToolbar
+                }
+
+                // Open a planner.
+                .fullScreenCover(item: $plannerCoverContext) { context in
+                    PlannerView(datestamp: context.datestamp) {
+                        plannerCoverContext = nil
+                    }
+                    .navigationTransition(
+                        .zoom(
+                            sourceID: context.datestamp,
+                            in: sheetAnimation
+                        )
                     )
+                }
+
+                // Debounce the filtering of calendar events when needed.
+                .onChange(of: searchText) { _, _ in scheduleFilterDebounce() }
+                .onChange(of: filterCalendarIds) { _, _ in
+                    scheduleFilterDebounce()
+                }
+                .onChange(of: calendarSettings?.checkedCalendarEventIds) {
+                    _,
+                    _ in
+                    scheduleFilterDebounce()
+                }
+
+                .onChange(of: eventMap) { _, _ in
+                    guard let datestamp = pendingScrollDatestamp else { return }
+
+                    pendingScrollDatestamp = nil
+
+                    // TODO: add this in PlannerView
+                    DispatchQueue.main.async {
+                        withAnimation {
+                            proxy.scrollTo(datestamp, anchor: .top)
+                        }
+                    }
+                }
+
+                // Load in the calendar settings.
+                .task {
+                    modelContext.ensureCalendarSettings(
+                        settings: calendarSettingsList
+                    )
+                }
+
+                // Reload the data from the page.
+                .refreshable {
+                    calendarStore.refresh(
+                        hiddenCalendarIds: calendarSettings?.hiddenCalendarIds
+                            ?? []
+                    )
+                }
+
+                // Calendar Data
+                .externalData(
+                    key: calendarStore.refreshKey,
+                    ready: calendarSettings != nil,
+                    load: computeFilteredEventMap
                 )
             }
-
-            // Debounce the filtering of calendar events when needed.
-            .onChange(of: searchText) { _, _ in scheduleFilterDebounce() }
-            .onChange(of: filterCalendarIds) { _, _ in scheduleFilterDebounce()
-            }
-            .onChange(of: calendarSettings?.checkedCalendarEventIds) { _, _ in
-                scheduleFilterDebounce()
-            }
-
-            // Load in the calendar settings.
-            .task {
-                modelContext.ensureCalendarSettings(
-                    settings: calendarSettingsList
-                )
-            }
-
-            // Reload the data from the page.
-            .refreshable {
-                calendarStore.refresh(
-                    hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? []
-                )
-            }
-
-            // Calendar Data
-            .externalData(
-                key: calendarStore.refreshKey,
-                ready: calendarSettings != nil,
-                load: computeFilteredEventMap
-            )
         }
     }
 
@@ -303,6 +325,12 @@ struct PlannerSearchTabView: View {
             values
                 .map { $0.datestamp }
                 .sorted()
+        }
+
+        if let firstYear = grouped.keys.sorted().first,
+            let firstDatestamp = eventMap[firstYear]?.first
+        {
+            pendingScrollDatestamp = firstDatestamp
         }
     }
 
