@@ -10,8 +10,8 @@ import SwiftUI
 struct PlannerChipView: View {
     let title: String
     let iconName: String?
-    let color: Color
-    let disableInteraction: Bool
+    let color: Color?
+    let onTap: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 4) {
@@ -20,19 +20,13 @@ struct PlannerChipView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 14, height: 14)
-                    .foregroundColor(color)
+                    .foregroundColor(color ?? Color(uiColor: .label))
             }
 
             Text(title)
                 .font(.system(size: 14, weight: .medium))
-                .foregroundColor(color)
+                .foregroundColor(color ?? Color(uiColor: .label))
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .frame(height: UIConstants.chipHeight)
-        .glassEffect(
-            .regular.tint(color.opacity(0.05)).interactive(!disableInteraction),
-            in: .rect(cornerRadius: UIConstants.chipHeight / 2)
-        )
+        .glassChip(color: color, onTap: onTap)
     }
 }

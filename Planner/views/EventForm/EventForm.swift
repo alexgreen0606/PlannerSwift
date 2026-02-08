@@ -224,7 +224,10 @@ struct EventFormView: View {
         Group {
             if !calendarStore.accessDenied {
                 ToolbarItem(placement: .bottomBar) {
-                    Button {
+                    AccentButtonView(
+                        label: "Add To Calendar",
+                        systemImage: "calendar.badge.plus"
+                    ) {
 
                         // Create a new calendar event to represent the form values.
                         let event = EKEvent(
@@ -243,13 +246,7 @@ struct EventFormView: View {
 
                         draftCalendarEvent = event
                         selectedDetent = .height(2600)
-                    } label: {
-                        HStack(alignment: .center) {
-                            Image(systemName: "calendar.badge.plus")
-                            Text("Add to calendar")
-                        }
                     }
-                    .tint(accentColor.swiftUIColor)
                 }
                 .sharedBackgroundVisibility(.hidden)
             }
@@ -258,7 +255,10 @@ struct EventFormView: View {
 
     private var calendarEventBottomToolbar: some ToolbarContent {
         ToolbarItem(placement: .bottomBar) {
-            Button {
+            AccentButtonView(
+                label: "Remove From Calendar",
+                systemImage: "calendar.badge.minus"
+            ) {
                 guard let calEvent = draftCalendarEvent else { return }
 
                 title = calEvent.title
@@ -267,13 +267,7 @@ struct EventFormView: View {
 
                 draftCalendarEvent = nil
                 selectedDetent = .height(340)
-            } label: {
-                HStack(alignment: .center) {
-                    Image(systemName: "calendar.badge.minus")
-                    Text("Remove from calendar")
-                }
             }
-            .tint(accentColor.swiftUIColor)
         }
         .sharedBackgroundVisibility(.hidden)
     }
@@ -337,15 +331,15 @@ struct EventFormView: View {
     }
 
     private func handleCalendarEventChange(_ event: EKEvent) {
-        
+
         // TODO: will this also refresh days that are out of the default range?
         syncLocalCalendarData()
-        
+
         if event.isAllDay {
             if let initialPlannerEvent {
                 modelContext.delete(initialPlannerEvent)
             }
-            
+
             dismiss()
             return
         }

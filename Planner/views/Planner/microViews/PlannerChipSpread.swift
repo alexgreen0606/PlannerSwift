@@ -40,44 +40,46 @@ struct PlannerChipSpreadView: View {
 
     var body: some View {
         WrappingHStack(alignment: .leading) {
+            
+            // Countdown Chip
             if let daysUntil {
                 PlannerChipView(
                     title: daysUntil,
                     iconName: nil,
-                    color: Color(uiColor: .label),
-                    disableInteraction: true
+                    color: nil,
+                    onTap: nil
                 )
             }
+            
+            // Location Chip
             PlannerChipView(
                 title: planner.location?.name
                     ?? weatherStore.locationManager.cityName,
-                iconName: "location",
-                color: Color(uiColor: .label),
-                disableInteraction: false
+                iconName: planner.location != nil ? "mappin.and.ellipse" : "location",
+                color: nil,
+                onTap: openLocationSheet
             )
             .matchedTransitionSource(
                 id:
                     "LOCATION",
                 in: animation
             )
-            .contentShape(Rectangle())
-            .onTapGesture(perform: openLocationSheet)
 
+            // Weather Chip
             if weatherData != nil {
                 weather
                     .contentShape(Rectangle())
                     .onTapGesture(perform: openWeatherApp)
             }
+            
+            // Event Chips
             ForEach(allDayEvents, id: \.eventIdentifier) { event in
                 PlannerChipView(
                     title: event.title,
                     iconName: iconMap[event.calendar.calendarIdentifier]
                         ?? event.calendar.iconName,
-                    color: Color(event.calendar.cgColor),
-                    disableInteraction: false
-                )
-                .contentShape(Rectangle())
-                .onTapGesture {
+                    color: Color(event.calendar.cgColor)
+                ) {
                     openCalendarEventSheet(event)
                 }
                 .matchedTransitionSource(
@@ -116,13 +118,7 @@ struct PlannerChipSpreadView: View {
                     .foregroundStyle(Color(uiColor: .label))
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .frame(height: UIConstants.chipHeight)
-        .glassEffect(
-            .regular.interactive(),
-            in: .rect(cornerRadius: UIConstants.chipHeight / 2)
-        )
+        .glassChip(color: nil, onTap: openWeatherApp)
     }
 
     private func openWeatherApp() {
