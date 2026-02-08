@@ -32,6 +32,8 @@ struct PlannerView: View {
 
     @State private var calendarPlannerEvents: [PlannerEvent] = []
     @State private var isDeleteCheckedConfirmationOpen = false
+    @State private var isLocationSheetOpen = false
+    @State private var selectedLocation: Location? = nil
     @State private var pendingScroll: PlannerEventPositionChange?
 
     // Toggle confirmation config for calendar events.
@@ -177,8 +179,8 @@ struct PlannerView: View {
                         events: calendarStore.allDayEventsByDatestamp[
                             datestamp
                         ] ?? [],
-                        showCountdown: true,
-                        showWeather: true,
+                        location: planner?.location,
+                        isLocationSheetOpen: $isLocationSheetOpen,
                         iconMap: calendarSettings?.iconMap ?? [:],
                         animation: sheetAnimation,
                         openCalendarEventSheet: { calEvent in
@@ -281,6 +283,48 @@ struct PlannerView: View {
                             in: sheetAnimation
                         )
                     )
+                }
+
+                // Location Sheet
+                .sheet(isPresented: $isLocationSheetOpen) {
+                    if let planner {
+                        NavigationStack {
+                            LocationSearchView(
+                                initialLocation: planner.location,
+                                selected: $selectedLocation
+                            )
+                            .navigationTitle("Set Location")
+                            .navigationBarTitleDisplayMode(.inline)
+                            .toolbar {
+                                ToolbarItem(placement: .cancellationAction) {
+                                    Button("Close", systemImage: "xmark") {
+                                        isLocationSheetOpen = false
+                                    }
+                                }
+                                
+                                ToolbarItem(placement: .confirmationAction) {
+                                    Button("Confirm", systemImage: "checkmark") {
+                                        planner.location = selectedLocation
+
+                                        do {
+                                            try modelContext.save()
+                                        } catch {
+                                            assertionFailure("Failed to save location: \(error)")
+                                        }
+
+                                        isLocationSheetOpen = false
+                                    }
+                                    .tint(accentColor.swiftUIColor)
+                                }
+                            }
+                        }
+                        .navigationTransition(
+                            .zoom(
+                                sourceID: "LOCATION",
+                                in: sheetAnimation
+                            )
+                        )
+                    }
                 }
 
                 // Slide to modified events once the UI has settled.

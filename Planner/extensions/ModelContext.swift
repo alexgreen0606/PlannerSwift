@@ -20,7 +20,7 @@ extension ModelContext {
             return
         }
 
-        let planner = Planner(datestamp: datestamp)
+        let planner = Planner(datestamp: datestamp, location: nil)
         insert(planner)
 
         do {

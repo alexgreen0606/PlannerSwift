@@ -398,13 +398,13 @@ struct EventFormView: View {
             let planners = try modelContext.fetch(descriptor)
 
             guard let planner = planners.first else {
-                return Planner(datestamp: datestamp)
+                return Planner(datestamp: datestamp, location: nil)
             }
 
             return planner
         } catch {
             assertionFailure("Failed to load in the planner: \(error)")
-            return Planner(datestamp: datestamp)
+            return Planner(datestamp: datestamp, location: nil)
         }
     }
 

@@ -14,11 +14,11 @@ import WrappingHStack
 struct PlannerChipSpreadView: View {
     let datestamp: String
     let events: [EKEvent]
-    let showCountdown: Bool
-    let showWeather: Bool
+    let location: Location?
+    @Binding var isLocationSheetOpen: Bool
     let iconMap: [String: String]
-    var animation: Namespace.ID?
-    let openCalendarEventSheet: ((EKEvent) -> Void)?
+    var animation: Namespace.ID
+    let openCalendarEventSheet: (EKEvent) -> Void
 
     @ObservedObject var weatherStore = WeatherStore.shared
 
@@ -35,42 +35,52 @@ struct PlannerChipSpreadView: View {
 
     var body: some View {
         WrappingHStack(alignment: .leading) {
-            if showCountdown, daysUntil != nil {
+            if let daysUntil {
                 PlannerChipView(
-                    title: daysUntil!,
+                    title: daysUntil,
                     iconName: nil,
                     color: Color(uiColor: .label),
                     disableInteraction: true
                 )
             }
-            if showWeather && weatherData != nil {
+            PlannerChipView(
+                title: location?.name ?? weatherStore.locationManager.cityName,
+                iconName: "location",
+                color: Color(uiColor: .label),
+                disableInteraction: false
+            )
+            .matchedTransitionSource(
+                id:
+                    "LOCATION",
+                in: animation
+            )
+            .contentShape(Rectangle())
+            .onTapGesture {
+                isLocationSheetOpen = true
+            }
+
+            if weatherData != nil {
                 weather
                     .contentShape(Rectangle())
                     .onTapGesture(perform: openWeatherApp)
             }
             ForEach(events, id: \.eventIdentifier) { event in
-                let chip = PlannerChipView(
+                PlannerChipView(
                     title: event.title,
                     iconName: iconMap[event.calendar.calendarIdentifier]
                         ?? event.calendar.iconName,
                     color: Color(event.calendar.cgColor),
-                    disableInteraction: openCalendarEventSheet == nil
+                    disableInteraction: false
                 )
-
-                if let openCalendarEventSheet, let animation {
-                    chip
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            openCalendarEventSheet(event)
-                        }
-                        .matchedTransitionSource(
-                            id:
-                                "\(String(describing: event.eventIdentifier))",
-                            in: animation
-                        )
-                } else {
-                    chip
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    openCalendarEventSheet(event)
                 }
+                .matchedTransitionSource(
+                    id:
+                        "\(String(describing: event.eventIdentifier))",
+                    in: animation
+                )
             }
         }
         .animation(.easeInOut(duration: 0.5), value: weatherData != nil)

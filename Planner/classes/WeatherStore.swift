@@ -17,13 +17,13 @@ final class WeatherStore: ObservableObject {
     private init() {}
 
     private let weatherService = WeatherService()
-    private let locationManager = LocationManager.shared
+    let locationManager = LocationManager.shared
 
     @Published private(set) var dayWeatherByDatestamp: [String: DayWeather] =
         [:]
 
     func loadWeather() async -> Set<String> {
-        guard let deviceLocation = locationManager.location else {
+        guard let weatherLocation = locationManager.weatherLocation else {
             print("Device location not available.")
             return []
         }
@@ -31,7 +31,7 @@ final class WeatherStore: ObservableObject {
         var loadedDatestamps = Set<String>()
 
         do {
-            let weather = try await weatherService.weather(for: deviceLocation)
+            let weather = try await weatherService.weather(for: weatherLocation)
 
             for dayWeather in weather.dailyForecast {
                 let currentDatestamp = dayWeather.date.datestamp
