@@ -31,7 +31,7 @@ struct PlannerAccessoryView: View {
     }
 
     private var weatherData: DayWeather? {
-        weatherStore.dayWeatherByDatestamp[todaystamp]
+        weatherStore.getWeather(for: todaystamp, at: planner?.location)
     }
 
     private var allDayEvents: [EKEvent] {

@@ -264,10 +264,13 @@ struct ChecklistView: View {
 
                 Button("Add", systemImage: "plus") {
                     createItem(at: sortedUncheckedItems.count)
-                    proxy.scrollTo(
-                        "UNCHECKED",
-                        anchor: .top
-                    )
+                    
+                    withAnimation(.easeInOut) {
+                        proxy.scrollTo(
+                            "UNCHECKED",
+                            anchor: .top
+                        )
+                    }
                 }
             } else {
                 Button("Delete", systemImage: "trash") {

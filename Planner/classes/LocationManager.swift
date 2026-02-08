@@ -23,7 +23,7 @@ final class LocationManager: NSObject, ObservableObject,
 
     private let manager = CLLocationManager()
 
-    @Published var weatherLocation: CLLocation?
+    @Published var deviceClLocation: CLLocation?
     @Published var cityName: String = "Unknown Location"
 
     func locationManager(
@@ -31,7 +31,7 @@ final class LocationManager: NSObject, ObservableObject,
         didUpdateLocations locations: [CLLocation]
     ) {
         guard let latest = locations.last else { return }
-        weatherLocation = latest
+        deviceClLocation = latest
 
         if let request = MKReverseGeocodingRequest(location: latest) {
             Task {

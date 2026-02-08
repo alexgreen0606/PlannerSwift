@@ -92,7 +92,7 @@ class CalendarStore: ObservableObject {
 
     private func load(hiddenCalendarIds: Set<String>) {
         loadCalendars()
-        loadEvents(
+        loadDefaultEvents(
             hiddenCalendarIds: hiddenCalendarIds
         )
     }
@@ -105,7 +105,8 @@ class CalendarStore: ObservableObject {
         )
     }
 
-    private func loadEvents(
+    // Loads the default range of available planner dates. Other dates may be lazily loaded.
+    private func loadDefaultEvents(
         hiddenCalendarIds: Set<String>
     ) {
         let minCalendarDate = keepPastPlansDuration.cutoffDate

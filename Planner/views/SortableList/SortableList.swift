@@ -157,7 +157,9 @@ struct SortableListView<
         // Slide to checked items when the user marks them visible.
         .onChange(of: showChecked) { _, newShowChecked in
             if newShowChecked {
-                proxy.scrollTo("UNCHECKED", anchor: .top)
+                withAnimation(.easeInOut) {
+                    proxy.scrollTo("UNCHECKED", anchor: .top)
+                }
             }
         }
         

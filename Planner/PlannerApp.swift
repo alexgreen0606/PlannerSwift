@@ -31,11 +31,6 @@ struct PlannerApp: App {
                 .environmentObject(weatherStore)
                 .environmentObject(calendarStore)
                 .environmentObject(navigator)
-                .task {
-                    Task {
-                        await weatherStore.loadWeather()
-                    }
-                }
         }
         .modelContainer(for: [
             Planner.self, ChecklistItem.self, CalendarSettings.self,

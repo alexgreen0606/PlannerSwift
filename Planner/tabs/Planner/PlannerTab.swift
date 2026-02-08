@@ -135,7 +135,7 @@ struct PlannerTabView: View {
                         hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? []
                     )
                     Task {
-                        await weatherStore.loadWeather()
+                        await weatherStore.resetWeather()
                     }
                 }
             }

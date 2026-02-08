@@ -23,6 +23,7 @@ struct PlannerView: View {
 
     @EnvironmentObject var calendarStore: CalendarStore
     @EnvironmentObject var todaystampManager: TodaystampWatcher
+    @ObservedObject var weatherStore = WeatherStore.shared
 
     @StateObject private var plannerManager = ListManager<PlannerEvent>()
     @State private var calendarEventToggler = CalendarEventToggler()
@@ -169,25 +170,31 @@ struct PlannerView: View {
         NavigationStack {
             ScrollViewReader { proxy in
                 SortableListView<
-                    PlannerEvent, AnyView, AnyView, PlannerChipSpreadView
+                    PlannerEvent, AnyView, AnyView, AnyView
                 >(
                     uncheckedItems: sortedOpenPlans,
                     checkedItems: sortedCheckedPlans,
                     showChecked: showChecked,
-                    floatingInfo: PlannerChipSpreadView(
-                        datestamp: datestamp,
-                        events: calendarStore.allDayEventsByDatestamp[
-                            datestamp
-                        ] ?? [],
-                        location: planner?.location,
-                        isLocationSheetOpen: $isLocationSheetOpen,
-                        iconMap: calendarSettings?.iconMap ?? [:],
-                        animation: sheetAnimation,
-                        openCalendarEventSheet: { calEvent in
-                            plannerEventSheetContext = EventSheetContext(
-                                plannerEvent: nil,
-                                calendarEvent: calEvent
-                            )
+                    floatingInfo: AnyView(
+                        Group {
+                            if let planner {
+                                PlannerChipSpreadView(
+                                    planner: planner,
+                                    iconMap: calendarSettings?.iconMap ?? [:],
+                                    animation: sheetAnimation,
+                                    openCalendarEventSheet: { calEvent in
+                                        plannerEventSheetContext = EventSheetContext(
+                                            plannerEvent: nil,
+                                            calendarEvent: calEvent
+                                        )
+                                    },
+                                    openLocationSheet: {
+                                        isLocationSheetOpen = true
+                                    }
+                                )
+                            } else {
+                                EmptyView()
+                            }
                         }
                     ),
                     customToggleConfig: toggleEventIconConfig,
@@ -301,15 +308,25 @@ struct PlannerView: View {
                                         isLocationSheetOpen = false
                                     }
                                 }
-                                
+
                                 ToolbarItem(placement: .confirmationAction) {
-                                    Button("Confirm", systemImage: "checkmark") {
+                                    Button("Confirm", systemImage: "checkmark")
+                                    {
                                         planner.location = selectedLocation
 
                                         do {
                                             try modelContext.save()
                                         } catch {
-                                            assertionFailure("Failed to save location: \(error)")
+                                            assertionFailure(
+                                                "Failed to save location: \(error)"
+                                            )
+                                        }
+
+                                        Task {
+                                            await weatherStore
+                                                .loadWeatherIfNeeded(
+                                                    for: planner.location
+                                                )
                                         }
 
                                         isLocationSheetOpen = false
@@ -341,21 +358,19 @@ struct PlannerView: View {
             }
             .environmentObject(plannerManager)
             .task {
-                modelContext.ensureCalendarSettings(
-                    settings: calendarSettingsList
-                )
-
                 modelContext.ensurePlanner(
                     planners: planners,
                     datestamp: datestamp
+                )
+
+                modelContext.ensureCalendarSettings(
+                    settings: calendarSettingsList
                 )
 
                 calendarStore.ensureCalendarEvents(
                     for: datestamp,
                     hiddenCalendarIds: calendarSettings!.hiddenCalendarIds
                 )
-
-                synchronizeCalendarEvents()
 
                 // Setup the planner managers.
                 calendarEventToggler.calendarSettings = calendarSettings
@@ -365,9 +380,20 @@ struct PlannerView: View {
                 )
             }
 
-            // Rebuild the planner when the calendar events change.
-            .onChange(of: calendarStore.refreshKey) { _, newKey in
-                synchronizeCalendarEvents()
+            // Calendar Data
+            .externalData(
+                key: calendarStore.refreshKey,
+                ready: planner != nil && calendarSettings != nil,
+                load: synchronizeCalendarEvents
+            )
+
+            // Weather Data
+            .externalData(key: weatherStore.refreshKey, ready: planner != nil) {
+                Task {
+                    await weatherStore.loadWeatherIfNeeded(
+                        for: planner?.location
+                    )
+                }
             }
         }
     }
@@ -452,7 +478,10 @@ struct PlannerView: View {
                     return
                 }
 
-                proxy.scrollTo("UNCHECKED", anchor: .bottom)
+                withAnimation(.easeInOut) {
+                    proxy.scrollTo("UNCHECKED", anchor: .bottom)
+                }
+
                 createEvent(at: sortedOpenPlans.count)
             }
             .tint(accentColor.swiftUIColor)
@@ -673,7 +702,10 @@ struct PlannerView: View {
             return
         }
 
-        proxy.scrollTo("\(event.id)", anchor: .center)
+        withAnimation(.easeInOut) {
+            proxy.scrollTo("\(event.id)", anchor: .center)
+        }
+
         pendingScroll = nil
     }
 

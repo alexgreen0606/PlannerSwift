@@ -23,7 +23,6 @@ struct PlannerSearchTabView: View {
 
     @EnvironmentObject var calendarStore: CalendarStore
     @EnvironmentObject var todaystampWatcher: TodaystampWatcher
-    @ObservedObject var weatherStore = WeatherStore.shared
 
     @State private var plannerCoverContext: PlannerCoverContext?
     @Namespace private var sheetAnimation
@@ -109,9 +108,6 @@ struct PlannerSearchTabView: View {
             .onChange(of: searchText) { _, _ in scheduleFilterDebounce() }
             .onChange(of: filterCalendarIds) { _, _ in scheduleFilterDebounce()
             }
-            .onChange(of: calendarStore.refreshKey) { _, newKey in
-                computeFilteredEventMap()
-            }
             .onChange(of: calendarSettings?.checkedCalendarEventIds) { _, _ in
                 scheduleFilterDebounce()
             }
@@ -121,8 +117,6 @@ struct PlannerSearchTabView: View {
                 modelContext.ensureCalendarSettings(
                     settings: calendarSettingsList
                 )
-                
-                computeFilteredEventMap()
             }
 
             // Reload the data from the page.
@@ -130,10 +124,14 @@ struct PlannerSearchTabView: View {
                 calendarStore.refresh(
                     hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? []
                 )
-                Task {
-                    await weatherStore.loadWeather()
-                }
             }
+
+            // Calendar Data
+            .externalData(
+                key: calendarStore.refreshKey,
+                ready: calendarSettings != nil,
+                load: computeFilteredEventMap
+            )
         }
     }
 

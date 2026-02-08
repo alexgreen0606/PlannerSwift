@@ -12,25 +12,30 @@ import WeatherKit
 import WrappingHStack
 
 struct PlannerChipSpreadView: View {
-    let datestamp: String
-    let events: [EKEvent]
-    let location: Location?
-    @Binding var isLocationSheetOpen: Bool
+    let planner: Planner
     let iconMap: [String: String]
     var animation: Namespace.ID
     let openCalendarEventSheet: (EKEvent) -> Void
+    let openLocationSheet: () -> Void
 
+    @EnvironmentObject var calendarStore: CalendarStore
     @ObservedObject var weatherStore = WeatherStore.shared
 
     let unit: UnitTemperature =
         Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
 
     private var daysUntil: String? {
-        datestamp.date?.countdown
+        planner.datestamp.date?.countdown
+    }
+
+    private var allDayEvents: [EKEvent] {
+        calendarStore.allDayEventsByDatestamp[
+            planner.datestamp
+        ] ?? []
     }
 
     private var weatherData: DayWeather? {
-        weatherStore.dayWeatherByDatestamp[datestamp]
+        weatherStore.getWeather(for: planner.datestamp, at: planner.location)
     }
 
     var body: some View {
@@ -44,7 +49,8 @@ struct PlannerChipSpreadView: View {
                 )
             }
             PlannerChipView(
-                title: location?.name ?? weatherStore.locationManager.cityName,
+                title: planner.location?.name
+                    ?? weatherStore.locationManager.cityName,
                 iconName: "location",
                 color: Color(uiColor: .label),
                 disableInteraction: false
@@ -55,16 +61,14 @@ struct PlannerChipSpreadView: View {
                 in: animation
             )
             .contentShape(Rectangle())
-            .onTapGesture {
-                isLocationSheetOpen = true
-            }
+            .onTapGesture(perform: openLocationSheet)
 
             if weatherData != nil {
                 weather
                     .contentShape(Rectangle())
                     .onTapGesture(perform: openWeatherApp)
             }
-            ForEach(events, id: \.eventIdentifier) { event in
+            ForEach(allDayEvents, id: \.eventIdentifier) { event in
                 PlannerChipView(
                     title: event.title,
                     iconName: iconMap[event.calendar.calendarIdentifier]

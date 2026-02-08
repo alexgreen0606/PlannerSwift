@@ -44,7 +44,7 @@ struct PlannerCardVerticalView: View {
     // MARK: - Weather Data
 
     private var weatherData: DayWeather? {
-        weatherStore.dayWeatherByDatestamp[datestamp]
+        weatherStore.getWeather(for: datestamp, at: planner?.location)
     }
 
     // MARK: - Event Data
@@ -218,12 +218,20 @@ struct PlannerCardVerticalView: View {
             modelContext.ensureCalendarSettings(
                 settings: calendarSettingsList
             )
-
-            synchronizeCalendarEvents()
-
         }
-        .onChange(of: calendarStore.refreshKey) { _, newKey in
-            synchronizeCalendarEvents()
+        
+        // Calendar Data Tracking
+        .externalData(
+            key: calendarStore.refreshKey,
+            ready: planner != nil && calendarSettings != nil,
+            load: synchronizeCalendarEvents
+        )
+        
+        // Weather Data Tracking
+        .externalData(key: weatherStore.refreshKey, ready: planner != nil) {
+            Task {
+                await weatherStore.loadWeatherIfNeeded(for: planner?.location)
+            }
         }
     }
 

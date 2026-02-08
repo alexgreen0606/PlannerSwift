@@ -108,7 +108,10 @@ struct FolderView: View {
             .onChange(of: sortedItems.map(\.id)) { _, _ in
                 guard let item = pendingScrollItem else { return }
 
-                proxy.scrollTo(item.id, anchor: .top)
+                withAnimation(.easeInOut) {
+                    proxy.scrollTo(item.id, anchor: .top)
+                }
+                
                 pendingScrollItem = nil
             }
         }

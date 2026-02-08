@@ -19,33 +19,96 @@ final class WeatherStore: ObservableObject {
     private let weatherService = WeatherService()
     let locationManager = LocationManager.shared
 
-    @Published private(set) var dayWeatherByDatestamp: [String: DayWeather] =
+    @Published private var weatherMap: [String: [String: DayWeather]] =
         [:]
+    
+    @Published var refreshKey: UUID = UUID()
 
-    func loadWeather() async -> Set<String> {
-        guard let weatherLocation = locationManager.weatherLocation else {
-            print("Device location not available.")
-            return []
+    func getWeather(for datestamp: String, at location: Location?)
+        -> DayWeather?
+    {
+        guard let locationKey = getLocationKey(for: location) else {
+            return nil
         }
 
-        var loadedDatestamps = Set<String>()
+        return weatherMap[locationKey]?[datestamp]
+    }
+
+    private func rounded(_ value: Double, precision: Int = 4) -> Double {
+        let factor = pow(10.0, Double(precision))
+        return (value * factor).rounded() / factor
+    }
+
+    func getLocationKey(for location: Location?) -> String? {
+        let coordinate: CLLocationCoordinate2D?
+
+        if let location {
+            coordinate = CLLocationCoordinate2D(
+                latitude: location.latitude,
+                longitude: location.longitude
+            )
+        } else {
+            coordinate = locationManager.deviceClLocation?.coordinate
+        }
+
+        guard let coordinate else { return nil }
+
+        let lat = rounded(coordinate.latitude)
+        let lon = rounded(coordinate.longitude)
+
+        return "\(lat),\(lon)"
+    }
+
+    func resetWeather() async {
+        await loadWeatherIfNeeded(for: nil, clearCache: true)
+        refreshKey = UUID()
+    }
+
+    func loadWeatherIfNeeded(
+        for location: Location?,
+        clearCache: Bool = false
+    ) async {
+        let weatherLocation: CLLocation
+
+        guard let locationKey = getLocationKey(for: location) else {
+            print("No location available.")
+            return
+        }
+
+        if weatherMap[locationKey] != nil, !clearCache {
+            // Weather already loaded. Exit early.
+            return
+        } else {
+            weatherMap[locationKey] = [:]
+        }
+
+        if let location {
+            weatherLocation = CLLocation(
+                latitude: location.latitude,
+                longitude: location.longitude
+            )
+        } else if let deviceLocation = locationManager.deviceClLocation {
+            weatherLocation = deviceLocation
+        } else {
+            print("Unable to determine location.")
+            return
+        }
 
         do {
             let weather = try await weatherService.weather(for: weatherLocation)
 
+            var newMap = clearCache ? [:] : weatherMap
+
             for dayWeather in weather.dailyForecast {
-                let currentDatestamp = dayWeather.date.datestamp
-                dayWeatherByDatestamp[currentDatestamp] = dayWeather
-                loadedDatestamps.insert(currentDatestamp)
+                let datestamp = dayWeather.date.datestamp
+                newMap[locationKey, default: [:]][datestamp] = dayWeather
             }
 
-            return loadedDatestamps
+            weatherMap = newMap
         } catch {
-            print(
-                "Failed to load weather: \(error)"
-            )
-            return []
+            print("Failed to load weather: \(error)")
         }
+
     }
 
 }
