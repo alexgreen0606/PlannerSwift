@@ -132,7 +132,7 @@ struct LocationSearchView: View {
                     "Search cities and addresses...",
                     text: $finder.queryFragment
                 )
-                .frame(maxHeight: 40)
+                .frame(maxHeight: 50)
                 .padding(.horizontal)
                 .glassEffect(.regular.interactive())
                 .tint(accentColor.swiftUIColor)
@@ -140,6 +140,7 @@ struct LocationSearchView: View {
                 selectionIndicator
             }
             .padding(.horizontal)
+            .padding(.top, 8)
         }
         .toolbar {
             bottomToolbar

@@ -123,6 +123,7 @@ struct EventFormView: View {
         Group {
             if let contact {
                 ContactFormView(contact: contact)
+                    .ignoresSafeArea()
             } else if let draftCalendarEvent {
                 calendarEventForm(for: draftCalendarEvent)
             } else {

@@ -300,7 +300,7 @@ struct PlannerView: View {
                                 initialLocation: planner.location,
                                 selected: $selectedLocation
                             )
-                            .navigationTitle("Set Location")
+                            .navigationTitle("Edit Location")
                             .navigationBarTitleDisplayMode(.inline)
                             .toolbar {
                                 ToolbarItem(placement: .cancellationAction) {

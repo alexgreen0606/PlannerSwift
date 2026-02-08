@@ -46,43 +46,37 @@ struct ContentView: View {
         calendarSettingsList.first
     }
 
-    // Set the styles for all of the tab headers.
+    // Set the rounded design for all navigation titles.
     init() {
         // Large Title
-        if var descriptor = UIFontDescriptor.preferredFontDescriptor(
-            withTextStyle: .largeTitle
-        )
-        .withDesign(.rounded) {
-            // heavy weight
+        if var descriptor = UIFontDescriptor
+            .preferredFontDescriptor(withTextStyle: .largeTitle)
+            .withDesign(.rounded) {
+
             descriptor = descriptor.addingAttributes([
                 .traits: [
                     UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy
                 ]
             ])
 
-            // font size
-            let customSize: CGFloat = 32
-            let font = UIFont(descriptor: descriptor, size: customSize)
+            let font = UIFont(descriptor: descriptor, size: descriptor.pointSize)
             UINavigationBar.appearance().largeTitleTextAttributes = [
                 .font: font
             ]
         }
 
         // Inline Title
-        if var descriptor = UIFontDescriptor.preferredFontDescriptor(
-            withTextStyle: .headline
-        )
-        .withDesign(.rounded) {
-            // heavy weight
+        if var descriptor = UIFontDescriptor
+            .preferredFontDescriptor(withTextStyle: .headline)
+            .withDesign(.rounded) {
+
             descriptor = descriptor.addingAttributes([
                 .traits: [
                     UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy
                 ]
             ])
 
-            // font size
-            let customSize: CGFloat = 26
-            let font = UIFont(descriptor: descriptor, size: customSize)
+            let font = UIFont(descriptor: descriptor, size: descriptor.pointSize)
             UINavigationBar.appearance().titleTextAttributes = [
                 .font: font
             ]
