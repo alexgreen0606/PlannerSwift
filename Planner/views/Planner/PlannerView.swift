@@ -362,6 +362,8 @@ struct PlannerView: View {
                     planners: planners,
                     datestamp: datestamp
                 )
+                
+                selectedLocation = planner!.location
 
                 modelContext.ensureCalendarSettings(
                     settings: calendarSettingsList

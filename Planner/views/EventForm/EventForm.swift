@@ -337,7 +337,18 @@ struct EventFormView: View {
     }
 
     private func handleCalendarEventChange(_ event: EKEvent) {
+        
+        // TODO: will this also refresh days that are out of the default range?
         syncLocalCalendarData()
+        
+        if event.isAllDay {
+            if let initialPlannerEvent {
+                modelContext.delete(initialPlannerEvent)
+            }
+            
+            dismiss()
+            return
+        }
 
         let targetDatestamp = event.startDate.datestamp
         let planner = loadPlanner(for: targetDatestamp)
