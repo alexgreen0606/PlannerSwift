@@ -98,8 +98,7 @@ struct TransferItemsFormView: View {
                         EmptyLabel("No Available \(mode.childrenLabel.capitalizedFirst)s")
                     }
                 }
-                .listStyle(.plain)
-                .transition(.move(edge: .leading))
+                .transition(.move(edge: .trailing))
                 .id(currentFolder.id)
             }
             .navigationTitle("Transfer \(mode.childrenLabel.capitalizedFirst)")
@@ -254,7 +253,6 @@ struct TransferItemsFormView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
-        .listRowSeparator(.hidden)
         .onTapGesture {
             if item.type == .checklist || mode == .folder {
                 selectedItem = item
