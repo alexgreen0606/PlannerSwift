@@ -10,12 +10,12 @@ import SwiftDate
 
 extension String {
     // Expects YYYY-MM-DD format.
-    var shortMonth: String { // Ex: DEC
+    var shortMonth: String {  // Ex: DEC
         self
             .toDate("yyyy-MM-dd", region: .local)?
             .toFormat("MMM")
             .uppercased()
-        ?? "???"
+            ?? "???"
     }
 
     // Expects YYYY-MM-DD format.
@@ -43,7 +43,7 @@ extension String {
     // Any user input expected.
     func separateTimeValue() -> (
         timeValue24Hour: String, updatedText: String
-    )? { // Ex: (13:45, sample user input)
+    )? {  // Ex: (13:45, sample user input)
         // Regex to match times like "9 AM", "9:30 pm", "12:05 PM"
         let pattern = #"\s+(1[0-2]|[1-9])(?::([0-5][0-9]))?\s?(AM|PM|am|pm)\b"#
 
@@ -73,5 +73,10 @@ extension String {
         let timeValue24Hour = date.toFormat("HH:mm")
         let updatedText = self.replacingOccurrences(of: fullMatch, with: "")
         return (timeValue24Hour: timeValue24Hour, updatedText: updatedText)
+    }
+
+    var capitalizedFirst: String {
+        guard let first = self.first else { return self }
+        return first.uppercased() + self.dropFirst()
     }
 }

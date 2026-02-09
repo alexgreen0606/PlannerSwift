@@ -20,8 +20,6 @@ struct LocationSearchView: View {
 
     let locationManager = LocationManager.shared
 
-    @FocusState private var isInputFocused: Bool
-
     private var topSuggestionId: String? {
         suggestionId(finder.suggestions.first)
     }
@@ -66,7 +64,6 @@ struct LocationSearchView: View {
                         "Search cities and addresses...",
                         text: $finder.queryFragment
                     )
-                    .focused($isInputFocused)
                     .frame(maxHeight: 50)
                     .padding(.horizontal)
                     .glassEffect(.regular.interactive())
@@ -77,9 +74,6 @@ struct LocationSearchView: View {
                     }
                 }
                 .padding(.horizontal)
-            }
-            .onAppear {
-                isInputFocused = true
             }
 
             // Keep the list scrolled to the top when results change.

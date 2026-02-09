@@ -27,16 +27,12 @@ extension ChecklistItem {
         "\(path)\(path.isEmpty ? "" : " / ")\(self.title)"
     }
 
-    var childrenLabel: String {
-        self.type == .checklist ? "items" : "contents"
-    }
-
     var deleteConfirmation: String {
         "Delete this entire \(self.type.rawValue)?"
     }
 
     var deleteWarning: String {
-        "\(self.items.isEmpty ? "" : "All \(childrenLabel) will be lost. ")This action is irreversible."
+        "\(self.items.isEmpty ? "" : "All \(type.childrenLabel) will be lost. ")This action is irreversible."
     }
     
     // TODO: Fails due to forcing self to re-evaluate its items on each iteration.
