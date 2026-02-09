@@ -17,4 +17,12 @@ enum ChecklistItemType: String, Codable {
         case .item: return "exclamationmark"
         }
     }
+
+    var capitalizedLabel: String {
+        switch self {
+        case .folder: return "Folder"
+        case .checklist: return "Checklist"
+        case .item: return "Item"
+        }
+    }
 }

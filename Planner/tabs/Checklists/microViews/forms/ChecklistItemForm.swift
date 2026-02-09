@@ -101,7 +101,7 @@ struct ChecklistItemFormView: View {
             .scrollDisabled(true)
             .navigationTitle(
                 sourceItem == nil
-                    ? "Create Item" : "Edit \(draft.type.rawValue)"
+                ? "Create Item" : "Edit \(draft.type.capitalizedLabel)"
             )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -114,6 +114,7 @@ struct TransferItemsFormView: View {
                     }
                 }
             }
+            .listStyle(.plain)
             .background(Color(.systemBackground))
             .navigationTitle("Transfer Items")
             .navigationSubtitle(selectionLabel)
