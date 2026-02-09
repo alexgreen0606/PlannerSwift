@@ -95,7 +95,7 @@ struct TransferItemsFormView: View {
                 }
                 .overlay {
                     if options.isEmpty {
-                        EmptyLabel("No Available \(mode.childrenLabel.capitalizedFirst)s")
+                        EmptyLabel("No Available \(mode.rawValue.capitalizedFirst)s")
                     }
                 }
                 .transition(.move(edge: .trailing))
