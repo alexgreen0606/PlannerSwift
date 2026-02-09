@@ -29,8 +29,7 @@ struct PlannerSearchTabView: View {
 
     @State private var filterDebounce: Task<Void, Never>?
     @State private var filterCalendarIds: Set<String> = []
-
-    @State private var pendingScrollDatestamp: String?
+    @State private var refreshKey: UUID = UUID()
 
     // Holds all calendar data displayed in the UI.
     @State private var eventMap: [String: [String]] = [:]
@@ -52,28 +51,32 @@ struct PlannerSearchTabView: View {
         }
     }
 
+    private var topDatestamp: String? {
+        guard let firstYear = sortedUpcomingYears.first else {
+            return nil
+        }
+
+        return eventMap[firstYear]?.first
+    }
+
     var body: some View {
         NavigationStack {
             ScrollViewReader { proxy in
                 List {
-                    if sortedUpcomingYears.isEmpty {
-                        EmptyLabel("No upcoming events")
-                            .frame(maxWidth: .infinity)
-                            .discreetListItem()
-                    }
-
                     ForEach(sortedUpcomingYears, id: \.self) { year in
                         Section {
                             ForEach(eventMap[year] ?? [], id: \.self) {
                                 datestamp in
                                 PlannerCardView(
                                     datestamp: datestamp,
-                                    iconMap: calendarSettings?.iconMap ?? [:],
+                                    iconMap: calendarSettings?.iconMap
+                                        ?? [:],
                                     isEventChecked: isCalendarEventChecked,
                                 ) {
-                                    plannerCoverContext = PlannerCoverContext(
-                                        datestamp: datestamp
-                                    )
+                                    plannerCoverContext =
+                                        PlannerCoverContext(
+                                            datestamp: datestamp
+                                        )
                                 }
                                 .matchedTransitionSource(
                                     id: datestamp,
@@ -87,6 +90,14 @@ struct PlannerSearchTabView: View {
                     }
                 }
                 .listStyle(.plain)
+                .overlay {
+                    if sortedUpcomingYears.isEmpty {
+                        EmptyLabel(
+                            searchText.isEmpty
+                                ? "No Upcoming Events" : "No Matching Events"
+                        )
+                    }
+                }
                 .safeAreaInset(edge: .bottom) {
                     Color.clear.frame(height: isSearching ? 80 : 0)
                 }
@@ -119,19 +130,6 @@ struct PlannerSearchTabView: View {
                     scheduleFilterDebounce()
                 }
 
-                .onChange(of: eventMap) { _, _ in
-                    guard let datestamp = pendingScrollDatestamp else { return }
-
-                    pendingScrollDatestamp = nil
-
-                    // TODO: add this in PlannerView
-                    DispatchQueue.main.async {
-                        withAnimation {
-                            proxy.scrollTo(datestamp, anchor: .top)
-                        }
-                    }
-                }
-
                 // Load in the calendar settings.
                 .task {
                     modelContext.ensureCalendarSettings(
@@ -152,6 +150,13 @@ struct PlannerSearchTabView: View {
                     key: calendarStore.refreshKey,
                     ready: calendarSettings != nil,
                     load: computeFilteredEventMap
+                )
+
+                // Keep the list scrolled to the top whenever the results change.
+                .prioritizeTopItemScroll(
+                    proxy: proxy,
+                    trigger: refreshKey,
+                    firstItemId: topDatestamp
                 )
             }
         }
@@ -327,11 +332,7 @@ struct PlannerSearchTabView: View {
                 .sorted()
         }
 
-        if let firstYear = grouped.keys.sorted().first,
-            let firstDatestamp = eventMap[firstYear]?.first
-        {
-            pendingScrollDatestamp = firstDatestamp
-        }
+        refreshKey = UUID()
     }
 
     private func scheduleFilterDebounce() {

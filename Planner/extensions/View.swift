@@ -15,7 +15,9 @@ extension View {
             .listRowBackground(Color.clear)
     }
 
-    func glassChip(color: Color?, onTap: (() -> Void)?, height: Double? = nil) -> some View {
+    func glassChip(color: Color?, onTap: (() -> Void)?, height: Double? = nil)
+        -> some View
+    {
         self
             .padding(.horizontal, (height ?? UIConstants.chipHeight) / 3)
             .padding(.vertical, 4)
@@ -34,4 +36,21 @@ extension View {
                 in: .rect(cornerRadius: (height ?? UIConstants.chipHeight) / 2)
             )
     }
+
+    func prioritizeTopItemScroll<Trigger: Equatable, ID: Hashable>(
+        proxy: ScrollViewProxy,
+        trigger: Trigger,
+        firstItemId: ID?
+    ) -> some View {
+        self.onChange(of: trigger) { _, _ in
+            guard let firstItemId else { return }
+
+            DispatchQueue.main.async {
+                withAnimation {
+                    proxy.scrollTo(firstItemId, anchor: .top)
+                }
+            }
+        }
+    }
+
 }

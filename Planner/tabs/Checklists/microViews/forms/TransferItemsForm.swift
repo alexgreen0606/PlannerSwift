@@ -67,7 +67,7 @@ struct TransferItemsFormView: View {
                         itemRow(item)
                     }
                 } header: {
-                    VStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 16) {
                         HStack(spacing: 8) {
                             Image(systemName: selectedItem.type.iconName)
                                 .resizable()

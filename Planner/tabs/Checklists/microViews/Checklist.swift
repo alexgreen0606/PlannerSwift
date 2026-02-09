@@ -278,11 +278,13 @@ struct ChecklistView: View {
                 Button("Add", systemImage: "plus") {
                     createItem(at: sortedUncheckedItems.count)
 
-                    withAnimation(.easeInOut) {
-                        proxy.scrollTo(
-                            "UNCHECKED",
-                            anchor: .top
-                        )
+                    DispatchQueue.main.async {
+                        withAnimation {
+                            proxy.scrollTo(
+                                "UNCHECKED",
+                                anchor: .top
+                            )
+                        }
                     }
                 }
             } else {

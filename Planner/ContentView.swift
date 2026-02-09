@@ -123,6 +123,7 @@ struct ContentView: View {
                         text: $plannerSearchText,
                         prompt: "Search planner..."
                     )
+                    .searchPresentationToolbarBehavior(.avoidHidingContent)
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)

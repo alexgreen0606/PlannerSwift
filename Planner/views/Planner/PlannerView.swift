@@ -480,8 +480,10 @@ struct PlannerView: View {
                     return
                 }
 
-                withAnimation(.easeInOut) {
-                    proxy.scrollTo("UNCHECKED", anchor: .bottom)
+                DispatchQueue.main.async {
+                    withAnimation {
+                        proxy.scrollTo("UNCHECKED", anchor: .bottom)
+                    }
                 }
 
                 createEvent(at: sortedOpenPlans.count)
@@ -704,8 +706,10 @@ struct PlannerView: View {
             return
         }
 
-        withAnimation(.easeInOut) {
-            proxy.scrollTo("\(event.id)", anchor: .center)
+        DispatchQueue.main.async {
+            withAnimation {
+                proxy.scrollTo("\(event.id)", anchor: .center)
+            }
         }
 
         pendingScroll = nil
