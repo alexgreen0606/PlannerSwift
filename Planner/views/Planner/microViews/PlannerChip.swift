@@ -15,8 +15,8 @@ struct PlannerChipView: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            if iconName != nil {
-                Image(systemName: iconName!)
+            if let iconName {
+                Image(systemName: iconName)
                     .resizable()
                     .scaledToFit()
                     .frame(width: 14, height: 14)

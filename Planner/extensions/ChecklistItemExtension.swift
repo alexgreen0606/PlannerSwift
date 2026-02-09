@@ -59,7 +59,7 @@ extension ChecklistItem {
         }
     }
 
-    func hasChecklists(excluding excludedId: PersistentIdentifier) -> Bool {
+    func hasChecklists(excluding excludedId: PersistentIdentifier? = nil) -> Bool {
         for item in items {
             if item.id == excludedId { continue }
 

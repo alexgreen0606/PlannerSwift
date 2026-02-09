@@ -59,7 +59,9 @@ struct ChecklistItemFormView: View {
                 }
                 .listSectionMargins(.top, 0)
 
-                if sourceItem == nil || sourceItem!.items.isEmpty {
+                if (sourceItem == nil || sourceItem!.items.isEmpty)
+                    && sourceItem?.parent != nil
+                {
                     Section {
                         Picker("Type", selection: $draft.type) {
                             Text("Checklist").tag(ChecklistItemType.checklist)
@@ -97,6 +99,11 @@ struct ChecklistItemFormView: View {
                 .listSectionMargins(.top, 0)
             }
             .scrollDisabled(true)
+            .navigationTitle(
+                sourceItem == nil
+                    ? "Create Item" : "Edit \(draft.type.rawValue)"
+            )
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Submit", systemImage: "checkmark") {

@@ -86,9 +86,21 @@ struct FolderView: View {
             // Edit Form
             .sheet(isPresented: $isEditFormOpen) {
                 ChecklistItemFormView(item: folder, parent: folder.parent)
-                .navigationTransition(
-                    .zoom(sourceID: "ELLIPSIS", in: sheetAnimation)
-                )
+                    .navigationTransition(
+                        .zoom(sourceID: "ELLIPSIS", in: sheetAnimation)
+                    )
+            }
+
+            // Transfer Form
+            .sheet(isPresented: $isTransferSheetOpen) {
+                TransferItemsFormView(currentItem: folder)
+                    .environmentObject(selectManager)
+                    .navigationTransition(
+                        .zoom(
+                            sourceID: "TRANSFER",
+                            in: sheetAnimation
+                        )
+                    )
             }
 
             // Checklist Page
@@ -111,7 +123,7 @@ struct FolderView: View {
                 withAnimation(.easeInOut) {
                     proxy.scrollTo(item.id, anchor: .top)
                 }
-                
+
                 pendingScrollItem = nil
             }
         }
@@ -137,7 +149,7 @@ struct FolderView: View {
                     selectManager.selectedItemIds.contains(
                         item.id
                     )
-                        ? folder.color.swiftUIColor
+                        ? Color(uiColor: .label)
                         : Color(uiColor: .secondaryLabel)
                 )
                 .contentTransition(
@@ -155,7 +167,6 @@ struct FolderView: View {
                 }
 
                 itemIcon(for: item)
-                    .opacity(selectManager.isSelectMode ? 0.5 : 1)
             }
             .frame(height: 19)
             .matchedTransitionSource(
@@ -212,6 +223,7 @@ struct FolderView: View {
         )
     }
 
+    @ToolbarContentBuilder
     private var topLeftToolbar: some ToolbarContent {
         Group {
             if !selectManager.isSelectMode {
@@ -349,11 +361,11 @@ struct FolderView: View {
                     ) {
                         isTransferSheetOpen = true
                     }
+                    .matchedTransitionSource(
+                        id: "TRANSFER",
+                        in: sheetAnimation
+                    )
                     .disabled(selectManager.selectedItemIds.isEmpty)
-                    .sheet(isPresented: $isTransferSheetOpen) {
-                        TransferItemsFormView(currentItem: folder)
-                            .environmentObject(selectManager)
-                    }
                 }
             }
         }

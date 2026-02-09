@@ -138,6 +138,19 @@ struct ChecklistView: View {
                     )
             }
         }
+        
+        // Transfer Form
+        .sheet(isPresented: $isTransferSheetOpen) {
+            if let checklist {
+                TransferItemsFormView(currentItem: checklist)
+                    .navigationTransition(
+                        .zoom(
+                            sourceID: "TRANSFER",
+                            in: sheetAnimation
+                        )
+                    )
+            }
+        }
     }
 
     // MARK: - Helper Views
@@ -264,7 +277,7 @@ struct ChecklistView: View {
 
                 Button("Add", systemImage: "plus") {
                     createItem(at: sortedUncheckedItems.count)
-                    
+
                     withAnimation(.easeInOut) {
                         proxy.scrollTo(
                             "UNCHECKED",
@@ -309,11 +322,10 @@ struct ChecklistView: View {
                     isTransferSheetOpen = true
                 }
                 .disabled(listManager.selectedItemIds.isEmpty)
-                .sheet(isPresented: $isTransferSheetOpen) {
-                    if let checklist {
-                        TransferItemsFormView(currentItem: checklist)
-                    }
-                }
+                .matchedTransitionSource(
+                    id: "TRANSFER",
+                    in: sheetAnimation
+                )
             }
         }
     }
