@@ -45,7 +45,8 @@ struct PlannerCardView: View {
 
             PreviewPlannerEventListView(
                 datestamp: datestamp,
-                events: singleDayEvents
+                events: singleDayEvents,
+                hideLastDivider: true
             )
         }
         .frame(maxWidth: .infinity, alignment: .leading)

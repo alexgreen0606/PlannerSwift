@@ -181,7 +181,8 @@ struct PlannerCardVerticalView: View {
 
             PreviewPlannerEventListView(
                 datestamp: datestamp,
-                events: previewPlannerEvents
+                events: previewPlannerEvents,
+                hideLastDivider: false
             )
 
             remainingPlansIndicator

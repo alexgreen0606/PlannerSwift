@@ -130,13 +130,25 @@ struct PlannerChipSpreadView: View {
 
                 HStack(alignment: .center, spacing: 4) {
                     Text(weatherData.highTempString(in: weatherUnit))
-                        .font(.caption2)
+                        .font(
+                            .system(
+                                size: 11,
+                                weight: .bold,
+                                design: .rounded
+                            )
+                        )
                         .foregroundStyle(Color(uiColor: .label))
 
                     Divider().frame(height: 16)
 
                     Text(weatherData.lowTempString(in: weatherUnit))
-                        .font(.caption2)
+                        .font(
+                            .system(
+                                size: 10,
+                                weight: .bold,
+                                design: .rounded
+                            )
+                        )
                         .foregroundStyle(Color(uiColor: .label))
                 }
             }
