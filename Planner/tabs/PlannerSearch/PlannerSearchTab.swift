@@ -33,6 +33,9 @@ struct PlannerSearchTabView: View {
 
     // Holds all calendar data displayed in the UI.
     @State private var eventMap: [String: [String]] = [:]
+    
+    @State private var toolbarHeight: CGFloat = 0
+    @State private var topInsetHeight: CGFloat = 49
 
     private var calendarSettings: CalendarSettings? {
         calendarSettingsList.first
@@ -61,156 +64,225 @@ struct PlannerSearchTabView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollViewReader { proxy in
-                List {
-                    ForEach(sortedUpcomingYears, id: \.self) { year in
-                        Section {
-                            ForEach(eventMap[year] ?? [], id: \.self) {
-                                datestamp in
-                                PlannerCardView(
-                                    datestamp: datestamp,
-                                    iconMap: calendarSettings?.iconMap
-                                        ?? [:],
-                                    isEventChecked: isCalendarEventChecked,
-                                ) {
-                                    plannerCoverContext =
-                                        PlannerCoverContext(
-                                            datestamp: datestamp
-                                        )
+            GeometryReader { geo in
+                ScrollViewReader { proxy in
+                    List {
+                        ForEach(sortedUpcomingYears, id: \.self) { year in
+                            Section {
+                                ForEach(eventMap[year] ?? [], id: \.self) {
+                                    datestamp in
+                                    PlannerCardView(
+                                        datestamp: datestamp,
+                                        iconMap: calendarSettings?.iconMap
+                                            ?? [:],
+                                        isEventChecked: isCalendarEventChecked,
+                                    ) {
+                                        plannerCoverContext =
+                                            PlannerCoverContext(
+                                                datestamp: datestamp
+                                            )
+                                    }
+                                    .matchedTransitionSource(
+                                        id: datestamp,
+                                        in: sheetAnimation
+                                    )
+                                    .id(datestamp)
                                 }
-                                .matchedTransitionSource(
-                                    id: datestamp,
-                                    in: sheetAnimation
-                                )
-                                .id(datestamp)
+                            } header: {
+                                upcomingYearHeader(year)
                             }
-                        } header: {
-                            upcomingYearHeader(year)
+                            .listSectionMargins(.top, 0)
+                        }
+                    }
+                    .listStyle(.plain)
+                    .overlay {
+                        if sortedUpcomingYears.isEmpty {
+                            EmptyLabel(
+                                searchText.isEmpty
+                                    ? "No Upcoming Events"
+                                    : "No Matching Events"
+                            )
+                        }
+                    }
+                    .safeAreaInset(edge: .top) {
+                        Color.clear
+                            .frame(
+                                height: topInsetHeight
+                            )
+                    }
+                    .ignoresSafeArea(edges: .top)
+                    .safeAreaInset(edge: .bottom) {
+                        Color.clear.frame(height: isSearching ? toolbarHeight : 0)
+                    }
+                    .background(Color.appBackground)
+                    .toolbar {
+                        topLeftToolbar
+                    }
+
+                    // Open a planner.
+                    .fullScreenCover(item: $plannerCoverContext) { context in
+                        PlannerView(datestamp: context.datestamp) {
+                            plannerCoverContext = nil
+                        }
+                        .navigationTransition(
+                            .zoom(
+                                sourceID: context.datestamp,
+                                in: sheetAnimation
+                            )
+                        )
+                    }
+
+                    // Debounce the filtering of calendar events when needed.
+                    .onChange(of: searchText) { _, _ in scheduleFilterDebounce()
+                    }
+                    .onChange(of: filterCalendarIds) { _, _ in
+                        scheduleFilterDebounce()
+                    }
+                    .onChange(of: calendarSettings?.checkedCalendarEventIds) {
+                        _,
+                        _ in
+                        scheduleFilterDebounce()
+                    }
+
+                    // Load in the calendar settings.
+                    .task {
+                        modelContext.ensureCalendarSettings(
+                            settings: calendarSettingsList
+                        )
+                    }
+
+                    // Reload the data from the page.
+                    .refreshable {
+                        calendarStore.refresh(
+                            hiddenCalendarIds: calendarSettings?
+                                .hiddenCalendarIds
+                                ?? []
+                        )
+                    }
+
+                    // Calendar Data
+                    .externalData(
+                        key: calendarStore.refreshKey,
+                        ready: calendarSettings != nil,
+                        load: computeFilteredEventMap
+                    )
+
+                    // Keep the list scrolled to the top whenever the results change.
+                    .prioritizeTopItemScroll(
+                        proxy: proxy,
+                        trigger: refreshKey,
+                        firstItemId: topDatestamp
+                    )
+                    
+                    // Calculate the layout values once the UI settles.
+                    .onAppear {
+                        DispatchQueue.main.async {
+                            toolbarHeight = geo.safeAreaInsets.bottom
+                            topInsetHeight = geo.safeAreaInsets.top - toolbarHeight + 16
                         }
                     }
                 }
-                .listStyle(.plain)
-                .overlay {
-                    if sortedUpcomingYears.isEmpty {
-                        EmptyLabel(
-                            searchText.isEmpty
-                                ? "No Upcoming Events" : "No Matching Events"
-                        )
+            }
+        }
+    }
+
+    private var calendarFilter: some View {
+        Group {
+            if !calendarStore.accessDenied {
+                Menu {
+                    Text("Filter Calendars")
+                        .font(.footnote)
+                    Divider()
+                    ForEach(sortedCalendars, id: \.calendarIdentifier) {
+                        calendar in
+                        Toggle(
+                            isOn: Binding(
+                                get: {
+                                    filterCalendarIds.contains(
+                                        calendar.calendarIdentifier
+                                    )
+                                },
+                                set: { isOn in
+                                    if isOn {
+                                        filterCalendarIds.insert(
+                                            calendar.calendarIdentifier
+                                        )
+                                    } else {
+                                        filterCalendarIds.remove(
+                                            calendar.calendarIdentifier
+                                        )
+                                    }
+                                }
+                            )
+                        ) {
+                            HStack(spacing: 8) {
+                                Image(
+                                    systemName:
+                                        calendarSettings?.iconMap[
+                                            calendar.calendarIdentifier
+                                        ] ?? calendar.iconName
+                                )
+                                .tint(Color(cgColor: calendar.cgColor))
+
+                                Text(calendar.title)
+                            }
+                        }
                     }
+                } label: {
+                    Image(systemName: "line.3.horizontal.decrease")
                 }
-                .safeAreaInset(edge: .bottom) {
-                    Color.clear.frame(height: isSearching ? 80 : 0)
-                }
-                .background(Color.appBackground)
-                .toolbar {
-                    topLeftToolbar
-                }
-
-                // Open a planner.
-                .fullScreenCover(item: $plannerCoverContext) { context in
-                    PlannerView(datestamp: context.datestamp) {
-                        plannerCoverContext = nil
-                    }
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: context.datestamp,
-                            in: sheetAnimation
-                        )
-                    )
-                }
-
-                // Debounce the filtering of calendar events when needed.
-                .onChange(of: searchText) { _, _ in scheduleFilterDebounce() }
-                .onChange(of: filterCalendarIds) { _, _ in
-                    scheduleFilterDebounce()
-                }
-                .onChange(of: calendarSettings?.checkedCalendarEventIds) {
-                    _,
-                    _ in
-                    scheduleFilterDebounce()
-                }
-
-                // Load in the calendar settings.
-                .task {
-                    modelContext.ensureCalendarSettings(
-                        settings: calendarSettingsList
-                    )
-                }
-
-                // Reload the data from the page.
-                .refreshable {
-                    calendarStore.refresh(
-                        hiddenCalendarIds: calendarSettings?.hiddenCalendarIds
-                            ?? []
-                    )
-                }
-
-                // Calendar Data
-                .externalData(
-                    key: calendarStore.refreshKey,
-                    ready: calendarSettings != nil,
-                    load: computeFilteredEventMap
-                )
-
-                // Keep the list scrolled to the top whenever the results change.
-                .prioritizeTopItemScroll(
-                    proxy: proxy,
-                    trigger: refreshKey,
-                    firstItemId: topDatestamp
-                )
+                .menuActionDismissBehavior(.disabled)
             }
         }
     }
 
     @ToolbarContentBuilder
     private var topLeftToolbar: some ToolbarContent {
-        Group {
-            if !calendarStore.accessDenied {
-                ToolbarItemGroup(placement: .topBarLeading) {
-                    Menu {
-                        Text("Filter Calendars")
-                            .font(.footnote)
-                        Divider()
-                        ForEach(sortedCalendars, id: \.calendarIdentifier) {
-                            calendar in
-                            Toggle(
-                                isOn: Binding(
-                                    get: {
-                                        filterCalendarIds.contains(
+        if !calendarStore.accessDenied {
+            ToolbarItemGroup(placement: .topBarLeading) {
+                Menu {
+                    Text("Filter Calendars")
+                        .font(.footnote)
+                    Divider()
+                    ForEach(sortedCalendars, id: \.calendarIdentifier) {
+                        calendar in
+                        Toggle(
+                            isOn: Binding(
+                                get: {
+                                    filterCalendarIds.contains(
+                                        calendar.calendarIdentifier
+                                    )
+                                },
+                                set: { isOn in
+                                    if isOn {
+                                        filterCalendarIds.insert(
                                             calendar.calendarIdentifier
                                         )
-                                    },
-                                    set: { isOn in
-                                        if isOn {
-                                            filterCalendarIds.insert(
-                                                calendar.calendarIdentifier
-                                            )
-                                        } else {
-                                            filterCalendarIds.remove(
-                                                calendar.calendarIdentifier
-                                            )
-                                        }
+                                    } else {
+                                        filterCalendarIds.remove(
+                                            calendar.calendarIdentifier
+                                        )
                                     }
-                                )
-                            ) {
-                                HStack(spacing: 8) {
-                                    Image(
-                                        systemName:
-                                            calendarSettings?.iconMap[
-                                                calendar.calendarIdentifier
-                                            ] ?? calendar.iconName
-                                    )
-                                    .tint(Color(cgColor: calendar.cgColor))
-
-                                    Text(calendar.title)
                                 }
+                            )
+                        ) {
+                            HStack(spacing: 8) {
+                                Image(
+                                    systemName:
+                                        calendarSettings?.iconMap[
+                                            calendar.calendarIdentifier
+                                        ] ?? calendar.iconName
+                                )
+                                .tint(Color(cgColor: calendar.cgColor))
+
+                                Text(calendar.title)
                             }
                         }
-                    } label: {
-                        Image(systemName: "line.3.horizontal.decrease")
                     }
-                    .menuActionDismissBehavior(.disabled)
+                } label: {
+                    Image(systemName: "line.3.horizontal.decrease")
                 }
+                .menuActionDismissBehavior(.disabled)
             }
         }
     }
