@@ -11,9 +11,10 @@ import SwiftUI
 struct PreviewPlannerEventListView: View {
     let datestamp: String
     let events: [PlannerEvent]
+    let remainingLabel: String?
 
     @Environment(\.displayScale) private var displayScale
-    
+
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
 
@@ -35,9 +36,15 @@ struct PreviewPlannerEventListView: View {
                         )
                     }
 
-                    if let last = events.last, event.id != last.id {
-                        dashedDivider
-                    }
+                    dashedDivider
+                }
+
+                if let remainingLabel {
+                    Text(remainingLabel)
+                        .font(
+                            .system(size: 12, weight: .heavy, design: .rounded)
+                        )
+                        .foregroundStyle(Color(uiColor: .tertiaryLabel))
                 }
             }
         }

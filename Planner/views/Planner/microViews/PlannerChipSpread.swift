@@ -103,10 +103,11 @@ struct PlannerChipSpreadView: View {
         HStack(alignment: .center, spacing: 8) {
             HStack(alignment: .center, spacing: 4) {
                 Image(systemName: weatherData!.symbolName)
-                    .symbolRenderingMode(.multicolor)
                     .resizable()
                     .scaledToFit()
                     .frame(width: 14, height: 14)
+                    .symbolVariant(.fill)
+                    .symbolRenderingMode(.multicolor)
 
                 Text(weatherData!.condition.description)
                     .font(.system(size: 14, weight: .medium))

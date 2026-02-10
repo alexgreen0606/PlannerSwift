@@ -18,7 +18,7 @@ struct PlannerCardVerticalView: View {
     private let isCalendarEventChecked: (EKEvent?) -> Bool
     private let openPlanner: () -> Void
 
-    private let maxPreviewEvents = 4
+    private let maxPreviewEvents = 5
 
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]
@@ -136,6 +136,15 @@ struct PlannerCardVerticalView: View {
         return "\(remainingCount) more plan\(remainingCount == 1 ? "" : "s")"
     }
 
+    private var hasPlans: Bool {
+        plannerEvents.count + allDayEvents.count > 0
+    }
+
+    private var location: String? {
+        planner?.location?.name
+            ?? weatherStore.locationManager.cityName
+    }
+
     init(
         datestamp: String,
         iconMap: [String: String],
@@ -162,13 +171,19 @@ struct PlannerCardVerticalView: View {
 
             PreviewPlannerEventListView(
                 datestamp: datestamp,
-                events: previewPlannerEvents
+                events: previewPlannerEvents,
+                remainingLabel: remainingPlansLabel
             )
 
             VStack {
-                Text(remainingPlansLabel)
-                    .font(.system(size: 12, weight: .heavy, design: .rounded))
-                    .foregroundStyle(Color(uiColor: .tertiaryLabel))
+                if !hasPlans {
+                    Text(remainingPlansLabel)
+                        .font(
+                            .system(size: 12, weight: .heavy, design: .rounded)
+                        )
+                        .foregroundStyle(Color(uiColor: .tertiaryLabel))
+
+                }
             }
             .frame(
                 maxWidth: .infinity,
@@ -176,33 +191,56 @@ struct PlannerCardVerticalView: View {
                 alignment: .center
             )
 
-            HStack(alignment: .bottom) {
-                if weatherData != nil {
-                    HStack(alignment: .center, spacing: 6) {
-                        Image(systemName: weatherData?.symbolName ?? "")
-                            .symbolRenderingMode(.multicolor)
-                            .imageScale(.small)
+            HStack {
+                if let weatherData, let location {
+                    Image(systemName: weatherData.symbolName)
+                        .symbolVariant(.fill)
+                        .symbolRenderingMode(.multicolor)
+                        .imageScale(.medium)
 
-                        Text(weatherData?.condition.description ?? "")
-                            .font(.caption2)
-                    }
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(weatherData.condition.description)
+                            .font(.system(size: 12, design: .rounded))
 
-                    Spacer()
+                        HStack {
+                            Text(location)
+                                .foregroundStyle(
+                                    Color(uiColor: .secondaryLabel)
+                                )
+                                .font(.system(size: 10))
 
-                    HStack(alignment: .center, spacing: 4) {
-                        Text(weatherData?.highTempString(in: unit) ?? "")
-                            .font(.caption2)
-                        Divider().frame(height: 16)
-                        Text(weatherData?.lowTempString(in: unit) ?? "")
-                            .font(.caption2)
+                            Spacer()
+
+                            HStack(alignment: .center, spacing: 4) {
+                                Text(weatherData.highTempString(in: unit))
+                                    .font(
+                                        .system(
+                                            size: 11,
+                                            weight: .bold,
+                                            design: .rounded
+                                        )
+                                    )
+                                Divider().frame(height: 16)
+                                Text(weatherData.lowTempString(in: unit))
+                                    .font(
+                                        .system(
+                                            size: 10,
+                                            weight: .bold,
+                                            design: .rounded
+                                        )
+                                    )
+                            }
+                        }
                     }
                 }
             }
-            .frame(height: 16)
+            .frame(height: 40)
         }
-        .padding()
-        .frame(width: 220)
-        .frame(height: 280, alignment: .top)
+        .padding(.horizontal)
+        .padding(.top)
+        .padding(.bottom, 6)
+        .frame(width: 240)
+        .frame(height: 330, alignment: .top)
         .contentShape(Rectangle())
         .background(
             RoundedRectangle(cornerRadius: 24)
@@ -219,14 +257,14 @@ struct PlannerCardVerticalView: View {
                 settings: calendarSettingsList
             )
         }
-        
+
         // Calendar Data Tracking
         .externalData(
             key: calendarStore.refreshKey,
             ready: planner != nil && calendarSettings != nil,
             load: synchronizeCalendarEvents
         )
-        
+
         // Weather Data Tracking
         .externalData(key: weatherStore.refreshKey, ready: planner != nil) {
             Task {

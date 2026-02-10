@@ -116,17 +116,17 @@ struct TransferItemsFormView: View {
             .safeAreaInset(edge: .top) {
                 if let selectedItem {
                     HStack {
-                        HStack(spacing: 8) {
-                            Image(systemName: sourceItem.type.iconName)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 14, height: 14)
-                                .foregroundStyle(sourceItem.color.swiftUIColor)
-
-                            VStack(alignment: .leading) {
-                                Text(selectionLabel)
-                                    .font(.system(size: 10, weight: .medium))
-                                    .foregroundStyle(Color(uiColor: .label))
+                        VStack(spacing: 2) {
+                            Text(selectionLabel)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(Color(uiColor: .label))
+                            
+                            HStack(spacing: 4) {
+                                Image(systemName: sourceItem.type.iconName)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 8, height: 8)
+                                    .foregroundStyle(sourceItem.color.swiftUIColor.opacity(0.8))
 
                                 Text(sourceItem.title)
                                     .font(.system(size: 8, weight: .medium))
@@ -135,7 +135,7 @@ struct TransferItemsFormView: View {
                                     )
                             }
                         }
-                        .glassChip(color: nil, onTap: nil, height: 30)
+                        .glassChip(color: nil, onTap: nil, height: 36)
 
                         Image(systemName: "arrow.right")
                             .resizable()
@@ -147,7 +147,7 @@ struct TransferItemsFormView: View {
                             Image(systemName: selectedItem.type.iconName)
                                 .resizable()
                                 .scaledToFit()
-                                .frame(width: 18, height: 18)
+                                .frame(width: 16, height: 16)
                                 .foregroundStyle(
                                     selectedItem.color.swiftUIColor
                                 )
@@ -157,15 +157,15 @@ struct TransferItemsFormView: View {
                                     .foregroundStyle(Color(uiColor: .label))
                         }
                         .glassChip(color: nil, onTap: nil, height: 40)
-                        .animation(
-                            .spring(
-                                response: 0.6,
-                                dampingFraction: 0.4
-                            ),
-                            value: selectedItem.id
-                        )
                     }
                     .padding(.horizontal)
+                    .animation(
+                        .spring(
+                            response: 0.3,
+                            dampingFraction: 0.4
+                        ),
+                        value: selectedItem.id
+                    )
                 }
             }
         }
