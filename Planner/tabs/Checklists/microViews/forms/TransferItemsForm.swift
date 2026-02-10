@@ -8,9 +8,14 @@
 import SwiftData
 import SwiftUI
 
+enum FolderNavigationDirection {
+    case forward
+    case backward
+}
+
 struct TransferItemsFormView: View {
-    let sourceItem: ChecklistItem
-    
+    let source: ChecklistItem
+
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
 
@@ -19,21 +24,39 @@ struct TransferItemsFormView: View {
 
     @EnvironmentObject var listManager: ListManager<ChecklistItem>
 
-    @State private var mode: ChecklistItemType
-    @State private var selectedItem: ChecklistItem?
+    @State private var destinationType: ChecklistItemType
+    @State private var destination: ChecklistItem?
     @State private var currentFolder: ChecklistItem
 
-    private var selectionLabel: String {
+    // Controls the animation of the folder navigator.
+    @State private var navDirection: FolderNavigationDirection = .forward
+
+    private var transferCount: String {
         let count = listManager.selectedItems.count
         return
             "\(count == 0 ? "No" : String(count)) item\(count == 1 ? "" : "s")"
     }
 
-    var options: [ChecklistItem] {
+    private var folderSlideTransition: AnyTransition {
+        switch navDirection {
+        case .forward:
+            return .asymmetric(
+                insertion: .move(edge: .trailing),
+                removal: .move(edge: .leading)
+            )
+        case .backward:
+            return .asymmetric(
+                insertion: .move(edge: .leading),
+                removal: .move(edge: .trailing)
+            )
+        }
+    }
+
+    var currentOptions: [ChecklistItem] {
         currentFolder.items
             .filter { item in
                 guard
-                    item.id != sourceItem.id
+                    item.id != source.id
                         && !listManager.selectedItemIds
                             .contains(
                                 item.id
@@ -41,12 +64,12 @@ struct TransferItemsFormView: View {
                 else { return false }
 
                 // If in folder mode, only show folders.
-                if mode == .folder {
+                if destinationType == .folder {
                     return item.type == .folder
                 }
 
                 // If in checklist mode and item is a folder, only show if it has checklists.
-                if mode == .checklist, item.type == .folder {
+                if destinationType == .checklist, item.type == .folder {
                     return item.hasChecklists()
                 }
 
@@ -60,116 +83,34 @@ struct TransferItemsFormView: View {
             currentItem.type == .folder
             ? currentItem
             : currentItem.parent!
-        self.mode = currentItem.type == .folder ? .folder : .checklist
-        self.sourceItem = currentItem
+        self.destinationType =
+            currentItem.type == .folder ? .folder : .checklist
+        self.source = currentItem
     }
 
     var body: some View {
         NavigationStack {
             ZStack {
-                List {
-                    Section {
-                        ForEach(
-                            options,
-                            id: \.self
-                        ) { item in
-                            itemRow(item)
-                        }
-                    } header: {
-                        VStack(alignment: .leading, spacing: 6) {
-                            if let parent = currentFolder.parent {
-                                AccentButtonView(
-                                    label: parent.title,
-                                    systemImage: "chevron.left"
-                                ) {
-                                    currentFolder = parent
-
-                                    if mode == .folder {
-                                        // Select the folder we are navigating back to.
-                                        selectedItem = parent
-                                    }
-                                }
-                            }
-
-                            Text(currentFolder.title)
-                        }
-                    }
-                    .listSectionMargins(.top, 0)
-                }
-                .overlay {
-                    if options.isEmpty {
-                        EmptyLabel("No Available \(mode.rawValue.capitalizedFirst)s")
-                    }
-                }
-                .transition(.move(edge: .trailing))
-                .id(currentFolder.id)
+                folderContent
+                    .id(currentFolder.id)
+                    .transition(folderSlideTransition)
             }
-            .navigationTitle("Transfer \(mode.childrenLabel.capitalizedFirst)")
+            .navigationTitle(
+                "Transfer \(destinationType.childrenLabel.capitalizedFirst)"
+            )
             .navigationBarTitleDisplayMode(.inline)
             .background(Color(.systemBackground))
-            .animation(.easeInOut, value: currentFolder.id)
-            .animation(.spring, value: selectedItem != nil)
             .toolbar {
                 topRightToolbar
                 topLeftToolbar(currentFolder)
             }
             .safeAreaInset(edge: .top) {
-                if let selectedItem {
-                    HStack {
-                        VStack(spacing: 2) {
-                            Text(selectionLabel)
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundStyle(Color(uiColor: .label))
-                            
-                            HStack(spacing: 4) {
-                                Image(systemName: sourceItem.type.iconName)
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 8, height: 8)
-                                    .foregroundStyle(sourceItem.color.swiftUIColor.opacity(0.8))
-
-                                Text(sourceItem.title)
-                                    .font(.system(size: 8, weight: .medium))
-                                    .foregroundStyle(
-                                        Color(uiColor: .secondaryLabel)
-                                    )
-                            }
-                        }
-                        .glassChip(color: nil, onTap: nil, height: 36)
-
-                        Image(systemName: "arrow.right")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 12, height: 12)
-                            .foregroundStyle(Color(uiColor: .secondaryLabel))
-
-                        HStack(spacing: 8) {
-                            Image(systemName: selectedItem.type.iconName)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 16, height: 16)
-                                .foregroundStyle(
-                                    selectedItem.color.swiftUIColor
-                                )
-
-                                Text(selectedItem.title)
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundStyle(Color(uiColor: .label))
-                        }
-                        .glassChip(color: nil, onTap: nil, height: 40)
-                    }
-                    .padding(.horizontal)
-                    .animation(
-                        .spring(
-                            response: 0.3,
-                            dampingFraction: 0.4
-                        ),
-                        value: selectedItem.id
-                    )
-                }
+                transferIndicator
             }
         }
     }
+
+    // MARK: - Toolbars
 
     @ToolbarContentBuilder
     private func topLeftToolbar(_ folder: ChecklistItem) -> some ToolbarContent
@@ -185,13 +126,13 @@ struct TransferItemsFormView: View {
     private var topRightToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Button("Submit", systemImage: "checkmark", role: .confirm) {
-                guard let selectedItem, selectedItem.id != sourceItem.id else {
+                guard let destination, destination.id != source.id else {
                     return
                 }
 
                 do {
                     try modelContext.transaction {
-                        selectedItem.inheritItems(listManager.selectedItems)
+                        destination.inheritItems(listManager.selectedItems)
                     }
                 } catch {
                     assertionFailure("Failed to transfer items: \(error)")
@@ -202,8 +143,123 @@ struct TransferItemsFormView: View {
 
                 dismiss()
             }
-            .disabled(selectedItem == nil || selectedItem!.id == sourceItem.id)
+            .disabled(destination == nil || destination!.id == source.id)
             .tint(accentColor.swiftUIColor)
+        }
+    }
+
+    // MARK: - Transfer Indicator
+
+    private var transferIndicator: some View {
+        HStack {
+            sourceChip
+
+            if let destination {
+                Image(systemName: "arrow.right")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 12, height: 12)
+                    .foregroundStyle(Color(uiColor: .secondaryLabel))
+
+                destinationChip(destination)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal)
+        .animation(
+            .spring(
+                response: 0.3,
+                dampingFraction: 0.4
+            ),
+            value: destination?.id
+        )
+    }
+
+    private var sourceChip: some View {
+        VStack(spacing: 2) {
+            Text(transferCount)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(Color(uiColor: .label))
+
+            HStack(spacing: 4) {
+                Image(systemName: source.type.iconName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 8, height: 8)
+                    .foregroundStyle(
+                        source.color.swiftUIColor.opacity(0.8)
+                    )
+
+                Text(source.title)
+                    .font(.system(size: 8, weight: .medium))
+                    .foregroundStyle(
+                        Color(uiColor: .secondaryLabel)
+                    )
+            }
+        }
+        .glassChip(color: nil, onTap: nil, height: 36)
+    }
+
+    private func destinationChip(_ selectedItem: ChecklistItem) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: selectedItem.type.iconName)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 16, height: 16)
+                .foregroundStyle(
+                    selectedItem.color.swiftUIColor
+                )
+
+            Text(selectedItem.title)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(Color(uiColor: .label))
+        }
+        .glassChip(color: nil, onTap: nil, height: 40)
+    }
+
+    // MARK: - Folder Contents
+
+    private var folderLabel: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let parent = currentFolder.parent {
+                AccentButtonView(
+                    label: parent.title,
+                    systemImage: "chevron.left"
+                ) {
+                    navDirection = .backward
+
+                    withAnimation {
+                        currentFolder = parent
+                    }
+
+                    if destinationType == .folder {
+                        // Select the folder we are navigating back to.
+                        destination = parent
+                    }
+                }
+            }
+
+            Text(currentFolder.title)
+        }
+    }
+
+    private var folderContent: some View {
+        List {
+            Section {
+                ForEach(currentOptions, id: \.self) { item in
+                    itemRow(item)
+                }
+            } header: {
+                folderLabel
+            }
+            .listSectionMargins(.top, 0)
+        }
+        .overlay {
+            if currentOptions.isEmpty {
+                EmptyLabel(
+                    "No Available \(destinationType.rawValue.capitalizedFirst)s"
+                )
+            }
         }
     }
 
@@ -239,7 +295,7 @@ struct TransferItemsFormView: View {
                 .frame(height: 19)
             }
 
-            if selectedItem == item {
+            if destination == item {
                 Image(systemName: "checkmark")
                     .resizable()
                     .scaledToFit()
@@ -249,13 +305,17 @@ struct TransferItemsFormView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .onTapGesture {
-            if item.type == .checklist || mode == .folder {
-                selectedItem = item
+            if item.type == .checklist || destinationType == .folder {
+                destination = item
 
                 if item.type == .checklist { return }
             }
 
-            currentFolder = item
+            navDirection = .forward
+
+            withAnimation {
+                currentFolder = item
+            }
         }
     }
 

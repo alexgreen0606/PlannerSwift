@@ -117,7 +117,11 @@ struct LocationSearchView: View {
             if let selected {
                 PlannerChipView(
                     title: selected.name,
-                    iconName: "mappin.and.ellipse",
+                    iconConfig: IconConfig(
+                        name: "mappin.and.ellipse",
+                        primaryColor: accentColor.swiftUIColor,
+                        secondaryColor: Color(uiColor: .secondaryLabel)
+                    ),
                     color: nil,
                     onTap: nil
                 )
@@ -127,6 +131,7 @@ struct LocationSearchView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 18, height: 18)
+                        .foregroundStyle(accentColor.swiftUIColor)
 
                     VStack(alignment: .leading) {
                         Text("Current Location")
@@ -135,7 +140,9 @@ struct LocationSearchView: View {
                         if let city = locationManager.cityName {
                             Text(city)
                                 .font(.system(size: 10, weight: .medium))
-                                .foregroundStyle(Color(uiColor: .secondaryLabel))
+                                .foregroundStyle(
+                                    Color(uiColor: .secondaryLabel)
+                                )
                         }
                     }
 

@@ -17,15 +17,39 @@ struct PlannerChipSpreadView: View {
     var animation: Namespace.ID
     let openCalendarEventSheet: (EKEvent) -> Void
     let openLocationSheet: () -> Void
+    let weatherUnit: UnitTemperature =
+        Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
+
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        AccentColor.blue
+
+    @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
+        .system
+
+    @Environment(\.colorScheme) private var systemColorScheme
 
     @EnvironmentObject var calendarStore: CalendarStore
     @ObservedObject var weatherStore = WeatherStore.shared
 
-    let unit: UnitTemperature =
-        Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
+    var isDarkMode: Bool {
+        switch appColorScheme {
+        case .dark: return true
+        case .light: return false
+        case .system: return systemColorScheme == .dark
+        }
+    }
 
-    private var daysUntil: String? {
+    private var countdownLabel: String? {
         planner.datestamp.date?.countdown
+    }
+
+    private var locationLabel: String? {
+        planner.location?.name
+            ?? weatherStore.locationManager.cityName
+    }
+
+    private var weatherData: DayWeather? {
+        weatherStore.getWeather(for: planner.datestamp, at: planner.location)
     }
 
     private var allDayEvents: [EKEvent] {
@@ -34,100 +58,115 @@ struct PlannerChipSpreadView: View {
         ] ?? []
     }
 
-    private var weatherData: DayWeather? {
-        weatherStore.getWeather(for: planner.datestamp, at: planner.location)
-    }
-
-    private var location: String? {
-        planner.location?.name
-            ?? weatherStore.locationManager.cityName
-    }
-
     var body: some View {
         WrappingHStack(alignment: .leading) {
 
-            // Countdown Chip
-            if let daysUntil {
-                PlannerChipView(
-                    title: daysUntil,
-                    iconName: nil,
-                    color: nil,
-                    onTap: nil
-                )
-            }
+            countdownChip
+            locationChip
+            weatherChip
 
-            // Location Chip
-            if let location {
-                PlannerChipView(
-                    title: location,
-                    iconName: planner.location != nil
-                        ? "mappin.and.ellipse" : "location",
-                    color: nil,
-                    onTap: openLocationSheet
-                )
-                .matchedTransitionSource(
-                    id:
-                        "LOCATION",
-                    in: animation
-                )
-            }
-
-            // Weather Chip
-            if weatherData != nil {
-                weather
-                    .contentShape(Rectangle())
-                    .onTapGesture(perform: openWeatherApp)
-            }
-
-            // Event Chips
             ForEach(allDayEvents, id: \.eventIdentifier) { event in
-                PlannerChipView(
-                    title: event.title,
-                    iconName: iconMap[event.calendar.calendarIdentifier]
-                        ?? event.calendar.iconName,
-                    color: Color(event.calendar.cgColor)
-                ) {
-                    openCalendarEventSheet(event)
+                eventChip(event)
+            }
+        }
+        .animation(.spring, value: weatherData)
+        .animation(.spring, value: locationLabel)
+        .animation(.spring, value: allDayEvents)
+    }
+
+    // MARK: - Chips
+
+    @ViewBuilder
+    private var countdownChip: some View {
+        if let countdownLabel {
+            PlannerChipView(
+                title: countdownLabel,
+                iconConfig: nil,
+                color: nil,
+                onTap: nil
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var locationChip: some View {
+        if let locationLabel {
+            PlannerChipView(
+                title: locationLabel,
+                iconConfig: IconConfig(
+                    name: planner.location != nil
+                        ? "mappin.and.ellipse" : "location",
+                    primaryColor: accentColor.swiftUIColor,
+                    secondaryColor: Color(uiColor: .secondaryLabel)
+                ),
+                color: nil,
+                onTap: openLocationSheet
+            )
+            .matchedTransitionSource(
+                id: "LOCATION",
+                in: animation
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var weatherChip: some View {
+        if let weatherData {
+            HStack(alignment: .center, spacing: 8) {
+                HStack(alignment: .center, spacing: 4) {
+                    Image(systemName: weatherData.symbolName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 14, height: 14)
+                        .symbolVariant(isDarkMode ? .fill : .none)
+                        .symbolRenderingMode(
+                            isDarkMode ? .multicolor : .monochrome
+                        )
+
+                    Text(weatherData.condition.description)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(Color(uiColor: .label))
                 }
-                .matchedTransitionSource(
-                    id:
-                        "\(String(describing: event.eventIdentifier))",
-                    in: animation
-                )
+
+                HStack(alignment: .center, spacing: 4) {
+                    Text(weatherData.highTempString(in: weatherUnit))
+                        .font(.caption2)
+                        .foregroundStyle(Color(uiColor: .label))
+
+                    Divider().frame(height: 16)
+
+                    Text(weatherData.lowTempString(in: weatherUnit))
+                        .font(.caption2)
+                        .foregroundStyle(Color(uiColor: .label))
+                }
             }
+            .glassChip(color: nil, onTap: openWeatherApp)
+            .contentShape(Rectangle())
+            .onTapGesture(perform: openWeatherApp)
         }
-        .animation(.easeInOut(duration: 0.5), value: weatherData != nil)
     }
 
-    private var weather: some View {
-        HStack(alignment: .center, spacing: 8) {
-            HStack(alignment: .center, spacing: 4) {
-                Image(systemName: weatherData!.symbolName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 14, height: 14)
-                    .symbolVariant(.fill)
-                    .symbolRenderingMode(.multicolor)
-
-                Text(weatherData!.condition.description)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(Color(uiColor: .label))
-            }
-
-            HStack(alignment: .center, spacing: 4) {
-                Text(weatherData?.highTempString(in: unit) ?? "")
-                    .font(.caption2)
-                    .foregroundStyle(Color(uiColor: .label))
-
-                Divider().frame(height: 16)
-
-                Text(weatherData?.lowTempString(in: unit) ?? "")
-                    .font(.caption2)
-                    .foregroundStyle(Color(uiColor: .label))
-            }
+    @ViewBuilder
+    private func eventChip(_ event: EKEvent) -> some View {
+        PlannerChipView(
+            title: event.title,
+            iconConfig: IconConfig(
+                name: iconMap[event.calendar.calendarIdentifier]
+                    ?? event.calendar.iconName,
+                primaryColor: nil,
+                secondaryColor: nil
+            ),
+            color: Color(event.calendar.cgColor)
+        ) {
+            openCalendarEventSheet(event)
         }
-        .glassChip(color: nil, onTap: openWeatherApp)
+        .matchedTransitionSource(
+            id: event.transitionId,
+            in: animation
+        )
     }
+
+    // MARK: - Helper Function
 
     private func openWeatherApp() {
         guard let url = URL(string: "weather://") else { return }

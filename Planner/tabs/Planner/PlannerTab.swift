@@ -63,7 +63,6 @@ struct PlannerTabView: View {
                                     datestamp in
                                     PlannerCardVerticalView(
                                         datestamp: datestamp,
-                                        iconMap: calendarSettings?.iconMap ?? [:],
                                         isCalendarEventChecked:
                                             isCalendarEventChecked
                                     ) {

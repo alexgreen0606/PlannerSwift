@@ -9,6 +9,11 @@ import EventKit
 import SwiftUI
 
 extension EKEvent {
+    
+    var transitionId: String {
+        "\(String(describing: self.eventIdentifier))"
+    }
+    
     @ViewBuilder
     func timeValueView(
         for datestamp: String,
@@ -27,4 +32,5 @@ extension EKEvent {
         }
         
     }
+    
 }

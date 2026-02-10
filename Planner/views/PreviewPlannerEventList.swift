@@ -11,7 +11,6 @@ import SwiftUI
 struct PreviewPlannerEventListView: View {
     let datestamp: String
     let events: [PlannerEvent]
-    let remainingLabel: String?
 
     @Environment(\.displayScale) private var displayScale
 
@@ -37,14 +36,6 @@ struct PreviewPlannerEventListView: View {
                     }
 
                     dashedDivider
-                }
-
-                if let remainingLabel {
-                    Text(remainingLabel)
-                        .font(
-                            .system(size: 12, weight: .heavy, design: .rounded)
-                        )
-                        .foregroundStyle(Color(uiColor: .tertiaryLabel))
                 }
             }
         }

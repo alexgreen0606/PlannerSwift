@@ -45,8 +45,7 @@ struct PlannerCardView: View {
 
             PreviewPlannerEventListView(
                 datestamp: datestamp,
-                events: singleDayEvents,
-                remainingLabel: nil
+                events: singleDayEvents
             )
         }
         .frame(maxWidth: .infinity, alignment: .leading)

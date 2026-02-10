@@ -10,7 +10,7 @@ import SwiftUI
 
 struct PreviewCalendarEventListView: View {
     let events: [EKEvent]
-    let iconMap: [String: String]
+    let iconMap: [String: String]?
 
     @EnvironmentObject var calendarStore: CalendarStore
 
@@ -20,7 +20,7 @@ struct PreviewCalendarEventListView: View {
                 ForEach(events, id: \.self) { event in
                     HStack(spacing: 4) {
                         Image(
-                            systemName: iconMap[
+                            systemName: iconMap?[
                                 event.calendar.calendarIdentifier
                             ]
                                 ?? event.calendar.iconName

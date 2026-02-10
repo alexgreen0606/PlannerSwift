@@ -17,7 +17,7 @@ struct EventSheetContext: Identifiable {
         }
 
         if let calEvent = calendarEvent {
-            return "\(String(describing: calEvent.eventIdentifier))"
+            return calEvent.transitionId
         }
 
         return "FALLBACK_NO_EVENT"
