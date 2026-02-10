@@ -142,31 +142,16 @@ struct FolderView: View {
         HStack(alignment: .top, spacing: 12) {
             HStack(spacing: selectManager.isSelectMode ? 16 : 0) {
 
-                Image(
-                    systemName: selectManager.selectedItemIds.contains(
-                        item.id
-                    ) ? "circle.inset.filled" : "circle"
-                )
-                .foregroundStyle(
-                    selectManager.selectedItemIds.contains(
+                AccentToggleView(
+                    isOn: selectManager.selectedItemIds.contains(
                         item.id
                     )
-                        ? Color(uiColor: .label)
-                        : Color(uiColor: .secondaryLabel)
-                )
-                .contentTransition(
-                    .symbolEffect(
-                        .replace
-                    )
-                )
-                .imageScale(.large)
+                ) {
+                    selectManager.toggleItem(item)
+                }
                 .opacity(selectManager.isSelectMode ? 1 : 0)
                 .frame(width: selectManager.isSelectMode ? 22 : 0)
                 .allowsHitTesting(selectManager.isSelectMode)
-                .contentShape(Circle())
-                .onTapGesture {
-                    selectManager.toggleItem(item)
-                }
 
                 itemIcon(for: item)
             }

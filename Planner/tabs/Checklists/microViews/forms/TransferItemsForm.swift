@@ -10,6 +10,9 @@ import SwiftUI
 
 struct TransferItemsFormView: View {
     let sourceItem: ChecklistItem
+    
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        AccentColor.blue
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -200,7 +203,7 @@ struct TransferItemsFormView: View {
                 dismiss()
             }
             .disabled(selectedItem == nil || selectedItem!.id == sourceItem.id)
-            .tint(selectedItem?.color.swiftUIColor ?? .blue)
+            .tint(accentColor.swiftUIColor)
         }
     }
 

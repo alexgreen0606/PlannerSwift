@@ -33,6 +33,11 @@ struct ItemToggleView<Item: ListItem>: View {
     let customIconConfig: CustomIconConfig<Item>?
     let onToggleChecked: () -> Void
 
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        AccentColor.blue
+
+    @EnvironmentObject var listManager: ListManager<Item>
+
     @State private var isConfirmationOpen: Bool = false
 
     private var iconName: String {
@@ -44,7 +49,9 @@ struct ItemToggleView<Item: ListItem>: View {
             ? Color(uiColor: .tertiaryLabel)
             : !isChecked
                 ? Color(uiColor: .secondaryLabel)
-                : customIconConfig?.primaryColor ?? tint
+                : listManager.isSelectMode
+                    ? accentColor.swiftUIColor
+                    : customIconConfig?.primaryColor ?? tint
     }
 
     private var secondaryColor: Color {
@@ -91,25 +98,29 @@ struct ItemToggleView<Item: ListItem>: View {
                     isPresented: $isConfirmationOpen,
                     titleVisibility: .visible,
                     actions: {
-                        if let actions = customIconConfig?.confirmation?.actions, let destructiveActions = customIconConfig?.confirmation?.destructiveActions
+                        if let actions = customIconConfig?.confirmation?
+                            .actions,
+                            let destructiveActions = customIconConfig?
+                                .confirmation?.destructiveActions
                         {
                             ForEach(Array(actions.keys), id: \.self) { key in
                                 Button(
                                     key,
                                     role: customIconConfig?.confirmation?
                                         .destructiveKeys.contains(key) == true
-                                    ? .destructive : .confirm
+                                        ? .destructive : .confirm
                                 ) {
                                     actions[key]?(item)
                                     isConfirmationOpen = false
                                 }
                             }
-                            ForEach(Array(destructiveActions.keys), id: \.self) { key in
+                            ForEach(Array(destructiveActions.keys), id: \.self)
+                            { key in
                                 Button(
                                     key,
                                     role: customIconConfig?.confirmation?
                                         .destructiveKeys.contains(key) == true
-                                    ? .destructive : .confirm
+                                        ? .destructive : .confirm
                                 ) {
                                     destructiveActions[key]?(item)
                                     isConfirmationOpen = false

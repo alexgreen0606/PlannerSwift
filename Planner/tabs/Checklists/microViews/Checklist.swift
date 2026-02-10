@@ -287,6 +287,7 @@ struct ChecklistView: View {
                         }
                     }
                 }
+                .tint(checklist?.color.swiftUIColor ?? .blue)
             } else {
                 Button("Delete", systemImage: "trash") {
                     showDeleteSelectedConfirm = true
