@@ -11,26 +11,34 @@ import SwiftUI
 struct ChecklistItemFormView: View {
     private let sourceItem: ChecklistItem?
     private let parent: ChecklistItem?
-    private let onCreated: ((ChecklistItem) -> Void)?
+    private let onSave: (ChecklistItem) -> Void
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
     @State private var draft: ChecklistItem
 
-    var isDirty: Bool {
+    private var isDirty: Bool {
         draft.title != sourceItem?.title || draft.color != sourceItem?.color
             || draft.type != sourceItem?.type
+    }
+    
+    private var showTypePicker: Bool {
+        guard let sourceItem else {
+            return true
+        }
+        
+        return sourceItem.items.isEmpty && parent != nil
     }
 
     init(
         item: ChecklistItem? = nil,
-        parent: ChecklistItem? = nil,
-        onCreated: ((ChecklistItem) -> Void)? = nil
+        parent: ChecklistItem?,
+        onSave: @escaping (ChecklistItem) -> Void
     ) {
         self.sourceItem = item
         self.parent = parent
-        self.onCreated = onCreated
+        self.onSave = onSave
 
         if let item {
             _draft = State(
@@ -59,9 +67,7 @@ struct ChecklistItemFormView: View {
                 }
                 .listSectionMargins(.top, 0)
 
-                if (sourceItem == nil || sourceItem!.items.isEmpty)
-                    && sourceItem?.parent != nil
-                {
+                if showTypePicker {
                     Section {
                         Picker("Type", selection: $draft.type) {
                             Text("Checklist").tag(ChecklistItemType.checklist)
@@ -122,11 +128,15 @@ struct ChecklistItemFormView: View {
     }
 
     private func handleSave() {
+        let savedItem: ChecklistItem
+        
         if let sourceItem {
             // Edit the existing item.
             sourceItem.title = draft.title
             sourceItem.color = draft.color
             sourceItem.type = draft.type
+            
+            savedItem = sourceItem
         } else {
             // Create the new item.
             let sorted = parent?.items.sorted {
@@ -142,7 +152,7 @@ struct ChecklistItemFormView: View {
             )
             modelContext.insert(newItem)
 
-            onCreated?(newItem)
+            savedItem = newItem
         }
 
         do {
@@ -154,5 +164,6 @@ struct ChecklistItemFormView: View {
         }
 
         dismiss()
+        onSave(savedItem)
     }
 }

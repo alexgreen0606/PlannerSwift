@@ -15,6 +15,9 @@ struct ChecklistsTabView: View {
 
     @StateObject private var checklistsManager = ListManager<ChecklistItem>()
     @State private var folderPath = NavigationPath()
+    @State private var checklistCoverId: PersistentIdentifier?
+    
+    @Namespace private var namespace
 
     private var root: ChecklistItem? {
         rootFolders.first
@@ -23,21 +26,44 @@ struct ChecklistsTabView: View {
     var body: some View {
         NavigationStack(path: $folderPath) {
             if let root = root {
-                FolderView(folder: root, openFolder: openFolder)
+                FolderView(folder: root, namespace: namespace, openItem: openItem)
                     .navigationDestination(for: ChecklistItem.self) { item in
                         if item.type == .folder {
-                            FolderView(folder: item, openFolder: openFolder)
+                            FolderView(folder: item, namespace: namespace, openItem: openItem)
                         }
                     }
             }
         }
-        .environmentObject(checklistsManager)
+        
+        // Checklist Page
+        .fullScreenCover(item: $checklistCoverId) { checklistId in
+            ChecklistView(checklistId: checklistId) { newFolder in
+                checklistCoverId = nil
+                
+                if let newFolder {
+                    openItem(newFolder)
+                }
+            }
+            .navigationTransition(
+                .zoom(
+                    sourceID: checklistId,
+                    in: namespace
+                )
+            )
+            .environmentObject(checklistsManager)
+        }
+        
         .task {
             modelContext.ensureRootFolder(rootFolders: rootFolders)
         }
     }
 
-    private func openFolder(folder: ChecklistItem) {
-        folderPath.append(folder)
+    private func openItem(_ item: ChecklistItem) {
+        if item.type == .folder {
+            folderPath.append(item)
+        } else {
+            checklistCoverId = item.id
+        }
     }
+
 }

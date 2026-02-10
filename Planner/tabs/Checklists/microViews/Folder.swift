@@ -10,17 +10,15 @@ import SwiftUI
 
 struct FolderView: View {
     let folder: ChecklistItem
-    let openFolder: (ChecklistItem) -> Void
+    let namespace: Namespace.ID
+    let openItem: (ChecklistItem) -> Void
     let iconWidth: CGFloat = 26
     let rowSpacing: CGFloat = 12
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @State private var checklistCoverId: PersistentIdentifier?
     @State private var pendingScrollItem: ChecklistItem?
-    @Namespace private var namespace
-
     @State private var showDeleteSelectedConfirm = false
     @State private var showDeleteFolderConfirm = false
     @State private var showTransferSheet = false
@@ -68,8 +66,8 @@ struct FolderView: View {
 
             // Create Item Form
             .sheet(isPresented: $showCreateSheet) {
-                ChecklistItemFormView(item: nil, parent: folder) { id in
-                    pendingScrollItem = id
+                ChecklistItemFormView(item: nil, parent: folder) { savedItem in
+                    pendingScrollItem = savedItem
                 }
                 .navigationTransition(
                     .zoom(sourceID: "ADD_BUTTON", in: namespace)
@@ -78,7 +76,12 @@ struct FolderView: View {
 
             // Edit Form
             .sheet(isPresented: $showEditSheet) {
-                ChecklistItemFormView(item: folder, parent: folder.parent)
+                ChecklistItemFormView(item: folder, parent: folder.parent) { savedItem in
+                    if savedItem.type == .checklist {
+                        dismiss()
+                        openItem(savedItem)
+                    }
+                }
                     .navigationTransition(
                         .zoom(sourceID: "ELLIPSIS", in: namespace)
                     )
@@ -94,19 +97,6 @@ struct FolderView: View {
                             in: namespace
                         )
                     )
-            }
-
-            // Checklist Page
-            .fullScreenCover(item: $checklistCoverId) { checklistId in
-                ChecklistView(checklistId: checklistId) {
-                    checklistCoverId = nil
-                }
-                .navigationTransition(
-                    .zoom(
-                        sourceID: checklistId,
-                        in: namespace
-                    )
-                )
             }
 
             // Scroll to new items.
@@ -341,12 +331,8 @@ struct FolderView: View {
                 selectManager.toggleItem(item)
                 return
             }
-
-            if item.type == .folder {
-                openFolder(item)
-            } else {
-                checklistCoverId = item.id
-            }
+            
+            openItem(item)
         }
         .matchedTransitionSource(
             id: item.id,

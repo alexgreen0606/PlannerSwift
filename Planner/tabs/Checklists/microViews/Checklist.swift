@@ -10,7 +10,9 @@ import SwiftUI
 
 struct ChecklistView: View {
     private let checklistId: PersistentIdentifier
-    private let closeChecklist: () -> Void
+    
+    // Can pass a folder to navigate into (passes itself when it is transformed into a folder).
+    private let closeChecklist: (ChecklistItem?) -> Void
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var listManager: ListManager<ChecklistItem>
@@ -81,7 +83,7 @@ struct ChecklistView: View {
 
     init(
         checklistId: PersistentIdentifier,
-        closeChecklist: @escaping () -> Void
+        closeChecklist: @escaping (ChecklistItem?) -> Void
     ) {
         self.checklistId = checklistId
         self.closeChecklist = closeChecklist
@@ -131,8 +133,14 @@ struct ChecklistView: View {
 
         // Edit Form
         .sheet(isPresented: $isEditFormOpen) {
-            if let checklist {
-                ChecklistItemFormView(item: checklist, parent: checklist.parent)
+            if let checklist, let parent = checklist.parent {
+                ChecklistItemFormView(item: checklist, parent: parent) { savedList in
+                    
+                    // TODO: if saved list is now a folder, close this and open the folder
+                    if savedList.type == .folder {
+                        closeChecklist(savedList)
+                    }
+                }
                     .navigationTransition(
                         .zoom(sourceID: "ELLIPSIS", in: sheetAnimation)
                     )
@@ -162,7 +170,7 @@ struct ChecklistView: View {
                     "Back",
                     systemImage: "chevron.left"
                 ) {
-                    closeChecklist()
+                    closeChecklist(nil)
                 }
             }
             Button("Cancel", systemImage: "xmark") {
@@ -417,7 +425,7 @@ struct ChecklistView: View {
             return
         }
 
-        closeChecklist()
+        closeChecklist(nil)
 
         modelContext.delete(checklist)
 
