@@ -114,10 +114,9 @@ struct LocationSearchView: View {
 
     private var selectionIndicator: some View {
         VStack(alignment: .trailing) {
-            if selected != nil {
+            if let selected {
                 PlannerChipView(
-                    title: selected?.name
-                        ?? locationManager.cityName,
+                    title: selected.name,
                     iconName: "mappin.and.ellipse",
                     color: nil,
                     onTap: nil
@@ -133,9 +132,11 @@ struct LocationSearchView: View {
                         Text("Current Location")
                             .font(.system(size: 14, weight: .medium))
 
-                        Text(locationManager.cityName)
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(Color(uiColor: .secondaryLabel))
+                        if let city = locationManager.cityName {
+                            Text(city)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(Color(uiColor: .secondaryLabel))
+                        }
                     }
 
                 }

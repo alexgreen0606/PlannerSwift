@@ -38,9 +38,14 @@ struct PlannerChipSpreadView: View {
         weatherStore.getWeather(for: planner.datestamp, at: planner.location)
     }
 
+    private var location: String? {
+        planner.location?.name
+            ?? weatherStore.locationManager.cityName
+    }
+
     var body: some View {
         WrappingHStack(alignment: .leading) {
-            
+
             // Countdown Chip
             if let daysUntil {
                 PlannerChipView(
@@ -50,20 +55,22 @@ struct PlannerChipSpreadView: View {
                     onTap: nil
                 )
             }
-            
+
             // Location Chip
-            PlannerChipView(
-                title: planner.location?.name
-                    ?? weatherStore.locationManager.cityName,
-                iconName: planner.location != nil ? "mappin.and.ellipse" : "location",
-                color: nil,
-                onTap: openLocationSheet
-            )
-            .matchedTransitionSource(
-                id:
-                    "LOCATION",
-                in: animation
-            )
+            if let location {
+                PlannerChipView(
+                    title: location,
+                    iconName: planner.location != nil
+                        ? "mappin.and.ellipse" : "location",
+                    color: nil,
+                    onTap: openLocationSheet
+                )
+                .matchedTransitionSource(
+                    id:
+                        "LOCATION",
+                    in: animation
+                )
+            }
 
             // Weather Chip
             if weatherData != nil {
@@ -71,7 +78,7 @@ struct PlannerChipSpreadView: View {
                     .contentShape(Rectangle())
                     .onTapGesture(perform: openWeatherApp)
             }
-            
+
             // Event Chips
             ForEach(allDayEvents, id: \.eventIdentifier) { event in
                 PlannerChipView(

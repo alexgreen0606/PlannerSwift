@@ -102,7 +102,6 @@ struct TransferItemsFormView: View {
                 .id(currentFolder.id)
             }
             .navigationTitle("Transfer \(mode.childrenLabel.capitalizedFirst)")
-            .navigationSubtitle(selectionLabel)
             .navigationBarTitleDisplayMode(.inline)
             .background(Color(.systemBackground))
             .animation(.easeInOut, value: currentFolder.id)
@@ -119,13 +118,14 @@ struct TransferItemsFormView: View {
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 14, height: 14)
+                                .foregroundStyle(sourceItem.color.swiftUIColor)
 
                             VStack(alignment: .leading) {
-                                Text(sourceItem.title)
+                                Text(selectionLabel)
                                     .font(.system(size: 10, weight: .medium))
                                     .foregroundStyle(Color(uiColor: .label))
 
-                                Text("Source")
+                                Text(sourceItem.title)
                                     .font(.system(size: 8, weight: .medium))
                                     .foregroundStyle(
                                         Color(uiColor: .secondaryLabel)
@@ -149,17 +149,9 @@ struct TransferItemsFormView: View {
                                     selectedItem.color.swiftUIColor
                                 )
 
-                            VStack(alignment: .leading) {
                                 Text(selectedItem.title)
                                     .font(.system(size: 14, weight: .medium))
                                     .foregroundStyle(Color(uiColor: .label))
-
-                                Text("Destination")
-                                    .font(.system(size: 10, weight: .medium))
-                                    .foregroundStyle(
-                                        Color(uiColor: .secondaryLabel)
-                                    )
-                            }
                         }
                         .glassChip(color: nil, onTap: nil, height: 40)
                         .animation(

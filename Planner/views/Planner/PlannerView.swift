@@ -306,6 +306,7 @@ struct PlannerView: View {
                                 ToolbarItem(placement: .cancellationAction) {
                                     Button("Close", systemImage: "xmark") {
                                         isLocationSheetOpen = false
+                                        selectedLocation = planner.location
                                     }
                                 }
 

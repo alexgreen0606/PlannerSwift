@@ -24,7 +24,7 @@ final class LocationManager: NSObject, ObservableObject,
     private let manager = CLLocationManager()
 
     @Published var deviceClLocation: CLLocation?
-    @Published var cityName: String = "Unknown Location"
+    @Published var cityName: String?
 
     func locationManager(
         _ manager: CLLocationManager,
@@ -44,7 +44,7 @@ final class LocationManager: NSObject, ObservableObject,
                         cityName = city
                     }
                 } catch {
-                    print("Reverse geocode error:", error)
+                    print("Failed to get the local city based on this device location:", error)
                 }
             }
         }
