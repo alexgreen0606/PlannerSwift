@@ -69,9 +69,9 @@ struct PlannerChipSpreadView: View {
                 eventChip(event)
             }
         }
-        .animation(.spring, value: weatherData)
-        .animation(.spring, value: locationLabel)
-        .animation(.spring, value: allDayEvents)
+        .animateChange(from: weatherData)
+        .animateChange(from: locationLabel)
+        .animateChange(from: allDayEvents)
     }
 
     // MARK: - Chips

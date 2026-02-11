@@ -34,7 +34,6 @@ struct PlannerView: View {
     @State private var calendarPlannerEvents: [PlannerEvent] = []
     @State private var isDeleteCheckedConfirmationOpen = false
     @State private var isLocationSheetOpen = false
-    @State private var selectedLocation: Location? = nil
     @State private var pendingScroll: PlannerEventPositionChange?
 
     // Toggle confirmation config for calendar events.
@@ -183,10 +182,11 @@ struct PlannerView: View {
                                     iconMap: calendarSettings?.iconMap ?? [:],
                                     animation: sheetAnimation,
                                     openCalendarEventSheet: { calEvent in
-                                        plannerEventSheetContext = EventSheetContext(
-                                            plannerEvent: nil,
-                                            calendarEvent: calEvent
-                                        )
+                                        plannerEventSheetContext =
+                                            EventSheetContext(
+                                                plannerEvent: nil,
+                                                calendarEvent: calEvent
+                                            )
                                     },
                                     openLocationSheet: {
                                         isLocationSheetOpen = true
@@ -295,45 +295,26 @@ struct PlannerView: View {
                 // Location Sheet
                 .sheet(isPresented: $isLocationSheetOpen) {
                     if let planner {
-                        NavigationStack {
-                            LocationSearchView(
-                                initialLocation: planner.location,
-                                selected: $selectedLocation
-                            )
-                            .navigationTitle("Edit Location")
-                            .navigationBarTitleDisplayMode(.inline)
-                            .toolbar {
-                                ToolbarItem(placement: .cancellationAction) {
-                                    Button("Close", systemImage: "xmark") {
-                                        isLocationSheetOpen = false
-                                        selectedLocation = planner.location
-                                    }
-                                }
+                        LocationSearchView(
+                            initialLocation: planner.location,
+                            title: "Edit Location",
+                            mode: .sheet
+                        ) { location in
+                            planner.location = location
 
-                                ToolbarItem(placement: .confirmationAction) {
-                                    Button("Confirm", systemImage: "checkmark")
-                                    {
-                                        planner.location = selectedLocation
+                            do {
+                                try modelContext.save()
+                            } catch {
+                                assertionFailure(
+                                    "Failed to save location: \(error)"
+                                )
+                            }
 
-                                        do {
-                                            try modelContext.save()
-                                        } catch {
-                                            assertionFailure(
-                                                "Failed to save location: \(error)"
-                                            )
-                                        }
-
-                                        Task {
-                                            await weatherStore
-                                                .loadWeatherIfNeeded(
-                                                    for: planner.location
-                                                )
-                                        }
-
-                                        isLocationSheetOpen = false
-                                    }
-                                    .tint(accentColor.swiftUIColor)
-                                }
+                            Task {
+                                await weatherStore
+                                    .loadWeatherIfNeeded(
+                                        for: planner.location
+                                    )
                             }
                         }
                         .navigationTransition(
@@ -363,8 +344,6 @@ struct PlannerView: View {
                     planners: planners,
                     datestamp: datestamp
                 )
-                
-                selectedLocation = planner!.location
 
                 modelContext.ensureCalendarSettings(
                     settings: calendarSettingsList

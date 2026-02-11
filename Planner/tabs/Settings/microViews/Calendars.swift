@@ -105,10 +105,14 @@ struct CalendarsView: View {
             }
         }
         .navigationTitle("Calendars")
+        .navigationBarTitleDisplayMode(.inline)
+        
         // Refresh the calendar when the hidden calendars change.
         .onChange(of: calendarSettings?.hiddenCalendarIds) { _, _ in
             scheduleCalendarRefreshDebounce()
         }
+        
+        // Load in the calendar settings.
         .task {
             modelContext.ensureCalendarSettings(
                 settings: calendarSettingsList

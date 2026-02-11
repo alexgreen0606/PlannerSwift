@@ -103,11 +103,7 @@ struct TransferItemsFormView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
                 folderContent
-                    .id(currentFolder.id)
-                    .transition(folderSlideTransition)
-            }
             .navigationTitle(
                 "Transfer \(destinationType.childrenLabel.capitalizedFirst)"
             )
@@ -179,13 +175,7 @@ struct TransferItemsFormView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal)
-        .animation(
-            .spring(
-                response: 0.3,
-                dampingFraction: 0.4
-            ),
-            value: destination?.id
-        )
+        .animateChange(from: destination?.id)
     }
 
     private var sourceChip: some View {
@@ -257,16 +247,20 @@ struct TransferItemsFormView: View {
     }
 
     private var folderContent: some View {
-        List {
-            Section {
-                ForEach(currentOptions, id: \.self) { item in
-                    itemRow(item)
+        ZStack {
+            List {
+                Section {
+                    ForEach(currentOptions, id: \.self) { item in
+                        itemRow(item)
+                    }
+                } header: {
+                    folderLabel
                 }
-            } header: {
-                folderLabel
+                .listSectionMargins(.top, 0)
             }
-            .listSectionMargins(.top, 0)
         }
+        .id(currentFolder.id)
+        .transition(folderSlideTransition)
         .overlay {
             if currentOptions.isEmpty {
                 EmptyLabel(

@@ -33,6 +33,13 @@ struct SettingsTabView: View {
         var toggleTransitionDuration: ToggleTransitionDuration =
             ToggleTransitionDuration.threeSeconds
 
+    @Environment(\.modelContext) private var modelContext
+    @Query private var plannerSettingsList: [PlannerSettings]
+
+    private var plannerSettings: PlannerSettings? {
+        plannerSettingsList.first
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -119,6 +126,28 @@ struct SettingsTabView: View {
                     NavigationLink("Calendars") {
                         CalendarsView()
                     }
+
+                    NavigationLink("Home Location") {
+                        LocationSearchView(
+                            initialLocation: plannerSettings?.homeLocation,
+                            title: "Edit Home Location",
+                            mode: .stack
+                        ) { location in
+                            guard let plannerSettings else {
+                                return
+                            }
+
+                            plannerSettings.homeLocation = location
+
+                            do {
+                                try modelContext.save()
+                            } catch {
+                                assertionFailure(
+                                    "Failed to save home location: \(error)"
+                                )
+                            }
+                        }
+                    }
                 } header: {
                     Text("Planner")
                 }
@@ -126,6 +155,13 @@ struct SettingsTabView: View {
 
             }
             .navigationTitle("Settings")
+
+            // Ensure planner settings.
+            .task {
+                modelContext.ensurePlannerSettings(
+                    settings: plannerSettingsList
+                )
+            }
         }
     }
 

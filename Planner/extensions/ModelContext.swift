@@ -50,7 +50,26 @@ extension ModelContext {
                 "Failed to create initial CalendarSettings: \(error)"
             )
         }
+    }
+    
+    @MainActor
+    func ensurePlannerSettings(
+        settings: [PlannerSettings]
+    ) {
+        if settings.first != nil {
+            return
+        }
 
+        let newSettings = PlannerSettings()
+        insert(newSettings)
+
+        do {
+            try save()
+        } catch {
+            assertionFailure(
+                "Failed to create initial PlannerSettings: \(error)"
+            )
+        }
     }
 
     @MainActor

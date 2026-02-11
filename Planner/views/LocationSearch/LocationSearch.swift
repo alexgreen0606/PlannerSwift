@@ -9,164 +9,218 @@ import Combine
 import MapKit
 import SwiftUI
 
+enum LocationSearchMode {
+    case sheet
+    case stack
+}
+
 struct LocationSearchView: View {
     let initialLocation: Location?
-    @Binding var selected: Location?
+    let title: String
+    let mode: LocationSearchMode
+    let onSave: (Location?) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
 
-    @StateObject private var finder = LocationFinder()
+    @Environment(\.dismiss) private var dismiss
 
     let locationManager = LocationManager.shared
 
+    @StateObject private var locationFinder = LocationFinder()
+    @State private var selectedLocation: Location?
+
     private var topSuggestionId: String? {
-        suggestionId(finder.suggestions.first)
+        optionId(locationFinder.suggestions.first)
+    }
+
+    init(
+        initialLocation: Location?,
+        title: String,
+        mode: LocationSearchMode,
+        onSave: @escaping (Location?) -> Void
+    ) {
+        self.initialLocation = initialLocation
+        self.title = title
+        self.mode = mode
+        self.onSave = onSave
+
+        _selectedLocation = State(initialValue: initialLocation)
     }
 
     var body: some View {
-        ScrollViewReader { proxy in
-            List {
-                ForEach(finder.suggestions, id: \.self) { suggestion in
-                    locationRow(
-                        title: suggestion.title,
-                        subtitle: suggestion.subtitle.isEmpty
-                            ? nil : suggestion.subtitle,
-                        isSelected: isSuggestionSelected(suggestion)
-                    ) {
-                        Task {
-                            guard
-                                let city =
-                                    await finder.selectCompletion(
-                                        suggestion
-                                    )
-                            else { return }
-                            selected = selected == city ? nil : city
-                        }
-                    }
-                    .id(suggestionId(suggestion))
-                }
-            }
-            .listStyle(.plain)
-            .overlay {
-                if finder.suggestions.isEmpty && finder.queryFragment.count > 2
-                {
-                    EmptyLabel("No Matching Locations")
-                }
-            }
-            .animation(.spring, value: selected)
-            .background(Color(uiColor: .systemBackground).ignoresSafeArea())
-            .safeAreaInset(edge: .top) {
-                VStack(alignment: .leading, spacing: 12) {
-                    selectionIndicator
-
-                    TextField(
-                        "Search cities and addresses...",
-                        text: $finder.queryFragment
-                    )
-                    .frame(maxHeight: 50)
-                    .padding(.horizontal)
-                    .glassEffect(.regular.interactive())
-                    .tint(accentColor.swiftUIColor)
-                    .toolbar {
-                        bottomToolbar
-                        keyboardToolbar
+        NavigationStack {
+            ScrollViewReader { proxy in
+                List {
+                    ForEach(locationFinder.suggestions, id: \.self) { option in
+                        optionRow(option)
                     }
                 }
-                .padding(.horizontal)
-            }
+                .listStyle(.plain)
+                .background(Color(uiColor: .systemBackground).ignoresSafeArea())
 
-            // Keep the list scrolled to the top when results change.
-            .prioritizeTopItemScroll(
-                proxy: proxy,
-                trigger: finder.suggestions,
-                firstItemId: topSuggestionId
-            )
-        }
-    }
-
-    @ToolbarContentBuilder
-    private var bottomToolbar: some ToolbarContent {
-        if selected != nil {
-            ToolbarItem(placement: .bottomBar) {
-                currentLocationButton
-            }
-            .sharedBackgroundVisibility(.hidden)
-        }
-    }
-
-    @ToolbarContentBuilder
-    private var keyboardToolbar: some ToolbarContent {
-        if selected != nil {
-            ToolbarItem(placement: .keyboard) {
-                currentLocationButton
-            }
-            .sharedBackgroundVisibility(.hidden)
-        }
-    }
-
-    private var currentLocationButton: some View {
-        AccentButtonView(label: "Use Current Location", systemImage: "location")
-        {
-            selected = nil
-        }
-    }
-
-    private var selectionIndicator: some View {
-        VStack(alignment: .trailing) {
-            if let selected {
-                PlannerChipView(
-                    title: selected.name,
-                    iconConfig: IconConfig(
-                        name: "mappin.and.ellipse",
-                        primaryColor: accentColor.swiftUIColor,
-                        secondaryColor: Color(uiColor: .secondaryLabel)
-                    ),
-                    color: nil,
-                    onTap: nil
+                // Keep the list scrolled to the top when results change.
+                .prioritizeTopItemScroll(
+                    proxy: proxy,
+                    trigger: locationFinder.suggestions,
+                    firstItemId: topSuggestionId
                 )
-            } else {
-                HStack(spacing: 6) {
-                    Image(systemName: "location")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 18, height: 18)
-                        .foregroundStyle(accentColor.swiftUIColor)
+            }
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
+            .toolbar {
+                topLeftToolbar
+                topRightToolbar
+            }
+            .safeAreaInset(edge: .top) {
+                selectionHeader
+            }
+            .overlay {
+                emptyOptionsLabel
+            }
 
-                    VStack(alignment: .leading) {
-                        Text("Current Location")
-                            .font(.system(size: 14, weight: .medium))
+        }
+    }
 
-                        if let city = locationManager.cityName {
-                            Text(city)
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundStyle(
-                                    Color(uiColor: .secondaryLabel)
-                                )
-                        }
-                    }
+    // MARK: - Toolbars
 
+    @ToolbarContentBuilder
+    private var topLeftToolbar: some ToolbarContent {
+        if mode == .sheet {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(
+                    "Back",
+                    systemImage: "xmark"
+                ) {
+                    dismiss()
                 }
-                .glassChip(color: nil, onTap: nil, height: 40)
+            }
+        } else {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(
+                    "Back",
+                    systemImage: "chevron.left"
+                ) {
+                    onSave(selectedLocation)
+                    dismiss()
+                }
             }
         }
-        .frame(maxWidth: .infinity, alignment: .trailing)
+    }
+
+    @ToolbarContentBuilder
+    private var topRightToolbar: some ToolbarContent {
+        if mode == .sheet {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Confirm", systemImage: "checkmark") {
+                    onSave(selectedLocation)
+                    dismiss()
+                }
+                .tint(accentColor.swiftUIColor)
+            }
+        }
+    }
+
+    // MARK: - Selection Header
+
+    private var selectionHeader: some View {
+        VStack(spacing: 16) {
+            selectionIndicator
+            inputField
+            currentLocationButton
+        }
+        .padding(.horizontal)
+        .animateChange(from: selectedLocation)
     }
 
     @ViewBuilder
-    private func locationRow(
-        title: String,
-        subtitle: String?,
-        isSelected: Bool,
-        onTap: @escaping () -> Void
-    ) -> some View {
+    private var selectionIndicator: some View {
+        if let selectedLocation {
+            PlannerChipView(
+                title: selectedLocation.name,
+                iconConfig: IconConfig(
+                    name: "mappin.and.ellipse",
+                    primaryColor: accentColor.swiftUIColor,
+                    secondaryColor: Color(uiColor: .secondaryLabel)
+                ),
+                color: nil,
+                onTap: nil
+            )
+        } else {
+            currentLocationIndicator
+        }
+    }
+
+    private var currentLocationIndicator: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "location")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 18, height: 18)
+                .foregroundStyle(accentColor.swiftUIColor)
+
+            VStack(alignment: .leading) {
+                Text("Current Location")
+                    .font(.system(size: 14, weight: .medium))
+
+                if let city = locationManager.cityName {
+                    Text(city)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(
+                            Color(uiColor: .secondaryLabel)
+                        )
+                }
+            }
+
+        }
+        .glassChip(color: nil, onTap: nil, height: 40)
+    }
+
+    private var inputField: some View {
+        TextField(
+            "Search cities and addresses...",
+            text: $locationFinder.queryFragment
+        )
+        .frame(maxHeight: 50)
+        .padding(.horizontal)
+        .glassEffect(.regular.interactive())
+        .tint(accentColor.swiftUIColor)
+    }
+
+    @ViewBuilder
+    private var currentLocationButton: some View {
+        if selectedLocation != nil {
+            AccentButtonView(
+                label: "Use Current Location",
+                systemImage: "location"
+            ) {
+                selectedLocation = nil
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    // MARK: - Option Rows
+
+    @ViewBuilder
+    private var emptyOptionsLabel: some View {
+        if locationFinder.suggestions.isEmpty
+            && locationFinder.queryFragment.count > 2
+        {
+            EmptyLabel("No Matching Locations")
+        }
+    }
+
+    @ViewBuilder
+    private func optionRow(_ option: MKLocalSearchCompletion) -> some View {
         HStack {
             VStack(alignment: .leading) {
-                Text(title)
+                Text(option.title)
                     .font(.headline)
 
-                if let subtitle {
-                    Text(subtitle)
+                if !option.subtitle.isEmpty {
+                    Text(option.subtitle)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -174,39 +228,42 @@ struct LocationSearchView: View {
 
             Spacer()
 
-            if isSelected {
+            if isOptionSelected(option) {
                 Image(systemName: "checkmark")
             }
         }
-        .contentShape(Rectangle())
-        .onTapGesture(perform: onTap)
+        .id(optionId(option))
         .discreetListItem()
-    }
-
-    private func isLocationSelected(_ location: Location) -> Bool {
-        guard let selected else {
-            return false
+        .contentShape(Rectangle())
+        .onTapGesture {
+            Task {
+                guard
+                    let city =
+                        await locationFinder.selectCompletion(
+                            option
+                        )
+                else { return }
+                selectedLocation = selectedLocation == city ? nil : city
+            }
         }
-
-        return selected.latitude == location.latitude
-            && selected.longitude == location.longitude
     }
 
-    private func isSuggestionSelected(_ suggestion: MKLocalSearchCompletion)
+    // MARK: - Helper Function
+
+    private func isOptionSelected(_ option: MKLocalSearchCompletion)
         -> Bool
     {
-        guard let selected else {
+        guard let selectedLocation else {
             return false
         }
 
-        return selected.name == suggestion.title
-            && selected.subtitle == suggestion.subtitle
+        return selectedLocation.name == option.title
+            && selectedLocation.subtitle == option.subtitle
     }
 
-    private func suggestionId(_ suggestion: MKLocalSearchCompletion?) -> String?
-    {
-        guard let suggestion else { return nil }
+    private func optionId(_ option: MKLocalSearchCompletion?) -> String? {
+        guard let option else { return nil }
 
-        return "\(suggestion.title)-\(suggestion.subtitle)"
+        return "\(option.title)-\(option.subtitle)"
     }
 }

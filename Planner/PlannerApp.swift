@@ -33,7 +33,7 @@ struct PlannerApp: App {
                 .environmentObject(navigator)
         }
         .modelContainer(for: [
-            Planner.self, ChecklistItem.self, CalendarSettings.self,
+            Planner.self, ChecklistItem.self, CalendarSettings.self, PlannerSettings.self
         ])
     }
 }
