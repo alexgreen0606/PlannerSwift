@@ -162,8 +162,8 @@ struct ChecklistItemFormView: View {
                 "Error saving checklist item: \(error)"
             )
         }
-
-        dismiss()
+        
         onSave(savedItem)
+        dismiss()
     }
 }

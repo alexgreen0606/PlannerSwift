@@ -10,6 +10,7 @@ import SwiftUI
 
 struct ChecklistView: View {
     private let checklistId: PersistentIdentifier
+    private let canTransferItems: Bool
     
     // Can pass a folder to navigate into (passes itself when it is transformed into a folder).
     private let closeChecklist: (ChecklistItem?) -> Void
@@ -83,10 +84,12 @@ struct ChecklistView: View {
 
     init(
         checklistId: PersistentIdentifier,
+        canTransferItems: Bool,
         closeChecklist: @escaping (ChecklistItem?) -> Void
     ) {
         self.checklistId = checklistId
         self.closeChecklist = closeChecklist
+        self.canTransferItems = canTransferItems
 
         _checklists = Query(
             filter: #Predicate<ChecklistItem> {
@@ -150,7 +153,7 @@ struct ChecklistView: View {
         // Transfer Form
         .sheet(isPresented: $isTransferSheetOpen) {
             if let checklist {
-                TransferItemsFormView(currentItem: checklist)
+                TransferItemsFormView(source: checklist, selectedIds: listManager.selectedItemIds)
                     .navigationTransition(
                         .zoom(
                             sourceID: "TRANSFER",
@@ -325,14 +328,13 @@ struct ChecklistView: View {
 
                 Spacer()
 
-                // TODO: hide this if there are no other lists to transfer to
                 Button(
                     "Transfer",
                     systemImage: "arrow.forward.folder"
                 ) {
                     isTransferSheetOpen = true
                 }
-                .disabled(listManager.selectedItemIds.isEmpty)
+                .disabled(!canTransferItems || listManager.selectedItemIds.isEmpty)
                 .matchedTransitionSource(
                     id: "TRANSFER",
                     in: sheetAnimation

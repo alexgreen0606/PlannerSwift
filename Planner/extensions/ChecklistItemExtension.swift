@@ -21,11 +21,6 @@ extension ChecklistItem {
 
         return components.reversed().joined(separator: " / ")
     }
-    
-    // Includes the item's name.
-    var fullPath: String {
-        "\(path)\(path.isEmpty ? "" : " / ")\(self.title)"
-    }
 
     var deleteConfirmation: String {
         "Delete this entire \(self.type.rawValue)?"
@@ -55,16 +50,16 @@ extension ChecklistItem {
         }
     }
 
-    func hasChecklists(excluding excludedId: PersistentIdentifier? = nil) -> Bool {
+    func hasChildType(_ type: ChecklistItemType, excluding excludedIds: Set<PersistentIdentifier>) -> Bool {
         for item in items {
-            if item.id == excludedId { continue }
+            if excludedIds.contains(item.id) { continue }
 
-            if item.type == .checklist {
+            if item.type == type {
                 return true
             }
 
             if item.type == .folder,
-                item.hasChecklists(excluding: excludedId)
+                item.hasChildType(type, excluding: excludedIds)
             {
                 return true
             }

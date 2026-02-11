@@ -70,7 +70,10 @@ struct TransferItemsFormView: View {
 
                 // If in checklist mode and item is a folder, only show if it has checklists.
                 if destinationType == .checklist, item.type == .folder {
-                    return item.hasChecklists()
+                    return item.hasChildType(
+                        .checklist,
+                        excluding: Set([source.id])
+                    )
                 }
 
                 return true
@@ -78,14 +81,24 @@ struct TransferItemsFormView: View {
             .sorted { $0.sortIndex < $1.sortIndex }
     }
 
-    init(currentItem: ChecklistItem) {
-        self.currentFolder =
-            currentItem.type == .folder
-            ? currentItem
-            : currentItem.parent!
+    init(source: ChecklistItem, selectedIds: Set<PersistentIdentifier>) {
+        var fp =
+            source.type == .folder
+            ? source
+            : source.parent!
+
+        // Step backwards through folders until you find one with a selectable item.
+        while !fp.hasChildType(source.type, excluding: Set(selectedIds + [source.id])),
+            let parent = fp.parent
+        {
+            fp = parent
+        }
+
+        self.currentFolder = fp
+
         self.destinationType =
-            currentItem.type == .folder ? .folder : .checklist
-        self.source = currentItem
+            source.type == .folder ? .folder : .checklist
+        self.source = source
     }
 
     var body: some View {

@@ -12,6 +12,8 @@ struct FolderView: View {
     let folder: ChecklistItem
     let namespace: Namespace.ID
     let openItem: (ChecklistItem) -> Void
+    let canTranferItems: Bool
+    let updateTransferAvailability: (Set<PersistentIdentifier>) -> Void
     let iconWidth: CGFloat = 26
     let rowSpacing: CGFloat = 12
 
@@ -89,7 +91,7 @@ struct FolderView: View {
 
             // Transfer Form
             .sheet(isPresented: $showTransferSheet) {
-                TransferItemsFormView(currentItem: folder)
+                TransferItemsFormView(source: folder, selectedIds: selectManager.selectedItemIds)
                     .environmentObject(selectManager)
                     .navigationTransition(
                         .zoom(
@@ -253,7 +255,6 @@ struct FolderView: View {
                 ToolbarSpacer(.fixed, placement: .topBarTrailing)
 
                 ToolbarItem(placement: .topBarTrailing) {
-                    // TODO: hide this if there are no other folders to transfer to
                     Button(
                         "Transfer",
                         systemImage: "arrow.forward.folder"
@@ -264,7 +265,7 @@ struct FolderView: View {
                         id: "TRANSFER",
                         in: namespace
                     )
-                    .disabled(selectManager.selectedItemIds.isEmpty)
+                    .disabled(!canTranferItems || selectManager.selectedItemIds.isEmpty)
                 }
             }
         }
@@ -282,6 +283,7 @@ struct FolderView: View {
                     )
                 ) {
                     selectManager.toggleItem(item)
+                    updateTransferAvailability(Set(selectManager.selectedItemIds + [folder.id]))
                 }
                 .opacity(selectManager.isSelectMode ? 1 : 0)
                 .frame(width: selectManager.isSelectMode ? 22 : 0)
@@ -329,6 +331,7 @@ struct FolderView: View {
         .onTapGesture {
             if selectManager.isSelectMode {
                 selectManager.toggleItem(item)
+                updateTransferAvailability(Set(selectManager.selectedItemIds + [folder.id]))
                 return
             }
             

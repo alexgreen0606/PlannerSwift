@@ -16,30 +16,49 @@ struct ChecklistsTabView: View {
     @StateObject private var checklistsManager = ListManager<ChecklistItem>()
     @State private var folderPath = NavigationPath()
     @State private var checklistCoverId: PersistentIdentifier?
-    
+
+    // Considers the selected items and whether any destination items exist to house them.
+    @State private var canTransferChecklistItems: Bool = false
+    @State private var canTransferFolderItems: Bool = false
+
     @Namespace private var namespace
 
-    private var root: ChecklistItem? {
+    private var rootFolder: ChecklistItem? {
         rootFolders.first
     }
 
     var body: some View {
         NavigationStack(path: $folderPath) {
-            if let root = root {
-                FolderView(folder: root, namespace: namespace, openItem: openItem)
-                    .navigationDestination(for: ChecklistItem.self) { item in
-                        if item.type == .folder {
-                            FolderView(folder: item, namespace: namespace, openItem: openItem)
-                        }
+            if let root = rootFolder {
+                FolderView(
+                    folder: root,
+                    namespace: namespace,
+                    openItem: openItem,
+                    canTranferItems: canTransferFolderItems,
+                    updateTransferAvailability: updateFolderTransferAvailability
+                )
+                .navigationDestination(for: ChecklistItem.self) { item in
+                    if item.type == .folder {
+                        FolderView(
+                            folder: item,
+                            namespace: namespace,
+                            openItem: openItem,
+                            canTranferItems: canTransferFolderItems,
+                            updateTransferAvailability: updateFolderTransferAvailability
+                        )
                     }
+                }
             }
         }
-        
+
         // Checklist Page
         .fullScreenCover(item: $checklistCoverId) { checklistId in
-            ChecklistView(checklistId: checklistId) { newFolder in
+            ChecklistView(
+                checklistId: checklistId,
+                canTransferItems: canTransferChecklistItems
+            ) { newFolder in
                 checklistCoverId = nil
-                
+
                 if let newFolder {
                     openItem(newFolder)
                 }
@@ -52,7 +71,8 @@ struct ChecklistsTabView: View {
             )
             .environmentObject(checklistsManager)
         }
-        
+
+        // Load in the root folder.
         .task {
             modelContext.ensureRootFolder(rootFolders: rootFolders)
         }
@@ -60,10 +80,21 @@ struct ChecklistsTabView: View {
 
     private func openItem(_ item: ChecklistItem) {
         if item.type == .folder {
+            canTransferFolderItems =
+                rootFolder?.hasChildType(.folder, excluding: Set([item.id])) == true
             folderPath.append(item)
         } else {
+            canTransferChecklistItems =
+                rootFolder?.hasChildType(.checklist, excluding: Set([item.id]))
+                == true
             checklistCoverId = item.id
         }
+    }
+
+    // itemIds includes the items to transfer AND their current folder.
+    private func updateFolderTransferAvailability(considering itemIds: Set<PersistentIdentifier>) {
+        canTransferFolderItems =
+            rootFolder?.hasChildType(.folder, excluding: itemIds) == true
     }
 
 }
