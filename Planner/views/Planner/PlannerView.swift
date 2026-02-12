@@ -10,6 +10,23 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
+struct EventSheetContext: Identifiable {
+    var plannerEvent: PlannerEvent?
+    var calendarEvent: EKEvent?
+
+    var id: String {
+        if let plannerEventId = plannerEvent?.id {
+            return "\(plannerEventId)"
+        }
+
+        if let calEvent = calendarEvent {
+            return calEvent.transitionId
+        }
+
+        return "FALLBACK_NO_EVENT"
+    }
+}
+
 struct PlannerView: View {
     private let datestamp: String
     private let closePlanner: () -> Void
@@ -183,7 +200,7 @@ struct PlannerView: View {
                 }
             }
         }
-        
+
         // Event Sheet
         .sheet(item: $eventSheetContext) { context in
             EventFormView(
@@ -199,7 +216,7 @@ struct PlannerView: View {
                 )
             )
         }
-        
+
         // Initialize data.
         .task {
             modelContext.ensurePlanner(
@@ -230,10 +247,7 @@ struct PlannerView: View {
             ready: planner != nil && calendarSettings != nil,
             load: synchronizeCalendarEvents
         )
-        
-        .onChange(of: eventSheetContext != nil) { _, newS in
-            print(eventSheetContext?.id)
-        }
+
     }
 
     // MARK: - Toolbars
