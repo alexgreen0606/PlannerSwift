@@ -21,7 +21,6 @@ struct FolderView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var pendingScrollItem: ChecklistItem?
-    @State private var showDeleteSelectedConfirm = false
     @State private var showDeleteFolderConfirm = false
     @State private var showTransferSheet = false
     @State private var showCreateSheet = false
@@ -78,27 +77,31 @@ struct FolderView: View {
 
             // Edit Form
             .sheet(isPresented: $showEditSheet) {
-                ChecklistItemFormView(item: folder, parent: folder.parent) { savedItem in
+                ChecklistItemFormView(item: folder, parent: folder.parent) {
+                    savedItem in
                     if savedItem.type == .checklist {
                         dismiss()
                         openItem(savedItem)
                     }
                 }
-                    .navigationTransition(
-                        .zoom(sourceID: "ELLIPSIS", in: namespace)
-                    )
+                .navigationTransition(
+                    .zoom(sourceID: "ELLIPSIS", in: namespace)
+                )
             }
 
             // Transfer Form
             .sheet(isPresented: $showTransferSheet) {
-                TransferItemsFormView(source: folder, selectedIds: selectManager.selectedItemIds)
-                    .environmentObject(selectManager)
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: "TRANSFER",
-                            in: namespace
-                        )
+                TransferItemsFormView(
+                    source: folder,
+                    selectedIds: selectManager.selectedItemIds
+                )
+                .environmentObject(selectManager)
+                .navigationTransition(
+                    .zoom(
+                        sourceID: "TRANSFER",
+                        in: namespace
                     )
+                )
             }
 
             // Scroll to new items.
@@ -168,105 +171,97 @@ struct FolderView: View {
 
     @ToolbarContentBuilder
     private var topRightToolbar: some ToolbarContent {
-        Group {
-            if !selectManager.isSelectMode {
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    Menu {
-                        Button {
-                            showEditSheet = true
-                        } label: {
-                            Text("Edit folder details")
-                            Image(systemName: "pencil")
-                        }
-
-                        Button {
-                            selectManager.toggleSelectMode()
-                        } label: {
-                            Image(systemName: "checkmark.circle")
-                            Text("Select contents")
-                                .fontWeight(.semibold)
-                        }
-                        .disabled(sortedItems.isEmpty)
-
-                        if folder.parent != nil {
-                            Button(role: .destructive) {
-                                showDeleteFolderConfirm = true
-                            } label: {
-                                Text("Delete this folder")
-                                Image(systemName: "trash")
-                            }
-                        }
-
+        if !selectManager.isSelectMode {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Menu {
+                    Button {
+                        showEditSheet = true
                     } label: {
-                        Image(systemName: "ellipsis")
-                    }
-                    .matchedTransitionSource(id: "ELLIPSIS", in: namespace)
-                    .confirmationDialog(
-                        folder.deleteConfirmation,
-                        isPresented: $showDeleteFolderConfirm,
-                        titleVisibility: .visible
-                    ) {
-                        Button("Confirm", role: .destructive) {
-                            deleteEntireFolder()
-                        }
-                    } message: {
-                        Text(folder.deleteWarning)
+                        Text("Edit folder details")
+                        Image(systemName: "pencil")
                     }
 
-                    Button("Add", systemImage: "plus") {
-                        showCreateSheet = true
+                    Button {
+                        selectManager.toggleSelectMode()
+                    } label: {
+                        Image(systemName: "checkmark.circle")
+                        Text("Select contents")
+                            .fontWeight(.semibold)
                     }
-                    .matchedTransitionSource(
-                        id: "ADD_BUTTON",
-                        in: namespace
-                    )
+                    .disabled(sortedItems.isEmpty)
+
+                    if folder.parent != nil {
+                        Button(role: .destructive) {
+                            showDeleteFolderConfirm = true
+                        } label: {
+                            Text("Delete this folder")
+                            Image(systemName: "trash")
+                        }
+                    }
+
+                } label: {
+                    Image(systemName: "ellipsis")
                 }
-            } else {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Delete", systemImage: "trash") {
-                        showDeleteSelectedConfirm = true
+                .matchedTransitionSource(id: "ELLIPSIS", in: namespace)
+                .confirmationDialog(
+                    folder.deleteConfirmation,
+                    isPresented: $showDeleteFolderConfirm,
+                    titleVisibility: .visible
+                ) {
+                    Button("Confirm", role: .destructive) {
+                        deleteEntireFolder()
                     }
-                    .disabled(selectManager.selectedItemIds.isEmpty)
-                    .confirmationDialog(
-                        "Delete selected contents?",
-                        isPresented: $showDeleteSelectedConfirm,
-                        titleVisibility: .visible
-                    ) {
-                        Button("Confirm", role: .destructive) {
-                            withAnimation(.easeInOut) {
-                                modelContext.deleteChecklistItems(
-                                    selectManager.selectedItems
-                                )
-                            }
+                } message: {
+                    Text(folder.deleteWarning)
+                }
 
-                            DispatchQueue.main.asyncAfter(
-                                deadline: .now() + .milliseconds(750)
-                            ) {
-                                selectManager.toggleSelectMode()
-                            }
-                        }
-                    } message: {
-                        Text(
-                            "This action is irreversible."
+                Button("Add", systemImage: "plus") {
+                    showCreateSheet = true
+                }
+                .matchedTransitionSource(
+                    id: "ADD_BUTTON",
+                    in: namespace
+                )
+            }
+        } else {
+            ToolbarItem(placement: .topBarTrailing) {
+                DeleteSelectedButtonView(
+                    itemsLabel: "contents",
+                    disabled: selectManager.selectedItemIds.isEmpty,
+                    warningMessage: nil
+                ) {
+                    withAnimation(.easeInOut) {
+                        modelContext.deleteChecklistItems(
+                            selectManager.selectedItems
                         )
                     }
-                }
 
-                ToolbarSpacer(.fixed, placement: .topBarTrailing)
-
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(
-                        "Transfer",
-                        systemImage: "arrow.forward.folder"
+                    DispatchQueue.main.asyncAfter(
+                        deadline: .now() + .milliseconds(750)
                     ) {
-                        showTransferSheet = true
+                        withAnimation {
+                            selectManager.toggleSelectMode()
+                        }
                     }
-                    .matchedTransitionSource(
-                        id: "TRANSFER",
-                        in: namespace
-                    )
-                    .disabled(!canTranferItems || selectManager.selectedItemIds.isEmpty)
                 }
+            }
+
+            ToolbarSpacer(.fixed, placement: .topBarTrailing)
+
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(
+                    "Transfer",
+                    systemImage: "arrow.forward.folder"
+                ) {
+                    showTransferSheet = true
+                }
+                .matchedTransitionSource(
+                    id: "TRANSFER",
+                    in: namespace
+                )
+                .disabled(
+                    !canTranferItems || selectManager.selectedItemIds.isEmpty
+                )
             }
         }
     }
@@ -283,7 +278,9 @@ struct FolderView: View {
                     )
                 ) {
                     selectManager.toggleItem(item)
-                    updateTransferAvailability(Set(selectManager.selectedItemIds + [folder.id]))
+                    updateTransferAvailability(
+                        Set(selectManager.selectedItemIds + [folder.id])
+                    )
                 }
                 .opacity(selectManager.isSelectMode ? 1 : 0)
                 .frame(width: selectManager.isSelectMode ? 22 : 0)
@@ -331,10 +328,12 @@ struct FolderView: View {
         .onTapGesture {
             if selectManager.isSelectMode {
                 selectManager.toggleItem(item)
-                updateTransferAvailability(Set(selectManager.selectedItemIds + [folder.id]))
+                updateTransferAvailability(
+                    Set(selectManager.selectedItemIds + [folder.id])
+                )
                 return
             }
-            
+
             openItem(item)
         }
         .matchedTransitionSource(

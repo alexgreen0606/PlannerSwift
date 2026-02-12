@@ -6,8 +6,10 @@
 //
 
 import EventKit
+import SwiftUI
 
 extension EKCalendar {
+    
     var iconName: String {
         let title = self.title.lowercased()
 
@@ -21,4 +23,9 @@ extension EKCalendar {
 
         return "calendar"
     }
+    
+    var color: Color {
+        Color(cgColor: self.cgColor)
+    }
+    
 }

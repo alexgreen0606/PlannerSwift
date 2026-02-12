@@ -130,14 +130,15 @@ struct SettingsTabView: View {
                     NavigationLink("Home Location") {
                         LocationSearchView(
                             initialLocation: plannerSettings?.homeLocation,
+                            initialLocationSource: plannerSettings?.homeLocation != nil ? .custom : .current,
                             title: "Edit Home Location",
-                            mode: .stack
-                        ) { location in
+                            mode: .home
+                        ) { source, location in
                             guard let plannerSettings else {
                                 return
                             }
 
-                            plannerSettings.homeLocation = location
+                            plannerSettings.homeLocation = source == .custom ? location : nil
 
                             do {
                                 try modelContext.save()

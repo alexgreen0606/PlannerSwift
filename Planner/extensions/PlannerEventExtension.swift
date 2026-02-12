@@ -9,6 +9,15 @@ import EventKit
 import SwiftUI
 
 extension PlannerEvent {
+    
+    func tint(accentColor: AccentColor) -> Color {
+        if let calendar = self.calendarEvent?.calendar {
+            return Color(cgColor: calendar.cgColor)
+        }
+
+        return accentColor.swiftUIColor
+    }
+    
     @ViewBuilder
     func timeValueView(
         for datestamp: String,
@@ -40,4 +49,5 @@ extension PlannerEvent {
             }
         }
     }
+    
 }

@@ -7,44 +7,58 @@
 
 import Combine
 import MapKit
+import SwiftData
 import SwiftUI
 
 enum LocationSearchMode {
-    case sheet
-    case stack
+    case planner
+    case home
 }
 
 struct LocationSearchView: View {
     let initialLocation: Location?
+    let initialLocationSource: LocationSource
     let title: String
     let mode: LocationSearchMode
-    let onSave: (Location?) -> Void
+    let onSave: (LocationSource, Location?) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+
+    @Query private var plannerSettingsList: [PlannerSettings]
 
     let locationManager = LocationManager.shared
 
     @StateObject private var locationFinder = LocationFinder()
+
+    @State private var selectedLocationSource: LocationSource
     @State private var selectedLocation: Location?
 
     private var topSuggestionId: String? {
         optionId(locationFinder.suggestions.first)
     }
 
+    private var plannerSettings: PlannerSettings? {
+        plannerSettingsList.first
+    }
+
     init(
         initialLocation: Location?,
+        initialLocationSource: LocationSource,
         title: String,
         mode: LocationSearchMode,
-        onSave: @escaping (Location?) -> Void
+        onSave: @escaping (LocationSource, Location?) -> Void
     ) {
         self.initialLocation = initialLocation
+        self.initialLocationSource = initialLocationSource
         self.title = title
         self.mode = mode
         self.onSave = onSave
 
+        _selectedLocationSource = State(initialValue: initialLocationSource)
         _selectedLocation = State(initialValue: initialLocation)
     }
 
@@ -80,6 +94,13 @@ struct LocationSearchView: View {
                 emptyOptionsLabel
             }
 
+            // Load in the planner settings.
+            .task {
+                modelContext.ensurePlannerSettings(
+                    settings: plannerSettingsList
+                )
+            }
+
         }
     }
 
@@ -87,7 +108,7 @@ struct LocationSearchView: View {
 
     @ToolbarContentBuilder
     private var topLeftToolbar: some ToolbarContent {
-        if mode == .sheet {
+        if mode == .planner {
             ToolbarItem(placement: .topBarLeading) {
                 Button(
                     "Back",
@@ -102,7 +123,7 @@ struct LocationSearchView: View {
                     "Back",
                     systemImage: "chevron.left"
                 ) {
-                    onSave(selectedLocation)
+                    onSave(selectedLocationSource, selectedLocation)
                     dismiss()
                 }
             }
@@ -111,10 +132,10 @@ struct LocationSearchView: View {
 
     @ToolbarContentBuilder
     private var topRightToolbar: some ToolbarContent {
-        if mode == .sheet {
+        if mode == .planner {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Confirm", systemImage: "checkmark") {
-                    onSave(selectedLocation)
+                    onSave(selectedLocationSource, selectedLocation)
                     dismiss()
                 }
                 .tint(accentColor.swiftUIColor)
@@ -128,15 +149,21 @@ struct LocationSearchView: View {
         VStack(spacing: 16) {
             selectionIndicator
             inputField
-            currentLocationButton
+
+            HStack {
+                currentLocationButton
+                Spacer()
+                homeLocationButton
+            }
         }
         .padding(.horizontal)
         .animateChange(from: selectedLocation)
+        .animateChange(from: selectedLocationSource)
     }
 
     @ViewBuilder
     private var selectionIndicator: some View {
-        if let selectedLocation {
+        if let selectedLocation, selectedLocationSource == .custom {
             PlannerChipView(
                 title: selectedLocation.name,
                 iconConfig: IconConfig(
@@ -147,6 +174,10 @@ struct LocationSearchView: View {
                 color: nil,
                 onTap: nil
             )
+        } else if let home = plannerSettings?.homeLocation,
+            selectedLocationSource == .home
+        {
+            homeLocationIndicator(home)
         } else {
             currentLocationIndicator
         }
@@ -158,7 +189,7 @@ struct LocationSearchView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 18, height: 18)
-                .foregroundStyle(accentColor.swiftUIColor)
+                .foregroundStyle(Color(uiColor: .secondaryLabel))
 
             VStack(alignment: .leading) {
                 Text("Current Location")
@@ -171,6 +202,30 @@ struct LocationSearchView: View {
                             Color(uiColor: .secondaryLabel)
                         )
                 }
+            }
+
+        }
+        .glassChip(color: nil, onTap: nil, height: 40)
+    }
+
+    @ViewBuilder
+    private func homeLocationIndicator(_ home: Location) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "house")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 18, height: 18)
+                .foregroundStyle(Color(uiColor: .secondaryLabel))
+
+            VStack(alignment: .leading) {
+                Text("Home Location")
+                    .font(.system(size: 14, weight: .medium))
+
+                Text(home.name)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(
+                        Color(uiColor: .secondaryLabel)
+                    )
             }
 
         }
@@ -190,14 +245,30 @@ struct LocationSearchView: View {
 
     @ViewBuilder
     private var currentLocationButton: some View {
-        if selectedLocation != nil {
+        if selectedLocationSource != .current
+            && !(selectedLocationSource == .home
+                && plannerSettings?.homeLocation == nil)
+        {
             AccentButtonView(
-                label: "Use Current Location",
+                label: "Current",
                 systemImage: "location"
             ) {
-                selectedLocation = nil
+                selectedLocationSource = .current
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    @ViewBuilder
+    private var homeLocationButton: some View {
+        if mode != .home, selectedLocationSource != .home,
+            plannerSettings?.homeLocation != nil
+        {
+            AccentButtonView(
+                label: "Home",
+                systemImage: "house"
+            ) {
+                selectedLocationSource = .home
+            }
         }
     }
 
@@ -243,6 +314,8 @@ struct LocationSearchView: View {
                             option
                         )
                 else { return }
+
+                selectedLocationSource = .custom
                 selectedLocation = selectedLocation == city ? nil : city
             }
         }
@@ -253,7 +326,7 @@ struct LocationSearchView: View {
     private func isOptionSelected(_ option: MKLocalSearchCompletion)
         -> Bool
     {
-        guard let selectedLocation else {
+        guard selectedLocationSource == .custom, let selectedLocation else {
             return false
         }
 

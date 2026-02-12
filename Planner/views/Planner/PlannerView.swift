@@ -23,60 +23,16 @@ struct PlannerView: View {
 
     @EnvironmentObject var calendarStore: CalendarStore
     @EnvironmentObject var todaystampManager: TodaystampWatcher
-    @ObservedObject var weatherStore = WeatherStore.shared
 
     @StateObject private var plannerManager = ListManager<PlannerEvent>()
     @State private var calendarEventToggler = CalendarEventToggler()
 
-    @State private var plannerEventSheetContext: EventSheetContext?
-    @Namespace private var sheetAnimation
+    @State private var eventSheetContext: EventSheetContext?
+    @Namespace private var namespace
 
     @State private var calendarPlannerEvents: [PlannerEvent] = []
     @State private var isDeleteCheckedConfirmationOpen = false
-    @State private var isLocationSheetOpen = false
     @State private var pendingScroll: PlannerEventPositionChange?
-
-    // Toggle confirmation config for calendar events.
-    private var toggleEventIconConfig: CustomIconConfig<PlannerEvent>? {
-        switch plannerType {
-        case .pastOrPresent: return nil
-        case .future:
-            return CustomIconConfig(
-                name: "circle.slash",
-                primaryColor: .red,
-                secondaryColor: Color(uiColor: .secondaryLabel),
-                confirmation: ConfirmationConfig(
-                    title: "Delete from calendar?",
-                    message: "Hiding only affects visibility in this planner.",
-                    destructiveKeys: ["Delete"],
-                    needsConfirmation: { event in
-                        event.calendarEvent != nil
-                            && !calendarEventToggler.isPlannerEventChecked(
-                                event
-                            )
-                    },
-                    actions: [
-                        "Hide": { event in
-                            let _ = calendarEventToggler.toggleEvent(event)
-                        }
-                    ],
-                    destructiveActions: [
-                        "Delete": { event in
-                            guard let calEvent = event.calendarEvent else {
-                                return
-                            }
-
-                            calendarStore.delete(event: calEvent)
-
-                            reloadCalendar()
-                        }
-                    ]
-                )
-            )
-        }
-    }
-
-    // MARK: - Swift Data
 
     private var calendarSettings: CalendarSettings? {
         calendarSettingsList.first
@@ -85,8 +41,6 @@ struct PlannerView: View {
     private var planner: Planner? {
         planners.first
     }
-
-    // MARK: - Helper Variables
 
     private var date: Date {
         datestamp.date ?? Date()
@@ -113,6 +67,23 @@ struct PlannerView: View {
             .filter {
                 calendarEventToggler.isPlannerEventChecked($0)
             }
+    }
+
+    private var visibleEvents: [PlannerEvent] {
+        var allVisibleItems = sortedOpenPlans
+
+        if planner?.showCompleted == true {
+            allVisibleItems.append(
+                contentsOf: sortedCheckedPlans
+            )
+        }
+
+        return allVisibleItems
+    }
+
+    private var isAllSelected: Bool {
+        plannerManager.selectedItemIds.count == visibleEvents.count
+            && !visibleEvents.isEmpty
     }
 
     // MARK: - UI Lists
@@ -153,11 +124,11 @@ struct PlannerView: View {
             .sorted { $0.sortIndex < $1.sortIndex }
     }
 
-    // Set the query to find this date's planner.
     init(datestamp: String, closePlanner: @escaping () -> Void) {
         self.datestamp = datestamp
         self.closePlanner = closePlanner
 
+        // Set the query to find this date's planner.
         _planners = Query(
             filter: #Predicate<Planner> {
                 $0.datestamp == datestamp
@@ -168,100 +139,22 @@ struct PlannerView: View {
     var body: some View {
         NavigationStack {
             ScrollViewReader { proxy in
-                SortableListView<
-                    PlannerEvent, AnyView, AnyView, AnyView
-                >(
+                SortableListView(
                     uncheckedItems: sortedOpenPlans,
                     checkedItems: sortedCheckedPlans,
                     showChecked: showChecked,
-                    floatingInfo: AnyView(
-                        Group {
-                            if let planner {
-                                PlannerChipSpreadView(
-                                    planner: planner,
-                                    iconMap: calendarSettings?.iconMap ?? [:],
-                                    animation: sheetAnimation,
-                                    openCalendarEventSheet: { calEvent in
-                                        plannerEventSheetContext =
-                                            EventSheetContext(
-                                                plannerEvent: nil,
-                                                calendarEvent: calEvent
-                                            )
-                                    },
-                                    openLocationSheet: {
-                                        isLocationSheetOpen = true
-                                    }
-                                )
-                            } else {
-                                EmptyView()
-                            }
-                        }
-                    ),
+                    floatingInfo: chipSpread,
                     customToggleConfig: toggleEventIconConfig,
                     checkedHeader: plannerType.checkedHeader,
                     checkedFooter: plannerType.getCheckedFooter(for: datestamp),
                     emptyUncheckedLabel: "No plans",
                     emptyCheckedLabel: plannerType.emptyCheckedLabel,
-                    animation: sheetAnimation,
-                    tint: { event in
-                        if let calendar = event.calendarEvent?.calendar {
-                            return Color(cgColor: calendar.cgColor)
-                        }
-
-                        return accentColor.swiftUIColor
-                    },
+                    namespace: namespace,
+                    tint: eventTint,
                     toolbarIcons: ["clock"],
-                    tapToolbar: { icon, event in
-                        plannerEventSheetContext = EventSheetContext(
-                            plannerEvent: event,
-                            calendarEvent: nil
-                        )
-                    },
-                    startAdornment: { event in
-                        if let calendarEvent = event.calendarEvent,
-                            let calendar = calendarEvent.calendar
-                        {
-                            AnyView(
-                                Image(
-                                    systemName:
-                                        calendarSettings?.iconMap[
-                                            calendar.calendarIdentifier
-                                        ] ?? calendar.iconName
-                                )
-                                .foregroundStyle(
-                                    Color(cgColor: calendar.cgColor)
-                                )
-                                .padding(.trailing, 6)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    plannerEventSheetContext =
-                                        EventSheetContext(
-                                            plannerEvent: event,
-                                            calendarEvent: nil
-                                        )
-                                }
-                            )
-                        } else {
-                            AnyView(
-                                EmptyView()
-                            )
-                        }
-                    },
-                    endAdornment: { event in
-                        AnyView(
-                            event.timeValueView(
-                                for: datestamp,
-                                openSheet: { event in
-                                    plannerEventSheetContext =
-                                        EventSheetContext(
-                                            plannerEvent: event,
-                                            calendarEvent: nil
-                                        )
-                                },
-                                accentColor: accentColor.swiftUIColor
-                            )
-                        )
-                    },
+                    tapToolbar: handleToolbarTap,
+                    startAdornment: startAdornment,
+                    endAdornment: endAdornment,
                     proxy: proxy,
                     createItem: createEvent,
                     handleTitleChange: handleEventTitleChange,
@@ -270,60 +163,11 @@ struct PlannerView: View {
                 )
                 .navigationTitle(date.dynamicHeader)
                 .navigationSubtitle(date.dynamicSubheader)
+                .environmentObject(plannerManager)
                 .toolbar {
                     topLeftToolbar
                     topRightToolbar
                     bottomToolbar(proxy)
-                }
-
-                // Event Sheet
-                .sheet(item: $plannerEventSheetContext) { context in
-                    EventFormView(
-                        plannerEvent: context.plannerEvent,
-                        calendarEvent: context.calendarEvent
-                    ) { change in
-                        pendingScroll = change
-                    }
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: context.id,
-                            in: sheetAnimation
-                        )
-                    )
-                }
-
-                // Location Sheet
-                .sheet(isPresented: $isLocationSheetOpen) {
-                    if let planner {
-                        LocationSearchView(
-                            initialLocation: planner.location,
-                            title: "Edit Location",
-                            mode: .sheet
-                        ) { location in
-                            planner.location = location
-
-                            do {
-                                try modelContext.save()
-                            } catch {
-                                assertionFailure(
-                                    "Failed to save location: \(error)"
-                                )
-                            }
-
-                            Task {
-                                await weatherStore
-                                    .loadWeatherIfNeeded(
-                                        for: planner.location
-                                    )
-                            }
-                        }
-                        .navigationTransition(
-                            .zoom(
-                                sourceID: "LOCATION",
-                                in: sheetAnimation
-                            )
-                        )
-                    }
                 }
 
                 // Slide to modified events once the UI has settled.
@@ -338,45 +182,57 @@ struct PlannerView: View {
                     )
                 }
             }
-            .environmentObject(plannerManager)
-            .task {
-                modelContext.ensurePlanner(
-                    planners: planners,
-                    datestamp: datestamp
-                )
-
-                modelContext.ensureCalendarSettings(
-                    settings: calendarSettingsList
-                )
-
-                calendarStore.ensureCalendarEvents(
-                    for: datestamp,
-                    hiddenCalendarIds: calendarSettings!.hiddenCalendarIds
-                )
-
-                // Setup the planner managers.
-                calendarEventToggler.calendarSettings = calendarSettings
-                plannerManager.setToggleItem(calendarEventToggler.toggleEvent)
-                plannerManager.setStatusChecker(
-                    calendarEventToggler.isPlannerEventChecked
-                )
+        }
+        
+        // Event Sheet
+        .sheet(item: $eventSheetContext) { context in
+            EventFormView(
+                plannerEvent: context.plannerEvent,
+                calendarEvent: context.calendarEvent
+            ) { change in
+                pendingScroll = change
             }
-
-            // Calendar Data
-            .externalData(
-                key: calendarStore.refreshKey,
-                ready: planner != nil && calendarSettings != nil,
-                load: synchronizeCalendarEvents
+            .navigationTransition(
+                .zoom(
+                    sourceID: context.id,
+                    in: namespace
+                )
+            )
+        }
+        
+        // Initialize data.
+        .task {
+            modelContext.ensurePlanner(
+                planners: planners,
+                datestamp: datestamp
             )
 
-            // Weather Data
-            .externalData(key: weatherStore.refreshKey, ready: planner != nil) {
-                Task {
-                    await weatherStore.loadWeatherIfNeeded(
-                        for: planner?.location
-                    )
-                }
-            }
+            modelContext.ensureCalendarSettings(
+                settings: calendarSettingsList
+            )
+
+            calendarStore.ensureCalendarEvents(
+                for: datestamp,
+                hiddenCalendarIds: calendarSettings!.hiddenCalendarIds
+            )
+
+            // Setup the planner managers.
+            calendarEventToggler.calendarSettings = calendarSettings
+            plannerManager.setToggleItem(calendarEventToggler.toggleEvent)
+            plannerManager.setStatusChecker(
+                calendarEventToggler.isPlannerEventChecked
+            )
+        }
+
+        // Up-to-date calendar data.
+        .externalData(
+            key: calendarStore.refreshKey,
+            ready: planner != nil && calendarSettings != nil,
+            load: synchronizeCalendarEvents
+        )
+        
+        .onChange(of: eventSheetContext != nil) { _, newS in
+            print(eventSheetContext?.id)
         }
     }
 
@@ -385,65 +241,104 @@ struct PlannerView: View {
     @ToolbarContentBuilder
     private var topLeftToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
-            Button("Back", systemImage: "chevron.left") {
-                closePlanner()
+            Group {
+                if !plannerManager.isSelectMode {
+                    Button("Back", systemImage: "chevron.left") {
+                        closePlanner()
+                    }
+                } else {
+                    Button("Cancel", systemImage: "xmark") {
+                        plannerManager.toggleSelectMode()
+                    }
+                }
             }
+            .animateChange(from: plannerManager.isSelectMode)
         }
     }
 
     @ToolbarContentBuilder
     private var topRightToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
-            Menu {
-                Button(
-                    action: {
-                        plannerType == .future
-                            ? planner?.showCanceled.toggle()
-                            : planner?.showCompleted.toggle()
-                    },
-                    label: {
-                        Text(
-                            plannerType.getToggleVisibilityLabel(
-                                showChecked
-                            )
+            Group {
+                if !plannerManager.isSelectMode {
+                    Menu {
+                        Button(
+                            action: {
+                                plannerType == .future
+                                    ? planner?.showCanceled.toggle()
+                                    : planner?.showCompleted.toggle()
+                            },
+                            label: {
+                                Text(
+                                    plannerType.getToggleVisibilityLabel(
+                                        showChecked
+                                    )
+                                )
+                                Image(
+                                    systemName: showChecked
+                                        ? "eye.slash" : "eye"
+                                )
+                            }
                         )
-                        Image(
-                            systemName: showChecked
-                                ? "eye.slash" : "eye"
-                        )
-                    }
-                )
 
-                Menu {
-                    Button(role: .destructive) {
-                        isDeleteCheckedConfirmationOpen = true
+                        Button {
+                            plannerManager.toggleSelectMode()
+                        } label: {
+                            Image(systemName: "checkmark.circle")
+                            Text("Select events")
+                                .fontWeight(.semibold)
+                        }
+                        .disabled(visibleEvents.isEmpty)
+
+                        Menu {
+                            Button(role: .destructive) {
+                                isDeleteCheckedConfirmationOpen = true
+                            } label: {
+                                Text(plannerType.deleteCheckedLabel)
+                                Image(systemName: "trash")
+                            }
+                            .disabled(rawCheckedEvents.isEmpty)
+
+                        } label: {
+                            Text("Delete options")
+                            Image(systemName: "trash")
+                        }
+
                     } label: {
-                        Text(plannerType.deleteCheckedLabel)
-                        Image(systemName: "trash")
+                        Image(systemName: "ellipsis")
                     }
-                    .disabled(rawCheckedEvents.isEmpty)
-
-                } label: {
-                    Text("Delete options")
-                    Image(systemName: "trash")
+                    .confirmationDialog(
+                        plannerType.deleteCheckedConfirmationTitle,
+                        isPresented: $isDeleteCheckedConfirmationOpen,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Confirm", role: .destructive) {
+                            deleteAllCheckedEvents()
+                        }
+                    } message: {
+                        Text(
+                            "Calendar events will not be deleted. This action is irreversible."
+                        )
+                    }
+                } else {
+                    Button {
+                        if isAllSelected {
+                            plannerManager.selectedItemIds = []
+                            plannerManager.selectedItems = []
+                        } else {
+                            plannerManager.selectedItems = visibleEvents
+                            plannerManager.selectedItemIds = Set(
+                                visibleEvents.map { $0.id }
+                            )
+                        }
+                    } label: {
+                        Text(isAllSelected ? "Deselect All" : "Select All")
+                            .fontWeight(.semibold)
+                    }
+                    .disabled(visibleEvents.isEmpty)
                 }
-
-            } label: {
-                Image(systemName: "ellipsis")
             }
-            .confirmationDialog(
-                plannerType.deleteCheckedConfirmationTitle,
-                isPresented: $isDeleteCheckedConfirmationOpen,
-                titleVisibility: .visible
-            ) {
-                Button("Confirm", role: .destructive) {
-                    deleteAllCheckedEvents()
-                }
-            } message: {
-                Text(
-                    "Calendar events will not be deleted. This action is irreversible."
-                )
-            }
+            .animateChange(from: plannerManager.isSelectMode)
         }
     }
 
@@ -451,24 +346,169 @@ struct PlannerView: View {
     private func bottomToolbar(_ proxy: ScrollViewProxy) -> some ToolbarContent
     {
         ToolbarItemGroup(placement: .bottomBar) {
-            Spacer()
+            Group {
+                if !plannerManager.isSelectMode {
+                    Spacer()
 
-            Button("Add", systemImage: "plus") {
-                if let last = sortedOpenPlans.last,
-                    last.title.isEmpty
-                {
-                    return
-                }
+                    Button("Add", systemImage: "plus") {
+                        if let last = sortedOpenPlans.last,
+                            last.title.isEmpty
+                        {
+                            return
+                        }
 
-                DispatchQueue.main.async {
-                    withAnimation {
-                        proxy.scrollTo("UNCHECKED", anchor: .bottom)
+                        DispatchQueue.main.async {
+                            withAnimation {
+                                proxy.scrollTo("UNCHECKED", anchor: .bottom)
+                            }
+                        }
+
+                        createEvent(at: sortedOpenPlans.count)
                     }
-                }
+                    .tint(accentColor.swiftUIColor)
+                } else {
+                    DeleteSelectedButtonView(
+                        itemsLabel: "events",
+                        disabled: plannerManager.selectedItemIds.isEmpty,
+                        warningMessage:
+                            "Calendar and planner events will be lost."
+                    ) {
+                        let selectedEvents = plannerManager.selectedItems
 
-                createEvent(at: sortedOpenPlans.count)
+                        var plannerOnlyEvents: [PlannerEvent] = []
+
+                        for event in selectedEvents {
+                            if let calEvent = event.calendarEvent {
+                                // Delete from device calendar.
+                                calendarStore.delete(event: calEvent)
+                            } else {
+                                plannerOnlyEvents.append(event)
+                            }
+                        }
+
+                        // Delete non-calendar events.
+                        if !plannerOnlyEvents.isEmpty {
+                            modelContext.deletePlannerEvents(plannerOnlyEvents)
+                        }
+
+                        reloadCalendar()
+
+                        DispatchQueue.main.asyncAfter(
+                            deadline: .now() + .milliseconds(750)
+                        ) {
+                            withAnimation {
+                                plannerManager.toggleSelectMode()
+                            }
+                        }
+                    }
+
+                    Spacer()
+
+                    Button(
+                        "Transfer",
+                        systemImage: "arrow.forward.folder"
+                    ) {
+                        // TODO: open transfer sheet
+                    }
+                    .disabled(plannerManager.selectedItemIds.isEmpty)
+                    .matchedTransitionSource(
+                        id: "TRANSFER",
+                        in: namespace
+                    )
+                }
             }
-            .tint(accentColor.swiftUIColor)
+            .animateChange(from: plannerManager.isSelectMode)
+        }
+    }
+
+    // MARK: - Chips
+
+    @ViewBuilder
+    private var chipSpread: some View {
+        if let planner {
+            PlannerChipSpreadView(
+                planner: planner,
+                iconMap: calendarSettings?.iconMap ?? [:],
+                namespace: namespace,
+                openCalendarEventSheet: { calEvent in
+                    eventSheetContext =
+                        EventSheetContext(
+                            plannerEvent: nil,
+                            calendarEvent: calEvent
+                        )
+                }
+            )
+        }
+    }
+
+    // MARK: - Event Rows
+
+    @ViewBuilder
+    private func startAdornment(event: PlannerEvent) -> some View {
+        if let calendarEvent = event.calendarEvent,
+            let calendar = calendarEvent.calendar
+        {
+            Image(
+                systemName:
+                    calendarSettings?.iconMap[
+                        calendar.calendarIdentifier
+                    ] ?? calendar.iconName
+            )
+            .foregroundStyle(calendar.color)
+            .padding(.trailing, 6)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                openPlannerEventSheet(event)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func endAdornment(event: PlannerEvent) -> some View {
+        event.timeValueView(
+            for: datestamp,
+            openSheet: openPlannerEventSheet,
+            accentColor: accentColor.swiftUIColor
+        )
+    }
+
+    // Toggle confirmation config for calendar events.
+    private var toggleEventIconConfig: CustomIconConfig<PlannerEvent>? {
+        switch plannerType {
+        case .pastOrPresent: return nil
+        case .future:
+            return CustomIconConfig(
+                name: "circle.slash",
+                primaryColor: .red,
+                secondaryColor: Color(uiColor: .secondaryLabel),
+                confirmation: ConfirmationConfig(
+                    title: "Delete from calendar?",
+                    message: "Hiding only affects visibility in this planner.",
+                    destructiveKeys: ["Delete"],
+                    needsConfirmation: { event in
+                        event.calendarEvent != nil
+                            && !calendarEventToggler.isPlannerEventChecked(
+                                event
+                            )
+                    },
+                    actions: [
+                        "Hide": { event in
+                            let _ = calendarEventToggler.toggleEvent(event)
+                        }
+                    ],
+                    destructiveActions: [
+                        "Delete": { event in
+                            guard let calEvent = event.calendarEvent else {
+                                return
+                            }
+
+                            calendarStore.delete(event: calEvent)
+
+                            reloadCalendar()
+                        }
+                    ]
+                )
+            )
         }
     }
 
@@ -645,13 +685,7 @@ struct PlannerView: View {
     // MARK: - Overflow Actions
 
     private func deleteAllCheckedEvents() {
-        guard let planner else {
-            return
-        }
-
-        modelContext.deleteCheckedPlans(from: planner)
-
-        reloadCalendar()
+        modelContext.deletePlannerEvents(rawCheckedEvents)
     }
 
     // MARK: - Helpers
@@ -693,6 +727,22 @@ struct PlannerView: View {
         }
 
         pendingScroll = nil
+    }
+
+    private func eventTint(event: PlannerEvent) -> Color {
+        event.tint(accentColor: accentColor)
+    }
+
+    private func handleToolbarTap(icon: String, event: PlannerEvent) {
+        openPlannerEventSheet(event)
+    }
+
+    private func openPlannerEventSheet(_ event: PlannerEvent) {
+        eventSheetContext =
+            EventSheetContext(
+                plannerEvent: event,
+                calendarEvent: nil
+            )
     }
 
 }

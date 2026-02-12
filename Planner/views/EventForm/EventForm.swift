@@ -176,41 +176,40 @@ struct EventFormView: View {
         }
     }
 
+    @ViewBuilder
     private func calendarEventForm(for event: EKEvent) -> some View {
-        Group {
-            if event.calendar.allowsContentModifications {
-                NavigationStack {
-                    EditCalendarEventFormView(
-                        event: event,
-                        eventStore: calendarStore.ekEventStore
-                    ) { action, event in
-                        guard action != .canceled else {
-                            dismiss()
-                            return
-                        }
-
-                        if let event, action == .saved {
-                            handleCalendarEventChange(event)
-                            return
-                        }
-
-                        syncLocalCalendarData()
+        if event.calendar.allowsContentModifications {
+            NavigationStack {
+                EditCalendarEventFormView(
+                    event: event,
+                    eventStore: calendarStore.ekEventStore
+                ) { action, event in
+                    guard action != .canceled else {
                         dismiss()
+                        return
                     }
-                    .tint(accentColor.swiftUIColor)
-                    .ignoresSafeArea()
-                    .toolbar {
-                        calendarEventBottomToolbar
+
+                    if let event, action == .saved {
+                        handleCalendarEventChange(event)
+                        return
                     }
+
+                    syncLocalCalendarData()
+                    dismiss()
                 }
-            } else {
-                ViewCalendarEventFormView(event: event)
-                    .tint(accentColor.swiftUIColor)
-                    .ignoresSafeArea()
+                .tint(accentColor.swiftUIColor)
+                .ignoresSafeArea()
+                .toolbar {
+                    calendarEventBottomToolbar
+                }
             }
+        } else {
+            ViewCalendarEventFormView(event: event)
+                .ignoresSafeArea()
         }
     }
 
+    @ToolbarContentBuilder
     private var plannerEventTopRightToolbar: some ToolbarContent {
         ToolbarItem(placement: .confirmationAction) {
             Button("Save", systemImage: "checkmark") {
@@ -221,39 +220,39 @@ struct EventFormView: View {
         }
     }
 
+    @ToolbarContentBuilder
     private var plannerEventBottomToolbar: some ToolbarContent {
-        Group {
-            if !calendarStore.accessDenied {
-                ToolbarItem(placement: .bottomBar) {
-                    AccentButtonView(
-                        label: "Add To Calendar",
-                        systemImage: "calendar.badge.plus"
-                    ) {
+        if !calendarStore.accessDenied {
+            ToolbarItem(placement: .bottomBar) {
+                AccentButtonView(
+                    label: "Add To Calendar",
+                    systemImage: "calendar.badge.plus"
+                ) {
 
-                        // Create a new calendar event to represent the form values.
-                        let event = EKEvent(
-                            eventStore: calendarStore.ekEventStore
-                        )
-                        event.calendar =
-                            calendarStore.ekEventStore
-                            .defaultCalendarForNewEvents
-                        event.title = title
-                        event.startDate = date
-                        event.endDate = Calendar.current.date(
-                            byAdding: .hour,
-                            value: 1,
-                            to: date
-                        )
+                    // Create a new calendar event to represent the form values.
+                    let event = EKEvent(
+                        eventStore: calendarStore.ekEventStore
+                    )
+                    event.calendar =
+                        calendarStore.ekEventStore
+                        .defaultCalendarForNewEvents
+                    event.title = title
+                    event.startDate = date
+                    event.endDate = Calendar.current.date(
+                        byAdding: .hour,
+                        value: 1,
+                        to: date
+                    )
 
-                        draftCalendarEvent = event
-                        selectedDetent = .height(2600)
-                    }
+                    draftCalendarEvent = event
+                    selectedDetent = .height(2600)
                 }
-                .sharedBackgroundVisibility(.hidden)
             }
+            .sharedBackgroundVisibility(.hidden)
         }
     }
 
+    @ToolbarContentBuilder
     private var calendarEventBottomToolbar: some ToolbarContent {
         ToolbarItem(placement: .bottomBar) {
             AccentButtonView(

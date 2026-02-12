@@ -10,7 +10,7 @@ import SwiftData
 import SwiftDate
 
 extension ModelContext {
-    
+
     @MainActor
     func ensurePlanner(
         planners: [Planner],
@@ -51,7 +51,7 @@ extension ModelContext {
             )
         }
     }
-    
+
     @MainActor
     func ensurePlannerSettings(
         settings: [PlannerSettings]
@@ -155,6 +155,24 @@ extension ModelContext {
     }
 
     @MainActor
+    func deletePlannerEvents(
+        _ events: [PlannerEvent]
+    ) {
+
+        for event in events {
+            delete(event)
+        }
+
+        do {
+            try save()
+        } catch {
+            assertionFailure(
+                "Failed to delete plan: \(error)"
+            )
+        }
+    }
+
+    @MainActor
     func synchronize(
         calendarEvents events: [EKEvent],
         into planner: Planner?,
@@ -179,7 +197,7 @@ extension ModelContext {
 
         return calendarPlannerEvents
     }
-    
+
     @MainActor
     func deleteChecklistItems(_ items: [ChecklistItem]) {
         items.forEach { delete($0) }

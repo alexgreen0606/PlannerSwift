@@ -6,8 +6,76 @@
 //
 
 import EventKit
+import SwiftUI
 
 extension Planner {
+
+    func location(settings: PlannerSettings?) -> Location? {
+        if self.locationSource == .custom,
+            let plannerLocation = self.location
+        {
+            return plannerLocation
+        }
+
+        if self.locationSource == .home,
+            let homeLocation = settings?.homeLocation
+        {
+            return homeLocation
+        }
+
+        // Nil uses the device location.
+        return nil
+    }
+
+    func locationLabel(settings: PlannerSettings?, localCityName: String?)
+        -> String?
+    {
+        if self.locationSource == .custom,
+            let plannerLocation = self.location
+        {
+            return plannerLocation.name
+        }
+
+        if self.locationSource == .home,
+            let homeLocation = settings?.homeLocation
+        {
+            return homeLocation.name
+        }
+
+        return localCityName
+    }
+
+    func locationIconConfig(
+        settings: PlannerSettings?,
+        accentColor: AccentColor
+    ) -> IconConfig {
+        if self.locationSource == .custom,
+            self.location != nil
+        {
+            return IconConfig(
+                name: "mappin.and.ellipse",
+                primaryColor: accentColor.swiftUIColor,
+                secondaryColor: Color(uiColor: .secondaryLabel)
+            )
+        }
+
+        if self.locationSource == .home,
+            settings?.homeLocation != nil
+        {
+            return IconConfig(
+                name: "house",
+                primaryColor: Color(uiColor: .secondaryLabel),
+                secondaryColor: nil
+            )
+        }
+
+        return IconConfig(
+            name: "location",
+            primaryColor: Color(uiColor: .secondaryLabel),
+            secondaryColor: nil
+        )
+    }
+
     func synchronizeCalendarEventPositions(
         for calendarEvents: [EKEvent],
         from settings: CalendarSettings
@@ -48,4 +116,5 @@ extension Planner {
 
         return plannerEvents
     }
+
 }

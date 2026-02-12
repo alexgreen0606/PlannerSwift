@@ -24,14 +24,13 @@ struct SortableListView<
     let uncheckedItems: [Item]
     let checkedItems: [Item]
     let showChecked: Bool
-    let disabledItemIds: Set<PersistentIdentifier> = []
     let floatingInfo: FloatingInfo?
     let customToggleConfig: CustomIconConfig<Item>?
     let checkedHeader: String
     let checkedFooter: String?
     let emptyUncheckedLabel: String
     let emptyCheckedLabel: String
-    let animation: Namespace.ID?
+    let namespace: Namespace.ID?
     let tint: (_ item: Item) -> Color
     let toolbarIcons: [String]
     let tapToolbar: ((String, Item) -> Void)?
@@ -64,15 +63,12 @@ struct SortableListView<
                         item: item,
                         tint: tint,
                         showChecked: showChecked,
-                        isSelectDisabled: disabledItemIds.contains(
-                            item.id
-                        ),
                         showUpperDivider: item.id == uncheckedItems.first?.id,
                         toolbarIcons: toolbarIcons,
                         tapToolbar: handleToolbarPress,
                         startAdornment: startAdornment,
                         endAdornment: endAdornment,
-                        animation: animation,
+                        namespace: namespace,
                         customToggleConfig: customToggleConfig,
                         onCreateItem: createItem,
                         onTitleChange: handleTitleChange,
@@ -108,22 +104,18 @@ struct SortableListView<
                             item: item,
                             tint: tint,
                             showChecked: true,
-                            isSelectDisabled: disabledItemIds.contains(
-                                item.id
-                            ),
                             showUpperDivider: item.id
                                 == checkedItems.first?.id,
                             toolbarIcons: toolbarIcons,
                             tapToolbar: { _, _ in },
                             startAdornment: startAdornment,
                             endAdornment: endAdornment,
-                            animation: animation,
+                            namespace: namespace,
                             customToggleConfig: customToggleConfig,
                             onCreateItem: { _, _ in },
                             onTitleChange: { _ in },
                             isItemChecked: isItemChecked
                         )
-                        .id(item.id)
                     }
                 } header: {
                     Text(
@@ -157,7 +149,6 @@ struct SortableListView<
         // Slide to checked items when the user marks them visible.
         .onChange(of: showChecked) { _, newShowChecked in
             if newShowChecked {
-                
                 DispatchQueue.main.async {
                     withAnimation {
                         proxy.scrollTo("UNCHECKED", anchor: .top)

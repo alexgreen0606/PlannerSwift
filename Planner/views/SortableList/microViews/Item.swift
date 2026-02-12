@@ -13,13 +13,12 @@ struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View
     @Bindable var item: Item
     let tint: (_ item: Item) -> Color
     let showChecked: Bool
-    let isSelectDisabled: Bool
     let showUpperDivider: Bool
     let toolbarIcons: [String]
     let tapToolbar: ((String, Item) -> Void)?
     let startAdornment: ((_ item: Item) -> StartAdornment)?
     let endAdornment: ((_ item: Item) -> EndAdornment)?
-    let animation: Namespace.ID?
+    let namespace: Namespace.ID?
     let customToggleConfig: CustomIconConfig<Item>?
     let onCreateItem:
         (_ baseId: PersistentIdentifier?, _ offset: Int) ->
@@ -105,9 +104,9 @@ struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View
                 }
             }
 
-        if let animation {
+        if let namespace {
             row
-                .matchedTransitionSource(id: "\(item.id)", in: animation)
+                .matchedTransitionSource(id: "\(item.id)", in: namespace)
         } else {
             row
         }
@@ -128,7 +127,6 @@ struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View
             item: item,
             tint: tintColor,
             isChecked: isChecked,
-            isDisabled: isSelectDisabled,
             opacity: opacity,
             customIconConfig: customToggleConfig
         ) {

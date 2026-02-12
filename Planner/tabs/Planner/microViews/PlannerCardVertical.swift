@@ -27,6 +27,7 @@ struct PlannerCardVerticalView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]
     @Query private var calendarSettingsList: [CalendarSettings]
+    @Query private var plannerSettingsList: [PlannerSettings]
 
     @ObservedObject var weatherStore = WeatherStore.shared
     @EnvironmentObject var calendarStore: CalendarStore
@@ -35,6 +36,10 @@ struct PlannerCardVerticalView: View {
 
     private var calendarSettings: CalendarSettings? {
         calendarSettingsList.first
+    }
+
+    private var plannerSettings: PlannerSettings? {
+        plannerSettingsList.first
     }
 
     private var planner: Planner? {
@@ -52,12 +57,18 @@ struct PlannerCardVerticalView: View {
     // MARK: - Weather Data
 
     private var weatherData: DayWeather? {
-        weatherStore.getWeather(for: datestamp, at: planner?.location)
+        weatherStore.getWeather(for: datestamp, at: location)
     }
 
-    private var location: String? {
-        planner?.location?.name
-            ?? weatherStore.locationManager.cityName
+    private var location: Location? {
+        planner?.location(settings: plannerSettings)
+    }
+
+    private var locationLabel: String? {
+        planner?.locationLabel(
+            settings: plannerSettings,
+            localCityName: weatherStore.locationManager.cityName
+        )
     }
 
     // MARK: - Event Data
@@ -211,6 +222,10 @@ struct PlannerCardVerticalView: View {
             modelContext.ensureCalendarSettings(
                 settings: calendarSettingsList
             )
+
+            modelContext.ensurePlannerSettings(
+                settings: plannerSettingsList
+            )
         }
 
         // Calendar Data Tracking
@@ -221,9 +236,12 @@ struct PlannerCardVerticalView: View {
         )
 
         // Weather Data Tracking
-        .externalData(key: weatherStore.refreshKey, ready: planner != nil) {
+        .externalData(
+            key: weatherStore.refreshKey,
+            ready: planner != nil && plannerSettings != nil
+        ) {
             Task {
-                await weatherStore.loadWeatherIfNeeded(for: planner?.location)
+                await weatherStore.loadWeatherIfNeeded(for: location)
             }
         }
     }
@@ -259,7 +277,7 @@ struct PlannerCardVerticalView: View {
     @ViewBuilder
     private var weatherInfo: some View {
         HStack {
-            if let weatherData, let location {
+            if let weatherData, let locationLabel {
                 Image(systemName: weatherData.symbolName)
                     .symbolVariant(isDarkMode ? .fill : .none)
                     .symbolRenderingMode(isDarkMode ? .multicolor : .monochrome)
@@ -270,7 +288,7 @@ struct PlannerCardVerticalView: View {
                         .font(.system(size: 12, design: .rounded))
 
                     HStack {
-                        Text(location)
+                        Text(locationLabel)
                             .foregroundStyle(
                                 Color(uiColor: .secondaryLabel)
                             )

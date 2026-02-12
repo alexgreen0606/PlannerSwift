@@ -6,6 +6,7 @@
 //
 
 import EventKit
+import SwiftData
 import SwiftDate
 import SwiftUI
 import WeatherKit
@@ -14,9 +15,8 @@ import WrappingHStack
 struct PlannerChipSpreadView: View {
     let planner: Planner
     let iconMap: [String: String]
-    var animation: Namespace.ID
+    var namespace: Namespace.ID
     let openCalendarEventSheet: (EKEvent) -> Void
-    let openLocationSheet: () -> Void
     let weatherUnit: UnitTemperature =
         Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
 
@@ -27,11 +27,20 @@ struct PlannerChipSpreadView: View {
         .system
 
     @Environment(\.colorScheme) private var systemColorScheme
+    @Environment(\.modelContext) private var modelContext
+
+    @Query private var plannerSettingsList: [PlannerSettings]
 
     @EnvironmentObject var calendarStore: CalendarStore
     @ObservedObject var weatherStore = WeatherStore.shared
 
-    var isDarkMode: Bool {
+    @State private var isLocationSheetOpen = false
+
+    private var plannerSettings: PlannerSettings? {
+        plannerSettingsList.first
+    }
+
+    private var isDarkMode: Bool {
         switch appColorScheme {
         case .dark: return true
         case .light: return false
@@ -43,13 +52,26 @@ struct PlannerChipSpreadView: View {
         planner.datestamp.date?.countdown
     }
 
+    private var location: Location? {
+        planner.location(settings: plannerSettings)
+    }
+
     private var locationLabel: String? {
-        planner.location?.name
-            ?? weatherStore.locationManager.cityName
+        planner.locationLabel(
+            settings: plannerSettings,
+            localCityName: weatherStore.locationManager.cityName
+        )
+    }
+
+    private var locationIconConfig: IconConfig {
+        planner.locationIconConfig(
+            settings: plannerSettings,
+            accentColor: accentColor
+        )
     }
 
     private var weatherData: DayWeather? {
-        weatherStore.getWeather(for: planner.datestamp, at: planner.location)
+        weatherStore.getWeather(for: planner.datestamp, at: location)
     }
 
     private var allDayEvents: [EKEvent] {
@@ -72,6 +94,58 @@ struct PlannerChipSpreadView: View {
         .animateChange(from: weatherData)
         .animateChange(from: locationLabel)
         .animateChange(from: allDayEvents)
+
+        // Location Sheet
+        .sheet(isPresented: $isLocationSheetOpen) {
+            LocationSearchView(
+                initialLocation: planner.location,
+                initialLocationSource: planner.locationSource,
+                title: "Edit Location",
+                mode: .planner
+            ) { source, location in
+
+                planner.locationSource = source
+                planner.location = location
+
+                do {
+                    try modelContext.save()
+                } catch {
+                    assertionFailure(
+                        "Failed to save location: \(error)"
+                    )
+                }
+
+                Task {
+                    await weatherStore
+                        .loadWeatherIfNeeded(
+                            for: location
+                        )
+                }
+            }
+            .navigationTransition(
+                .zoom(
+                    sourceID: "LOCATION",
+                    in: namespace
+                )
+            )
+        }
+
+        // Load in the planner settings.
+        .task {
+            modelContext.ensurePlannerSettings(settings: plannerSettingsList)
+        }
+
+        // Weather Data
+        .externalData(
+            key: weatherStore.refreshKey,
+            ready: plannerSettings != nil
+        ) {
+            Task {
+                await weatherStore.loadWeatherIfNeeded(
+                    for: location
+                )
+            }
+        }
     }
 
     // MARK: - Chips
@@ -93,18 +167,15 @@ struct PlannerChipSpreadView: View {
         if let locationLabel {
             PlannerChipView(
                 title: locationLabel,
-                iconConfig: IconConfig(
-                    name: planner.location != nil
-                        ? "mappin.and.ellipse" : "location",
-                    primaryColor: accentColor.swiftUIColor,
-                    secondaryColor: Color(uiColor: .secondaryLabel)
-                ),
+                iconConfig: locationIconConfig,
                 color: nil,
-                onTap: openLocationSheet
+                onTap: {
+                    isLocationSheetOpen = true
+                }
             )
             .matchedTransitionSource(
                 id: "LOCATION",
-                in: animation
+                in: namespace
             )
         }
     }
@@ -174,7 +245,7 @@ struct PlannerChipSpreadView: View {
         }
         .matchedTransitionSource(
             id: event.transitionId,
-            in: animation
+            in: namespace
         )
     }
 

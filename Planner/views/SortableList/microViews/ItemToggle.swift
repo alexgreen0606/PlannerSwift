@@ -28,7 +28,6 @@ struct ItemToggleView<Item: ListItem>: View {
     let item: Item
     let tint: Color
     let isChecked: Bool
-    let isDisabled: Bool
     let opacity: Double
     let customIconConfig: CustomIconConfig<Item>?
     let onToggleChecked: () -> Void
@@ -45,22 +44,18 @@ struct ItemToggleView<Item: ListItem>: View {
     }
 
     private var primaryColor: Color {
-        isDisabled
-            ? Color(uiColor: .tertiaryLabel)
-            : !isChecked
-                ? Color(uiColor: .secondaryLabel)
-                : listManager.isSelectMode
-                    ? accentColor.swiftUIColor
-                    : customIconConfig?.primaryColor ?? tint
+        !isChecked
+            ? Color(uiColor: .secondaryLabel)
+            : listManager.isSelectMode
+                ? accentColor.swiftUIColor
+                : customIconConfig?.primaryColor ?? tint
     }
 
     private var secondaryColor: Color {
-        isDisabled
-            ? Color(uiColor: .tertiaryLabel)
-            : !isChecked
-                ? Color(uiColor: .secondaryLabel)
-                : customIconConfig?.secondaryColor
-                    ?? Color(uiColor: .secondaryLabel)
+        !isChecked
+            ? Color(uiColor: .secondaryLabel)
+            : customIconConfig?.secondaryColor
+                ?? Color(uiColor: .secondaryLabel)
     }
 
     private var needsConfirmation: Bool {

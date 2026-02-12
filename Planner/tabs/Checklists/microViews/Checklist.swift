@@ -11,7 +11,7 @@ import SwiftUI
 struct ChecklistView: View {
     private let checklistId: PersistentIdentifier
     private let canTransferItems: Bool
-    
+
     // Can pass a folder to navigate into (passes itself when it is transformed into a folder).
     private let closeChecklist: (ChecklistItem?) -> Void
 
@@ -21,7 +21,6 @@ struct ChecklistView: View {
 
     @State private var showDeleteCompletedConfirm = false
     @State private var showDeleteChecklistConfirm = false
-    @State private var showDeleteSelectedConfirm = false
     @State private var isTransferSheetOpen = false
     @State private var isEditFormOpen = false
 
@@ -111,7 +110,7 @@ struct ChecklistView: View {
                     checkedFooter: nil,
                     emptyUncheckedLabel: "No items",
                     emptyCheckedLabel: "No completed items",
-                    animation: nil,
+                    namespace: nil,
                     tint: { _ in checklist?.color.swiftUIColor ?? .blue },
                     toolbarIcons: [],
                     tapToolbar: { _, _ in },
@@ -137,29 +136,33 @@ struct ChecklistView: View {
         // Edit Form
         .sheet(isPresented: $isEditFormOpen) {
             if let checklist, let parent = checklist.parent {
-                ChecklistItemFormView(item: checklist, parent: parent) { savedList in
-                    
+                ChecklistItemFormView(item: checklist, parent: parent) {
+                    savedList in
+
                     // TODO: if saved list is now a folder, close this and open the folder
                     if savedList.type == .folder {
                         closeChecklist(savedList)
                     }
                 }
-                    .navigationTransition(
-                        .zoom(sourceID: "ELLIPSIS", in: sheetAnimation)
-                    )
+                .navigationTransition(
+                    .zoom(sourceID: "ELLIPSIS", in: sheetAnimation)
+                )
             }
         }
-        
+
         // Transfer Form
         .sheet(isPresented: $isTransferSheetOpen) {
             if let checklist {
-                TransferItemsFormView(source: checklist, selectedIds: listManager.selectedItemIds)
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: "TRANSFER",
-                            in: sheetAnimation
-                        )
+                TransferItemsFormView(
+                    source: checklist,
+                    selectedIds: listManager.selectedItemIds
+                )
+                .navigationTransition(
+                    .zoom(
+                        sourceID: "TRANSFER",
+                        in: sheetAnimation
                     )
+                )
             }
         }
     }
@@ -168,113 +171,122 @@ struct ChecklistView: View {
 
     private var topLeftToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
-            if !listManager.isSelectMode {
-                Button(
-                    "Back",
-                    systemImage: "chevron.left"
-                ) {
-                    closeChecklist(nil)
+            Group {
+                if !listManager.isSelectMode {
+                    Button(
+                        "Back",
+                        systemImage: "chevron.left"
+                    ) {
+                        closeChecklist(nil)
+                    }
+                }
+                Button("Cancel", systemImage: "xmark") {
+                    withAnimation {
+                        listManager.toggleSelectMode()
+                    }
                 }
             }
-            Button("Cancel", systemImage: "xmark") {
-                listManager.toggleSelectMode()
-            }
+            .animateChange(from: listManager.isSelectMode)
         }
     }
 
     @ToolbarContentBuilder
     private var topRightToolbar: some ToolbarContent {
-        if !listManager.isSelectMode {
-            ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    showCompletedToggle
+        ToolbarItem(placement: .topBarTrailing) {
+            Group {
+                if !listManager.isSelectMode {
+                    Menu {
+                        showCompletedToggle
 
-                    Button {
-                        isEditFormOpen = true
+                        Button {
+                            isEditFormOpen = true
+                        } label: {
+                            Text("Edit checklist details")
+                            Image(systemName: "pencil")
+                        }
+
+                        Button {
+                            withAnimation {
+                                listManager.toggleSelectMode()
+                            }
+                        } label: {
+                            Image(systemName: "checkmark.circle")
+                            Text("Select items")
+                                .fontWeight(.semibold)
+                        }
+                        .disabled(visibleItems.isEmpty)
+
+                        Menu {
+                            Button(role: .destructive) {
+                                showDeleteCompletedConfirm = true
+                            } label: {
+                                Text("Delete completed items")
+                            }
+                            .disabled(!hasCheckedItems)
+
+                            Button(role: .destructive) {
+                                showDeleteChecklistConfirm = true
+                            } label: {
+                                Text("Delete this list")
+                            }
+                        } label: {
+                            Label(
+                                "Delete options",
+                                systemImage: "trash"
+                            )
+                        }
+
                     } label: {
-                        Text("Edit checklist details")
-                        Image(systemName: "pencil")
+                        Image(systemName: "ellipsis")
                     }
-
+                    .matchedTransitionSource(
+                        id: "ELLIPSIS",
+                        in: sheetAnimation
+                    )
+                    .confirmationDialog(
+                        checklist?.deleteConfirmation ?? "",
+                        isPresented: $showDeleteChecklistConfirm,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Confirm", role: .destructive) {
+                            deleteEntireList()
+                        }
+                    } message: {
+                        Text(
+                            checklist?.deleteWarning ?? ""
+                        )
+                    }
+                    .confirmationDialog(
+                        "Delete completed items from this list?",
+                        isPresented: $showDeleteCompletedConfirm,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Confirm", role: .destructive) {
+                            deleteAllCompletedItems()
+                        }
+                    } message: {
+                        Text("This action is irreversible.")
+                    }
+                } else {
                     Button {
-                        listManager.toggleSelectMode()
+                        if isAllSelected {
+                            listManager.selectedItemIds = []
+                            listManager.selectedItems = []
+                        } else {
+                            listManager.selectedItems = visibleItems
+                            listManager.selectedItemIds = Set(
+                                visibleItems.map { $0.id }
+                            )
+                        }
                     } label: {
-                        Image(systemName: "checkmark.circle")
-                        Text("Select items")
+                        Text(isAllSelected ? "Deselect All" : "Select All")
                             .fontWeight(.semibold)
                     }
                     .disabled(visibleItems.isEmpty)
-
-                    Menu {
-                        Button(role: .destructive) {
-                            showDeleteCompletedConfirm = true
-                        } label: {
-                            Text("Delete completed items")
-                        }
-                        .disabled(!hasCheckedItems)
-
-                        Button(role: .destructive) {
-                            showDeleteChecklistConfirm = true
-                        } label: {
-                            Text("Delete this list")
-                        }
-                    } label: {
-                        Label(
-                            "Delete options",
-                            systemImage: "trash"
-                        )
-                    }
-
-                } label: {
-                    Image(systemName: "ellipsis")
-                }
-                .matchedTransitionSource(
-                    id: "ELLIPSIS",
-                    in: sheetAnimation
-                )
-                .confirmationDialog(
-                    checklist?.deleteConfirmation ?? "",
-                    isPresented: $showDeleteChecklistConfirm,
-                    titleVisibility: .visible
-                ) {
-                    Button("Confirm", role: .destructive) {
-                        deleteEntireList()
-                    }
-                } message: {
-                    Text(
-                        checklist?.deleteWarning ?? ""
-                    )
-                }
-                .confirmationDialog(
-                    "Delete completed items from this list?",
-                    isPresented: $showDeleteCompletedConfirm,
-                    titleVisibility: .visible
-                ) {
-                    Button("Confirm", role: .destructive) {
-                        deleteAllCompletedItems()
-                    }
-                } message: {
-                    Text("This action is irreversible.")
+                    .animateChange(from: isAllSelected)
                 }
             }
-        } else {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    if isAllSelected {
-                        listManager.selectedItemIds = []
-                        listManager.selectedItems = []
-                    } else {
-                        listManager.selectedItems = visibleItems
-                        listManager.selectedItemIds = Set(
-                            visibleItems.map { $0.id }
-                        )
-                    }
-                } label: {
-                    Text(isAllSelected ? "Deselect All" : "Select All")
-                        .fontWeight(.semibold)
-                }
-                .disabled(visibleItems.isEmpty)
-            }
+            .animateChange(from: listManager.isSelectMode)
         }
     }
 
@@ -283,33 +295,29 @@ struct ChecklistView: View {
         _ proxy: ScrollViewProxy
     ) -> some ToolbarContent {
         ToolbarItemGroup(placement: .bottomBar) {
-            if !listManager.isSelectMode {
-                Spacer()
+            Group {
+                if !listManager.isSelectMode {
+                    Spacer()
 
-                Button("Add", systemImage: "plus") {
-                    createItem(at: sortedUncheckedItems.count)
+                    Button("Add", systemImage: "plus") {
+                        createItem(at: sortedUncheckedItems.count)
 
-                    DispatchQueue.main.async {
-                        withAnimation {
-                            proxy.scrollTo(
-                                "UNCHECKED",
-                                anchor: .top
-                            )
+                        DispatchQueue.main.async {
+                            withAnimation {
+                                proxy.scrollTo(
+                                    "UNCHECKED",
+                                    anchor: .top
+                                )
+                            }
                         }
                     }
-                }
-                .tint(checklist?.color.swiftUIColor ?? .blue)
-            } else {
-                Button("Delete", systemImage: "trash") {
-                    showDeleteSelectedConfirm = true
-                }
-                .disabled(listManager.selectedItemIds.isEmpty)
-                .confirmationDialog(
-                    "Delete selected items?",
-                    isPresented: $showDeleteSelectedConfirm,
-                    titleVisibility: .visible
-                ) {
-                    Button("Confirm", role: .destructive) {
+                    .tint(checklist?.color.swiftUIColor ?? .blue)
+                } else {
+                    DeleteSelectedButtonView(
+                        itemsLabel: "items",
+                        disabled: listManager.selectedItemIds.isEmpty,
+                        warningMessage: nil
+                    ) {
                         modelContext.deleteChecklistItems(
                             listManager.selectedItems
                         )
@@ -320,26 +328,25 @@ struct ChecklistView: View {
                             listManager.toggleSelectMode()
                         }
                     }
-                } message: {
-                    Text(
-                        "This action is irreversible."
+
+                    Spacer()
+
+                    Button(
+                        "Transfer",
+                        systemImage: "arrow.forward.folder"
+                    ) {
+                        isTransferSheetOpen = true
+                    }
+                    .disabled(
+                        !canTransferItems || listManager.selectedItemIds.isEmpty
+                    )
+                    .matchedTransitionSource(
+                        id: "TRANSFER",
+                        in: sheetAnimation
                     )
                 }
-
-                Spacer()
-
-                Button(
-                    "Transfer",
-                    systemImage: "arrow.forward.folder"
-                ) {
-                    isTransferSheetOpen = true
-                }
-                .disabled(!canTransferItems || listManager.selectedItemIds.isEmpty)
-                .matchedTransitionSource(
-                    id: "TRANSFER",
-                    in: sheetAnimation
-                )
             }
+            .animateChange(from: listManager.isSelectMode)
         }
     }
 
