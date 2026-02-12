@@ -88,7 +88,10 @@ struct TransferItemsFormView: View {
             : source.parent!
 
         // Step backwards through folders until you find one with a selectable item.
-        while !fp.hasChildType(source.type, excluding: Set(selectedIds + [source.id])),
+        while !fp.hasChildType(
+            source.type,
+            excluding: Set(selectedIds + [source.id])
+        ),
             let parent = fp.parent
         {
             fp = parent
@@ -103,27 +106,26 @@ struct TransferItemsFormView: View {
 
     var body: some View {
         NavigationStack {
-                folderContent
-            .navigationTitle(
-                "Transfer \(destinationType.childrenLabel.capitalizedFirst)"
-            )
-            .navigationBarTitleDisplayMode(.inline)
-            .background(Color(.systemBackground))
-            .toolbar {
-                topRightToolbar
-                topLeftToolbar(currentFolder)
-            }
-            .safeAreaInset(edge: .top) {
-                transferIndicator
-            }
+            folderContent
+                .navigationTitle(
+                    "Transfer \(destinationType.childrenLabel.capitalizedFirst)"
+                )
+                .navigationBarTitleDisplayMode(.inline)
+                .background(Color(.systemBackground))
+                .toolbar {
+                    topRightToolbar
+                    topLeftToolbar
+                }
+                .safeAreaInset(edge: .top) {
+                    transferIndicator
+                }
         }
     }
 
     // MARK: - Toolbars
 
     @ToolbarContentBuilder
-    private func topLeftToolbar(_ folder: ChecklistItem) -> some ToolbarContent
-    {
+    private var topLeftToolbar: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
             Button("Cancel", systemImage: "xmark") {
                 dismiss()
@@ -160,7 +162,7 @@ struct TransferItemsFormView: View {
     // MARK: - Transfer Indicator
 
     private var transferIndicator: some View {
-        HStack {
+        HStack(spacing: 16) {
             sourceChip
 
             if let destination {
@@ -179,44 +181,27 @@ struct TransferItemsFormView: View {
     }
 
     private var sourceChip: some View {
-        VStack(spacing: 2) {
-            Text(transferCount)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(Color(uiColor: .label))
-
-            HStack(spacing: 4) {
-                Image(systemName: source.type.iconName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 8, height: 8)
-                    .foregroundStyle(
-                        source.color.swiftUIColor.opacity(0.8)
-                    )
-
-                Text(source.title)
-                    .font(.system(size: 8, weight: .medium))
-                    .foregroundStyle(
-                        Color(uiColor: .secondaryLabel)
-                    )
-            }
-        }
+        TransferSourceIndicatorView(
+            title: transferCount,
+            subtitle: source.title,
+            iconConfig: IconConfig(
+                name: source.type.iconName,
+                primaryColor: source.color.swiftUIColor.opacity(0.8),
+                secondaryColor: nil
+            )
+        )
         .glassChip(color: nil, onTap: nil, height: 36)
     }
 
     private func destinationChip(_ selectedItem: ChecklistItem) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: selectedItem.type.iconName)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 16, height: 16)
-                .foregroundStyle(
-                    selectedItem.color.swiftUIColor
-                )
-
-            Text(selectedItem.title)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(Color(uiColor: .label))
-        }
+        TransferDestinationIndicatorView(
+            title: selectedItem.title,
+            iconConfig: IconConfig(
+                name: selectedItem.type.iconName,
+                primaryColor: selectedItem.color.swiftUIColor,
+                secondaryColor: nil
+            )
+        )
         .glassChip(color: nil, onTap: nil, height: 40)
     }
 

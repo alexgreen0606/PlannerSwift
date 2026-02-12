@@ -49,6 +49,7 @@ struct PlannerView: View {
 
     @State private var calendarPlannerEvents: [PlannerEvent] = []
     @State private var isDeleteCheckedConfirmationOpen = false
+    @State private var showTransferSheet = false
     @State private var pendingScroll: PlannerEventPositionChange?
 
     private var calendarSettings: CalendarSettings? {
@@ -180,11 +181,41 @@ struct PlannerView: View {
                 )
                 .navigationTitle(date.dynamicHeader)
                 .navigationSubtitle(date.dynamicSubheader)
-                .environmentObject(plannerManager)
                 .toolbar {
                     topLeftToolbar
                     topRightToolbar
                     bottomToolbar(proxy)
+                }
+                
+                // Event Sheet
+                .sheet(item: $eventSheetContext) { context in
+                    EventFormView(
+                        plannerEvent: context.plannerEvent,
+                        calendarEvent: context.calendarEvent
+                    ) { change in
+                        pendingScroll = change
+                    }
+                    .navigationTransition(
+                        .zoom(
+                            sourceID: context.id,
+                            in: namespace
+                        )
+                    )
+                }
+                
+                // Event Sheet
+                .sheet(isPresented: $showTransferSheet) {
+                    if let planner {
+                        TransferEventsFormView(
+                            sourcePlanner: planner
+                        )
+                        .navigationTransition(
+                            .zoom(
+                                sourceID: "TRANSFER",
+                                in: namespace
+                            )
+                        )
+                    }
                 }
 
                 // Slide to modified events once the UI has settled.
@@ -200,22 +231,7 @@ struct PlannerView: View {
                 }
             }
         }
-
-        // Event Sheet
-        .sheet(item: $eventSheetContext) { context in
-            EventFormView(
-                plannerEvent: context.plannerEvent,
-                calendarEvent: context.calendarEvent
-            ) { change in
-                pendingScroll = change
-            }
-            .navigationTransition(
-                .zoom(
-                    sourceID: context.id,
-                    in: namespace
-                )
-            )
-        }
+        .environmentObject(plannerManager)
 
         // Initialize data.
         .task {
@@ -422,7 +438,7 @@ struct PlannerView: View {
                         "Transfer",
                         systemImage: "arrow.forward.folder"
                     ) {
-                        // TODO: open transfer sheet
+                        showTransferSheet = true
                     }
                     .disabled(plannerManager.selectedItemIds.isEmpty)
                     .matchedTransitionSource(

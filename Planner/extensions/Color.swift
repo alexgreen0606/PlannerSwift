@@ -8,6 +8,14 @@
 import SwiftUI
 
 extension Color {
+    static var label: Color {
+        Color(uiColor: .label)
+    }
+    
+    static var secondary: Color {
+        Color(uiColor: .secondaryLabel)
+    }
+    
     static var appBackground: Color {
         let light = UIColor.secondarySystemBackground
         let dark = UIColor.black
