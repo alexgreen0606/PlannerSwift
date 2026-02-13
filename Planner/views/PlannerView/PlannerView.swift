@@ -87,6 +87,8 @@ struct PlannerView: View {
             }
     }
 
+    // MARK: - Select Mode
+
     private var visibleEvents: [PlannerEvent] {
         var allVisibleItems = sortedOpenPlans
 
@@ -104,6 +106,16 @@ struct PlannerView: View {
     private var isAllSelected: Bool {
         plannerManager.selectedItemIds.count == visibleEvents.count
             && !visibleEvents.isEmpty
+    }
+
+    private var subtitle: String {
+        if plannerManager.isSelectMode {
+            let count = plannerManager.selectedItems.count
+            return
+                "\(count == 0 ? "No" : String(count)) plan\(count == 1 ? "" : "s") selected"
+        }
+
+        return date.dynamicSubheader
     }
 
     // MARK: - UI Lists
@@ -182,7 +194,7 @@ struct PlannerView: View {
                     isItemChecked: calendarEventToggler.isPlannerEventChecked
                 )
                 .navigationTitle(date.dynamicHeader)
-                .navigationSubtitle(date.dynamicSubheader)
+                .navigationSubtitle(subtitle)
                 .toolbar {
                     topLeftToolbar
                     topRightToolbar

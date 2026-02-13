@@ -15,6 +15,15 @@ extension View {
             .listRowBackground(Color.clear)
     }
 
+    func sectionLabel() -> some View {
+        self
+            .font(.headline)
+            .foregroundStyle(Color.secondary)
+            .listRowInsets(.bottom, 0)
+            .padding(.horizontal)
+            .discreetListItem()
+    }
+
     func glassChip(color: Color?, onTap: (() -> Void)?, height: Double? = nil)
         -> some View
     {

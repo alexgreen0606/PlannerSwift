@@ -51,20 +51,14 @@ struct PlannerTabView: View {
                 List {
                     Section {
                         Text("This week")
-                            .padding(.leading, 16)
-                            .font(.headline)
-                            .foregroundStyle(Color.secondary)
-                            .listRowInsets(.bottom, 0)
-                            .discreetListItem()
+                            .sectionLabel()
                         
                         ScrollView(.horizontal) {
                             HStack(alignment: .top, spacing: 12) {
                                 ForEach(thisWeekDatestamps, id: \.self) {
                                     datestamp in
                                     PlannerCardVerticalView(
-                                        datestamp: datestamp,
-                                        isCalendarEventChecked:
-                                            isCalendarEventChecked
+                                        datestamp: datestamp
                                     ) {
                                         plannerCoverContext = PlannerCoverContext(
                                             datestamp: datestamp
@@ -76,12 +70,12 @@ struct PlannerTabView: View {
                                     )
                                 }
                             }
-                            .padding(.horizontal, 16)
+                            .padding(.horizontal)
                         }
                         .scrollIndicators(.hidden)
                         .background(Color.clear)
                     }
-                    .listRowInsets(.horizontal, 0)
+                    .listRowInsets(EdgeInsets())
                     .discreetListItem()
                 }
                 .listStyle(.plain)
@@ -178,7 +172,6 @@ struct PlannerTabView: View {
     @ToolbarContentBuilder
     private var topRightToolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .topBarTrailing) {
-
             Button("New Event", systemImage: "plus") {
                 isNewEventSheetOpen = true
             }
@@ -187,16 +180,6 @@ struct PlannerTabView: View {
                 in: sheetAnimation
             )
         }
-    }
-
-    private func isCalendarEventChecked(event: EKEvent?) -> Bool {
-        guard let calendarSettings, let event else {
-            return false
-        }
-
-        return calendarSettings.checkedCalendarEventIds.contains(
-            event.calendarItemExternalIdentifier
-        )
     }
 
 }

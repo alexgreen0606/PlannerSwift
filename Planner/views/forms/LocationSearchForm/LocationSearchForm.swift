@@ -29,6 +29,7 @@ struct LocationSearchView: View {
     @Environment(\.modelContext) private var modelContext
 
     @Query private var plannerSettingsList: [PlannerSettings]
+    @Query private var locations: [Location]
 
     let locationManager = LocationManager.shared
 
@@ -36,6 +37,7 @@ struct LocationSearchView: View {
 
     @State private var selectedLocationSource: LocationSource
     @State private var selectedLocation: Location?
+    @State private var existingLocations: [Location] = []
 
     private var topSuggestionId: String? {
         optionId(locationFinder.suggestions.first)
@@ -65,20 +67,11 @@ struct LocationSearchView: View {
     var body: some View {
         NavigationStack {
             ScrollViewReader { proxy in
-                List {
-                    ForEach(locationFinder.suggestions, id: \.self) { option in
-                        optionRow(option)
-                    }
+                if locationFinder.queryFragment.count < 2 {
+                    fillerSuggestions
+                } else {
+                    searchResults(proxy: proxy)
                 }
-                .listStyle(.plain)
-                .background(Color(uiColor: .systemBackground).ignoresSafeArea())
-
-                // Keep the list scrolled to the top when results change.
-                .withScrollTrigger(
-                    proxy: proxy,
-                    trigger: locationFinder.suggestions,
-                    id: topSuggestionId
-                )
             }
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
@@ -93,6 +86,7 @@ struct LocationSearchView: View {
             .overlay {
                 emptyOptionsLabel
             }
+            .onAppear(perform: buildSuggestedLocations)
         }
     }
 
@@ -263,7 +257,66 @@ struct LocationSearchView: View {
         }
     }
 
-    // MARK: - Option Rows
+    // MARK: - Suggestions List
+
+    private var fillerSuggestions: some View {
+        List {
+            ForEach(existingLocations, id: \.self) { option in
+                suggestionRow(option)
+            }
+        }
+        .listStyle(.plain)
+        .background(Color(uiColor: .systemBackground).ignoresSafeArea())
+    }
+
+    @ViewBuilder
+    private func suggestionRow(_ suggestion: Location) -> some View {
+        HStack {
+            VStack(alignment: .leading) {
+                Text(suggestion.name)
+                    .font(.headline)
+
+                if let subtitle = suggestion.subtitle {
+                    Text(subtitle)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Spacer()
+
+            if isSuggestionSelected(suggestion) {
+                Image(systemName: "checkmark")
+            }
+        }
+        .discreetListItem()
+        .contentShape(Rectangle())
+        .onTapGesture {
+            Task {
+                selectedLocationSource = .custom
+                selectedLocation = suggestion
+            }
+        }
+    }
+
+    // MARK: - Search Results List
+
+    private func searchResults(proxy: ScrollViewProxy) -> some View {
+        List {
+            ForEach(locationFinder.suggestions, id: \.self) { option in
+                optionRow(option)
+            }
+        }
+        .listStyle(.plain)
+        .background(Color(uiColor: .systemBackground).ignoresSafeArea())
+
+        // Keep the list scrolled to the top when results change.
+        .withScrollTrigger(
+            proxy: proxy,
+            trigger: locationFinder.suggestions,
+            id: topSuggestionId
+        )
+    }
 
     @ViewBuilder
     private var emptyOptionsLabel: some View {
@@ -325,9 +378,38 @@ struct LocationSearchView: View {
             && selectedLocation.subtitle == option.subtitle
     }
 
+    private func isSuggestionSelected(_ suggestion: Location)
+        -> Bool
+    {
+        selectedLocationSource == .custom && selectedLocation == suggestion
+    }
+
     private func optionId(_ option: MKLocalSearchCompletion?) -> String? {
         guard let option else { return nil }
 
         return "\(option.title)-\(option.subtitle)"
     }
+
+    private func buildSuggestedLocations() {
+        var firstByKey: [String: Location] = [:]
+
+        for location in locations {
+            let key = location.key
+
+            if firstByKey[key] == nil {
+                firstByKey[key] = location
+            }
+        }
+
+        let sortedLocations = firstByKey.values.sorted { lhs, rhs in
+            if lhs.name != rhs.name {
+                return lhs.name < rhs.name
+            }
+
+            return (lhs.subtitle ?? "") < (rhs.subtitle ?? "")
+        }
+
+        existingLocations = sortedLocations
+    }
+
 }

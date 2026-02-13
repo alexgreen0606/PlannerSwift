@@ -21,7 +21,7 @@ final class WeatherStore: ObservableObject {
 
     @Published private var weatherMap: [String: [String: DayWeather]] =
         [:]
-    
+
     @Published var refreshKey: UUID = UUID()
 
     func getWeather(for datestamp: String, at location: Location?)
@@ -32,11 +32,6 @@ final class WeatherStore: ObservableObject {
         }
 
         return weatherMap[locationKey]?[datestamp]
-    }
-
-    private func rounded(_ value: Double, precision: Int = 4) -> Double {
-        let factor = pow(10.0, Double(precision))
-        return (value * factor).rounded() / factor
     }
 
     func getLocationKey(for location: Location?) -> String? {
@@ -53,8 +48,8 @@ final class WeatherStore: ObservableObject {
 
         guard let coordinate else { return nil }
 
-        let lat = rounded(coordinate.latitude)
-        let lon = rounded(coordinate.longitude)
+        let lat = coordinate.latitude.roundDecimals(to: 4)
+        let lon = coordinate.longitude.roundDecimals(to: 4)
 
         return "\(lat),\(lon)"
     }

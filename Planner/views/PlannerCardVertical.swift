@@ -14,7 +14,6 @@ import WrappingHStack
 
 struct PlannerCardVerticalView: View {
     private let datestamp: String
-    private let isCalendarEventChecked: (EKEvent?) -> Bool
     private let openPlanner: () -> Void
     private let maxPreviewEvents = 5
     let weatherUnit: UnitTemperature =
@@ -167,12 +166,10 @@ struct PlannerCardVerticalView: View {
 
     init(
         datestamp: String,
-        isCalendarEventChecked: @escaping (EKEvent?) -> Bool,
         openPlanner: @escaping () -> Void
     ) {
         self.datestamp = datestamp
         self.openPlanner = openPlanner
-        self.isCalendarEventChecked = isCalendarEventChecked
 
         _planners = Query(
             filter: #Predicate<Planner> {
@@ -323,6 +320,16 @@ struct PlannerCardVerticalView: View {
                 into: planner,
                 with: calendarSettings
             ) ?? calendarPlannerEvents
+    }
+    
+    private func isCalendarEventChecked(_ event: EKEvent?) -> Bool {
+        guard let calendarSettings, let event else {
+            return false
+        }
+
+        return calendarSettings.checkedCalendarEventIds.contains(
+            event.calendarItemExternalIdentifier
+        )
     }
 
 }
