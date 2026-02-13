@@ -14,9 +14,13 @@ class LocationFinder: NSObject, ObservableObject,
     MKLocalSearchCompleterDelegate
 {
     @Published var queryFragment: String = "" {
-        didSet { completer.queryFragment = queryFragment }
+        didSet {
+            completer.queryFragment = queryFragment
+        }
     }
     @Published var suggestions: [MKLocalSearchCompletion] = []
+    @Published var hasNetworkError: Bool = false
+
     private let completer = MKLocalSearchCompleter()
 
     override init() {
@@ -26,6 +30,7 @@ class LocationFinder: NSObject, ObservableObject,
     }
 
     func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
+        hasNetworkError = false
         suggestions = completer.results
     }
 
@@ -33,7 +38,13 @@ class LocationFinder: NSObject, ObservableObject,
         _ completer: MKLocalSearchCompleter,
         didFailWithError error: Error
     ) {
-        print("Completer error: \(error)")
+        let nsError = error as NSError
+
+        if nsError.domain == NSURLErrorDomain {
+            hasNetworkError = true
+        } else if nsError.domain == MKError.errorDomain {
+            assertionFailure("ERROR: LocationFinder.completer: \(error)")
+        }
     }
 
     func selectCompletion(_ completion: MKLocalSearchCompletion) async -> (

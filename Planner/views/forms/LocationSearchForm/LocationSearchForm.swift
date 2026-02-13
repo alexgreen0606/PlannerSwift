@@ -323,7 +323,10 @@ struct LocationSearchView: View {
         if locationFinder.suggestions.isEmpty
             && locationFinder.queryFragment.count > 2
         {
-            EmptyLabel("No Matching Locations")
+            EmptyLabel(
+                locationFinder.hasNetworkError
+                    ? "No Internet Connection" : "No Matching Locations"
+            )
         }
     }
 
