@@ -16,37 +16,12 @@ enum LocationSearchMode {
 }
 
 struct LocationSearchView: View {
-    let initialLocation: Location?
-    let initialLocationSource: LocationSource
-    let title: String
-    let mode: LocationSearchMode
-    let onSave: (LocationSource, Location?) -> Void
-
-    @AppStorage("accentColor") var accentColor: AccentColor =
-        AccentColor.blue
-
-    @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
-
-    @Query private var plannerSettingsList: [PlannerSettings]
-    @Query private var locations: [Location]
-
-    let locationManager = LocationManager.shared
-
-    @StateObject private var locationFinder = LocationFinder()
-
-    @State private var selectedLocationSource: LocationSource
-    @State private var selectedLocation: Location?
-    @State private var existingLocations: [Location] = []
-
-    private var topSuggestionId: String? {
-        optionId(locationFinder.suggestions.first)
-    }
-
-    private var plannerSettings: PlannerSettings? {
-        plannerSettingsList.first
-    }
-
+    private let initialLocation: Location?
+    private let initialLocationSource: LocationSource
+    private let title: String
+    private let mode: LocationSearchMode
+    private let onSave: (LocationSource, Location?) -> Void
+    
     init(
         initialLocation: Location?,
         initialLocationSource: LocationSource,
@@ -62,6 +37,29 @@ struct LocationSearchView: View {
 
         _selectedLocationSource = State(initialValue: initialLocationSource)
         _selectedLocation = State(initialValue: initialLocation)
+    }
+
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        AccentColor.blue
+
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var locationManager: DeviceLocationManager
+
+    @Query private var plannerSettingsList: [PlannerSettings]
+    @Query private var locations: [Location]
+
+    @StateObject private var locationFinder = LocationFinder()
+    @State private var selectedLocationSource: LocationSource
+    @State private var selectedLocation: Location?
+    @State private var existingLocations: [Location] = []
+
+    private var topSuggestionId: String? {
+        optionId(locationFinder.suggestions.first)
+    }
+
+    private var plannerSettings: PlannerSettings? {
+        plannerSettingsList.first
     }
 
     var body: some View {

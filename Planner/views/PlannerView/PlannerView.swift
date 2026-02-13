@@ -30,16 +30,28 @@ struct EventSheetContext: Identifiable {
 struct PlannerView: View {
     private let datestamp: String
     private let closePlanner: () -> Void
+    
+    init(datestamp: String, closePlanner: @escaping () -> Void) {
+        self.datestamp = datestamp
+        self.closePlanner = closePlanner
+
+        // Set the query to find this date's planner.
+        _planners = Query(
+            filter: #Predicate<Planner> {
+                $0.datestamp == datestamp
+            }
+        )
+    }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
 
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var todaystampManager: TodaystampWatcher
+    
     @Query private var planners: [Planner]
     @Query private var calendarSettingsList: [CalendarSettings]
-
-    @EnvironmentObject var calendarStore: CalendarStore
-    @EnvironmentObject var todaystampManager: TodaystampWatcher
 
     @StateObject private var plannerManager = ListManager<PlannerEvent>()
     @State private var calendarEventToggler = CalendarEventToggler()
@@ -154,18 +166,6 @@ struct PlannerView: View {
                     || plannerManager.newlyUncheckedIds.contains($0.id)
             }
             .sorted { $0.sortIndex < $1.sortIndex }
-    }
-
-    init(datestamp: String, closePlanner: @escaping () -> Void) {
-        self.datestamp = datestamp
-        self.closePlanner = closePlanner
-
-        // Set the query to find this date's planner.
-        _planners = Query(
-            filter: #Predicate<Planner> {
-                $0.datestamp == datestamp
-            }
-        )
     }
 
     var body: some View {

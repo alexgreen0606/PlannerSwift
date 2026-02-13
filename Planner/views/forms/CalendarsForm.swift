@@ -13,9 +13,9 @@ import SwiftUI
 struct CalendarsFormView: View {
 
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var calendarStore: CalendarStore
+    
     @Query private var calendarSettingsList: [CalendarSettings]
-
-    @EnvironmentObject var calendarStore: CalendarStore
 
     @State private var calendarRefreshDebounce: Task<Void, Never>?
 

@@ -12,7 +12,7 @@ struct PreviewCalendarEventListView: View {
     let events: [EKEvent]
     let iconMap: [String: String]?
 
-    @EnvironmentObject var calendarStore: CalendarStore
+    @EnvironmentObject private var calendarStore: CalendarStore
 
     var body: some View {
         if !events.isEmpty {

@@ -28,16 +28,14 @@ final class ListManager<Item: ListItem>: ObservableObject {
         self.isItemChecked = isItemChecked
     }
 
-    init() {}
-
     @Published var newlyCheckedIds: Set<PersistentIdentifier> = []
     @Published var newlyUncheckedIds: Set<PersistentIdentifier> = []
 
-    // Keeps faded items hidden for 1 second after they have moved.
-    @Published var fadingItemIds: Set<PersistentIdentifier> = []
-
     @Published var selectedItems: [Item] = []
     @Published var selectedItemIds: Set<PersistentIdentifier> = []
+    
+    // Keeps faded items hidden for 1 second after they have moved.
+    @Published var fadingItemIds: Set<PersistentIdentifier> = []
 
     // Controls fading of checked items.
     @Published var fadingOpacity: Double = 1

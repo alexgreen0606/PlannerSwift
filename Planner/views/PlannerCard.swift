@@ -14,7 +14,7 @@ struct PlannerCardView: View {
     let isEventChecked: (EKEvent?) -> Bool
     let openPlanner: () -> Void
 
-    @EnvironmentObject var calendarEventStore: CalendarStore
+    @EnvironmentObject private var calendarEventStore: CalendarStore
 
     private var allDayEvents: [EKEvent] {
         calendarEventStore.allDayEventsByDatestamp[

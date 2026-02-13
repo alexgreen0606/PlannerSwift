@@ -17,11 +17,11 @@ struct PlannerTabView: View {
             KeepPastPlansDuration.oneMonth
 
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
+    @EnvironmentObject private var weatherStore: WeatherStore
+    
     @Query private var calendarSettingsList: [CalendarSettings]
-
-    @EnvironmentObject var calendarStore: CalendarStore
-    @EnvironmentObject var todaystampWatcher: TodaystampWatcher
-    @ObservedObject var weatherStore = WeatherStore.shared
 
     @State private var plannerCoverContext: PlannerCoverContext?
     @Namespace private var sheetAnimation

@@ -13,11 +13,13 @@ import WeatherKit
 
 @MainActor
 final class WeatherStore: ObservableObject {
-    static let shared = WeatherStore()
-    private init() {}
+    private let locationManager: DeviceLocationManager
+
+    init(locationManager: DeviceLocationManager) {
+        self.locationManager = locationManager
+    }
 
     private let weatherService = WeatherService()
-    let locationManager = LocationManager.shared
 
     @Published private var weatherMap: [String: [String: DayWeather]] =
         [:]

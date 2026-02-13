@@ -12,25 +12,7 @@ struct ChecklistItemFormView: View {
     private let sourceItem: ChecklistItem?
     private let parent: ChecklistItem?
     private let onSave: (ChecklistItem) -> Void
-
-    @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss
-
-    @State private var draft: ChecklistItem
-
-    private var isDirty: Bool {
-        draft.title != sourceItem?.title || draft.color != sourceItem?.color
-            || draft.type != sourceItem?.type
-    }
     
-    private var showTypePicker: Bool {
-        guard let sourceItem else {
-            return true
-        }
-        
-        return sourceItem.items.isEmpty && parent != nil
-    }
-
     init(
         item: ChecklistItem? = nil,
         parent: ChecklistItem?,
@@ -56,6 +38,24 @@ struct ChecklistItemFormView: View {
                 )
             )
         }
+    }
+
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var draft: ChecklistItem
+
+    private var isDirty: Bool {
+        draft.title != sourceItem?.title || draft.color != sourceItem?.color
+            || draft.type != sourceItem?.type
+    }
+    
+    private var showTypePicker: Bool {
+        guard let sourceItem else {
+            return true
+        }
+        
+        return sourceItem.items.isEmpty && parent != nil
     }
 
     var body: some View {

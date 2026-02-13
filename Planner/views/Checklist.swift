@@ -11,12 +11,29 @@ import SwiftUI
 struct ChecklistView: View {
     private let checklistId: PersistentIdentifier
     private let canTransferItems: Bool
-
+    
     // Can pass a folder to navigate into (passes itself when it is transformed into a folder).
     private let closeChecklist: (ChecklistItem?) -> Void
+    
+    init(
+        checklistId: PersistentIdentifier,
+        canTransferItems: Bool,
+        closeChecklist: @escaping (ChecklistItem?) -> Void
+    ) {
+        self.checklistId = checklistId
+        self.closeChecklist = closeChecklist
+        self.canTransferItems = canTransferItems
+
+        _checklists = Query(
+            filter: #Predicate<ChecklistItem> {
+                $0.id == checklistId
+            }
+        )
+    }
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject var listManager: ListManager<ChecklistItem>
+    @EnvironmentObject private var listManager: ListManager<ChecklistItem>
+    
     @Query private var checklists: [ChecklistItem]
 
     @State private var showDeleteCompletedConfirm = false
@@ -24,7 +41,7 @@ struct ChecklistView: View {
     @State private var isTransferSheetOpen = false
     @State private var isEditFormOpen = false
 
-    @Namespace private var sheetAnimation
+    @Namespace private var namespace
 
     private var checklist: ChecklistItem? {
         checklists.first
@@ -81,22 +98,6 @@ struct ChecklistView: View {
         return checklist?.path ?? ""
     }
 
-    init(
-        checklistId: PersistentIdentifier,
-        canTransferItems: Bool,
-        closeChecklist: @escaping (ChecklistItem?) -> Void
-    ) {
-        self.checklistId = checklistId
-        self.closeChecklist = closeChecklist
-        self.canTransferItems = canTransferItems
-
-        _checklists = Query(
-            filter: #Predicate<ChecklistItem> {
-                $0.id == checklistId
-            }
-        )
-    }
-
     var body: some View {
         NavigationStack {
             ScrollViewReader { proxy in
@@ -146,7 +147,7 @@ struct ChecklistView: View {
                     }
                 }
                 .navigationTransition(
-                    .zoom(sourceID: "ELLIPSIS", in: sheetAnimation)
+                    .zoom(sourceID: "ELLIPSIS", in: namespace)
                 )
             }
         }
@@ -161,7 +162,7 @@ struct ChecklistView: View {
                 .navigationTransition(
                     .zoom(
                         sourceID: "TRANSFER",
-                        in: sheetAnimation
+                        in: namespace
                     )
                 )
             }
@@ -239,7 +240,7 @@ struct ChecklistView: View {
                 }
                 .matchedTransitionSource(
                     id: "ELLIPSIS",
-                    in: sheetAnimation
+                    in: namespace
                 )
                 .confirmationDialog(
                     checklist?.deleteConfirmation ?? "",
@@ -337,7 +338,7 @@ struct ChecklistView: View {
                 )
                 .matchedTransitionSource(
                     id: "TRANSFER",
-                    in: sheetAnimation
+                    in: namespace
                 )
             }
         }

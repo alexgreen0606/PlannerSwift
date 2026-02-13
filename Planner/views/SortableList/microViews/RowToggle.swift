@@ -88,7 +88,7 @@ struct RowToggleView<Item: ListItem>: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
 
-    @EnvironmentObject var listManager: ListManager<Item>
+    @EnvironmentObject private var listManager: ListManager<Item>
 
     @State private var isConfirmationOpen: Bool = false
 

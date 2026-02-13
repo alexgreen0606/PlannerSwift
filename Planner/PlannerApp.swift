@@ -10,17 +10,25 @@ import SwiftUI
 
 @main
 struct PlannerApp: App {
-    
+
+    init() {
+        let locationManager = DeviceLocationManager()
+        _locationManager = StateObject(wrappedValue: locationManager)
+        _weatherStore = StateObject(
+            wrappedValue: WeatherStore(locationManager: locationManager)
+        )
+    }
+
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
-    
+
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
         .system
 
-    @State private var navigator = NavigationManager()
-    let weatherStore = WeatherStore.shared
-    let todaystampWatcher = TodaystampWatcher.shared
-    let calendarStore = CalendarStore.shared
+    @StateObject private var locationManager = DeviceLocationManager()
+    @StateObject private var weatherStore: WeatherStore
+    @StateObject private var calendarStore = CalendarStore()
+    @StateObject private var todaystampWatcher = TodaystampWatcher()
 
     var body: some Scene {
         WindowGroup {
@@ -30,10 +38,11 @@ struct PlannerApp: App {
                 .environmentObject(todaystampWatcher)
                 .environmentObject(weatherStore)
                 .environmentObject(calendarStore)
-                .environmentObject(navigator)
+                .environmentObject(locationManager)
         }
         .modelContainer(for: [
-            Planner.self, ChecklistItem.self, CalendarSettings.self, PlannerSettings.self
+            Planner.self, ChecklistItem.self, CalendarSettings.self,
+            PlannerSettings.self,
         ])
     }
 }

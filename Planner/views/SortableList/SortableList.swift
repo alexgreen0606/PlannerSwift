@@ -42,7 +42,7 @@ struct SortableListView<
     let moveItem: (_ from: Int, _ to: Int) -> Void
     let isItemChecked: ((_ item: Item) -> Bool)?
 
-    @EnvironmentObject var listManager: ListManager<Item>
+    @EnvironmentObject private var listManager: ListManager<Item>
 
     @StateObject var focusController = FocusController()
 

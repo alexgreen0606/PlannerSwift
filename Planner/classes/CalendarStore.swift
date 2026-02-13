@@ -1,5 +1,5 @@
 //
-//  CalendarEventStore.swift
+//  CalendarStore.swift
 //  Planner
 //
 //  Created by Alex Green on 12/16/25.
@@ -12,9 +12,7 @@ import SwiftUI
 
 @MainActor
 class CalendarStore: ObservableObject {
-    static let shared = CalendarStore()
-    private init() {}
-
+    
     @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
         KeepPastPlansDuration =
             KeepPastPlansDuration.oneMonth

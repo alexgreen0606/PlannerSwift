@@ -13,41 +13,7 @@ import SwiftDate
 import SwiftUI
 
 struct ContentView: View {
-
-    @AppStorage("keepCanceledPlansDuration") private
-        var keepCanceledPlansDuration: KeepCanceledPlansDuration =
-            KeepCanceledPlansDuration.startOfDay
-
-    @AppStorage("lastCleansedDatestamp") var lastCleansedDatestamp: String = ""
-
-    @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
-        KeepPastPlansDuration =
-            KeepPastPlansDuration.oneMonth
-
-    @Environment(\.modelContext) private var modelContext
-    @Query private var calendarSettingsList: [CalendarSettings]
-    @Query private var plannerSettingsList: [PlannerSettings]
-    @Query var foldersList: [ChecklistItem]
-    @Query private var planners: [Planner]
-
-    @EnvironmentObject var todaystampWatcher: TodaystampWatcher
-    @EnvironmentObject var calendarStore: CalendarStore
-
-    let contactsStore = CNContactStore()
-
-    @State private var selectedTab: AppTab = .planner
-    @State private var plannerSearchText: String = ""
-
-    private var eventsForToday: [EKEvent] {
-        return calendarStore.allDayEventsByDatestamp[
-            todaystampWatcher.todaystamp
-        ] ?? []
-    }
-
-    private var calendarSettings: CalendarSettings? {
-        calendarSettingsList.first
-    }
-
+    
     // Set the rounded design for all navigation titles.
     init() {
         // Large Title
@@ -83,6 +49,40 @@ struct ContentView: View {
                 .font: font
             ]
         }
+    }
+    
+    let contactsStore = CNContactStore()
+
+    @AppStorage("keepCanceledPlansDuration") private
+        var keepCanceledPlansDuration: KeepCanceledPlansDuration =
+            KeepCanceledPlansDuration.startOfDay
+
+    @AppStorage("lastCleansedDatestamp") var lastCleansedDatestamp: String = ""
+
+    @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
+        KeepPastPlansDuration =
+            KeepPastPlansDuration.oneMonth
+
+    @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
+    @EnvironmentObject private var calendarStore: CalendarStore
+    
+    @Query private var calendarSettingsList: [CalendarSettings]
+    @Query private var plannerSettingsList: [PlannerSettings]
+    @Query private var foldersList: [ChecklistItem]
+    @Query private var planners: [Planner]
+
+    @State private var selectedTab: AppTab = .planner
+    @State private var plannerSearchText: String = ""
+
+    private var eventsForToday: [EKEvent] {
+        return calendarStore.allDayEventsByDatestamp[
+            todaystampWatcher.todaystamp
+        ] ?? []
+    }
+
+    private var calendarSettings: CalendarSettings? {
+        calendarSettingsList.first
     }
 
     var body: some View {

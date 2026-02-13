@@ -13,6 +13,15 @@ import SwiftUI
 class LocationFinder: NSObject, ObservableObject,
     MKLocalSearchCompleterDelegate
 {
+    
+    override init() {
+        super.init()
+        completer.resultTypes = .address
+        completer.delegate = self
+    }
+    
+    private let completer = MKLocalSearchCompleter()
+    
     @Published var queryFragment: String = "" {
         didSet {
             completer.queryFragment = queryFragment
@@ -20,14 +29,6 @@ class LocationFinder: NSObject, ObservableObject,
     }
     @Published var suggestions: [MKLocalSearchCompletion] = []
     @Published var hasNetworkError: Bool = false
-
-    private let completer = MKLocalSearchCompleter()
-
-    override init() {
-        super.init()
-        completer.resultTypes = .address
-        completer.delegate = self
-    }
 
     func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
         hasNetworkError = false

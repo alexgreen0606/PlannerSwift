@@ -28,12 +28,12 @@ struct PlannerChipSpreadView: View {
 
     @Environment(\.colorScheme) private var systemColorScheme
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var weatherStore: WeatherStore
+    @EnvironmentObject private var locationManager: DeviceLocationManager
 
     @Query private var plannerSettingsList: [PlannerSettings]
-
-    @EnvironmentObject var calendarStore: CalendarStore
-    @ObservedObject var weatherStore = WeatherStore.shared
-
+    
     @State private var isLocationSheetOpen = false
 
     private var plannerSettings: PlannerSettings? {
@@ -59,7 +59,7 @@ struct PlannerChipSpreadView: View {
     private var locationLabel: String? {
         planner.locationLabel(
             settings: plannerSettings,
-            localCityName: weatherStore.locationManager.cityName
+            localCityName: locationManager.cityName
         )
     }
 

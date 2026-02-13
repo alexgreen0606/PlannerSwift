@@ -14,14 +14,30 @@ struct PlannerAccessoryView: View {
     private var todaystamp: String
     private var namespace: Namespace.ID
     private let openTodayPlanner: () -> Void
+    
+    init(
+        todaystamp: String,
+        namespace: Namespace.ID,
+        openTodayPlanner: @escaping () -> Void
+    ) {
+        self.namespace = namespace
+        self.todaystamp = todaystamp
+        self.openTodayPlanner = openTodayPlanner
+
+        _planners = Query(
+            filter: #Predicate<Planner> {
+                $0.datestamp == todaystamp
+            }
+        )
+    }
 
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
 
     @Environment(\.modelContext) private var modelContext
     @Query private var planners: [Planner]
     
-    @EnvironmentObject var calendarStore: CalendarStore
-    @ObservedObject var weatherStore = WeatherStore.shared
+    @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var weatherStore: WeatherStore
 
     let unit: UnitTemperature =
         Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
@@ -60,22 +76,6 @@ struct PlannerAccessoryView: View {
         }
 
         return "\(planCount) plan\(planCount == 1 ? "" : "s")"
-    }
-
-    init(
-        todaystamp: String,
-        namespace: Namespace.ID,
-        openTodayPlanner: @escaping () -> Void
-    ) {
-        self.namespace = namespace
-        self.todaystamp = todaystamp
-        self.openTodayPlanner = openTodayPlanner
-
-        _planners = Query(
-            filter: #Predicate<Planner> {
-                $0.datestamp == todaystamp
-            }
-        )
     }
 
     var body: some View {

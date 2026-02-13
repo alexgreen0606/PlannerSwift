@@ -16,50 +16,7 @@ struct EventFormView: View {
     private let initialPlannerEvent: PlannerEvent?
     private let initialCalendarEvent: EKEvent?
     private let handleEventChange: (PlannerEventPositionChange) -> Void
-
-    // Overrides all other behavior in this sheet and displays the Contact form.
-    private let contact: CNContact?
-
-    @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
-        KeepPastPlansDuration =
-            KeepPastPlansDuration.oneMonth
-
-    @AppStorage("accentColor") var accentColor: AccentColor =
-        AccentColor.blue
-
-    @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss
-
-    @Query private var calendarSettingsList: [CalendarSettings]
-
-    @EnvironmentObject var calendarStore: CalendarStore
-    @EnvironmentObject var todaystampWatcher: TodaystampWatcher
-
-    @State private var calendarEventToggler = CalendarEventToggler()
-
-    @State private var draftCalendarEvent: EKEvent?
-    @State private var selectedDetent: PresentationDetent = .height(340)
-
-    @State private var title: String
-    @State private var date: Date
-    @State private var hasTime: Bool
-
-    private var calendarSettings: CalendarSettings? {
-        calendarSettingsList.first
-    }
-
-    private var isValid: Bool {
-        !title.isEmpty
-            && (date != initialPlannerEvent?.date
-                || title != initialPlannerEvent?.title
-                || draftCalendarEvent
-                    != initialPlannerEvent?.calendarEvent)
-    }
-
-    private var isCreateForm: Bool {
-        initialPlannerEvent == nil && initialCalendarEvent == nil
-    }
-
+    
     init(
         plannerEvent: PlannerEvent?,
         calendarEvent: EKEvent?,
@@ -117,6 +74,47 @@ struct EventFormView: View {
         _date = State(initialValue: date)
         _hasTime = State(initialValue: hasTime)
         self.contact = contact
+    }
+
+    // Overrides all other behavior in this sheet and displays the Contact form.
+    private let contact: CNContact?
+
+    @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
+        KeepPastPlansDuration =
+            KeepPastPlansDuration.oneMonth
+
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        AccentColor.blue
+
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
+
+    @Query private var calendarSettingsList: [CalendarSettings]
+
+    @State private var calendarEventToggler = CalendarEventToggler()
+    @State private var selectedDetent: PresentationDetent = .height(340)
+    
+    @State private var draftCalendarEvent: EKEvent?
+    @State private var title: String
+    @State private var date: Date
+    @State private var hasTime: Bool
+
+    private var calendarSettings: CalendarSettings? {
+        calendarSettingsList.first
+    }
+
+    private var isValid: Bool {
+        !title.isEmpty
+            && (date != initialPlannerEvent?.date
+                || title != initialPlannerEvent?.title
+                || draftCalendarEvent
+                    != initialPlannerEvent?.calendarEvent)
+    }
+
+    private var isCreateForm: Bool {
+        initialPlannerEvent == nil && initialCalendarEvent == nil
     }
 
     var body: some View {

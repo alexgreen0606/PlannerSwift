@@ -11,8 +11,8 @@ import SwiftDate
 
 @MainActor
 class TodaystampWatcher: ObservableObject {
-    static let shared = TodaystampWatcher()
-    private init() {
+    
+    init() {
         scheduleMidnightUpdate()
     }
 

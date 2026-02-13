@@ -10,6 +10,12 @@ import SwiftUI
 
 struct TransferEventsFormView: View {
     private let sourceDate: Date
+    
+    init(sourcePlanner: Planner) {
+        let initialDate = sourcePlanner.datestamp.date ?? Date()
+        self.sourceDate = initialDate
+        _destinationDate = State(initialValue: initialDate)
+    }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -20,9 +26,8 @@ struct TransferEventsFormView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-
-    @EnvironmentObject var todaystampWatcher: TodaystampWatcher
-    @EnvironmentObject var plannerManager: ListManager<PlannerEvent>
+    @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
+    @EnvironmentObject private var plannerManager: ListManager<PlannerEvent>
 
     @State private var destinationDate: Date
     @State private var hasCalendarEvents: Bool = false
@@ -31,12 +36,6 @@ struct TransferEventsFormView: View {
         let count = plannerManager.selectedItems.count
         return
             "\(count == 0 ? "No" : String(count)) event\(count == 1 ? "" : "s")"
-    }
-
-    init(sourcePlanner: Planner) {
-        let initialDate = sourcePlanner.datestamp.date ?? Date()
-        self.sourceDate = initialDate
-        _destinationDate = State(initialValue: initialDate)
     }
 
     var body: some View {

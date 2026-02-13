@@ -19,23 +19,22 @@ struct PlannerSearchTabView: View {
 
     @Environment(\.isSearching) private var isSearching
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
+    
     @Query private var calendarSettingsList: [CalendarSettings]
-
-    @EnvironmentObject var calendarStore: CalendarStore
-    @EnvironmentObject var todaystampWatcher: TodaystampWatcher
 
     @State private var plannerCoverContext: PlannerCoverContext?
     @Namespace private var sheetAnimation
 
     @State private var filterDebounce: Task<Void, Never>?
     @State private var filterCalendarIds: Set<String> = []
-    @State private var refreshKey: UUID = UUID()
+    @State private var scrollToTopTrigger: UUID = UUID()
+    @State private var toolbarHeight: CGFloat = 0
+    @State private var topInsetHeight: CGFloat = 49
 
     // Holds all calendar data displayed in the UI.
     @State private var eventMap: [String: [String]] = [:]
-    
-    @State private var toolbarHeight: CGFloat = 0
-    @State private var topInsetHeight: CGFloat = 49
 
     private var calendarSettings: CalendarSettings? {
         calendarSettingsList.first
@@ -163,7 +162,7 @@ struct PlannerSearchTabView: View {
                     // Keep the list scrolled to the top whenever the results change.
                     .withScrollTrigger(
                         proxy: proxy,
-                        trigger: refreshKey,
+                        trigger: scrollToTopTrigger,
                         id: topDatestamp
                     )
                     
@@ -397,7 +396,7 @@ struct PlannerSearchTabView: View {
                 .sorted()
         }
 
-        refreshKey = UUID()
+        scrollToTopTrigger = UUID()
     }
 
     private func scheduleFilterDebounce() {

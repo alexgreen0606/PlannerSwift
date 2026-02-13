@@ -28,9 +28,8 @@ struct RowView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View
 
     @Environment(\.scenePhase) private var appPhase
     @Environment(\.modelContext) private var modelContext
-
-    @EnvironmentObject var focusController: FocusController
-    @EnvironmentObject var listManager: ListManager<Item>
+    @EnvironmentObject private var focusController: FocusController
+    @EnvironmentObject private var listManager: ListManager<Item>
 
     // Will be updated dynamically within the TextfieldView.
     @State private var height: CGFloat = 0

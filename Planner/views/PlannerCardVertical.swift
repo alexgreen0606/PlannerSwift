@@ -16,6 +16,21 @@ struct PlannerCardVerticalView: View {
     private let datestamp: String
     private let openPlanner: () -> Void
     private let maxPreviewEvents = 5
+    
+    init(
+        datestamp: String,
+        openPlanner: @escaping () -> Void
+    ) {
+        self.datestamp = datestamp
+        self.openPlanner = openPlanner
+
+        _planners = Query(
+            filter: #Predicate<Planner> {
+                $0.datestamp == datestamp
+            }
+        )
+    }
+    
     let weatherUnit: UnitTemperature =
         Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
 
@@ -27,12 +42,13 @@ struct PlannerCardVerticalView: View {
 
     @Environment(\.colorScheme) private var systemColorScheme
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var weatherStore: WeatherStore
+    @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var locationManager: DeviceLocationManager
+    
     @Query private var planners: [Planner]
     @Query private var calendarSettingsList: [CalendarSettings]
     @Query private var plannerSettingsList: [PlannerSettings]
-
-    @ObservedObject var weatherStore = WeatherStore.shared
-    @EnvironmentObject var calendarStore: CalendarStore
 
     @State private var calendarPlannerEvents: [PlannerEvent] = []
 
@@ -69,7 +85,7 @@ struct PlannerCardVerticalView: View {
     private var locationLabel: String? {
         planner?.locationLabel(
             settings: plannerSettings,
-            localCityName: weatherStore.locationManager.cityName
+            localCityName: locationManager.cityName
         )
     }
     
@@ -172,20 +188,6 @@ struct PlannerCardVerticalView: View {
     private var hasPlans: Bool {
         plannerEvents.count + allDayEvents.count + calendarPlannerEvents.count
             > 0
-    }
-
-    init(
-        datestamp: String,
-        openPlanner: @escaping () -> Void
-    ) {
-        self.datestamp = datestamp
-        self.openPlanner = openPlanner
-
-        _planners = Query(
-            filter: #Predicate<Planner> {
-                $0.datestamp == datestamp
-            }
-        )
     }
 
     var body: some View {

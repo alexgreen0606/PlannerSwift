@@ -1,5 +1,5 @@
 //
-//  LocationManager.swift
+//  DeviceLocationManager.swift
 //  Planner
 //
 //  Created by Alex Green on 1/2/26.
@@ -9,11 +9,11 @@ import Combine
 import MapKit
 
 @MainActor
-final class LocationManager: NSObject, ObservableObject,
+final class DeviceLocationManager: NSObject, ObservableObject,
     CLLocationManagerDelegate
 {
-    static let shared = LocationManager()
-    private override init() {
+    
+    override init() {
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest

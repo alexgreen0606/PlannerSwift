@@ -8,9 +8,6 @@
 import SwiftUI
 
 struct NewRowTriggerView: View {
-    @AppStorage("showListSeparators") private var showListSeparators: Bool =
-        true
-
     private let showLowerDivider: Bool
     private let showUpperDivider: Bool
     private let onCreateItem: () -> Void
@@ -24,6 +21,9 @@ struct NewRowTriggerView: View {
         self.showUpperDivider = showUpperDivider
         self.onCreateItem = onCreateItem
     }
+    
+    @AppStorage("showListSeparators") private var showListSeparators: Bool =
+        true
 
     var body: some View {
         Rectangle()

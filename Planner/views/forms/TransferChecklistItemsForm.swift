@@ -14,15 +14,37 @@ enum FolderNavigationDirection {
 }
 
 struct TransferChecklistItemsFormView: View {
-    let source: ChecklistItem
+    private let source: ChecklistItem
+    
+    init(source: ChecklistItem, selectedIds: Set<PersistentIdentifier>) {
+        var fp =
+            source.type == .folder
+            ? source
+            : source.parent!
+
+        // Step backwards through folders until you find one with a selectable item.
+        while !fp.hasChildType(
+            source.type,
+            excluding: Set(selectedIds + [source.id])
+        ),
+            let parent = fp.parent
+        {
+            fp = parent
+        }
+
+        self.currentFolder = fp
+
+        self.destinationType =
+            source.type == .folder ? .folder : .checklist
+        self.source = source
+    }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
 
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-
-    @EnvironmentObject var listManager: ListManager<ChecklistItem>
+    @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var listManager: ListManager<ChecklistItem>
 
     @State private var destinationType: ChecklistItemType
     @State private var destination: ChecklistItem?
@@ -79,29 +101,6 @@ struct TransferChecklistItemsFormView: View {
                 return true
             }
             .sorted { $0.sortIndex < $1.sortIndex }
-    }
-
-    init(source: ChecklistItem, selectedIds: Set<PersistentIdentifier>) {
-        var fp =
-            source.type == .folder
-            ? source
-            : source.parent!
-
-        // Step backwards through folders until you find one with a selectable item.
-        while !fp.hasChildType(
-            source.type,
-            excluding: Set(selectedIds + [source.id])
-        ),
-            let parent = fp.parent
-        {
-            fp = parent
-        }
-
-        self.currentFolder = fp
-
-        self.destinationType =
-            source.type == .folder ? .folder : .checklist
-        self.source = source
     }
 
     var body: some View {
