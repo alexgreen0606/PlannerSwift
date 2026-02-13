@@ -25,7 +25,7 @@ struct PreviewPlannerEventListView: View {
                     HStack(alignment: .top, spacing: 12) {
                         Text(event.title)
                             .font(.system(size: 15))
-                            .foregroundStyle(Color(uiColor: .label))
+                            .foregroundStyle(Color.label)
 
                         Spacer()
 

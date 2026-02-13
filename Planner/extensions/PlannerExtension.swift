@@ -55,7 +55,7 @@ extension Planner {
             return IconConfig(
                 name: "mappin.and.ellipse",
                 primaryColor: accentColor.swiftUIColor,
-                secondaryColor: Color(uiColor: .secondaryLabel)
+                secondaryColor: Color.secondary
             )
         }
 
@@ -64,14 +64,14 @@ extension Planner {
         {
             return IconConfig(
                 name: "house",
-                primaryColor: Color(uiColor: .secondaryLabel),
+                primaryColor: Color.secondary,
                 secondaryColor: nil
             )
         }
 
         return IconConfig(
             name: "location",
-            primaryColor: Color(uiColor: .secondaryLabel),
+            primaryColor: Color.secondary,
             secondaryColor: nil
         )
     }
@@ -115,6 +115,29 @@ extension Planner {
         }
 
         return plannerEvents
+    }
+
+    // TODO: Fails due to forcing self to re-evaluate its items on each iteration.
+    func inheritEvents(_ eventsToMove: [PlannerEvent]) {
+        let events = eventsToMove
+
+        for event in events {
+            print(
+                "\(event.planner?.datestamp ?? "ORPHANED") -> \(event.title) -> \(self.datestamp)"
+            )
+            event.planner = self
+        }
+
+        normalizeSortIndexesSafely()
+    }
+
+    // TODO: this should account for calendar events as well
+    private func normalizeSortIndexesSafely() {
+        let sorted = events.sorted { $0.sortIndex < $1.sortIndex }
+
+        for (index, item) in sorted.enumerated() {
+            item.sortIndex = Double(index)
+        }
     }
 
 }

@@ -53,7 +53,7 @@ struct PlannerTabView: View {
                         Text("This week")
                             .padding(.leading, 16)
                             .font(.headline)
-                            .foregroundStyle(Color(uiColor: .secondaryLabel))
+                            .foregroundStyle(Color.secondary)
                             .listRowInsets(.bottom, 0)
                             .discreetListItem()
                         
@@ -118,13 +118,6 @@ struct PlannerTabView: View {
                             sourceID: context.customSource ?? context.datestamp,
                             in: sheetAnimation
                         )
-                    )
-                }
-                
-                // Load in the calendar settings.
-                .task {
-                    modelContext.ensureCalendarSettings(
-                        settings: calendarSettingsList
                     )
                 }
                 

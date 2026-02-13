@@ -90,7 +90,9 @@ struct PlannerView: View {
     private var visibleEvents: [PlannerEvent] {
         var allVisibleItems = sortedOpenPlans
 
-        if planner?.showCompleted == true {
+        if (plannerType == .future && planner?.showCanceled == true)
+            || (plannerType == .pastOrPresent && planner?.showCompleted == true)
+        {
             allVisibleItems.append(
                 contentsOf: sortedCheckedPlans
             )
@@ -186,7 +188,7 @@ struct PlannerView: View {
                     topRightToolbar
                     bottomToolbar(proxy)
                 }
-                
+
                 // Event Sheet
                 .sheet(item: $eventSheetContext) { context in
                     EventFormView(
@@ -202,7 +204,7 @@ struct PlannerView: View {
                         )
                     )
                 }
-                
+
                 // Event Sheet
                 .sheet(isPresented: $showTransferSheet) {
                     if let planner {
@@ -238,10 +240,6 @@ struct PlannerView: View {
             modelContext.ensurePlanner(
                 planners: planners,
                 datestamp: datestamp
-            )
-
-            modelContext.ensureCalendarSettings(
-                settings: calendarSettingsList
             )
 
             calendarStore.ensureCalendarEvents(
@@ -503,18 +501,17 @@ struct PlannerView: View {
     }
 
     // Toggle confirmation config for calendar events.
-    private var toggleEventIconConfig: CustomIconConfig<PlannerEvent>? {
+    private var toggleEventIconConfig: RowToggleConfig<PlannerEvent>? {
         switch plannerType {
         case .pastOrPresent: return nil
         case .future:
-            return CustomIconConfig(
+            return RowToggleConfig(
                 name: "circle.slash",
                 primaryColor: .red,
-                secondaryColor: Color(uiColor: .secondaryLabel),
-                confirmation: ConfirmationConfig(
+                secondaryColor: .secondary,
+                confirmation: RowConfirmationConfig(
                     title: "Delete from calendar?",
                     message: "Hiding only affects visibility in this planner.",
-                    destructiveKeys: ["Delete"],
                     needsConfirmation: { event in
                         event.calendarEvent != nil
                             && !calendarEventToggler.isPlannerEventChecked(
@@ -522,20 +519,24 @@ struct PlannerView: View {
                             )
                     },
                     actions: [
-                        "Hide": { event in
-                            let _ = calendarEventToggler.toggleEvent(event)
-                        }
-                    ],
-                    destructiveActions: [
-                        "Delete": { event in
+                        ConfirmationAction(
+                            title: "Hide",
+                            role: nil
+                        ) { event in
+                            _ = calendarEventToggler.toggleEvent(event)
+                        },
+
+                        ConfirmationAction(
+                            title: "Delete",
+                            role: .destructive
+                        ) { event in
                             guard let calEvent = event.calendarEvent else {
                                 return
                             }
 
                             calendarStore.delete(event: calEvent)
-
                             reloadCalendar()
-                        }
+                        },
                     ]
                 )
             )
@@ -768,6 +769,11 @@ struct PlannerView: View {
     }
 
     private func openPlannerEventSheet(_ event: PlannerEvent) {
+        if plannerManager.isSelectMode {
+            plannerManager.toggleItem(event)
+            return
+        }
+
         eventSheetContext =
             EventSheetContext(
                 plannerEvent: event,

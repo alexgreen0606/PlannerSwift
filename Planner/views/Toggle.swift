@@ -1,5 +1,5 @@
 //
-//  AccentToggle.swift
+//  Toggle.swift
 //  Planner
 //
 //  Created by Alex Green on 2/9/26.
@@ -7,8 +7,10 @@
 
 import SwiftUI
 
-struct AccentToggleView: View {
+struct ToggleView: View {
     let isOn: Bool
+    let tint: Color?
+    let opacity: Double
     let toggle: () -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -20,14 +22,8 @@ struct AccentToggleView: View {
 
     private var primaryColor: Color {
         !isOn
-            ? Color(uiColor: .secondaryLabel)
-            : accentColor.swiftUIColor
-    }
-
-    private var secondaryColor: Color {
-        !isOn
-            ? Color(uiColor: .secondaryLabel)
-            : Color(uiColor: .secondaryLabel)
+            ? Color.secondary
+            : tint ?? accentColor.swiftUIColor
     }
 
     var body: some View {
@@ -35,13 +31,14 @@ struct AccentToggleView: View {
             .imageScale(.large)
             .foregroundStyle(
                 primaryColor,
-                secondaryColor
+                Color.secondary
             )
             .contentTransition(
                 .symbolEffect(
                     .replace
                 )
             )
+            .opacity(opacity)
             .contentShape(Circle())
             .onTapGesture(perform: toggle)
     }

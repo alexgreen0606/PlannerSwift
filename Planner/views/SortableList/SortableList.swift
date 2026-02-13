@@ -25,7 +25,7 @@ struct SortableListView<
     let checkedItems: [Item]
     let showChecked: Bool
     let floatingInfo: FloatingInfo?
-    let customToggleConfig: CustomIconConfig<Item>?
+    let customToggleConfig: RowToggleConfig<Item>?
     let checkedHeader: String
     let checkedFooter: String?
     let emptyUncheckedLabel: String
@@ -49,7 +49,7 @@ struct SortableListView<
     var body: some View {
         List {
             Section {
-                NewItemTriggerView {
+                NewRowTriggerView {
                     createItem(
                         uncheckedItems.first?.id,
                         0
@@ -59,7 +59,7 @@ struct SortableListView<
                 .listRowInsets(EdgeInsets())
 
                 ForEach(uncheckedItems) { item in
-                    ItemView(
+                    RowView(
                         item: item,
                         tint: tint,
                         showChecked: showChecked,
@@ -78,7 +78,7 @@ struct SortableListView<
                 }
                 .onMove(perform: moveUncheckedItem)
 
-                NewItemTriggerView {
+                NewRowTriggerView {
                     createItem(uncheckedItems.last?.id, 1)
                 }
                 .discreetListItem()
@@ -100,7 +100,7 @@ struct SortableListView<
             if showChecked {
                 Section {
                     ForEach(checkedItems) { item in
-                        ItemView(
+                        RowView(
                             item: item,
                             tint: tint,
                             showChecked: true,
@@ -125,7 +125,7 @@ struct SortableListView<
                     if checkedFooter != nil && !checkedItems.isEmpty {
                         Text(checkedFooter!)
                             .font(.footnote)
-                            .foregroundStyle(Color(uiColor: .secondaryLabel))
+                            .foregroundStyle(Color.secondary)
                     }
                 }
                 .discreetListItem()
@@ -142,9 +142,9 @@ struct SortableListView<
                 EmptyLabel(emptyUncheckedLabel)
             }
         }
-        .animation(.linear(duration: 0.2), value: uncheckedItems)
-        .animation(.linear(duration: 0.2), value: listManager.newlyCheckedIds)
-        .animation(.linear(duration: 0.2), value: listManager.newlyUncheckedIds)
+        .animateChange(from: uncheckedItems)
+        .animateChange(from: listManager.newlyCheckedIds)
+        .animateChange(from: listManager.newlyUncheckedIds)
         
         // Slide to checked items when the user marks them visible.
         .onChange(of: showChecked) { _, newShowChecked in

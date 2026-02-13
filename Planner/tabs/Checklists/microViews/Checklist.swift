@@ -153,7 +153,7 @@ struct ChecklistView: View {
         // Transfer Form
         .sheet(isPresented: $isTransferSheetOpen) {
             if let checklist {
-                TransferItemsFormView(
+                TransferChecklistItemsFormView(
                     source: checklist,
                     selectedIds: listManager.selectedItemIds
                 )

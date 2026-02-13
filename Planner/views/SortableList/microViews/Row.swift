@@ -1,5 +1,5 @@
 //
-//  ItemView.swift
+//  Row.swift
 //  Planner
 //
 //  Created by Alex Green on 12/1/25.
@@ -8,7 +8,7 @@
 import SwiftData
 import SwiftUI
 
-struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View
+struct RowView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View
 {
     @Bindable var item: Item
     let tint: (_ item: Item) -> Color
@@ -19,7 +19,7 @@ struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View
     let startAdornment: ((_ item: Item) -> StartAdornment)?
     let endAdornment: ((_ item: Item) -> EndAdornment)?
     let namespace: Namespace.ID?
-    let customToggleConfig: CustomIconConfig<Item>?
+    let customToggleConfig: RowToggleConfig<Item>?
     let onCreateItem:
         (_ baseId: PersistentIdentifier?, _ offset: Int) ->
             Void
@@ -123,22 +123,20 @@ struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View
 
     // Item Toggle
     private var toggle: some View {
-        ItemToggleView(
+        RowToggleView(
             item: item,
             tint: tintColor,
             isChecked: isChecked,
             opacity: opacity,
             customIconConfig: customToggleConfig
-        ) {
-            listManager.toggleItem(item)
-        }
+        )
         .frame(height: 44, alignment: .center)
     }
 
     // Item Text
     private var textStack: some View {
         VStack(spacing: 0) {
-            NewItemTriggerView(
+            NewRowTriggerView(
                 showUpperDivider: showUpperDivider,
                 onCreateItem: {
                     guard !listManager.isSelectMode else {
@@ -167,7 +165,7 @@ struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View
                 }
             }
             .frame(minHeight: 28)
-            NewItemTriggerView(
+            NewRowTriggerView(
                 showLowerDivider: true,
                 onCreateItem: {
                     guard !listManager.isSelectMode else {
@@ -185,7 +183,7 @@ struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View
     // Static Text
     private var titleText: some View {
         Text(item.title)
-            .foregroundColor(Color(uiColor: .label))
+            .foregroundColor(Color.label)
             .opacity(isFocused ? 0 : 1)
             .font(.system(size: UIConstants.listItemFontSize))
             .lineLimit(nil)
@@ -206,7 +204,7 @@ struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View
 
     // Textfield
     private var editableField: some View {
-        TextfieldView(
+        RowTextfieldView(
             text: $item.title,
             isFocused: $isFocused,
             height: $height,
@@ -228,7 +226,7 @@ struct ItemView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View
         )
         .tint(tintColor)
         .frame(height: height)
-        .foregroundColor(Color(uiColor: .label))
+        .foregroundColor(Color.label)
         .opacity(isFocused ? 1 : 0)
         .frame(maxWidth: .infinity, alignment: .leading)
         .fixedSize(horizontal: false, vertical: true)

@@ -71,7 +71,7 @@ class CalendarStore: ObservableObject {
     // More up-to-date than using event.calendar.cgColor directly.
     func calendarColor(for id: String) -> Color {
         guard let calendar = calendarsById[id] else {
-            return Color(uiColor: .secondaryLabel)
+            return Color.secondary
         }
 
         return Color(calendar.cgColor)
@@ -249,6 +249,20 @@ class CalendarStore: ObservableObject {
             try eventStore.remove(event, span: .thisEvent, commit: true)
         } catch {
             assertionFailure("Failed to delete event: \(error)")
+        }
+    }
+    
+    @MainActor
+    func transfer(event: EKEvent, into date: Date) {
+        guard event.calendar.allowsContentModifications else {
+            print("Cannot transfer event. Calendar is read-only.")
+            return
+        }
+
+        do {
+            // TODO: transfer event start date to new date. Maintain time range.
+        } catch {
+            assertionFailure("Failed to transfer event: \(error)")
         }
     }
 

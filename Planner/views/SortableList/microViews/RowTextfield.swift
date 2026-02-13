@@ -1,5 +1,5 @@
 //
-//  TextfieldView.swift
+//  RowTextfieldView.swift
 //  Planner
 //
 //  Created by Alex Green on 12/1/25.
@@ -8,7 +8,7 @@
 import SwiftUI
 import UIKit
 
-struct TextfieldView: UIViewRepresentable {
+struct RowTextfieldView: UIViewRepresentable {
     @Binding var text: String
     @Binding var isFocused: Bool
     @Binding var height: CGFloat
@@ -74,10 +74,10 @@ struct TextfieldView: UIViewRepresentable {
     }
 
     final class Coordinator: NSObject, UITextViewDelegate {
-        let parent: TextfieldView
+        let parent: RowTextfieldView
         weak var textView: UITextView?
 
-        init(_ parent: TextfieldView) {
+        init(_ parent: RowTextfieldView) {
             self.parent = parent
         }
 

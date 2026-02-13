@@ -26,6 +26,8 @@ struct ContentView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Query private var calendarSettingsList: [CalendarSettings]
+    @Query private var plannerSettingsList: [PlannerSettings]
+    @Query var foldersList: [ChecklistItem]
     @Query private var planners: [Planner]
 
     @EnvironmentObject var todaystampWatcher: TodaystampWatcher
@@ -128,10 +130,17 @@ struct ContentView: View {
         }
         .tabBarMinimizeBehavior(.onScrollDown)
 
+        // Ensure all global storage objects exist.
         .task {
             modelContext.ensureCalendarSettings(
                 settings: calendarSettingsList
             )
+            
+            modelContext.ensurePlannerSettings(
+                settings: plannerSettingsList
+            )
+            
+            modelContext.ensureRootFolder(folders: foldersList)
 
             calendarStore.requestAccessAndLoad(
                 hiddenCalendarIds: calendarSettings!.hiddenCalendarIds

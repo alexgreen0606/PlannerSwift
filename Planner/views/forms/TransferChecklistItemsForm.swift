@@ -1,5 +1,5 @@
 //
-//  TransferItemsForm.swift
+//  TransferChecklistItemsForm.swift
 //  Planner
 //
 //  Created by Alex Green on 1/26/26.
@@ -13,7 +13,7 @@ enum FolderNavigationDirection {
     case backward
 }
 
-struct TransferItemsFormView: View {
+struct TransferChecklistItemsFormView: View {
     let source: ChecklistItem
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -170,7 +170,7 @@ struct TransferItemsFormView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 12, height: 12)
-                    .foregroundStyle(Color(uiColor: .secondaryLabel))
+                    .foregroundStyle(Color.secondary)
 
                 destinationChip(destination)
             }

@@ -130,11 +130,6 @@ struct PlannerChipSpreadView: View {
             )
         }
 
-        // Load in the planner settings.
-        .task {
-            modelContext.ensurePlannerSettings(settings: plannerSettingsList)
-        }
-
         // Weather Data
         .externalData(
             key: weatherStore.refreshKey,
@@ -196,7 +191,7 @@ struct PlannerChipSpreadView: View {
 
                     Text(weatherData.condition.description)
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(Color(uiColor: .label))
+                        .foregroundStyle(Color.label)
                 }
 
                 HStack(alignment: .center, spacing: 4) {
@@ -208,7 +203,7 @@ struct PlannerChipSpreadView: View {
                                 design: .rounded
                             )
                         )
-                        .foregroundStyle(Color(uiColor: .label))
+                        .foregroundStyle(Color.label)
 
                     Divider().frame(height: 16)
 
@@ -220,7 +215,7 @@ struct PlannerChipSpreadView: View {
                                 design: .rounded
                             )
                         )
-                        .foregroundStyle(Color(uiColor: .label))
+                        .foregroundStyle(Color.label)
                 }
             }
             .glassChip(color: nil, onTap: openWeatherApp)

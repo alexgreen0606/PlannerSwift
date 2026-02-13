@@ -23,7 +23,7 @@ struct TransferDestinationIndicatorView: View {
 
             Text(title)
                 .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(Color(uiColor: .label))
+                .foregroundStyle(Color.label)
         }
     }
 }

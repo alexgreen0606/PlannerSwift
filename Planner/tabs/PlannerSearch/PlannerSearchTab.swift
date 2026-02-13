@@ -144,13 +144,6 @@ struct PlannerSearchTabView: View {
                         scheduleFilterDebounce()
                     }
 
-                    // Load in the calendar settings.
-                    .task {
-                        modelContext.ensureCalendarSettings(
-                            settings: calendarSettingsList
-                        )
-                    }
-
                     // Reload the data from the page.
                     .refreshable {
                         calendarStore.refresh(

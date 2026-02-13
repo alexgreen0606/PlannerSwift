@@ -12,7 +12,7 @@ import WeatherKit
 
 struct PlannerAccessoryView: View {
     private var todaystamp: String
-    private var animation: Namespace.ID
+    private var namespace: Namespace.ID
     private let openTodayPlanner: () -> Void
 
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
@@ -64,10 +64,10 @@ struct PlannerAccessoryView: View {
 
     init(
         todaystamp: String,
-        animation: Namespace.ID,
+        namespace: Namespace.ID,
         openTodayPlanner: @escaping () -> Void
     ) {
-        self.animation = animation
+        self.namespace = namespace
         self.todaystamp = todaystamp
         self.openTodayPlanner = openTodayPlanner
 
@@ -87,7 +87,7 @@ struct PlannerAccessoryView: View {
                     .font(.callout)
                     .matchedTransitionSource(
                         id: "PLANNER_ACCESSORY",
-                        in: animation
+                        in: namespace
                     )
 
                 HStack(alignment: .center, spacing: 6) {
@@ -109,7 +109,7 @@ struct PlannerAccessoryView: View {
                     Text(planCountLabel)
                         .font(.caption2)
                         .foregroundStyle(
-                            Color(uiColor: .secondaryLabel)
+                            Color.secondary
                         )
                 }
             }
@@ -133,7 +133,7 @@ struct PlannerAccessoryView: View {
                                 .font(.caption2)
                         }
                         .foregroundStyle(
-                            Color(uiColor: .secondaryLabel)
+                            Color.secondary
                         )
                     }
                 }

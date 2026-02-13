@@ -10,8 +10,10 @@ import SwiftDate
 import SwiftUI
 
 struct ChecklistsTabView: View {
+    
     @Environment(\.modelContext) private var modelContext
-    @Query var rootFolders: [ChecklistItem]
+    
+    @Query var foldersList: [ChecklistItem]
 
     @StateObject private var checklistsManager = ListManager<ChecklistItem>()
     @State private var folderPath = NavigationPath()
@@ -23,8 +25,9 @@ struct ChecklistsTabView: View {
 
     @Namespace private var namespace
 
+    // TODO: should I query for parent == nil?
     private var rootFolder: ChecklistItem? {
-        rootFolders.first
+        foldersList.first
     }
 
     var body: some View {
@@ -70,11 +73,6 @@ struct ChecklistsTabView: View {
                 )
             )
             .environmentObject(checklistsManager)
-        }
-
-        // Load in the root folder.
-        .task {
-            modelContext.ensureRootFolder(rootFolders: rootFolders)
         }
     }
 

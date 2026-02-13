@@ -111,13 +111,6 @@ struct CalendarsView: View {
         .onChange(of: calendarSettings?.hiddenCalendarIds) { _, _ in
             scheduleCalendarRefreshDebounce()
         }
-        
-        // Load in the calendar settings.
-        .task {
-            modelContext.ensureCalendarSettings(
-                settings: calendarSettingsList
-            )
-        }
     }
 
     private func scheduleCalendarRefreshDebounce() {

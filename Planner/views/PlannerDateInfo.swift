@@ -46,7 +46,7 @@ struct PlannerDateInfoView: View {
 
                 Text(subtitle)
                     .font(.footnote)
-                    .foregroundStyle(Color(uiColor: .secondaryLabel))
+                    .foregroundStyle(Color.secondary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -218,14 +218,6 @@ struct PlannerCardVerticalView: View {
                 planners: planners,
                 datestamp: datestamp
             )
-
-            modelContext.ensureCalendarSettings(
-                settings: calendarSettingsList
-            )
-
-            modelContext.ensurePlannerSettings(
-                settings: plannerSettingsList
-            )
         }
 
         // Calendar Data Tracking
@@ -253,7 +245,7 @@ struct PlannerCardVerticalView: View {
                 .font(
                     .system(size: 12, weight: .heavy, design: .rounded)
                 )
-                .foregroundStyle(Color(uiColor: .secondaryLabel))
+                .foregroundStyle(Color.secondary)
         }
     }
 
@@ -290,7 +282,7 @@ struct PlannerCardVerticalView: View {
                     HStack {
                         Text(locationLabel)
                             .foregroundStyle(
-                                Color(uiColor: .secondaryLabel)
+                                Color.secondary
                             )
                             .font(.system(size: 10))
 

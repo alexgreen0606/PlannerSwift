@@ -91,7 +91,7 @@ struct FolderView: View {
 
             // Transfer Form
             .sheet(isPresented: $showTransferSheet) {
-                TransferItemsFormView(
+                TransferChecklistItemsFormView(
                     source: folder,
                     selectedIds: selectManager.selectedItemIds
                 )
@@ -272,10 +272,12 @@ struct FolderView: View {
         HStack(alignment: .top, spacing: rowSpacing) {
             HStack(spacing: selectManager.isSelectMode ? 16 : 0) {
 
-                AccentToggleView(
+                ToggleView(
                     isOn: selectManager.selectedItemIds.contains(
                         item.id
-                    )
+                    ),
+                    tint: nil,
+                    opacity: 1,
                 ) {
                     selectManager.toggleItem(item)
                     updateTransferAvailability(
@@ -315,10 +317,7 @@ struct FolderView: View {
             .frame(height: 19)
             .opacity(selectManager.isSelectMode ? 0 : 1)
         }
-        .animation(
-            .easeInOut(duration: 0.3),
-            value: selectManager.isSelectMode
-        )
+        .animateChange(from: selectManager.isSelectMode)
         .id(item.id)
         .alignmentGuide(.listRowSeparatorLeading) { _ in
             iconWidth + rowSpacing

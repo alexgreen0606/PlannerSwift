@@ -93,14 +93,6 @@ struct LocationSearchView: View {
             .overlay {
                 emptyOptionsLabel
             }
-
-            // Load in the planner settings.
-            .task {
-                modelContext.ensurePlannerSettings(
-                    settings: plannerSettingsList
-                )
-            }
-
         }
     }
 
@@ -169,7 +161,7 @@ struct LocationSearchView: View {
                 iconConfig: IconConfig(
                     name: "mappin.and.ellipse",
                     primaryColor: accentColor.swiftUIColor,
-                    secondaryColor: Color(uiColor: .secondaryLabel)
+                    secondaryColor: Color.secondary
                 ),
                 color: nil,
                 onTap: nil
@@ -189,7 +181,7 @@ struct LocationSearchView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 18, height: 18)
-                .foregroundStyle(Color(uiColor: .secondaryLabel))
+                .foregroundStyle(Color.secondary)
 
             VStack(alignment: .leading) {
                 Text("Current Location")
@@ -199,11 +191,10 @@ struct LocationSearchView: View {
                     Text(city)
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(
-                            Color(uiColor: .secondaryLabel)
+                            Color.secondary
                         )
                 }
             }
-
         }
         .glassChip(color: nil, onTap: nil, height: 40)
     }
@@ -215,16 +206,16 @@ struct LocationSearchView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 18, height: 18)
-                .foregroundStyle(Color(uiColor: .secondaryLabel))
+                .foregroundStyle(Color.secondary)
 
             VStack(alignment: .leading) {
-                Text("Home Location")
+                Text("Home")
                     .font(.system(size: 14, weight: .medium))
 
                 Text(home.name)
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(
-                        Color(uiColor: .secondaryLabel)
+                        Color.secondary
                     )
             }
 

@@ -1,5 +1,5 @@
 //
-//  NewItemTriggerView.swift
+//  NewRowTriggerView.swift
 //  Planner
 //
 //  Created by Alex Green on 12/1/25.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct NewItemTriggerView: View {
+struct NewRowTriggerView: View {
     @AppStorage("showListSeparators") private var showListSeparators: Bool =
         true
 

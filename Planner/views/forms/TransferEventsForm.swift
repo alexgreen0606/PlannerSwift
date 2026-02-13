@@ -9,7 +9,7 @@ import SwiftData
 import SwiftUI
 
 struct TransferEventsFormView: View {
-    let sourceDate: Date
+    private let sourceDate: Date
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -25,6 +25,7 @@ struct TransferEventsFormView: View {
     @EnvironmentObject var plannerManager: ListManager<PlannerEvent>
 
     @State private var destinationDate: Date
+    @State private var hasCalendarEvents: Bool = false
 
     private var transferCount: String {
         let count = plannerManager.selectedItems.count
@@ -51,13 +52,16 @@ struct TransferEventsFormView: View {
                         displayedComponents: .date
                     )
                     .datePickerStyle(.graphical)
-                    .listRowBackground(Color.clear)
                     .discreetListItem()
+                } footer: {
+                    if hasCalendarEvents {
+                        Text(
+                            "Calendar events will be moved to the selected date while keeping their original start and end times. Event duration will not change."
+                        )
+                    }
                 }
                 .discreetListItem()
                 .listSectionMargins(.top, 0)
-                .padding(.top, 0)
-
             }
             .scrollDisabled(true)
             .navigationTitle(
@@ -71,7 +75,11 @@ struct TransferEventsFormView: View {
                 transferIndicator
             }
         }
-        .presentationDetents([.height(450)])
+        .presentationDetents([.height(hasCalendarEvents ? 580 : 500)])
+        
+        .task {
+            hasCalendarEvents = plannerManager.selectedItems.contains(where: {$0.calendarEvent != nil})
+        }
     }
 
     // MARK: - Toolbars
@@ -79,26 +87,12 @@ struct TransferEventsFormView: View {
     @ToolbarContentBuilder
     private var topRightToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
-            Button("Submit", systemImage: "checkmark", role: .confirm) {
-                // TODO: transfer
-
-                //                guard let destination, destination.id != source.id else {
-                //                    return
-                //                }
-                //
-                //                do {
-                //                    try modelContext.transaction {
-                //                        destination.inheritItems(plannerManager.selectedItems)
-                //                    }
-                //                } catch {
-                //                    assertionFailure("Failed to transfer items: \(error)")
-                //                    return
-                //                }
-
-                plannerManager.toggleSelectMode()
-
-                dismiss()
-            }
+            Button(
+                "Submit",
+                systemImage: "checkmark",
+                role: .confirm,
+                action: handleTransfer
+            )
             .disabled(destinationDate == sourceDate)
             .tint(accentColor.swiftUIColor)
         }
@@ -115,7 +109,7 @@ struct TransferEventsFormView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 12, height: 12)
-                    .foregroundStyle(Color(uiColor: .secondaryLabel))
+                    .foregroundStyle(Color.secondary)
 
                 destinationChip
             }
@@ -146,6 +140,26 @@ struct TransferEventsFormView: View {
                 secondaryColor: nil
             )
         )
+    }
+
+    private func handleTransfer() {
+        let targetDatestamp = destinationDate.datestamp
+        let planner = modelContext.loadPlanner(for: targetDatestamp)
+
+        var plannerEvents: [PlannerEvent] = []
+
+        for event in plannerManager.selectedItems {
+            if let calEvent = event.calendarEvent {
+
+            } else {
+                plannerEvents.append(event)
+            }
+        }
+
+        modelContext.transferPlannerEvents(plannerEvents, into: planner)
+
+        plannerManager.toggleSelectMode()
+        dismiss()
     }
 
 }

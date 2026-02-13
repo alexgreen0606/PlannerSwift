@@ -118,7 +118,7 @@ struct ChecklistItemFormView: View {
                     }
                     .tint(
                         draft.title.isEmpty
-                            ? Color(uiColor: .label) : draft.color.swiftUIColor
+                            ? Color.label : draft.color.swiftUIColor
                     )
                     .disabled(draft.title.isEmpty || !isDirty)
                 }

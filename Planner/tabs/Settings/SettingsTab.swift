@@ -156,13 +156,6 @@ struct SettingsTabView: View {
 
             }
             .navigationTitle("Settings")
-
-            // Ensure planner settings.
-            .task {
-                modelContext.ensurePlannerSettings(
-                    settings: plannerSettingsList
-                )
-            }
         }
     }
 

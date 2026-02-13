@@ -16,7 +16,7 @@ struct TransferSourceIndicatorView: View {
         VStack(spacing: 2) {
             Text(title)
                 .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(Color(uiColor: .label))
+                .foregroundStyle(Color.label)
 
             HStack(spacing: 4) {
                 Image(systemName: iconConfig.name)
@@ -30,7 +30,7 @@ struct TransferSourceIndicatorView: View {
                 Text(subtitle)
                     .font(.system(size: 8, weight: .medium))
                     .foregroundStyle(
-                        Color(uiColor: .secondaryLabel)
+                        Color.secondary
                     )
             }
         }

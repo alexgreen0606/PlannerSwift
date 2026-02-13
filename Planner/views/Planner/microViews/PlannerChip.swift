@@ -22,14 +22,14 @@ struct PlannerChipView: View {
                     .frame(width: 14, height: 14)
                     .foregroundStyle(
                         iconConfig.primaryColor ?? color
-                            ?? Color(uiColor: .label),
-                        iconConfig.secondaryColor ?? Color(uiColor: .label)
+                            ?? Color.label,
+                        iconConfig.secondaryColor ?? Color.label
                     )
             }
 
             Text(title)
                 .font(.system(size: 14, weight: .medium))
-                .foregroundColor(color ?? Color(uiColor: .label))
+                .foregroundColor(color ?? Color.label)
         }
         .glassChip(color: color, onTap: onTap)
     }

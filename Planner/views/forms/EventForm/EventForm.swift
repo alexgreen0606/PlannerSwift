@@ -136,10 +136,6 @@ struct EventFormView: View {
             selection: $selectedDetent
         )
         .task {
-            modelContext.ensureCalendarSettings(
-                settings: calendarSettingsList
-            )
-
             calendarEventToggler.calendarSettings = calendarSettings
         }
     }
@@ -277,7 +273,7 @@ struct EventFormView: View {
         let hasEventMoved =
             initialPlannerEvent?.planner?.datestamp != targetDatestamp
 
-        let planner = loadPlanner(for: targetDatestamp)
+        let planner = modelContext.loadPlanner(for: targetDatestamp)
         let combinedEvents = getPlannerEvents(for: planner)
         let bottomSortIndex = (combinedEvents.last?.sortIndex ?? 0) + 8.0
 
@@ -345,7 +341,7 @@ struct EventFormView: View {
         }
 
         let targetDatestamp = event.startDate.datestamp
-        let planner = loadPlanner(for: targetDatestamp)
+        let planner = modelContext.loadPlanner(for: targetDatestamp)
 
         // Rebuild planner events using the same pipeline as the list
         let rebuiltEvents = getPlannerEvents(for: planner)
@@ -387,30 +383,6 @@ struct EventFormView: View {
             hiddenCalendarIds: calendarSettings?.hiddenCalendarIds
                 ?? []
         )
-    }
-
-    private func loadPlanner(
-        for datestamp: String
-    ) -> Planner {
-
-        let descriptor = FetchDescriptor<Planner>(
-            predicate: #Predicate<Planner> { planner in
-                planner.datestamp == datestamp
-            }
-        )
-
-        do {
-            let planners = try modelContext.fetch(descriptor)
-
-            guard let planner = planners.first else {
-                return Planner(datestamp: datestamp, location: nil)
-            }
-
-            return planner
-        } catch {
-            assertionFailure("Failed to load in the planner: \(error)")
-            return Planner(datestamp: datestamp, location: nil)
-        }
     }
 
     private func getPlannerEvents(
