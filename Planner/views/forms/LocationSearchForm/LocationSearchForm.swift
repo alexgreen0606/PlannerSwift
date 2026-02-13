@@ -352,15 +352,34 @@ struct LocationSearchView: View {
         .contentShape(Rectangle())
         .onTapGesture {
             Task {
-                guard
-                    let city =
-                        await locationFinder.selectCompletion(
-                            option
-                        )
-                else { return }
+                guard let result = await locationFinder.selectCompletion(option)
+                else {
+                    return
+                }
 
                 selectedLocationSource = .custom
-                selectedLocation = selectedLocation == city ? nil : city
+
+                // Re-use existing locations if they already exists in storage.
+                let locationKey = coordinateKey(
+                    lat: result.latitude,
+                    long: result.longitude
+                )
+
+                guard
+                    let existing = existingLocations.first(where: {
+                        $0.key == locationKey
+                    })
+                else {
+                    selectedLocation = Location(
+                        name: result.name,
+                        subtitle: result.subtitle,
+                        latitude: result.latitude,
+                        longitude: result.longitude
+                    )
+                    return
+                }
+
+                selectedLocation = existing
             }
         }
     }

@@ -8,10 +8,7 @@
 extension Location {
 
     var key: String {
-        let lat = self.latitude.roundDecimals(to: 4)
-        let lon = self.longitude.roundDecimals(to: 4)
-
-        return "\(lat),\(lon)"
+        coordinateKey(lat: self.latitude, long: self.longitude)
     }
 
 }

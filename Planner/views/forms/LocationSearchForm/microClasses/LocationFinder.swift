@@ -36,7 +36,9 @@ class LocationFinder: NSObject, ObservableObject,
         print("Completer error: \(error)")
     }
 
-    func selectCompletion(_ completion: MKLocalSearchCompletion) async -> Location? {
+    func selectCompletion(_ completion: MKLocalSearchCompletion) async -> (
+        name: String, subtitle: String, latitude: Double, longitude: Double
+    )? {
         let request = MKLocalSearch.Request(completion: completion)
         let search = MKLocalSearch(request: request)
 
@@ -48,10 +50,9 @@ class LocationFinder: NSObject, ObservableObject,
             }
 
             let coordinate = item.location.coordinate
-            let name = completion.title
 
-            return Location(
-                name: name,
+            return (
+                name: completion.title,
                 subtitle: completion.subtitle,
                 latitude: coordinate.latitude,
                 longitude: coordinate.longitude
