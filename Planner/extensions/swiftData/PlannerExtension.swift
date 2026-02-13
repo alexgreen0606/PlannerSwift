@@ -125,13 +125,26 @@ extension Planner {
             print(
                 "\(event.planner?.datestamp ?? "ORPHANED") -> \(event.title) -> \(self.datestamp)"
             )
+
+            if let date = event.date {
+                if let newDate = date.shiftDate(to: self.datestamp) {
+                    print("P: \(date) -> \(newDate)")
+                    event.date = newDate
+                } else {
+                    assertionFailure(
+                        "ERROR PlannerExtension.inheritEvents: Failed to shift event to new date."
+                    )
+                    event.date = nil
+                }
+            }
+
             event.planner = self
         }
 
         normalizeSortIndexesSafely()
     }
 
-    // TODO: this should account for calendar events as well
+    // TODO: this should account for calendar events as well and sort everything
     private func normalizeSortIndexesSafely() {
         let sorted = events.sorted { $0.sortIndex < $1.sortIndex }
 

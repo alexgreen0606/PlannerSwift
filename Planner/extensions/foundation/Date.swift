@@ -67,6 +67,20 @@ extension Date {
         DateInRegion(self, region: .local).toFormat("yyyy-MM-dd")
     }
 
+    func shiftDate(to datestamp: String) -> Date? {
+        guard let newDate = datestamp.dateInLocalRegion else {
+            return nil
+        }
+
+        let original = DateInRegion(self, region: .local)
+
+        return original.dateBySet([
+            .year: newDate.year,
+            .month: newDate.month,
+            .day: newDate.day,
+        ])?.date
+    }
+
     func timeValues(for datestamp: String) -> (
         timeValue: String, indicator: String, detail: String?
     ) {  // Ex: 12:37, PM, END

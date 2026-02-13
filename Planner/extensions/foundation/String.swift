@@ -33,6 +33,11 @@ extension String {
     var date: Date? {
         self.toDate("yyyy-MM-dd", region: .local)?.date
     }
+    
+    // Expects YYYY-MM-DD format.
+    var dateInLocalRegion: DateInRegion? {
+        self.toDate("yyyy-MM-dd", region: .local)
+    }
 
     // Expect 24-hour HH:MM format.
     func toDate(for datestamp: String) -> Date? {
