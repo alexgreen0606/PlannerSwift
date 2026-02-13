@@ -188,6 +188,7 @@ struct PlannerView: View {
                     topRightToolbar
                     bottomToolbar(proxy)
                 }
+                .animateChange(from: plannerManager.isSelectMode)
 
                 // Event Sheet
                 .sheet(item: $eventSheetContext) { context in
@@ -269,104 +270,98 @@ struct PlannerView: View {
     @ToolbarContentBuilder
     private var topLeftToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
-            Group {
-                if !plannerManager.isSelectMode {
-                    Button("Back", systemImage: "chevron.left") {
-                        closePlanner()
-                    }
-                } else {
-                    Button("Cancel", systemImage: "xmark") {
-                        plannerManager.toggleSelectMode()
-                    }
+            if !plannerManager.isSelectMode {
+                Button("Back", systemImage: "chevron.left") {
+                    closePlanner()
+                }
+            } else {
+                Button("Cancel", systemImage: "xmark") {
+                    plannerManager.toggleSelectMode()
                 }
             }
-            .animateChange(from: plannerManager.isSelectMode)
         }
     }
 
     @ToolbarContentBuilder
     private var topRightToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
-            Group {
-                if !plannerManager.isSelectMode {
-                    Menu {
-                        Button(
-                            action: {
-                                plannerType == .future
-                                    ? planner?.showCanceled.toggle()
-                                    : planner?.showCompleted.toggle()
-                            },
-                            label: {
-                                Text(
-                                    plannerType.getToggleVisibilityLabel(
-                                        showChecked
-                                    )
+            if !plannerManager.isSelectMode {
+                Menu {
+                    Button(
+                        action: {
+                            plannerType == .future
+                                ? planner?.showCanceled.toggle()
+                                : planner?.showCompleted.toggle()
+                        },
+                        label: {
+                            Text(
+                                plannerType.getToggleVisibilityLabel(
+                                    showChecked
                                 )
-                                Image(
-                                    systemName: showChecked
-                                        ? "eye.slash" : "eye"
-                                )
-                            }
-                        )
-
-                        Button {
-                            plannerManager.toggleSelectMode()
-                        } label: {
-                            Image(systemName: "checkmark.circle")
-                            Text("Select events")
-                                .fontWeight(.semibold)
-                        }
-                        .disabled(visibleEvents.isEmpty)
-
-                        Menu {
-                            Button(role: .destructive) {
-                                isDeleteCheckedConfirmationOpen = true
-                            } label: {
-                                Text(plannerType.deleteCheckedLabel)
-                                Image(systemName: "trash")
-                            }
-                            .disabled(rawCheckedEvents.isEmpty)
-
-                        } label: {
-                            Text("Delete options")
-                            Image(systemName: "trash")
-                        }
-
-                    } label: {
-                        Image(systemName: "ellipsis")
-                    }
-                    .confirmationDialog(
-                        plannerType.deleteCheckedConfirmationTitle,
-                        isPresented: $isDeleteCheckedConfirmationOpen,
-                        titleVisibility: .visible
-                    ) {
-                        Button("Confirm", role: .destructive) {
-                            deleteAllCheckedEvents()
-                        }
-                    } message: {
-                        Text(
-                            "Calendar events will not be deleted. This action is irreversible."
-                        )
-                    }
-                } else {
-                    Button {
-                        if isAllSelected {
-                            plannerManager.selectedItemIds = []
-                            plannerManager.selectedItems = []
-                        } else {
-                            plannerManager.selectedItems = visibleEvents
-                            plannerManager.selectedItemIds = Set(
-                                visibleEvents.map { $0.id }
+                            )
+                            Image(
+                                systemName: showChecked
+                                    ? "eye.slash" : "eye"
                             )
                         }
+                    )
+
+                    Button {
+                        plannerManager.toggleSelectMode()
                     } label: {
-                        Text(isAllSelected ? "Deselect All" : "Select All")
+                        Image(systemName: "checkmark.circle")
+                        Text("Select events")
                             .fontWeight(.semibold)
                     }
                     .disabled(visibleEvents.isEmpty)
+
+                    Menu {
+                        Button(role: .destructive) {
+                            isDeleteCheckedConfirmationOpen = true
+                        } label: {
+                            Text(plannerType.deleteCheckedLabel)
+                            Image(systemName: "trash")
+                        }
+                        .disabled(rawCheckedEvents.isEmpty)
+
+                    } label: {
+                        Text("Delete options")
+                        Image(systemName: "trash")
+                    }
+
+                } label: {
+                    Image(systemName: "ellipsis")
                 }
+                .confirmationDialog(
+                    plannerType.deleteCheckedConfirmationTitle,
+                    isPresented: $isDeleteCheckedConfirmationOpen,
+                    titleVisibility: .visible
+                ) {
+                    Button("Confirm", role: .destructive) {
+                        deleteAllCheckedEvents()
+                    }
+                } message: {
+                    Text(
+                        "Calendar events will not be deleted. This action is irreversible."
+                    )
+                }
+            } else {
+                Button {
+                    if isAllSelected {
+                        plannerManager.selectedItemIds = []
+                        plannerManager.selectedItems = []
+                    } else {
+                        plannerManager.selectedItems = visibleEvents
+                        plannerManager.selectedItemIds = Set(
+                            visibleEvents.map { $0.id }
+                        )
+                    }
+                } label: {
+                    Text(isAllSelected ? "Deselect All" : "Select All")
+                        .fontWeight(.semibold)
+                }
+                .disabled(visibleEvents.isEmpty)
             }
-            .animateChange(from: plannerManager.isSelectMode)
         }
     }
 
@@ -374,78 +369,75 @@ struct PlannerView: View {
     private func bottomToolbar(_ proxy: ScrollViewProxy) -> some ToolbarContent
     {
         ToolbarItemGroup(placement: .bottomBar) {
-            Group {
-                if !plannerManager.isSelectMode {
-                    Spacer()
+            if !plannerManager.isSelectMode {
+                Spacer()
 
-                    Button("Add", systemImage: "plus") {
-                        if let last = sortedOpenPlans.last,
-                            last.title.isEmpty
-                        {
-                            return
-                        }
-
-                        DispatchQueue.main.async {
-                            withAnimation {
-                                proxy.scrollTo("UNCHECKED", anchor: .bottom)
-                            }
-                        }
-
-                        createEvent(at: sortedOpenPlans.count)
+                Button("Add", systemImage: "plus") {
+                    if let last = sortedOpenPlans.last,
+                        last.title.isEmpty
+                    {
+                        return
                     }
-                    .tint(accentColor.swiftUIColor)
-                } else {
-                    DeleteSelectedButtonView(
-                        itemsLabel: "events",
-                        disabled: plannerManager.selectedItemIds.isEmpty,
-                        warningMessage:
-                            "Calendar and planner events will be lost."
-                    ) {
-                        let selectedEvents = plannerManager.selectedItems
 
-                        var plannerOnlyEvents: [PlannerEvent] = []
-
-                        for event in selectedEvents {
-                            if let calEvent = event.calendarEvent {
-                                // Delete from device calendar.
-                                calendarStore.delete(event: calEvent)
-                            } else {
-                                plannerOnlyEvents.append(event)
-                            }
-                        }
-
-                        // Delete non-calendar events.
-                        if !plannerOnlyEvents.isEmpty {
-                            modelContext.deletePlannerEvents(plannerOnlyEvents)
-                        }
-
-                        reloadCalendar()
-
-                        DispatchQueue.main.asyncAfter(
-                            deadline: .now() + .milliseconds(750)
-                        ) {
-                            withAnimation {
-                                plannerManager.toggleSelectMode()
-                            }
+                    DispatchQueue.main.async {
+                        withAnimation {
+                            proxy.scrollTo("UNCHECKED", anchor: .bottom)
                         }
                     }
 
-                    Spacer()
-
-                    Button(
-                        "Transfer",
-                        systemImage: "arrow.forward.folder"
-                    ) {
-                        showTransferSheet = true
-                    }
-                    .disabled(plannerManager.selectedItemIds.isEmpty)
-                    .matchedTransitionSource(
-                        id: "TRANSFER",
-                        in: namespace
-                    )
+                    createEvent(at: sortedOpenPlans.count)
                 }
+                .tint(accentColor.swiftUIColor)
+            } else {
+                DeleteSelectedButtonView(
+                    itemsLabel: "events",
+                    disabled: plannerManager.selectedItemIds.isEmpty,
+                    warningMessage:
+                        "Calendar and planner events will be lost."
+                ) {
+                    let selectedEvents = plannerManager.selectedItems
+
+                    var plannerOnlyEvents: [PlannerEvent] = []
+
+                    for event in selectedEvents {
+                        if let calEvent = event.calendarEvent {
+                            // Delete from device calendar.
+                            calendarStore.delete(event: calEvent)
+                        } else {
+                            plannerOnlyEvents.append(event)
+                        }
+                    }
+
+                    // Delete non-calendar events.
+                    if !plannerOnlyEvents.isEmpty {
+                        modelContext.deletePlannerEvents(plannerOnlyEvents)
+                    }
+
+                    reloadCalendar()
+
+                    DispatchQueue.main.asyncAfter(
+                        deadline: .now() + .milliseconds(750)
+                    ) {
+                        withAnimation {
+                            plannerManager.toggleSelectMode()
+                        }
+                    }
+                }
+
+                Spacer()
+
+                Button(
+                    "Transfer",
+                    systemImage: "arrow.forward.folder"
+                ) {
+                    showTransferSheet = true
+                }
+                .disabled(plannerManager.selectedItemIds.isEmpty)
+                .matchedTransitionSource(
+                    id: "TRANSFER",
+                    in: namespace
+                )
             }
-            .animateChange(from: plannerManager.isSelectMode)
         }
     }
 

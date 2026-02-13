@@ -64,6 +64,7 @@ struct FolderView: View {
                 topLeftToolbar
                 topRightToolbar
             }
+            .animateChange(from: selectManager.isSelectMode)
 
             // Create Item Form
             .sheet(isPresented: $showCreateSheet) {
@@ -130,41 +131,39 @@ struct FolderView: View {
 
     @ToolbarContentBuilder
     private var topLeftToolbar: some ToolbarContent {
-        Group {
-            if !selectManager.isSelectMode {
-                if folder.parent != nil {
-                    ToolbarItemGroup(placement: .topBarLeading) {
-                        Button("Back", systemImage: "chevron.left") {
-                            dismiss()
-                        }
+        if !selectManager.isSelectMode {
+            if folder.parent != nil {
+                ToolbarItemGroup(placement: .topBarLeading) {
+                    Button("Back", systemImage: "chevron.left") {
+                        dismiss()
                     }
                 }
-            } else {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Close", systemImage: "xmark") {
-                        selectManager.toggleSelectMode()
-                    }
+            }
+        } else {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Close", systemImage: "xmark") {
+                    selectManager.toggleSelectMode()
                 }
+            }
 
-                ToolbarSpacer(.fixed, placement: .topBarLeading)
+            ToolbarSpacer(.fixed, placement: .topBarLeading)
 
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        if isAllSelected {
-                            selectManager.selectedItemIds = []
-                            selectManager.selectedItems = []
-                        } else {
-                            selectManager.selectedItems = sortedItems
-                            selectManager.selectedItemIds = Set(
-                                sortedItems.map { $0.id }
-                            )
-                        }
-                    } label: {
-                        Text(isAllSelected ? "Deselect All" : "Select All")
-                            .fontWeight(.semibold)
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    if isAllSelected {
+                        selectManager.selectedItemIds = []
+                        selectManager.selectedItems = []
+                    } else {
+                        selectManager.selectedItems = sortedItems
+                        selectManager.selectedItemIds = Set(
+                            sortedItems.map { $0.id }
+                        )
                     }
-                    .disabled(sortedItems.isEmpty)
+                } label: {
+                    Text(isAllSelected ? "Deselect All" : "Select All")
+                        .fontWeight(.semibold)
                 }
+                .disabled(sortedItems.isEmpty)
             }
         }
     }
@@ -277,24 +276,19 @@ struct FolderView: View {
                         item.id
                     ),
                     tint: nil,
-                    opacity: 1,
+                    opacity: selectManager.isSelectMode ? 1 : 0,
                 ) {
                     selectManager.toggleItem(item)
                     updateTransferAvailability(
                         Set(selectManager.selectedItemIds + [folder.id])
                     )
                 }
-                .opacity(selectManager.isSelectMode ? 1 : 0)
                 .frame(width: selectManager.isSelectMode ? 22 : 0)
                 .allowsHitTesting(selectManager.isSelectMode)
 
                 itemIcon(for: item)
             }
             .frame(height: 19)
-            .matchedTransitionSource(
-                id: item.id,
-                in: namespace
-            )
 
             Text(item.title)
                 .font(.system(size: UIConstants.listItemFontSize))
@@ -315,9 +309,7 @@ struct FolderView: View {
                 }
             }
             .frame(height: 19)
-            .opacity(selectManager.isSelectMode ? 0 : 1)
         }
-        .animateChange(from: selectManager.isSelectMode)
         .id(item.id)
         .alignmentGuide(.listRowSeparatorLeading) { _ in
             iconWidth + rowSpacing
