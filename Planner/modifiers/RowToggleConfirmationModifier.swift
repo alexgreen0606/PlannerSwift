@@ -46,7 +46,7 @@ private struct RowToggleConfirmationModifier<Item: ListItem>: ViewModifier {
 
 extension View {
 
-    func withConfirmation<Item: ListItem>(
+    func withToggleConfirmation<Item: ListItem>(
         _ config: RowConfirmationConfig<Item>?,
         item: Item,
         isPresented: Binding<Bool>

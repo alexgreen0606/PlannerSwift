@@ -51,7 +51,7 @@ struct RowToggleConfig<Item: ListItem> {
                     toggle()
                 }
             }
-            .withConfirmation(
+            .withToggleConfirmation(
                 confirmation,
                 item: item,
                 isPresented: isConfirmationOpen
