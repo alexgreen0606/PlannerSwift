@@ -1,5 +1,5 @@
 //
-//  ConfirmationModifier.swift
+//  RowToggleConfirmationModifier.swift
 //  Planner
 //
 //  Created by Alex Green on 2/12/26.
@@ -7,15 +7,14 @@
 
 import SwiftUI
 
-private struct ConfirmationModifier<Item: ListItem>: ViewModifier {
-
+private struct RowToggleConfirmationModifier<Item: ListItem>: ViewModifier {
     let config: RowConfirmationConfig<Item>?
     let item: Item
     @Binding var isPresented: Bool
 
     func body(content: Content) -> some View {
         if let config,
-           config.needsConfirmation(item)
+            config.needsConfirmation(item)
         {
             content
                 .confirmationDialog(
@@ -53,11 +52,12 @@ extension View {
         isPresented: Binding<Bool>
     ) -> some View {
         modifier(
-            ConfirmationModifier(
+            RowToggleConfirmationModifier(
                 config: config,
                 item: item,
                 isPresented: isPresented
             )
         )
     }
+
 }
