@@ -74,10 +74,10 @@ struct LocationSearchView: View {
                 .background(Color(uiColor: .systemBackground).ignoresSafeArea())
 
                 // Keep the list scrolled to the top when results change.
-                .prioritizeTopItemScroll(
+                .withScrollTrigger(
                     proxy: proxy,
                     trigger: locationFinder.suggestions,
-                    firstItemId: topSuggestionId
+                    id: topSuggestionId
                 )
             }
             .navigationTitle(title)

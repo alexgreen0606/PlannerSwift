@@ -37,17 +37,18 @@ extension View {
             )
     }
 
-    func prioritizeTopItemScroll<Trigger: Equatable, ID: Hashable>(
+    func withScrollTrigger<Trigger: Equatable, ID: Hashable>(
         proxy: ScrollViewProxy,
         trigger: Trigger,
-        firstItemId: ID?
+        id: ID?,
+        disabled: Bool = false
     ) -> some View {
         self.onChange(of: trigger) { _, _ in
-            guard let firstItemId else { return }
+            guard !disabled, let id else { return }
 
             DispatchQueue.main.async {
                 withAnimation {
-                    proxy.scrollTo(firstItemId, anchor: .top)
+                    proxy.scrollTo(id, anchor: .top)
                 }
             }
         }

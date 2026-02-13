@@ -142,25 +142,23 @@ struct SortableListView<
                 EmptyLabel(emptyUncheckedLabel)
             }
         }
-        .animateChange(from: uncheckedItems)
-        .animateChange(from: listManager.newlyCheckedIds)
-        .animateChange(from: listManager.newlyUncheckedIds)
-        
-        // Slide to checked items when the user marks them visible.
-        .onChange(of: showChecked) { _, newShowChecked in
-            if newShowChecked {
-                DispatchQueue.main.async {
-                    withAnimation {
-                        proxy.scrollTo("UNCHECKED", anchor: .top)
-                    }
-                }
-            }
-        }
-        
+
         // Blur the textfield when the list unmounts (deletes empty items).
         .onDisappear {
             focusController.focusedId = nil
         }
+        
+        .animateChange(from: uncheckedItems)
+        .animateChange(from: listManager.newlyCheckedIds)
+        .animateChange(from: listManager.newlyUncheckedIds)
+
+        // Slide to checked items when the user marks them visible.
+        .withScrollTrigger(
+            proxy: proxy,
+            trigger: showChecked,
+            id: "CHECKED",
+            disabled: !showChecked
+        )
     }
 
     private func moveUncheckedItem(

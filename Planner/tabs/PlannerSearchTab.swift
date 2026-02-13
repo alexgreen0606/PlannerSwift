@@ -161,10 +161,10 @@ struct PlannerSearchTabView: View {
                     )
 
                     // Keep the list scrolled to the top whenever the results change.
-                    .prioritizeTopItemScroll(
+                    .withScrollTrigger(
                         proxy: proxy,
                         trigger: refreshKey,
-                        firstItemId: topDatestamp
+                        id: topDatestamp
                     )
                     
                     // Calculate the layout values once the UI settles.

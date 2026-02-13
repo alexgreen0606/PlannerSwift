@@ -1,5 +1,5 @@
 //
-//  Calendars.swift
+//  CalendarsForm.swift
 //  Planner
 //
 //  Created by Alex Green on 1/22/26.
@@ -10,7 +10,7 @@ import EventKit
 import SwiftData
 import SwiftUI
 
-struct CalendarsView: View {
+struct CalendarsFormView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Query private var calendarSettingsList: [CalendarSettings]
