@@ -42,7 +42,7 @@ extension Planner {
             return homeLocation.name
         }
 
-        return localCityName
+        return localCityName ?? "Current Location"
     }
 
     func locationIconConfig(

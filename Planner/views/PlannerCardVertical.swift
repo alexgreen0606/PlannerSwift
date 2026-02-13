@@ -21,6 +21,9 @@ struct PlannerCardVerticalView: View {
 
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
         .system
+    
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        AccentColor.blue
 
     @Environment(\.colorScheme) private var systemColorScheme
     @Environment(\.modelContext) private var modelContext
@@ -67,6 +70,13 @@ struct PlannerCardVerticalView: View {
         planner?.locationLabel(
             settings: plannerSettings,
             localCityName: weatherStore.locationManager.cityName
+        )
+    }
+    
+    private var locationIconConfig: IconConfig? {
+        planner?.locationIconConfig(
+            settings: plannerSettings,
+            accentColor: accentColor
         )
     }
 
@@ -199,7 +209,7 @@ struct PlannerCardVerticalView: View {
         }
         .padding(.horizontal)
         .padding(.top)
-        .padding(.bottom, 6)
+        .padding(.bottom, 12)
         .frame(width: 240)
         .frame(height: 330, alignment: .top)
         .background(
@@ -265,26 +275,48 @@ struct PlannerCardVerticalView: View {
 
     @ViewBuilder
     private var weatherInfo: some View {
-        HStack {
-            if let weatherData, let locationLabel {
+        HStack(alignment: .bottom) {
+            if let weatherData {
                 Image(systemName: weatherData.symbolName)
                     .symbolVariant(isDarkMode ? .fill : .none)
                     .symbolRenderingMode(isDarkMode ? .multicolor : .monochrome)
                     .imageScale(.medium)
+                    .frame(maxHeight: .infinity)
+            }
 
-                VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 0) {
+
+                if let weatherData {
                     Text(weatherData.condition.description)
                         .font(.system(size: 12, design: .rounded))
+                }
 
-                    HStack {
-                        Text(locationLabel)
-                            .foregroundStyle(
-                                Color.secondary
-                            )
-                            .font(.system(size: 10))
+                HStack {
 
-                        Spacer()
+                    if let locationLabel, let locationIconConfig {
+                        HStack(spacing: 6) {
+                            if weatherData == nil {
+                                Image(systemName: locationIconConfig.name)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 11, height: 11)
+                                    .foregroundStyle(
+                                        locationIconConfig.primaryColor ?? .secondary,
+                                        locationIconConfig.secondaryColor ?? .secondary
+                                    )
+                            }
+                            
+                            Text(locationLabel)
+                                .foregroundStyle(
+                                    Color.secondary
+                                )
+                                .font(.system(size: 10))
+                        }
+                    }
 
+                    Spacer()
+
+                    if let weatherData {
                         HStack(alignment: .center, spacing: 4) {
                             Text(weatherData.highTempString(in: weatherUnit))
                                 .font(
@@ -306,9 +338,12 @@ struct PlannerCardVerticalView: View {
                         }
                     }
                 }
+                .frame(maxHeight: .infinity, alignment: .bottom)
             }
         }
-        .frame(height: 40)
+        .frame(height: 30)
+        .animateChange(from: weatherData != nil)
+        .animateChange(from: locationLabel != nil)
     }
 
     private func synchronizeCalendarEvents() {
@@ -321,7 +356,7 @@ struct PlannerCardVerticalView: View {
                 with: calendarSettings
             ) ?? calendarPlannerEvents
     }
-    
+
     private func isCalendarEventChecked(_ event: EKEvent?) -> Bool {
         guard let calendarSettings, let event else {
             return false
