@@ -12,24 +12,24 @@ import SwiftData
 @available(iOS 26.0, *)
 @Model
 class PlannerEvent: ListItem {
-    var date: Date?
-
-    @Relationship(inverse: \Planner.events)
-    var planner: Planner?
+    var date: Date
+    
+    // Default events to generic, untimed events.
+    var untimed: Bool = true
 
     @Transient
     var calendarEvent: EKEvent? = nil
 
     init(
+        date: Date,
+        calendarEvent: EKEvent? = nil,
         sortIndex: Double,
-        planner: Planner? = nil,
-        calendarEvent: EKEvent? = nil
     ) {
+        self.date = date
+        
         super.init(sortIndex: sortIndex)
         
-        self.planner = planner
         self.calendarEvent = calendarEvent
         self.title = calendarEvent?.title ?? ""
-        date = calendarEvent?.startDate  // TODO: use end date if needed (MULTI_DAY)
     }
 }

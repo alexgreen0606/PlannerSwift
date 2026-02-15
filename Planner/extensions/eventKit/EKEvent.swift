@@ -6,6 +6,7 @@
 //
 
 import EventKit
+import SwiftDate
 import SwiftUI
 
 extension EKEvent {
@@ -16,15 +17,14 @@ extension EKEvent {
     
     @ViewBuilder
     func timeValueView(
-        for datestamp: String,
+        in region: Region,
         openSheet: (() -> Void)?
     ) -> some View {
 
         // TODO: determine if start or end date
 
         TimeValue(
-            date: self.startDate,
-            datestamp: datestamp,
+            day: DateInRegion(self.startDate, region: region),
             disabled: false,
             color: Color(self.calendar.cgColor)
         ) {

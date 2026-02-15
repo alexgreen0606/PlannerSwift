@@ -9,20 +9,24 @@ import SwiftData
 
 @Model
 class Planner {
+    
+    // Converts to the start of day based on the planner's location.
     @Attribute(.unique) var datestamp: String
+    
     var showCompleted: Bool = false
     var showCanceled: Bool = false
+    
     var locationSource = LocationSource.home
     
     @Relationship(deleteRule: .cascade)
     var location: Location?
 
-    @Relationship(deleteRule: .cascade)
-    var events = [PlannerEvent]()
+//    @Relationship(deleteRule: .cascade)
+//    var events = [PlannerEvent]()
     
     init(datestamp: String, location: Location?) {
         self.datestamp = datestamp
         self.location = location
-        self.events = []
+        // self.events = []
     }
 }

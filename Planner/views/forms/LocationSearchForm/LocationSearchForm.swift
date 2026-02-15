@@ -375,7 +375,8 @@ struct LocationSearchView: View {
                         name: result.name,
                         subtitle: result.subtitle,
                         latitude: result.latitude,
-                        longitude: result.longitude
+                        longitude: result.longitude,
+                        timeZoneIdentifier: result.timeZoneIdentifier
                     )
                     return
                 }

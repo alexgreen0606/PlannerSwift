@@ -7,6 +7,7 @@
 
 import EventKit
 import SwiftUI
+import SwiftDate
 
 struct PreviewPlannerEventListView: View {
     let datestamp: String
@@ -30,7 +31,8 @@ struct PreviewPlannerEventListView: View {
                         Spacer()
 
                         event.timeValueView(
-                            for: datestamp,
+                            // TODO: pass correct region
+                            in: .local,
                             openSheet: nil,
                             accentColor: accentColor.swiftUIColor
                         )

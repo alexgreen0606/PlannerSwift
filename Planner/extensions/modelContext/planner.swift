@@ -77,25 +77,4 @@ extension ModelContext {
         // function that called this.
     }
     
-    @MainActor
-    func deleteCheckedPlans(
-        from planner: Planner
-    ) {
-
-        for event in planner.events {
-            if event.isChecked {
-                print("Deleting checked event: \(event.id)")
-                delete(event)
-            }
-        }
-
-        do {
-            try save()
-        } catch {
-            assertionFailure(
-                "Failed to delete checked plans: \(error)"
-            )
-        }
-    }
-    
 }

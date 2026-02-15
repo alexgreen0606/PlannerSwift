@@ -30,6 +30,27 @@ extension ModelContext {
             )
         }
     }
+    
+    @MainActor
+    func togglePlannerEvent(
+        _ event: PlannerEvent,
+        calendarSettings: CalendarSettings
+    ) -> Bool {
+
+        let wasContextUpdated = calendarSettings.toggleEvent(event)
+        
+        if wasContextUpdated {
+            do {
+                try save()
+            } catch {
+                assertionFailure(
+                    "ERROR calendarSettings.togglePlannerEvent: \(error)"
+                )
+            }
+        }
+
+        return wasContextUpdated
+    }
 
     @MainActor
     func deleteStaleCalendarEventPositions(

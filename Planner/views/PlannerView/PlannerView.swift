@@ -10,6 +10,7 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
+// Note: Moving this to separate file breaks ZOOM transitions of file rows.
 struct EventSheetContext: Identifiable {
     var plannerEvent: PlannerEvent?
     var calendarEvent: EKEvent?
@@ -28,19 +29,47 @@ struct EventSheetContext: Identifiable {
 }
 
 struct PlannerView: View {
-    private let datestamp: String
-    private let closePlanner: () -> Void
-    
-    init(datestamp: String, closePlanner: @escaping () -> Void) {
-        self.datestamp = datestamp
-        self.closePlanner = closePlanner
+    private let planner: Planner
+    private let plannerSettings: PlannerSettings
+    private let calendarSettings: CalendarSettings
+    private let dismiss: () -> Void
 
-        // Set the query to find this date's planner.
-        _planners = Query(
-            filter: #Predicate<Planner> {
-                $0.datestamp == datestamp
+    private let region: Region
+    private let startOfDay: DateInRegion
+
+    init(
+        planner: Planner,
+        plannerSettings: PlannerSettings,
+        calendarSettings: CalendarSettings,
+        dismiss: @escaping () -> Void
+    ) {
+        let region = planner.region(settings: plannerSettings)
+
+        guard let startOfDay = planner.datestamp.startOfDay(in: region) else {
+            fatalError("Could not get DateInRegion from: \(planner.datestamp)")
+        }
+
+        let startOfNextDay = (startOfDay + 1.days)
+
+        // Set the query to find this date's events.
+        _plannerEvents = Query(
+            filter: #Predicate<PlannerEvent> {
+                $0.date >= startOfDay.date && $0.date < startOfNextDay.date
             }
         )
+
+        _plannerManager = StateObject(
+            wrappedValue: ListManager<PlannerEvent>(
+                isItemChecked: calendarSettings.isPlannerEventChecked
+            )
+        )
+
+        self.planner = planner
+        self.plannerSettings = plannerSettings
+        self.calendarSettings = calendarSettings
+        self.dismiss = dismiss
+        self.region = region
+        self.startOfDay = startOfDay
     }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -49,70 +78,45 @@ struct PlannerView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var todaystampManager: TodaystampWatcher
-    
-    @Query private var planners: [Planner]
-    @Query private var calendarSettingsList: [CalendarSettings]
 
-    @StateObject private var plannerManager = ListManager<PlannerEvent>()
-    @State private var calendarEventToggler = CalendarEventToggler()
+    @Query private var plannerEvents: [PlannerEvent]
+
+    @State private var calendarPlannerEvents: [PlannerEvent] = []
+
+    @StateObject private var plannerManager: ListManager<PlannerEvent>
 
     @State private var eventSheetContext: EventSheetContext?
     @Namespace private var namespace
 
-    @State private var calendarPlannerEvents: [PlannerEvent] = []
-    @State private var isDeleteCheckedConfirmationOpen = false
-    @State private var showTransferSheet = false
     @State private var pendingScroll: PlannerEventPositionChange?
-
-    private var calendarSettings: CalendarSettings? {
-        calendarSettingsList.first
-    }
-
-    private var planner: Planner? {
-        planners.first
-    }
-
-    private var date: Date {
-        datestamp.date ?? Date()
-    }
+    @State private var showDeleteCheckedConfirmation = false
+    @State private var showTransferSheet = false
 
     private var plannerType: PlannerType {
-        datestamp <= todaystampManager.todaystamp ? .pastOrPresent : .future
+        planner.datestamp <= todaystampManager.todaystamp
+            ? .pastOrPresent : .future
     }
 
     private var showChecked: Bool {
-        plannerType == .future
-            ? planner?.showCanceled == true : planner?.showCompleted == true
+        plannerType == .future ? planner.showCanceled : planner.showCompleted
+    }
+
+    private var allEvents: [PlannerEvent] {
+        plannerEvents + calendarPlannerEvents
     }
 
     private var rawCheckedEvents: [PlannerEvent] {
-        guard let planner else {
-            return []
-        }
-
-        let combinedEvents = planner.events + calendarPlannerEvents
-
-        return
-            combinedEvents
-            .filter {
-                calendarEventToggler.isPlannerEventChecked($0)
-            }
+        allEvents.filter { calendarSettings.isPlannerEventChecked($0) }
     }
 
     // MARK: - Select Mode
 
     private var visibleEvents: [PlannerEvent] {
-        var allVisibleItems = sortedOpenPlans
-
-        if (plannerType == .future && planner?.showCanceled == true)
-            || (plannerType == .pastOrPresent && planner?.showCompleted == true)
-        {
-            allVisibleItems.append(
-                contentsOf: sortedCheckedPlans
-            )
+        if showChecked {
+            return sortedOpenPlans + sortedCheckedPlans
         }
 
-        return allVisibleItems
+        return sortedOpenPlans
     }
 
     private var isAllSelected: Bool {
@@ -127,22 +131,15 @@ struct PlannerView: View {
                 "\(count == 0 ? "No" : String(count)) plan\(count == 1 ? "" : "s") selected"
         }
 
-        return date.dynamicSubheader
+        return startOfDay.dynamicSubheader
     }
 
     // MARK: - UI Lists
 
     private var sortedOpenPlans: [PlannerEvent] {
-        guard let planner else {
-            return []
-        }
-
-        let combinedEvents = planner.events + calendarPlannerEvents
-
-        return
-            combinedEvents
+        allEvents
             .filter {
-                (!(calendarEventToggler.isPlannerEventChecked($0))
+                (!(calendarSettings.isPlannerEventChecked($0))
                     && !plannerManager.newlyUncheckedIds.contains($0.id))
                     || plannerManager.newlyCheckedIds.contains($0.id)
             }
@@ -152,16 +149,9 @@ struct PlannerView: View {
     }
 
     private var sortedCheckedPlans: [PlannerEvent] {
-        guard let planner else {
-            return []
-        }
-
-        let combinedEvents = planner.events + calendarPlannerEvents
-
-        return
-            combinedEvents
+        allEvents
             .filter {
-                (calendarEventToggler.isPlannerEventChecked($0)
+                (calendarSettings.isPlannerEventChecked($0)
                     && !plannerManager.newlyCheckedIds.contains($0.id))
                     || plannerManager.newlyUncheckedIds.contains($0.id)
             }
@@ -178,7 +168,9 @@ struct PlannerView: View {
                     floatingInfo: chipSpread,
                     customToggleConfig: toggleEventIconConfig,
                     checkedHeader: plannerType.checkedHeader,
-                    checkedFooter: plannerType.getCheckedFooter(for: datestamp),
+                    checkedFooter: plannerType.getCheckedFooter(
+                        for: startOfDay
+                    ),
                     emptyUncheckedLabel: "No plans",
                     emptyCheckedLabel: plannerType.emptyCheckedLabel,
                     namespace: namespace,
@@ -190,10 +182,10 @@ struct PlannerView: View {
                     proxy: proxy,
                     createItem: createEvent,
                     handleTitleChange: handleEventTitleChange,
-                    moveItem: handleMoveUncheckedEvent,
-                    isItemChecked: calendarEventToggler.isPlannerEventChecked
+                    moveItem: moveUncheckedEvent,
+                    isItemChecked: calendarSettings.isPlannerEventChecked
                 )
-                .navigationTitle(date.dynamicHeader)
+                .navigationTitle(startOfDay.dynamicHeader)
                 .navigationSubtitle(subtitle)
                 .toolbar {
                     topLeftToolbar
@@ -206,7 +198,9 @@ struct PlannerView: View {
                 .sheet(item: $eventSheetContext) { context in
                     EventFormView(
                         plannerEvent: context.plannerEvent,
-                        calendarEvent: context.calendarEvent
+                        calendarEvent: context.calendarEvent,
+                        plannerSettings: plannerSettings,
+                        calendarSettings: calendarSettings
                     ) { change in
                         pendingScroll = change
                     }
@@ -220,17 +214,16 @@ struct PlannerView: View {
 
                 // Event Sheet
                 .sheet(isPresented: $showTransferSheet) {
-                    if let planner {
-                        TransferEventsFormView(
-                            sourcePlanner: planner
+                    TransferEventsFormView(
+                        startOfDay: startOfDay,
+                        settings: plannerSettings
+                    )
+                    .navigationTransition(
+                        .zoom(
+                            sourceID: "TRANSFER",
+                            in: namespace
                         )
-                        .navigationTransition(
-                            .zoom(
-                                sourceID: "TRANSFER",
-                                in: namespace
-                            )
-                        )
-                    }
+                    )
                 }
 
                 // Slide to modified events once the UI has settled.
@@ -247,31 +240,16 @@ struct PlannerView: View {
             }
         }
         .environmentObject(plannerManager)
-
-        // Initialize data.
+        
+        // Pass the custom toggler to the planner manager.
         .task {
-            modelContext.ensurePlanner(
-                planners: planners,
-                datestamp: datestamp
-            )
-
-            calendarStore.ensureCalendarEvents(
-                for: datestamp,
-                hiddenCalendarIds: calendarSettings!.hiddenCalendarIds
-            )
-
-            // Setup the planner managers.
-            calendarEventToggler.calendarSettings = calendarSettings
-            plannerManager.setToggleItem(calendarEventToggler.toggleEvent)
-            plannerManager.setStatusChecker(
-                calendarEventToggler.isPlannerEventChecked
-            )
+            plannerManager.setToggleItem(togglePlannerEvent)
         }
 
         // Up-to-date calendar data.
         .externalData(
             key: calendarStore.refreshKey,
-            ready: planner != nil && calendarSettings != nil,
+            ready: true,
             load: synchronizeCalendarEvents
         )
 
@@ -284,7 +262,7 @@ struct PlannerView: View {
         ToolbarItem(placement: .topBarLeading) {
             if !plannerManager.isSelectMode {
                 Button("Back", systemImage: "chevron.left") {
-                    closePlanner()
+                    dismiss()
                 }
             } else {
                 Button("Cancel", systemImage: "xmark") {
@@ -302,8 +280,8 @@ struct PlannerView: View {
                     Button(
                         action: {
                             plannerType == .future
-                                ? planner?.showCanceled.toggle()
-                                : planner?.showCompleted.toggle()
+                                ? planner.showCanceled.toggle()
+                                : planner.showCompleted.toggle()
                         },
                         label: {
                             Text(
@@ -329,7 +307,7 @@ struct PlannerView: View {
 
                     Menu {
                         Button(role: .destructive) {
-                            isDeleteCheckedConfirmationOpen = true
+                            showDeleteCheckedConfirmation = true
                         } label: {
                             Text(plannerType.deleteCheckedLabel)
                             Image(systemName: "trash")
@@ -346,7 +324,7 @@ struct PlannerView: View {
                 }
                 .confirmationDialog(
                     plannerType.deleteCheckedConfirmationTitle,
-                    isPresented: $isDeleteCheckedConfirmationOpen,
+                    isPresented: $showDeleteCheckedConfirmation,
                     titleVisibility: .visible
                 ) {
                     Button("Confirm", role: .destructive) {
@@ -397,7 +375,11 @@ struct PlannerView: View {
                         }
                     }
 
-                    createEvent(at: sortedOpenPlans.count)
+                    modelContext.createEvent(
+                        startOfDay: startOfDay,
+                        at: sortedOpenPlans.count,
+                        in: sortedOpenPlans
+                    )
                 }
                 .tint(accentColor.swiftUIColor)
             } else {
@@ -457,20 +439,19 @@ struct PlannerView: View {
 
     @ViewBuilder
     private var chipSpread: some View {
-        if let planner {
-            PlannerChipSpreadView(
-                planner: planner,
-                iconMap: calendarSettings?.iconMap ?? [:],
-                namespace: namespace,
-                openCalendarEventSheet: { calEvent in
-                    eventSheetContext =
-                        EventSheetContext(
-                            plannerEvent: nil,
-                            calendarEvent: calEvent
-                        )
-                }
-            )
-        }
+        PlannerChipSpreadView(
+            planner: planner,
+            startOfDay: startOfDay,
+            iconMap: calendarSettings.iconMap,
+            namespace: namespace,
+            openCalendarEventSheet: { calEvent in
+                eventSheetContext =
+                    EventSheetContext(
+                        plannerEvent: nil,
+                        calendarEvent: calEvent
+                    )
+            }
+        )
     }
 
     // MARK: - Event Rows
@@ -482,7 +463,7 @@ struct PlannerView: View {
         {
             Image(
                 systemName:
-                    calendarSettings?.iconMap[
+                    calendarSettings.iconMap[
                         calendar.calendarIdentifier
                     ] ?? calendar.iconName
             )
@@ -498,7 +479,7 @@ struct PlannerView: View {
     @ViewBuilder
     private func endAdornment(event: PlannerEvent) -> some View {
         event.timeValueView(
-            for: datestamp,
+            in: region,
             openSheet: openPlannerEventSheet,
             accentColor: accentColor.swiftUIColor
         )
@@ -518,7 +499,7 @@ struct PlannerView: View {
                     message: "Hiding only affects visibility in this planner.",
                     needsConfirmation: { event in
                         event.calendarEvent != nil
-                            && !calendarEventToggler.isPlannerEventChecked(
+                            && !calendarSettings.isPlannerEventChecked(
                                 event
                             )
                     },
@@ -527,7 +508,7 @@ struct PlannerView: View {
                             title: "Hide",
                             role: nil
                         ) { event in
-                            _ = calendarEventToggler.toggleEvent(event)
+                            _ = calendarSettings.toggleEvent(event)
                         },
 
                         ConfirmationAction(
@@ -553,17 +534,18 @@ struct PlannerView: View {
         calendarPlannerEvents =
             modelContext.synchronize(
                 calendarEvents: calendarStore.singleDayEventsByDatestamp[
-                    datestamp
+                    planner.datestamp
                 ] ?? [],
-                into: planner,
-                with: calendarSettings
+                into: plannerEvents,
+                planner: planner,
+                calendarSettings: calendarSettings,
+                plannerSettings: plannerSettings
             ) ?? calendarPlannerEvents
     }
 
     private func reloadCalendar() {
         calendarStore.refresh(
-            hiddenCalendarIds: calendarSettings?
-                .hiddenCalendarIds ?? []
+            hiddenCalendarIds: calendarSettings.hiddenCalendarIds
         )
     }
 
@@ -595,64 +577,20 @@ struct PlannerView: View {
             return
         }
 
-        createEvent(at: finalIndex)
-    }
-
-    private func createEvent(at index: Int) {
-        guard let planner = planner else { return }
-        let sortIndex = generateSortIndex(index: index, items: sortedOpenPlans)
-        let newEvent = PlannerEvent(sortIndex: sortIndex, planner: planner)
-
-        modelContext.insert(newEvent)
-        try! modelContext.save()
-    }
-
-    private func handleMoveUncheckedEvent(from: Int, to: Int) {
-        guard from != to else { return }
-
-        // 1: Force-save the event to its new position.
-        let movedEvent = sortedOpenPlans[from]
-        let eventsWithoutEvent = sortedOpenPlans.filter {
-            $0.id != movedEvent.id
-        }
-        let newSortIndex = generateSortIndex(
-            index: to,
-            items: eventsWithoutEvent
+        modelContext.createEvent(
+            startOfDay: startOfDay,
+            at: finalIndex,
+            in: sortedOpenPlans
         )
-        movedEvent.sortIndex = newSortIndex
+    }
 
-        // Save the calendar event position.
-        if movedEvent.calendarEvent != nil && calendarSettings != nil {
-            calendarSettings!.sortIndexMap[
-                movedEvent.calendarEvent!.calendarItemExternalIdentifier
-            ] = movedEvent.sortIndex
-        }
-
-        try! modelContext.save()
-
-        // 2: After UI settles, validate correct chronological insertion.
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 1_000_000_000)  // 1 sec
-
-            let validSortIndex = generateValidPlannerEventSortIndex(
-                for: movedEvent,
-                in: sortedOpenPlans
-            )
-            if validSortIndex != newSortIndex {
-                movedEvent.sortIndex = validSortIndex
-
-                // Save the calendar event position.
-                if movedEvent.calendarEvent != nil
-                    && calendarSettings != nil
-                {
-                    calendarSettings!.sortIndexMap[
-                        movedEvent.calendarEvent!.calendarItemExternalIdentifier
-                    ] = movedEvent.sortIndex
-                }
-
-                try! modelContext.save()
-            }
-        }
+    private func moveUncheckedEvent(from: Int, to: Int) {
+        modelContext.moveEvent(
+            from: from,
+            to: to,
+            events: sortedOpenPlans,
+            calendarSettings: calendarSettings
+        )
     }
 
     private func handleEventTitleChange(event: PlannerEvent) {
@@ -668,8 +606,6 @@ struct PlannerView: View {
             return
         }
 
-        guard let datestamp = event.planner?.datestamp else { return }
-
         // 3. Build the data from the event title.
         guard
             let (timeValue, updatedText) = event.title.separateTimeValue()
@@ -679,7 +615,7 @@ struct PlannerView: View {
 
         guard
             let date = timeValue.toDate(
-                for: datestamp
+                for: planner.datestamp
             )
         else {
             return
@@ -687,6 +623,7 @@ struct PlannerView: View {
 
         event.title = updatedText
         event.date = date
+        event.untimed = false
 
         // 4. Validate sort order.
         let newSortIndex = generateValidPlannerEventSortIndex(
@@ -783,6 +720,10 @@ struct PlannerView: View {
                 plannerEvent: event,
                 calendarEvent: nil
             )
+    }
+    
+    private func togglePlannerEvent(_ event: PlannerEvent) -> Bool {
+        return modelContext.togglePlannerEvent(event, calendarSettings: calendarSettings)
     }
 
 }

@@ -13,11 +13,19 @@ class Location {
     var subtitle: String?
     var latitude: Double
     var longitude: Double
-    
-    init(name: String, subtitle: String? = nil, latitude: Double, longitude: Double) {
+    var timeZoneIdentifier: String
+
+    init(
+        name: String,
+        subtitle: String? = nil,
+        latitude: Double,
+        longitude: Double,
+        timeZoneIdentifier: String
+    ) {
         self.name = name
         self.subtitle = subtitle
         self.latitude = latitude
         self.longitude = longitude
+        self.timeZoneIdentifier = timeZoneIdentifier
     }
 }

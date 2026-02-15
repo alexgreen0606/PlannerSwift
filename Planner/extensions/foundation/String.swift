@@ -28,15 +28,10 @@ extension String {
 
         return "\(day).calendar"
     }
-
-    // Expects YYYY-MM-DD format.
-    var date: Date? {
-        self.toDate("yyyy-MM-dd", region: .local)?.date
-    }
     
     // Expects YYYY-MM-DD format.
-    var dateInLocalRegion: DateInRegion? {
-        self.toDate("yyyy-MM-dd", region: .local)
+    func startOfDay(in region: Region) -> DateInRegion? {
+        self.toDate("yyyy-MM-dd", region: region)?.dateAtStartOf(.day)
     }
 
     // Expect 24-hour HH:MM format.

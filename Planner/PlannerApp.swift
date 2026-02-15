@@ -42,7 +42,7 @@ struct PlannerApp: App {
         }
         .modelContainer(for: [
             Planner.self, ChecklistItem.self, CalendarSettings.self,
-            PlannerSettings.self,
+            PlannerSettings.self, PlannerEvent.self
         ])
     }
 }

@@ -12,18 +12,23 @@ func generateValidPlannerEventSortIndex(
     let prevSortIndex = event.sortIndex
 
     // Maintain current position.
-    guard let eventDate = event.date else {
+    guard !event.untimed else {
         return prevSortIndex
     }
+    
+    let eventDate = event.date
     
     var eventWasFound = false
     var eventNeedsMoving = false
     
     let events = events.sorted { $0.sortIndex < $1.sortIndex }
+    
     for (index, pointerEvent) in events.enumerated().reversed() {
-        guard let pointerEventDate = pointerEvent.date else {
+        guard !pointerEvent.untimed else {
             continue
         }
+        
+        let pointerEventDate = pointerEvent.date
         
         if pointerEvent.id == event.id {
             // Mark the target event as found.

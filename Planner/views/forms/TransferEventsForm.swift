@@ -6,15 +6,19 @@
 //
 
 import SwiftData
+import SwiftDate
 import SwiftUI
 
 struct TransferEventsFormView: View {
     private let sourceDate: Date
-    
-    init(sourcePlanner: Planner) {
-        let initialDate = sourcePlanner.datestamp.date ?? Date()
-        self.sourceDate = initialDate
-        _destinationDate = State(initialValue: initialDate)
+    private let sourceStartOfDay: DateInRegion
+    private let plannerSettings: PlannerSettings
+
+    init(startOfDay: DateInRegion, settings: PlannerSettings) {
+        self.sourceDate = startOfDay.date
+        self.sourceStartOfDay = startOfDay
+        self.plannerSettings = settings
+        _destinationDate = State(initialValue: startOfDay.date)
     }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -75,9 +79,11 @@ struct TransferEventsFormView: View {
             }
         }
         .presentationDetents([.height(hasCalendarEvents ? 580 : 500)])
-        
+
         .task {
-            hasCalendarEvents = plannerManager.selectedItems.contains(where: {$0.calendarEvent != nil})
+            hasCalendarEvents = plannerManager.selectedItems.contains(where: {
+                $0.calendarEvent != nil
+            })
         }
     }
 
@@ -121,7 +127,7 @@ struct TransferEventsFormView: View {
     private var sourceChip: some View {
         TransferSourceIndicatorView(
             title: transferCount,
-            subtitle: sourceDate.dynamicHeader,
+            subtitle: sourceStartOfDay.dynamicHeader,
             iconConfig: IconConfig(
                 name: "note",
                 primaryColor: nil,
@@ -132,9 +138,9 @@ struct TransferEventsFormView: View {
 
     private var destinationChip: some View {
         TransferDestinationIndicatorView(
-            title: destinationDate.dynamicHeader,
+            title: "TODO", // destinationDate.dynamicHeader,
             iconConfig: IconConfig(
-                name: destinationDate.datestamp.calendarSymbolName,
+                name: "TODO", // destinationDate.datestamp.calendarSymbolName,
                 primaryColor: nil,
                 secondaryColor: nil
             )
@@ -142,7 +148,7 @@ struct TransferEventsFormView: View {
     }
 
     private func handleTransfer() {
-        let targetDatestamp = destinationDate.datestamp
+        let targetDatestamp = "TODO"// destinationDate.datestamp
         let planner = modelContext.loadPlanner(for: targetDatestamp)
 
         var plannerEvents: [PlannerEvent] = []
@@ -154,8 +160,10 @@ struct TransferEventsFormView: View {
                 plannerEvents.append(event)
             }
         }
-
-        modelContext.transferPlannerEvents(plannerEvents, into: planner)
+        
+        // TODO: find the target startOfDay
+        let targetStartOfDay = DateInRegion(Date(), region: .local)
+        modelContext.transferPlannerEvents(plannerEvents, to: targetStartOfDay)
 
         plannerManager.toggleSelectMode()
         dismiss()

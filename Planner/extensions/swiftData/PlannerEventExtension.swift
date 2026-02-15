@@ -6,10 +6,23 @@
 //
 
 import EventKit
+import SwiftDate
 import SwiftUI
 
 extension PlannerEvent {
-    
+
+    // TODO: is this needed?
+//    var time: Date? {
+//        if let calEvent = self.calendarEvent {
+//
+//            // TODO: DETERMINE START OR END DATE BASED ON EVENT.DATE
+//
+//            return calEvent.startDate
+//        }
+//
+//        return untimed ? nil : self.date
+//    }
+
     func tint(accentColor: AccentColor) -> Color {
         if let calendar = self.calendarEvent?.calendar {
             return Color(cgColor: calendar.cgColor)
@@ -17,37 +30,32 @@ extension PlannerEvent {
 
         return accentColor.swiftUIColor
     }
-    
+
     @ViewBuilder
     func timeValueView(
-        for datestamp: String,
+        in region: Region,
         openSheet: ((PlannerEvent) -> Void)?,
         accentColor: Color
     ) -> some View {
-        Group {
-            if let calendarEvent = self.calendarEvent {
-                calendarEvent.timeValueView(
-                    for: datestamp,
-                    openSheet: {
-                        openSheet?(self)
-                    }
-                )
+        if let calendarEvent = self.calendarEvent {
 
-            } else if let date = self.date {
-
-                TimeValue(
-                    date: date,
-                    datestamp: datestamp,
-                    disabled: false,
-                    color: accentColor
-                ) {
-                    openSheet?(self)
-                }
-
-            } else {
-                EmptyView()
+            calendarEvent.timeValueView(
+                in: region
+            ) {
+                openSheet?(self)
             }
+
+        } else if !self.untimed {
+
+            TimeValue(
+                day: DateInRegion(self.date, region: region),
+                disabled: false,
+                color: accentColor
+            ) {
+                openSheet?(self)
+            }
+
         }
     }
-    
+
 }

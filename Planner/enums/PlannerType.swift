@@ -40,20 +40,14 @@ enum PlannerType: String {
         }
     }
 
-    func getCheckedFooter(for datestamp: String) -> String? {
+    func getCheckedFooter(for startOfDay: DateInRegion) -> String? {
         switch self {
         case .pastOrPresent:
             return nil
 
         case .future:
-            guard
-                let date = datestamp.toDate("yyyy-MM-dd", region: .local)?
-                    .date
-            else {
-                return nil
-            }
 
-            var formatted = date.dynamicHeader
+            var formatted = startOfDay.dynamicHeader
 
             if !formatted.contains(",") {
                 if let dayString = formatted.split(separator: " ").last,

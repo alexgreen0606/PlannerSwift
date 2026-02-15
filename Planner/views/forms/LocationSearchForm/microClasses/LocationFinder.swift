@@ -13,15 +13,15 @@ import SwiftUI
 class LocationFinder: NSObject, ObservableObject,
     MKLocalSearchCompleterDelegate
 {
-    
+
     override init() {
         super.init()
         completer.resultTypes = .address
         completer.delegate = self
     }
-    
+
     private let completer = MKLocalSearchCompleter()
-    
+
     @Published var queryFragment: String = "" {
         didSet {
             completer.queryFragment = queryFragment
@@ -49,7 +49,8 @@ class LocationFinder: NSObject, ObservableObject,
     }
 
     func selectCompletion(_ completion: MKLocalSearchCompletion) async -> (
-        name: String, subtitle: String, latitude: Double, longitude: Double
+        name: String, subtitle: String, latitude: Double, longitude: Double,
+        timeZoneIdentifier: String
     )? {
         let request = MKLocalSearch.Request(completion: completion)
         let search = MKLocalSearch(request: request)
@@ -57,7 +58,10 @@ class LocationFinder: NSObject, ObservableObject,
         do {
             let response = try await search.start()
 
-            guard let item = response.mapItems.first else {
+            guard let item = response.mapItems.first,
+                let timeZoneIdentifier = item.timeZone?.identifier
+            else {
+                // TODO: think about what to do when a location doesnt have a timeZone
                 return nil
             }
 
@@ -67,7 +71,8 @@ class LocationFinder: NSObject, ObservableObject,
                 name: completion.title,
                 subtitle: completion.subtitle,
                 latitude: coordinate.latitude,
-                longitude: coordinate.longitude
+                longitude: coordinate.longitude,
+                timeZoneIdentifier: timeZoneIdentifier
             )
 
         } catch {

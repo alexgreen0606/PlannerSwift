@@ -6,34 +6,36 @@
 //
 
 import SwiftUI
+import SwiftDate
 
 struct PlannerDateInfoView: View {
     let datestamp: String
+    let region: Region
     let isSoon: Bool
-
-    private var date: Date? {
-        datestamp.date
+    
+    private var startOfDay: DateInRegion? {
+        datestamp.startOfDay(in: region)
     }
 
     private var title: String {
-        guard let date else {
+        guard let startOfDay else {
             return datestamp
         }
         
-        return isSoon ? date.weekday : date.countdown ?? ""
+        return isSoon ? startOfDay.weekday : startOfDay.countdown ?? ""
     }
 
     private var subtitle: String {
-        guard let date else {
+        guard let startOfDay else {
             return ""
         }
         
-        let countdown = date.countdown
+        let countdown = startOfDay.countdown
         if isSoon, let countdown {
             return countdown
         }
 
-        return date.weekday
+        return startOfDay.weekday
     }
 
     var body: some View {

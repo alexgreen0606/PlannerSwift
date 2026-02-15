@@ -97,7 +97,7 @@ final class WeatherStore: ObservableObject {
             var newMap = clearCache ? [:] : weatherMap
 
             for dayWeather in weather.dailyForecast {
-                let datestamp = dayWeather.date.datestamp
+                let datestamp = "TODO" // dayWeather.date.datestamp // TODO: cast to DateInRegion as needed
                 newMap[locationKey, default: [:]][datestamp] = dayWeather
             }
 

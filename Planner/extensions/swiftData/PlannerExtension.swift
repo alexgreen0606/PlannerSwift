@@ -6,9 +6,14 @@
 //
 
 import EventKit
+import SwiftDate
 import SwiftUI
 
 extension Planner {
+
+    func region(settings: PlannerSettings?) -> Region {
+        location(settings: settings)?.region ?? .local
+    }
 
     func location(settings: PlannerSettings?) -> Location? {
         if self.locationSource == .custom,
@@ -76,12 +81,22 @@ extension Planner {
         )
     }
 
+    // TODO: should I just sort ALL calendar events with ALL planner events? Is that a crazy idea?
+    
+    // TODO: get this working. Is casting to region important here? Or is the creation of the events at the correct region what matters, and this is simply sorting absolute positions?
     func synchronizeCalendarEventPositions(
-        for calendarEvents: [EKEvent],
-        from settings: CalendarSettings
+        _ calendarEvents: [EKEvent],
+        plannerEvents: [PlannerEvent], // Note: This should have all plans, not just open ones.
+        calendarSettings: CalendarSettings,
+        plannerSettings: PlannerSettings
     ) -> [PlannerEvent] {
+        
+        // TODO: do regions even matter here?
+        let plannerRegion = self.region(settings: plannerSettings)
+        
+        // Calendar events use their regions from EKEvent?
 
-        var sortedPlannerEvents = self.events.filter { !$0.isChecked }.sorted {
+        var sortedPlannerEvents: [PlannerEvent] = plannerEvents.sorted {
             $0.sortIndex < $1.sortIndex
         }
 
@@ -93,13 +108,14 @@ extension Planner {
 
         for calEvent in sortedCalendarEvents {
             let sortIndex =
-                settings.sortIndexMap[calEvent.calendarItemExternalIdentifier]
+                calendarSettings.sortIndexMap[calEvent.calendarItemExternalIdentifier]
                 ?? ((sortedPlannerEvents.last?.sortIndex ?? 0) + 8)
 
             // Dummy event for UI representation. No persistence to storage.
             let plannerEvent = PlannerEvent(
-                sortIndex: sortIndex,
-                calendarEvent: calEvent
+                date: calEvent.startDate, // TODO: use end date if this is an end date
+                calendarEvent: calEvent,
+                sortIndex: sortIndex
             )
 
             sortedPlannerEvents.append(plannerEvent)
@@ -110,47 +126,11 @@ extension Planner {
             )
 
             plannerEvents.append(plannerEvent)
-            settings.sortIndexMap[calEvent.calendarItemExternalIdentifier] =
+            calendarSettings.sortIndexMap[calEvent.calendarItemExternalIdentifier] =
                 plannerEvent.sortIndex
         }
 
         return plannerEvents
-    }
-
-    // TODO: Fails due to forcing self to re-evaluate its items on each iteration.
-    func inheritEvents(_ eventsToMove: [PlannerEvent]) {
-        let events = eventsToMove
-
-        for event in events {
-            print(
-                "\(event.planner?.datestamp ?? "ORPHANED") -> \(event.title) -> \(self.datestamp)"
-            )
-
-            if let date = event.date {
-                if let newDate = date.shiftDate(to: self.datestamp) {
-                    print("P: \(date) -> \(newDate)")
-                    event.date = newDate
-                } else {
-                    assertionFailure(
-                        "ERROR PlannerExtension.inheritEvents: Failed to shift event to new date."
-                    )
-                    event.date = nil
-                }
-            }
-
-            event.planner = self
-        }
-
-        normalizeSortIndexesSafely()
-    }
-
-    // TODO: this should account for calendar events as well and sort everything
-    private func normalizeSortIndexesSafely() {
-        let sorted = events.sorted { $0.sortIndex < $1.sortIndex }
-
-        for (index, item) in sorted.enumerated() {
-            item.sortIndex = Double(index)
-        }
     }
 
 }

@@ -14,26 +14,28 @@ typealias StatusGuard<Item> = (_ item: Item) -> Bool
 @MainActor
 final class ListManager<Item: ListItem>: ObservableObject {
     private var toggleItem: StatusGuard<Item>?
-    private var isItemChecked: StatusGuard<Item>?
-    
-    @AppStorage("toggleTransitionDuration") private var toggleTransitionDuration:
-        ToggleTransitionDuration =
-    ToggleTransitionDuration.threeSeconds
+    private let isItemChecked: StatusGuard<Item>?
 
+    init(
+        isItemChecked: StatusGuard<Item>? = nil
+    ) {
+        self.isItemChecked = isItemChecked
+    }
+    
     func setToggleItem(_ toggleItem: @escaping StatusGuard<Item>) {
         self.toggleItem = toggleItem
     }
-    
-    func setStatusChecker(_ isItemChecked: @escaping StatusGuard<Item>) {
-        self.isItemChecked = isItemChecked
-    }
+
+    @AppStorage("toggleTransitionDuration") private
+        var toggleTransitionDuration: ToggleTransitionDuration =
+            ToggleTransitionDuration.threeSeconds
 
     @Published var newlyCheckedIds: Set<PersistentIdentifier> = []
     @Published var newlyUncheckedIds: Set<PersistentIdentifier> = []
 
     @Published var selectedItems: [Item] = []
     @Published var selectedItemIds: Set<PersistentIdentifier> = []
-    
+
     // Keeps faded items hidden for 1 second after they have moved.
     @Published var fadingItemIds: Set<PersistentIdentifier> = []
 
@@ -46,11 +48,11 @@ final class ListManager<Item: ListItem>: ObservableObject {
     deinit {
         task?.cancel()
     }
-    
+
     var isSelectMode: Bool {
         toggleType == .select
     }
-    
+
     func toggleSelectMode() {
         if isSelectMode {
             toggleType = .check
@@ -86,7 +88,7 @@ final class ListManager<Item: ListItem>: ObservableObject {
 
     private func toggleChecked(for item: Item) {
         let isChecked = isItemChecked?(item) ?? item.isChecked
-        
+
         if toggleTransitionDuration != .instant {
             if isChecked {
                 if !newlyCheckedIds.contains(item.id) {
@@ -101,10 +103,10 @@ final class ListManager<Item: ListItem>: ObservableObject {
                     newlyUncheckedIds.remove(item.id)
                 }
             }
-            
+
             fadingItemIds = newlyCheckedIds
             beginFade()
-            
+
         } else {
             newlyCheckedIds = []
             newlyUncheckedIds = []
@@ -127,7 +129,9 @@ final class ListManager<Item: ListItem>: ObservableObject {
             do {
                 try await Task.sleep(for: .milliseconds(500))
 
-                withAnimation(.linear(duration: toggleTransitionDuration.duration.seconds)) {
+                withAnimation(
+                    .linear(duration: toggleTransitionDuration.duration.seconds)
+                ) {
                     self.fadingOpacity = 0
                 }
 

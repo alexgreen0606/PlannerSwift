@@ -13,13 +13,15 @@ import SwiftDate
 import SwiftUI
 
 struct ContentView: View {
-    
+
     // Set the rounded design for all navigation titles.
     init() {
         // Large Title
-        if var descriptor = UIFontDescriptor
+        if var descriptor =
+            UIFontDescriptor
             .preferredFontDescriptor(withTextStyle: .largeTitle)
-            .withDesign(.rounded) {
+            .withDesign(.rounded)
+        {
 
             descriptor = descriptor.addingAttributes([
                 .traits: [
@@ -27,16 +29,21 @@ struct ContentView: View {
                 ]
             ])
 
-            let font = UIFont(descriptor: descriptor, size: descriptor.pointSize)
+            let font = UIFont(
+                descriptor: descriptor,
+                size: descriptor.pointSize
+            )
             UINavigationBar.appearance().largeTitleTextAttributes = [
                 .font: font
             ]
         }
 
         // Inline Title
-        if var descriptor = UIFontDescriptor
+        if var descriptor =
+            UIFontDescriptor
             .preferredFontDescriptor(withTextStyle: .headline)
-            .withDesign(.rounded) {
+            .withDesign(.rounded)
+        {
 
             descriptor = descriptor.addingAttributes([
                 .traits: [
@@ -44,13 +51,16 @@ struct ContentView: View {
                 ]
             ])
 
-            let font = UIFont(descriptor: descriptor, size: descriptor.pointSize)
+            let font = UIFont(
+                descriptor: descriptor,
+                size: descriptor.pointSize
+            )
             UINavigationBar.appearance().titleTextAttributes = [
                 .font: font
             ]
         }
     }
-    
+
     let contactsStore = CNContactStore()
 
     @AppStorage("keepCanceledPlansDuration") private
@@ -66,7 +76,7 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject private var calendarStore: CalendarStore
-    
+
     @Query private var calendarSettingsList: [CalendarSettings]
     @Query private var plannerSettingsList: [PlannerSettings]
     @Query private var foldersList: [ChecklistItem]
@@ -75,14 +85,18 @@ struct ContentView: View {
     @State private var selectedTab: AppTab = .planner
     @State private var plannerSearchText: String = ""
 
+    private var calendarSettings: CalendarSettings? {
+        calendarSettingsList.first
+    }
+
+    private var plannerSettings: PlannerSettings? {
+        plannerSettingsList.first
+    }
+
     private var eventsForToday: [EKEvent] {
         return calendarStore.allDayEventsByDatestamp[
             todaystampWatcher.todaystamp
         ] ?? []
-    }
-
-    private var calendarSettings: CalendarSettings? {
-        calendarSettingsList.first
     }
 
     var body: some View {
@@ -90,7 +104,10 @@ struct ContentView: View {
             Tab(value: .planner) {
                 PlannerTabView()
             } label: {
-                Label("", systemImage: todaystampWatcher.todaystamp.calendarSymbolName)
+                Label(
+                    "",
+                    systemImage: todaystampWatcher.todaystamp.calendarSymbolName
+                )
             }
 
             Tab(value: .checklists) {
@@ -120,12 +137,18 @@ struct ContentView: View {
             }
 
             Tab(value: .search, role: .search) {
-                PlannerSearchTabView(searchText: $plannerSearchText)
+                if let plannerSettings, let calendarSettings {
+                    PlannerSearchTabView(
+                        searchText: $plannerSearchText,
+                        plannerSettings: plannerSettings,
+                        calendarSettings: calendarSettings
+                    )
                     .searchable(
                         text: $plannerSearchText,
                         prompt: "Search planner..."
                     )
                     .searchPresentationToolbarBehavior(.avoidHidingContent)
+                }
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
@@ -135,11 +158,11 @@ struct ContentView: View {
             modelContext.ensureCalendarSettings(
                 settings: calendarSettingsList
             )
-            
+
             modelContext.ensurePlannerSettings(
                 settings: plannerSettingsList
             )
-            
+
             modelContext.ensureRootFolder(folders: foldersList)
 
             calendarStore.requestAccessAndLoad(
@@ -196,8 +219,10 @@ struct ContentView: View {
             do {
                 if let todayPlanner = try modelContext.fetch(descriptor).first {
 
+                    // TODO: need to load in all the plans for this day
+
                     // Delete canceled plans from today's planner.
-                    modelContext.deleteCheckedPlans(from: todayPlanner)
+                    modelContext.deleteCheckedPlans(from: [])
                 }
             } catch {
                 assertionFailure(

@@ -7,6 +7,7 @@
 
 import EventKit
 import SwiftUI
+import SwiftDate
 
 struct PlannerCardView: View {
     let datestamp: String
@@ -29,17 +30,21 @@ struct PlannerCardView: View {
                 !isEventChecked($0)
             }
 
+        // TODO: is correct date passed here?
         return events.enumerated().map { index, calEvent in
             PlannerEvent(
+                date: calEvent.startDate,
+                calendarEvent: calEvent,
                 sortIndex: Double(index),
-                calendarEvent: calEvent
             )
         }
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            PlannerDateInfoView(datestamp: datestamp, isSoon: false)
+            
+            // TODO: pass correct region here
+            PlannerDateInfoView(datestamp: datestamp, region: .local, isSoon: false)
 
             PreviewCalendarEventListView(events: allDayEvents, iconMap: iconMap)
 

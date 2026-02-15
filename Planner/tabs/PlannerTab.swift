@@ -11,7 +11,7 @@ import SwiftDate
 import SwiftUI
 
 struct PlannerTabView: View {
-    
+
     @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
         KeepPastPlansDuration =
             KeepPastPlansDuration.oneMonth
@@ -20,10 +20,11 @@ struct PlannerTabView: View {
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject private var weatherStore: WeatherStore
-    
-    @Query private var calendarSettingsList: [CalendarSettings]
 
-    @State private var plannerCoverContext: PlannerCoverContext?
+    @Query private var calendarSettingsList: [CalendarSettings]
+    @Query private var plannerSettingsList: [PlannerSettings]
+
+    @State private var openPlanner: Planner? = nil
     @Namespace private var sheetAnimation
 
     @State private var selectedCalendarDate: Date = Date()
@@ -32,6 +33,10 @@ struct PlannerTabView: View {
 
     private var calendarSettings: CalendarSettings? {
         calendarSettingsList.first
+    }
+
+    private var plannerSettings: PlannerSettings? {
+        plannerSettingsList.first
     }
 
     private var thisWeekDatestamps: [String] {
@@ -52,18 +57,15 @@ struct PlannerTabView: View {
                     Section {
                         Text("This week")
                             .sectionLabel()
-                        
+
                         ScrollView(.horizontal) {
                             HStack(alignment: .top, spacing: 12) {
                                 ForEach(thisWeekDatestamps, id: \.self) {
                                     datestamp in
                                     PlannerCardVerticalView(
-                                        datestamp: datestamp
-                                    ) {
-                                        plannerCoverContext = PlannerCoverContext(
-                                            datestamp: datestamp
-                                        )
-                                    }
+                                        datestamp: datestamp,
+                                        openPlanner: $openPlanner
+                                    )
                                     .matchedTransitionSource(
                                         id: datestamp,
                                         in: sheetAnimation
@@ -85,40 +87,51 @@ struct PlannerTabView: View {
                     topLeftToolbar
                     topRightToolbar
                 }
-                
+
                 // Create new event.
                 .sheet(isPresented: $isNewEventSheetOpen) {
-                    EventFormView(
-                        plannerEvent: nil,
-                        calendarEvent: nil
-                    ) { _ in
-                        // TODO: show indiactor of event creation
-                    }
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: "ADD_EVENT",
-                            in: sheetAnimation
+                    if let calendarSettings, let plannerSettings {
+                        EventFormView(
+                            plannerEvent: nil,
+                            calendarEvent: nil,
+                            plannerSettings: plannerSettings,
+                            calendarSettings: calendarSettings
+                        ) { _ in
+                            // TODO: show indiactor of event creation
+                        }
+                        .navigationTransition(
+                            .zoom(
+                                sourceID: "ADD_EVENT",
+                                in: sheetAnimation
+                            )
                         )
-                    )
+                    }
                 }
-                
+
                 // Open a planner.
-                .fullScreenCover(item: $plannerCoverContext) { context in
-                    PlannerView(datestamp: context.datestamp) {
-                        plannerCoverContext = nil
-                    }
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: context.customSource ?? context.datestamp,
-                            in: sheetAnimation
+                .fullScreenCover(item: $openPlanner) { planner in
+                    if let calendarSettings, let plannerSettings {
+                        PlannerView(
+                            planner: planner,
+                            plannerSettings: plannerSettings,
+                            calendarSettings: calendarSettings
+                        ) {
+                            openPlanner = nil
+                        }
+                        .navigationTransition(
+                            .zoom(
+                                sourceID: planner.datestamp,
+                                in: sheetAnimation
+                            )
                         )
-                    )
+                    }
                 }
-                
+
                 // Reload the data from the page.
                 .refreshable {
                     calendarStore.refresh(
-                        hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? []
+                        hiddenCalendarIds: calendarSettings?.hiddenCalendarIds
+                            ?? []
                     )
                     Task {
                         await weatherStore.resetWeather()
@@ -127,7 +140,7 @@ struct PlannerTabView: View {
             }
         }
     }
-    
+
     @ToolbarContentBuilder
     private var topLeftToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
@@ -145,18 +158,20 @@ struct PlannerTabView: View {
                         displayedComponents: .date
                     )
                     .datePickerStyle(.graphical)
-                    .onChange(of: selectedCalendarDate) {
-                        _,
-                        targetPlannerDate in
-                        isCalendarPickerOpen = false
 
-                        DispatchQueue.main.async {
-                            plannerCoverContext = PlannerCoverContext(
-                                datestamp: targetPlannerDate.datestamp,
-                                customSource: "CALENDAR"
-                            )
-                        }
-                    }
+                    // TODO: need to handle this differently
+                    //                    .onChange(of: selectedCalendarDate) {
+                    //                        _,
+                    //                        targetPlannerDate in
+                    //                        isCalendarPickerOpen = false
+                    //
+                    //                        DispatchQueue.main.async {
+                    //                            plannerCoverContext = PlannerCoverContext(
+                    //                                datestamp: targetPlannerDate.datestamp,
+                    //                                customSource: "CALENDAR"
+                    //                            )
+                    //                        }
+                    //                    }
                 }
                 .frame(width: 340, height: 320)
                 .padding()

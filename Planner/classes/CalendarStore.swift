@@ -10,6 +10,7 @@ import EventKit
 import SwiftDate
 import SwiftUI
 
+// TODO: figure out correct regions to use in this file
 @MainActor
 class CalendarStore: ObservableObject {
     
@@ -147,7 +148,6 @@ class CalendarStore: ObservableObject {
                 let datestamp =
                     event.startDate
                     .in(region: .local)
-                    .date
                     .datestamp
 
                 singleDayMap[datestamp, default: []].append(event)
@@ -163,6 +163,7 @@ class CalendarStore: ObservableObject {
     @MainActor
     func ensureCalendarEvents(
         for datestamp: String,
+        startOfDay: DateInRegion,
         hiddenCalendarIds: Set<String>
     ) {
         // Already loaded for this day.
@@ -172,22 +173,11 @@ class CalendarStore: ObservableObject {
             return
         }
 
-        guard let date = datestamp.date else {
-            assertionFailure("Invalid datestamp: \(datestamp)")
-            return
-        }
-
-        let start =
-            date
-            .in(region: .local)
-            .dateAtStartOf(.day)
-            .date
-
-        let end = start + 1.days
+        let startOfNextDay = startOfDay + 1.days
 
         let predicate = eventStore.predicateForEvents(
-            withStart: start,
-            end: end,
+            withStart: startOfDay.date,
+            end: startOfNextDay.date,
             calendars: nil
         )
 
@@ -215,6 +205,7 @@ class CalendarStore: ObservableObject {
         refreshKey = UUID()
     }
 
+    // TODO: use the correct region here
     // TODO: use this for ALL-DAY events, then create a new one for MULTI_DAY
     private func expandedDatestamps(for event: EKEvent) -> [String] {
         var results: [String] = []
@@ -223,13 +214,14 @@ class CalendarStore: ObservableObject {
             .in(region: .local)
             .dateAtStartOf(.day)
 
+        // TODO: use correct region here
         let end = event.endDate
             .in(region: .local)
             .dateAtStartOf(.day)
 
         var current = start
         while current <= end {
-            results.append(current.date.datestamp)
+            results.append(current.datestamp)
             current = current + 1.days
         }
 

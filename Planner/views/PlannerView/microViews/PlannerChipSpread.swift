@@ -14,6 +14,7 @@ import WrappingHStack
 
 struct PlannerChipSpreadView: View {
     let planner: Planner
+    let startOfDay: DateInRegion
     let iconMap: [String: String]
     var namespace: Namespace.ID
     let openCalendarEventSheet: (EKEvent) -> Void
@@ -49,7 +50,7 @@ struct PlannerChipSpreadView: View {
     }
 
     private var countdownLabel: String? {
-        planner.datestamp.date?.countdown
+        startOfDay.countdown
     }
 
     private var location: Location? {

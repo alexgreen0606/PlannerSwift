@@ -10,20 +10,27 @@ import ContactsUI
 import EventKit
 import EventKitUI
 import SwiftData
+import SwiftDate
 import SwiftUI
 
 struct EventFormView: View {
     private let initialPlannerEvent: PlannerEvent?
     private let initialCalendarEvent: EKEvent?
+    private let plannerSettings: PlannerSettings
+    private let calendarSettings: CalendarSettings
     private let handleEventChange: (PlannerEventPositionChange) -> Void
     
     init(
         plannerEvent: PlannerEvent?,
         calendarEvent: EKEvent?,
+        plannerSettings: PlannerSettings,
+        calendarSettings: CalendarSettings,
         handleEventChange: @escaping (PlannerEventPositionChange) -> Void
     ) {
         self.initialPlannerEvent = plannerEvent
         self.initialCalendarEvent = plannerEvent?.calendarEvent ?? calendarEvent
+        self.plannerSettings = plannerSettings
+        self.calendarSettings = calendarSettings
         self.handleEventChange = handleEventChange
 
         var title = ""
@@ -39,14 +46,8 @@ struct EventFormView: View {
             }
         } else if let plannerEvent {
             title = plannerEvent.title
-
-            if let time = plannerEvent.date {
-                date = time
-                hasTime = true
-            } else if let target = plannerEvent.planner?.datestamp.date {
-                date = target
-                hasTime = false
-            }
+            date = plannerEvent.date
+            hasTime = !plannerEvent.untimed
         }
 
         // Open the contact for birthday events.
@@ -91,19 +92,12 @@ struct EventFormView: View {
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
 
-    @Query private var calendarSettingsList: [CalendarSettings]
-
-    @State private var calendarEventToggler = CalendarEventToggler()
     @State private var selectedDetent: PresentationDetent = .height(340)
     
     @State private var draftCalendarEvent: EKEvent?
     @State private var title: String
     @State private var date: Date
     @State private var hasTime: Bool
-
-    private var calendarSettings: CalendarSettings? {
-        calendarSettingsList.first
-    }
 
     private var isValid: Bool {
         !title.isEmpty
@@ -133,9 +127,6 @@ struct EventFormView: View {
             [.height(340), .height(2600)],
             selection: $selectedDetent
         )
-        .task {
-            calendarEventToggler.calendarSettings = calendarSettings
-        }
     }
 
     private var plannerEventForm: some View {
@@ -267,61 +258,62 @@ struct EventFormView: View {
     }
 
     private func savePlannerEvent() {
-        let targetDatestamp = date.datestamp
-        let hasEventMoved =
-            initialPlannerEvent?.planner?.datestamp != targetDatestamp
-
-        let planner = modelContext.loadPlanner(for: targetDatestamp)
-        let combinedEvents = getPlannerEvents(for: planner)
-        let bottomSortIndex = (combinedEvents.last?.sortIndex ?? 0) + 8.0
-
-        var event =
-            initialPlannerEvent ?? PlannerEvent(sortIndex: bottomSortIndex)
-        if hasEventMoved && initialPlannerEvent != nil {
-            // Transfered events get placed at the bottom of their new planner.
-            event.sortIndex = bottomSortIndex
-        }
-
-        // Delete the stale calendar event if one exists.
-        if let calEvent = initialCalendarEvent {
-
-            calendarStore.delete(event: calEvent)
-            calendarStore.refresh(
-                hiddenCalendarIds: calendarSettings?.hiddenCalendarIds
-                    ?? []
-            )
-
-            if let initialPlannerEvent {
-                // Clone the dummy calendar event.
-                event = PlannerEvent(
-                    sortIndex: initialPlannerEvent.sortIndex
-                )
-            }
-
-            modelContext.insert(event)
-        }
-
-        event.planner = planner
-        event.title = title
-        event.date = hasTime ? date : nil
-
-        let validSortIndex = generateValidPlannerEventSortIndex(
-            for: event,
-            in: combinedEvents + [event]  // Ensure the planner contains the event.
-        )
-
-        if validSortIndex != event.sortIndex {
-            event.sortIndex = validSortIndex
-        }
-
-        do {
-            try modelContext.save()
-        } catch {
-            assertionFailure("Failed to save planner event: \(error)")
-        }
-
-        dismiss()
-        handleEventChange(.planner(id: event.id, sortIndex: validSortIndex))
+        // TODO: implement and add this to model context
+//        let targetDatestamp = date.datestamp
+//        let hasEventMoved =
+//            initialPlannerEvent?.planner?.datestamp != targetDatestamp
+//
+//        let planner = modelContext.loadPlanner(for: targetDatestamp)
+//        let combinedEvents = getPlannerEvents(for: planner)
+//        let bottomSortIndex = (combinedEvents.last?.sortIndex ?? 0) + 8.0
+//
+//        var event =
+//            initialPlannerEvent ?? PlannerEvent(sortIndex: bottomSortIndex)
+//        if hasEventMoved && initialPlannerEvent != nil {
+//            // Transfered events get placed at the bottom of their new planner.
+//            event.sortIndex = bottomSortIndex
+//        }
+//
+//        // Delete the stale calendar event if one exists.
+//        if let calEvent = initialCalendarEvent {
+//
+//            calendarStore.delete(event: calEvent)
+//            calendarStore.refresh(
+//                hiddenCalendarIds: calendarSettings?.hiddenCalendarIds
+//                    ?? []
+//            )
+//
+//            if let initialPlannerEvent {
+//                // Clone the dummy calendar event.
+//                event = PlannerEvent(
+//                    sortIndex: initialPlannerEvent.sortIndex
+//                )
+//            }
+//
+//            modelContext.insert(event)
+//        }
+//
+//        event.planner = planner
+//        event.title = title
+//        event.date = hasTime ? date : nil
+//
+//        let validSortIndex = generateValidPlannerEventSortIndex(
+//            for: event,
+//            in: combinedEvents + [event]  // Ensure the planner contains the event.
+//        )
+//
+//        if validSortIndex != event.sortIndex {
+//            event.sortIndex = validSortIndex
+//        }
+//
+//        do {
+//            try modelContext.save()
+//        } catch {
+//            assertionFailure("Failed to save planner event: \(error)")
+//        }
+//
+//        dismiss()
+//        handleEventChange(.planner(id: event.id, sortIndex: validSortIndex))
     }
 
     private func handleCalendarEventChange(_ event: EKEvent) {
@@ -338,7 +330,7 @@ struct EventFormView: View {
             return
         }
 
-        let targetDatestamp = event.startDate.datestamp
+        let targetDatestamp = "TODO"// event.startDate.datestamp
         let planner = modelContext.loadPlanner(for: targetDatestamp)
 
         // Rebuild planner events using the same pipeline as the list
@@ -378,8 +370,7 @@ struct EventFormView: View {
         }
 
         calendarStore.refresh(
-            hiddenCalendarIds: calendarSettings?.hiddenCalendarIds
-                ?? []
+            hiddenCalendarIds: calendarSettings.hiddenCalendarIds
         )
     }
 
@@ -389,15 +380,20 @@ struct EventFormView: View {
         let calendarEvents =
             calendarStore.singleDayEventsByDatestamp[planner.datestamp] ?? []
 
+        // TODO: pass correct events
+        let startOfDay = DateInRegion(Date(), region: .local)
         let calendarPlannerEvents =
             modelContext.synchronize(
                 calendarEvents: calendarEvents,
-                into: planner,
-                with: calendarSettings
+                into: [],
+                planner: planner,
+                calendarSettings: calendarSettings,
+                plannerSettings: plannerSettings
             ) ?? []
 
-        return (planner.events + calendarPlannerEvents)
-            .filter { !calendarEventToggler.isPlannerEventChecked($0) }
+        // TODO: fix this
+        return [] // (planner.events + calendarPlannerEvents)
+            .filter { !calendarSettings.isPlannerEventChecked($0) }
             .sorted { $0.sortIndex < $1.sortIndex }
     }
 

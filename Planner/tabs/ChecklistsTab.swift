@@ -10,10 +10,11 @@ import SwiftDate
 import SwiftUI
 
 struct ChecklistsTabView: View {
-    
+
     @Environment(\.modelContext) private var modelContext
-    
-    @Query var foldersList: [ChecklistItem]
+
+    // TODO Should only return one folder that doesnt have a parent.
+    @Query var rootFolderList: [ChecklistItem]
 
     @StateObject private var checklistsManager = ListManager<ChecklistItem>()
     @State private var folderPath = NavigationPath()
@@ -25,9 +26,8 @@ struct ChecklistsTabView: View {
 
     @Namespace private var namespace
 
-    // TODO: should I query for parent == nil?
     private var rootFolder: ChecklistItem? {
-        foldersList.first
+        rootFolderList.first
     }
 
     var body: some View {
@@ -47,7 +47,8 @@ struct ChecklistsTabView: View {
                             namespace: namespace,
                             openItem: openItem,
                             canTranferItems: canTransferFolderItems,
-                            updateTransferAvailability: updateFolderTransferAvailability
+                            updateTransferAvailability:
+                                updateFolderTransferAvailability
                         )
                     }
                 }
@@ -79,7 +80,8 @@ struct ChecklistsTabView: View {
     private func openItem(_ item: ChecklistItem) {
         if item.type == .folder {
             canTransferFolderItems =
-                rootFolder?.hasChildType(.folder, excluding: Set([item.id])) == true
+                rootFolder?.hasChildType(.folder, excluding: Set([item.id]))
+                == true
             folderPath.append(item)
         } else {
             canTransferChecklistItems =
@@ -90,7 +92,9 @@ struct ChecklistsTabView: View {
     }
 
     // itemIds includes the items to transfer AND their current folder.
-    private func updateFolderTransferAvailability(considering itemIds: Set<PersistentIdentifier>) {
+    private func updateFolderTransferAvailability(
+        considering itemIds: Set<PersistentIdentifier>
+    ) {
         canTransferFolderItems =
             rootFolder?.hasChildType(.folder, excluding: itemIds) == true
     }

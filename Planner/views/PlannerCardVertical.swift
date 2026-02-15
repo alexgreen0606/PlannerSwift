@@ -14,15 +14,17 @@ import WrappingHStack
 
 struct PlannerCardVerticalView: View {
     private let datestamp: String
-    private let openPlanner: () -> Void
+    @Binding private var openPlanner: Planner?
+    // private let openPlanner: () -> Void
     private let maxPreviewEvents = 5
     
     init(
         datestamp: String,
-        openPlanner: @escaping () -> Void
+        openPlanner: Binding<Planner?>
+        // openPlanner: @escaping () -> Void
     ) {
         self.datestamp = datestamp
-        self.openPlanner = openPlanner
+        self._openPlanner = openPlanner
 
         _planners = Query(
             filter: #Predicate<Planner> {
@@ -104,10 +106,12 @@ struct PlannerCardVerticalView: View {
     }
 
     private var plannerEvents: [PlannerEvent] {
-        planner?.events
-            .filter { !$0.isChecked }
-            .sorted { $0.sortIndex < $1.sortIndex }
-            ?? []
+        []
+        // TODO: fix this
+//        planner?.events
+//            .filter { !$0.isChecked }
+//            .sorted { $0.sortIndex < $1.sortIndex }
+//            ?? []
     }
 
     private var uncheckedCalendarPlannerEvents: [PlannerEvent] {
@@ -192,7 +196,8 @@ struct PlannerCardVerticalView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            PlannerDateInfoView(datestamp: datestamp, isSoon: true)
+            // TODO: use correct value here for region
+            PlannerDateInfoView(datestamp: datestamp, region: .local, isSoon: true)
 
             PreviewCalendarEventListView(
                 events: allDayEvents,
@@ -219,7 +224,11 @@ struct PlannerCardVerticalView: View {
                 .fill(Color.cardBackground)
         )
         .contentShape(Rectangle())
-        .onTapGesture(perform: openPlanner)
+        .onTapGesture {
+            if let planner {
+                openPlanner = planner
+            }
+        }
 
         // Load in the planner and calendar settings.
         .task {
@@ -349,13 +358,20 @@ struct PlannerCardVerticalView: View {
     }
 
     private func synchronizeCalendarEvents() {
+        guard let planner, let calendarSettings, let plannerSettings else {
+            return
+        }
+        
+        // TODO: pass correct events
         calendarPlannerEvents =
             modelContext.synchronize(
                 calendarEvents: calendarStore.singleDayEventsByDatestamp[
                     datestamp
                 ] ?? [],
-                into: planner,
-                with: calendarSettings
+                into: [],
+                planner: planner,
+                calendarSettings: calendarSettings,
+                plannerSettings: plannerSettings
             ) ?? calendarPlannerEvents
     }
 

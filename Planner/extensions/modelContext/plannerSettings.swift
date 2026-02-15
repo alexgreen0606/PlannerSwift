@@ -5,13 +5,13 @@
 //  Created by Alex Green on 2/12/26.
 //
 
+import EventKit
 import SwiftData
 import SwiftDate
 import SwiftUI
-import EventKit
 
 extension ModelContext {
-    
+
     @MainActor
     func ensurePlannerSettings(
         settings: [PlannerSettings]
@@ -31,31 +31,33 @@ extension ModelContext {
             )
         }
     }
-    
+
     @MainActor
     func synchronize(
         calendarEvents events: [EKEvent],
-        into planner: Planner?,
-        with settings: CalendarSettings?
+        into plannerEvents: [PlannerEvent],
+        planner: Planner,
+        calendarSettings: CalendarSettings,
+        plannerSettings: PlannerSettings
     ) -> [PlannerEvent]? {
-        guard let planner = planner, let settings = settings
-        else { return nil }
 
         let calendarPlannerEvents =
             planner.synchronizeCalendarEventPositions(
-                for: events,
-                from: settings
+                events,
+                plannerEvents: plannerEvents,
+                calendarSettings: calendarSettings,
+                plannerSettings: plannerSettings
             )
 
         do {
             try save()
         } catch {
             assertionFailure(
-                "Failed to synchronize calendar events into planner: \(error)"
+                "ERROR plannerSettings.synchronize: \(error)"
             )
         }
 
         return calendarPlannerEvents
     }
-    
+
 }
