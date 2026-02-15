@@ -46,7 +46,7 @@ struct PlannerView: View {
         let region = planner.region(settings: plannerSettings)
 
         guard let startOfDay = planner.datestamp.startOfDay(in: region) else {
-            fatalError("Could not get DateInRegion from: \(planner.datestamp)")
+            fatalError("ERROR PlannerView.init: Could not get DateInRegion from: \(planner.datestamp)")
         }
 
         let startOfNextDay = (startOfDay + 1.days)

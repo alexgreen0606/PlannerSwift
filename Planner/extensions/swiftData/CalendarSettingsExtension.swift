@@ -15,8 +15,12 @@ extension CalendarSettings {
             return event.isChecked
         }
 
-        return self.checkedCalendarEventIds.contains(
-            calendarEvent.calendarItemExternalIdentifier
+        return isCalendarEventChecked(calendarEvent)
+    }
+    
+    func isCalendarEventChecked(_ event: EKEvent) -> Bool {
+        self.checkedCalendarEventIds.contains(
+            event.calendarItemExternalIdentifier
         )
     }
 

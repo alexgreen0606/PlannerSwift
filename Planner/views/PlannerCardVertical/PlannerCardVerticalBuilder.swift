@@ -1,33 +1,35 @@
 //
-//  PlannerBuilderView.swift
+//  PlannerCardVerticalBuilder.swift
 //  Planner
 //
-//  Created by Alex Green on 2/14/26.
+//  Created by Alex Green on 2/15/26.
 //
 
 import SwiftData
 import SwiftDate
 import SwiftUI
 
-struct PlannerBuilderView: View {
+struct PlannerCardVerticalBuilderView: View {
     private let datestamp: String
     private let plannerSettings: PlannerSettings
     private let calendarSettings: CalendarSettings
-    private let dismiss: () -> Void
+    @Binding private var openPlanner: Planner?
 
     init(
         datestamp: String,
         plannerSettings: PlannerSettings,
         calendarSettings: CalendarSettings,
-        dismiss: @escaping () -> Void
+        openPlanner: Binding<Planner?>
     ) {
         self.datestamp = datestamp
         self.plannerSettings = plannerSettings
         self.calendarSettings = calendarSettings
-        self.dismiss = dismiss
+        self._openPlanner = openPlanner
 
         _planners = Query(
-            filter: #Predicate<Planner> { $0.datestamp == datestamp }
+            filter: #Predicate<Planner> {
+                $0.datestamp == datestamp
+            }
         )
     }
 
@@ -42,11 +44,11 @@ struct PlannerBuilderView: View {
     var body: some View {
         Group {
             if let planner {
-                PlannerView(
+                PlannerCardVerticalView(
                     planner: planner,
                     plannerSettings: plannerSettings,
                     calendarSettings: calendarSettings,
-                    dismiss: dismiss
+                    openPlanner: $openPlanner
                 )
             }
         }

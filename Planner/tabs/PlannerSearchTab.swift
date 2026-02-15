@@ -10,10 +10,6 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-struct PlannerDatestamp: Identifiable, Hashable {
-    let id: String
-}
-
 struct PlannerSearchTabView: View {
     @Binding var searchText: String
     let plannerSettings: PlannerSettings

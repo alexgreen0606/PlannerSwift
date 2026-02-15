@@ -13,32 +13,48 @@ import WeatherKit
 import WrappingHStack
 
 struct PlannerCardVerticalView: View {
-    private let datestamp: String
+    private let planner: Planner
+    private let plannerSettings: PlannerSettings
+    private let calendarSettings: CalendarSettings
     @Binding private var openPlanner: Planner?
-    // private let openPlanner: () -> Void
+
     private let maxPreviewEvents = 5
-    
+
     init(
-        datestamp: String,
+        planner: Planner,
+        plannerSettings: PlannerSettings,
+        calendarSettings: CalendarSettings,
         openPlanner: Binding<Planner?>
-        // openPlanner: @escaping () -> Void
     ) {
-        self.datestamp = datestamp
+        self.planner = planner
+        self.plannerSettings = plannerSettings
+        self.calendarSettings = calendarSettings
         self._openPlanner = openPlanner
 
-        _planners = Query(
-            filter: #Predicate<Planner> {
-                $0.datestamp == datestamp
+        let region = planner.region(settings: plannerSettings)
+
+        guard let startOfDay = planner.datestamp.startOfDay(in: region) else {
+            fatalError(
+                "ERROR PlannerCardVertical.init: Could not get DateInRegion from: \(planner.datestamp)"
+            )
+        }
+
+        let startOfNextDay = (startOfDay + 1.days)
+
+        // Set the query to find this date's events.
+        _plannerEvents = Query(
+            filter: #Predicate<PlannerEvent> {
+                $0.date >= startOfDay.date && $0.date < startOfNextDay.date
             }
         )
     }
-    
+
     let weatherUnit: UnitTemperature =
         Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
 
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
         .system
-    
+
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
 
@@ -47,24 +63,10 @@ struct PlannerCardVerticalView: View {
     @EnvironmentObject private var weatherStore: WeatherStore
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var locationManager: DeviceLocationManager
-    
-    @Query private var planners: [Planner]
-    @Query private var calendarSettingsList: [CalendarSettings]
-    @Query private var plannerSettingsList: [PlannerSettings]
+
+    @Query private var plannerEvents: [PlannerEvent]
 
     @State private var calendarPlannerEvents: [PlannerEvent] = []
-
-    private var calendarSettings: CalendarSettings? {
-        calendarSettingsList.first
-    }
-
-    private var plannerSettings: PlannerSettings? {
-        plannerSettingsList.first
-    }
-
-    private var planner: Planner? {
-        planners.first
-    }
 
     var isDarkMode: Bool {
         switch appColorScheme {
@@ -77,22 +79,22 @@ struct PlannerCardVerticalView: View {
     // MARK: - Weather Data
 
     private var weatherData: DayWeather? {
-        weatherStore.getWeather(for: datestamp, at: location)
+        weatherStore.getWeather(for: planner.datestamp, at: location)
     }
 
     private var location: Location? {
-        planner?.location(settings: plannerSettings)
+        planner.location(settings: plannerSettings)
     }
 
     private var locationLabel: String? {
-        planner?.locationLabel(
+        planner.locationLabel(
             settings: plannerSettings,
             localCityName: locationManager.cityName
         )
     }
-    
-    private var locationIconConfig: IconConfig? {
-        planner?.locationIconConfig(
+
+    private var locationIconConfig: IconConfig {
+        planner.locationIconConfig(
             settings: plannerSettings,
             accentColor: accentColor
         )
@@ -101,17 +103,14 @@ struct PlannerCardVerticalView: View {
     // MARK: - Event Data
 
     private var allDayEvents: [EKEvent] {
-        calendarStore.allDayEventsByDatestamp[datestamp]
+        calendarStore.allDayEventsByDatestamp[planner.datestamp]
             ?? []
     }
 
-    private var plannerEvents: [PlannerEvent] {
-        []
-        // TODO: fix this
-//        planner?.events
-//            .filter { !$0.isChecked }
-//            .sorted { $0.sortIndex < $1.sortIndex }
-//            ?? []
+    private var sortedOpenPlannerEvents: [PlannerEvent] {
+        plannerEvents
+            .filter { !$0.isChecked }
+            .sorted { $0.sortIndex < $1.sortIndex }
     }
 
     private var uncheckedCalendarPlannerEvents: [PlannerEvent] {
@@ -121,11 +120,11 @@ struct PlannerCardVerticalView: View {
     }
 
     private var timedPlannerEvents: [PlannerEvent] {
-        plannerEvents.filter { $0.date != nil }
+        sortedOpenPlannerEvents.filter { !$0.untimed }
     }
 
     private var untimedPlannerEvents: [PlannerEvent] {
-        plannerEvents.filter { $0.date == nil }
+        sortedOpenPlannerEvents.filter { $0.untimed }
     }
 
     private var previewAllDayEvents: [EKEvent] {
@@ -173,7 +172,7 @@ struct PlannerCardVerticalView: View {
     private var remainingPlansLabel: String {
         let totalCount =
             allDayEvents.count + uncheckedCalendarPlannerEvents.count
-            + plannerEvents.count
+            + sortedOpenPlannerEvents.count
 
         let previewCount = allDayEvents.count + previewPlannerEvents.count
 
@@ -190,22 +189,26 @@ struct PlannerCardVerticalView: View {
     }
 
     private var hasPlans: Bool {
-        plannerEvents.count + allDayEvents.count + calendarPlannerEvents.count
+        sortedOpenPlannerEvents.count + allDayEvents.count
+            + calendarPlannerEvents.count
             > 0
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // TODO: use correct value here for region
-            PlannerDateInfoView(datestamp: datestamp, region: .local, isSoon: true)
+            PlannerDateInfoView(
+                datestamp: planner.datestamp,
+                region: planner.region(settings: plannerSettings),
+                isSoon: true
+            )
 
             PreviewCalendarEventListView(
                 events: allDayEvents,
-                iconMap: calendarSettings?.iconMap
+                iconMap: calendarSettings.iconMap
             )
 
             PreviewPlannerEventListView(
-                datestamp: datestamp,
+                datestamp: planner.datestamp,
                 events: previewPlannerEvents,
                 hideLastDivider: false
             )
@@ -225,30 +228,20 @@ struct PlannerCardVerticalView: View {
         )
         .contentShape(Rectangle())
         .onTapGesture {
-            if let planner {
-                openPlanner = planner
-            }
-        }
-
-        // Load in the planner and calendar settings.
-        .task {
-            modelContext.ensurePlanner(
-                planners: planners,
-                datestamp: datestamp
-            )
+            openPlanner = planner
         }
 
         // Calendar Data Tracking
         .externalData(
             key: calendarStore.refreshKey,
-            ready: planner != nil && calendarSettings != nil,
+            ready: true,
             load: synchronizeCalendarEvents
         )
 
         // Weather Data Tracking
         .externalData(
             key: weatherStore.refreshKey,
-            ready: planner != nil && plannerSettings != nil
+            ready: true
         ) {
             Task {
                 await weatherStore.loadWeatherIfNeeded(for: location)
@@ -304,7 +297,7 @@ struct PlannerCardVerticalView: View {
 
                 HStack {
 
-                    if let locationLabel, let locationIconConfig {
+                    if let locationLabel {
                         HStack(spacing: 6) {
                             if weatherData == nil {
                                 Image(systemName: locationIconConfig.name)
@@ -312,11 +305,13 @@ struct PlannerCardVerticalView: View {
                                     .scaledToFit()
                                     .frame(width: 11, height: 11)
                                     .foregroundStyle(
-                                        locationIconConfig.primaryColor ?? .secondary,
-                                        locationIconConfig.secondaryColor ?? .secondary
+                                        locationIconConfig.primaryColor
+                                            ?? .secondary,
+                                        locationIconConfig.secondaryColor
+                                            ?? .secondary
                                     )
                             }
-                            
+
                             Text(locationLabel)
                                 .foregroundStyle(
                                     Color.secondary
@@ -358,17 +353,12 @@ struct PlannerCardVerticalView: View {
     }
 
     private func synchronizeCalendarEvents() {
-        guard let planner, let calendarSettings, let plannerSettings else {
-            return
-        }
-        
-        // TODO: pass correct events
         calendarPlannerEvents =
             modelContext.synchronize(
                 calendarEvents: calendarStore.singleDayEventsByDatestamp[
-                    datestamp
+                    planner.datestamp
                 ] ?? [],
-                into: [],
+                into: plannerEvents,
                 planner: planner,
                 calendarSettings: calendarSettings,
                 plannerSettings: plannerSettings
@@ -376,13 +366,11 @@ struct PlannerCardVerticalView: View {
     }
 
     private func isCalendarEventChecked(_ event: EKEvent?) -> Bool {
-        guard let calendarSettings, let event else {
+        guard let event else {
             return false
         }
 
-        return calendarSettings.checkedCalendarEventIds.contains(
-            event.calendarItemExternalIdentifier
-        )
+        return calendarSettings.isCalendarEventChecked(event)
     }
 
 }

@@ -11,6 +11,8 @@ import SwiftDate
 import SwiftUI
 
 struct PlannerTabView: View {
+    let plannerSettings: PlannerSettings
+    let calendarSettings: CalendarSettings
 
     @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
         KeepPastPlansDuration =
@@ -21,23 +23,13 @@ struct PlannerTabView: View {
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject private var weatherStore: WeatherStore
 
-    @Query private var calendarSettingsList: [CalendarSettings]
-    @Query private var plannerSettingsList: [PlannerSettings]
-
+    @State private var openDatestamp: PlannerDatestamp? = nil
     @State private var openPlanner: Planner? = nil
-    @Namespace private var sheetAnimation
+    @Namespace private var namespace
 
     @State private var selectedCalendarDate: Date = Date()
-    @State private var isNewEventSheetOpen = false
-    @State private var isCalendarPickerOpen = false
-
-    private var calendarSettings: CalendarSettings? {
-        calendarSettingsList.first
-    }
-
-    private var plannerSettings: PlannerSettings? {
-        plannerSettingsList.first
-    }
+    @State private var showNewEventSheet = false
+    @State private var showCalendarPicker = false
 
     private var thisWeekDatestamps: [String] {
         let region = Region.local
@@ -59,16 +51,18 @@ struct PlannerTabView: View {
                             .sectionLabel()
 
                         ScrollView(.horizontal) {
-                            HStack(alignment: .top, spacing: 12) {
+                            HStack {
                                 ForEach(thisWeekDatestamps, id: \.self) {
                                     datestamp in
-                                    PlannerCardVerticalView(
+                                    PlannerCardVerticalBuilderView(
                                         datestamp: datestamp,
+                                        plannerSettings: plannerSettings,
+                                        calendarSettings: calendarSettings,
                                         openPlanner: $openPlanner
                                     )
                                     .matchedTransitionSource(
                                         id: datestamp,
-                                        in: sheetAnimation
+                                        in: namespace
                                     )
                                 }
                             }
@@ -89,49 +83,61 @@ struct PlannerTabView: View {
                 }
 
                 // Create new event.
-                .sheet(isPresented: $isNewEventSheetOpen) {
-                    if let calendarSettings, let plannerSettings {
-                        EventFormView(
-                            plannerEvent: nil,
-                            calendarEvent: nil,
-                            plannerSettings: plannerSettings,
-                            calendarSettings: calendarSettings
-                        ) { _ in
-                            // TODO: show indiactor of event creation
-                        }
-                        .navigationTransition(
-                            .zoom(
-                                sourceID: "ADD_EVENT",
-                                in: sheetAnimation
-                            )
-                        )
+                .sheet(isPresented: $showNewEventSheet) {
+                    EventFormView(
+                        plannerEvent: nil,
+                        calendarEvent: nil,
+                        plannerSettings: plannerSettings,
+                        calendarSettings: calendarSettings
+                    ) { _ in
+                        // TODO: show indiactor of event creation
                     }
+                    .navigationTransition(
+                        .zoom(
+                            sourceID: "ADD_EVENT",
+                            in: namespace
+                        )
+                    )
                 }
 
-                // Open a planner.
+                // Open a planner (from a card)
                 .fullScreenCover(item: $openPlanner) { planner in
-                    if let calendarSettings, let plannerSettings {
-                        PlannerView(
-                            planner: planner,
-                            plannerSettings: plannerSettings,
-                            calendarSettings: calendarSettings
-                        ) {
-                            openPlanner = nil
-                        }
-                        .navigationTransition(
-                            .zoom(
-                                sourceID: planner.datestamp,
-                                in: sheetAnimation
-                            )
-                        )
+                    PlannerView(
+                        planner: planner,
+                        plannerSettings: plannerSettings,
+                        calendarSettings: calendarSettings
+                    ) {
+                        openPlanner = nil
                     }
+                    .navigationTransition(
+                        .zoom(
+                            sourceID: planner.datestamp,
+                            in: namespace
+                        )
+                    )
+                }
+
+                // Open a Planner (from calendar)
+                .fullScreenCover(item: $openDatestamp) { datestamp in
+                    PlannerBuilderView(
+                        datestamp: datestamp.id,
+                        plannerSettings: plannerSettings,
+                        calendarSettings: calendarSettings
+                    ) {
+                        openDatestamp = nil
+                    }
+                    .navigationTransition(
+                        .zoom(
+                            sourceID: "CALENDAR",
+                            in: namespace
+                        )
+                    )
                 }
 
                 // Reload the data from the page.
                 .refreshable {
                     calendarStore.refresh(
-                        hiddenCalendarIds: calendarSettings?.hiddenCalendarIds
-                            ?? []
+                        hiddenCalendarIds: calendarSettings.hiddenCalendarIds
                     )
                     Task {
                         await weatherStore.resetWeather()
@@ -145,9 +151,9 @@ struct PlannerTabView: View {
     private var topLeftToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             Button("Calendar", systemImage: "calendar") {
-                isCalendarPickerOpen = true
+                showCalendarPicker = true
             }
-            .popover(isPresented: $isCalendarPickerOpen) {
+            .popover(isPresented: $showCalendarPicker) {
                 VStack {
                     DatePicker(
                         "Open a planner",
@@ -158,20 +164,22 @@ struct PlannerTabView: View {
                         displayedComponents: .date
                     )
                     .datePickerStyle(.graphical)
+                    .onChange(of: selectedCalendarDate) {
+                        _,
+                        targetPlannerDate in
+                        showCalendarPicker = false
 
-                    // TODO: need to handle this differently
-                    //                    .onChange(of: selectedCalendarDate) {
-                    //                        _,
-                    //                        targetPlannerDate in
-                    //                        isCalendarPickerOpen = false
-                    //
-                    //                        DispatchQueue.main.async {
-                    //                            plannerCoverContext = PlannerCoverContext(
-                    //                                datestamp: targetPlannerDate.datestamp,
-                    //                                customSource: "CALENDAR"
-                    //                            )
-                    //                        }
-                    //                    }
+                        let localDate = DateInRegion(
+                            targetPlannerDate,
+                            region: .local
+                        )
+
+                        DispatchQueue.main.async {
+                            openDatestamp = PlannerDatestamp(
+                                id: localDate.datestamp
+                            )
+                        }
+                    }
                 }
                 .frame(width: 340, height: 320)
                 .padding()
@@ -179,7 +187,7 @@ struct PlannerTabView: View {
             }
             .matchedTransitionSource(
                 id: "CALENDAR",
-                in: sheetAnimation
+                in: namespace
             )
         }
     }
@@ -188,11 +196,11 @@ struct PlannerTabView: View {
     private var topRightToolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .topBarTrailing) {
             Button("New Event", systemImage: "plus") {
-                isNewEventSheetOpen = true
+                showNewEventSheet = true
             }
             .matchedTransitionSource(
                 id: "ADD_EVENT",
-                in: sheetAnimation
+                in: namespace
             )
         }
     }

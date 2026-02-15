@@ -102,7 +102,12 @@ struct ContentView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             Tab(value: .planner) {
-                PlannerTabView()
+                if let plannerSettings, let calendarSettings {
+                    PlannerTabView(
+                        plannerSettings: plannerSettings,
+                        calendarSettings: calendarSettings
+                    )
+                }
             } label: {
                 Label(
                     "",
