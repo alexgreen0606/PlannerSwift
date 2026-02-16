@@ -10,27 +10,42 @@ import SwiftDate
 import SwiftUI
 
 extension EKEvent {
-    
+
     var transitionId: String {
         "\(String(describing: self.eventIdentifier))"
     }
-    
+
     @ViewBuilder
     func timeValueView(
-        in region: Region,
+        in plannerRegion: Region,
         openSheet: (() -> Void)?
     ) -> some View {
 
         // TODO: determine if start or end date
 
+        let eventRegion = self.region(fallback: plannerRegion)
+
         TimeValue(
-            day: DateInRegion(self.startDate, region: region),
+            day: DateInRegion(self.startDate, region: eventRegion),
             disabled: false,
             color: Color(self.calendar.cgColor)
         ) {
             openSheet?()
         }
-        
+
     }
-    
+
+    func region(fallback: Region) -> Region {
+        // TODO: what if start and end timezones are different?
+        if let timeZone = self.timeZone {
+            return Region(
+                calendar: fallback.calendar,
+                zone: timeZone,
+                locale: fallback.locale
+            )
+        } else {
+            return fallback
+        }
+    }
+
 }

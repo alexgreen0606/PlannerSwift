@@ -93,10 +93,12 @@ struct ContentView: View {
         plannerSettingsList.first
     }
 
+    // TODO: fix
     private var eventsForToday: [EKEvent] {
-        return calendarStore.allDayEventsByDatestamp[
-            todaystampWatcher.todaystamp
-        ] ?? []
+        []
+//        return calendarStore.allDayEventsByDatestamp[
+//            todaystampWatcher.todaystamp
+//        ] ?? []
     }
 
     var body: some View {

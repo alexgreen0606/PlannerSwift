@@ -39,7 +39,7 @@ extension ModelContext {
         planner: Planner,
         calendarSettings: CalendarSettings,
         plannerSettings: PlannerSettings
-    ) -> [PlannerEvent]? {
+    ) -> [PlannerEvent] {
 
         let calendarPlannerEvents =
             planner.synchronizeCalendarEventPositions(

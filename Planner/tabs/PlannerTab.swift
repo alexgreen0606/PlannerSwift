@@ -54,8 +54,9 @@ struct PlannerTabView: View {
                             HStack {
                                 ForEach(thisWeekDatestamps, id: \.self) {
                                     datestamp in
-                                    PlannerCardVerticalBuilderView(
+                                    PlannerPreviewBuilderView(
                                         datestamp: datestamp,
+                                        type: .planner,
                                         plannerSettings: plannerSettings,
                                         calendarSettings: calendarSettings,
                                         openPlanner: $openPlanner

@@ -378,7 +378,7 @@ struct EventFormView: View {
         for planner: Planner
     ) -> [PlannerEvent] {
         let calendarEvents =
-            calendarStore.singleDayEventsByDatestamp[planner.datestamp] ?? []
+            calendarStore.timedEvents(for: planner)
 
         // TODO: pass correct events
         let startOfDay = DateInRegion(Date(), region: .local)
@@ -389,7 +389,7 @@ struct EventFormView: View {
                 planner: planner,
                 calendarSettings: calendarSettings,
                 plannerSettings: plannerSettings
-            ) ?? []
+            )
 
         // TODO: fix this
         return [] // (planner.events + calendarPlannerEvents)

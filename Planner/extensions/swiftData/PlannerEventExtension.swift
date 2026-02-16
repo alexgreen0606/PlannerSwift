@@ -25,7 +25,7 @@ extension PlannerEvent {
 
     func tint(accentColor: AccentColor) -> Color {
         if let calendar = self.calendarEvent?.calendar {
-            return Color(cgColor: calendar.cgColor)
+            return calendar.color
         }
 
         return accentColor.swiftUIColor

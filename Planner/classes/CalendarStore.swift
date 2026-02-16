@@ -10,10 +10,14 @@ import EventKit
 import SwiftDate
 import SwiftUI
 
-// TODO: figure out correct regions to use in this file
+struct PlannerData {
+    let allDayEvents: [EKEvent]
+    let timedEvents: [EKEvent]
+}
+
 @MainActor
 class CalendarStore: ObservableObject {
-    
+
     @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
         KeepPastPlansDuration =
             KeepPastPlansDuration.oneMonth
@@ -21,12 +25,15 @@ class CalendarStore: ObservableObject {
     private let eventStore = EKEventStore()
 
     @Published private(set) var calendarsById: [String: EKCalendar] = [:]
-    @Published private(set) var allDayEventsByDatestamp: [String: [EKEvent]] =
-        [:]
-    @Published private(set) var singleDayEventsByDatestamp:
-        [String: [EKEvent]] = [:]
-    @Published var refreshKey: UUID? = nil
+
+    @Published private(set) var plannerData: [String: PlannerData] = [:]
+    
+    @Published private(set) var loadedPlannerKeys: Set<String> = []
+
+    // TODO: we can no longer use this. We aren't loading in all existing events
     @Published private(set) var existingEventIds: Set<String> = []
+
+    @Published var loadId: UUID = UUID()
     @Published var accessDenied: Bool = true
 
     var ekEventStore: EKEventStore {
@@ -73,7 +80,15 @@ class CalendarStore: ObservableObject {
             return Color.secondary
         }
 
-        return Color(calendar.cgColor)
+        return calendar.color
+    }
+    
+    func allDayEvents(for planner: Planner) -> [EKEvent] {
+        plannerData[planner.key]?.allDayEvents ?? []
+    }
+    
+    func timedEvents(for planner: Planner) -> [EKEvent] {
+        plannerData[planner.key]?.timedEvents ?? []
     }
 
     private func requestAccess(hiddenCalendarIds: Set<String>) {
@@ -91,9 +106,8 @@ class CalendarStore: ObservableObject {
 
     private func load(hiddenCalendarIds: Set<String>) {
         loadCalendars()
-        loadDefaultEvents(
-            hiddenCalendarIds: hiddenCalendarIds
-        )
+        loadedPlannerKeys = []
+        loadId = UUID()
     }
 
     private func loadCalendars() {
@@ -104,73 +118,18 @@ class CalendarStore: ObservableObject {
         )
     }
 
-    // Loads the default range of available planner dates. Other dates may be lazily loaded.
-    private func loadDefaultEvents(
-        hiddenCalendarIds: Set<String>
-    ) {
-        let minCalendarDate = keepPastPlansDuration.cutoffDate
-
-        let start =
-            minCalendarDate == .distantPast
-            ? DateInRegion(Date(), region: .local)
-                .date : minCalendarDate
-
-        let end = DateInRegion(Date(), region: .local)
-            .dateByAdding(3, .year)
-            .date
-
-        let predicate = eventStore.predicateForEvents(
-            withStart: start,
-            end: end,
-            calendars: nil
-        )
-
-        let events = eventStore.events(matching: predicate)
-
-        var allDayMap: [String: [EKEvent]] = [:]
-        var singleDayMap: [String: [EKEvent]] = [:]
-        var eventIds: Set<String> = []
-
-        for event in events {
-            eventIds.insert(event.calendarItemExternalIdentifier)
-
-            if hiddenCalendarIds.contains(event.calendar.calendarIdentifier) {
-                continue
-            }
-
-            if event.isAllDay {
-                // All-day events can span multiple days.
-                for datestamp in expandedDatestamps(for: event) {
-                    allDayMap[datestamp, default: []].append(event)
-                }
-            } else {
-                //TODO: handle MULTI_DAY. For now, Timed events belong only to their start day
-                let datestamp =
-                    event.startDate
-                    .in(region: .local)
-                    .datestamp
-
-                singleDayMap[datestamp, default: []].append(event)
-            }
-        }
-
-        existingEventIds = eventIds
-        allDayEventsByDatestamp = allDayMap
-        singleDayEventsByDatestamp = singleDayMap
-        refreshKey = UUID()
-    }
-
     @MainActor
-    func ensureCalendarEvents(
-        for datestamp: String,
+    func ensurePlannerData(
+        plannerKey: String,
         startOfDay: DateInRegion,
         hiddenCalendarIds: Set<String>
     ) {
-        // Already loaded for this day.
-        if allDayEventsByDatestamp[datestamp] != nil
-            || singleDayEventsByDatestamp[datestamp] != nil
-        {
+
+        // Exit if the planner data has already been loaded.
+        if loadedPlannerKeys.contains(plannerKey) {
             return
+        } else {
+            loadedPlannerKeys.insert(plannerKey)
         }
 
         let startOfNextDay = startOfDay + 1.days
@@ -184,7 +143,7 @@ class CalendarStore: ObservableObject {
         let events = eventStore.events(matching: predicate)
 
         var allDayEvents: [EKEvent] = []
-        var singleDayEvents: [EKEvent] = []
+        var timedEvents: [EKEvent] = []
 
         for event in events {
             existingEventIds.insert(event.calendarItemExternalIdentifier)
@@ -196,36 +155,16 @@ class CalendarStore: ObservableObject {
             if event.isAllDay {
                 allDayEvents.append(event)
             } else {
-                singleDayEvents.append(event)
+                timedEvents.append(event)
             }
         }
 
-        allDayEventsByDatestamp[datestamp] = allDayEvents
-        singleDayEventsByDatestamp[datestamp] = singleDayEvents
-        refreshKey = UUID()
-    }
-
-    // TODO: use the correct region here
-    // TODO: use this for ALL-DAY events, then create a new one for MULTI_DAY
-    private func expandedDatestamps(for event: EKEvent) -> [String] {
-        var results: [String] = []
-
-        let start = event.startDate
-            .in(region: .local)
-            .dateAtStartOf(.day)
-
-        // TODO: use correct region here
-        let end = event.endDate
-            .in(region: .local)
-            .dateAtStartOf(.day)
-
-        var current = start
-        while current <= end {
-            results.append(current.datestamp)
-            current = current + 1.days
-        }
-
-        return results
+        let newData = PlannerData(
+            allDayEvents: allDayEvents,
+            timedEvents: timedEvents
+        )
+        
+        plannerData[plannerKey] = newData
     }
 
     @MainActor
@@ -241,7 +180,7 @@ class CalendarStore: ObservableObject {
             assertionFailure("Failed to delete event: \(error)")
         }
     }
-    
+
     @MainActor
     func transfer(event: EKEvent, into date: Date) {
         guard event.calendar.allowsContentModifications else {
@@ -254,6 +193,10 @@ class CalendarStore: ObservableObject {
         } catch {
             assertionFailure("Failed to transfer event: \(error)")
         }
+    }
+    
+    func doesPlannerHaveData(key: String) -> Bool {
+        loadedPlannerKeys.contains(key) && plannerData[key] != nil
     }
 
 }

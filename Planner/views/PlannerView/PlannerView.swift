@@ -46,7 +46,9 @@ struct PlannerView: View {
         let region = planner.region(settings: plannerSettings)
 
         guard let startOfDay = planner.datestamp.startOfDay(in: region) else {
-            fatalError("ERROR PlannerView.init: Could not get DateInRegion from: \(planner.datestamp)")
+            fatalError(
+                "ERROR PlannerView.init: Could not get DateInRegion from: \(planner.datestamp)"
+            )
         }
 
         let startOfNextDay = (startOfDay + 1.days)
@@ -240,16 +242,22 @@ struct PlannerView: View {
             }
         }
         .environmentObject(plannerManager)
-        
+
         // Pass the custom toggler to the planner manager.
         .task {
             plannerManager.setToggleItem(togglePlannerEvent)
+
+            calendarStore.ensurePlannerData(
+                plannerKey: planner.key,
+                startOfDay: startOfDay,
+                hiddenCalendarIds: calendarSettings.hiddenCalendarIds
+            )
         }
 
         // Up-to-date calendar data.
         .externalData(
-            key: calendarStore.refreshKey,
-            ready: true,
+            key: calendarStore.loadId,
+            ready: calendarStore.doesPlannerHaveData(key: planner.key),
             load: synchronizeCalendarEvents
         )
 
@@ -533,14 +541,12 @@ struct PlannerView: View {
     private func synchronizeCalendarEvents() {
         calendarPlannerEvents =
             modelContext.synchronize(
-                calendarEvents: calendarStore.singleDayEventsByDatestamp[
-                    planner.datestamp
-                ] ?? [],
+                calendarEvents: calendarStore.timedEvents(for: planner),
                 into: plannerEvents,
                 planner: planner,
                 calendarSettings: calendarSettings,
                 plannerSettings: plannerSettings
-            ) ?? calendarPlannerEvents
+            )
     }
 
     private func reloadCalendar() {
@@ -721,9 +727,12 @@ struct PlannerView: View {
                 calendarEvent: nil
             )
     }
-    
+
     private func togglePlannerEvent(_ event: PlannerEvent) -> Bool {
-        return modelContext.togglePlannerEvent(event, calendarSettings: calendarSettings)
+        return modelContext.togglePlannerEvent(
+            event,
+            calendarSettings: calendarSettings
+        )
     }
 
 }

@@ -76,9 +76,7 @@ struct PlannerChipSpreadView: View {
     }
 
     private var allDayEvents: [EKEvent] {
-        calendarStore.allDayEventsByDatestamp[
-            planner.datestamp
-        ] ?? []
+        calendarStore.allDayEvents(for: planner)
     }
 
     var body: some View {

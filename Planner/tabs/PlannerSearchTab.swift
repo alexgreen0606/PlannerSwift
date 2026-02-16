@@ -24,6 +24,7 @@ struct PlannerSearchTabView: View {
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
 
+    @State private var openPlanner: Planner? = nil
     @State private var openPlannerDatestamp: PlannerDatestamp? = nil
     @Namespace private var namespace
 
@@ -37,6 +38,7 @@ struct PlannerSearchTabView: View {
     @State private var eventMap: [String: [String]] = [:]
 
     private var sortedUpcomingYears: [String] {
+        return ["2026"]
         Array(eventMap.keys).sorted()
     }
 
@@ -63,17 +65,21 @@ struct PlannerSearchTabView: View {
                     List {
                         ForEach(sortedUpcomingYears, id: \.self) { year in
                             Section {
-                                ForEach(eventMap[year] ?? [], id: \.self) {
+                                ForEach(
+                                    eventMap[year] ?? [
+                                        "2026-02-15", "2026-02-16",
+                                        "2026-02-17", "2026-02-18",
+                                    ],
+                                    id: \.self
+                                ) {
                                     datestamp in
-                                    PlannerCardView(
+                                    PlannerPreviewBuilderView(
                                         datestamp: datestamp,
-                                        iconMap: calendarSettings.iconMap,
-                                        isEventChecked: isCalendarEventChecked
-                                    ) {
-                                        openPlannerDatestamp = PlannerDatestamp(
-                                            id: datestamp
-                                        )
-                                    }
+                                        type: .search,
+                                        plannerSettings: plannerSettings,
+                                        calendarSettings: calendarSettings,
+                                        openPlanner: $openPlanner
+                                    )
                                     .matchedTransitionSource(
                                         id: datestamp,
                                         in: namespace
@@ -103,9 +109,20 @@ struct PlannerSearchTabView: View {
                     }
 
                     // Open a planner.
-                    .fullScreenCover(item: $openPlannerDatestamp) {
-                        plannerDatestamp in
-                        planner(datestamp: plannerDatestamp.id)
+                    .fullScreenCover(item: $openPlanner) { planner in
+                        PlannerView(
+                            planner: planner,
+                            plannerSettings: plannerSettings,
+                            calendarSettings: calendarSettings
+                        ) {
+                            openPlanner = nil
+                        }
+                        .navigationTransition(
+                            .zoom(
+                                sourceID: planner.datestamp,
+                                in: namespace
+                            )
+                        )
                     }
 
                     // Keep the list scrolled to the top whenever the results change.
@@ -120,7 +137,7 @@ struct PlannerSearchTabView: View {
                         DispatchQueue.main.async {
                             toolbarHeight = geo.safeAreaInsets.bottom
                             topInsetHeight =
-                                geo.safeAreaInsets.top - toolbarHeight + 16
+                                geo.safeAreaInsets.top - toolbarHeight + 32
                         }
                     }
                 }
@@ -149,8 +166,8 @@ struct PlannerSearchTabView: View {
 
         // Calendar Data
         .externalData(
-            key: calendarStore.refreshKey,
-            ready: calendarSettings != nil,
+            key: calendarStore.loadId,
+            ready: true,
             load: computeFilteredEventMap
         )
     }
@@ -191,7 +208,7 @@ struct PlannerSearchTabView: View {
                                         calendar.calendarIdentifier
                                     ] ?? calendar.iconName
                             )
-                            .tint(Color(cgColor: calendar.cgColor))
+                            .tint(calendar.color)
 
                             Text(calendar.title)
                         }
@@ -241,7 +258,7 @@ struct PlannerSearchTabView: View {
                                             calendar.calendarIdentifier
                                         ] ?? calendar.iconName
                                 )
-                                .tint(Color(cgColor: calendar.cgColor))
+                                .tint(calendar.color)
 
                                 Text(calendar.title)
                             }
@@ -314,105 +331,106 @@ struct PlannerSearchTabView: View {
             )
     }
 
+    // TODO: this should gather all calendar events for the next year, plus planners for the next year
     private func computeFilteredEventMap() {
-        let today = todaystampWatcher.todaystamp
-        let todayDate = today.toDate("yyyy-MM-dd", region: .local)?.date
-        let maxDate = todaystampWatcher.maxCalendarDate
-
-        // ------------------------------------------------------------------
-        // 1. Collect all datestamps that have events (all-day + single-day)
-        // ------------------------------------------------------------------
-        let eventDatestamps = Set(
-            calendarStore.allDayEventsByDatestamp.keys
-        ).union(
-            calendarStore.singleDayEventsByDatestamp.keys
-        )
-
-        // ------------------------------------------------------------------
-        // 2. Trim datestamps to the desired date range
-        // ------------------------------------------------------------------
-        let dateRangeFiltered: [(year: String, datestamp: String)] =
-            eventDatestamps.compactMap { datestamp in
-                guard
-                    let date = datestamp.toDate("yyyy-MM-dd", region: .local)?
-                        .date,
-                    let todayDate,
-                    date > todayDate,
-                    date < maxDate
-                else { return nil }
-
-                return (String(date.year), datestamp)
-            }
-
-        // ------------------------------------------------------------------
-        // 3. Filter events by:
-        //    a) calendar IDs (if provided)
-        //    b) checked status
-        //    c) search text in title (if provided)
-        //    Remove datestamps with zero remaining events
-        // ------------------------------------------------------------------
-        let filteredDatestamps = dateRangeFiltered.compactMap {
-            entry -> (year: String, datestamp: String)? in
-            let datestamp = entry.datestamp
-
-            // Combine all events for this datestamp
-            let events =
-                (calendarStore.allDayEventsByDatestamp[datestamp] ?? [])
-                + (calendarStore.singleDayEventsByDatestamp[datestamp] ?? [])
-
-            // Filter by calendar identifiers (skip if none selected)
-            let calendarFiltered =
-                filterCalendarIds.isEmpty
-                ? events
-                : events.filter {
-                    filterCalendarIds.contains($0.calendar.calendarIdentifier)
-                }
-
-            // Filter out checked events
-            let checkedFiltered =
-                calendarSettings == nil
-                ? calendarFiltered
-                : calendarFiltered.filter {
-                    !calendarSettings.checkedCalendarEventIds.contains(
-                        $0.calendarItemExternalIdentifier
-                    )
-                }
-
-            let trimmedSearchText = searchText.trimmingCharacters(
-                in: .whitespacesAndNewlines
-            )
-
-            // Filter by search text in title (skip if empty)
-            let searchFiltered =
-                trimmedSearchText.isEmpty
-                ? checkedFiltered
-                : checkedFiltered.filter {
-                    $0.title.localizedCaseInsensitiveContains(
-                        trimmedSearchText
-                    )
-                }
-
-            // Remove this datestamp entirely if no events remain
-            guard !searchFiltered.isEmpty else { return nil }
-
-            return entry
-        }
-
-        // ------------------------------------------------------------------
-        // 4. Group remaining datestamps by year
-        // ------------------------------------------------------------------
-        let grouped = Dictionary(grouping: filteredDatestamps, by: { $0.year })
-
-        // ------------------------------------------------------------------
-        // 5. Sort datestamps within each year
-        // ------------------------------------------------------------------
-        eventMap = grouped.mapValues { values in
-            values
-                .map { $0.datestamp }
-                .sorted()
-        }
-
-        scrollToTopTrigger = UUID()
+        //        let today = todaystampWatcher.todaystamp
+        //        let todayDate = today.toDate("yyyy-MM-dd", region: .local)?.date
+        //        let maxDate = todaystampWatcher.maxCalendarDate
+        //
+        //        // ------------------------------------------------------------------
+        //        // 1. Collect all datestamps that have events (all-day + single-day)
+        //        // ------------------------------------------------------------------
+        //        let eventDatestamps = Set(
+        //            calendarStore.allDayEventsByDatestamp.keys
+        //        ).union(
+        //            calendarStore.singleDayEventsByDatestamp.keys
+        //        )
+        //
+        //        // ------------------------------------------------------------------
+        //        // 2. Trim datestamps to the desired date range
+        //        // ------------------------------------------------------------------
+        //        let dateRangeFiltered: [(year: String, datestamp: String)] =
+        //            eventDatestamps.compactMap { datestamp in
+        //                guard
+        //                    let date = datestamp.toDate("yyyy-MM-dd", region: .local)?
+        //                        .date,
+        //                    let todayDate,
+        //                    date > todayDate,
+        //                    date < maxDate
+        //                else { return nil }
+        //
+        //                return (String(date.year), datestamp)
+        //            }
+        //
+        //        // ------------------------------------------------------------------
+        //        // 3. Filter events by:
+        //        //    a) calendar IDs (if provided)
+        //        //    b) checked status
+        //        //    c) search text in title (if provided)
+        //        //    Remove datestamps with zero remaining events
+        //        // ------------------------------------------------------------------
+        //        let filteredDatestamps = dateRangeFiltered.compactMap {
+        //            entry -> (year: String, datestamp: String)? in
+        //            let datestamp = entry.datestamp
+        //
+        //            // Combine all events for this datestamp
+        //            let events =
+        //                (calendarStore.allDayEventsByDatestamp[datestamp] ?? [])
+        //                + (calendarStore.singleDayEventsByDatestamp[datestamp] ?? [])
+        //
+        //            // Filter by calendar identifiers (skip if none selected)
+        //            let calendarFiltered =
+        //                filterCalendarIds.isEmpty
+        //                ? events
+        //                : events.filter {
+        //                    filterCalendarIds.contains($0.calendar.calendarIdentifier)
+        //                }
+        //
+        //            // Filter out checked events
+        //            let checkedFiltered =
+        //                calendarSettings == nil
+        //                ? calendarFiltered
+        //                : calendarFiltered.filter {
+        //                    !calendarSettings.checkedCalendarEventIds.contains(
+        //                        $0.calendarItemExternalIdentifier
+        //                    )
+        //                }
+        //
+        //            let trimmedSearchText = searchText.trimmingCharacters(
+        //                in: .whitespacesAndNewlines
+        //            )
+        //
+        //            // Filter by search text in title (skip if empty)
+        //            let searchFiltered =
+        //                trimmedSearchText.isEmpty
+        //                ? checkedFiltered
+        //                : checkedFiltered.filter {
+        //                    $0.title.localizedCaseInsensitiveContains(
+        //                        trimmedSearchText
+        //                    )
+        //                }
+        //
+        //            // Remove this datestamp entirely if no events remain
+        //            guard !searchFiltered.isEmpty else { return nil }
+        //
+        //            return entry
+        //        }
+        //
+        //        // ------------------------------------------------------------------
+        //        // 4. Group remaining datestamps by year
+        //        // ------------------------------------------------------------------
+        //        let grouped = Dictionary(grouping: filteredDatestamps, by: { $0.year })
+        //
+        //        // ------------------------------------------------------------------
+        //        // 5. Sort datestamps within each year
+        //        // ------------------------------------------------------------------
+        //        eventMap = grouped.mapValues { values in
+        //            values
+        //                .map { $0.datestamp }
+        //                .sorted()
+        //        }
+        //
+        //        scrollToTopTrigger = UUID()
     }
 
     private func scheduleFilterDebounce() {

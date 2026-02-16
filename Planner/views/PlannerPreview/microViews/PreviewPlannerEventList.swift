@@ -6,13 +6,12 @@
 //
 
 import EventKit
-import SwiftUI
 import SwiftDate
+import SwiftUI
 
 struct PreviewPlannerEventListView: View {
-    let datestamp: String
+    let plannerRegion: Region
     let events: [PlannerEvent]
-    let hideLastDivider: Bool
 
     @Environment(\.displayScale) private var displayScale
 
@@ -25,22 +24,18 @@ struct PreviewPlannerEventListView: View {
                 ForEach(events, id: \.id) { event in
                     HStack(alignment: .top, spacing: 12) {
                         Text(event.title)
-                            .font(.system(size: 15))
-                            .foregroundStyle(Color.label)
+                            .font(.system(size: UIConstants.listItemFontSize * 0.8))
 
                         Spacer()
 
                         event.timeValueView(
-                            // TODO: pass correct region
-                            in: .local,
+                            in: plannerRegion,
                             openSheet: nil,
                             accentColor: accentColor.swiftUIColor
                         )
                     }
 
-                    if !hideLastDivider || event != events.last! {
-                        dashedDivider
-                    }
+                    dashedDivider
                 }
             }
         }

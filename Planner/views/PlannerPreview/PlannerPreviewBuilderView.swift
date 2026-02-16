@@ -9,19 +9,22 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-struct PlannerCardVerticalBuilderView: View {
+struct PlannerPreviewBuilderView: View {
     private let datestamp: String
+    private let type: PlannerPreviewType
     private let plannerSettings: PlannerSettings
     private let calendarSettings: CalendarSettings
     @Binding private var openPlanner: Planner?
 
     init(
         datestamp: String,
+        type: PlannerPreviewType,
         plannerSettings: PlannerSettings,
         calendarSettings: CalendarSettings,
         openPlanner: Binding<Planner?>
     ) {
         self.datestamp = datestamp
+        self.type = type
         self.plannerSettings = plannerSettings
         self.calendarSettings = calendarSettings
         self._openPlanner = openPlanner
@@ -44,8 +47,9 @@ struct PlannerCardVerticalBuilderView: View {
     var body: some View {
         Group {
             if let planner {
-                PlannerCardVerticalView(
+                PlannerPreviewView(
                     planner: planner,
+                    type: type,
                     plannerSettings: plannerSettings,
                     calendarSettings: calendarSettings,
                     openPlanner: $openPlanner

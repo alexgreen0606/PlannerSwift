@@ -10,6 +10,10 @@ import SwiftDate
 import SwiftUI
 
 extension Planner {
+    
+    var key: String {
+        location?.key ?? "\(datestamp)-CURRENT_LOCATION"
+    }
 
     func region(settings: PlannerSettings?) -> Region {
         location(settings: settings)?.region ?? .local
