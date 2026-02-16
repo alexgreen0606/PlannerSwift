@@ -46,7 +46,6 @@
 //        planners.first
 //    }
 //
-//    // TODO: this is outdated. Needs to consider the home location.
 //    private var weatherData: DayWeather? {
 //        weatherStore.getWeather(for: todaystamp, at: planner?.location)
 //    }

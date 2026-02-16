@@ -84,8 +84,8 @@ extension Planner {
             secondaryColor: nil
         )
     }
-
-    // TODO: should I just sort ALL calendar events with ALL planner events? Is that a crazy idea?
+    
+    // TODO: what if a calendar event belongs to 2 planners, and the sort indices conflict??? Should I have per-planner sort indices?
     
     // TODO: get this working. Is casting to region important here? Or is the creation of the events at the correct region what matters, and this is simply sorting absolute positions?
     func synchronizeCalendarEventPositions(

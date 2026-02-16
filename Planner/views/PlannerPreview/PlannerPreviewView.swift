@@ -97,7 +97,7 @@ struct PlannerPreviewView: View {
     // MARK: - Weather Data
 
     private var weatherData: DayWeather? {
-        weatherStore.getWeather(for: planner.datestamp, at: location)
+        weatherStore.getWeather(for: startOfDay, at: location)
     }
 
     private var location: Location? {
@@ -257,11 +257,12 @@ struct PlannerPreviewView: View {
 
             // Weather Data Tracking
             .externalData(
-                key: weatherStore.refreshKey,
+                key: weatherStore.loadId,
                 ready: true
             ) {
                 Task {
-                    await weatherStore.loadWeatherIfNeeded(for: location)
+                    print("Calling \(planner.datestamp)")
+                    await weatherStore.loadWeatherIfNeeded(location: location, region: startOfDay.region)
                 }
             }
             .contentShape(Rectangle())
@@ -394,20 +395,12 @@ struct PlannerPreviewView: View {
     }
     
     @ViewBuilder
-    // TODO: space the weather temp below the rest TEST
     private var topRightWeatherInfo: some View {
         if type == .search {
-            VStack {
+            VStack(alignment: .trailing) {
                 HStack(alignment: .bottom) {
-                    if let weatherData {
-                        Image(systemName: weatherData.symbolName)
-                            .symbolVariant(isDarkMode ? .fill : .none)
-                            .symbolRenderingMode(isDarkMode ? .multicolor : .monochrome)
-                            .imageScale(.medium)
-                            .frame(maxHeight: .infinity)
-                    }
                     
-                    VStack(alignment: .leading, spacing: 0) {
+                    VStack(alignment: .trailing, spacing: 0) {
                         
                         if let weatherData {
                             Text(weatherData.condition.description)
@@ -438,6 +431,14 @@ struct PlannerPreviewView: View {
                                 }
                             }
                         }
+                    }
+                    
+                    if let weatherData {
+                        Image(systemName: weatherData.symbolName)
+                            .symbolVariant(isDarkMode ? .fill : .none)
+                            .symbolRenderingMode(isDarkMode ? .multicolor : .monochrome)
+                            .imageScale(.medium)
+                            .frame(maxHeight: .infinity)
                     }
                 }
                 

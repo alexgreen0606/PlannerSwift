@@ -13,8 +13,11 @@ struct ChecklistsTabView: View {
 
     @Environment(\.modelContext) private var modelContext
 
-    // TODO Should only return one folder that doesnt have a parent.
-    @Query var rootFolderList: [ChecklistItem]
+    @Query(
+        filter: #Predicate<ChecklistItem> { item in
+            item.parent == nil
+        }
+    ) var rootFolderList: [ChecklistItem] // Only one item should exist without a parent.
 
     @StateObject private var checklistsManager = ListManager<ChecklistItem>()
     @State private var folderPath = NavigationPath()

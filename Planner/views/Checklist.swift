@@ -140,8 +140,6 @@ struct ChecklistView: View {
             if let checklist, let parent = checklist.parent {
                 ChecklistItemFormView(item: checklist, parent: parent) {
                     savedList in
-
-                    // TODO: if saved list is now a folder, close this and open the folder
                     if savedList.type == .folder {
                         closeChecklist(savedList)
                     }

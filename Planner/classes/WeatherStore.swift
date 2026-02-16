@@ -21,22 +21,77 @@ final class WeatherStore: ObservableObject {
 
     private let weatherService = WeatherService()
 
-    @Published private var weatherMap: [String: [String: DayWeather]] =
+    // Location Key -> Date (Region Start Of Day) -> Weather
+    @Published private var weatherMap: [String: [Date: DayWeather]] =
         [:]
 
-    @Published var refreshKey: UUID = UUID()
+    @Published var loadId: UUID = UUID()
+    @Published var loadedLocationKeys: Set<String> = []
 
-    func getWeather(for datestamp: String, at location: Location?)
+    func resetWeather() async {
+        loadedLocationKeys = []
+        loadId = UUID()
+    }
+
+    func getWeather(for startOfDay: DateInRegion, at location: Location?)
         -> DayWeather?
     {
         guard let locationKey = getLocationKey(for: location) else {
             return nil
         }
 
-        return weatherMap[locationKey]?[datestamp]
+        return weatherMap[locationKey]?[startOfDay.date]
     }
 
-    func getLocationKey(for location: Location?) -> String? {
+    func loadWeatherIfNeeded(
+        location: Location?,
+        region: Region
+    ) async {
+        let weatherLocation: CLLocation
+
+        guard let locationKey = getLocationKey(for: location) else {
+            print(
+                "ERROR WeatherStore.loadWeatherIfNeeded: Failed to build a locationKey."
+            )
+            return
+        }
+
+        if loadedLocationKeys.contains(locationKey) {
+            // Weather already loaded. Exit early.
+            return
+        } else {
+            loadedLocationKeys.insert(locationKey)
+        }
+
+        if let location {
+            weatherLocation = CLLocation(
+                latitude: location.latitude,
+                longitude: location.longitude
+            )
+        } else if let deviceLocation = locationManager.deviceClLocation {
+            weatherLocation = deviceLocation
+        } else {
+            print(
+                "ERROR WeatherStore.loadWeatherIfNeeded: Failed to build a weatherLocation."
+            )
+            return
+        }
+
+        do {
+            let weather = try await weatherService.weather(for: weatherLocation)
+
+            for dayWeather in weather.dailyForecast {
+                weatherMap[locationKey, default: [:]][dayWeather.date] =
+                    dayWeather
+            }
+
+        } catch {
+            print("ERROR WeatherStore.loadWeatherIfNeeded: \(error)")
+        }
+
+    }
+
+    private func getLocationKey(for location: Location?) -> String? {
         let coordinate: CLLocationCoordinate2D?
 
         if let location {
@@ -48,64 +103,14 @@ final class WeatherStore: ObservableObject {
             coordinate = locationManager.deviceClLocation?.coordinate
         }
 
-        guard let coordinate else { return nil }
+        guard let coordinate else {
+            return nil
+        }
 
         let lat = coordinate.latitude.roundDecimals(to: 4)
         let lon = coordinate.longitude.roundDecimals(to: 4)
 
         return "\(lat),\(lon)"
-    }
-
-    func resetWeather() async {
-        await loadWeatherIfNeeded(for: nil, clearCache: true)
-        refreshKey = UUID()
-    }
-
-    func loadWeatherIfNeeded(
-        for location: Location?,
-        clearCache: Bool = false
-    ) async {
-        let weatherLocation: CLLocation
-
-        guard let locationKey = getLocationKey(for: location) else {
-            print("No location available.")
-            return
-        }
-
-        if weatherMap[locationKey] != nil, !clearCache {
-            // Weather already loaded. Exit early.
-            return
-        } else {
-            weatherMap[locationKey] = [:]
-        }
-
-        if let location {
-            weatherLocation = CLLocation(
-                latitude: location.latitude,
-                longitude: location.longitude
-            )
-        } else if let deviceLocation = locationManager.deviceClLocation {
-            weatherLocation = deviceLocation
-        } else {
-            print("Unable to determine location.")
-            return
-        }
-
-        do {
-            let weather = try await weatherService.weather(for: weatherLocation)
-
-            var newMap = clearCache ? [:] : weatherMap
-
-            for dayWeather in weather.dailyForecast {
-                let datestamp = "TODO" // dayWeather.date.datestamp // TODO: cast to DateInRegion as needed
-                newMap[locationKey, default: [:]][datestamp] = dayWeather
-            }
-
-            weatherMap = newMap
-        } catch {
-            print("Failed to load weather: \(error)")
-        }
-
     }
 
 }

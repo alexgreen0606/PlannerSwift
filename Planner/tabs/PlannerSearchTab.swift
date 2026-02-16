@@ -68,7 +68,7 @@ struct PlannerSearchTabView: View {
                                 ForEach(
                                     eventMap[year] ?? [
                                         "2026-02-15", "2026-02-16",
-                                        "2026-02-17", "2026-02-18",
+                                        "2026-02-17", "2026-02-18", "2026-02-19"
                                     ],
                                     id: \.self
                                 ) {

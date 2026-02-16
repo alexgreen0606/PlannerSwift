@@ -61,7 +61,8 @@ class LocationFinder: NSObject, ObservableObject,
             guard let item = response.mapItems.first,
                 let timeZoneIdentifier = item.timeZone?.identifier
             else {
-                // TODO: think about what to do when a location doesnt have a timeZone
+                // TODO: Show an error message about not having a timeZone.
+                print("ERROR LocationFinder.selectCompletion: Location does not have a timeZone.")
                 return nil
             }
 

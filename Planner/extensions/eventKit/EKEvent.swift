@@ -36,7 +36,11 @@ extension EKEvent {
     }
 
     func region(fallback: Region) -> Region {
-        // TODO: what if start and end timezones are different?
+        
+        // TODO: is this true???
+        // Note: Event start and end may be in different timezones.
+        // As of now, Apple does not provide access to these different timezones.
+        
         if let timeZone = self.timeZone {
             return Region(
                 calendar: fallback.calendar,

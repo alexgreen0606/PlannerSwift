@@ -72,7 +72,7 @@ struct PlannerChipSpreadView: View {
     }
 
     private var weatherData: DayWeather? {
-        weatherStore.getWeather(for: planner.datestamp, at: location)
+        weatherStore.getWeather(for: startOfDay, at: location)
     }
 
     private var allDayEvents: [EKEvent] {
@@ -117,7 +117,8 @@ struct PlannerChipSpreadView: View {
                 Task {
                     await weatherStore
                         .loadWeatherIfNeeded(
-                            for: location
+                            location: location,
+                            region: startOfDay.region
                         )
                 }
             }
@@ -131,12 +132,13 @@ struct PlannerChipSpreadView: View {
 
         // Weather Data
         .externalData(
-            key: weatherStore.refreshKey,
+            key: weatherStore.loadId,
             ready: plannerSettings != nil
         ) {
             Task {
                 await weatherStore.loadWeatherIfNeeded(
-                    for: location
+                    location: location,
+                    region: startOfDay.region
                 )
             }
         }

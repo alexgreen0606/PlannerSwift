@@ -11,18 +11,6 @@ import SwiftUI
 
 extension PlannerEvent {
 
-    // TODO: is this needed?
-//    var time: Date? {
-//        if let calEvent = self.calendarEvent {
-//
-//            // TODO: DETERMINE START OR END DATE BASED ON EVENT.DATE
-//
-//            return calEvent.startDate
-//        }
-//
-//        return untimed ? nil : self.date
-//    }
-
     func tint(accentColor: AccentColor) -> Color {
         if let calendar = self.calendarEvent?.calendar {
             return calendar.color
