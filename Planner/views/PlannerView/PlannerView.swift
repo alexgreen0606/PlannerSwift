@@ -489,11 +489,10 @@ struct PlannerView: View {
     private func rightAdornment(event: PlannerEvent) -> some View {
         event.timeValueView(
             in: region,
-            openSheet: {
-                openPlannerEventSheet(event)
-            },
             accentColor: accentColor.swiftUIColor
-        )
+        ) {
+            openPlannerEventSheet(event)
+        }
     }
 
     @ViewBuilder

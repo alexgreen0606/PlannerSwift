@@ -40,7 +40,7 @@ struct PlannerBuilderView: View {
     }
 
     var body: some View {
-        Group {
+        ZStack {
             if let planner {
                 PlannerView(
                     planner: planner,

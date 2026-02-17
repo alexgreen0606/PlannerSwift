@@ -34,7 +34,8 @@ extension EKEvent {
         var timeString: String? = nil
         let eventRegion = region(fallback: plannerRegion)
 
-        if eventRegion.timeZone != plannerRegion.timeZone {
+        if eventRegion.timeZone.identifier != plannerRegion.timeZone.identifier {
+            
             // TODO: Start vs End
             let dateInRegion = DateInRegion(startDate, region: eventRegion)
             timeString = dateInRegion.timeWithTimezone

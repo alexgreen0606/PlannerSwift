@@ -26,8 +26,8 @@ extension PlannerEvent {
     @ViewBuilder
     func timeValueView(
         in region: Region,
-        openSheet: (() -> Void)?,
-        accentColor: Color
+        accentColor: Color,
+        openSheet: (() -> Void)?
     ) -> some View {
         if let calendarEvent = self.calendarEvent {
 

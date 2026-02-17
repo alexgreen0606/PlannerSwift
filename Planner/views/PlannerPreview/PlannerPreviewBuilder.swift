@@ -23,6 +23,7 @@ struct PlannerPreviewBuilderView: View {
         calendarSettings: CalendarSettings,
         openPlanner: Binding<Planner?>
     ) {
+        print(datestamp)
         self.datestamp = datestamp
         self.type = type
         self.plannerSettings = plannerSettings
@@ -45,7 +46,7 @@ struct PlannerPreviewBuilderView: View {
     }
 
     var body: some View {
-        Group {
+        ZStack {
             if let planner {
                 PlannerPreviewView(
                     planner: planner,
