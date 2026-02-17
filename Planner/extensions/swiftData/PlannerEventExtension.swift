@@ -26,16 +26,15 @@ extension PlannerEvent {
     @ViewBuilder
     func timeValueView(
         in region: Region,
-        openSheet: ((PlannerEvent) -> Void)?,
+        openSheet: (() -> Void)?,
         accentColor: Color
     ) -> some View {
         if let calendarEvent = self.calendarEvent {
 
             calendarEvent.timeValueView(
-                in: region
-            ) {
-                openSheet?(self)
-            }
+                in: region,
+                openSheet: openSheet
+            )
 
         } else if !self.untimed {
 
@@ -43,10 +42,9 @@ extension PlannerEvent {
                 day: DateInRegion(self.date, region: region),
                 disabled: false,
                 color: accentColor,
-                scale: 1
-            ) {
-                openSheet?(self)
-            }
+                scale: 1,
+                openEventSheet:  openSheet
+            )
 
         }
     }

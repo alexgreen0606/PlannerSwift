@@ -13,10 +13,10 @@ struct TimeValueView: View {
     let disabled: Bool
     let color: Color
     let scale: Double
-    let openEventSheet: () -> Void
+    let openEventSheet: (() -> Void)?
 
     var body: some View {
-        HStack(alignment: .top, spacing: 1 * scale) {
+        let val = HStack(alignment: .top, spacing: 1 * scale) {
             // Time Value (12:30)
             Text(day.timeValues.timeValue)
                 .font(.system(size: 14 * scale, weight: .black, design: .rounded))
@@ -44,7 +44,13 @@ struct TimeValueView: View {
                     .offset(y: 16 * scale)
             }
         }
-        .contentShape(Rectangle())
-        .onTapGesture(perform: openEventSheet)
+        
+        if let openEventSheet {
+            val
+                .contentShape(Rectangle())
+                .onTapGesture(perform: openEventSheet)
+        } else {
+            val
+        }
     }
 }

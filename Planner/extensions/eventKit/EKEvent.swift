@@ -65,10 +65,9 @@ extension EKEvent {
             day: DateInRegion(self.startDate, region: eventRegion),
             disabled: false,
             color: !usePlannerRegion ? .secondary : self.calendar.color,
-            scale: scale
-        ) {
-            openSheet?()
-        }
+            scale: scale,
+            openEventSheet: openSheet
+        )
 
     }
 
