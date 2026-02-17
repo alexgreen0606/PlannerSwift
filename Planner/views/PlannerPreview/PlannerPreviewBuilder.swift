@@ -23,7 +23,6 @@ struct PlannerPreviewBuilderView: View {
         calendarSettings: CalendarSettings,
         openPlanner: Binding<Planner?>
     ) {
-        print(datestamp)
         self.datestamp = datestamp
         self.type = type
         self.plannerSettings = plannerSettings

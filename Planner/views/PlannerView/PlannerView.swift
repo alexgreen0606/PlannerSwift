@@ -500,21 +500,23 @@ struct PlannerView: View {
         if let calEvent = event.calendarEvent,
             let values = calEvent.bottomAdornmentValues(plannerRegion: region)
         {
-            HStack(spacing: 4) {
+            HStack {
 
                 if let location = values.location {
-                    Image(systemName: "mappin.and.ellipse")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 10, height: 10)
-                        .foregroundStyle(
-                            calEvent.calendar.color,
-                            Color.secondary
-                        )
-
-                    Text(location)
-                        .font(.system(size: 10))
-                        .foregroundColor(.secondary)
+                    HStack(alignment: .top, spacing: 4){
+                        Image(systemName: "mappin.and.ellipse")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 10, height: 10)
+                            .foregroundStyle(
+                                calEvent.calendar.color,
+                                Color.secondary
+                            )
+                        
+                        Text(location)
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary)
+                    }
                 }
 
                 Spacer()

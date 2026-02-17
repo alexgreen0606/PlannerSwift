@@ -81,9 +81,6 @@ struct EventFormView: View {
         )
         draftPlannerEvent.title = title
         draftPlannerEvent.untimed = !hasTime
-        //        _title = State(initialValue: title)
-        //        _date = State(initialValue: date)
-        //        _hasTime = State(initialValue: hasTime)
         self.draftPlannerEvent = draftPlannerEvent
         self.contact = contact
     }
@@ -107,9 +104,6 @@ struct EventFormView: View {
 
     @State private var draftCalendarEvent: EKEvent?
     @State private var draftPlannerEvent: PlannerEvent
-    //    @State private var title: String
-    //    @State private var date: Date
-    //    @State private var hasTime: Bool
 
     private var isValid: Bool {
         !draftPlannerEvent.title.isEmpty
@@ -177,28 +171,43 @@ struct EventFormView: View {
     @ViewBuilder
     private func calendarEventForm(for event: EKEvent) -> some View {
         if event.calendar.allowsContentModifications {
-            NavigationStack {
-                EditCalendarEventFormView(
-                    event: event,
-                    eventStore: calendarStore.ekEventStore
-                ) { action, event in
-                    guard action != .canceled else {
-                        dismiss()
-                        return
-                    }
-
-                    if let event, action == .saved {
-                        handleCalendarEventChange(event)
-                        return
-                    }
-
-                    updateCalendarData()
+            EditCalendarEventFormView(
+                event: event,
+                eventStore: calendarStore.ekEventStore
+            ) { action, event in
+                guard action != .canceled else {
                     dismiss()
+                    return
                 }
-                .tint(accentColor.swiftUIColor)
-                .ignoresSafeArea()
-                .toolbar {
-                    calendarEventBottomToolbar
+
+                if let event, action == .saved {
+                    handleCalendarEventChange(event)
+                    return
+                }
+
+                updateCalendarData()
+                dismiss()
+            }
+            .tint(accentColor.swiftUIColor)
+            .ignoresSafeArea()
+            .overlay {
+                VStack {
+
+                    Spacer()
+
+                    AccentButtonView(
+                        label: "Remove From Calendar",
+                        systemImage: "calendar.badge.minus"
+                    ) {
+                        guard let calEvent = draftCalendarEvent else { return }
+
+                        draftPlannerEvent.title = calEvent.title
+                        draftPlannerEvent.date = calEvent.startDate
+                        draftPlannerEvent.untimed = false
+
+                        draftCalendarEvent = nil
+                        selectedDetent = .height(340)
+                    }
                 }
             }
         } else {
@@ -227,14 +236,20 @@ struct EventFormView: View {
                     systemImage: "calendar.badge.plus"
                 ) {
 
-                    // Create a new calendar event to represent the form values.
-                    let event = EKEvent(
-                        eventStore: calendarStore.ekEventStore
-                    )
+                    // Build a calendar event to represent the form values.
+                    let event =
+                        initialCalendarEvent
+                        ?? EKEvent(
+                            eventStore: calendarStore.ekEventStore
+                        )
                     event.calendar =
-                        calendarStore.ekEventStore
+                        initialCalendarEvent?.calendar
+                        ?? calendarStore.ekEventStore
                         .defaultCalendarForNewEvents
+
                     event.title = draftPlannerEvent.title
+
+                    // TODO: follow same time standards as apple
                     event.startDate = draftPlannerEvent.date
                     event.endDate = Calendar.current.date(
                         byAdding: .hour,
@@ -248,26 +263,6 @@ struct EventFormView: View {
             }
             .sharedBackgroundVisibility(.hidden)
         }
-    }
-
-    @ToolbarContentBuilder
-    private var calendarEventBottomToolbar: some ToolbarContent {
-        ToolbarItem(placement: .bottomBar) {
-            AccentButtonView(
-                label: "Remove From Calendar",
-                systemImage: "calendar.badge.minus"
-            ) {
-                guard let calEvent = draftCalendarEvent else { return }
-
-                draftPlannerEvent.title = calEvent.title
-                draftPlannerEvent.date = calEvent.startDate
-                draftPlannerEvent.untimed = false
-
-                draftCalendarEvent = nil
-                selectedDetent = .height(340)
-            }
-        }
-        .sharedBackgroundVisibility(.hidden)
     }
 
     private func savePlannerEvent() {
@@ -437,7 +432,7 @@ struct EventFormView: View {
 
         // TODO: load in here
         let calendarEvents: [EKEvent] = []
-            // calendarStore.timedEvents(for: planner)
+        // calendarStore.timedEvents(for: planner)
 
         let calendarPlannerEvents =
             modelContext.synchronize(

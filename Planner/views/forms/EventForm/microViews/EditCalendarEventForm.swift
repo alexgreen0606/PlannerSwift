@@ -24,6 +24,7 @@ struct EditCalendarEventFormView: UIViewControllerRepresentable {
         vc.eventStore = eventStore
         vc.event = event
         vc.editViewDelegate = context.coordinator
+        vc.additionalSafeAreaInsets.bottom = 30
 
         return vc
     }
