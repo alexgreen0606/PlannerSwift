@@ -83,6 +83,7 @@ struct PlannerView: View {
 
     @Query private var plannerEvents: [PlannerEvent]
 
+    @State private var calendarData: PlannerCalendarData?
     @State private var calendarPlannerEvents: [PlannerEvent] = []
 
     @StateObject private var plannerManager: ListManager<PlannerEvent>
@@ -101,6 +102,10 @@ struct PlannerView: View {
 
     private var showChecked: Bool {
         plannerType == .future ? planner.showCanceled : planner.showCompleted
+    }
+
+    private var allDayEvents: [EKEvent] {
+        calendarData?.allDayEvents ?? []
     }
 
     private var allEvents: [PlannerEvent] {
@@ -179,8 +184,9 @@ struct PlannerView: View {
                     tint: eventTint,
                     toolbarIcons: ["clock"],
                     tapToolbar: handleToolbarTap,
-                    startAdornment: startAdornment,
-                    endAdornment: endAdornment,
+                    leftAdornment: leftAdornment,
+                    rightAdornment: rightAdornment,
+                    bottomAdornment: bottomAdornment,
                     proxy: proxy,
                     createItem: createEvent,
                     handleTitleChange: handleEventTitleChange,
@@ -246,19 +252,13 @@ struct PlannerView: View {
         // Pass the custom toggler to the planner manager.
         .task {
             plannerManager.setToggleItem(togglePlannerEvent)
-
-            calendarStore.ensurePlannerData(
-                plannerKey: planner.key,
-                startOfDay: startOfDay,
-                hiddenCalendarIds: calendarSettings.hiddenCalendarIds
-            )
         }
 
-        // Up-to-date calendar data.
+        // Calendar data tracking.
         .externalData(
-            key: calendarStore.loadId,
-            ready: calendarStore.doesPlannerHaveData(key: planner.key),
-            load: synchronizeCalendarEvents
+            key: calendarStore.loadTrigger,
+            ready: true,
+            load: loadCalendarData
         )
 
     }
@@ -415,7 +415,7 @@ struct PlannerView: View {
                         modelContext.deletePlannerEvents(plannerOnlyEvents)
                     }
 
-                    reloadCalendar()
+                    refreshCalendar()
 
                     DispatchQueue.main.asyncAfter(
                         deadline: .now() + .milliseconds(750)
@@ -450,6 +450,7 @@ struct PlannerView: View {
         PlannerChipSpreadView(
             planner: planner,
             startOfDay: startOfDay,
+            allDayEvents: allDayEvents,
             iconMap: calendarSettings.iconMap,
             namespace: namespace,
             openCalendarEventSheet: { calEvent in
@@ -465,7 +466,7 @@ struct PlannerView: View {
     // MARK: - Event Rows
 
     @ViewBuilder
-    private func startAdornment(event: PlannerEvent) -> some View {
+    private func leftAdornment(event: PlannerEvent) -> some View {
         if let calendarEvent = event.calendarEvent,
             let calendar = calendarEvent.calendar
         {
@@ -485,12 +486,50 @@ struct PlannerView: View {
     }
 
     @ViewBuilder
-    private func endAdornment(event: PlannerEvent) -> some View {
+    private func rightAdornment(event: PlannerEvent) -> some View {
         event.timeValueView(
             in: region,
             openSheet: openPlannerEventSheet,
             accentColor: accentColor.swiftUIColor
         )
+    }
+
+    @ViewBuilder
+    private func bottomAdornment(event: PlannerEvent) -> some View {
+        if let calEvent = event.calendarEvent,
+            let values = calEvent.bottomAdornmentValues(plannerRegion: region)
+        {
+            HStack(spacing: 4) {
+
+                if let location = values.location {
+                    Image(systemName: "mappin.and.ellipse")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 10, height: 10)
+                        .foregroundStyle(
+                            calEvent.calendar.color,
+                            Color.secondary
+                        )
+
+                    Text(location)
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                if let time = values.time {
+                    Text(time)
+                        .font(.system(size: 9))
+                        .foregroundColor(.secondary)
+                }
+
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.bottom, 4)
+        }
+
+        // TODO: add location logic here once it exists (event-specific)
     }
 
     // Toggle confirmation config for calendar events.
@@ -528,7 +567,7 @@ struct PlannerView: View {
                             }
 
                             calendarStore.delete(event: calEvent)
-                            reloadCalendar()
+                            refreshCalendar()
                         },
                     ]
                 )
@@ -538,19 +577,28 @@ struct PlannerView: View {
 
     // MARK: - Data Handlers
 
-    private func synchronizeCalendarEvents() {
+    private func loadCalendarData() {
+
+        let calendarData = calendarStore.loadPlannerData(
+            plannerKey: planner.key,
+            startOfDay: startOfDay,
+            hiddenCalendarIds: calendarSettings.hiddenCalendarIds
+        )
+
         calendarPlannerEvents =
             modelContext.synchronize(
-                calendarEvents: calendarStore.timedEvents(for: planner),
+                calendarEvents: calendarData.timedEvents,
                 into: plannerEvents,
                 planner: planner,
                 calendarSettings: calendarSettings,
                 plannerSettings: plannerSettings
             )
+
+        self.calendarData = calendarData
     }
 
-    private func reloadCalendar() {
-        calendarStore.refresh(
+    private func refreshCalendar() {
+        calendarStore.loadFreshCache(
             hiddenCalendarIds: calendarSettings.hiddenCalendarIds
         )
     }

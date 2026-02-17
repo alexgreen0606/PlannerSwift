@@ -25,7 +25,7 @@ class PlannerEvent: ListItem {
         calendarEvent: EKEvent? = nil,
         sortIndex: Double,
     ) {
-        self.date = date
+        self.date = calendarEvent?.startDate ?? date // TODO: use end date if needed
         
         super.init(sortIndex: sortIndex)
         

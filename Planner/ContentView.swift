@@ -172,7 +172,7 @@ struct ContentView: View {
 
             modelContext.ensureRootFolder(folders: foldersList)
 
-            calendarStore.requestAccessAndLoad(
+            calendarStore.loadFreshCache(
                 hiddenCalendarIds: calendarSettings!.hiddenCalendarIds
             )
 

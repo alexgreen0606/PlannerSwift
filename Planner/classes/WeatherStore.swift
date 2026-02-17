@@ -22,7 +22,7 @@ final class WeatherStore: ObservableObject {
     private let weatherService = WeatherService()
 
     // Location Key -> Date (Region Start Of Day) -> Weather
-    @Published private var weatherMap: [String: [Date: DayWeather]] =
+    @Published var weatherMap: [String: [Date: DayWeather]] =
         [:]
 
     @Published var loadId: UUID = UUID()
@@ -81,7 +81,14 @@ final class WeatherStore: ObservableObject {
             let weather = try await weatherService.weather(for: weatherLocation)
 
             for dayWeather in weather.dailyForecast {
-                weatherMap[locationKey, default: [:]][dayWeather.date] =
+
+                let dayInPlannerRegion = DateInRegion(
+                    dayWeather.date,
+                    region: region
+                )
+                .dateAt(.startOfDay)
+
+                weatherMap[locationKey, default: [:]][dayInPlannerRegion.date] =
                     dayWeather
             }
 

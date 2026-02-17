@@ -15,8 +15,9 @@ class FocusController: ObservableObject {
 
 struct SortableListView<
     Item: ListItem,
-    StartAdornment: View,
-    EndAdornment: View,
+    LeftAdornment: View,
+    RightAdornment: View,
+    BottomAdornment: View,
     FloatingInfo: View
 >:
     View
@@ -34,8 +35,9 @@ struct SortableListView<
     let tint: (_ item: Item) -> Color
     let toolbarIcons: [String]
     let tapToolbar: ((String, Item) -> Void)?
-    let startAdornment: ((_ item: Item) -> StartAdornment)?
-    let endAdornment: ((_ item: Item) -> EndAdornment)?
+    let leftAdornment: ((_ item: Item) -> LeftAdornment)?
+    let rightAdornment: ((_ item: Item) -> RightAdornment)?
+    let bottomAdornment: ((_ item: Item) -> BottomAdornment)?
     let proxy: ScrollViewProxy
     let createItem: (_ baseId: PersistentIdentifier?, _ offset: Int) -> Void
     let handleTitleChange: (_ item: Item) -> Void
@@ -66,8 +68,9 @@ struct SortableListView<
                         showUpperDivider: item.id == uncheckedItems.first?.id,
                         toolbarIcons: toolbarIcons,
                         tapToolbar: handleToolbarPress,
-                        startAdornment: startAdornment,
-                        endAdornment: endAdornment,
+                        leftAdornment: leftAdornment,
+                        rightAdornment: rightAdornment,
+                        bottomAdornment: bottomAdornment,
                         namespace: namespace,
                         customToggleConfig: customToggleConfig,
                         onCreateItem: createItem,
@@ -108,8 +111,9 @@ struct SortableListView<
                                 == checkedItems.first?.id,
                             toolbarIcons: toolbarIcons,
                             tapToolbar: { _, _ in },
-                            startAdornment: startAdornment,
-                            endAdornment: endAdornment,
+                            leftAdornment: leftAdornment,
+                            rightAdornment: rightAdornment,
+                            bottomAdornment: bottomAdornment,
                             namespace: namespace,
                             customToggleConfig: customToggleConfig,
                             onCreateItem: { _, _ in },

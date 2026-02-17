@@ -39,6 +39,31 @@ extension ModelContext {
     }
 
     @MainActor
+    func getEvents(
+        for startOfDay: DateInRegion
+    ) -> [PlannerEvent] {
+
+        let startOfNextDay = (startOfDay + 1.days)
+
+        let descriptor = FetchDescriptor<PlannerEvent>(
+            predicate: #Predicate {
+                $0.date >= startOfDay.date && $0.date < startOfNextDay.date
+            }
+        )
+
+        do {
+            return try fetch(descriptor)
+        } catch {
+            assertionFailure(
+                "ERROR plannerEvent.getEvents: \(error)"
+            )
+        }
+
+        return []
+
+    }
+
+    @MainActor
     func moveEvent(
         from: Int,
         to: Int,

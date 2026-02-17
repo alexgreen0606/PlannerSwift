@@ -8,17 +8,18 @@
 import SwiftDate
 import SwiftUI
 
-struct TimeValue: View {
+struct TimeValueView: View {
     let day: DateInRegion
     let disabled: Bool
     let color: Color
+    let scale: Double
     let openEventSheet: () -> Void
 
     var body: some View {
-        HStack(alignment: .top, spacing: 1) {
+        HStack(alignment: .top, spacing: 1 * scale) {
             // Time Value (12:30)
             Text(day.timeValues.timeValue)
-                .font(.system(size: 14, weight: .black, design: .rounded))
+                .font(.system(size: 14 * scale, weight: .black, design: .rounded))
                 .foregroundStyle(
                     disabled
                         ? Color(uiColor: .tertiaryLabel) : color
@@ -26,7 +27,7 @@ struct TimeValue: View {
 
             // Indicator (PM / AM)
             Text(day.timeValues.indicator)
-                .font(.system(size: 7, weight: .medium))
+                .font(.system(size: 7 * scale, weight: .medium))
                 .foregroundStyle(
                     disabled ? Color(uiColor: .tertiaryLabel) : Color.secondary
                 )
@@ -35,12 +36,12 @@ struct TimeValue: View {
             if let detail = day.timeValues.detail {
                 // Multi-Day Detail (START / END)
                 Text(detail)
-                    .font(.system(size: 7, weight: .medium))
+                    .font(.system(size: 7 * scale, weight: .medium))
                     .foregroundStyle(
                         disabled
                             ? Color(uiColor: .tertiaryLabel) : Color.secondary
                     )
-                    .offset(y: 16)
+                    .offset(y: 16 * scale)
             }
         }
         .contentShape(Rectangle())

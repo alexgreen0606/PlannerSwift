@@ -68,6 +68,7 @@ struct PlannerTabView: View {
                                 }
                             }
                             .padding(.horizontal)
+                            .animateChange(from: thisWeekDatestamps)
                         }
                         .scrollIndicators(.hidden)
                         .background(Color.clear)
@@ -137,7 +138,7 @@ struct PlannerTabView: View {
 
                 // Reload the data from the page.
                 .refreshable {
-                    calendarStore.refresh(
+                    calendarStore.loadFreshCache(
                         hiddenCalendarIds: calendarSettings.hiddenCalendarIds
                     )
                     Task {

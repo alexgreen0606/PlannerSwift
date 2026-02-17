@@ -15,6 +15,7 @@ import WrappingHStack
 struct PlannerChipSpreadView: View {
     let planner: Planner
     let startOfDay: DateInRegion
+    let allDayEvents: [EKEvent]
     let iconMap: [String: String]
     var namespace: Namespace.ID
     let openCalendarEventSheet: (EKEvent) -> Void
@@ -75,10 +76,6 @@ struct PlannerChipSpreadView: View {
         weatherStore.getWeather(for: startOfDay, at: location)
     }
 
-    private var allDayEvents: [EKEvent] {
-        calendarStore.allDayEvents(for: planner)
-    }
-
     var body: some View {
         WrappingHStack(alignment: .leading) {
 
@@ -133,6 +130,19 @@ struct PlannerChipSpreadView: View {
         // Weather Data
         .externalData(
             key: weatherStore.loadId,
+            ready: plannerSettings != nil
+        ) {
+            Task {
+                await weatherStore.loadWeatherIfNeeded(
+                    location: location,
+                    region: startOfDay.region
+                )
+            }
+        }
+        
+        // Calendar Data
+        .externalData(
+            key: calendarStore.loadTrigger,
             ready: plannerSettings != nil
         ) {
             Task {

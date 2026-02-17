@@ -10,7 +10,7 @@ import SwiftDate
 import SwiftUI
 
 extension Planner {
-    
+
     var key: String {
         location?.key ?? "\(datestamp)-CURRENT_LOCATION"
     }
@@ -84,21 +84,13 @@ extension Planner {
             secondaryColor: nil
         )
     }
-    
-    // TODO: what if a calendar event belongs to 2 planners, and the sort indices conflict??? Should I have per-planner sort indices?
-    
-    // TODO: get this working. Is casting to region important here? Or is the creation of the events at the correct region what matters, and this is simply sorting absolute positions?
+
     func synchronizeCalendarEventPositions(
         _ calendarEvents: [EKEvent],
-        plannerEvents: [PlannerEvent], // Note: This should have all plans, not just open ones.
+        plannerEvents: [PlannerEvent],  // Note: This should have all plans, not just open ones.
         calendarSettings: CalendarSettings,
         plannerSettings: PlannerSettings
     ) -> [PlannerEvent] {
-        
-        // TODO: do regions even matter here?
-        let plannerRegion = self.region(settings: plannerSettings)
-        
-        // Calendar events use their regions from EKEvent?
 
         var sortedPlannerEvents: [PlannerEvent] = plannerEvents.sorted {
             $0.sortIndex < $1.sortIndex
@@ -112,15 +104,18 @@ extension Planner {
 
         for calEvent in sortedCalendarEvents {
             let sortIndex =
-                calendarSettings.sortIndexMap[calEvent.calendarItemExternalIdentifier]
+                calendarSettings.sortIndexMap[
+                    calEvent.calendarItemExternalIdentifier
+                ]
                 ?? ((sortedPlannerEvents.last?.sortIndex ?? 0) + 8)
 
             // Dummy event for UI representation. No persistence to storage.
             let plannerEvent = PlannerEvent(
-                date: calEvent.startDate, // TODO: use end date if this is an end date
+                date: calEvent.startDate,  // TODO: use end date if this is an end date
                 calendarEvent: calEvent,
                 sortIndex: sortIndex
             )
+            plannerEvent.untimed = false
 
             sortedPlannerEvents.append(plannerEvent)
 
@@ -130,7 +125,9 @@ extension Planner {
             )
 
             plannerEvents.append(plannerEvent)
-            calendarSettings.sortIndexMap[calEvent.calendarItemExternalIdentifier] =
+            calendarSettings.sortIndexMap[
+                calEvent.calendarItemExternalIdentifier
+            ] =
                 plannerEvent.sortIndex
         }
 

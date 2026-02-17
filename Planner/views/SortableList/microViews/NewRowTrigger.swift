@@ -28,7 +28,7 @@ struct NewRowTriggerView: View {
     var body: some View {
         Rectangle()
             .fill(.clear)
-            .frame(height: 8)
+            .frame(height: RowConstants.separatorHeight)
             .overlay(
                 VStack {
                     if showListSeparators && showLowerDivider == true {

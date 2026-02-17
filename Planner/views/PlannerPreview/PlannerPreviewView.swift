@@ -85,6 +85,7 @@ struct PlannerPreviewView: View {
     @Query private var plannerEvents: [PlannerEvent]
 
     @State private var calendarPlannerEvents: [PlannerEvent] = []
+    @State private var calendarData: PlannerCalendarData? = nil
 
     var isDarkMode: Bool {
         switch appColorScheme {
@@ -121,7 +122,7 @@ struct PlannerPreviewView: View {
     // MARK: - Event Data
 
     private var allDayEvents: [EKEvent] {
-        calendarStore.allDayEvents(for: planner)
+        calendarData?.allDayEvents ?? []
     }
 
     private var sortedOpenPlannerEvents: [PlannerEvent] {
@@ -213,16 +214,16 @@ struct PlannerPreviewView: View {
 
     var body: some View {
         let content = VStack(alignment: .leading, spacing: 12) {
-            
+
             HStack(alignment: .top) {
                 PlannerDateInfoView(
                     datestamp: planner.datestamp,
                     region: planner.region(settings: plannerSettings),
                     isSoon: type.isSoon
                 )
-                
+
                 Spacer()
-                
+
                 topRightWeatherInfo
             }
 
@@ -240,36 +241,31 @@ struct PlannerPreviewView: View {
             emptyPlannerIndicator
             bottomWeatherInfo
         }
-            .task {
-                calendarStore.ensurePlannerData(
-                    plannerKey: planner.key,
-                    startOfDay: startOfDay,
-                    hiddenCalendarIds: calendarSettings.hiddenCalendarIds
+        .contentShape(Rectangle())
+        .onTapGesture {
+            openPlanner = planner
+        }
+
+        // Calendar data tracking.
+        .externalData(
+            key: calendarStore.loadTrigger,
+            ready: true,
+            load: loadCalendarData
+        )
+
+        // Weather data tracking.
+        .externalData(
+            key: weatherStore.loadId,
+            ready: true
+        ) {
+            Task {
+                await weatherStore.loadWeatherIfNeeded(
+                    location: location,
+                    region: startOfDay.region
                 )
             }
+        }
 
-            // Calendar Data Tracking
-            .externalData(
-                key: calendarStore.loadId,
-                ready: calendarStore.doesPlannerHaveData(key: planner.key),
-                load: synchronizeCalendarEvents
-            )
-
-            // Weather Data Tracking
-            .externalData(
-                key: weatherStore.loadId,
-                ready: true
-            ) {
-                Task {
-                    print("Calling \(planner.datestamp)")
-                    await weatherStore.loadWeatherIfNeeded(location: location, region: startOfDay.region)
-                }
-            }
-            .contentShape(Rectangle())
-            .onTapGesture {
-                openPlanner = planner
-            }
-        
         if type == .planner {
             content
                 .padding(.top)
@@ -277,8 +273,10 @@ struct PlannerPreviewView: View {
                 .padding(.bottom, 12)
                 .frame(width: 240)
                 .frame(height: 330, alignment: .top)
-                .background(RoundedRectangle(cornerRadius: 24)
-                    .fill(Color.cardBackground))
+                .background(
+                    RoundedRectangle(cornerRadius: 24)
+                        .fill(Color.cardBackground)
+                )
         } else {
             content
                 .frame(maxWidth: .infinity)
@@ -324,20 +322,22 @@ struct PlannerPreviewView: View {
                 if let weatherData {
                     Image(systemName: weatherData.symbolName)
                         .symbolVariant(isDarkMode ? .fill : .none)
-                        .symbolRenderingMode(isDarkMode ? .multicolor : .monochrome)
+                        .symbolRenderingMode(
+                            isDarkMode ? .multicolor : .monochrome
+                        )
                         .imageScale(.medium)
                         .frame(maxHeight: .infinity)
                 }
-                
+
                 VStack(alignment: .leading, spacing: 0) {
-                    
+
                     if let weatherData {
                         Text(weatherData.condition.description)
                             .font(.system(size: 12, design: .rounded))
                     }
-                    
+
                     HStack {
-                        
+
                         if let locationLabel {
                             HStack(spacing: 6) {
                                 if weatherData == nil {
@@ -347,12 +347,12 @@ struct PlannerPreviewView: View {
                                         .frame(width: 11, height: 11)
                                         .foregroundStyle(
                                             locationIconConfig.primaryColor
-                                            ?? .secondary,
+                                                ?? .secondary,
                                             locationIconConfig.secondaryColor
-                                            ?? .secondary
+                                                ?? .secondary
                                         )
                                 }
-                                
+
                                 Text(locationLabel)
                                     .foregroundStyle(
                                         Color.secondary
@@ -360,19 +360,21 @@ struct PlannerPreviewView: View {
                                     .font(.system(size: 10))
                             }
                         }
-                        
+
                         Spacer()
-                        
+
                         if let weatherData {
                             HStack(alignment: .center, spacing: 4) {
-                                Text(weatherData.highTempString(in: weatherUnit))
-                                    .font(
-                                        .system(
-                                            size: 11,
-                                            weight: .bold,
-                                            design: .rounded
-                                        )
+                                Text(
+                                    weatherData.highTempString(in: weatherUnit)
+                                )
+                                .font(
+                                    .system(
+                                        size: 11,
+                                        weight: .bold,
+                                        design: .rounded
                                     )
+                                )
                                 Divider().frame(height: 16)
                                 Text(weatherData.lowTempString(in: weatherUnit))
                                     .font(
@@ -393,20 +395,20 @@ struct PlannerPreviewView: View {
             .animateChange(from: locationLabel != nil)
         }
     }
-    
+
     @ViewBuilder
     private var topRightWeatherInfo: some View {
         if type == .search {
             VStack(alignment: .trailing) {
                 HStack(alignment: .bottom) {
-                    
+
                     VStack(alignment: .trailing, spacing: 0) {
-                        
+
                         if let weatherData {
                             Text(weatherData.condition.description)
                                 .font(.system(size: 12, design: .rounded))
                         }
-                        
+
                         if let locationLabel {
                             HStack(spacing: 6) {
                                 if weatherData == nil, planner.location != nil {
@@ -416,13 +418,14 @@ struct PlannerPreviewView: View {
                                         .frame(width: 11, height: 11)
                                         .foregroundStyle(
                                             locationIconConfig.primaryColor
-                                            ?? .secondary,
+                                                ?? .secondary,
                                             locationIconConfig.secondaryColor
-                                            ?? .secondary
+                                                ?? .secondary
                                         )
                                 }
-                                
-                                if weatherData != nil || planner.location != nil {
+
+                                if weatherData != nil || planner.location != nil
+                                {
                                     Text(locationLabel)
                                         .foregroundStyle(
                                             Color.secondary
@@ -432,16 +435,18 @@ struct PlannerPreviewView: View {
                             }
                         }
                     }
-                    
+
                     if let weatherData {
                         Image(systemName: weatherData.symbolName)
                             .symbolVariant(isDarkMode ? .fill : .none)
-                            .symbolRenderingMode(isDarkMode ? .multicolor : .monochrome)
+                            .symbolRenderingMode(
+                                isDarkMode ? .multicolor : .monochrome
+                            )
                             .imageScale(.medium)
                             .frame(maxHeight: .infinity)
                     }
                 }
-                
+
                 if let weatherData {
                     HStack(alignment: .center, spacing: 4) {
                         Text(weatherData.highTempString(in: weatherUnit))
@@ -463,22 +468,31 @@ struct PlannerPreviewView: View {
                             )
                     }
                 }
-                
+
             }
             .animateChange(from: weatherData != nil)
             .animateChange(from: locationLabel != nil)
         }
     }
 
-    private func synchronizeCalendarEvents() {
+    private func loadCalendarData() {
+
+        let calendarData = calendarStore.loadPlannerData(
+            plannerKey: planner.key,
+            startOfDay: startOfDay,
+            hiddenCalendarIds: calendarSettings.hiddenCalendarIds
+        )
+
         calendarPlannerEvents =
             modelContext.synchronize(
-                calendarEvents: calendarStore.timedEvents(for: planner),
+                calendarEvents: calendarData.timedEvents,
                 into: plannerEvents,
                 planner: planner,
                 calendarSettings: calendarSettings,
                 plannerSettings: plannerSettings
             )
+
+        self.calendarData = calendarData
     }
 
     private func isCalendarEventChecked(_ event: EKEvent?) -> Bool {

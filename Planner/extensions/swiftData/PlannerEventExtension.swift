@@ -10,6 +10,10 @@ import SwiftDate
 import SwiftUI
 
 extension PlannerEvent {
+    
+    func timeZone(fallback: TimeZone) -> TimeZone {
+        self.calendarEvent?.timeZone ?? fallback
+    }
 
     func tint(accentColor: AccentColor) -> Color {
         if let calendar = self.calendarEvent?.calendar {
@@ -35,10 +39,11 @@ extension PlannerEvent {
 
         } else if !self.untimed {
 
-            TimeValue(
+            TimeValueView(
                 day: DateInRegion(self.date, region: region),
                 disabled: false,
-                color: accentColor
+                color: accentColor,
+                scale: 1
             ) {
                 openSheet?(self)
             }

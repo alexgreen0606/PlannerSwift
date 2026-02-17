@@ -158,7 +158,7 @@ struct PlannerSearchTabView: View {
 
         // Reload the data from the page.
         .refreshable {
-            calendarStore.refresh(
+            calendarStore.loadFreshCache(
                 hiddenCalendarIds: calendarSettings
                     .hiddenCalendarIds
             )
@@ -166,7 +166,7 @@ struct PlannerSearchTabView: View {
 
         // Calendar Data
         .externalData(
-            key: calendarStore.loadId,
+            key: calendarStore.loadTrigger,
             ready: true,
             load: computeFilteredEventMap
         )

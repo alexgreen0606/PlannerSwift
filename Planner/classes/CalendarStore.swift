@@ -10,7 +10,7 @@ import EventKit
 import SwiftDate
 import SwiftUI
 
-struct PlannerData {
+struct PlannerCalendarData {
     let allDayEvents: [EKEvent]
     let timedEvents: [EKEvent]
 }
@@ -24,17 +24,14 @@ class CalendarStore: ObservableObject {
 
     private let eventStore = EKEventStore()
 
-    @Published private(set) var calendarsById: [String: EKCalendar] = [:]
-
-    @Published private(set) var plannerData: [String: PlannerData] = [:]
-    
-    @Published private(set) var loadedPlannerKeys: Set<String> = []
-
     // TODO: we can no longer use this. We aren't loading in all existing events
     @Published private(set) var existingEventIds: Set<String> = []
 
-    @Published var loadId: UUID = UUID()
+    @Published var loadTrigger: UUID = UUID()
     @Published var accessDenied: Bool = true
+
+    private var calendarsById: [String: EKCalendar] = [:]
+    private var cache: [String: PlannerCalendarData] = [:]
 
     var ekEventStore: EKEventStore {
         eventStore
@@ -48,14 +45,13 @@ class CalendarStore: ObservableObject {
             }
     }
 
-    @MainActor
-    func requestAccessAndLoad(
+    func loadFreshCache(
         hiddenCalendarIds: Set<String>
     ) {
         switch EKEventStore.authorizationStatus(for: .event) {
         case .authorized:
             accessDenied = false
-            load(
+            beginCacheRefresh(
                 hiddenCalendarIds: hiddenCalendarIds
             )
         case .notDetermined:
@@ -69,11 +65,7 @@ class CalendarStore: ObservableObject {
         }
     }
 
-    @MainActor
-    func refresh(hiddenCalendarIds: Set<String>) {
-        requestAccessAndLoad(hiddenCalendarIds: hiddenCalendarIds)
-    }
-
+    // TODO: is this still needed? Test changing an EKEvent's calendar color
     // More up-to-date than using event.calendar.cgColor directly.
     func calendarColor(for id: String) -> Color {
         guard let calendar = calendarsById[id] else {
@@ -82,21 +74,15 @@ class CalendarStore: ObservableObject {
 
         return calendar.color
     }
-    
-    func allDayEvents(for planner: Planner) -> [EKEvent] {
-        plannerData[planner.key]?.allDayEvents ?? []
-    }
-    
-    func timedEvents(for planner: Planner) -> [EKEvent] {
-        plannerData[planner.key]?.timedEvents ?? []
-    }
+
+    // MARK: - Helper Functions
 
     private func requestAccess(hiddenCalendarIds: Set<String>) {
         eventStore.requestFullAccessToEvents { granted, error in
             Task { @MainActor in
                 if granted {
                     self.accessDenied = false
-                    self.load(hiddenCalendarIds: hiddenCalendarIds)
+                    self.beginCacheRefresh(hiddenCalendarIds: hiddenCalendarIds)
                 } else {
                     self.accessDenied = true
                 }
@@ -104,10 +90,10 @@ class CalendarStore: ObservableObject {
         }
     }
 
-    private func load(hiddenCalendarIds: Set<String>) {
+    private func beginCacheRefresh(hiddenCalendarIds: Set<String>) {
         loadCalendars()
-        loadedPlannerKeys = []
-        loadId = UUID()
+        cache = [:]
+        loadTrigger = UUID()
     }
 
     private func loadCalendars() {
@@ -118,22 +104,20 @@ class CalendarStore: ObservableObject {
         )
     }
 
-    @MainActor
-    func ensurePlannerData(
+    func loadPlannerData(
         plannerKey: String,
         startOfDay: DateInRegion,
         hiddenCalendarIds: Set<String>
-    ) {
+    ) -> PlannerCalendarData {
 
-        // Exit if the planner data has already been loaded.
-        if loadedPlannerKeys.contains(plannerKey) {
-            return
-        } else {
-            loadedPlannerKeys.insert(plannerKey)
+        // Return cached data.
+        if let existingData = cache[plannerKey] {
+            return existingData
         }
 
         let startOfNextDay = startOfDay + 1.days
 
+        // TODO: are end events returned too?
         let predicate = eventStore.predicateForEvents(
             withStart: startOfDay.date,
             end: startOfNextDay.date,
@@ -159,15 +143,15 @@ class CalendarStore: ObservableObject {
             }
         }
 
-        let newData = PlannerData(
+        let newData = PlannerCalendarData(
             allDayEvents: allDayEvents,
             timedEvents: timedEvents
         )
-        
-        plannerData[plannerKey] = newData
+
+        cache[plannerKey] = newData
+        return newData
     }
 
-    @MainActor
     func delete(event: EKEvent) {
         guard event.calendar.allowsContentModifications else {
             print("Cannot delete event. Calendar is read-only.")
@@ -181,7 +165,6 @@ class CalendarStore: ObservableObject {
         }
     }
 
-    @MainActor
     func transfer(event: EKEvent, into date: Date) {
         guard event.calendar.allowsContentModifications else {
             print("Cannot transfer event. Calendar is read-only.")
@@ -193,10 +176,6 @@ class CalendarStore: ObservableObject {
         } catch {
             assertionFailure("Failed to transfer event: \(error)")
         }
-    }
-    
-    func doesPlannerHaveData(key: String) -> Bool {
-        loadedPlannerKeys.contains(key) && plannerData[key] != nil
     }
 
 }

@@ -55,6 +55,22 @@ extension DateInRegion {
         return weekday
     }
 
+    var timeWithTimezone: String? {  // EX: 3PM CST, 3:59AM GMT
+        var time = ""
+        
+        if date.minute == 0 {
+            time = self.toFormat("ha")
+        } else {
+            time = self.toFormat("h:mma")
+        }
+        
+        guard !time.isEmpty, let timeZoneAbbreviation = self.region.timeZone.abbreviation() else {
+            return nil
+        }
+
+        return "\(time) \(timeZoneAbbreviation)"
+    }
+
     var countdown: String? {  // Ex: Today, Tomorrow, 3 days away, 3 days ago
         let target = self.dateAt(.startOfDay)
         let today = DateInRegion(Date(), region: .local).dateAt(.startOfDay)
@@ -88,10 +104,12 @@ extension DateInRegion {
     var datestamp: String {  // Ex: 2025-12-31
         self.toFormat("yyyy-MM-dd")
     }
-    
-    var timeValues: (
-        timeValue: String, indicator: String, detail: String?
-    ) {  // Ex: 12:37, PM, END
+
+    var timeValues:
+        (
+            timeValue: String, indicator: String, detail: String?
+        )
+    {  // Ex: 12:37, PM, END
 
         // Convert to 12-hour format
         let hour12 = self.hour % 12 == 0 ? 12 : hour % 12
@@ -117,5 +135,5 @@ extension DateInRegion {
             locale: Locale.current
         )
     }
-    
+
 }

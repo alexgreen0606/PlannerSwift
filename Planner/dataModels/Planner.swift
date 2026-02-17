@@ -20,13 +20,9 @@ class Planner {
     
     @Relationship(deleteRule: .cascade)
     var location: Location?
-
-//    @Relationship(deleteRule: .cascade)
-//    var events = [PlannerEvent]()
     
     init(datestamp: String, location: Location?) {
         self.datestamp = datestamp
         self.location = location
-        // self.events = []
     }
 }

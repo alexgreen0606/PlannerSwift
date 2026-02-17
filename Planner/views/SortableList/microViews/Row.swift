@@ -8,16 +8,28 @@
 import SwiftData
 import SwiftUI
 
-struct RowView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View
-{
+enum RowConstants {
+    static let horizontalAdornmentHeight: CGFloat = 34
+    static let verticalTextPadding: CGFloat = 6
+    static let separatorHeight: CGFloat = 10
+    static let toggleHeight: CGFloat = 54
+}
+
+struct RowView<
+    Item: ListItem,
+    LeftAdornment: View,
+    RightAdornment: View,
+    BottomAdornment: View
+>: View {
     @Bindable var item: Item
     let tint: (_ item: Item) -> Color
     let showChecked: Bool
     let showUpperDivider: Bool
     let toolbarIcons: [String]
     let tapToolbar: ((String, Item) -> Void)?
-    let startAdornment: ((_ item: Item) -> StartAdornment)?
-    let endAdornment: ((_ item: Item) -> EndAdornment)?
+    let leftAdornment: ((_ item: Item) -> LeftAdornment)?
+    let rightAdornment: ((_ item: Item) -> RightAdornment)?
+    let bottomAdornment: ((_ item: Item) -> BottomAdornment)?
     let namespace: Namespace.ID?
     let customToggleConfig: RowToggleConfig<Item>?
     let onCreateItem:
@@ -63,7 +75,7 @@ struct RowView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View
             .frame(maxWidth: .infinity, alignment: .top)
             .listRowInsets(EdgeInsets())
             .discreetListItem()
-            .padding(.horizontal, 16)
+            .padding(.horizontal)
 
             // Trigger focus on render for empty items (new items).
             .onAppear {
@@ -129,7 +141,7 @@ struct RowView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View
             opacity: opacity,
             customIconConfig: customToggleConfig
         )
-        .frame(height: 44, alignment: .center)
+        .frame(height: RowConstants.toggleHeight, alignment: .center)
     }
 
     // Item Text
@@ -147,23 +159,32 @@ struct RowView<Item: ListItem, StartAdornment: View, EndAdornment: View>: View
                 }
             )
             HStack(alignment: .top, spacing: 4) {
-                if let startAdornment = startAdornment {
-                    startAdornment(item)
+                if let leftAdornment = leftAdornment {
+                    leftAdornment(item)
                         .opacity(opacity)
-                        .frame(height: 28, alignment: .center)
+                        .frame(
+                            height: RowConstants.horizontalAdornmentHeight,
+                            alignment: .center
+                        )
                 }
                 ZStack(alignment: .leading) {
                     titleText
                     editableField
                 }
-                .padding(.vertical, 3)
-                if let endAdornment = endAdornment {
-                    endAdornment(item)
+                .padding(.vertical, RowConstants.verticalTextPadding)
+                if let rightAdornment = rightAdornment {
+                    rightAdornment(item)
                         .opacity(opacity)
-                        .frame(height: 28, alignment: .center)
+                        .frame(
+                            height: RowConstants.horizontalAdornmentHeight,
+                            alignment: .center
+                        )
                 }
             }
-            .frame(minHeight: 28)
+            .frame(minHeight: RowConstants.horizontalAdornmentHeight)
+            if let bottomAdornment {
+                bottomAdornment(item)
+            }
             NewRowTriggerView(
                 showLowerDivider: true,
                 onCreateItem: {
