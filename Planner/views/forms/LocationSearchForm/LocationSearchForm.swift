@@ -361,14 +361,14 @@ struct LocationSearchView: View {
                 selectedLocationSource = .custom
 
                 // Re-use existing locations if they already exists in storage.
-                let locationKey = coordinateKey(
-                    lat: result.latitude,
-                    long: result.longitude
-                )
+                let coordinateKey = CLLocationCoordinate2D(
+                    latitude: result.latitude,
+                    longitude: result.longitude
+                ).key
 
                 guard
                     let existing = existingLocations.first(where: {
-                        $0.key == locationKey
+                        $0.coordinateKey == coordinateKey
                     })
                 else {
                     selectedLocation = Location(
@@ -415,7 +415,7 @@ struct LocationSearchView: View {
         var firstByKey: [String: Location] = [:]
 
         for location in locations {
-            let key = location.key
+            let key = location.coordinateKey
 
             if firstByKey[key] == nil {
                 firstByKey[key] = location

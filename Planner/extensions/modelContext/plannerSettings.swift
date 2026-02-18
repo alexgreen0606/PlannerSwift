@@ -37,7 +37,6 @@ extension ModelContext {
         calendarEvents events: [EKEvent],
         into plannerEvents: [PlannerEvent],
         planner: Planner,
-        calendarSettings: CalendarSettings,
         plannerSettings: PlannerSettings
     ) -> [PlannerEvent] {
 
@@ -45,7 +44,6 @@ extension ModelContext {
             planner.synchronizeCalendarEventPositions(
                 events,
                 plannerEvents: plannerEvents,
-                calendarSettings: calendarSettings,
                 plannerSettings: plannerSettings
             )
 

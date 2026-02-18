@@ -124,7 +124,9 @@ struct SettingsTabView: View {
                     .pickerStyle(.menu)
 
                     NavigationLink("Calendars") {
-                        CalendarsFormView()
+                        if let plannerSettings {
+                            CalendarsFormView(plannerSettings: plannerSettings)
+                        }
                     }
 
                     NavigationLink("Home Location") {

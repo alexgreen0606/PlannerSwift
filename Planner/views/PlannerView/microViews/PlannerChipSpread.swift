@@ -72,6 +72,8 @@ struct PlannerChipSpreadView: View {
         )
     }
 
+    // TODO: Re-fetch weather when device location changes.
+    
     private var weatherData: DayWeather? {
         weatherStore.getWeather(for: startOfDay, at: location)
     }
@@ -130,19 +132,6 @@ struct PlannerChipSpreadView: View {
         // Weather Data
         .externalData(
             key: weatherStore.loadId,
-            ready: plannerSettings != nil
-        ) {
-            Task {
-                await weatherStore.loadWeatherIfNeeded(
-                    location: location,
-                    region: startOfDay.region
-                )
-            }
-        }
-        
-        // Calendar Data
-        .externalData(
-            key: calendarStore.loadTrigger,
             ready: plannerSettings != nil
         ) {
             Task {

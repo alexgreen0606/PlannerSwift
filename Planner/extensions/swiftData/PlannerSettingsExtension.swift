@@ -1,5 +1,5 @@
 //
-//  CalendarSettingsExtension.swift
+//  PlannerSettingsExtension.swift
 //  Planner
 //
 //  Created by Alex Green on 2/14/26.
@@ -7,7 +7,7 @@
 
 import EventKit
 
-extension CalendarSettings {
+extension PlannerSettings {
 
     func isPlannerEventChecked(_ event: PlannerEvent) -> Bool {
         guard let calendarEvent = event.calendarEvent

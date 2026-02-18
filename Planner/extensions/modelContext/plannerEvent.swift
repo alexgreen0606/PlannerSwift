@@ -68,7 +68,7 @@ extension ModelContext {
         from: Int,
         to: Int,
         events: [PlannerEvent],
-        calendarSettings: CalendarSettings
+        plannerSettings: PlannerSettings
     ) {
         guard from != to else { return }
 
@@ -85,7 +85,7 @@ extension ModelContext {
 
         // Save the calendar event position.
         if movedEvent.calendarEvent != nil {
-            calendarSettings.sortIndexMap[
+            plannerSettings.sortIndexMap[
                 movedEvent.calendarEvent!.calendarItemExternalIdentifier
             ] = movedEvent.sortIndex
         }
@@ -111,7 +111,7 @@ extension ModelContext {
 
                 // Save the calendar event position.
                 if movedEvent.calendarEvent != nil {
-                    calendarSettings.sortIndexMap[
+                    plannerSettings.sortIndexMap[
                         movedEvent.calendarEvent!.calendarItemExternalIdentifier
                     ] = movedEvent.sortIndex
                 }

@@ -31,7 +31,6 @@ struct EventSheetContext: Identifiable {
 struct PlannerView: View {
     private let planner: Planner
     private let plannerSettings: PlannerSettings
-    private let calendarSettings: CalendarSettings
     private let dismiss: () -> Void
 
     private let region: Region
@@ -40,7 +39,6 @@ struct PlannerView: View {
     init(
         planner: Planner,
         plannerSettings: PlannerSettings,
-        calendarSettings: CalendarSettings,
         dismiss: @escaping () -> Void
     ) {
         let region = planner.region(settings: plannerSettings)
@@ -62,13 +60,12 @@ struct PlannerView: View {
 
         _plannerManager = StateObject(
             wrappedValue: ListManager<PlannerEvent>(
-                isItemChecked: calendarSettings.isPlannerEventChecked
+                isItemChecked: plannerSettings.isPlannerEventChecked
             )
         )
 
         self.planner = planner
         self.plannerSettings = plannerSettings
-        self.calendarSettings = calendarSettings
         self.dismiss = dismiss
         self.region = region
         self.startOfDay = startOfDay
@@ -113,7 +110,7 @@ struct PlannerView: View {
     }
 
     private var rawCheckedEvents: [PlannerEvent] {
-        allEvents.filter { calendarSettings.isPlannerEventChecked($0) }
+        allEvents.filter { plannerSettings.isPlannerEventChecked($0) }
     }
 
     // MARK: - Select Mode
@@ -146,7 +143,7 @@ struct PlannerView: View {
     private var sortedOpenPlans: [PlannerEvent] {
         allEvents
             .filter {
-                (!(calendarSettings.isPlannerEventChecked($0))
+                (!(plannerSettings.isPlannerEventChecked($0))
                     && !plannerManager.newlyUncheckedIds.contains($0.id))
                     || plannerManager.newlyCheckedIds.contains($0.id)
             }
@@ -158,7 +155,7 @@ struct PlannerView: View {
     private var sortedCheckedPlans: [PlannerEvent] {
         allEvents
             .filter {
-                (calendarSettings.isPlannerEventChecked($0)
+                (plannerSettings.isPlannerEventChecked($0)
                     && !plannerManager.newlyCheckedIds.contains($0.id))
                     || plannerManager.newlyUncheckedIds.contains($0.id)
             }
@@ -191,7 +188,7 @@ struct PlannerView: View {
                     createItem: createEvent,
                     handleTitleChange: handleEventTitleChange,
                     moveItem: moveUncheckedEvent,
-                    isItemChecked: calendarSettings.isPlannerEventChecked
+                    isItemChecked: plannerSettings.isPlannerEventChecked
                 )
                 .navigationTitle(startOfDay.dynamicHeader)
                 .navigationSubtitle(subtitle)
@@ -208,7 +205,6 @@ struct PlannerView: View {
                         plannerEvent: context.plannerEvent,
                         calendarEvent: context.calendarEvent,
                         plannerSettings: plannerSettings,
-                        calendarSettings: calendarSettings
                     ) { change in
                         pendingScroll = change
                     }
@@ -250,7 +246,7 @@ struct PlannerView: View {
         .environmentObject(plannerManager)
 
         // Pass the custom toggler to the planner manager.
-        .task {
+        .onAppear {
             plannerManager.setToggleItem(togglePlannerEvent)
         }
 
@@ -451,7 +447,7 @@ struct PlannerView: View {
             planner: planner,
             startOfDay: startOfDay,
             allDayEvents: allDayEvents,
-            iconMap: calendarSettings.iconMap,
+            iconMap: plannerSettings.iconMap,
             namespace: namespace,
             openCalendarEventSheet: { calEvent in
                 eventSheetContext =
@@ -472,7 +468,7 @@ struct PlannerView: View {
         {
             Image(
                 systemName:
-                    calendarSettings.iconMap[
+                    plannerSettings.iconMap[
                         calendar.calendarIdentifier
                     ] ?? calendar.iconName
             )
@@ -549,7 +545,7 @@ struct PlannerView: View {
                     message: "Hiding only affects visibility in this planner.",
                     needsConfirmation: { event in
                         event.calendarEvent != nil
-                            && !calendarSettings.isPlannerEventChecked(
+                            && !plannerSettings.isPlannerEventChecked(
                                 event
                             )
                     },
@@ -558,7 +554,7 @@ struct PlannerView: View {
                             title: "Hide",
                             role: nil
                         ) { event in
-                            _ = calendarSettings.toggleEvent(event)
+                            _ = plannerSettings.toggleEvent(event)
                         },
 
                         ConfirmationAction(
@@ -585,7 +581,7 @@ struct PlannerView: View {
         let calendarData = calendarStore.loadPlannerData(
             plannerKey: planner.key,
             startOfDay: startOfDay,
-            hiddenCalendarIds: calendarSettings.hiddenCalendarIds
+            hiddenCalendarIds: plannerSettings.hiddenCalendarIds
         )
 
         calendarPlannerEvents =
@@ -593,8 +589,7 @@ struct PlannerView: View {
                 calendarEvents: calendarData.timedEvents,
                 into: plannerEvents,
                 planner: planner,
-                calendarSettings: calendarSettings,
-                plannerSettings: plannerSettings
+                plannerSettings: plannerSettings,
             )
 
         self.calendarData = calendarData
@@ -602,7 +597,7 @@ struct PlannerView: View {
 
     private func refreshCalendar() {
         calendarStore.loadFreshCache(
-            hiddenCalendarIds: calendarSettings.hiddenCalendarIds
+            hiddenCalendarIds: plannerSettings.hiddenCalendarIds
         )
     }
 
@@ -646,7 +641,7 @@ struct PlannerView: View {
             from: from,
             to: to,
             events: sortedOpenPlans,
-            calendarSettings: calendarSettings
+            plannerSettings: plannerSettings
         )
     }
 
@@ -782,7 +777,7 @@ struct PlannerView: View {
     private func togglePlannerEvent(_ event: PlannerEvent) -> Bool {
         return modelContext.togglePlannerEvent(
             event,
-            calendarSettings: calendarSettings
+            plannerSettings: plannerSettings
         )
     }
 

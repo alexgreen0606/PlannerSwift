@@ -41,7 +41,7 @@ struct PlannerApp: App {
                 .environmentObject(locationManager)
         }
         .modelContainer(for: [
-            Planner.self, ChecklistItem.self, CalendarSettings.self,
+            Planner.self, ChecklistItem.self, PlannerSettings.self,
             PlannerSettings.self, PlannerEvent.self
         ])
     }

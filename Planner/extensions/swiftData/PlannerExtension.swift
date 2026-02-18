@@ -12,7 +12,7 @@ import SwiftUI
 extension Planner {
 
     var key: String {
-        location?.key ?? "\(datestamp)-CURRENT_LOCATION"
+        location?.coordinateKey ?? "\(datestamp)-CURRENT_LOCATION"
     }
 
     func region(settings: PlannerSettings?) -> Region {
@@ -88,7 +88,6 @@ extension Planner {
     func synchronizeCalendarEventPositions(
         _ calendarEvents: [EKEvent],
         plannerEvents: [PlannerEvent],  // Note: This should have all plans, not just open ones.
-        calendarSettings: CalendarSettings,
         plannerSettings: PlannerSettings
     ) -> [PlannerEvent] {
 
@@ -104,7 +103,7 @@ extension Planner {
 
         for calEvent in sortedCalendarEvents {
             let sortIndex =
-                calendarSettings.sortIndexMap[
+                plannerSettings.sortIndexMap[
                     calEvent.calendarItemExternalIdentifier
                 ]
                 ?? ((sortedPlannerEvents.last?.sortIndex ?? 0) + 8)
@@ -125,7 +124,7 @@ extension Planner {
             )
 
             plannerEvents.append(plannerEvent)
-            calendarSettings.sortIndexMap[
+            plannerSettings.sortIndexMap[
                 calEvent.calendarItemExternalIdentifier
             ] =
                 plannerEvent.sortIndex

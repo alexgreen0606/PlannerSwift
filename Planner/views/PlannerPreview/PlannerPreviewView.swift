@@ -25,7 +25,6 @@ struct PlannerPreviewView: View {
     private let planner: Planner
     private let type: PlannerPreviewType
     private let plannerSettings: PlannerSettings
-    private let calendarSettings: CalendarSettings
     @Binding private var openPlanner: Planner?
 
     private let startOfDay: DateInRegion
@@ -37,13 +36,11 @@ struct PlannerPreviewView: View {
         planner: Planner,
         type: PlannerPreviewType,
         plannerSettings: PlannerSettings,
-        calendarSettings: CalendarSettings,
         openPlanner: Binding<Planner?>
     ) {
         self.planner = planner
         self.type = type
         self.plannerSettings = plannerSettings
-        self.calendarSettings = calendarSettings
         self._openPlanner = openPlanner
 
         let region = planner.region(settings: plannerSettings)
@@ -229,7 +226,7 @@ struct PlannerPreviewView: View {
 
             PreviewCalendarEventListView(
                 events: allDayEvents,
-                iconMap: calendarSettings.iconMap
+                iconMap: plannerSettings.iconMap
             )
 
             PreviewPlannerEventListView(
@@ -480,7 +477,7 @@ struct PlannerPreviewView: View {
         let calendarData = calendarStore.loadPlannerData(
             plannerKey: planner.key,
             startOfDay: startOfDay,
-            hiddenCalendarIds: calendarSettings.hiddenCalendarIds
+            hiddenCalendarIds: plannerSettings.hiddenCalendarIds
         )
 
         calendarPlannerEvents =
@@ -488,8 +485,7 @@ struct PlannerPreviewView: View {
                 calendarEvents: calendarData.timedEvents,
                 into: plannerEvents,
                 planner: planner,
-                calendarSettings: calendarSettings,
-                plannerSettings: plannerSettings
+                plannerSettings: plannerSettings,
             )
 
         self.calendarData = calendarData
@@ -500,7 +496,7 @@ struct PlannerPreviewView: View {
             return false
         }
 
-        return calendarSettings.isCalendarEventChecked(event)
+        return plannerSettings.isCalendarEventChecked(event)
     }
 
 }

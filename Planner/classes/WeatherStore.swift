@@ -28,7 +28,7 @@ final class WeatherStore: ObservableObject {
     @Published var loadId: UUID = UUID()
     @Published var loadedLocationKeys: Set<String> = []
 
-    func resetWeather() async {
+    func resetWeather() {
         loadedLocationKeys = []
         loadId = UUID()
     }
@@ -57,9 +57,11 @@ final class WeatherStore: ObservableObject {
         }
 
         if loadedLocationKeys.contains(locationKey) {
-            // Weather already loaded. Exit early.
             return
         } else {
+            print(
+                "\(location?.name ?? locationManager.cityName ?? "Current Location"): Cache miss. Fetching."
+            )
             loadedLocationKeys.insert(locationKey)
         }
 
@@ -99,25 +101,7 @@ final class WeatherStore: ObservableObject {
     }
 
     private func getLocationKey(for location: Location?) -> String? {
-        let coordinate: CLLocationCoordinate2D?
-
-        if let location {
-            coordinate = CLLocationCoordinate2D(
-                latitude: location.latitude,
-                longitude: location.longitude
-            )
-        } else {
-            coordinate = locationManager.deviceClLocation?.coordinate
-        }
-
-        guard let coordinate else {
-            return nil
-        }
-
-        let lat = coordinate.latitude.roundDecimals(to: 4)
-        let lon = coordinate.longitude.roundDecimals(to: 4)
-
-        return "\(lat),\(lon)"
+        location?.coordinateKey ?? locationManager.deviceClLocation?.coordinate.key
     }
 
 }

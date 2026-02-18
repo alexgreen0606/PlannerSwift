@@ -12,18 +12,15 @@ import SwiftUI
 struct PlannerBuilderView: View {
     private let datestamp: String
     private let plannerSettings: PlannerSettings
-    private let calendarSettings: CalendarSettings
     private let dismiss: () -> Void
 
     init(
         datestamp: String,
         plannerSettings: PlannerSettings,
-        calendarSettings: CalendarSettings,
         dismiss: @escaping () -> Void
     ) {
         self.datestamp = datestamp
         self.plannerSettings = plannerSettings
-        self.calendarSettings = calendarSettings
         self.dismiss = dismiss
 
         _planners = Query(
@@ -45,7 +42,6 @@ struct PlannerBuilderView: View {
                 PlannerView(
                     planner: planner,
                     plannerSettings: plannerSettings,
-                    calendarSettings: calendarSettings,
                     dismiss: dismiss
                 )
             }

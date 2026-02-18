@@ -18,7 +18,6 @@ struct EventFormView: View {
     private let initialPlannerEvent: PlannerEvent?
     private let initialCalendarEvent: EKEvent?
     private let plannerSettings: PlannerSettings
-    private let calendarSettings: CalendarSettings
     private let handleEventChange: (PlannerEventPositionChange) -> Void
 
     init(
@@ -26,31 +25,36 @@ struct EventFormView: View {
         plannerEvent: PlannerEvent?,
         calendarEvent: EKEvent?,
         plannerSettings: PlannerSettings,
-        calendarSettings: CalendarSettings,
         handleEventChange: @escaping (PlannerEventPositionChange) -> Void
     ) {
+        print("Init. \(plannerEvent?.calendarEvent?.eventIdentifier)")
         self.initialPlannerEvent = plannerEvent
         self.sourcePlanner = sourcePlanner
         self.initialCalendarEvent = plannerEvent?.calendarEvent ?? calendarEvent
         self.plannerSettings = plannerSettings
-        self.calendarSettings = calendarSettings
         self.handleEventChange = handleEventChange
 
-        var title = ""
-        var hasTime = false
-        var date = Date()
+        let draftPlannerEvent = PlannerEvent(
+            date: Date(),
+            calendarEvent: nil,
+            sortIndex: 0
+        )
+
         var contact: CNContact? = nil
 
         if let calEvent = plannerEvent?.calendarEvent ?? calendarEvent {
-            _draftCalendarEvent = State(initialValue: calEvent)
+
+            // TODO: Start vs End Date
+            draftPlannerEvent.date = calEvent.startDate
+            draftPlannerEvent.calendarEvent = calEvent
 
             if calEvent.calendar.allowsContentModifications {
                 _selectedDetent = State(initialValue: .height(2600))
             }
         } else if let plannerEvent {
-            title = plannerEvent.title
-            date = plannerEvent.date
-            hasTime = !plannerEvent.untimed
+            draftPlannerEvent.title = plannerEvent.title
+            draftPlannerEvent.date = plannerEvent.date
+            draftPlannerEvent.untimed = plannerEvent.untimed
         }
 
         // Open the contact for birthday events.
@@ -74,15 +78,8 @@ struct EventFormView: View {
             }
         }
 
-        let draftPlannerEvent = PlannerEvent(
-            date: date,
-            calendarEvent: nil,
-            sortIndex: 0
-        )
-        draftPlannerEvent.title = title
-        draftPlannerEvent.untimed = !hasTime
-        self.draftPlannerEvent = draftPlannerEvent
         self.contact = contact
+        self.draftPlannerEvent = draftPlannerEvent
     }
 
     // Overrides all other behavior in this sheet and displays the Contact form.
@@ -102,14 +99,14 @@ struct EventFormView: View {
 
     @State private var selectedDetent: PresentationDetent = .height(340)
 
-    @State private var draftCalendarEvent: EKEvent?
+    // @State private var draftCalendarEvent: EKEvent?
     @State private var draftPlannerEvent: PlannerEvent
 
     private var isValid: Bool {
         !draftPlannerEvent.title.isEmpty
             && (draftPlannerEvent.date != initialPlannerEvent?.date
                 || draftPlannerEvent.title != initialPlannerEvent?.title
-                || draftCalendarEvent
+                || draftPlannerEvent.calendarEvent
                     != initialPlannerEvent?.calendarEvent)
     }
 
@@ -122,7 +119,7 @@ struct EventFormView: View {
             if let contact {
                 ContactFormView(contact: contact)
                     .ignoresSafeArea()
-            } else if let draftCalendarEvent {
+            } else if let draftCalendarEvent = draftPlannerEvent.calendarEvent {
                 calendarEventForm(for: draftCalendarEvent)
             } else {
                 plannerEventForm
@@ -199,13 +196,14 @@ struct EventFormView: View {
                         label: "Remove From Calendar",
                         systemImage: "calendar.badge.minus"
                     ) {
-                        guard let calEvent = draftCalendarEvent else { return }
+                        guard let calEvent = draftPlannerEvent.calendarEvent
+                        else { return }
 
                         draftPlannerEvent.title = calEvent.title
                         draftPlannerEvent.date = calEvent.startDate
                         draftPlannerEvent.untimed = false
 
-                        draftCalendarEvent = nil
+                        draftPlannerEvent.calendarEvent = nil
                         selectedDetent = .height(340)
                     }
                 }
@@ -257,7 +255,7 @@ struct EventFormView: View {
                         to: draftPlannerEvent.date
                     )
 
-                    draftCalendarEvent = event
+                    draftPlannerEvent.calendarEvent = event
                     selectedDetent = .height(2600)
                 }
             }
@@ -287,7 +285,7 @@ struct EventFormView: View {
         //
         //            calendarStore.delete(event: calEvent)
         //            calendarStore.refresh(
-        //                hiddenCalendarIds: calendarSettings?.hiddenCalendarIds
+        //                hiddenCalendarIds: plannerSettings?.hiddenCalendarIds
         //                    ?? []
         //            )
         //
@@ -358,7 +356,7 @@ struct EventFormView: View {
 
         let sourceStartOfNextDay = (sourceStartOfDay + 1.days)
 
-        // TODO: handle end events too
+        // TODO: Start vs End Dates
         guard
             event.startDate.date >= sourceStartOfDay.date
                 && event.startDate.date < sourceStartOfNextDay.date
@@ -410,7 +408,7 @@ struct EventFormView: View {
         }
 
         calendarStore.loadFreshCache(
-            hiddenCalendarIds: calendarSettings.hiddenCalendarIds
+            hiddenCalendarIds: plannerSettings.hiddenCalendarIds
         )
     }
 
@@ -430,21 +428,25 @@ struct EventFormView: View {
 
         let plannerEvents = modelContext.getEvents(for: startOfDay)
 
-        // TODO: load in here
-        let calendarEvents: [EKEvent] = []
-        // calendarStore.timedEvents(for: planner)
+        let plannerCalendarData: PlannerCalendarData =
+            calendarStore.loadPlannerData(
+                plannerKey: planner.key,
+                startOfDay: startOfDay,
+                hiddenCalendarIds: plannerSettings.hiddenCalendarIds
+            )
+
+        let calendarEvents = plannerCalendarData.allDayEvents
 
         let calendarPlannerEvents =
             modelContext.synchronize(
                 calendarEvents: calendarEvents,
                 into: plannerEvents,
                 planner: planner,
-                calendarSettings: calendarSettings,
                 plannerSettings: plannerSettings
             )
 
         return (plannerEvents + calendarPlannerEvents)
-            .filter { !calendarSettings.isPlannerEventChecked($0) }
+            .filter { !plannerSettings.isPlannerEventChecked($0) }
             .sorted { $0.sortIndex < $1.sortIndex }
     }
 

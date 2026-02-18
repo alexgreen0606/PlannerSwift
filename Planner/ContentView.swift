@@ -76,18 +76,15 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
+    @EnvironmentObject private var weatherStore: WeatherStore
 
-    @Query private var calendarSettingsList: [CalendarSettings]
     @Query private var plannerSettingsList: [PlannerSettings]
     @Query private var foldersList: [ChecklistItem]
     @Query private var planners: [Planner]
 
     @State private var selectedTab: AppTab = .planner
     @State private var plannerSearchText: String = ""
-
-    private var calendarSettings: CalendarSettings? {
-        calendarSettingsList.first
-    }
 
     private var plannerSettings: PlannerSettings? {
         plannerSettingsList.first
@@ -96,18 +93,17 @@ struct ContentView: View {
     // TODO: fix
     private var eventsForToday: [EKEvent] {
         []
-//        return calendarStore.allDayEventsByDatestamp[
-//            todaystampWatcher.todaystamp
-//        ] ?? []
+        //        return calendarStore.allDayEventsByDatestamp[
+        //            todaystampWatcher.todaystamp
+        //        ] ?? []
     }
 
     var body: some View {
         TabView(selection: $selectedTab) {
             Tab(value: .planner) {
-                if let plannerSettings, let calendarSettings {
+                if let plannerSettings {
                     PlannerTabView(
-                        plannerSettings: plannerSettings,
-                        calendarSettings: calendarSettings
+                        plannerSettings: plannerSettings
                     )
                 }
             } label: {
@@ -144,11 +140,10 @@ struct ContentView: View {
             }
 
             Tab(value: .search, role: .search) {
-                if let plannerSettings, let calendarSettings {
+                if let plannerSettings {
                     PlannerSearchTabView(
                         searchText: $plannerSearchText,
-                        plannerSettings: plannerSettings,
-                        calendarSettings: calendarSettings
+                        plannerSettings: plannerSettings
                     )
                     .searchable(
                         text: $plannerSearchText,
@@ -162,8 +157,8 @@ struct ContentView: View {
 
         // Ensure all global storage objects exist.
         .task {
-            modelContext.ensureCalendarSettings(
-                settings: calendarSettingsList
+            modelContext.ensureplannerSettings(
+                settings: plannerSettingsList
             )
 
             modelContext.ensurePlannerSettings(
@@ -173,7 +168,7 @@ struct ContentView: View {
             modelContext.ensureRootFolder(folders: foldersList)
 
             calendarStore.loadFreshCache(
-                hiddenCalendarIds: calendarSettings!.hiddenCalendarIds
+                hiddenCalendarIds: plannerSettings!.hiddenCalendarIds
             )
 
             cleanseStorage()
@@ -185,6 +180,14 @@ struct ContentView: View {
                     "Failed to request contacts access: \(error)"
                 )
             }
+        }
+
+        // Re-load the weather when the device's location changes.
+        .onChange(of: deviceLocationManager.deviceClLocation?.coordinate.key) {
+            _,
+            _ in
+            print("Device location has changed. Refetching weather...")
+            weatherStore.resetWeather()
         }
     }
 
@@ -200,9 +203,9 @@ struct ContentView: View {
         if keepPastPlansDuration != .forever {
 
             // Delete sort indices for events that no longer exist in the calendar.
-            if let calendarSettings {
+            if let plannerSettings {
                 modelContext.deleteStaleCalendarEventPositions(
-                    in: calendarSettings,
+                    in: plannerSettings,
                     with: calendarStore.existingEventIds
                 )
             }

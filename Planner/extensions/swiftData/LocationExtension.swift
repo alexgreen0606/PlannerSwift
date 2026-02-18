@@ -5,14 +5,17 @@
 //  Created by Alex Green on 2/13/26.
 //
 
-import SwiftDate
 import Foundation
+import MapKit
+import SwiftDate
 
 extension Location {
 
-    var key: String {
-        coordinateKey(lat: self.latitude, long: self.longitude)
-            + self.timeZoneIdentifier
+    var coordinateKey: String {
+        CLLocationCoordinate2D(
+            latitude: self.latitude,
+            longitude: self.longitude
+        ).key
     }
 
     var region: Region? {
@@ -23,7 +26,7 @@ extension Location {
             )
             return nil
         }
-        
+
         return Region(
             calendar: Calendar.current,
             zone: timeZone,

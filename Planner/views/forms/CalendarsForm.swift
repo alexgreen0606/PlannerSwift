@@ -11,17 +11,16 @@ import SwiftData
 import SwiftUI
 
 struct CalendarsFormView: View {
+    let plannerSettings: PlannerSettings
+
+    init(plannerSettings: PlannerSettings) {
+        self.plannerSettings = plannerSettings
+    }
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
-    
-    @Query private var calendarSettingsList: [CalendarSettings]
 
     @State private var calendarRefreshDebounce: Task<Void, Never>?
-
-    private var calendarSettings: CalendarSettings? {
-        calendarSettingsList.first
-    }
 
     private var iconOptions: [String] = [
         "briefcase.fill",
@@ -45,10 +44,10 @@ struct CalendarsFormView: View {
             ) { calendar in
                 HStack {
                     Image(
-                        systemName: calendarSettings?.hiddenCalendarIds
+                        systemName: plannerSettings.hiddenCalendarIds
                             .contains(calendar.calendarIdentifier)
-                        == false
-                        ? "checkmark.circle" : "circle"
+                            == false
+                            ? "checkmark.circle" : "circle"
                     )
                     .foregroundStyle(Color(calendar.cgColor))
                     .contentShape(Rectangle())
@@ -58,44 +57,40 @@ struct CalendarsFormView: View {
                         )
                     )
                     .onTapGesture {
-                        guard let calendarSettings else { return }
-                        
-                        if calendarSettings.hiddenCalendarIds.contains(
+                        if plannerSettings.hiddenCalendarIds.contains(
                             calendar.calendarIdentifier
                         ) {
-                            calendarSettings.hiddenCalendarIds.remove(
+                            plannerSettings.hiddenCalendarIds.remove(
                                 calendar.calendarIdentifier
                             )
                         } else {
-                            calendarSettings.hiddenCalendarIds.insert(
+                            plannerSettings.hiddenCalendarIds.insert(
                                 calendar.calendarIdentifier
                             )
                         }
-                        
+
                         try! modelContext.save()
                     }
-                    
+
                     Text(calendar.title)
-                    
+
                     Spacer()
-                    
+
                     Menu {
                         ForEach(iconOptions, id: \.self) { iconName in
                             Button("", systemImage: iconName) {
-                                guard let calendarSettings else {
-                                    return
-                                }
-                                
-                                calendarSettings.iconMap[
+
+                                plannerSettings.iconMap[
                                     calendar.calendarIdentifier
                                 ] = iconName
-                                
+
+                                // TODO: move to model context
                                 try! modelContext.save()
                             }
                         }
                     } label: {
                         Image(
-                            systemName: calendarSettings?.iconMap[
+                            systemName: plannerSettings.iconMap[
                                 calendar.calendarIdentifier
                             ] ?? calendar.iconName
                         )
@@ -106,9 +101,9 @@ struct CalendarsFormView: View {
         }
         .navigationTitle("Calendars")
         .navigationBarTitleDisplayMode(.inline)
-        
+
         // Refresh the calendar when the hidden calendars change.
-        .onChange(of: calendarSettings?.hiddenCalendarIds) { _, _ in
+        .onChange(of: plannerSettings.hiddenCalendarIds) { _, _ in
             scheduleCalendarRefreshDebounce()
         }
     }
@@ -123,7 +118,7 @@ struct CalendarsFormView: View {
 
                 // Refresh the calendar data.
                 calendarStore.loadFreshCache(
-                    hiddenCalendarIds: calendarSettings?.hiddenCalendarIds ?? []
+                    hiddenCalendarIds: plannerSettings.hiddenCalendarIds
                 )
             } catch {
             }

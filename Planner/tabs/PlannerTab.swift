@@ -12,7 +12,6 @@ import SwiftUI
 
 struct PlannerTabView: View {
     let plannerSettings: PlannerSettings
-    let calendarSettings: CalendarSettings
 
     @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
         KeepPastPlansDuration =
@@ -58,7 +57,6 @@ struct PlannerTabView: View {
                                         datestamp: datestamp,
                                         type: .planner,
                                         plannerSettings: plannerSettings,
-                                        calendarSettings: calendarSettings,
                                         openPlanner: $openPlanner
                                     )
                                     .matchedTransitionSource(
@@ -89,8 +87,7 @@ struct PlannerTabView: View {
                     EventFormView(
                         plannerEvent: nil,
                         calendarEvent: nil,
-                        plannerSettings: plannerSettings,
-                        calendarSettings: calendarSettings
+                        plannerSettings: plannerSettings
                     ) { _ in
                         // TODO: show indiactor of event creation
                     }
@@ -106,8 +103,7 @@ struct PlannerTabView: View {
                 .fullScreenCover(item: $openPlanner) { planner in
                     PlannerView(
                         planner: planner,
-                        plannerSettings: plannerSettings,
-                        calendarSettings: calendarSettings
+                        plannerSettings: plannerSettings
                     ) {
                         openPlanner = nil
                     }
@@ -124,7 +120,6 @@ struct PlannerTabView: View {
                     PlannerBuilderView(
                         datestamp: datestamp.id,
                         plannerSettings: plannerSettings,
-                        calendarSettings: calendarSettings
                     ) {
                         openDatestamp = nil
                     }
@@ -139,7 +134,7 @@ struct PlannerTabView: View {
                 // Reload the data from the page.
                 .refreshable {
                     calendarStore.loadFreshCache(
-                        hiddenCalendarIds: calendarSettings.hiddenCalendarIds
+                        hiddenCalendarIds: plannerSettings.hiddenCalendarIds
                     )
                     Task {
                         await weatherStore.resetWeather()

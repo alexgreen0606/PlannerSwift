@@ -1,5 +1,5 @@
 //
-//  calendarSettings.swift
+//  plannerSettings.swift
 //  Planner
 //
 //  Created by Alex Green on 2/12/26.
@@ -12,21 +12,21 @@ import SwiftDate
 extension ModelContext {
 
     @MainActor
-    func ensureCalendarSettings(
-        settings: [CalendarSettings]
+    func ensureplannerSettings(
+        settings: [PlannerSettings]
     ) {
         if settings.first != nil {
             return
         }
 
-        let newSettings = CalendarSettings()
+        let newSettings = PlannerSettings()
         insert(newSettings)
 
         do {
             try save()
         } catch {
             assertionFailure(
-                "Failed to create initial CalendarSettings: \(error)"
+                "Failed to create initial PlannerSettings: \(error)"
             )
         }
     }
@@ -34,17 +34,17 @@ extension ModelContext {
     @MainActor
     func togglePlannerEvent(
         _ event: PlannerEvent,
-        calendarSettings: CalendarSettings
+        plannerSettings: PlannerSettings
     ) -> Bool {
 
-        let wasContextUpdated = calendarSettings.toggleEvent(event)
+        let wasContextUpdated = plannerSettings.toggleEvent(event)
         
         if wasContextUpdated {
             do {
                 try save()
             } catch {
                 assertionFailure(
-                    "ERROR calendarSettings.togglePlannerEvent: \(error)"
+                    "ERROR plannerSettings.togglePlannerEvent: \(error)"
                 )
             }
         }
@@ -54,7 +54,7 @@ extension ModelContext {
 
     @MainActor
     func deleteStaleCalendarEventPositions(
-        in settings: CalendarSettings,
+        in settings: PlannerSettings,
         with eventIds: Set<String>
     ) {
 

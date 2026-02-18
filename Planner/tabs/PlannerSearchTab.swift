@@ -13,7 +13,6 @@ import SwiftUI
 struct PlannerSearchTabView: View {
     @Binding var searchText: String
     let plannerSettings: PlannerSettings
-    let calendarSettings: CalendarSettings
 
     @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
         KeepPastPlansDuration =
@@ -44,7 +43,7 @@ struct PlannerSearchTabView: View {
 
     private var sortedCalendars: [EKCalendar] {
         calendarStore.sortedCalendars.filter {
-            !calendarSettings.hiddenCalendarIds.contains(
+            !plannerSettings.hiddenCalendarIds.contains(
                 $0.calendarIdentifier
             )
         }
@@ -77,7 +76,6 @@ struct PlannerSearchTabView: View {
                                         datestamp: datestamp,
                                         type: .search,
                                         plannerSettings: plannerSettings,
-                                        calendarSettings: calendarSettings,
                                         openPlanner: $openPlanner
                                     )
                                     .matchedTransitionSource(
@@ -112,8 +110,7 @@ struct PlannerSearchTabView: View {
                     .fullScreenCover(item: $openPlanner) { planner in
                         PlannerView(
                             planner: planner,
-                            plannerSettings: plannerSettings,
-                            calendarSettings: calendarSettings
+                            plannerSettings: plannerSettings
                         ) {
                             openPlanner = nil
                         }
@@ -150,7 +147,7 @@ struct PlannerSearchTabView: View {
         .onChange(of: filterCalendarIds) { _, _ in
             scheduleFilterDebounce()
         }
-        .onChange(of: calendarSettings.checkedCalendarEventIds) {
+        .onChange(of: plannerSettings.checkedCalendarEventIds) {
             _,
             _ in
             scheduleFilterDebounce()
@@ -159,7 +156,7 @@ struct PlannerSearchTabView: View {
         // Reload the data from the page.
         .refreshable {
             calendarStore.loadFreshCache(
-                hiddenCalendarIds: calendarSettings
+                hiddenCalendarIds: plannerSettings
                     .hiddenCalendarIds
             )
         }
@@ -204,7 +201,7 @@ struct PlannerSearchTabView: View {
                         HStack(spacing: 8) {
                             Image(
                                 systemName:
-                                    calendarSettings.iconMap[
+                                    plannerSettings.iconMap[
                                         calendar.calendarIdentifier
                                     ] ?? calendar.iconName
                             )
@@ -254,7 +251,7 @@ struct PlannerSearchTabView: View {
                             HStack(spacing: 8) {
                                 Image(
                                     systemName:
-                                        calendarSettings.iconMap[
+                                        plannerSettings.iconMap[
                                             calendar.calendarIdentifier
                                         ] ?? calendar.iconName
                                 )
@@ -275,8 +272,7 @@ struct PlannerSearchTabView: View {
     private func planner(datestamp: String) -> some View {
         PlannerBuilderView(
             datestamp: datestamp,
-            plannerSettings: plannerSettings,
-            calendarSettings: calendarSettings
+            plannerSettings: plannerSettings
         ) {
             openPlannerDatestamp = nil
         }
@@ -317,7 +313,7 @@ struct PlannerSearchTabView: View {
             return false
         }
 
-        return calendarSettings.checkedCalendarEventIds.contains(
+        return plannerSettings.checkedCalendarEventIds.contains(
             event.calendarItemExternalIdentifier
         )
     }
@@ -388,10 +384,10 @@ struct PlannerSearchTabView: View {
         //
         //            // Filter out checked events
         //            let checkedFiltered =
-        //                calendarSettings == nil
+        //                plannerSettings == nil
         //                ? calendarFiltered
         //                : calendarFiltered.filter {
-        //                    !calendarSettings.checkedCalendarEventIds.contains(
+        //                    !plannerSettings.checkedCalendarEventIds.contains(
         //                        $0.calendarItemExternalIdentifier
         //                    )
         //                }

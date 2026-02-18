@@ -12,16 +12,27 @@ import MapKit
 final class DeviceLocationManager: NSObject, ObservableObject,
     CLLocationManagerDelegate
 {
-    
+
     override init() {
         super.init()
+
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest
         manager.requestWhenInUseAuthorization()
-        manager.startUpdatingLocation()
+
+        fetchLocation()
+
+        // Periodic refresh (every 10 minutes).
+        startPeriodicRefresh()
+    }
+
+    deinit {
+        refreshTask?.cancel()
     }
 
     private let manager = CLLocationManager()
+
+    private var refreshTask: Task<Void, Never>?
 
     @Published var deviceClLocation: CLLocation?
     @Published var cityName: String?
@@ -31,22 +42,24 @@ final class DeviceLocationManager: NSObject, ObservableObject,
         didUpdateLocations locations: [CLLocation]
     ) {
         guard let latest = locations.last else { return }
-        deviceClLocation = latest
 
-        if let request = MKReverseGeocodingRequest(location: latest) {
-            Task {
-                do {
-                    let mapItems = try await request.mapItems
-                    if let item = mapItems.first,
-                        let addressInfo = item.addressRepresentations,
-                        let city = addressInfo.cityName
-                    {
-                        cityName = city
-                    }
-                } catch {
-                    print("Failed to get the local city based on this device location:", error)
-                }
-            }
+        let roundedCoordinate = CLLocationCoordinate2D(
+            latitude: latest.coordinate.latitude.roundDecimals(to: 2),
+            longitude: latest.coordinate.longitude.roundDecimals(to: 2)
+        )
+
+        let roundedLocation = CLLocation(
+            coordinate: roundedCoordinate,
+            altitude: latest.altitude,
+            horizontalAccuracy: latest.horizontalAccuracy,
+            verticalAccuracy: latest.verticalAccuracy,
+            timestamp: latest.timestamp
+        )
+
+        deviceClLocation = roundedLocation
+
+        Task {
+            await reverseGeocode(roundedLocation)
         }
     }
 
@@ -54,6 +67,35 @@ final class DeviceLocationManager: NSObject, ObservableObject,
         _ manager: CLLocationManager,
         didFailWithError error: Error
     ) {
-        print("LocationManager error:", error)
+        print("ERROR DeviceLocationManager:", error)
+    }
+
+    private func fetchLocation() {
+        manager.requestLocation()
+    }
+
+    private func startPeriodicRefresh() {
+        refreshTask = Task { @MainActor in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(600))
+                fetchLocation()
+            }
+        }
+    }
+
+    private func reverseGeocode(_ location: CLLocation) async {
+        if let request = MKReverseGeocodingRequest(location: location) {
+            do {
+                let mapItems = try await request.mapItems
+                if let item = mapItems.first,
+                    let addressInfo = item.addressRepresentations,
+                    let city = addressInfo.cityName
+                {
+                    cityName = city
+                }
+            } catch {
+                print("ERROR DeviceLocationManager.reverseGeocode:", error)
+            }
+        }
     }
 }
