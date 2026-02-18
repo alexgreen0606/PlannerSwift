@@ -202,6 +202,7 @@ struct PlannerView: View {
                 // Event Sheet
                 .sheet(item: $eventSheetContext) { context in
                     EventFormView(
+                        sourcePlanner: planner,
                         plannerEvent: context.plannerEvent,
                         calendarEvent: context.calendarEvent,
                         plannerSettings: plannerSettings,
@@ -728,25 +729,26 @@ struct PlannerView: View {
 
             if let calendarId = pending.calendarId {
                 return sortedOpenPlans.first(
-                    where: { $0.calendarEvent?.eventIdentifier == calendarId }
+                    where: { $0.calendarEvent?.calendarItemExternalIdentifier == calendarId }
                 )
             }
 
             return nil
         }()
-
+        
         guard
             let event = targetEvent,
             let targetSortIndex = pending.targetSortIndex,
             event.sortIndex == targetSortIndex
         else {
             // List not ready yet. Wait for next change.
+            print("List not ready for scroll. Skipping.")
             return
         }
 
         DispatchQueue.main.async {
             withAnimation {
-                proxy.scrollTo("\(event.id)", anchor: .center)
+                proxy.scrollTo(event.id, anchor: .center)
             }
         }
 

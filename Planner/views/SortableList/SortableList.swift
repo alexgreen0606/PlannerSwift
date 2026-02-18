@@ -77,7 +77,7 @@ struct SortableListView<
                         onTitleChange: handleTitleChange,
                         isItemChecked: isItemChecked
                     )
-                    .id("\(item.id)")
+                    .id(item.id)
                 }
                 .onMove(perform: moveUncheckedItem)
 
@@ -152,7 +152,7 @@ struct SortableListView<
             focusController.focusedId = nil
         }
         
-        .animateSynchronousAction(from: uncheckedItems)
+        // .animateSynchronousAction(from: uncheckedItems)
         .animateSynchronousAction(from: listManager.newlyCheckedIds)
         .animateSynchronousAction(from: listManager.newlyUncheckedIds)
 

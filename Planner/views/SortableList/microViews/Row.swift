@@ -94,9 +94,13 @@ struct RowView<
             }
 
             // Blur the textfield when this item has been selected.
-            .onChange(of: isChecked) { _, newIsSelected in
-                if newIsSelected == true {
+            .onChange(of: isChecked) { wasChecked, isChecked in
+                if !wasChecked, isChecked, focusController.focusedId == item.id,
+                    isFocused
+                {
                     isFocused = false
+                    focusController.focusedId = nil
+                    dismissKeyboard()
                 }
             }
 

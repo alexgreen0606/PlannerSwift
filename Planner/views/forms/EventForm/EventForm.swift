@@ -27,7 +27,6 @@ struct EventFormView: View {
         plannerSettings: PlannerSettings,
         handleEventChange: @escaping (PlannerEventPositionChange) -> Void
     ) {
-        print("Init. \(plannerEvent?.calendarEvent?.eventIdentifier)")
         self.initialPlannerEvent = plannerEvent
         self.sourcePlanner = sourcePlanner
         self.initialCalendarEvent = plannerEvent?.calendarEvent ?? calendarEvent
@@ -390,12 +389,12 @@ struct EventFormView: View {
             dismiss()
             return
         }
-
+    
         dismiss()
-
+        
         handleEventChange(
             .calendar(
-                id: event.eventIdentifier,
+                id: event.calendarItemExternalIdentifier,
                 sortIndex: plannerEvent.sortIndex
             )
         )
@@ -435,7 +434,7 @@ struct EventFormView: View {
                 hiddenCalendarIds: plannerSettings.hiddenCalendarIds
             )
 
-        let calendarEvents = plannerCalendarData.allDayEvents
+        let calendarEvents = plannerCalendarData.timedEvents
 
         let calendarPlannerEvents =
             modelContext.synchronize(
