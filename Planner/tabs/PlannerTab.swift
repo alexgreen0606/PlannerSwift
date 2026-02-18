@@ -21,6 +21,7 @@ struct PlannerTabView: View {
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject private var weatherStore: WeatherStore
+    @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
     @State private var openDatestamp: PlannerDatestamp? = nil
     @State private var openPlanner: Planner? = nil
@@ -133,12 +134,11 @@ struct PlannerTabView: View {
 
                 // Reload the data from the page.
                 .refreshable {
+                    weatherStore.loadFreshCache()
                     calendarStore.loadFreshCache(
                         hiddenCalendarIds: plannerSettings.hiddenCalendarIds
                     )
-                    Task {
-                        await weatherStore.resetWeather()
-                    }
+                    deviceLocationManager.fetchLocation()
                 }
             }
         }

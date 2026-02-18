@@ -22,6 +22,8 @@ struct PlannerSearchTabView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
+    @EnvironmentObject private var weatherStore: WeatherStore
+    @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
     @State private var openPlanner: Planner? = nil
     @State private var openPlannerDatestamp: PlannerDatestamp? = nil
@@ -67,7 +69,8 @@ struct PlannerSearchTabView: View {
                                 ForEach(
                                     eventMap[year] ?? [
                                         "2026-02-15", "2026-02-16",
-                                        "2026-02-17", "2026-02-18", "2026-02-19"
+                                        "2026-02-17", "2026-02-18",
+                                        "2026-02-19",
                                     ],
                                     id: \.self
                                 ) {
@@ -155,10 +158,12 @@ struct PlannerSearchTabView: View {
 
         // Reload the data from the page.
         .refreshable {
+            weatherStore.loadFreshCache()
             calendarStore.loadFreshCache(
                 hiddenCalendarIds: plannerSettings
                     .hiddenCalendarIds
             )
+            deviceLocationManager.fetchLocation()
         }
 
         // Calendar Data

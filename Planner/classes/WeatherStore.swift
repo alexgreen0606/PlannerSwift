@@ -28,7 +28,7 @@ final class WeatherStore: ObservableObject {
     @Published var loadId: UUID = UUID()
     @Published var loadedLocationKeys: Set<String> = []
 
-    func resetWeather() {
+    func loadFreshCache() {
         loadedLocationKeys = []
         loadId = UUID()
     }

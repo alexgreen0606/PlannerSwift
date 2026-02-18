@@ -187,7 +187,7 @@ struct ContentView: View {
             _,
             _ in
             print("Device location has changed. Refetching weather...")
-            weatherStore.resetWeather()
+            weatherStore.loadFreshCache()
         }
     }
 

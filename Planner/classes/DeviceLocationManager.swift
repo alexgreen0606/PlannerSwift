@@ -36,6 +36,10 @@ final class DeviceLocationManager: NSObject, ObservableObject,
 
     @Published var deviceClLocation: CLLocation?
     @Published var cityName: String?
+    
+    func fetchLocation() {
+        manager.requestLocation()
+    }
 
     func locationManager(
         _ manager: CLLocationManager,
@@ -68,10 +72,6 @@ final class DeviceLocationManager: NSObject, ObservableObject,
         didFailWithError error: Error
     ) {
         print("ERROR DeviceLocationManager:", error)
-    }
-
-    private func fetchLocation() {
-        manager.requestLocation()
     }
 
     private func startPeriodicRefresh() {
