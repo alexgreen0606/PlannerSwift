@@ -132,7 +132,7 @@ struct ChecklistView: View {
                     topRightToolbar
                     bottomToolbar(proxy)
                 }
-                .animateChange(from: listManager.isSelectMode)
+                .animateSynchronousAction(from: listManager.isSelectMode)
             }
         }
 
@@ -281,7 +281,7 @@ struct ChecklistView: View {
                         .fontWeight(.semibold)
                 }
                 .disabled(visibleItems.isEmpty)
-                .animateChange(from: isAllSelected)
+                .animateSynchronousAction(from: isAllSelected)
             }
         }
     }

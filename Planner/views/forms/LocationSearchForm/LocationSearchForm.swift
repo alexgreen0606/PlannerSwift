@@ -141,8 +141,8 @@ struct LocationSearchView: View {
             }
         }
         .padding(.horizontal)
-        .animateChange(from: selectedLocation)
-        .animateChange(from: selectedLocationSource)
+        .animateSynchronousAction(from: selectedLocation)
+        .animateSynchronousAction(from: selectedLocationSource)
     }
 
     @ViewBuilder

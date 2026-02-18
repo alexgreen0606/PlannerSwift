@@ -176,7 +176,7 @@ struct TransferChecklistItemsFormView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal)
-        .animateChange(from: destination?.id)
+        .animateSynchronousAction(from: destination?.id)
     }
 
     private var sourceChip: some View {

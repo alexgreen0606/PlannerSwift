@@ -64,7 +64,7 @@ struct FolderView: View {
                 topLeftToolbar
                 topRightToolbar
             }
-            .animateChange(from: selectManager.isSelectMode)
+            .animateSynchronousAction(from: selectManager.isSelectMode)
 
             // Create Item Form
             .sheet(isPresented: $showCreateSheet) {

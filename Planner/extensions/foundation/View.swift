@@ -63,11 +63,22 @@ extension View {
         }
     }
 
-    func animateChange<Trigger: Equatable>(from trigger: Trigger) -> some View {
+    func animateSynchronousAction<Trigger: Equatable>(from trigger: Trigger) -> some View {
         self
             .animation(
                 .spring(
                     response: 0.4,
+                    dampingFraction: 0.4
+                ),
+                value: trigger
+            )
+    }
+    
+    func animateAsynchronousAction<Trigger: Equatable>(from trigger: Trigger) -> some View {
+        self
+            .animation(
+                .spring(
+                    response: 0.9,
                     dampingFraction: 0.4
                 ),
                 value: trigger

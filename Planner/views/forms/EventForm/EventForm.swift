@@ -154,7 +154,7 @@ struct EventFormView: View {
                 Toggle("No specific time", isOn: $draftPlannerEvent.untimed)
                     .tint(accentColor.swiftUIColor)
             }
-            .animateChange(from: draftPlannerEvent.untimed)
+            .animateSynchronousAction(from: draftPlannerEvent.untimed)
             .navigationTitle(isCreateForm ? "Create Plan" : "Edit Plan")
             .navigationBarTitleDisplayMode(.inline)
             .scrollDisabled(true)

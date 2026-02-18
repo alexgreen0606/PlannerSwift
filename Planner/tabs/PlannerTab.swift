@@ -66,7 +66,7 @@ struct PlannerTabView: View {
                                 }
                             }
                             .padding(.horizontal)
-                            .animateChange(from: thisWeekDatestamps)
+                            .animateAsynchronousAction(from: thisWeekDatestamps)
                         }
                         .scrollIndicators(.hidden)
                         .background(Color.clear)

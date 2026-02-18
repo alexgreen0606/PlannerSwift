@@ -89,9 +89,9 @@ struct PlannerChipSpreadView: View {
                 eventChip(event)
             }
         }
-        .animateChange(from: weatherData)
-        .animateChange(from: locationLabel)
-        .animateChange(from: allDayEvents)
+        .animateAsynchronousAction(from: weatherData)
+        .animateAsynchronousAction(from: locationLabel)
+        .animateAsynchronousAction(from: allDayEvents)
 
         // Location Sheet
         .sheet(isPresented: $isLocationSheetOpen) {

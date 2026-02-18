@@ -197,7 +197,7 @@ struct PlannerView: View {
                     topRightToolbar
                     bottomToolbar(proxy)
                 }
-                .animateChange(from: plannerManager.isSelectMode)
+                .animateSynchronousAction(from: plannerManager.isSelectMode)
 
                 // Event Sheet
                 .sheet(item: $eventSheetContext) { context in

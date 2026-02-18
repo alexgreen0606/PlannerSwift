@@ -388,8 +388,8 @@ struct PlannerPreviewView: View {
                 }
             }
             .frame(height: 30)
-            .animateChange(from: weatherData != nil)
-            .animateChange(from: locationLabel != nil)
+            .animateAsynchronousAction(from: weatherData != nil)
+            .animateAsynchronousAction(from: locationLabel != nil)
         }
     }
 
@@ -467,8 +467,8 @@ struct PlannerPreviewView: View {
                 }
 
             }
-            .animateChange(from: weatherData != nil)
-            .animateChange(from: locationLabel != nil)
+            .animateAsynchronousAction(from: weatherData != nil)
+            .animateAsynchronousAction(from: locationLabel != nil)
         }
     }
 

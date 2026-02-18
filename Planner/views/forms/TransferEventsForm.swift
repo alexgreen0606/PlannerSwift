@@ -121,7 +121,7 @@ struct TransferEventsFormView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal)
-        .animateChange(from: destinationDate)
+        .animateSynchronousAction(from: destinationDate)
     }
 
     private var sourceChip: some View {

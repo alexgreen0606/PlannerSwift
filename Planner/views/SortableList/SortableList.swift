@@ -152,9 +152,9 @@ struct SortableListView<
             focusController.focusedId = nil
         }
         
-        .animateChange(from: uncheckedItems)
-        .animateChange(from: listManager.newlyCheckedIds)
-        .animateChange(from: listManager.newlyUncheckedIds)
+        .animateSynchronousAction(from: uncheckedItems)
+        .animateSynchronousAction(from: listManager.newlyCheckedIds)
+        .animateSynchronousAction(from: listManager.newlyUncheckedIds)
 
         // Slide to checked items when the user marks them visible.
         .withScrollTrigger(
