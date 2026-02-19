@@ -152,7 +152,7 @@ struct SortableListView<
             focusController.focusedId = nil
         }
         
-        // .animateSynchronousAction(from: uncheckedItems)
+        .animateSynchronousAction(from: uncheckedItems)
         .animateSynchronousAction(from: listManager.newlyCheckedIds)
         .animateSynchronousAction(from: listManager.newlyUncheckedIds)
 

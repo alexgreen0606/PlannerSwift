@@ -25,12 +25,12 @@ final class WeatherStore: ObservableObject {
     @Published var weatherMap: [String: [Date: DayWeather]] =
         [:]
 
-    @Published var loadId: UUID = UUID()
+    @Published var loadTrigger: UUID = UUID()
     @Published var loadedLocationKeys: Set<String> = []
 
     func loadFreshCache() {
         loadedLocationKeys = []
-        loadId = UUID()
+        loadTrigger = UUID()
     }
 
     func getWeather(for startOfDay: DateInRegion, at location: Location?)

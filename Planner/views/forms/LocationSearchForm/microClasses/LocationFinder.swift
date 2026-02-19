@@ -44,7 +44,7 @@ class LocationFinder: NSObject, ObservableObject,
         if nsError.domain == NSURLErrorDomain {
             hasNetworkError = true
         } else if nsError.domain == MKError.errorDomain {
-            assertionFailure("ERROR: LocationFinder.completer: \(error)")
+            print("ERROR: LocationFinder.completer: \(error)")
         }
     }
 

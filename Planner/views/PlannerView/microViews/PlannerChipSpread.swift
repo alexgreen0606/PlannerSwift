@@ -18,6 +18,7 @@ struct PlannerChipSpreadView: View {
     let allDayEvents: [EKEvent]
     let iconMap: [String: String]
     var namespace: Namespace.ID
+    let plannerSettings: PlannerSettings
     let openCalendarEventSheet: (EKEvent) -> Void
     let weatherUnit: UnitTemperature =
         Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
@@ -34,13 +35,7 @@ struct PlannerChipSpreadView: View {
     @EnvironmentObject private var weatherStore: WeatherStore
     @EnvironmentObject private var locationManager: DeviceLocationManager
 
-    @Query private var plannerSettingsList: [PlannerSettings]
-    
     @State private var isLocationSheetOpen = false
-
-    private var plannerSettings: PlannerSettings? {
-        plannerSettingsList.first
-    }
 
     private var isDarkMode: Bool {
         switch appColorScheme {
@@ -72,8 +67,6 @@ struct PlannerChipSpreadView: View {
         )
     }
 
-    // TODO: Re-fetch weather when device location changes.
-    
     private var weatherData: DayWeather? {
         weatherStore.getWeather(for: startOfDay, at: location)
     }
@@ -101,25 +94,22 @@ struct PlannerChipSpreadView: View {
                 title: "Edit Location",
                 mode: .planner
             ) { source, location in
-
-                planner.locationSource = source
-                planner.location = location
-
-                do {
-                    try modelContext.save()
-                } catch {
-                    assertionFailure(
-                        "Failed to save location: \(error)"
+                
+                modelContext.updateLocation(
+                    for: planner,
+                    location: location,
+                    locationSource: source
+                )
+                
+                let newRegion = planner.region(settings: plannerSettings)
+                
+                Task {
+                    await weatherStore.loadWeatherIfNeeded(
+                        location: location,
+                        region: newRegion
                     )
                 }
-
-                Task {
-                    await weatherStore
-                        .loadWeatherIfNeeded(
-                            location: location,
-                            region: startOfDay.region
-                        )
-                }
+                
             }
             .navigationTransition(
                 .zoom(
@@ -129,18 +119,12 @@ struct PlannerChipSpreadView: View {
             )
         }
 
-        // Weather Data
+        // Weather Data -> Refresh when user overscrolls.
         .externalData(
-            key: weatherStore.loadId,
-            ready: plannerSettings != nil
-        ) {
-            Task {
-                await weatherStore.loadWeatherIfNeeded(
-                    location: location,
-                    region: startOfDay.region
-                )
-            }
-        }
+            key: weatherStore.loadTrigger,
+            ready: true,
+            load: loadWeather
+        )
     }
 
     // MARK: - Chips
@@ -249,5 +233,14 @@ struct PlannerChipSpreadView: View {
     private func openWeatherApp() {
         guard let url = URL(string: "weather://") else { return }
         UIApplication.shared.open(url)
+    }
+
+    private func loadWeather() {
+        Task {
+            await weatherStore.loadWeatherIfNeeded(
+                location: location,
+                region: startOfDay.region
+            )
+        }
     }
 }

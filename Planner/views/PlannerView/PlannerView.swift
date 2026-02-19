@@ -199,38 +199,6 @@ struct PlannerView: View {
                 }
                 .animateSynchronousAction(from: plannerManager.isSelectMode)
 
-                // Event Sheet
-                .sheet(item: $eventSheetContext) { context in
-                    EventFormView(
-                        sourcePlanner: planner,
-                        plannerEvent: context.plannerEvent,
-                        calendarEvent: context.calendarEvent,
-                        plannerSettings: plannerSettings,
-                    ) { change in
-                        pendingScroll = change
-                    }
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: context.id,
-                            in: namespace
-                        )
-                    )
-                }
-
-                // Event Sheet
-                .sheet(isPresented: $showTransferSheet) {
-                    TransferEventsFormView(
-                        startOfDay: startOfDay,
-                        settings: plannerSettings
-                    )
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: "TRANSFER",
-                            in: namespace
-                        )
-                    )
-                }
-
                 // Slide to modified events once the UI has settled.
                 .onChange(of: sortedOpenPlans.map(\.id)) { _, _ in
                     attemptScrollToEvent(
@@ -245,6 +213,41 @@ struct PlannerView: View {
             }
         }
         .environmentObject(plannerManager)
+        
+        // Event Sheet
+        .sheet(item: $eventSheetContext) { context in
+            EventFormView(
+                sourcePlanner: planner,
+                plannerEvent: context.plannerEvent,
+                calendarEvent: context.calendarEvent,
+                plannerSettings: plannerSettings,
+            ) { change in
+                pendingScroll = change
+            }
+            .navigationTransition(
+                .zoom(
+                    sourceID: context.id,
+                    in: namespace
+                )
+            )
+            .onAppear {
+                print("Event sheet mounting.")
+            }
+        }
+        
+        // Transfer Event Sheet
+        .sheet(isPresented: $showTransferSheet) {
+            TransferEventsFormView(
+                startOfDay: startOfDay,
+                settings: plannerSettings
+            )
+            .navigationTransition(
+                .zoom(
+                    sourceID: "TRANSFER",
+                    in: namespace
+                )
+            )
+        }
 
         // Pass the custom toggler to the planner manager.
         .onAppear {
@@ -450,6 +453,7 @@ struct PlannerView: View {
             allDayEvents: allDayEvents,
             iconMap: plannerSettings.iconMap,
             namespace: namespace,
+            plannerSettings: plannerSettings,
             openCalendarEventSheet: { calEvent in
                 eventSheetContext =
                     EventSheetContext(

@@ -389,9 +389,9 @@ struct EventFormView: View {
             dismiss()
             return
         }
-    
+
         dismiss()
-        
+
         handleEventChange(
             .calendar(
                 id: event.calendarItemExternalIdentifier,

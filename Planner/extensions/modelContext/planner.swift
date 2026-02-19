@@ -59,6 +59,25 @@ extension ModelContext {
     }
     
     @MainActor
+    func updateLocation(
+        for planner: Planner,
+        location: Location?,
+        locationSource: LocationSource
+    ) {
+        
+        planner.location = location
+        planner.locationSource = locationSource
+
+        do {
+            try save()
+        } catch {
+            assertionFailure(
+                "ERROR planner.updateLocation: \(error)"
+            )
+        }
+    }
+    
+    @MainActor
     func deleteOldPlanners(
         from planners: [Planner],
         before cutoffDate: Date

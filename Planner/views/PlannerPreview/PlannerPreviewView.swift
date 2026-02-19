@@ -252,7 +252,7 @@ struct PlannerPreviewView: View {
 
         // Weather data tracking.
         .externalData(
-            key: weatherStore.loadId,
+            key: weatherStore.loadTrigger,
             ready: true
         ) {
             Task {
