@@ -27,6 +27,13 @@ struct EventFormView: View {
         plannerSettings: PlannerSettings,
         handleEventChange: @escaping (PlannerEventPositionChange) -> Void
     ) {
+        if initialPlannerEvent != nil && initialCalendarEvent != nil {
+            fatalError(
+                "ERROR: Cannot initialize EventFormView with both a PlannerEvent and a CalendarEvent"
+            )
+            return
+        }
+
         self.initialPlannerEvent = plannerEvent
         self.sourcePlanner = sourcePlanner
         self.initialCalendarEvent = plannerEvent?.calendarEvent ?? calendarEvent
@@ -263,62 +270,121 @@ struct EventFormView: View {
     }
 
     private func savePlannerEvent() {
-        // TODO: implement and add this to model context
-        //        let targetDatestamp = date.datestamp
-        //        let hasEventMoved =
-        //            initialPlannerEvent?.planner?.datestamp != targetDatestamp
-        //
-        //        let planner = modelContext.loadPlanner(for: targetDatestamp)
-        //        let combinedEvents = getPlannerEvents(for: planner)
-        //        let bottomSortIndex = (combinedEvents.last?.sortIndex ?? 0) + 8.0
-        //
-        //        var event =
-        //            initialPlannerEvent ?? PlannerEvent(sortIndex: bottomSortIndex)
-        //        if hasEventMoved && initialPlannerEvent != nil {
-        //            // Transfered events get placed at the bottom of their new planner.
-        //            event.sortIndex = bottomSortIndex
-        //        }
-        //
-        //        // Delete the stale calendar event if one exists.
-        //        if let calEvent = initialCalendarEvent {
-        //
-        //            calendarStore.delete(event: calEvent)
-        //            calendarStore.refresh(
-        //                hiddenCalendarIds: plannerSettings?.hiddenCalendarIds
-        //                    ?? []
-        //            )
-        //
-        //            if let initialPlannerEvent {
-        //                // Clone the dummy calendar event.
-        //                event = PlannerEvent(
-        //                    sortIndex: initialPlannerEvent.sortIndex
-        //                )
-        //            }
-        //
-        //            modelContext.insert(event)
-        //        }
-        //
-        //        event.planner = planner
-        //        event.title = title
-        //        event.date = hasTime ? date : nil
-        //
-        //        let validSortIndex = generateValidPlannerEventSortIndex(
-        //            for: event,
-        //            in: combinedEvents + [event]  // Ensure the planner contains the event.
-        //        )
-        //
-        //        if validSortIndex != event.sortIndex {
-        //            event.sortIndex = validSortIndex
-        //        }
-        //
-        //        do {
-        //            try modelContext.save()
-        //        } catch {
-        //            assertionFailure("Failed to save planner event: \(error)")
-        //        }
-        //
-        //        dismiss()
-        //        handleEventChange(.planner(id: event.id, sortIndex: validSortIndex))
+        
+        // ------------------------------------------------------------------
+        // 1. Delete stale calendar event if one exists.
+        // ------------------------------------------------------------------
+        
+        if let initialCalendarEvent {
+
+            // Delete the original calendar event and refresh the store.
+
+            calendarStore.delete(event: initialCalendarEvent)
+
+            // TODO: will the events be up-to-date below?
+            calendarStore.loadFreshCache(
+                hiddenCalendarIds: plannerSettings.hiddenCalendarIds
+            )
+
+        }
+        
+        // ------------------------------------------------------------------
+        // 2. TODO: Get the planners the event lands in. Place it in the earliest one
+        // ------------------------------------------------------------------
+
+        // TODO: get the planner the event lands in (could be multiple)
+        let targetDatestamp = draftPlannerEvent.date
+
+        // TODO: get the planners that the event could land in (3 total)
+
+        // load in those events
+
+        let hasEventMoved =
+            initialPlannerEvent?.planner?.datestamp != targetDatestamp
+
+        let planner = modelContext.loadPlanner(for: targetDatestamp)
+        let combinedEvents = getPlannerEvents(for: planner)
+        let bottomSortIndex = (combinedEvents.last?.sortIndex ?? 0) + 8.0
+
+        // ------------------------------------------------------------------
+        // 3. Build the PlannerEvent
+        // ------------------------------------------------------------------
+
+        var event: PlannerEvent? = nil
+
+        if let initialPlannerEvent {
+            
+            // Reuse the existing planner event.
+            
+            event = initialPlannerEvent
+
+            guard let event else {
+                assertionFailure(
+                    "ERROR EventForm.savePlannerEvent: Failed to build saved event(1)"
+                )
+                dismiss()
+                return
+            }
+
+            event.title = draftPlannerEvent.title
+            event.date = draftPlannerEvent.date
+            event.untimed = draftPlannerEvent.untimed
+
+            if hasEventMoved {
+                // Transfered events get placed at the bottom of their new planner.
+                event.sortIndex = bottomSortIndex
+            }
+
+        } else {
+            
+            // Save the draft planner event to the context.
+
+            event = draftPlannerEvent
+
+            guard let event else {
+                assertionFailure(
+                    "ERROR EventForm.savePlannerEvent: Failed to build saved event(2)"
+                )
+                dismiss()
+                return
+            }
+
+            event.sortIndex = bottomSortIndex
+
+            modelContext.insert(event)
+        }
+        
+        guard let event else {
+            assertionFailure(
+                "ERROR EventForm.savePlannerEvent: Failed to build saved event(3)"
+            )
+            dismiss()
+            return
+        }
+
+        // TODO: load in all events from synchronized function below
+
+        let validSortIndex = generateValidPlannerEventSortIndex(
+            for: event,
+            in: combinedEvents + [event]  // TODO: Ensure the planner contains the event. Is this needed?
+        )
+
+        if validSortIndex != event.sortIndex {
+            event.sortIndex = validSortIndex
+        }
+        
+            // TODO: add this to model context
+        do {
+            try modelContext.save()
+        } catch {
+            assertionFailure("Failed to save planner event: \(error)")
+        }
+
+        dismiss()
+
+        // TODO: will the draftPlannerEvent have the same ID when it is saved?
+        handleEventChange(.planner(id: event.id, sortIndex: validSortIndex))
+
     }
 
     private func handleCalendarEventChange(_ event: EKEvent) {
