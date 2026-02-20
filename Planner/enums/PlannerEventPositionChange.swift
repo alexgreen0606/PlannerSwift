@@ -6,17 +6,18 @@
 //
 
 import SwiftData
+import SwiftUI
 
 enum PlannerEventPositionChange: Equatable {
 
     case planner(
         id: PersistentIdentifier,
-        sortIndex: Double
+        sortDate: Date
     )
 
     case calendar(
         id: String,
-        sortIndex: Double
+        sortDate: Date
     )
 
     case transfer(
@@ -41,11 +42,11 @@ enum PlannerEventPositionChange: Equatable {
         }
     }
 
-    var targetSortIndex: Double? {
+    var targetSortDate: Date? {
         switch self {
-        case .planner(_, let sortIndex),
-            .calendar(_, let sortIndex):
-            return sortIndex
+        case .planner(_, let sortDate),
+            .calendar(_, let sortDate):
+            return sortDate
         case .transfer:
             return nil
         }

@@ -125,7 +125,7 @@ struct PlannerPreviewView: View {
     private var sortedOpenPlannerEvents: [PlannerEvent] {
         plannerEvents
             .filter { !$0.isChecked }
-            .sorted { $0.sortIndex < $1.sortIndex }
+            .sorted { $0.sortDate < $1.sortDate }
     }
 
     private var uncheckedCalendarPlannerEvents: [PlannerEvent] {
@@ -135,11 +135,11 @@ struct PlannerPreviewView: View {
     }
 
     private var timedPlannerEvents: [PlannerEvent] {
-        sortedOpenPlannerEvents.filter { !$0.untimed }
+        sortedOpenPlannerEvents.filter { $0.hasTime }
     }
 
     private var untimedPlannerEvents: [PlannerEvent] {
-        sortedOpenPlannerEvents.filter { $0.untimed }
+        sortedOpenPlannerEvents.filter { !$0.hasTime }
     }
 
     private var previewAllDayEvents: [EKEvent] {
@@ -181,7 +181,7 @@ struct PlannerPreviewView: View {
         return
             (singleDayPlannerEvents + timedPlannerEventsToAdd
             + untimedPlannerEventsToAdd)
-            .sorted { $0.sortIndex < $1.sortIndex }
+            .sorted { $0.sortDate < $1.sortDate }
     }
 
     private var remainingPlansLabel: String {
@@ -262,6 +262,18 @@ struct PlannerPreviewView: View {
                 )
             }
         }
+        
+        // TODO: why is the sorting off?
+        // Re-build the calendar events when the sort orders change.
+//        .onChange(of: plannerSettings) { _, _ in
+//            if let calendarData {
+//                calendarPlannerEvents =
+//                modelContext.buildCalendarPlannerEvents(
+//                    calendarEvents: calendarData.timedEvents,
+//                    plannerSettings: plannerSettings
+//                )
+//            }
+//        }
 
         if type == .planner {
             content
@@ -481,11 +493,9 @@ struct PlannerPreviewView: View {
         )
 
         calendarPlannerEvents =
-            modelContext.synchronize(
+            modelContext.buildCalendarPlannerEvents(
                 calendarEvents: calendarData.timedEvents,
-                into: plannerEvents,
-                planner: planner,
-                plannerSettings: plannerSettings,
+                plannerSettings: plannerSettings
             )
 
         self.calendarData = calendarData

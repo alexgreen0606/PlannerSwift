@@ -24,9 +24,6 @@ class CalendarStore: ObservableObject {
 
     private let eventStore = EKEventStore()
 
-    // TODO: we can no longer use this. We aren't loading in all existing events
-    @Published private(set) var existingEventIds: Set<String> = []
-
     @Published var loadTrigger: UUID = UUID()
     @Published var accessDenied: Bool = true
 
@@ -117,7 +114,7 @@ class CalendarStore: ObservableObject {
 
         let startOfNextDay = startOfDay + 1.days
 
-        // TODO: are end events returned too?
+        // TODO: is event returned if it ends on this date? It should.
         let predicate = eventStore.predicateForEvents(
             withStart: startOfDay.date,
             end: startOfNextDay.date,
@@ -130,7 +127,6 @@ class CalendarStore: ObservableObject {
         var timedEvents: [EKEvent] = []
 
         for event in events {
-            existingEventIds.insert(event.calendarItemExternalIdentifier)
 
             if hiddenCalendarIds.contains(event.calendar.calendarIdentifier) {
                 continue

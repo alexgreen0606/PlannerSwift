@@ -17,7 +17,7 @@ extension PlannerSettings {
 
         return isCalendarEventChecked(calendarEvent)
     }
-    
+
     func isCalendarEventChecked(_ event: EKEvent) -> Bool {
         self.checkedCalendarEventIds.contains(
             event.calendarItemExternalIdentifier
@@ -44,5 +44,40 @@ extension PlannerSettings {
         }
 
         return true
+    }
+
+    // Note: May want to consider adding events with a chronological sort.
+    func buildCalendarPlannerEvents(
+        calendarEvents: [EKEvent]
+    ) -> [PlannerEvent] {
+
+        var plannerEvents: [PlannerEvent] = []
+
+        for calEvent in calendarEvents {
+
+            // Build the dummy event for UI representation. No persistence to storage.
+            let plannerEvent = PlannerEvent(
+                date: calEvent.startDate,
+                calendarEvent: calEvent,
+                sortIndex: 0
+            )
+            plannerEvent.hasTime = true
+
+            // Use the user-defined sort date if one exists.
+            if let customSortDate = self.calendarSortDateMap[
+                calEvent.calendarItemExternalIdentifier
+            ] {
+                plannerEvent.sortDate = customSortDate
+            } else {
+                self.calendarSortDateMap[
+                    calEvent.calendarItemExternalIdentifier
+                ] = calEvent.startDate
+            }
+
+            plannerEvents.append(plannerEvent)
+
+        }
+
+        return plannerEvents
     }
 }

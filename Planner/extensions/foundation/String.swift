@@ -28,16 +28,21 @@ extension String {
 
         return "\(day).calendar"
     }
-    
+
     // Expects YYYY-MM-DD format.
     func startOfDay(in region: Region) -> DateInRegion? {
         self.toDate("yyyy-MM-dd", region: region)?.dateAtStartOf(.day)
     }
 
     // Expect 24-hour HH:MM format.
-    func toDate(for datestamp: String) -> Date? {
-        let dateTime = "\(datestamp) \(self)"
-        return dateTime.toDate("yyyy-MM-dd HH:mm", region: .local)?.date
+    func toDate(for startOfDay: DateInRegion) -> Date? {
+        let dateString = startOfDay.toFormat("yyyy-MM-dd")
+        let dateTimeString = "\(dateString) \(self)"
+
+        return
+            dateTimeString
+            .toDate("yyyy-MM-dd HH:mm", region: startOfDay.region)?
+            .date
     }
 
     // Any user input expected.

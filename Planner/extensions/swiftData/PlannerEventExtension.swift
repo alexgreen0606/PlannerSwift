@@ -10,10 +10,6 @@ import SwiftDate
 import SwiftUI
 
 extension PlannerEvent {
-    
-    func timeZone(fallback: TimeZone) -> TimeZone {
-        self.calendarEvent?.timeZone ?? fallback
-    }
 
     func tint(accentColor: AccentColor) -> Color {
         if let calendar = self.calendarEvent?.calendar {
@@ -21,6 +17,52 @@ extension PlannerEvent {
         }
 
         return accentColor.swiftUIColor
+    }
+
+    func handleTitleChange(
+        startOfDay: DateInRegion,
+        eventKitStore: EKEventStore
+    ) {
+
+        // Case 1: Update the device calendar with the new title.
+        guard self.calendarEvent == nil else {
+            self.calendarEvent!.title = self.title
+
+            do {
+                try eventKitStore.save(
+                    self.calendarEvent!,
+                    span: .thisEvent
+                )
+            } catch {
+                assertionFailure(
+                    "ERROR PlannerEventExtension.handleTitleChange: \(error)"
+                )
+            }
+
+            return
+        }
+
+        // Case 2: Scan the new title for a time value.
+        guard
+            let (timeValue, updatedText) = self.title.separateTimeValue()
+        else {
+            return
+        }
+
+        guard
+            let date = timeValue.toDate(
+                for: startOfDay
+            )
+        else {
+            return
+        }
+
+        self.title = updatedText
+        self.hasTime = true
+
+        // Change the event's date, but preserve its sort position.
+        self.date = date
+
     }
 
     @ViewBuilder
@@ -36,14 +78,14 @@ extension PlannerEvent {
                 openSheet: openSheet
             )
 
-        } else if !self.untimed {
+        } else if self.hasTime {
 
             TimeValueView(
                 day: DateInRegion(self.date, region: region),
                 disabled: false,
                 color: accentColor,
                 scale: 1,
-                openEventSheet:  openSheet
+                openEventSheet: openSheet
             )
 
         }

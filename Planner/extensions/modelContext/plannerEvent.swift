@@ -14,17 +14,53 @@ extension ModelContext {
 
     @MainActor
     func createEvent(
+        near baseId: PersistentIdentifier?,
+        offset: Int,
+        in events: [PlannerEvent],
         startOfDay: DateInRegion,
-        at index: Int,
-        in events: [PlannerEvent]
+        plannerSettings: PlannerSettings
     ) {
 
-        let sortIndex = generateSortIndex(index: index, items: events)
+        guard
+            let baseIndex = baseId == nil
+                ? 0
+                : events.firstIndex(where: {
+                    $0.id == baseId
+                })
+        else {
+            assertionFailure(
+                "ERROR plannerEvent.createEvent: Failed to get a base index for the new event."
+            )
+            return
+        }
+
+        let finalIndex = baseIndex + offset
+
+        // Don't create the new event if it is next to an empty event.
+
+        let upperEvent = finalIndex > 0 ? events[finalIndex - 1] : nil
+        if let upperEvent, upperEvent.title.isEmpty {
+            return
+        }
+
+        let lowerEvent =
+            finalIndex < events.count
+            ? events[finalIndex] : nil
+        if let lowerEvent, lowerEvent.title.isEmpty {
+            return
+        }
+
+        let sortDate = generateSortDate(
+            startOfDay: startOfDay,
+            index: finalIndex,
+            events: events,
+            plannerSettings: plannerSettings
+        )
 
         let newEvent = PlannerEvent(
-            date: startOfDay.date,
+            date: sortDate,
             calendarEvent: nil,
-            sortIndex: sortIndex
+            sortIndex: 0
         )
 
         insert(newEvent)
@@ -67,63 +103,59 @@ extension ModelContext {
     func moveEvent(
         from: Int,
         to: Int,
+        startOfDay: DateInRegion,
         events: [PlannerEvent],
         plannerSettings: PlannerSettings
     ) {
         guard from != to else { return }
 
-        // 1: Force-save the event to its new position.
+        // Save the event to its new position. Preserve the actual event date.
         let movedEvent = events[from]
         let eventsWithoutEvent = events.filter {
             $0.id != movedEvent.id
         }
-        let newSortIndex = generateSortIndex(
+        let newSortDate = generateSortDate(
+            startOfDay: startOfDay,
             index: to,
-            items: eventsWithoutEvent
+            events: eventsWithoutEvent,
+            plannerSettings: plannerSettings
         )
-        movedEvent.sortIndex = newSortIndex
+        movedEvent.sortDate = newSortDate
 
-        // Save the calendar event position.
-        if movedEvent.calendarEvent != nil {
-            plannerSettings.sortIndexMap[
-                movedEvent.calendarEvent!.calendarItemExternalIdentifier
-            ] = movedEvent.sortIndex
+        // Handle calendar event position changes.
+        if let calEvent = movedEvent.calendarEvent {
+            plannerSettings.calendarSortDateMap[
+                calEvent.calendarItemExternalIdentifier
+            ] = movedEvent.sortDate
         }
 
         do {
             try save()
         } catch {
             assertionFailure(
-                "ERROR: plannerEvent.moveEvent(1): \(error)"
+                "ERROR: plannerEvent.moveEvent: \(error)"
             )
         }
+    }
 
-        // 2: After UI settles, validate correct chronological insertion.
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 1_000_000_000)  // 1 sec
+    @MainActor
+    func handleTitleChange(
+        _ event: PlannerEvent,
+        startOfDay: DateInRegion,
+        eventKitStore: EKEventStore
+    ) {
 
-            let validSortIndex = generateValidPlannerEventSortIndex(
-                for: movedEvent,
-                in: events
+        event.handleTitleChange(
+            startOfDay: startOfDay,
+            eventKitStore: eventKitStore
+        )
+
+        do {
+            try save()
+        } catch {
+            assertionFailure(
+                "ERROR: plannerEvent.handleTitleChange: \(error)"
             )
-            if validSortIndex != newSortIndex {
-                movedEvent.sortIndex = validSortIndex
-
-                // Save the calendar event position.
-                if movedEvent.calendarEvent != nil {
-                    plannerSettings.sortIndexMap[
-                        movedEvent.calendarEvent!.calendarItemExternalIdentifier
-                    ] = movedEvent.sortIndex
-                }
-
-                do {
-                    try save()
-                } catch {
-                    assertionFailure(
-                        "ERROR: plannerEvent.moveEvent(2): \(error)"
-                    )
-                }
-            }
         }
     }
 
@@ -137,7 +169,7 @@ extension ModelContext {
         let targetRegion = startOfDay.region
 
         for event in events {
-            if event.untimed {
+            if !event.hasTime {
                 event.date = startOfDay.date
             } else {
 
@@ -155,8 +187,6 @@ extension ModelContext {
                 //                }
             }
         }
-
-        // TODO: normalize sort indices
 
         do {
             try save()
@@ -203,6 +233,71 @@ extension ModelContext {
             assertionFailure(
                 "Failed to delete checked plans: \(error)"
             )
+        }
+    }
+
+    @MainActor
+    func savePlannerEventChanges(
+        _ draftPlannerEvent: PlannerEvent,
+        initialPlannerEvent: PlannerEvent?,
+        initialCalendarEvent: EKEvent?
+    ) {
+
+        if let initialPlannerEvent {
+
+            // Reuse the existing planner event.
+
+            initialPlannerEvent.title = draftPlannerEvent.title
+            initialPlannerEvent.date = draftPlannerEvent.date
+            initialPlannerEvent.hasTime = draftPlannerEvent.hasTime
+            initialPlannerEvent.calendarEvent = nil
+
+        } else {
+
+            // Save the draft planner event to the context.
+
+            insert(draftPlannerEvent)
+
+        }
+
+        do {
+            try save()
+        } catch {
+            assertionFailure(
+                "ERROR plannerEvent.savePlannerEventChanges(PlannerEvent): \(error)"
+            )
+        }
+    }
+
+    @MainActor
+    func savePlannerEventChanges(
+        _ calendarEvent: EKEvent?,
+        initialPlannerEvent: PlannerEvent?,
+        plannerSettings: PlannerSettings
+    ) {
+        if let initialPlannerEvent {
+
+            if let calendarEvent {
+
+                // Event was not deleted. Use the original planner event's sort date for the new event.
+                plannerSettings.calendarSortDateMap[
+                    calendarEvent.calendarItemExternalIdentifier
+                ] =
+                    initialPlannerEvent.sortDate
+
+            }
+
+            Task { @MainActor in
+                self.delete(initialPlannerEvent)
+            }
+
+            do {
+                try save()
+            } catch {
+                assertionFailure(
+                    "ERROR plannerEvent.savePlannerEventChanges(EKEvent): \(error)"
+                )
+            }
         }
     }
 

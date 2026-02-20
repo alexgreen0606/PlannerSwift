@@ -148,7 +148,7 @@ struct PlannerView: View {
                     || plannerManager.newlyCheckedIds.contains($0.id)
             }
             .sorted {
-                $0.sortIndex < $1.sortIndex
+                $0.sortDate < $1.sortDate
             }
     }
 
@@ -159,7 +159,7 @@ struct PlannerView: View {
                     && !plannerManager.newlyCheckedIds.contains($0.id))
                     || plannerManager.newlyUncheckedIds.contains($0.id)
             }
-            .sorted { $0.sortIndex < $1.sortIndex }
+            .sorted { $0.sortDate < $1.sortDate }
     }
 
     var body: some View {
@@ -213,7 +213,7 @@ struct PlannerView: View {
             }
         }
         .environmentObject(plannerManager)
-        
+
         // Event Sheet
         .sheet(item: $eventSheetContext) { context in
             EventFormView(
@@ -230,11 +230,8 @@ struct PlannerView: View {
                     in: namespace
                 )
             )
-            .onAppear {
-                print("Event sheet mounting.")
-            }
         }
-        
+
         // Transfer Event Sheet
         .sheet(isPresented: $showTransferSheet) {
             TransferEventsFormView(
@@ -382,11 +379,15 @@ struct PlannerView: View {
                             proxy.scrollTo("UNCHECKED", anchor: .bottom)
                         }
                     }
+                    
+                    let lastEventId = sortedOpenPlans.last?.id
 
                     modelContext.createEvent(
+                        near: lastEventId,
+                        offset: lastEventId != nil ? 1 : 0,
+                        in: sortedOpenPlans,
                         startOfDay: startOfDay,
-                        at: sortedOpenPlans.count,
-                        in: sortedOpenPlans
+                        plannerSettings: plannerSettings
                     )
                 }
                 .tint(accentColor.swiftUIColor)
@@ -504,7 +505,7 @@ struct PlannerView: View {
             HStack {
 
                 if let location = values.location {
-                    HStack(alignment: .top, spacing: 4){
+                    HStack(alignment: .top, spacing: 4) {
                         Image(systemName: "mappin.and.ellipse")
                             .resizable()
                             .scaledToFit()
@@ -513,7 +514,7 @@ struct PlannerView: View {
                                 calEvent.calendar.color,
                                 Color.secondary
                             )
-                        
+
                         Text(location)
                             .font(.system(size: 10))
                             .foregroundColor(.secondary)
@@ -590,11 +591,9 @@ struct PlannerView: View {
         )
 
         calendarPlannerEvents =
-            modelContext.synchronize(
+            modelContext.buildCalendarPlannerEvents(
                 calendarEvents: calendarData.timedEvents,
-                into: plannerEvents,
-                planner: planner,
-                plannerSettings: plannerSettings,
+                plannerSettings: plannerSettings
             )
 
         self.calendarData = calendarData
@@ -612,32 +611,12 @@ struct PlannerView: View {
         near baseId: PersistentIdentifier?,
         offset: Int = 0
     ) {
-        guard
-            let baseIndex = sortedOpenPlans.firstIndex(where: {
-                $0.id == baseId
-            })
-        else {
-            return
-        }
-
-        let finalIndex = baseIndex + offset
-
-        // Don't create the new item if it is next to an empty item.
-        let upperEvent = finalIndex > 0 ? sortedOpenPlans[finalIndex - 1] : nil
-        let lowerEvent =
-            finalIndex < sortedOpenPlans.count
-            ? sortedOpenPlans[finalIndex] : nil
-        if let upper = upperEvent, upper.title.isEmpty {
-            return
-        }
-        if let lower = lowerEvent, lower.title.isEmpty {
-            return
-        }
-
         modelContext.createEvent(
+            near: baseId,
+            offset: offset,
+            in: sortedOpenPlans,
             startOfDay: startOfDay,
-            at: finalIndex,
-            in: sortedOpenPlans
+            plannerSettings: plannerSettings
         )
     }
 
@@ -645,70 +624,18 @@ struct PlannerView: View {
         modelContext.moveEvent(
             from: from,
             to: to,
+            startOfDay: startOfDay,
             events: sortedOpenPlans,
             plannerSettings: plannerSettings
         )
     }
 
     private func handleEventTitleChange(event: PlannerEvent) {
-        // 1. TODO: Handle recurring events here
-
-        // 2. Update the device calendar with the new title.
-        guard event.calendarEvent == nil else {
-            event.calendarEvent!.title = event.title
-            try! calendarStore.ekEventStore.save(
-                event.calendarEvent!,
-                span: .thisEvent
-            )
-            return
-        }
-
-        // 3. Build the data from the event title.
-        guard
-            let (timeValue, updatedText) = event.title.separateTimeValue()
-        else {
-            return
-        }
-
-        guard
-            let date = timeValue.toDate(
-                for: planner.datestamp
-            )
-        else {
-            return
-        }
-
-        event.title = updatedText
-        event.date = date
-        event.untimed = false
-
-        // 4. Validate sort order.
-        let newSortIndex = generateValidPlannerEventSortIndex(
-            for: event,
-            in: sortedOpenPlans
+        modelContext.handleTitleChange(
+            event,
+            startOfDay: startOfDay,
+            eventKitStore: calendarStore.ekEventStore
         )
-
-        guard newSortIndex != event.sortIndex else {
-            do {
-                try modelContext.save()
-            } catch {
-                assertionFailure(
-                    "Failed to save new item after time smart-detect: \(error)"
-                )
-            }
-            return
-        }
-
-        event.sortIndex = newSortIndex
-        pendingScroll = .planner(id: event.id, sortIndex: newSortIndex)
-
-        do {
-            try modelContext.save()
-        } catch {
-            assertionFailure(
-                "Failed to save new item after time smart-detect: \(error)"
-            )
-        }
     }
 
     // MARK: - Overflow Actions
@@ -733,17 +660,20 @@ struct PlannerView: View {
 
             if let calendarId = pending.calendarId {
                 return sortedOpenPlans.first(
-                    where: { $0.calendarEvent?.calendarItemExternalIdentifier == calendarId }
+                    where: {
+                        $0.calendarEvent?.calendarItemExternalIdentifier
+                            == calendarId
+                    }
                 )
             }
 
             return nil
         }()
-        
+
         guard
             let event = targetEvent,
-            let targetSortIndex = pending.targetSortIndex,
-            event.sortIndex == targetSortIndex
+            let targetSortDate = pending.targetSortDate,
+            event.sortDate == targetSortDate
         else {
             // List not ready yet. Wait for next change.
             print("List not ready for scroll. Skipping.")

@@ -155,6 +155,21 @@ struct SortableListView<
         .animateSynchronousAction(from: uncheckedItems)
         .animateSynchronousAction(from: listManager.newlyCheckedIds)
         .animateSynchronousAction(from: listManager.newlyUncheckedIds)
+        
+        // Blur the textfields when select mode begins.
+        .onChange(of: listManager.isSelectMode) { _, isSelectMode in
+            if isSelectMode, focusController.focusedId != nil {
+                focusController.focusedId = nil
+                
+            }
+        }
+        
+        // Dismiss the keyboard when no items are focused.
+        .onChange(of: focusController.focusedId) { _, id in
+            if id == nil {
+               dismissKeyboard()
+            }
+        }
 
         // Slide to checked items when the user marks them visible.
         .withScrollTrigger(

@@ -115,14 +115,6 @@ struct SettingsTabView: View {
                     }
                     .pickerStyle(.menu)
 
-                    Picker(
-                        "Show End Events",
-                        selection: $keepPastPlansDuration
-                    ) {
-                        // TODO: multi-day only / always
-                    }
-                    .pickerStyle(.menu)
-
                     NavigationLink("Calendars") {
                         if let plannerSettings {
                             CalendarsFormView(plannerSettings: plannerSettings)

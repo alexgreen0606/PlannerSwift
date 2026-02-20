@@ -12,10 +12,17 @@ import SwiftData
 @available(iOS 26.0, *)
 @Model
 class PlannerEvent: ListItem {
+    
+    // Controlled by the EventModal.
+    // Any changes to this value will overwrite the sortDate.
     var date: Date
     
+    // Controlled by drag-and-drop.
+    // May go out of sync with the date.
+    var sortDate: Date
+    
     // Default events to generic, untimed events.
-    var untimed: Bool = true
+    var hasTime: Bool = false
 
     @Transient
     var calendarEvent: EKEvent? = nil
@@ -25,7 +32,11 @@ class PlannerEvent: ListItem {
         calendarEvent: EKEvent? = nil,
         sortIndex: Double,
     ) {
-        self.date = calendarEvent?.startDate ?? date // TODO: use end date if needed
+        
+        let initialDate = calendarEvent?.startDate ?? date
+        
+        self.date = initialDate
+        self.sortDate = initialDate
         
         super.init(sortIndex: sortIndex)
         

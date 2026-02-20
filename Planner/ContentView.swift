@@ -157,10 +157,6 @@ struct ContentView: View {
 
         // Ensure all global storage objects exist.
         .task {
-            modelContext.ensureplannerSettings(
-                settings: plannerSettingsList
-            )
-
             modelContext.ensurePlannerSettings(
                 settings: plannerSettingsList
             )
@@ -202,11 +198,12 @@ struct ContentView: View {
 
         if keepPastPlansDuration != .forever {
 
+            // TODO: fix this
             // Delete sort indices for events that no longer exist in the calendar.
             if let plannerSettings {
                 modelContext.deleteStaleCalendarEventPositions(
                     in: plannerSettings,
-                    with: calendarStore.existingEventIds
+                    with: []
                 )
             }
 

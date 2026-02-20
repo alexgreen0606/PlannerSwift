@@ -15,7 +15,6 @@ extension EKEvent {
         "\(String(describing: self.eventIdentifier))"
     }
 
-    // TODO: Start vs End
     func dateInRegion(region: Region) -> DateInRegion {
         DateInRegion(self.startDate, region: region)
     }
@@ -36,7 +35,6 @@ extension EKEvent {
 
         if eventRegion.timeZone.identifier != plannerRegion.timeZone.identifier {
             
-            // TODO: Start vs End
             let dateInRegion = DateInRegion(startDate, region: eventRegion)
             timeString = dateInRegion.timeWithTimezone
         }
@@ -55,8 +53,6 @@ extension EKEvent {
         scale: Double = 1,
         openSheet: (() -> Void)?
     ) -> some View {
-
-        // TODO: Start vs End
 
         let eventRegion =
             usePlannerRegion

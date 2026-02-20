@@ -6,6 +6,7 @@
 //
 
 import SwiftData
+import SwiftUI
 
 @Model
 class PlannerSettings {
@@ -14,7 +15,7 @@ class PlannerSettings {
     var iconMap: [String: String] = [:]
 
     // Maps Calendar events IDs to sortIndex values for their planner references.
-    var sortIndexMap: [String: Double] = [:]
+    var calendarSortDateMap: [String: Date] = [:]
     
     // Set of calendar IDs to exclude from planners.
     var hiddenCalendarIds: Set<String> = []

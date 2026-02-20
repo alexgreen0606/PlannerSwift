@@ -46,8 +46,27 @@ struct RowView<
     // Will be updated dynamically within the TextfieldView.
     @State private var height: CGFloat = 0
 
-    @State private var isFocused: Bool = false
     @State private var debounceTask: Task<Void, Never>? = nil
+
+    private var isFocused: Bool {
+        focusController.focusedId == item.id
+    }
+    
+    private var isFocusedBinding: Binding<Bool> {
+        Binding(
+            get: {
+                focusController.focusedId == item.id
+            },
+            set: { newValue in
+                if newValue {
+                    // TODO: fix this warning
+                    focusController.focusedId = item.id
+                } else if focusController.focusedId == item.id {
+                    focusController.focusedId = nil
+                }
+            }
+        )
+    }
 
     private var tintColor: Color {
         tint(item)
@@ -79,43 +98,22 @@ struct RowView<
 
             // Trigger focus on render for empty items (new items).
             .onAppear {
-                if item.title.isEmpty {
-                    isFocused = true
-                }
-            }
-
-            // Blur the textfield when a different field is focused.
-            .onChange(of: focusController.focusedId) { _, newFocusedId in
-                if newFocusedId != item.id,
-                    isFocused
-                {
-                    isFocused = false
+                if item.title.isEmpty, !isFocused {
+                    focusController.focusedId = item.id
                 }
             }
 
             // Blur the textfield when this item has been selected.
-            .onChange(of: isChecked) { wasChecked, isChecked in
-                if !wasChecked, isChecked, focusController.focusedId == item.id,
-                    isFocused
-                {
-                    isFocused = false
+            .onChange(of: isChecked) { _, isChecked in
+                if isChecked, isFocused {
                     focusController.focusedId = nil
-                    dismissKeyboard()
-                }
-            }
-
-            // Blur the textfield when select mode begins.
-            .onChange(of: listManager.isSelectMode) { _, isSelectMode in
-                if isSelectMode {
-                    isFocused = false
-                    dismissKeyboard()
                 }
             }
 
             // Blur the textfield when the app exits focus.
             .onChange(of: appPhase) { _, phase in
                 if phase == .inactive {
-                    isFocused = false
+                    focusController.focusedId = nil
                 }
             }
 
@@ -221,7 +219,7 @@ struct RowView<
                 }
 
                 if !isChecked && !item.isChecked {
-                    isFocused = true
+                    focusController.focusedId = item.id
                 }
             }
     }
@@ -230,7 +228,7 @@ struct RowView<
     private var editableField: some View {
         RowTextfieldView(
             text: $item.title,
-            isFocused: $isFocused,
+            isFocused: isFocusedBinding,
             height: $height,
             toolbarIcons: toolbarIcons,
             accentColor: tintColor,
@@ -266,11 +264,8 @@ struct RowView<
         }
 
         // Handle focus side effects.
-        .onChange(of: isFocused) { oldIsFocused, newIsFocused in
-            if newIsFocused {
-                // Mark the global focused ID so other fields are blurred.
-                focusController.focusedId = item.id
-            } else if oldIsFocused {
+        .onChange(of: isFocused) { wasFocused, isFocused in
+            if wasFocused, !isFocused {
                 debounceTask?.cancel()
 
                 let trimmed = item.title.trimmingCharacters(
@@ -278,22 +273,15 @@ struct RowView<
                 )
 
                 if trimmed.isEmpty {
-                    modelContext.delete(item)
+                    Task { @MainActor in
+                        modelContext.delete(item)
+                    }
                 } else {
                     item.title = trimmed
                     onTitleChange(item)
                 }
             }
         }
-    }
-
-    func dismissKeyboard() {
-        UIApplication.shared.sendAction(
-            #selector(UIResponder.resignFirstResponder),
-            to: nil,
-            from: nil,
-            for: nil
-        )
     }
 
 }
