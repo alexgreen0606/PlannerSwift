@@ -50,7 +50,7 @@ class LocationFinder: NSObject, ObservableObject,
 
     func selectCompletion(_ completion: MKLocalSearchCompletion) async -> (
         name: String, subtitle: String, latitude: Double, longitude: Double,
-        timeZoneIdentifier: String
+        timeZoneIdentifier: String?
     )? {
         let request = MKLocalSearch.Request(completion: completion)
         let search = MKLocalSearch(request: request)
@@ -58,11 +58,7 @@ class LocationFinder: NSObject, ObservableObject,
         do {
             let response = try await search.start()
 
-            guard let item = response.mapItems.first,
-                let timeZoneIdentifier = item.timeZone?.identifier
-            else {
-                // TODO: Show an error message about not having a timeZone.
-                print("ERROR LocationFinder.selectCompletion: Location does not have a timeZone.")
+            guard let item = response.mapItems.first else {
                 return nil
             }
 
@@ -73,11 +69,11 @@ class LocationFinder: NSObject, ObservableObject,
                 subtitle: completion.subtitle,
                 latitude: coordinate.latitude,
                 longitude: coordinate.longitude,
-                timeZoneIdentifier: timeZoneIdentifier
+                timeZoneIdentifier: item.timeZone?.identifier
             )
 
         } catch {
-            print("Search error: \(error)")
+            print("ERROR: LocationFinder.selectCompletion: \(error)")
             return nil
         }
     }

@@ -19,11 +19,6 @@ final class DeviceLocationManager: NSObject, ObservableObject,
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest
         manager.requestWhenInUseAuthorization()
-
-        fetchLocation()
-
-        // Periodic refresh (every 10 minutes).
-        startPeriodicRefresh()
     }
 
     deinit {
@@ -36,9 +31,23 @@ final class DeviceLocationManager: NSObject, ObservableObject,
 
     @Published var deviceClLocation: CLLocation?
     @Published var cityName: String?
-    
+
     func fetchLocation() {
         manager.requestLocation()
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        switch manager.authorizationStatus {
+        case .authorizedWhenInUse, .authorizedAlways:
+            fetchLocation()
+            startPeriodicRefresh()
+        case .denied, .restricted:
+            print("Location access denied or restricted.")
+        case .notDetermined:
+            break
+        @unknown default:
+            break
+        }
     }
 
     func locationManager(

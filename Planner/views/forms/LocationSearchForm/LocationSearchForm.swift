@@ -21,7 +21,7 @@ struct LocationSearchView: View {
     private let title: String
     private let mode: LocationSearchMode
     private let onSave: (LocationSource, Location?) -> Void
-    
+
     init(
         initialLocation: Location?,
         initialLocationSource: LocationSource,
@@ -53,6 +53,7 @@ struct LocationSearchView: View {
     @State private var selectedLocationSource: LocationSource
     @State private var selectedLocation: Location?
     @State private var existingLocations: [Location] = []
+    @State private var noTimeZoneKeys = Set<String>()
 
     private var topSuggestionId: String? {
         optionId(locationFinder.suggestions.first)
@@ -330,15 +331,28 @@ struct LocationSearchView: View {
 
     @ViewBuilder
     private func optionRow(_ option: MKLocalSearchCompletion) -> some View {
+        let hasNoTimeZone = optionHasNoTimeZone(option)
+
         HStack {
             VStack(alignment: .leading) {
                 Text(option.title)
                     .font(.headline)
+                    .opacity(hasNoTimeZone ? 0.3 : 1)
 
                 if !option.subtitle.isEmpty {
                     Text(option.subtitle)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
+                        .opacity(hasNoTimeZone ? 0.3 : 1)
+                }
+
+                if hasNoTimeZone {
+                    Text("This location has no time zone and cannot be used.")
+                        .font(
+                            .system(size: 12, weight: .medium, design: .rounded)
+                        )
+                        .foregroundColor(.red)
+                        .padding(.top, 2)
                 }
             }
 
@@ -348,23 +362,34 @@ struct LocationSearchView: View {
                 Image(systemName: "checkmark")
             }
         }
+        .animateSynchronousAction(from: hasNoTimeZone)
         .id(optionId(option))
         .discreetListItem()
         .contentShape(Rectangle())
         .onTapGesture {
             Task {
+                guard let optionId = optionId(option) else { return }
+
+                guard !noTimeZoneKeys.contains(optionId) else { return }
+
                 guard let result = await locationFinder.selectCompletion(option)
                 else {
                     return
                 }
 
-                selectedLocationSource = .custom
+                // Skip locations that do not have a TimeZone.
+                guard let timeZoneIdentifier = result.timeZoneIdentifier else {
+                    noTimeZoneKeys.insert(optionId)
+                    return
+                }
 
                 // Re-use existing locations if they already exists in storage.
                 let coordinateKey = CLLocationCoordinate2D(
                     latitude: result.latitude,
                     longitude: result.longitude
                 ).key
+
+                selectedLocationSource = .custom
 
                 guard
                     let existing = existingLocations.first(where: {
@@ -376,7 +401,7 @@ struct LocationSearchView: View {
                         subtitle: result.subtitle,
                         latitude: result.latitude,
                         longitude: result.longitude,
-                        timeZoneIdentifier: result.timeZoneIdentifier
+                        timeZoneIdentifier: timeZoneIdentifier
                     )
                     return
                 }
@@ -397,6 +422,12 @@ struct LocationSearchView: View {
 
         return selectedLocation.name == option.title
             && selectedLocation.subtitle == option.subtitle
+    }
+
+    func optionHasNoTimeZone(_ option: MKLocalSearchCompletion) -> Bool {
+        guard let optionId = optionId(option) else { return false }
+
+        return noTimeZoneKeys.contains(optionId)
     }
 
     private func isSuggestionSelected(_ suggestion: Location)
