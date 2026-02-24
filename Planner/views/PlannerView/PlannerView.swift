@@ -223,7 +223,7 @@ struct PlannerView: View {
                 calendarEvent: context.calendarEvent,
                 settings: settings,
             ) { change in
-                pendingScroll = change
+                // pendingScroll = change
             }
             .navigationTransition(
                 .zoom(

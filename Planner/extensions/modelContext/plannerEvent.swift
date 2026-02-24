@@ -254,9 +254,6 @@ extension ModelContext {
             initialPlannerEvent.location = draftPlannerEvent.location
             initialPlannerEvent.locationSource = draftPlannerEvent.locationSource
 
-            // TODO: this print statement fixes a bug.
-            // When this is not present, the location is not persisted to storage.
-            // print(initialPlannerEvent.location)
 
         } else {
 
@@ -276,21 +273,12 @@ extension ModelContext {
 
             // TODO: add event to bottom of planner
 
-            // TODO: this print statement fixes a bug.
-            // When this is not present, the location is not persisted to storage.
-            // print(newEvent.location)
-
             insert(newEvent)
 
         }
 
-        do {
-            try save()
-        } catch {
-            assertionFailure(
-                "ERROR plannerEvent.savePlannerEventChanges(PlannerEvent): \(error)"
-            )
-        }
+        // Note: Saving the context here will delete the location. Allow the model context to auto-save as needed.
+
     }
 
     @MainActor

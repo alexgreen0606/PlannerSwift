@@ -458,7 +458,7 @@ struct EventFormView: View {
     }
 
     private func savePlannerEvent() {
-
+        
         modelContext.savePlannerEventChanges(
             draftPlannerEvent,
             initialPlannerEvent: initialPlannerEvent,
