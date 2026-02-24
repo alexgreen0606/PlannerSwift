@@ -12,7 +12,7 @@ import SwiftUI
 
 struct PlannerSearchTabView: View {
     @Binding var searchText: String
-    let plannerSettings: PlannerSettings
+    let settings: PlannerSettings
 
     @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
         KeepPastPlansDuration =
@@ -45,7 +45,7 @@ struct PlannerSearchTabView: View {
 
     private var sortedCalendars: [EKCalendar] {
         calendarStore.sortedCalendars.filter {
-            !plannerSettings.hiddenCalendarIds.contains(
+            !settings.hiddenCalendarIds.contains(
                 $0.calendarIdentifier
             )
         }
@@ -78,7 +78,7 @@ struct PlannerSearchTabView: View {
                                     PlannerPreviewBuilderView(
                                         datestamp: datestamp,
                                         type: .search,
-                                        plannerSettings: plannerSettings,
+                                        settings: settings,
                                         openPlanner: $openPlanner
                                     )
                                     .matchedTransitionSource(
@@ -113,7 +113,7 @@ struct PlannerSearchTabView: View {
                     .fullScreenCover(item: $openPlanner) { planner in
                         PlannerView(
                             planner: planner,
-                            plannerSettings: plannerSettings
+                            settings: settings
                         ) {
                             openPlanner = nil
                         }
@@ -150,7 +150,7 @@ struct PlannerSearchTabView: View {
         .onChange(of: filterCalendarIds) { _, _ in
             scheduleFilterDebounce()
         }
-        .onChange(of: plannerSettings.checkedCalendarEventIds) {
+        .onChange(of: settings.checkedCalendarEventIds) {
             _,
             _ in
             scheduleFilterDebounce()
@@ -160,7 +160,7 @@ struct PlannerSearchTabView: View {
         .refreshable {
             weatherStore.loadFreshCache()
             calendarStore.loadFreshCache(
-                hiddenCalendarIds: plannerSettings
+                hiddenCalendarIds: settings
                     .hiddenCalendarIds
             )
             deviceLocationManager.fetchLocation()
@@ -206,7 +206,7 @@ struct PlannerSearchTabView: View {
                         HStack(spacing: 8) {
                             Image(
                                 systemName:
-                                    plannerSettings.iconMap[
+                                    settings.iconMap[
                                         calendar.calendarIdentifier
                                     ] ?? calendar.iconName
                             )
@@ -256,7 +256,7 @@ struct PlannerSearchTabView: View {
                             HStack(spacing: 8) {
                                 Image(
                                     systemName:
-                                        plannerSettings.iconMap[
+                                        settings.iconMap[
                                             calendar.calendarIdentifier
                                         ] ?? calendar.iconName
                                 )
@@ -277,7 +277,7 @@ struct PlannerSearchTabView: View {
     private func planner(datestamp: String) -> some View {
         PlannerBuilderView(
             datestamp: datestamp,
-            plannerSettings: plannerSettings
+            settings: settings
         ) {
             openPlannerDatestamp = nil
         }
@@ -318,7 +318,7 @@ struct PlannerSearchTabView: View {
             return false
         }
 
-        return plannerSettings.checkedCalendarEventIds.contains(
+        return settings.checkedCalendarEventIds.contains(
             event.calendarItemExternalIdentifier
         )
     }
@@ -389,10 +389,10 @@ struct PlannerSearchTabView: View {
         //
         //            // Filter out checked events
         //            let checkedFiltered =
-        //                plannerSettings == nil
+        //                settings == nil
         //                ? calendarFiltered
         //                : calendarFiltered.filter {
-        //                    !plannerSettings.checkedCalendarEventIds.contains(
+        //                    !settings.checkedCalendarEventIds.contains(
         //                        $0.calendarItemExternalIdentifier
         //                    )
         //                }

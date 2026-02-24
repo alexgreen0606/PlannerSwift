@@ -24,7 +24,7 @@ enum PlannerPreviewType {
 struct PlannerPreviewView: View {
     private let planner: Planner
     private let type: PlannerPreviewType
-    private let plannerSettings: PlannerSettings
+    private let settings: PlannerSettings
     @Binding private var openPlanner: Planner?
 
     private let startOfDay: DateInRegion
@@ -35,15 +35,15 @@ struct PlannerPreviewView: View {
     init(
         planner: Planner,
         type: PlannerPreviewType,
-        plannerSettings: PlannerSettings,
+        settings: PlannerSettings,
         openPlanner: Binding<Planner?>
     ) {
         self.planner = planner
         self.type = type
-        self.plannerSettings = plannerSettings
+        self.settings = settings
         self._openPlanner = openPlanner
 
-        let region = planner.region(settings: plannerSettings)
+        let region = planner.region(settings: settings)
 
         guard let startOfDay = planner.datestamp.startOfDay(in: region) else {
             fatalError(
@@ -99,19 +99,19 @@ struct PlannerPreviewView: View {
     }
 
     private var location: Location? {
-        planner.location(settings: plannerSettings)
+        planner.location(settings: settings)
     }
 
     private var locationLabel: String? {
         planner.locationLabel(
-            settings: plannerSettings,
-            localCityName: locationManager.cityName
+            localCityName: locationManager.cityName,
+            settings: settings
         )
     }
 
     private var locationIconConfig: IconConfig {
         planner.locationIconConfig(
-            settings: plannerSettings,
+            settings: settings,
             accentColor: accentColor
         )
     }
@@ -215,7 +215,7 @@ struct PlannerPreviewView: View {
             HStack(alignment: .top) {
                 PlannerDateInfoView(
                     datestamp: planner.datestamp,
-                    region: planner.region(settings: plannerSettings),
+                    region: planner.region(settings: settings),
                     isSoon: type.isSoon
                 )
 
@@ -226,7 +226,7 @@ struct PlannerPreviewView: View {
 
             PreviewCalendarEventListView(
                 events: allDayEvents,
-                iconMap: plannerSettings.iconMap
+                iconMap: settings.iconMap
             )
 
             PreviewPlannerEventListView(
@@ -265,12 +265,12 @@ struct PlannerPreviewView: View {
         
         // TODO: why is the sorting off?
         // Re-build the calendar events when the sort orders change.
-//        .onChange(of: plannerSettings) { _, _ in
+//        .onChange(of: settings) { _, _ in
 //            if let calendarData {
 //                calendarPlannerEvents =
 //                modelContext.buildCalendarPlannerEvents(
 //                    calendarEvents: calendarData.timedEvents,
-//                    plannerSettings: plannerSettings
+//                    settings: settings
 //                )
 //            }
 //        }
@@ -489,13 +489,13 @@ struct PlannerPreviewView: View {
         let calendarData = calendarStore.loadPlannerData(
             plannerKey: planner.key,
             startOfDay: startOfDay,
-            hiddenCalendarIds: plannerSettings.hiddenCalendarIds
+            hiddenCalendarIds: settings.hiddenCalendarIds
         )
 
         calendarPlannerEvents =
             modelContext.buildCalendarPlannerEvents(
                 calendarEvents: calendarData.timedEvents,
-                plannerSettings: plannerSettings
+                settings: settings
             )
 
         self.calendarData = calendarData
@@ -506,7 +506,7 @@ struct PlannerPreviewView: View {
             return false
         }
 
-        return plannerSettings.isCalendarEventChecked(event)
+        return settings.isCalendarEventChecked(event)
     }
 
 }

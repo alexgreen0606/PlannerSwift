@@ -23,9 +23,12 @@ class PlannerEvent: ListItem {
     
     // Default events to generic, untimed events.
     var hasTime: Bool = false
+    
+    var locationSource = LocationSource.planner
+    var location: Location?
 
     @Transient
-    var calendarEvent: EKEvent? = nil
+    var calendarEvent: EKEvent?
 
     init(
         date: Date,

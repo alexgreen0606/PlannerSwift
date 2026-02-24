@@ -1,5 +1,5 @@
 //
-//  plannerSettings.swift
+//  settings.swift
 //  Planner
 //
 //  Created by Alex Green on 2/12/26.
@@ -35,17 +35,17 @@ extension ModelContext {
     @MainActor
     func buildCalendarPlannerEvents(
         calendarEvents events: [EKEvent],
-        plannerSettings: PlannerSettings
+        settings: PlannerSettings
     ) -> [PlannerEvent] {
 
         let calendarPlannerEvents =
-            plannerSettings.buildCalendarPlannerEvents(calendarEvents: events)
+            settings.buildCalendarPlannerEvents(calendarEvents: events)
 
         do {
             try save()
         } catch {
             assertionFailure(
-                "ERROR plannerSettings.buildCalendarPlannerEvents: \(error)"
+                "ERROR settings.buildCalendarPlannerEvents: \(error)"
             )
         }
 
@@ -55,17 +55,17 @@ extension ModelContext {
     @MainActor
     func togglePlannerEvent(
         _ event: PlannerEvent,
-        plannerSettings: PlannerSettings
+        settings: PlannerSettings
     ) -> Bool {
 
-        let wasContextUpdated = plannerSettings.toggleEvent(event)
+        let wasContextUpdated = settings.toggleEvent(event)
 
         if wasContextUpdated {
             do {
                 try save()
             } catch {
                 assertionFailure(
-                    "ERROR plannerSettings.togglePlannerEvent: \(error)"
+                    "ERROR settings.togglePlannerEvent: \(error)"
                 )
             }
         }

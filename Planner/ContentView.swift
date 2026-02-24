@@ -86,7 +86,7 @@ struct ContentView: View {
     @State private var selectedTab: AppTab = .planner
     @State private var plannerSearchText: String = ""
 
-    private var plannerSettings: PlannerSettings? {
+    private var settings: PlannerSettings? {
         plannerSettingsList.first
     }
 
@@ -101,9 +101,9 @@ struct ContentView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             Tab(value: .planner) {
-                if let plannerSettings {
+                if let settings {
                     PlannerTabView(
-                        plannerSettings: plannerSettings
+                        settings: settings
                     )
                 }
             } label: {
@@ -140,10 +140,10 @@ struct ContentView: View {
             }
 
             Tab(value: .search, role: .search) {
-                if let plannerSettings {
+                if let settings {
                     PlannerSearchTabView(
                         searchText: $plannerSearchText,
-                        plannerSettings: plannerSettings
+                        settings: settings
                     )
                     .searchable(
                         text: $plannerSearchText,
@@ -164,7 +164,7 @@ struct ContentView: View {
             modelContext.ensureRootFolder(folders: foldersList)
 
             calendarStore.loadFreshCache(
-                hiddenCalendarIds: plannerSettings!.hiddenCalendarIds
+                hiddenCalendarIds: settings!.hiddenCalendarIds
             )
 
             cleanseStorage()
@@ -200,9 +200,9 @@ struct ContentView: View {
 
             // TODO: fix this
             // Delete sort indices for events that no longer exist in the calendar.
-            if let plannerSettings {
+            if let settings {
                 modelContext.deleteStaleCalendarEventPositions(
-                    in: plannerSettings,
+                    in: settings,
                     with: []
                 )
             }

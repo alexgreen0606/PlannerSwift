@@ -11,7 +11,7 @@ import SwiftDate
 import SwiftUI
 
 struct PlannerTabView: View {
-    let plannerSettings: PlannerSettings
+    let settings: PlannerSettings
 
     @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
         KeepPastPlansDuration =
@@ -57,7 +57,7 @@ struct PlannerTabView: View {
                                     PlannerPreviewBuilderView(
                                         datestamp: datestamp,
                                         type: .planner,
-                                        plannerSettings: plannerSettings,
+                                        settings: settings,
                                         openPlanner: $openPlanner
                                     )
                                     .matchedTransitionSource(
@@ -88,7 +88,7 @@ struct PlannerTabView: View {
                     EventFormView(
                         plannerEvent: nil,
                         calendarEvent: nil,
-                        plannerSettings: plannerSettings
+                        settings: settings
                     ) { _ in
                         // TODO: show indiactor of event creation
                     }
@@ -104,7 +104,7 @@ struct PlannerTabView: View {
                 .fullScreenCover(item: $openPlanner) { planner in
                     PlannerView(
                         planner: planner,
-                        plannerSettings: plannerSettings
+                        settings: settings
                     ) {
                         openPlanner = nil
                     }
@@ -120,7 +120,7 @@ struct PlannerTabView: View {
                 .fullScreenCover(item: $openDatestamp) { datestamp in
                     PlannerBuilderView(
                         datestamp: datestamp.id,
-                        plannerSettings: plannerSettings,
+                        settings: settings,
                     ) {
                         openDatestamp = nil
                     }
@@ -136,7 +136,7 @@ struct PlannerTabView: View {
                 .refreshable {
                     weatherStore.loadFreshCache()
                     calendarStore.loadFreshCache(
-                        hiddenCalendarIds: plannerSettings.hiddenCalendarIds
+                        hiddenCalendarIds: settings.hiddenCalendarIds
                     )
                     deviceLocationManager.fetchLocation()
                 }

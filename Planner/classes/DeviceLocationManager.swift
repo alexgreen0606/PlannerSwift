@@ -30,7 +30,7 @@ final class DeviceLocationManager: NSObject, ObservableObject,
     private var refreshTask: Task<Void, Never>?
 
     @Published var deviceClLocation: CLLocation?
-    @Published var cityName: String?
+    @Published var cityName: String = "Current Location"
 
     func fetchLocation() {
         manager.requestLocation()

@@ -13,47 +13,130 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
+struct DraftPlannerEvent {
+    var title: String
+    var date: Date
+    var hasTime: Bool
+    var locationSource: LocationSource
+    var location: Location?
+    var calendarEvent: EKEvent?
+
+    // Nil means the current device location is used.
+    private func location(settings: PlannerSettings, planner: Planner?)
+        -> Location?
+    {
+        switch locationSource {
+        case .custom:
+            guard let location else {
+                fatalError(
+                    "ERROR EventForm.location: Draft is set to custom location but no location is set."
+                )
+            }
+
+            return location
+        case .planner:
+            guard let planner else {
+                fatalError(
+                    "ERROR EventForm.location: Draft is set to planner location but no planner was passed."
+                )
+            }
+
+            return planner.location(settings: settings)
+        case .home:
+            return settings.homeLocation
+        case .current:
+            return nil
+        }
+    }
+
+    func region(settings: PlannerSettings, planner: Planner?) -> Region {
+        location(settings: settings, planner: planner)?.region ?? .local
+    }
+
+    func locationLabel(
+        localCityName: String,
+        settings: PlannerSettings,
+        planner: Planner?
+    ) -> String {
+        location(settings: settings, planner: planner)?.name ?? localCityName
+    }
+}
+
 struct EventFormView: View {
     private let sourcePlanner: Planner?
     private let initialPlannerEvent: PlannerEvent?
     private let initialCalendarEvent: EKEvent?
-    private let plannerSettings: PlannerSettings
+    private let settings: PlannerSettings
     private let handleEventChange: (PlannerEventPositionChange) -> Void
 
     init(
         sourcePlanner: Planner? = nil,
         plannerEvent: PlannerEvent?,
         calendarEvent: EKEvent?,
-        plannerSettings: PlannerSettings,
+        settings: PlannerSettings,
         handleEventChange: @escaping (PlannerEventPositionChange) -> Void
     ) {
         self.initialPlannerEvent = plannerEvent
         self.sourcePlanner = sourcePlanner
         self.initialCalendarEvent = plannerEvent?.calendarEvent ?? calendarEvent
-        self.plannerSettings = plannerSettings
+        self.settings = settings
         self.handleEventChange = handleEventChange
 
-        let draftPlannerEvent = PlannerEvent(
+        var draftPlannerEvent = DraftPlannerEvent(
+            title: "",
             date: Date(),
-            calendarEvent: nil,
-            sortIndex: 0
+            hasTime: false,
+            locationSource: .current,
+            location: nil,
+            calendarEvent: nil
         )
+
+        if sourcePlanner == nil {
+            // Use the home location for new events that are not tied to a planner.
+            draftPlannerEvent.locationSource = .home
+        }
 
         var contact: CNContact? = nil
 
         if let calEvent = plannerEvent?.calendarEvent ?? calendarEvent {
-
+            
+            draftPlannerEvent.title = calEvent.title
             draftPlannerEvent.date = calEvent.startDate
-            draftPlannerEvent.calendarEvent = calEvent
+            draftPlannerEvent.hasTime = true
+
+            if let structuredLocation = calEvent.structuredLocation,
+                let latitude = structuredLocation.geoLocation?.coordinate
+                    .latitude,
+                let longitude = structuredLocation.geoLocation?.coordinate
+                    .longitude, let locationLabel = calEvent.location
+            {
+                
+                // Add the calendar event's location to the event.
+
+                draftPlannerEvent.location = Location(
+                    name: locationLabel,
+                    latitude: latitude,
+                    longitude: longitude,
+                    timeZoneIdentifier: calEvent.timeZone?.identifier
+                        ?? Region.local.timeZone.identifier
+                )
+
+                draftPlannerEvent.locationSource = .custom
+
+            }
 
             if calEvent.calendar.allowsContentModifications {
                 _selectedDetent = State(initialValue: .height(2600))
             }
+            
+            draftPlannerEvent.calendarEvent = calEvent
 
         } else if let plannerEvent {
 
             draftPlannerEvent.title = plannerEvent.title
             draftPlannerEvent.hasTime = plannerEvent.hasTime
+            draftPlannerEvent.location = plannerEvent.location
+            draftPlannerEvent.locationSource = plannerEvent.locationSource
 
             if !plannerEvent.hasTime {
 
@@ -70,7 +153,7 @@ struct EventFormView: View {
 
                     startDayInRegion =
                         sourcePlanner.datestamp.startOfDay(
-                            in: sourcePlanner.region(settings: plannerSettings)
+                            in: sourcePlanner.region(settings: settings)
                         ) ?? now
 
                     startDayInRegion =
@@ -137,9 +220,10 @@ struct EventFormView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
+    @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
-    @State private var selectedDetent: PresentationDetent = .height(340)
-    @State private var draftPlannerEvent: PlannerEvent
+    @State private var selectedDetent: PresentationDetent = .height(460)
+    @State private var draftPlannerEvent: DraftPlannerEvent
 
     private var isValid: Bool {
         !draftPlannerEvent.title.isEmpty
@@ -147,7 +231,10 @@ struct EventFormView: View {
                 || draftPlannerEvent.title != initialPlannerEvent?.title
                 || draftPlannerEvent.calendarEvent
                     != initialPlannerEvent?.calendarEvent
-                || draftPlannerEvent.hasTime != initialPlannerEvent?.hasTime)
+                || draftPlannerEvent.hasTime != initialPlannerEvent?.hasTime
+                || draftPlannerEvent.location != initialPlannerEvent?.location
+                || draftPlannerEvent.locationSource
+                    != initialPlannerEvent?.locationSource)
     }
 
     private var isCreateForm: Bool {
@@ -167,7 +254,7 @@ struct EventFormView: View {
         }
         .presentationDragIndicator(.hidden)
         .presentationDetents(
-            [.height(340), .height(2600)],
+            [.height(460), .height(2600)],
             selection: $selectedDetent
         )
     }
@@ -181,23 +268,78 @@ struct EventFormView: View {
                 }
                 .listSectionMargins(.top, 0)
 
-                DatePicker(
-                    "Date",
-                    selection: $draftPlannerEvent.date,
-                    in: keepPastPlansDuration
-                        .cutoffDate...todaystampWatcher
-                        .maxCalendarDate,
-                    displayedComponents: draftPlannerEvent.hasTime
-                        ? [.date, .hourAndMinute] : .date
-                )
-                .environment(
-                    \.timeZone,
-                    sourcePlanner?.region(settings: plannerSettings).timeZone
-                        ?? .current
-                )
+                Section {
+                    DatePicker(
+                        "Date",
+                        selection: $draftPlannerEvent.date,
+                        in: keepPastPlansDuration
+                            .cutoffDate...todaystampWatcher
+                            .maxCalendarDate,
+                        displayedComponents: draftPlannerEvent.hasTime
+                            ? [.date, .hourAndMinute] : .date
+                    )
+                    .environment(
+                        \.timeZone,
+                        draftPlannerEvent
+                            .region(
+                                settings: settings,
+                                planner: sourcePlanner
+                            )
+                            .timeZone
+                    )
 
-                Toggle("Time", isOn: $draftPlannerEvent.hasTime)
-                    .tint(accentColor.swiftUIColor)
+                    Toggle("Time", isOn: $draftPlannerEvent.hasTime)
+                        .tint(accentColor.swiftUIColor)
+                }
+
+                Section {
+                    NavigationLink {
+                        LocationSearchView(
+                            initialLocation: draftPlannerEvent.location,
+                            initialLocationSource: draftPlannerEvent
+                                .locationSource,
+                            title: "Edit Event Location",
+                            sourcePlanner: sourcePlanner,
+                            mode: .event
+                        ) { source, location in
+
+                            draftPlannerEvent.location = location
+                            draftPlannerEvent.locationSource = source
+
+                        }
+                    } label: {
+                        HStack {
+
+                            Text("Location")
+
+                            Spacer()
+
+                            Text(
+                                draftPlannerEvent.locationLabel(
+                                    localCityName: deviceLocationManager
+                                        .cityName,
+                                    settings: settings,
+                                    planner: sourcePlanner
+                                )
+                            )
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+
+                        }
+                    }
+                } footer: {
+                    let timeZoneAbbreviation =
+                        draftPlannerEvent
+                        .region(
+                            settings: settings,
+                            planner: sourcePlanner
+                        )
+                        .timeZone
+                        .abbreviation() ?? "Unknown Time Zone"
+
+                    Text("Time Zone: \(timeZoneAbbreviation)")
+                }
+
             }
             .navigationTitle(isCreateForm ? "Create Plan" : "Edit Plan")
             .navigationBarTitleDisplayMode(.inline)
@@ -234,17 +376,9 @@ struct EventFormView: View {
                         label: "Remove From Calendar",
                         systemImage: "calendar.badge.minus"
                     ) {
-
                         // Note: EventKit does not give access to the updated EKEvent.
-                        guard let calEvent = draftPlannerEvent.calendarEvent
-                        else { return }
-
-                        draftPlannerEvent.title = calEvent.title
-                        draftPlannerEvent.date = calEvent.startDate
-                        draftPlannerEvent.hasTime = true
-
                         draftPlannerEvent.calendarEvent = nil
-                        selectedDetent = .height(340)
+                        selectedDetent = .height(460)
                     }
                 }
             }
@@ -285,10 +419,26 @@ struct EventFormView: View {
                         ?? calendarStore.ekEventStore
                         .defaultCalendarForNewEvents
 
-                    if let location = sourcePlanner?.location {
+                    if let location = draftPlannerEvent.location {
+
+                        // Location display name.
+                        event.location = location.name
+
+                        // Location coordinates.
+                        let structuredLocation = EKStructuredLocation(
+                            title: location.name
+                        )
+                        structuredLocation.geoLocation = CLLocation(
+                            latitude: location.latitude,
+                            longitude: location.longitude
+                        )
+                        event.structuredLocation = structuredLocation
+
+                        // Location time zone.
                         event.timeZone = TimeZone(
                             identifier: location.timeZoneIdentifier
                         )
+
                     }
 
                     event.title = draftPlannerEvent.title
@@ -322,7 +472,7 @@ struct EventFormView: View {
             calendarStore.delete(event: initialCalendarEvent)
 
             calendarStore.loadFreshCache(
-                hiddenCalendarIds: plannerSettings.hiddenCalendarIds
+                hiddenCalendarIds: settings.hiddenCalendarIds
             )
 
         }
@@ -336,7 +486,7 @@ struct EventFormView: View {
         modelContext.savePlannerEventChanges(
             event,
             initialPlannerEvent: initialPlannerEvent,
-            plannerSettings: plannerSettings
+            settings: settings
         )
 
         reloadGlobalCalendarData()
@@ -347,7 +497,7 @@ struct EventFormView: View {
     // Deletes stale planner event and reloads the calendar.
     private func reloadGlobalCalendarData() {
         calendarStore.loadFreshCache(
-            hiddenCalendarIds: plannerSettings.hiddenCalendarIds
+            hiddenCalendarIds: settings.hiddenCalendarIds
         )
     }
 

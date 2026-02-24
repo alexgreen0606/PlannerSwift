@@ -18,7 +18,7 @@ struct PlannerChipSpreadView: View {
     let allDayEvents: [EKEvent]
     let iconMap: [String: String]
     var namespace: Namespace.ID
-    let plannerSettings: PlannerSettings
+    let settings: PlannerSettings
     let openCalendarEventSheet: (EKEvent) -> Void
     let weatherUnit: UnitTemperature =
         Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
@@ -50,20 +50,13 @@ struct PlannerChipSpreadView: View {
     }
 
     private var location: Location? {
-        planner.location(settings: plannerSettings)
+        planner.location(settings: settings)
     }
 
-    private var locationLabel: String? {
+    private var locationLabel: String {
         planner.locationLabel(
-            settings: plannerSettings,
-            localCityName: locationManager.cityName
-        )
-    }
-
-    private var locationIconConfig: IconConfig {
-        planner.locationIconConfig(
-            settings: plannerSettings,
-            accentColor: accentColor
+            localCityName: locationManager.cityName,
+            settings: settings
         )
     }
 
@@ -101,7 +94,7 @@ struct PlannerChipSpreadView: View {
                     locationSource: source
                 )
                 
-                let newRegion = planner.region(settings: plannerSettings)
+                let newRegion = planner.region(settings: settings)
                 
                 Task {
                     await weatherStore.loadWeatherIfNeeded(
@@ -143,7 +136,12 @@ struct PlannerChipSpreadView: View {
 
     @ViewBuilder
     private var locationChip: some View {
-        if let locationLabel {
+        
+            let locationIconConfig = planner.locationIconConfig(
+                settings: settings,
+                accentColor: accentColor
+            )
+            
             PlannerChipView(
                 title: locationLabel,
                 iconConfig: locationIconConfig,
@@ -156,7 +154,6 @@ struct PlannerChipSpreadView: View {
                 id: "LOCATION",
                 in: namespace
             )
-        }
     }
 
     @ViewBuilder

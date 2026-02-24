@@ -11,10 +11,10 @@ import SwiftData
 import SwiftUI
 
 struct CalendarsFormView: View {
-    let plannerSettings: PlannerSettings
+    let settings: PlannerSettings
 
-    init(plannerSettings: PlannerSettings) {
-        self.plannerSettings = plannerSettings
+    init(settings: PlannerSettings) {
+        self.settings = settings
     }
 
     @Environment(\.modelContext) private var modelContext
@@ -44,7 +44,7 @@ struct CalendarsFormView: View {
             ) { calendar in
                 HStack {
                     Image(
-                        systemName: plannerSettings.hiddenCalendarIds
+                        systemName: settings.hiddenCalendarIds
                             .contains(calendar.calendarIdentifier)
                             == false
                             ? "checkmark.circle" : "circle"
@@ -57,14 +57,14 @@ struct CalendarsFormView: View {
                         )
                     )
                     .onTapGesture {
-                        if plannerSettings.hiddenCalendarIds.contains(
+                        if settings.hiddenCalendarIds.contains(
                             calendar.calendarIdentifier
                         ) {
-                            plannerSettings.hiddenCalendarIds.remove(
+                            settings.hiddenCalendarIds.remove(
                                 calendar.calendarIdentifier
                             )
                         } else {
-                            plannerSettings.hiddenCalendarIds.insert(
+                            settings.hiddenCalendarIds.insert(
                                 calendar.calendarIdentifier
                             )
                         }
@@ -80,7 +80,7 @@ struct CalendarsFormView: View {
                         ForEach(iconOptions, id: \.self) { iconName in
                             Button("", systemImage: iconName) {
 
-                                plannerSettings.iconMap[
+                                settings.iconMap[
                                     calendar.calendarIdentifier
                                 ] = iconName
 
@@ -90,7 +90,7 @@ struct CalendarsFormView: View {
                         }
                     } label: {
                         Image(
-                            systemName: plannerSettings.iconMap[
+                            systemName: settings.iconMap[
                                 calendar.calendarIdentifier
                             ] ?? calendar.iconName
                         )
@@ -103,7 +103,7 @@ struct CalendarsFormView: View {
         .navigationBarTitleDisplayMode(.inline)
 
         // Refresh the calendar when the hidden calendars change.
-        .onChange(of: plannerSettings.hiddenCalendarIds) { _, _ in
+        .onChange(of: settings.hiddenCalendarIds) { _, _ in
             scheduleCalendarRefreshDebounce()
         }
     }
@@ -118,7 +118,7 @@ struct CalendarsFormView: View {
 
                 // Refresh the calendar data.
                 calendarStore.loadFreshCache(
-                    hiddenCalendarIds: plannerSettings.hiddenCalendarIds
+                    hiddenCalendarIds: settings.hiddenCalendarIds
                 )
             } catch {
             }

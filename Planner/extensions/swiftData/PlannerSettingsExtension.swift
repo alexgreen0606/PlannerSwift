@@ -6,8 +6,26 @@
 //
 
 import EventKit
+import SwiftDate
+import SwiftUI
 
 extension PlannerSettings {
+
+    var homeRegion: Region {
+        homeLocation?.region ?? .local
+    }
+
+    func homeLocationLabel(localCityName: String) -> String {
+        homeLocation?.name ?? localCityName
+    }
+
+    var homeLocationIconConfig: IconConfig {
+        IconConfig(
+            name: homeLocation != nil ? "house" : "location",
+            primaryColor: Color.secondary,
+            secondaryColor: nil
+        )
+    }
 
     func isPlannerEventChecked(_ event: PlannerEvent) -> Bool {
         guard let calendarEvent = event.calendarEvent

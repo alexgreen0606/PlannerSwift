@@ -18,13 +18,12 @@ extension Location {
         ).key
     }
 
-    var region: Region? {
-        guard let timeZone = TimeZone(identifier: self.timeZoneIdentifier)
+    var region: Region {
+        guard let timeZone = TimeZone(identifier: timeZoneIdentifier)
         else {
-            assertionFailure(
-                "ERROR LocationExtension.region: Could not create a TimeZone from: \(self.timeZoneIdentifier)"
+            fatalError(
+                "ERROR LocationExtension.region: Could not create a TimeZone from \(timeZoneIdentifier)"
             )
-            return nil
         }
 
         return Region(

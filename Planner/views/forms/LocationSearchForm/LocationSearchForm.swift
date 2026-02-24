@@ -11,14 +11,16 @@ import SwiftData
 import SwiftUI
 
 enum LocationSearchMode {
-    case planner
     case home
+    case planner
+    case event
 }
 
 struct LocationSearchView: View {
     private let initialLocation: Location?
     private let initialLocationSource: LocationSource
     private let title: String
+    private let sourcePlanner: Planner?
     private let mode: LocationSearchMode
     private let onSave: (LocationSource, Location?) -> Void
 
@@ -26,12 +28,14 @@ struct LocationSearchView: View {
         initialLocation: Location?,
         initialLocationSource: LocationSource,
         title: String,
+        sourcePlanner: Planner? = nil,
         mode: LocationSearchMode,
         onSave: @escaping (LocationSource, Location?) -> Void
     ) {
         self.initialLocation = initialLocation
         self.initialLocationSource = initialLocationSource
         self.title = title
+        self.sourcePlanner = sourcePlanner
         self.mode = mode
         self.onSave = onSave
 
@@ -43,7 +47,6 @@ struct LocationSearchView: View {
         AccentColor.blue
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var locationManager: DeviceLocationManager
 
     @Query private var plannerSettingsList: [PlannerSettings]
@@ -59,7 +62,7 @@ struct LocationSearchView: View {
         optionId(locationFinder.suggestions.first)
     }
 
-    private var plannerSettings: PlannerSettings? {
+    private var settings: PlannerSettings? {
         plannerSettingsList.first
     }
 
@@ -93,17 +96,15 @@ struct LocationSearchView: View {
 
     @ToolbarContentBuilder
     private var topLeftToolbar: some ToolbarContent {
-        if mode == .planner {
-            ToolbarItem(placement: .topBarLeading) {
+        ToolbarItem(placement: .topBarLeading) {
+            if mode == .planner {
                 Button(
-                    "Back",
+                    "Close",
                     systemImage: "xmark"
                 ) {
                     dismiss()
                 }
-            }
-        } else {
-            ToolbarItem(placement: .topBarLeading) {
+            } else {
                 Button(
                     "Back",
                     systemImage: "chevron.left"
@@ -137,9 +138,10 @@ struct LocationSearchView: View {
 
             HStack {
                 currentLocationButton
-                Spacer()
                 homeLocationButton
+                plannerLocationButton
             }
+            .frame(maxWidth: .infinity)
         }
         .padding(.horizontal)
         .animateSynchronousAction(from: selectedLocation)
@@ -159,7 +161,7 @@ struct LocationSearchView: View {
                 color: nil,
                 onTap: nil
             )
-        } else if let home = plannerSettings?.homeLocation,
+        } else if let home = settings?.homeLocation,
             selectedLocationSource == .home
         {
             homeLocationIndicator(home)
@@ -180,8 +182,8 @@ struct LocationSearchView: View {
                 Text("Current Location")
                     .font(.system(size: 14, weight: .medium))
 
-                if let city = locationManager.cityName {
-                    Text(city)
+                if locationManager.cityName != "Current Location" {
+                    Text(locationManager.cityName)
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(
                             Color.secondary
@@ -231,7 +233,9 @@ struct LocationSearchView: View {
     private var currentLocationButton: some View {
         if selectedLocationSource != .current
             && !(selectedLocationSource == .home
-                && plannerSettings?.homeLocation == nil)
+                && settings?.homeLocation == nil)
+            && !(selectedLocationSource == .planner
+                && settings?.homeLocation == nil)
         {
             AccentButtonView(
                 label: "Current",
@@ -245,13 +249,28 @@ struct LocationSearchView: View {
     @ViewBuilder
     private var homeLocationButton: some View {
         if mode != .home, selectedLocationSource != .home,
-            plannerSettings?.homeLocation != nil
+            settings?.homeLocation != nil
         {
             AccentButtonView(
                 label: "Home",
                 systemImage: "house"
             ) {
                 selectedLocationSource = .home
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var plannerLocationButton: some View {
+        if mode == .event, selectedLocationSource != .planner,
+            sourcePlanner?.location != nil,
+            let sourcePlannerIcon = sourcePlanner?.datestamp.calendarSymbolName
+        {
+            AccentButtonView(
+                label: "Planner",
+                systemImage: sourcePlannerIcon
+            ) {
+                selectedLocationSource = .planner
             }
         }
     }
@@ -291,10 +310,8 @@ struct LocationSearchView: View {
         .discreetListItem()
         .contentShape(Rectangle())
         .onTapGesture {
-            Task {
-                selectedLocationSource = .custom
-                selectedLocation = suggestion
-            }
+            selectedLocationSource = .custom
+            selectedLocation = suggestion
         }
     }
 
@@ -396,6 +413,7 @@ struct LocationSearchView: View {
                         $0.coordinateKey == coordinateKey
                     })
                 else {
+
                     selectedLocation = Location(
                         name: result.name,
                         subtitle: result.subtitle,
@@ -403,6 +421,7 @@ struct LocationSearchView: View {
                         longitude: result.longitude,
                         timeZoneIdentifier: timeZoneIdentifier
                     )
+
                     return
                 }
 

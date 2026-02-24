@@ -36,7 +36,9 @@ struct SettingsTabView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var plannerSettingsList: [PlannerSettings]
 
-    private var plannerSettings: PlannerSettings? {
+    @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
+
+    private var settings: PlannerSettings? {
         plannerSettingsList.first
     }
 
@@ -116,24 +118,27 @@ struct SettingsTabView: View {
                     .pickerStyle(.menu)
 
                     NavigationLink("Calendars") {
-                        if let plannerSettings {
-                            CalendarsFormView(plannerSettings: plannerSettings)
+                        if let settings {
+                            CalendarsFormView(settings: settings)
                         }
                     }
 
-                    NavigationLink("Home Location") {
+                    NavigationLink {
                         LocationSearchView(
-                            initialLocation: plannerSettings?.homeLocation,
-                            initialLocationSource: plannerSettings?.homeLocation != nil ? .custom : .current,
+                            initialLocation: settings?.homeLocation,
+                            initialLocationSource: settings?.homeLocation
+                                != nil ? .custom : .current,
                             title: "Edit Home Location",
                             mode: .home
                         ) { source, location in
-                            guard let plannerSettings else {
+                            guard let settings else {
                                 return
                             }
 
-                            plannerSettings.homeLocation = source == .custom ? location : nil
+                            settings.homeLocation =
+                                source == .custom ? location : nil
 
+                            // TODO: move to model context
                             do {
                                 try modelContext.save()
                             } catch {
@@ -141,6 +146,22 @@ struct SettingsTabView: View {
                                     "Failed to save home location: \(error)"
                                 )
                             }
+                        }
+                    } label: {
+                        HStack {
+
+                            Text("Home Location")
+
+                            Spacer()
+
+                            Text(
+                                settings?.homeLocation?.name
+                                    ?? deviceLocationManager.cityName
+                                    ?? "Current Location"
+                            )
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+
                         }
                     }
                 } header: {

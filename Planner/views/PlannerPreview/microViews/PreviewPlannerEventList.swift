@@ -30,7 +30,7 @@ struct PreviewPlannerEventListView: View {
 
                         event.timeValueView(
                             in: plannerRegion,
-                            accentColor: accentColor.swiftUIColor,
+                            accentColor: accentColor,
                             openSheet: nil
                         )
                     }

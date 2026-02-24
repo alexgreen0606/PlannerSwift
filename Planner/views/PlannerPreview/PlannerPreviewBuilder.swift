@@ -12,18 +12,18 @@ import SwiftUI
 struct PlannerPreviewBuilderView: View {
     private let datestamp: String
     private let type: PlannerPreviewType
-    private let plannerSettings: PlannerSettings
+    private let settings: PlannerSettings
     @Binding private var openPlanner: Planner?
 
     init(
         datestamp: String,
         type: PlannerPreviewType,
-        plannerSettings: PlannerSettings,
+        settings: PlannerSettings,
         openPlanner: Binding<Planner?>
     ) {
         self.datestamp = datestamp
         self.type = type
-        self.plannerSettings = plannerSettings
+        self.settings = settings
         self._openPlanner = openPlanner
 
         _planners = Query(
@@ -47,7 +47,7 @@ struct PlannerPreviewBuilderView: View {
                 PlannerPreviewView(
                     planner: planner,
                     type: type,
-                    plannerSettings: plannerSettings,
+                    settings: settings,
                     openPlanner: $openPlanner
                 )
             }

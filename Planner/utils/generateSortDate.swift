@@ -14,7 +14,7 @@ func generateSortDate(
     startOfDay: DateInRegion,
     index: Int,
     events: [PlannerEvent],
-    plannerSettings: PlannerSettings
+    settings: PlannerSettings
 ) -> Date {
 
     let dayStart = startOfDay.date
@@ -38,7 +38,7 @@ func generateSortDate(
         normalizeEvents(
             events: events,
             startOfDay: startOfDay,
-            plannerSettings: plannerSettings
+            settings: settings
         )
 
         // Recalculate after normalization
@@ -58,7 +58,7 @@ private func midpoint(between a: Date, and b: Date) -> Date {
 func normalizeEvents(
     events: [PlannerEvent],
     startOfDay: DateInRegion,
-    plannerSettings: PlannerSettings
+    settings: PlannerSettings
 ) {
     guard !events.isEmpty else { return }
 
@@ -72,7 +72,7 @@ func normalizeEvents(
         event.sortDate = dayStart.addingTimeInterval(increment * Double(i + 1))
 
         if let calEvent = event.calendarEvent {
-            plannerSettings.calendarSortDateMap[
+            settings.calendarSortDateMap[
                 calEvent.calendarItemExternalIdentifier
             ] = event.sortDate
         }

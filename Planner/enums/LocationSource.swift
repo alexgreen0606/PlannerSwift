@@ -8,5 +8,6 @@
 enum LocationSource: String, Codable {
     case current
     case home
+    case planner
     case custom
 }

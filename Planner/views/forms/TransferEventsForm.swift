@@ -12,12 +12,12 @@ import SwiftUI
 struct TransferEventsFormView: View {
     private let sourceDate: Date
     private let sourceStartOfDay: DateInRegion
-    private let plannerSettings: PlannerSettings
+    private let settings: PlannerSettings
 
     init(startOfDay: DateInRegion, settings: PlannerSettings) {
         self.sourceDate = startOfDay.date
         self.sourceStartOfDay = startOfDay
-        self.plannerSettings = settings
+        self.settings = settings
         _destinationDate = State(initialValue: startOfDay.date)
     }
 

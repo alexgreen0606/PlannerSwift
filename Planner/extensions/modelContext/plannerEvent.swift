@@ -18,7 +18,7 @@ extension ModelContext {
         offset: Int,
         in events: [PlannerEvent],
         startOfDay: DateInRegion,
-        plannerSettings: PlannerSettings
+        settings: PlannerSettings
     ) {
 
         guard
@@ -54,7 +54,7 @@ extension ModelContext {
             startOfDay: startOfDay,
             index: finalIndex,
             events: events,
-            plannerSettings: plannerSettings
+            settings: settings
         )
 
         let newEvent = PlannerEvent(
@@ -105,7 +105,7 @@ extension ModelContext {
         to: Int,
         startOfDay: DateInRegion,
         events: [PlannerEvent],
-        plannerSettings: PlannerSettings
+        settings: PlannerSettings
     ) {
         guard from != to else { return }
 
@@ -118,13 +118,13 @@ extension ModelContext {
             startOfDay: startOfDay,
             index: to,
             events: eventsWithoutEvent,
-            plannerSettings: plannerSettings
+            settings: settings
         )
         movedEvent.sortDate = newSortDate
 
         // Handle calendar event position changes.
         if let calEvent = movedEvent.calendarEvent {
-            plannerSettings.calendarSortDateMap[
+            settings.calendarSortDateMap[
                 calEvent.calendarItemExternalIdentifier
             ] = movedEvent.sortDate
         }
@@ -238,7 +238,7 @@ extension ModelContext {
 
     @MainActor
     func savePlannerEventChanges(
-        _ draftPlannerEvent: PlannerEvent,
+        _ draftPlannerEvent: DraftPlannerEvent,
         initialPlannerEvent: PlannerEvent?,
         initialCalendarEvent: EKEvent?
     ) {
@@ -251,12 +251,36 @@ extension ModelContext {
             initialPlannerEvent.date = draftPlannerEvent.date
             initialPlannerEvent.hasTime = draftPlannerEvent.hasTime
             initialPlannerEvent.calendarEvent = nil
+            initialPlannerEvent.location = draftPlannerEvent.location
+            initialPlannerEvent.locationSource = draftPlannerEvent.locationSource
+
+            // TODO: this print statement fixes a bug.
+            // When this is not present, the location is not persisted to storage.
+            // print(initialPlannerEvent.location)
 
         } else {
 
             // Save the draft planner event to the context.
 
-            insert(draftPlannerEvent)
+            let newEvent = PlannerEvent(
+                date: draftPlannerEvent.date,
+                sortIndex: 0
+            )
+            
+            newEvent.title = draftPlannerEvent.title
+            newEvent.date = draftPlannerEvent.date
+            newEvent.hasTime = draftPlannerEvent.hasTime
+            newEvent.calendarEvent = nil
+            newEvent.location = draftPlannerEvent.location
+            newEvent.locationSource = draftPlannerEvent.locationSource
+
+            // TODO: add event to bottom of planner
+
+            // TODO: this print statement fixes a bug.
+            // When this is not present, the location is not persisted to storage.
+            // print(newEvent.location)
+
+            insert(newEvent)
 
         }
 
@@ -273,14 +297,14 @@ extension ModelContext {
     func savePlannerEventChanges(
         _ calendarEvent: EKEvent?,
         initialPlannerEvent: PlannerEvent?,
-        plannerSettings: PlannerSettings
+        settings: PlannerSettings
     ) {
         if let initialPlannerEvent {
 
             if let calendarEvent {
 
                 // Event was not deleted. Use the original planner event's sort date for the new event.
-                plannerSettings.calendarSortDateMap[
+                settings.calendarSortDateMap[
                     calendarEvent.calendarItemExternalIdentifier
                 ] =
                     initialPlannerEvent.sortDate
