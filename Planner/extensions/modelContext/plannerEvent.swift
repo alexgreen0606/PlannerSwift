@@ -237,7 +237,7 @@ extension ModelContext {
     }
 
     @MainActor
-    func savePlannerEventChanges(
+    func saveEventFormChanges(
         _ draftPlannerEvent: DraftPlannerEvent,
         initialPlannerEvent: PlannerEvent?,
         initialCalendarEvent: EKEvent?
@@ -282,7 +282,7 @@ extension ModelContext {
     }
 
     @MainActor
-    func savePlannerEventChanges(
+    func saveEventFormChanges(
         _ calendarEvent: EKEvent?,
         initialPlannerEvent: PlannerEvent?,
         settings: PlannerSettings
@@ -307,7 +307,7 @@ extension ModelContext {
                 try save()
             } catch {
                 assertionFailure(
-                    "ERROR plannerEvent.savePlannerEventChanges(EKEvent): \(error)"
+                    "ERROR plannerEvent.saveEventFormChanges(EKEvent): \(error)"
                 )
             }
         }

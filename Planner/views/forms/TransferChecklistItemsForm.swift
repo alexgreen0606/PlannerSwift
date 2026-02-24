@@ -15,7 +15,7 @@ enum FolderNavigationDirection {
 
 struct TransferChecklistItemsFormView: View {
     private let source: ChecklistItem
-    
+
     init(source: ChecklistItem, selectedIds: Set<PersistentIdentifier>) {
         var fp =
             source.type == .folder
@@ -105,19 +105,39 @@ struct TransferChecklistItemsFormView: View {
 
     var body: some View {
         NavigationStack {
-            folderContent
-                .navigationTitle(
-                    "Transfer \(destinationType.childrenLabel.capitalizedFirst)"
-                )
-                .navigationBarTitleDisplayMode(.inline)
-                .background(Color(.systemBackground))
-                .toolbar {
-                    topRightToolbar
-                    topLeftToolbar
+            ZStack {
+                List {
+                    Section {
+                        ForEach(currentOptions, id: \.self) { item in
+                            itemRow(item)
+                        }
+                    } header: {
+                        folderLabel
+                    }
+                    .listSectionMargins(.top, 0)
                 }
-                .safeAreaInset(edge: .top) {
-                    transferIndicator
+            }
+            .id(currentFolder.id)
+            .transition(folderSlideTransition)
+            .overlay {
+                if currentOptions.isEmpty {
+                    EmptyLabel(
+                        "No Available \(destinationType.rawValue.capitalizedFirst)s"
+                    )
                 }
+            }
+            .navigationTitle(
+                "Transfer \(destinationType.childrenLabel.capitalizedFirst)"
+            )
+            .navigationBarTitleDisplayMode(.inline)
+            .background(Color(.systemBackground))
+            .toolbar {
+                topRightToolbar
+                topLeftToolbar
+            }
+            .safeAreaInset(edge: .top) {
+                transferIndicator
+            }
         }
     }
 
@@ -227,30 +247,6 @@ struct TransferChecklistItemsFormView: View {
             }
 
             Text(currentFolder.title)
-        }
-    }
-
-    private var folderContent: some View {
-        ZStack {
-            List {
-                Section {
-                    ForEach(currentOptions, id: \.self) { item in
-                        itemRow(item)
-                    }
-                } header: {
-                    folderLabel
-                }
-                .listSectionMargins(.top, 0)
-            }
-        }
-        .id(currentFolder.id)
-        .transition(folderSlideTransition)
-        .overlay {
-            if currentOptions.isEmpty {
-                EmptyLabel(
-                    "No Available \(destinationType.rawValue.capitalizedFirst)s"
-                )
-            }
         }
     }
 

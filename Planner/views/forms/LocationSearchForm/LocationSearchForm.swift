@@ -66,6 +66,27 @@ struct LocationSearchView: View {
         plannerSettingsList.first
     }
 
+    private var showCurrentOption: Bool {
+        selectedLocationSource != .current
+            && !(selectedLocationSource == .home
+                && settings?.homeLocation == nil)
+            && !(selectedLocationSource == .planner
+                && settings?.homeLocation == nil)
+    }
+
+    private var showHomeOption: Bool {
+        mode != .home
+            && selectedLocationSource != .home
+            && settings?.homeLocation != nil
+    }
+
+    private var showPlannerOption: Bool {
+        mode == .event
+            && selectedLocationSource != .planner
+            && sourcePlanner?.location != nil
+            && sourcePlanner?.datestamp.calendarSymbolName != nil
+    }
+
     var body: some View {
         NavigationStack {
             ScrollViewReader { proxy in
@@ -141,7 +162,6 @@ struct LocationSearchView: View {
                 homeLocationButton
                 plannerLocationButton
             }
-            .frame(maxWidth: .infinity)
         }
         .padding(.horizontal)
         .animateSynchronousAction(from: selectedLocation)
@@ -231,26 +251,21 @@ struct LocationSearchView: View {
 
     @ViewBuilder
     private var currentLocationButton: some View {
-        if selectedLocationSource != .current
-            && !(selectedLocationSource == .home
-                && settings?.homeLocation == nil)
-            && !(selectedLocationSource == .planner
-                && settings?.homeLocation == nil)
-        {
+        if showCurrentOption {
             AccentButtonView(
                 label: "Current",
                 systemImage: "location"
             ) {
                 selectedLocationSource = .current
             }
+
+            Spacer()
         }
     }
 
     @ViewBuilder
     private var homeLocationButton: some View {
-        if mode != .home, selectedLocationSource != .home,
-            settings?.homeLocation != nil
-        {
+        if showHomeOption {
             AccentButtonView(
                 label: "Home",
                 systemImage: "house"
@@ -262,21 +277,26 @@ struct LocationSearchView: View {
 
     @ViewBuilder
     private var plannerLocationButton: some View {
-        if mode == .event, selectedLocationSource != .planner,
-            sourcePlanner?.location != nil,
-            let sourcePlannerIcon = sourcePlanner?.datestamp.calendarSymbolName
-        {
-            AccentButtonView(
-                label: "Planner",
-                systemImage: sourcePlannerIcon
-            ) {
-                selectedLocationSource = .planner
+        if let sourcePlannerIcon = sourcePlanner?.datestamp.calendarSymbolName {
+            if showPlannerOption {
+
+                if showHomeOption {
+                    Spacer()
+                }
+
+                AccentButtonView(
+                    label: "Planner",
+                    systemImage: sourcePlannerIcon
+                ) {
+                    selectedLocationSource = .planner
+                }
             }
         }
     }
 
     // MARK: - Suggestions List
 
+    @ViewBuilder
     private var fillerSuggestions: some View {
         List {
             ForEach(existingLocations, id: \.self) { option in
@@ -289,6 +309,8 @@ struct LocationSearchView: View {
 
     @ViewBuilder
     private func suggestionRow(_ suggestion: Location) -> some View {
+        let isSelected = isSuggestionSelected(suggestion)
+
         HStack {
             VStack(alignment: .leading) {
                 Text(suggestion.name)
@@ -303,7 +325,7 @@ struct LocationSearchView: View {
 
             Spacer()
 
-            if isSuggestionSelected(suggestion) {
+            if isSelected {
                 Image(systemName: "checkmark")
             }
         }
@@ -349,6 +371,7 @@ struct LocationSearchView: View {
     @ViewBuilder
     private func optionRow(_ option: MKLocalSearchCompletion) -> some View {
         let hasNoTimeZone = optionHasNoTimeZone(option)
+        let isSelected = isOptionSelected(option)
 
         HStack {
             VStack(alignment: .leading) {
@@ -375,7 +398,7 @@ struct LocationSearchView: View {
 
             Spacer()
 
-            if isOptionSelected(option) {
+            if isSelected {
                 Image(systemName: "checkmark")
             }
         }

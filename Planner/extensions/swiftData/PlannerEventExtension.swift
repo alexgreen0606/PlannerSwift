@@ -17,28 +17,12 @@ extension PlannerEvent {
     private func location(settings: PlannerSettings, planner: Planner?)
         -> Location?
     {
-        switch locationSource {
-        case .custom:
-            guard let location else {
-                fatalError(
-                    "ERROR PlannerEventExtension.location: Event is set to custom location but no location is set."
-                )
-            }
-
-            return location
-        case .planner:
-            guard let planner else {
-                fatalError(
-                    "ERROR PlannerEventExtension.location: Event is set to planner location but no planner was passed."
-                )
-            }
-
-            return planner.location(settings: settings)
-        case .home:
-            return settings.homeLocation
-        case .current:
-            return nil
-        }
+        eventLocation(
+            locationSource: locationSource,
+            location: location,
+            planner: planner,
+            settings: settings
+        )
     }
 
     func locationIconConfig(
@@ -255,7 +239,8 @@ extension PlannerEvent {
 
                 if eventRegion != plannerRegion && hasTime {
                     let dateInRegion = DateInRegion(date, region: eventRegion)
-                    let timeString = dateInRegion.timeWithTimezone ?? "Unknown Time Zone"
+                    let timeString =
+                        dateInRegion.timeWithTimezone ?? "Unknown Time Zone"
 
                     Text(timeString)
                         .font(.system(size: 9))

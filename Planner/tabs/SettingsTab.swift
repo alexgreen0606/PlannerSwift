@@ -157,7 +157,6 @@ struct SettingsTabView: View {
                             Text(
                                 settings?.homeLocation?.name
                                     ?? deviceLocationManager.cityName
-                                    ?? "Current Location"
                             )
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
