@@ -110,6 +110,8 @@ struct RowView<
     // Item Text
     private var textStack: some View {
         VStack(spacing: 0) {
+            
+            // Upper Item Trigger
             NewRowTriggerView(
                 showUpperDivider: showUpperDivider,
                 onCreateItem: {
@@ -121,7 +123,10 @@ struct RowView<
                     onCreateItem(item.stableId, 0)
                 }
             )
+            
             HStack(alignment: .top, spacing: 4) {
+                
+                // Left Adornment
                 if let leftAdornment = leftAdornment {
                     leftAdornment(item)
                         .opacity(opacity)
@@ -130,11 +135,15 @@ struct RowView<
                             alignment: .center
                         )
                 }
+                
+                // Title
                 ZStack(alignment: .leading) {
                     titleText
                     editableField
                 }
                 .padding(.vertical, RowConstants.verticalTextPadding)
+                
+                // Right Adornment
                 if let rightAdornment = rightAdornment {
                     rightAdornment(item)
                         .opacity(opacity)
@@ -143,11 +152,16 @@ struct RowView<
                             alignment: .center
                         )
                 }
+                
             }
             .frame(minHeight: RowConstants.horizontalAdornmentHeight)
+            
+            // Bottom Adornment
             if let bottomAdornment {
                 bottomAdornment(item)
             }
+            
+            // Lower Item Trigger
             NewRowTriggerView(
                 showLowerDivider: true,
                 onCreateItem: {
@@ -166,7 +180,6 @@ struct RowView<
     // Static Text
     private var titleText: some View {
         Text(item.title)
-            .foregroundColor(Color.label)
             .opacity(isFocused ? 0 : 1)
             .font(.system(size: UIConstants.listItemFontSize))
             .lineLimit(nil)
@@ -203,14 +216,10 @@ struct RowView<
                 } else {
                     listManager.focusedId = nil
                 }
-            },
-            onDone: {
-                listManager.focusedId = nil
             }
         )
         .tint(tintColor)
         .frame(height: height)
-        .foregroundColor(Color.label)
         .opacity(isFocused ? 1 : 0)
         .frame(maxWidth: .infinity, alignment: .leading)
         .fixedSize(horizontal: false, vertical: true)

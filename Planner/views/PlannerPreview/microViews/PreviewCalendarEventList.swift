@@ -17,7 +17,7 @@ struct PreviewCalendarEventListView: View {
     var body: some View {
         if !events.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                ForEach(events, id: \.self) { event in
+                ForEach(events, id: \.calendarItemExternalIdentifier) { event in
                     HStack(spacing: 4) {
                         Image(
                             systemName: iconMap?[

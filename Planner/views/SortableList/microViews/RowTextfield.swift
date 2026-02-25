@@ -20,7 +20,6 @@ struct RowTextfieldView: UIViewRepresentable {
     var accentColor: Color
     var onTapToolbar: (String) -> Void
     var onEnter: () -> Void
-    var onDone: () -> Void
 
     func makeUIView(context: Context) -> UITextView {
         let textField = UITextView()
@@ -70,6 +69,8 @@ struct RowTextfieldView: UIViewRepresentable {
 
         if focusedId == itemId && !uiView.isFirstResponder {
             uiView.becomeFirstResponder()
+        } else if focusedId == nil && uiView.isFirstResponder {
+            uiView.resignFirstResponder()
         }
     }
 
@@ -189,8 +190,7 @@ struct RowTextfieldView: UIViewRepresentable {
         }
 
         @objc private func doneButtonTapped() {
-            parent.onDone()
-            textView?.resignFirstResponder()
+            parent.focusedId = nil
         }
 
     }

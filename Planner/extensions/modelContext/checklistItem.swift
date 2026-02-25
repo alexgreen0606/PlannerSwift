@@ -78,7 +78,7 @@ extension ModelContext {
     }
 
     @MainActor
-    func moveItem(in items: [ChecklistItem], from: Int, to: Int) {
+    func moveChecklistItem(in items: [ChecklistItem], from: Int, to: Int) {
         guard from != to else { return }
 
         let movedEvent = items[from]
@@ -95,21 +95,21 @@ extension ModelContext {
             try save()
         } catch {
             assertionFailure(
-                "ERROR checklistItem.moveItem: \(error)"
+                "ERROR checklistItem.moveChecklistItem: \(error)"
             )
         }
     }
 
     @MainActor
-    func deleteChecklist(_ checklist: ChecklistItem) {
+    func deleteChecklistItem(_ item: ChecklistItem) {
 
-        delete(checklist)
+        delete(item)
 
         do {
             try save()
         } catch {
             assertionFailure(
-                "ERROR checklistItem.deleteChecklist: \(error)"
+                "ERROR checklistItem.deleteChecklistItem: \(error)"
             )
         }
     }

@@ -9,14 +9,35 @@ import SwiftData
 import SwiftUI
 
 struct ChecklistView: View {
-    let checklist: ChecklistItem
-    let canTransferItems: Bool
+    private let checklist: ChecklistItem
+    private let canTransferItems: Bool
 
     // Can pass a folder to navigate into (passes itself when it is transformed into a folder).
-    let closeChecklist: (ChecklistItem?) -> Void
+    private let closeChecklist: (ChecklistItem?) -> Void
+
+    init(
+        checklist: ChecklistItem,
+        canTransferItems: Bool,
+        closeChecklist: @escaping (ChecklistItem?) -> Void
+    ) {
+        self.checklist = checklist
+        self.canTransferItems = canTransferItems
+        self.closeChecklist = closeChecklist
+        let checklistId = checklist.stableId
+
+        // Note: We must query the items separately.
+        // Using checklist.items causes each list row to lose its state when a new item is inserted.
+        _items = Query(
+            filter: #Predicate<ChecklistItem> { item in
+                item.parent?.stableId == checklistId
+            }
+        )
+    }
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var listManager: ListManager<ChecklistItem>
+
+    @Query private var items: [ChecklistItem]
 
     @State private var showDeleteCompletedConfirm = false
     @State private var showDeleteChecklistConfirm = false
@@ -26,11 +47,11 @@ struct ChecklistView: View {
     @Namespace private var namespace
 
     private var hasCheckedItems: Bool {
-        checklist.items.contains(where: \.isChecked)
+        items.contains(where: \.isChecked)
     }
 
     private var sortedUncheckedItems: [ChecklistItem] {
-        checklist.items
+        items
             .filter {
                 (!$0.isChecked
                     && !listManager.newlyUncheckedIds.contains($0.stableId))
@@ -40,7 +61,7 @@ struct ChecklistView: View {
     }
 
     private var sortedCheckedItems: [ChecklistItem] {
-        checklist.items
+        items
             .filter {
                 ($0.isChecked
                     && !listManager.newlyCheckedIds.contains($0.stableId))
@@ -124,7 +145,7 @@ struct ChecklistView: View {
                     }
                 }
                 .navigationTransition(
-                    .zoom(sourceID: "ELLIPSIS", in: namespace)
+                    .zoom(sourceID: IDConstants.ELLIPSIS_BUTTON, in: namespace)
                 )
             }
         }
@@ -137,7 +158,7 @@ struct ChecklistView: View {
             )
             .navigationTransition(
                 .zoom(
-                    sourceID: "TRANSFER",
+                    sourceID: IDConstants.TRANSFER_BUTTON,
                     in: namespace
                 )
             )
@@ -156,7 +177,11 @@ struct ChecklistView: View {
                     closeChecklist(nil)
                 }
             } else {
-                Button("Cancel", systemImage: "xmark", action: listManager.toggleSelectMode)
+                Button(
+                    "Cancel",
+                    systemImage: "xmark",
+                    action: listManager.toggleSelectMode
+                )
             }
         }
     }
@@ -208,7 +233,7 @@ struct ChecklistView: View {
                     Image(systemName: "ellipsis")
                 }
                 .matchedTransitionSource(
-                    id: "ELLIPSIS",
+                    id: IDConstants.ELLIPSIS_BUTTON,
                     in: namespace
                 )
                 .confirmationDialog(
@@ -216,7 +241,11 @@ struct ChecklistView: View {
                     isPresented: $showDeleteChecklistConfirm,
                     titleVisibility: .visible
                 ) {
-                    Button("Confirm", role: .destructive, action: deleteEntireList)
+                    Button(
+                        "Confirm",
+                        role: .destructive,
+                        action: deleteEntireList
+                    )
                 } message: {
                     Text(
                         checklist.deleteWarning
@@ -235,15 +264,7 @@ struct ChecklistView: View {
                 }
             } else {
                 Button {
-                    if isAllSelected {
-                        listManager.selectedItemIds = []
-                        listManager.selectedItems = []
-                    } else {
-                        listManager.selectedItems = visibleItems
-                        listManager.selectedItemIds = Set(
-                            visibleItems.map { $0.stableId }
-                        )
-                    }
+                    listManager.toggleSelectAll(visibleItems: visibleItems)
                 } label: {
                     Text(isAllSelected ? "Deselect All" : "Select All")
                         .fontWeight(.semibold)
@@ -295,7 +316,7 @@ struct ChecklistView: View {
                     !canTransferItems || listManager.selectedItemIds.isEmpty
                 )
                 .matchedTransitionSource(
-                    id: "TRANSFER",
+                    id: IDConstants.TRANSFER_BUTTON,
                     in: namespace
                 )
             }
@@ -335,7 +356,11 @@ struct ChecklistView: View {
     }
 
     private func moveItem(from: Int, to: Int) {
-        modelContext.moveItem(in: sortedUncheckedItems, from: from, to: to)
+        modelContext.moveChecklistItem(
+            in: sortedUncheckedItems,
+            from: from,
+            to: to
+        )
     }
 
     private func deleteAllCompletedItems() {
@@ -343,11 +368,8 @@ struct ChecklistView: View {
     }
 
     private func deleteEntireList() {
-        
         closeChecklist(nil)
-        
-        modelContext.deleteChecklist(checklist)
-        
+        modelContext.deleteChecklistItem(checklist)
     }
 
     private func createLowerItem(scrollProxy: ScrollViewProxy) {
@@ -360,7 +382,7 @@ struct ChecklistView: View {
         DispatchQueue.main.async {
             withAnimation {
                 scrollProxy.scrollTo(
-                    IdConstants.UNCHECKED_ITEMS,
+                    IDConstants.UNCHECKED_ITEMS,
                     anchor: .top
                 )
             }

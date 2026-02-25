@@ -241,7 +241,7 @@ struct PlannerView: View {
             )
             .navigationTransition(
                 .zoom(
-                    sourceID: "TRANSFER",
+                    sourceID: IDConstants.TRANSFER_BUTTON,
                     in: namespace
                 )
             )
@@ -267,13 +267,16 @@ struct PlannerView: View {
     private var topLeftToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             if !plannerManager.isSelectMode {
-                Button("Back", systemImage: "chevron.left") {
-                    dismiss()
-                }
+                Button("Back", systemImage: "chevron.left", action: dismiss)
             } else {
-                Button("Cancel", systemImage: "xmark") {
-                    plannerManager.toggleSelectMode()
-                }
+                Button(
+                    "Cancel",
+                    systemImage: "xmark",
+                    action: plannerManager.toggleSelectMode
+                )
+                // Note: This fixes a bug where opening select mode while a keyboard is open causes this button to
+                // appear tinted as the accent color.
+                .tint(Color.label)
             }
         }
     }
@@ -343,15 +346,7 @@ struct PlannerView: View {
                 }
             } else {
                 Button {
-                    if isAllSelected {
-                        plannerManager.selectedItemIds = []
-                        plannerManager.selectedItems = []
-                    } else {
-                        plannerManager.selectedItems = visibleEvents
-                        plannerManager.selectedItemIds = Set(
-                            visibleEvents.map { $0.stableId }
-                        )
-                    }
+                    plannerManager.toggleSelectAll(visibleItems: visibleEvents)
                 } label: {
                     Text(isAllSelected ? "Deselect All" : "Select All")
                         .fontWeight(.semibold)
@@ -417,7 +412,7 @@ struct PlannerView: View {
                 }
                 .disabled(plannerManager.selectedItemIds.isEmpty)
                 .matchedTransitionSource(
-                    id: "TRANSFER",
+                    id: IDConstants.TRANSFER_BUTTON,
                     in: namespace
                 )
             }
@@ -599,7 +594,10 @@ struct PlannerView: View {
 
         DispatchQueue.main.async {
             withAnimation {
-                scrollProxy.scrollTo(IdConstants.UNCHECKED_ITEMS, anchor: .bottom)
+                scrollProxy.scrollTo(
+                    IDConstants.UNCHECKED_ITEMS,
+                    anchor: .bottom
+                )
             }
         }
 

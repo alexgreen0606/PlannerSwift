@@ -81,7 +81,6 @@ struct SortableListView<
                 }
                 .discreetListItem()
                 .listRowInsets(EdgeInsets())
-                .id(IdConstants.UNCHECKED_ITEMS)
 
                 if uncheckedItems.isEmpty && showChecked {
                     EmptyLabel(emptyUncheckedLabel)
@@ -94,6 +93,7 @@ struct SortableListView<
                     .listRowInsets(.top, 0)
             }
             .listSectionSeparator(.hidden)
+            .id(IDConstants.UNCHECKED_ITEMS)
 
             if showChecked {
                 Section {
@@ -128,7 +128,7 @@ struct SortableListView<
                     }
                 }
                 .discreetListItem()
-                .id(IdConstants.CHECKED_ITEMS)
+                .id(IDConstants.CHECKED_ITEMS)
             }
         }
         .listStyle(.plain)
@@ -150,17 +150,9 @@ struct SortableListView<
         .animateSynchronousAction(from: listManager.newlyCheckedIds)
         .animateSynchronousAction(from: listManager.newlyUncheckedIds)
         
-        // Dismiss the keyboard when no items are focused.
-        .onChange(of: listManager.focusedId) { _, id in
-            if id == nil {
-               dismissKeyboard()
-            }
-        }
-        
         // Blur the textfields when the app exits focus.
         .onChange(of: appPhase) { _, phase in
             if phase == .inactive {
-                dismissKeyboard()
                 listManager.focusedId = nil
             }
         }
@@ -169,7 +161,7 @@ struct SortableListView<
         .withScrollTrigger(
             scrollProxy: scrollProxy,
             trigger: showChecked,
-            id: IdConstants.CHECKED_ITEMS,
+            id: IDConstants.CHECKED_ITEMS,
             disabled: !showChecked
         )
     }
@@ -191,17 +183,7 @@ struct SortableListView<
 
     private func handleToolbarPress(_ iconName: String, _ item: Item) {
         tapToolbar?(iconName, item)
-        dismissKeyboard()
         listManager.focusedId = nil
-    }
-
-    func dismissKeyboard() {
-        UIApplication.shared.sendAction(
-            #selector(UIResponder.resignFirstResponder),
-            to: nil,
-            from: nil,
-            for: nil
-        )
     }
 
 }

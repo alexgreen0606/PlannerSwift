@@ -8,14 +8,18 @@
 import SwiftData
 import SwiftUI
 
+enum LayoutConstants {
+    static let ICON_WIDTH: CGFloat = 26
+    static let ROW_SPACING: CGFloat = 12
+    static let ICON_CONTAINER_HEIGHT: CGFloat = 53
+}
+
 struct FolderView: View {
     let folder: ChecklistItem
     let namespace: Namespace.ID
     let openItem: (ChecklistItem) -> Void
     let canTranferItems: Bool
     let updateTransferAvailability: (Set<UUID>) -> Void
-    let iconWidth: CGFloat = 26
-    let rowSpacing: CGFloat = 12
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -51,7 +55,7 @@ struct FolderView: View {
             List {
                 ForEach(
                     sortedItems,
-                    id: \.self
+                    id: \.stableId
                 ) { item in
                     itemRow(item)
                 }
@@ -72,7 +76,7 @@ struct FolderView: View {
                     pendingScrollItem = savedItem
                 }
                 .navigationTransition(
-                    .zoom(sourceID: "ADD_BUTTON", in: namespace)
+                    .zoom(sourceID: IDConstants.ADD_BUTTON, in: namespace)
                 )
             }
 
@@ -86,7 +90,7 @@ struct FolderView: View {
                     }
                 }
                 .navigationTransition(
-                    .zoom(sourceID: "ELLIPSIS", in: namespace)
+                    .zoom(sourceID: IDConstants.ELLIPSIS_BUTTON, in: namespace)
                 )
             }
 
@@ -99,7 +103,7 @@ struct FolderView: View {
                 .environmentObject(selectManager)
                 .navigationTransition(
                     .zoom(
-                        sourceID: "TRANSFER",
+                        sourceID: IDConstants.TRANSFER_BUTTON,
                         in: namespace
                     )
                 )
@@ -150,15 +154,7 @@ struct FolderView: View {
 
             ToolbarItem(placement: .topBarLeading) {
                 Button {
-                    if isAllSelected {
-                        selectManager.selectedItemIds = []
-                        selectManager.selectedItems = []
-                    } else {
-                        selectManager.selectedItems = sortedItems
-                        selectManager.selectedItemIds = Set(
-                            sortedItems.map { $0.stableId }
-                        )
-                    }
+                    selectManager.toggleSelectAll(visibleItems: sortedItems)
                 } label: {
                     Text(isAllSelected ? "Deselect All" : "Select All")
                         .fontWeight(.semibold)
@@ -201,7 +197,7 @@ struct FolderView: View {
                 } label: {
                     Image(systemName: "ellipsis")
                 }
-                .matchedTransitionSource(id: "ELLIPSIS", in: namespace)
+                .matchedTransitionSource(id: IDConstants.ELLIPSIS_BUTTON, in: namespace)
                 .confirmationDialog(
                     folder.deleteConfirmation,
                     isPresented: $showDeleteFolderConfirm,
@@ -218,7 +214,7 @@ struct FolderView: View {
                     showCreateSheet = true
                 }
                 .matchedTransitionSource(
-                    id: "ADD_BUTTON",
+                    id: IDConstants.ADD_BUTTON,
                     in: namespace
                 )
             }
@@ -253,7 +249,7 @@ struct FolderView: View {
                     showTransferSheet = true
                 }
                 .matchedTransitionSource(
-                    id: "TRANSFER",
+                    id: IDConstants.TRANSFER_BUTTON,
                     in: namespace
                 )
                 .disabled(
@@ -266,7 +262,7 @@ struct FolderView: View {
     // MARK: - Item Rows
 
     private func itemRow(_ item: ChecklistItem) -> some View {
-        HStack(alignment: .top, spacing: rowSpacing) {
+        HStack(alignment: .top, spacing: LayoutConstants.ROW_SPACING) {
             HStack(spacing: selectManager.isSelectMode ? 16 : 0) {
 
                 ToggleView(
@@ -310,7 +306,7 @@ struct FolderView: View {
         }
         .id(item.stableId)
         .alignmentGuide(.listRowSeparatorLeading) { _ in
-            iconWidth + rowSpacing
+            LayoutConstants.ICON_WIDTH + LayoutConstants.ROW_SPACING
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
@@ -338,8 +334,8 @@ struct FolderView: View {
         .foregroundColor(item.color.swiftUIColor)
         .imageScale(.medium)
         .frame(
-            width: iconWidth,
-            height: 53,
+            width: LayoutConstants.ICON_WIDTH,
+            height: LayoutConstants.ICON_CONTAINER_HEIGHT,
             alignment: .center
         )
     }
@@ -347,39 +343,23 @@ struct FolderView: View {
     // MARK: - Helper Functions
 
     private func moveItem(from sources: IndexSet, to destination: Int) {
-        for source in sources {
+        for from in sources {
             var targetIndex = destination
-            if targetIndex > source {
+            if targetIndex > from {
                 targetIndex -= 1
             }
 
-            guard source != targetIndex else { continue }
-
-            let movedEvent = sortedItems[source]
-            let remainingItems = sortedItems.filter {
-                $0.stableId != movedEvent.stableId
-            }
-            movedEvent.sortIndex = generateSortIndex(
-                index: targetIndex,
-                items: remainingItems
+            modelContext.moveChecklistItem(
+                in: sortedItems,
+                from: from,
+                to: targetIndex
             )
         }
-
-        try! modelContext.save()
     }
 
     private func deleteEntireFolder() {
         dismiss()
-
-        modelContext.delete(folder)
-
-        do {
-            try modelContext.save()
-        } catch {
-            assertionFailure(
-                "Failed to delete folder: \(error)"
-            )
-        }
+        modelContext.deleteChecklistItem(folder)
     }
 
 }

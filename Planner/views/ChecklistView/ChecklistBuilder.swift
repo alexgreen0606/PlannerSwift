@@ -10,7 +10,6 @@ import SwiftDate
 import SwiftUI
 
 struct ChecklistBuilderView: View {
-    private let checklistId: UUID
     private let canTransferItems: Bool
     private let closeChecklist: (ChecklistItem?) -> Void
 
@@ -19,7 +18,6 @@ struct ChecklistBuilderView: View {
         canTransferItems: Bool,
         closeChecklist: @escaping (ChecklistItem?) -> Void
     ) {
-        self.checklistId = checklistId
         self.closeChecklist = closeChecklist
         self.canTransferItems = canTransferItems
 

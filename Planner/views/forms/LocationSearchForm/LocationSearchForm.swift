@@ -299,7 +299,7 @@ struct LocationSearchView: View {
     @ViewBuilder
     private var fillerSuggestions: some View {
         List {
-            ForEach(existingLocations, id: \.self) { option in
+            ForEach(existingLocations, id: \.id) { option in
                 suggestionRow(option)
             }
         }

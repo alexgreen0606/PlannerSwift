@@ -21,7 +21,7 @@ final class ListManager<Item: ListItem>: ObservableObject {
     ) {
         self.isItemChecked = isItemChecked
     }
-    
+
     func setToggleItem(_ toggleItem: @escaping StatusGuard<Item>) {
         self.toggleItem = toggleItem
     }
@@ -41,7 +41,7 @@ final class ListManager<Item: ListItem>: ObservableObject {
 
     // Controls fading of checked items.
     @Published var fadingOpacity: Double = 1
-    
+
     @Published var focusedId: UUID?
 
     private var task: Task<Void, Never>?
@@ -72,6 +72,18 @@ final class ListManager<Item: ListItem>: ObservableObject {
         }
     }
 
+    func toggleSelectAll(visibleItems: [Item]) {
+        if selectedItemIds.count == visibleItems.count {
+            selectedItemIds = []
+            selectedItems = []
+        } else {
+            selectedItems = visibleItems
+            selectedItemIds = Set(
+                visibleItems.map { $0.stableId }
+            )
+        }
+    }
+
     func toggleItem(_ item: Item) {
         switch toggleType {
         case .select:
@@ -92,12 +104,12 @@ final class ListManager<Item: ListItem>: ObservableObject {
     }
 
     private func toggleChecked(for item: Item) {
-        
+
         // Blur this item if it is currently focused.
         if focusedId == item.stableId {
             focusedId = nil
         }
-        
+
         let isChecked = isItemChecked?(item) ?? item.isChecked
 
         if toggleTransitionDuration != .instant {

@@ -108,7 +108,7 @@ struct TransferChecklistItemsFormView: View {
             ZStack {
                 List {
                     Section {
-                        ForEach(currentOptions, id: \.self) { item in
+                        ForEach(currentOptions, id: \.stableId) { item in
                             itemRow(item)
                         }
                     } header: {
