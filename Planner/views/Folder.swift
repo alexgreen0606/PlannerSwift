@@ -13,7 +13,7 @@ struct FolderView: View {
     let namespace: Namespace.ID
     let openItem: (ChecklistItem) -> Void
     let canTranferItems: Bool
-    let updateTransferAvailability: (Set<PersistentIdentifier>) -> Void
+    let updateTransferAvailability: (Set<UUID>) -> Void
     let iconWidth: CGFloat = 26
     let rowSpacing: CGFloat = 12
 
@@ -47,7 +47,7 @@ struct FolderView: View {
     }
 
     var body: some View {
-        ScrollViewReader { proxy in
+        ScrollViewReader { scrollProxy in
             List {
                 ForEach(
                     sortedItems,
@@ -106,12 +106,12 @@ struct FolderView: View {
             }
 
             // Scroll to new items.
-            .onChange(of: sortedItems.map(\.id)) { _, _ in
+            .onChange(of: sortedItems.map(\.stableId)) { _, _ in
                 guard let item = pendingScrollItem else { return }
 
                 DispatchQueue.main.async {
                     withAnimation {
-                        proxy.scrollTo(item.id, anchor: .top)
+                        scrollProxy.scrollTo(item.stableId, anchor: .top)
                     }
                 }
 
@@ -156,7 +156,7 @@ struct FolderView: View {
                     } else {
                         selectManager.selectedItems = sortedItems
                         selectManager.selectedItemIds = Set(
-                            sortedItems.map { $0.id }
+                            sortedItems.map { $0.stableId }
                         )
                     }
                 } label: {
@@ -229,7 +229,7 @@ struct FolderView: View {
                     disabled: selectManager.selectedItemIds.isEmpty,
                     warningMessage: nil
                 ) {
-                    withAnimation(.easeInOut) {
+                    withAnimation {
                         modelContext.deleteChecklistItems(
                             selectManager.selectedItems
                         )
@@ -238,9 +238,7 @@ struct FolderView: View {
                     DispatchQueue.main.asyncAfter(
                         deadline: .now() + .milliseconds(750)
                     ) {
-                        withAnimation {
-                            selectManager.toggleSelectMode()
-                        }
+                        selectManager.toggleSelectMode()
                     }
                 }
             }
@@ -273,14 +271,14 @@ struct FolderView: View {
 
                 ToggleView(
                     isOn: selectManager.selectedItemIds.contains(
-                        item.id
+                        item.stableId
                     ),
                     tint: nil,
                     opacity: selectManager.isSelectMode ? 1 : 0,
                 ) {
                     selectManager.toggleItem(item)
                     updateTransferAvailability(
-                        Set(selectManager.selectedItemIds + [folder.id])
+                        Set(selectManager.selectedItemIds + [folder.stableId])
                     )
                 }
                 .frame(width: selectManager.isSelectMode ? 22 : 0)
@@ -310,7 +308,7 @@ struct FolderView: View {
             }
             .frame(height: 19)
         }
-        .id(item.id)
+        .id(item.stableId)
         .alignmentGuide(.listRowSeparatorLeading) { _ in
             iconWidth + rowSpacing
         }
@@ -320,7 +318,7 @@ struct FolderView: View {
             if selectManager.isSelectMode {
                 selectManager.toggleItem(item)
                 updateTransferAvailability(
-                    Set(selectManager.selectedItemIds + [folder.id])
+                    Set(selectManager.selectedItemIds + [folder.stableId])
                 )
                 return
             }
@@ -328,7 +326,7 @@ struct FolderView: View {
             openItem(item)
         }
         .matchedTransitionSource(
-            id: item.id,
+            id: item.stableId,
             in: namespace
         )
     }
@@ -358,7 +356,9 @@ struct FolderView: View {
             guard source != targetIndex else { continue }
 
             let movedEvent = sortedItems[source]
-            let remainingItems = sortedItems.filter { $0.id != movedEvent.id }
+            let remainingItems = sortedItems.filter {
+                $0.stableId != movedEvent.stableId
+            }
             movedEvent.sortIndex = generateSortIndex(
                 index: targetIndex,
                 items: remainingItems

@@ -9,32 +9,14 @@ import SwiftData
 import SwiftUI
 
 struct ChecklistView: View {
-    private let checklistId: PersistentIdentifier
-    private let canTransferItems: Bool
-    
-    // Can pass a folder to navigate into (passes itself when it is transformed into a folder).
-    private let closeChecklist: (ChecklistItem?) -> Void
-    
-    init(
-        checklistId: PersistentIdentifier,
-        canTransferItems: Bool,
-        closeChecklist: @escaping (ChecklistItem?) -> Void
-    ) {
-        self.checklistId = checklistId
-        self.closeChecklist = closeChecklist
-        self.canTransferItems = canTransferItems
+    let checklist: ChecklistItem
+    let canTransferItems: Bool
 
-        _checklists = Query(
-            filter: #Predicate<ChecklistItem> {
-                $0.id == checklistId
-            }
-        )
-    }
+    // Can pass a folder to navigate into (passes itself when it is transformed into a folder).
+    let closeChecklist: (ChecklistItem?) -> Void
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var listManager: ListManager<ChecklistItem>
-    
-    @Query private var checklists: [ChecklistItem]
 
     @State private var showDeleteCompletedConfirm = false
     @State private var showDeleteChecklistConfirm = false
@@ -43,38 +25,34 @@ struct ChecklistView: View {
 
     @Namespace private var namespace
 
-    private var checklist: ChecklistItem? {
-        checklists.first
-    }
-
     private var hasCheckedItems: Bool {
-        checklist?.items.contains(where: \.isChecked) ?? false
+        checklist.items.contains(where: \.isChecked)
     }
 
     private var sortedUncheckedItems: [ChecklistItem] {
-        checklist?.items
+        checklist.items
             .filter {
                 (!$0.isChecked
-                    && !listManager.newlyUncheckedIds.contains($0.id))
-                    || listManager.newlyCheckedIds.contains($0.id)
+                    && !listManager.newlyUncheckedIds.contains($0.stableId))
+                    || listManager.newlyCheckedIds.contains($0.stableId)
             }
-            .sorted { $0.sortIndex < $1.sortIndex } ?? []
+            .sorted { $0.sortIndex < $1.sortIndex }
     }
 
     private var sortedCheckedItems: [ChecklistItem] {
-        checklist?.items
+        checklist.items
             .filter {
                 ($0.isChecked
-                    && !listManager.newlyCheckedIds.contains($0.id))
-                    || listManager.newlyUncheckedIds.contains($0.id)
+                    && !listManager.newlyCheckedIds.contains($0.stableId))
+                    || listManager.newlyUncheckedIds.contains($0.stableId)
             }
-            .sorted { $0.sortIndex < $1.sortIndex } ?? []
+            .sorted { $0.sortIndex < $1.sortIndex }
     }
 
     private var visibleItems: [ChecklistItem] {
         var allVisibleItems = sortedUncheckedItems
 
-        if checklist?.showCompleted == true {
+        if checklist.showCompleted {
             allVisibleItems.append(
                 contentsOf: sortedCheckedItems
             )
@@ -95,16 +73,16 @@ struct ChecklistView: View {
                 "\(count == 0 ? "No" : String(count)) item\(count == 1 ? "" : "s") selected"
         }
 
-        return checklist?.path ?? ""
+        return checklist.path
     }
 
     var body: some View {
         NavigationStack {
-            ScrollViewReader { proxy in
+            ScrollViewReader { scrollProxy in
                 SortableListView(
                     uncheckedItems: sortedUncheckedItems,
                     checkedItems: sortedCheckedItems,
-                    showChecked: checklist?.showCompleted == true,
+                    showChecked: checklist.showCompleted,
                     floatingInfo: EmptyView(),
                     customToggleConfig: nil,
                     checkedHeader: "Completed items",
@@ -112,25 +90,25 @@ struct ChecklistView: View {
                     emptyUncheckedLabel: "No items",
                     emptyCheckedLabel: "No completed items",
                     namespace: nil,
-                    tint: { _ in checklist?.color.swiftUIColor ?? .blue },
+                    tint: { _ in checklist.color.swiftUIColor },
                     toolbarIcons: [],
                     tapToolbar: { _, _ in },
                     leftAdornment: { _ in EmptyView() },
                     rightAdornment: { _ in EmptyView() },
                     bottomAdornment: { _ in EmptyView() },
-                    proxy: proxy,
+                    scrollProxy: scrollProxy,
                     createItem: createItem,
                     handleTitleChange: { _ in },
                     moveItem: moveItem,
                     isItemChecked: nil
                 )
-                .accentColor(checklist?.color.swiftUIColor ?? .blue)
-                .navigationTitle(checklist?.title ?? "")
+                .accentColor(checklist.color.swiftUIColor)
+                .navigationTitle(checklist.title)
                 .navigationSubtitle(subtitle)
                 .toolbar {
                     topLeftToolbar
                     topRightToolbar
-                    bottomToolbar(proxy)
+                    bottomToolbar(scrollProxy: scrollProxy)
                 }
                 .animateSynchronousAction(from: listManager.isSelectMode)
             }
@@ -138,7 +116,7 @@ struct ChecklistView: View {
 
         // Edit Form
         .sheet(isPresented: $isEditFormOpen) {
-            if let checklist, let parent = checklist.parent {
+            if let parent = checklist.parent {
                 ChecklistItemFormView(item: checklist, parent: parent) {
                     savedList in
                     if savedList.type == .folder {
@@ -153,18 +131,16 @@ struct ChecklistView: View {
 
         // Transfer Form
         .sheet(isPresented: $isTransferSheetOpen) {
-            if let checklist {
-                TransferChecklistItemsFormView(
-                    source: checklist,
-                    selectedIds: listManager.selectedItemIds
+            TransferChecklistItemsFormView(
+                source: checklist,
+                selectedIds: listManager.selectedItemIds
+            )
+            .navigationTransition(
+                .zoom(
+                    sourceID: "TRANSFER",
+                    in: namespace
                 )
-                .navigationTransition(
-                    .zoom(
-                        sourceID: "TRANSFER",
-                        in: namespace
-                    )
-                )
-            }
+            )
         }
     }
 
@@ -180,11 +156,7 @@ struct ChecklistView: View {
                     closeChecklist(nil)
                 }
             } else {
-                Button("Cancel", systemImage: "xmark") {
-                    withAnimation {
-                        listManager.toggleSelectMode()
-                    }
-                }
+                Button("Cancel", systemImage: "xmark", action: listManager.toggleSelectMode)
             }
         }
     }
@@ -204,9 +176,7 @@ struct ChecklistView: View {
                     }
 
                     Button {
-                        withAnimation {
-                            listManager.toggleSelectMode()
-                        }
+                        listManager.toggleSelectMode()
                     } label: {
                         Image(systemName: "checkmark.circle")
                         Text("Select items")
@@ -242,16 +212,14 @@ struct ChecklistView: View {
                     in: namespace
                 )
                 .confirmationDialog(
-                    checklist?.deleteConfirmation ?? "",
+                    checklist.deleteConfirmation,
                     isPresented: $showDeleteChecklistConfirm,
                     titleVisibility: .visible
                 ) {
-                    Button("Confirm", role: .destructive) {
-                        deleteEntireList()
-                    }
+                    Button("Confirm", role: .destructive, action: deleteEntireList)
                 } message: {
                     Text(
-                        checklist?.deleteWarning ?? ""
+                        checklist.deleteWarning
                     )
                 }
                 .confirmationDialog(
@@ -273,7 +241,7 @@ struct ChecklistView: View {
                     } else {
                         listManager.selectedItems = visibleItems
                         listManager.selectedItemIds = Set(
-                            visibleItems.map { $0.id }
+                            visibleItems.map { $0.stableId }
                         )
                     }
                 } label: {
@@ -288,25 +256,16 @@ struct ChecklistView: View {
 
     @ToolbarContentBuilder
     private func bottomToolbar(
-        _ proxy: ScrollViewProxy
+        scrollProxy: ScrollViewProxy
     ) -> some ToolbarContent {
         ToolbarItemGroup(placement: .bottomBar) {
             if !listManager.isSelectMode {
                 Spacer()
 
                 Button("Add", systemImage: "plus") {
-                    createItem(at: sortedUncheckedItems.count)
-
-                    DispatchQueue.main.async {
-                        withAnimation {
-                            proxy.scrollTo(
-                                "UNCHECKED",
-                                anchor: .top
-                            )
-                        }
-                    }
+                    createLowerItem(scrollProxy: scrollProxy)
                 }
-                .tint(checklist?.color.swiftUIColor ?? .blue)
+                .tint(checklist.color.swiftUIColor)
             } else {
                 DeleteSelectedButtonView(
                     itemsLabel: "items",
@@ -345,15 +304,14 @@ struct ChecklistView: View {
 
     private var showCompletedToggle: some View {
         Button {
-            checklist?.showCompleted.toggle()
+            checklist.showCompleted.toggle()
         } label: {
             Image(
-                systemName: checklist?.showCompleted
-                    == true
+                systemName: checklist.showCompleted
                     ? "eye.slash" : "eye"
             )
             Text(
-                checklist?.showCompleted == true
+                checklist.showCompleted
                     ? "Hide completed"
                     : "Show completed"
             )
@@ -363,59 +321,21 @@ struct ChecklistView: View {
     // MARK: - Helper Functions
 
     private func createItem(
-        near baseId: PersistentIdentifier?,
-        offset: Int = 0
+        near baseId: UUID?,
+        offset: Int
     ) {
-        guard
-            let baseIndex = sortedUncheckedItems.firstIndex(where: {
-                $0.id == baseId
-            })
-        else {
-            return
+        if let newId = modelContext.createChecklistItem(
+            in: sortedUncheckedItems,
+            near: baseId,
+            offset: offset,
+            parent: checklist
+        ) {
+            listManager.focusedId = newId
         }
-
-        let finalIndex = baseIndex + offset
-
-        // Don't create the new item if it is next to an empty item.
-        let upperEvent =
-            finalIndex > 0 ? sortedUncheckedItems[finalIndex - 1] : nil
-        let lowerEvent =
-            finalIndex < sortedUncheckedItems.count
-            ? sortedUncheckedItems[finalIndex] : nil
-        if let upper = upperEvent, upper.title.isEmpty {
-            return
-        }
-        if let lower = lowerEvent, lower.title.isEmpty {
-            return
-        }
-
-        createItem(at: finalIndex)
-    }
-
-    private func createItem(at index: Int) {
-        let sortIndex = generateSortIndex(
-            index: index,
-            items: sortedUncheckedItems
-        )
-        let newItem = ChecklistItem(sortIndex: sortIndex, parent: checklist)
-
-        modelContext.insert(newItem)
-        try! modelContext.save()
     }
 
     private func moveItem(from: Int, to: Int) {
-        guard from != to else { return }
-
-        let movedEvent = sortedUncheckedItems[from]
-        let remainingItems = sortedUncheckedItems.filter {
-            $0.id != movedEvent.id
-        }
-        movedEvent.sortIndex = generateSortIndex(
-            index: to,
-            items: remainingItems
-        )
-
-        try! modelContext.save()
+        modelContext.moveItem(in: sortedUncheckedItems, from: from, to: to)
     }
 
     private func deleteAllCompletedItems() {
@@ -423,21 +343,29 @@ struct ChecklistView: View {
     }
 
     private func deleteEntireList() {
-        guard let checklist else {
-            return
-        }
-
+        
         closeChecklist(nil)
+        
+        modelContext.deleteChecklist(checklist)
+        
+    }
 
-        modelContext.delete(checklist)
+    private func createLowerItem(scrollProxy: ScrollViewProxy) {
 
-        do {
-            try modelContext.save()
-        } catch {
-            assertionFailure(
-                "Failed to delete list: \(error)"
-            )
+        createItem(
+            near: sortedUncheckedItems.last?.stableId,
+            offset: 1
+        )
+
+        DispatchQueue.main.async {
+            withAnimation {
+                scrollProxy.scrollTo(
+                    IdConstants.UNCHECKED_ITEMS,
+                    anchor: .top
+                )
+            }
         }
+
     }
 
 }

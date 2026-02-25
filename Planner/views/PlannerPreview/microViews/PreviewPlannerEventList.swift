@@ -21,7 +21,7 @@ struct PreviewPlannerEventListView: View {
     var body: some View {
         if !events.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                ForEach(events, id: \.id) { event in
+                ForEach(events, id: \.stableId) { event in
                     HStack(alignment: .top, spacing: 12) {
                         Text(event.title)
                             .font(.system(size: UIConstants.listItemFontSize * 0.8))

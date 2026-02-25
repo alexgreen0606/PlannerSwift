@@ -14,45 +14,30 @@ extension ModelContext {
 
     @MainActor
     func createEvent(
-        near baseId: PersistentIdentifier?,
-        offset: Int,
         in events: [PlannerEvent],
+        near baseId: UUID?,
+        offset: Int,
         startOfDay: DateInRegion,
         settings: PlannerSettings
-    ) {
+    ) -> UUID? {
 
-        guard
-            let baseIndex = baseId == nil
-                ? 0
-                : events.firstIndex(where: {
-                    $0.id == baseId
-                })
-        else {
-            assertionFailure(
-                "ERROR plannerEvent.createEvent: Failed to get a base index for the new event."
+        var targetIndex: Int? = 0
+
+        if let baseId {
+            targetIndex = generateTargetIndex(
+                in: events,
+                near: baseId,
+                offset: offset
             )
-            return
         }
 
-        let finalIndex = baseIndex + offset
-
-        // Don't create the new event if it is next to an empty event.
-
-        let upperEvent = finalIndex > 0 ? events[finalIndex - 1] : nil
-        if let upperEvent, upperEvent.title.isEmpty {
-            return
-        }
-
-        let lowerEvent =
-            finalIndex < events.count
-            ? events[finalIndex] : nil
-        if let lowerEvent, lowerEvent.title.isEmpty {
-            return
+        guard let targetIndex else {
+            return nil
         }
 
         let sortDate = generateSortDate(
             startOfDay: startOfDay,
-            index: finalIndex,
+            index: targetIndex,
             events: events,
             settings: settings
         )
@@ -65,13 +50,15 @@ extension ModelContext {
 
         insert(newEvent)
 
-        do {
-            try save()
-        } catch {
-            assertionFailure(
-                "ERROR plannerEvent.createEvent: \(error)"
-            )
+        Task { @MainActor in
+            do {
+                try self.save()
+            } catch {
+                print("ERROR plannerEvent.createEvent: \(error)")
+            }
         }
+
+        return newEvent.stableId
     }
 
     @MainActor
@@ -112,15 +99,14 @@ extension ModelContext {
         // Save the event to its new position. Preserve the actual event date.
         let movedEvent = events[from]
         let eventsWithoutEvent = events.filter {
-            $0.id != movedEvent.id
+            $0.stableId != movedEvent.stableId
         }
-        let newSortDate = generateSortDate(
+        movedEvent.sortDate = generateSortDate(
             startOfDay: startOfDay,
             index: to,
             events: eventsWithoutEvent,
             settings: settings
         )
-        movedEvent.sortDate = newSortDate
 
         // Handle calendar event position changes.
         if let calEvent = movedEvent.calendarEvent {
@@ -222,7 +208,7 @@ extension ModelContext {
 
         for event in plans {
             if event.isChecked {
-                print("Deleting checked event: \(event.id)")
+                print("Deleting checked event: \(event.stableId)")
                 delete(event)
             }
         }
@@ -252,8 +238,8 @@ extension ModelContext {
             initialPlannerEvent.hasTime = draftPlannerEvent.hasTime
             initialPlannerEvent.calendarEvent = nil
             initialPlannerEvent.location = draftPlannerEvent.location
-            initialPlannerEvent.locationSource = draftPlannerEvent.locationSource
-
+            initialPlannerEvent.locationSource =
+                draftPlannerEvent.locationSource
 
         } else {
 
@@ -263,7 +249,7 @@ extension ModelContext {
                 date: draftPlannerEvent.date,
                 sortIndex: 0
             )
-            
+
             newEvent.title = draftPlannerEvent.title
             newEvent.date = draftPlannerEvent.date
             newEvent.hasTime = draftPlannerEvent.hasTime

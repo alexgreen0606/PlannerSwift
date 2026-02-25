@@ -33,14 +33,12 @@ struct RowView<
     let namespace: Namespace.ID?
     let customToggleConfig: RowToggleConfig<Item>?
     let onCreateItem:
-        (_ baseId: PersistentIdentifier?, _ offset: Int) ->
+        (_ baseId: UUID?, _ offset: Int) ->
             Void
     let onTitleChange: (_ item: Item) -> Void
     let isItemChecked: ((_ item: Item) -> Bool)?
 
-    @Environment(\.scenePhase) private var appPhase
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var focusController: FocusController
     @EnvironmentObject private var listManager: ListManager<Item>
 
     // Will be updated dynamically within the TextfieldView.
@@ -49,23 +47,7 @@ struct RowView<
     @State private var debounceTask: Task<Void, Never>? = nil
 
     private var isFocused: Bool {
-        focusController.focusedId == item.id
-    }
-    
-    private var isFocusedBinding: Binding<Bool> {
-        Binding(
-            get: {
-                focusController.focusedId == item.id
-            },
-            set: { newValue in
-                if newValue {
-                    // TODO: fix this warning
-                    focusController.focusedId = item.id
-                } else if focusController.focusedId == item.id {
-                    focusController.focusedId = nil
-                }
-            }
-        )
+        listManager.focusedId == item.stableId
     }
 
     private var tintColor: Color {
@@ -75,14 +57,14 @@ struct RowView<
     private var opacity: Double {
         guard !showChecked else { return 1 }
 
-        let isPending = listManager.fadingItemIds.contains(item.id)
+        let isPending = listManager.fadingItemIds.contains(item.stableId)
 
         return isPending ? listManager.fadingOpacity : 1
     }
 
     private var isChecked: Bool {
         if listManager.isSelectMode {
-            return listManager.selectedItemIds.contains(item.id)
+            return listManager.selectedItemIds.contains(item.stableId)
         }
 
         return isItemChecked?(item) == true || item.isChecked
@@ -96,30 +78,9 @@ struct RowView<
             .discreetListItem()
             .padding(.horizontal)
 
-            // Trigger focus on render for empty items (new items).
-            .onAppear {
-                if item.title.isEmpty, !isFocused {
-                    focusController.focusedId = item.id
-                }
-            }
-
-            // Blur the textfield when this item has been selected.
-            .onChange(of: isChecked) { _, isChecked in
-                if isChecked, isFocused {
-                    focusController.focusedId = nil
-                }
-            }
-
-            // Blur the textfield when the app exits focus.
-            .onChange(of: appPhase) { _, phase in
-                if phase == .inactive {
-                    focusController.focusedId = nil
-                }
-            }
-
         if let namespace {
             row
-                .matchedTransitionSource(id: "\(item.id)", in: namespace)
+                .matchedTransitionSource(id: "\(item.stableId)", in: namespace)
         } else {
             row
         }
@@ -157,7 +118,7 @@ struct RowView<
                         return
                     }
 
-                    onCreateItem(item.id, 0)
+                    onCreateItem(item.stableId, 0)
                 }
             )
             HStack(alignment: .top, spacing: 4) {
@@ -195,7 +156,7 @@ struct RowView<
                         return
                     }
 
-                    onCreateItem(item.id, 1)
+                    onCreateItem(item.stableId, 1)
                 }
             )
         }
@@ -219,7 +180,7 @@ struct RowView<
                 }
 
                 if !isChecked && !item.isChecked {
-                    focusController.focusedId = item.id
+                    listManager.focusedId = item.stableId
                 }
             }
     }
@@ -227,8 +188,9 @@ struct RowView<
     // Textfield
     private var editableField: some View {
         RowTextfieldView(
+            itemId: item.stableId,
+            focusedId: $listManager.focusedId,
             text: $item.title,
-            isFocused: isFocusedBinding,
             height: $height,
             toolbarIcons: toolbarIcons,
             accentColor: tintColor,
@@ -237,13 +199,13 @@ struct RowView<
             },
             onEnter: {
                 if !item.title.isEmpty {
-                    onCreateItem(item.id, 1)
+                    onCreateItem(item.stableId, 1)
                 } else {
-                    focusController.focusedId = nil
+                    listManager.focusedId = nil
                 }
             },
             onDone: {
-                focusController.focusedId = nil
+                listManager.focusedId = nil
             }
         )
         .tint(tintColor)

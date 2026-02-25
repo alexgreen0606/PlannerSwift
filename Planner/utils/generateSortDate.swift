@@ -31,7 +31,6 @@ func generateSortDate(
 
     // Calculate midpoint
     let interval = nextDate.timeIntervalSince(prevDate)
-    print(interval)
     if interval < 1.0 {
 
         // Interval too small → normalize all events

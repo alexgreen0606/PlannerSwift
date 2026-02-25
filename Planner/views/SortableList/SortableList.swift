@@ -9,10 +9,6 @@ import Combine
 import SwiftData
 import SwiftUI
 
-class FocusController: ObservableObject {
-    @Published var focusedId: PersistentIdentifier?
-}
-
 struct SortableListView<
     Item: ListItem,
     LeftAdornment: View,
@@ -38,34 +34,33 @@ struct SortableListView<
     let leftAdornment: ((_ item: Item) -> LeftAdornment)?
     let rightAdornment: ((_ item: Item) -> RightAdornment)?
     let bottomAdornment: ((_ item: Item) -> BottomAdornment)?
-    let proxy: ScrollViewProxy
-    let createItem: (_ baseId: PersistentIdentifier?, _ offset: Int) -> Void
+    let scrollProxy: ScrollViewProxy
+    let createItem: (_ baseId: UUID?, _ offset: Int) -> Void
     let handleTitleChange: (_ item: Item) -> Void
     let moveItem: (_ from: Int, _ to: Int) -> Void
     let isItemChecked: ((_ item: Item) -> Bool)?
 
+    @Environment(\.scenePhase) private var appPhase
     @EnvironmentObject private var listManager: ListManager<Item>
-
-    @StateObject var focusController = FocusController()
 
     var body: some View {
         List {
             Section {
                 NewRowTriggerView {
                     createItem(
-                        uncheckedItems.first?.id,
+                        uncheckedItems.first?.stableId,
                         0
                     )
                 }
                 .discreetListItem()
                 .listRowInsets(EdgeInsets())
 
-                ForEach(uncheckedItems) { item in
+                ForEach(uncheckedItems, id: \.stableId) { item in
                     RowView(
                         item: item,
                         tint: tint,
                         showChecked: showChecked,
-                        showUpperDivider: item.id == uncheckedItems.first?.id,
+                        showUpperDivider: item.stableId == uncheckedItems.first?.stableId,
                         toolbarIcons: toolbarIcons,
                         tapToolbar: handleToolbarPress,
                         leftAdornment: leftAdornment,
@@ -77,16 +72,16 @@ struct SortableListView<
                         onTitleChange: handleTitleChange,
                         isItemChecked: isItemChecked
                     )
-                    .id(item.id)
+                    .id(item.stableId)
                 }
                 .onMove(perform: moveUncheckedItem)
 
                 NewRowTriggerView {
-                    createItem(uncheckedItems.last?.id, 1)
+                    createItem(uncheckedItems.last?.stableId, 1)
                 }
                 .discreetListItem()
                 .listRowInsets(EdgeInsets())
-                .id("UNCHECKED")
+                .id(IdConstants.UNCHECKED_ITEMS)
 
                 if uncheckedItems.isEmpty && showChecked {
                     EmptyLabel(emptyUncheckedLabel)
@@ -102,13 +97,13 @@ struct SortableListView<
 
             if showChecked {
                 Section {
-                    ForEach(checkedItems) { item in
+                    ForEach(checkedItems, id: \.stableId) { item in
                         RowView(
                             item: item,
                             tint: tint,
                             showChecked: true,
-                            showUpperDivider: item.id
-                                == checkedItems.first?.id,
+                            showUpperDivider: item.stableId
+                                == checkedItems.first?.stableId,
                             toolbarIcons: toolbarIcons,
                             tapToolbar: { _, _ in },
                             leftAdornment: leftAdornment,
@@ -133,10 +128,9 @@ struct SortableListView<
                     }
                 }
                 .discreetListItem()
-                .id("CHECKED")
+                .id(IdConstants.CHECKED_ITEMS)
             }
         }
-        .environmentObject(focusController)
         .listStyle(.plain)
         .environment(\.defaultMinListRowHeight, 0)
         .safeAreaPadding(.bottom, 20)
@@ -149,33 +143,33 @@ struct SortableListView<
 
         // Blur the textfield when the list unmounts (deletes empty items).
         .onDisappear {
-            focusController.focusedId = nil
+            listManager.focusedId = nil
         }
         
         .animateSynchronousAction(from: uncheckedItems)
         .animateSynchronousAction(from: listManager.newlyCheckedIds)
         .animateSynchronousAction(from: listManager.newlyUncheckedIds)
         
-        // Blur the textfields when select mode begins.
-        .onChange(of: listManager.isSelectMode) { _, isSelectMode in
-            if isSelectMode, focusController.focusedId != nil {
-                focusController.focusedId = nil
-                
+        // Dismiss the keyboard when no items are focused.
+        .onChange(of: listManager.focusedId) { _, id in
+            if id == nil {
+               dismissKeyboard()
             }
         }
         
-        // Dismiss the keyboard when no items are focused.
-        .onChange(of: focusController.focusedId) { _, id in
-            if id == nil {
-               dismissKeyboard()
+        // Blur the textfields when the app exits focus.
+        .onChange(of: appPhase) { _, phase in
+            if phase == .inactive {
+                dismissKeyboard()
+                listManager.focusedId = nil
             }
         }
 
         // Slide to checked items when the user marks them visible.
         .withScrollTrigger(
-            proxy: proxy,
+            scrollProxy: scrollProxy,
             trigger: showChecked,
-            id: "CHECKED",
+            id: IdConstants.CHECKED_ITEMS,
             disabled: !showChecked
         )
     }
@@ -197,8 +191,8 @@ struct SortableListView<
 
     private func handleToolbarPress(_ iconName: String, _ item: Item) {
         tapToolbar?(iconName, item)
-        focusController.focusedId = nil
         dismissKeyboard()
+        listManager.focusedId = nil
     }
 
     func dismissKeyboard() {

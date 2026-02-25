@@ -16,7 +16,7 @@ struct EventSheetContext: Identifiable {
     var calendarEvent: EKEvent?
 
     var id: String {
-        if let plannerEventId = plannerEvent?.id {
+        if let plannerEventId = plannerEvent?.stableId {
             return "\(plannerEventId)"
         }
 
@@ -145,8 +145,8 @@ struct PlannerView: View {
         allEvents
             .filter {
                 (!(settings.isPlannerEventChecked($0))
-                    && !plannerManager.newlyUncheckedIds.contains($0.id))
-                    || plannerManager.newlyCheckedIds.contains($0.id)
+                    && !plannerManager.newlyUncheckedIds.contains($0.stableId))
+                    || plannerManager.newlyCheckedIds.contains($0.stableId)
             }
             .sorted {
                 $0.sortDate < $1.sortDate
@@ -157,15 +157,15 @@ struct PlannerView: View {
         allEvents
             .filter {
                 (settings.isPlannerEventChecked($0)
-                    && !plannerManager.newlyCheckedIds.contains($0.id))
-                    || plannerManager.newlyUncheckedIds.contains($0.id)
+                    && !plannerManager.newlyCheckedIds.contains($0.stableId))
+                    || plannerManager.newlyUncheckedIds.contains($0.stableId)
             }
             .sorted { $0.sortDate < $1.sortDate }
     }
 
     var body: some View {
         NavigationStack {
-            ScrollViewReader { proxy in
+            ScrollViewReader { scrollProxy in
                 SortableListView(
                     uncheckedItems: sortedOpenPlans,
                     checkedItems: sortedCheckedPlans,
@@ -185,7 +185,7 @@ struct PlannerView: View {
                     leftAdornment: leftAdornment,
                     rightAdornment: rightAdornment,
                     bottomAdornment: bottomAdornment,
-                    proxy: proxy,
+                    scrollProxy: scrollProxy,
                     createItem: createEvent,
                     handleTitleChange: handleEventTitleChange,
                     moveItem: moveUncheckedEvent,
@@ -196,19 +196,19 @@ struct PlannerView: View {
                 .toolbar {
                     topLeftToolbar
                     topRightToolbar
-                    bottomToolbar(proxy)
+                    bottomToolbar(scrollProxy: scrollProxy)
                 }
                 .animateSynchronousAction(from: plannerManager.isSelectMode)
 
                 // Slide to modified events once the UI has settled.
-                .onChange(of: sortedOpenPlans.map(\.id)) { _, _ in
+                .onChange(of: sortedOpenPlans.map(\.stableId)) { _, _ in
                     attemptScrollToEvent(
-                        proxy: proxy
+                        scrollProxy: scrollProxy
                     )
                 }
                 .onChange(of: pendingScroll) { _, _ in
                     attemptScrollToEvent(
-                        proxy: proxy
+                        scrollProxy: scrollProxy
                     )
                 }
             }
@@ -349,7 +349,7 @@ struct PlannerView: View {
                     } else {
                         plannerManager.selectedItems = visibleEvents
                         plannerManager.selectedItemIds = Set(
-                            visibleEvents.map { $0.id }
+                            visibleEvents.map { $0.stableId }
                         )
                     }
                 } label: {
@@ -362,34 +362,15 @@ struct PlannerView: View {
     }
 
     @ToolbarContentBuilder
-    private func bottomToolbar(_ proxy: ScrollViewProxy) -> some ToolbarContent
+    private func bottomToolbar(scrollProxy: ScrollViewProxy)
+        -> some ToolbarContent
     {
         ToolbarItemGroup(placement: .bottomBar) {
             if !plannerManager.isSelectMode {
                 Spacer()
 
                 Button("Add", systemImage: "plus") {
-                    if let last = sortedOpenPlans.last,
-                        last.title.isEmpty
-                    {
-                        return
-                    }
-
-                    DispatchQueue.main.async {
-                        withAnimation {
-                            proxy.scrollTo("UNCHECKED", anchor: .bottom)
-                        }
-                    }
-                    
-                    let lastEventId = sortedOpenPlans.last?.id
-
-                    modelContext.createEvent(
-                        near: lastEventId,
-                        offset: lastEventId != nil ? 1 : 0,
-                        in: sortedOpenPlans,
-                        startOfDay: startOfDay,
-                        settings: settings
-                    )
+                    createLowerEvent(scrollProxy: scrollProxy)
                 }
                 .tint(accentColor.swiftUIColor)
             } else {
@@ -422,9 +403,7 @@ struct PlannerView: View {
                     DispatchQueue.main.asyncAfter(
                         deadline: .now() + .milliseconds(750)
                     ) {
-                        withAnimation {
-                            plannerManager.toggleSelectMode()
-                        }
+                        plannerManager.toggleSelectMode()
                     }
                 }
 
@@ -500,7 +479,12 @@ struct PlannerView: View {
 
     @ViewBuilder
     private func bottomAdornment(event: PlannerEvent) -> some View {
-        event.locationValueView(in: planner, settings: settings, localCityName: deviceLocationManager.cityName, accentColor: accentColor)
+        event.locationValueView(
+            in: planner,
+            settings: settings,
+            localCityName: deviceLocationManager.cityName,
+            accentColor: accentColor
+        )
     }
 
     // Toggle confirmation config for calendar events.
@@ -574,16 +558,18 @@ struct PlannerView: View {
     // MARK: - List Actions
 
     private func createEvent(
-        near baseId: PersistentIdentifier?,
+        near baseId: UUID?,
         offset: Int = 0
     ) {
-        modelContext.createEvent(
+        if let newId = modelContext.createEvent(
+            in: sortedOpenPlans,
             near: baseId,
             offset: offset,
-            in: sortedOpenPlans,
             startOfDay: startOfDay,
             settings: settings
-        )
+        ) {
+            plannerManager.focusedId = newId
+        }
     }
 
     private func moveUncheckedEvent(from: Int, to: Int) {
@@ -604,6 +590,21 @@ struct PlannerView: View {
         )
     }
 
+    private func createLowerEvent(scrollProxy: ScrollViewProxy) {
+
+        createEvent(
+            near: sortedOpenPlans.last?.stableId,
+            offset: 1
+        )
+
+        DispatchQueue.main.async {
+            withAnimation {
+                scrollProxy.scrollTo(IdConstants.UNCHECKED_ITEMS, anchor: .bottom)
+            }
+        }
+
+    }
+
     // MARK: - Overflow Actions
 
     private func deleteAllCheckedEvents() {
@@ -613,7 +614,7 @@ struct PlannerView: View {
     // MARK: - Helpers
 
     private func attemptScrollToEvent(
-        proxy: ScrollViewProxy
+        scrollProxy: ScrollViewProxy
     ) {
         guard let pending = pendingScroll, pending.isScrollable else {
             return
@@ -621,7 +622,8 @@ struct PlannerView: View {
 
         let targetEvent: PlannerEvent? = {
             if let plannerId = pending.plannerId {
-                return sortedOpenPlans.first(where: { $0.id == plannerId })
+                return sortedOpenPlans.first(where: { $0.stableId == plannerId }
+                )
             }
 
             if let calendarId = pending.calendarId {
@@ -648,7 +650,7 @@ struct PlannerView: View {
 
         DispatchQueue.main.async {
             withAnimation {
-                proxy.scrollTo(event.id, anchor: .center)
+                scrollProxy.scrollTo(event.stableId, anchor: .center)
             }
         }
 

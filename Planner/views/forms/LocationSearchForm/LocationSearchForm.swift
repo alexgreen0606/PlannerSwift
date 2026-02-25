@@ -89,11 +89,11 @@ struct LocationSearchView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollViewReader { proxy in
+            ScrollViewReader { scrollProxy in
                 if locationFinder.queryFragment.count < 2 {
                     fillerSuggestions
                 } else {
-                    searchResults(proxy: proxy)
+                    searchResults(scrollProxy: scrollProxy)
                 }
             }
             .navigationTitle(title)
@@ -339,7 +339,7 @@ struct LocationSearchView: View {
 
     // MARK: - Search Results List
 
-    private func searchResults(proxy: ScrollViewProxy) -> some View {
+    private func searchResults(scrollProxy: ScrollViewProxy) -> some View {
         List {
             ForEach(locationFinder.suggestions, id: \.self) { option in
                 optionRow(option)
@@ -350,7 +350,7 @@ struct LocationSearchView: View {
 
         // Keep the list scrolled to the top when results change.
         .withScrollTrigger(
-            proxy: proxy,
+            scrollProxy: scrollProxy,
             trigger: locationFinder.suggestions,
             id: topSuggestionId
         )

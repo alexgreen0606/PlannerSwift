@@ -6,10 +6,14 @@
 //
 
 import SwiftData
+import SwiftUI
 
 @available(iOS 26.0, *)
 @Model
 class ListItem {
+    
+    var stableId = UUID()
+    
     var title: String = ""
     var isChecked: Bool = false
     var sortIndex: Double

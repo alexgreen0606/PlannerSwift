@@ -5,12 +5,16 @@
 //  Created by Alex Green on 12/1/25.
 //
 
+import SwiftData
 import SwiftUI
 import UIKit
 
 struct RowTextfieldView: UIViewRepresentable {
+
+    let itemId: UUID
+    @Binding var focusedId: UUID?
+
     @Binding var text: String
-    @Binding var isFocused: Bool
     @Binding var height: CGFloat
     var toolbarIcons: [String]
     var accentColor: Color
@@ -64,7 +68,7 @@ struct RowTextfieldView: UIViewRepresentable {
 
         calculateHeight(view: uiView)
 
-        if isFocused && !uiView.isFirstResponder {
+        if focusedId == itemId && !uiView.isFirstResponder {
             uiView.becomeFirstResponder()
         }
     }
@@ -86,12 +90,10 @@ struct RowTextfieldView: UIViewRepresentable {
         }
 
         func textViewDidBeginEditing(_ textView: UITextView) {
-            parent.isFocused = true
-        }
+            guard parent.focusedId != parent.itemId else { return }
 
-        func textViewDidEndEditing(_ textView: UITextView) {
-            if !textView.isFirstResponder {
-                parent.isFocused = false
+            Task { @MainActor in
+                parent.focusedId = parent.itemId
             }
         }
 

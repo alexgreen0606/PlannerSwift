@@ -30,7 +30,7 @@
 //        
 //        let pointerEventDate = pointerEvent.date
 //        
-//        if pointerEvent.id == event.id {
+//        if pointerEvent.stableId == event.stableId {
 //            // Mark the target event as found.
 //            eventWasFound = true
 //            

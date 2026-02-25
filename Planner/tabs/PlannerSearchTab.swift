@@ -62,7 +62,7 @@ struct PlannerSearchTabView: View {
     var body: some View {
         NavigationStack {
             GeometryReader { geo in
-                ScrollViewReader { proxy in
+                ScrollViewReader { scrollProxy in
                     List {
                         ForEach(sortedUpcomingYears, id: \.self) { year in
                             Section {
@@ -127,7 +127,7 @@ struct PlannerSearchTabView: View {
 
                     // Keep the list scrolled to the top whenever the results change.
                     .withScrollTrigger(
-                        proxy: proxy,
+                        scrollProxy: scrollProxy,
                         trigger: scrollToTopTrigger,
                         id: topDatestamp
                     )

@@ -44,7 +44,7 @@ struct PlannerTabView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollViewReader { proxy in
+            ScrollViewReader { scrollProxy in
                 List {
                     Section {
                         Text("This week")

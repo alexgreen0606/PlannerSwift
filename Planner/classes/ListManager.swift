@@ -30,17 +30,19 @@ final class ListManager<Item: ListItem>: ObservableObject {
         var toggleTransitionDuration: ToggleTransitionDuration =
             ToggleTransitionDuration.threeSeconds
 
-    @Published var newlyCheckedIds: Set<PersistentIdentifier> = []
-    @Published var newlyUncheckedIds: Set<PersistentIdentifier> = []
+    @Published var newlyCheckedIds: Set<UUID> = []
+    @Published var newlyUncheckedIds: Set<UUID> = []
 
     @Published var selectedItems: [Item] = []
-    @Published var selectedItemIds: Set<PersistentIdentifier> = []
+    @Published var selectedItemIds: Set<UUID> = []
 
     // Keeps faded items hidden for 1 second after they have moved.
-    @Published var fadingItemIds: Set<PersistentIdentifier> = []
+    @Published var fadingItemIds: Set<UUID> = []
 
     // Controls fading of checked items.
     @Published var fadingOpacity: Double = 1
+    
+    @Published var focusedId: UUID?
 
     private var task: Task<Void, Never>?
     private var toggleType: ListToggleType = .check
@@ -54,16 +56,19 @@ final class ListManager<Item: ListItem>: ObservableObject {
     }
 
     func toggleSelectMode() {
-        if isSelectMode {
-            toggleType = .check
-            selectedItems = []
-            selectedItemIds = []
-        } else {
-            newlyCheckedIds.removeAll()
-            newlyUncheckedIds.removeAll()
-            fadingOpacity = 1
-            task?.cancel()
-            toggleType = .select
+        withAnimation {
+            if isSelectMode {
+                toggleType = .check
+                selectedItems = []
+                selectedItemIds = []
+            } else {
+                focusedId = nil
+                newlyCheckedIds.removeAll()
+                newlyUncheckedIds.removeAll()
+                fadingOpacity = 1
+                task?.cancel()
+                toggleType = .select
+            }
         }
     }
 
@@ -77,30 +82,36 @@ final class ListManager<Item: ListItem>: ObservableObject {
     }
 
     private func toggleSelect(_ item: Item) {
-        if selectedItemIds.contains(item.id) {
-            selectedItemIds.remove(item.id)
-            selectedItems.removeAll(where: { $0.id == item.id })
+        if selectedItemIds.contains(item.stableId) {
+            selectedItemIds.remove(item.stableId)
+            selectedItems.removeAll(where: { $0.stableId == item.stableId })
         } else {
-            selectedItemIds.insert(item.id)
+            selectedItemIds.insert(item.stableId)
             selectedItems.append(item)
         }
     }
 
     private func toggleChecked(for item: Item) {
+        
+        // Blur this item if it is currently focused.
+        if focusedId == item.stableId {
+            focusedId = nil
+        }
+        
         let isChecked = isItemChecked?(item) ?? item.isChecked
 
         if toggleTransitionDuration != .instant {
             if isChecked {
-                if !newlyCheckedIds.contains(item.id) {
-                    newlyUncheckedIds.insert(item.id)
+                if !newlyCheckedIds.contains(item.stableId) {
+                    newlyUncheckedIds.insert(item.stableId)
                 } else {
-                    newlyCheckedIds.remove(item.id)
+                    newlyCheckedIds.remove(item.stableId)
                 }
             } else {
-                if !newlyUncheckedIds.contains(item.id) {
-                    newlyCheckedIds.insert(item.id)
+                if !newlyUncheckedIds.contains(item.stableId) {
+                    newlyCheckedIds.insert(item.stableId)
                 } else {
-                    newlyUncheckedIds.remove(item.id)
+                    newlyUncheckedIds.remove(item.stableId)
                 }
             }
 

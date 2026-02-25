@@ -11,7 +11,7 @@ import SwiftUI
 enum PlannerEventPositionChange: Equatable {
 
     case planner(
-        id: PersistentIdentifier,
+        id: UUID,
         sortDate: Date
     )
 
@@ -24,7 +24,7 @@ enum PlannerEventPositionChange: Equatable {
         targetDatestamp: String
     )
 
-    var plannerId: PersistentIdentifier? {
+    var plannerId: UUID? {
         switch self {
         case .planner(let id, _):
             return id

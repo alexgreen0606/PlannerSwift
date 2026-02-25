@@ -47,7 +47,7 @@ extension View {
     }
 
     func withScrollTrigger<Trigger: Equatable, ID: Hashable>(
-        proxy: ScrollViewProxy,
+        scrollProxy: ScrollViewProxy,
         trigger: Trigger,
         id: ID?,
         disabled: Bool = false
@@ -57,7 +57,7 @@ extension View {
 
             DispatchQueue.main.async {
                 withAnimation {
-                    proxy.scrollTo(id, anchor: .top)
+                    scrollProxy.scrollTo(id, anchor: .top)
                 }
             }
         }

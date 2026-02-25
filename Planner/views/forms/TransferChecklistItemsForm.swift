@@ -16,7 +16,7 @@ enum FolderNavigationDirection {
 struct TransferChecklistItemsFormView: View {
     private let source: ChecklistItem
 
-    init(source: ChecklistItem, selectedIds: Set<PersistentIdentifier>) {
+    init(source: ChecklistItem, selectedIds: Set<UUID>) {
         var fp =
             source.type == .folder
             ? source
@@ -25,7 +25,7 @@ struct TransferChecklistItemsFormView: View {
         // Step backwards through folders until you find one with a selectable item.
         while !fp.hasChildType(
             source.type,
-            excluding: Set(selectedIds + [source.id])
+            excluding: Set(selectedIds + [source.stableId])
         ),
             let parent = fp.parent
         {
@@ -78,10 +78,10 @@ struct TransferChecklistItemsFormView: View {
         currentFolder.items
             .filter { item in
                 guard
-                    item.id != source.id
+                    item.stableId != source.stableId
                         && !listManager.selectedItemIds
                             .contains(
-                                item.id
+                                item.stableId
                             )
                 else { return false }
 
@@ -94,7 +94,7 @@ struct TransferChecklistItemsFormView: View {
                 if destinationType == .checklist, item.type == .folder {
                     return item.hasChildType(
                         .checklist,
-                        excluding: Set([source.id])
+                        excluding: Set([source.stableId])
                     )
                 }
 
@@ -117,7 +117,7 @@ struct TransferChecklistItemsFormView: View {
                     .listSectionMargins(.top, 0)
                 }
             }
-            .id(currentFolder.id)
+            .id(currentFolder.stableId)
             .transition(folderSlideTransition)
             .overlay {
                 if currentOptions.isEmpty {
@@ -156,7 +156,7 @@ struct TransferChecklistItemsFormView: View {
     private var topRightToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Button("Submit", systemImage: "checkmark", role: .confirm) {
-                guard let destination, destination.id != source.id else {
+                guard let destination, destination.stableId != source.stableId else {
                     return
                 }
 
@@ -173,7 +173,7 @@ struct TransferChecklistItemsFormView: View {
 
                 dismiss()
             }
-            .disabled(destination == nil || destination!.id == source.id)
+            .disabled(destination == nil || destination!.stableId == source.stableId)
             .tint(accentColor.swiftUIColor)
         }
     }
@@ -196,7 +196,7 @@ struct TransferChecklistItemsFormView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal)
-        .animateSynchronousAction(from: destination?.id)
+        .animateSynchronousAction(from: destination?.stableId)
     }
 
     private var sourceChip: some View {

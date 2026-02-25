@@ -9,6 +9,10 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
+struct IdentifiableUUID: Identifiable {
+    let id: UUID
+}
+
 struct ChecklistsTabView: View {
 
     @Environment(\.modelContext) private var modelContext
@@ -21,7 +25,7 @@ struct ChecklistsTabView: View {
 
     @StateObject private var checklistsManager = ListManager<ChecklistItem>()
     @State private var folderPath = NavigationPath()
-    @State private var checklistCoverId: PersistentIdentifier?
+    @State private var checklistCoverId: IdentifiableUUID?
 
     // Considers the selected items and whether any destination items exist to house them.
     @State private var canTransferChecklistItems: Bool = false
@@ -60,8 +64,8 @@ struct ChecklistsTabView: View {
 
         // Checklist Page
         .fullScreenCover(item: $checklistCoverId) { checklistId in
-            ChecklistView(
-                checklistId: checklistId,
+            ChecklistBuilderView(
+                checklistId: checklistId.id,
                 canTransferItems: canTransferChecklistItems
             ) { newFolder in
                 checklistCoverId = nil
@@ -72,7 +76,7 @@ struct ChecklistsTabView: View {
             }
             .navigationTransition(
                 .zoom(
-                    sourceID: checklistId,
+                    sourceID: checklistId.id,
                     in: namespace
                 )
             )
@@ -83,20 +87,20 @@ struct ChecklistsTabView: View {
     private func openItem(_ item: ChecklistItem) {
         if item.type == .folder {
             canTransferFolderItems =
-                rootFolder?.hasChildType(.folder, excluding: Set([item.id]))
+                rootFolder?.hasChildType(.folder, excluding: Set([item.stableId]))
                 == true
             folderPath.append(item)
         } else {
             canTransferChecklistItems =
-                rootFolder?.hasChildType(.checklist, excluding: Set([item.id]))
+                rootFolder?.hasChildType(.checklist, excluding: Set([item.stableId]))
                 == true
-            checklistCoverId = item.id
+            checklistCoverId = IdentifiableUUID(id: item.stableId)
         }
     }
 
     // itemIds includes the items to transfer AND their current folder.
     private func updateFolderTransferAvailability(
-        considering itemIds: Set<PersistentIdentifier>
+        considering itemIds: Set<UUID>
     ) {
         canTransferFolderItems =
             rootFolder?.hasChildType(.folder, excluding: itemIds) == true

@@ -5,6 +5,7 @@
 //  Created by Alex Green on 1/24/26.
 //
 import SwiftData
+import SwiftUI
 
 extension ChecklistItem {
 
@@ -50,9 +51,9 @@ extension ChecklistItem {
         }
     }
 
-    func hasChildType(_ type: ChecklistItemType, excluding excludedIds: Set<PersistentIdentifier>) -> Bool {
+    func hasChildType(_ type: ChecklistItemType, excluding excludedIds: Set<UUID>) -> Bool {
         for item in items {
-            if excludedIds.contains(item.id) { continue }
+            if excludedIds.contains(item.stableId) { continue }
 
             if item.type == type {
                 return true

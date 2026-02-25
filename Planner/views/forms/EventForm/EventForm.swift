@@ -473,5 +473,14 @@ struct EventFormView: View {
         draftPlannerEvent.calendarEvent = nil
         selectedDetent = .height(460)
     }
+    
+    private func isDraftDirty(draft: DraftPlannerEvent, initial: PlannerEvent?) -> Bool {
+        draft.date != initial?.date
+            || draft.title != initial?.title
+            || draft.calendarEvent != initial?.calendarEvent
+            || draft.hasTime != initial?.hasTime
+            || draft.location != initial?.location
+            || draft.locationSource != initial?.locationSource
+    }
 
 }
