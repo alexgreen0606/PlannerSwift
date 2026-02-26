@@ -22,6 +22,7 @@ struct RowView<
     BottomAdornment: View
 >: View {
     @Bindable var item: Item
+    @Binding var focusedId: UUID?
     let tint: (_ item: Item) -> Color
     let showChecked: Bool
     let showUpperDivider: Bool
@@ -47,7 +48,7 @@ struct RowView<
     @State private var debounceTask: Task<Void, Never>? = nil
 
     private var isFocused: Bool {
-        listManager.focusedId == item.stableId
+        focusedId == item.stableId
     }
 
     private var tintColor: Color {
@@ -193,7 +194,7 @@ struct RowView<
                 }
 
                 if !isChecked && !item.isChecked {
-                    listManager.focusedId = item.stableId
+                    focusedId = item.stableId
                 }
             }
     }
@@ -202,7 +203,7 @@ struct RowView<
     private var editableField: some View {
         RowTextfieldView(
             itemId: item.stableId,
-            focusedId: $listManager.focusedId,
+            focusedId: $focusedId,
             text: $item.title,
             height: $height,
             toolbarIcons: toolbarIcons,
@@ -214,7 +215,7 @@ struct RowView<
                 if !item.title.isEmpty {
                     onCreateItem(item.stableId, 1)
                 } else {
-                    listManager.focusedId = nil
+                    focusedId = nil
                 }
             }
         )

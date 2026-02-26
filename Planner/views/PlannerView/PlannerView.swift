@@ -92,6 +92,7 @@ struct PlannerView: View {
     @State private var pendingScroll: PlannerEventPositionChange?
     @State private var showDeleteCheckedConfirmation = false
     @State private var showTransferSheet = false
+    @State private var focusedId: UUID?
 
     private var plannerType: PlannerType {
         planner.datestamp <= todaystampManager.todaystamp
@@ -169,6 +170,7 @@ struct PlannerView: View {
                 SortableListView(
                     uncheckedItems: sortedOpenPlans,
                     checkedItems: sortedCheckedPlans,
+                    focusedId: $focusedId,
                     showChecked: showChecked,
                     floatingInfo: chipSpread,
                     customToggleConfig: toggleEventIconConfig,
@@ -563,7 +565,7 @@ struct PlannerView: View {
             startOfDay: startOfDay,
             settings: settings
         ) {
-            plannerManager.focusedId = newId
+            focusedId = newId
         }
     }
 

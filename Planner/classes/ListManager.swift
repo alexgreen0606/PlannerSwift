@@ -42,8 +42,6 @@ final class ListManager<Item: ListItem>: ObservableObject {
     // Controls fading of checked items.
     @Published var fadingOpacity: Double = 1
 
-    @Published var focusedId: UUID?
-
     private var task: Task<Void, Never>?
     private var toggleType: ListToggleType = .check
 
@@ -62,7 +60,6 @@ final class ListManager<Item: ListItem>: ObservableObject {
                 selectedItems = []
                 selectedItemIds = []
             } else {
-                focusedId = nil
                 newlyCheckedIds.removeAll()
                 newlyUncheckedIds.removeAll()
                 fadingOpacity = 1
@@ -104,11 +101,6 @@ final class ListManager<Item: ListItem>: ObservableObject {
     }
 
     private func toggleChecked(for item: Item) {
-
-        // Blur this item if it is currently focused.
-        if focusedId == item.stableId {
-            focusedId = nil
-        }
 
         let isChecked = isItemChecked?(item) ?? item.isChecked
 

@@ -38,13 +38,14 @@ struct ChecklistView: View {
     @EnvironmentObject private var listManager: ListManager<ChecklistItem>
 
     @Query private var items: [ChecklistItem]
+    
+    @State private var isEditFormOpen = false
+    @State private var isTransferSheetOpen = false
+    @Namespace private var namespace
 
     @State private var showDeleteCompletedConfirm = false
     @State private var showDeleteChecklistConfirm = false
-    @State private var isTransferSheetOpen = false
-    @State private var isEditFormOpen = false
-
-    @Namespace private var namespace
+    @State private var focusedId: UUID?
 
     private var hasCheckedItems: Bool {
         items.contains(where: \.isChecked)
@@ -103,6 +104,7 @@ struct ChecklistView: View {
                 SortableListView(
                     uncheckedItems: sortedUncheckedItems,
                     checkedItems: sortedCheckedItems,
+                    focusedId: $focusedId,
                     showChecked: checklist.showCompleted,
                     floatingInfo: EmptyView(),
                     customToggleConfig: nil,
@@ -351,7 +353,7 @@ struct ChecklistView: View {
             offset: offset,
             parent: checklist
         ) {
-            listManager.focusedId = newId
+            focusedId = newId
         }
     }
 
@@ -383,7 +385,7 @@ struct ChecklistView: View {
             withAnimation {
                 scrollProxy.scrollTo(
                     IDConstants.UNCHECKED_ITEMS,
-                    anchor: .top
+                    anchor: .bottom
                 )
             }
         }

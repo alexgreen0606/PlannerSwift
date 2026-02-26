@@ -8,6 +8,7 @@
 import EventKit
 import SwiftData
 import SwiftDate
+import SwiftUI
 
 extension ModelContext {
 
@@ -42,7 +43,6 @@ extension ModelContext {
         offset: Int,
         parent: ChecklistItem
     ) -> UUID? {
-
         var targetIndex: Int? = 0
 
         if let baseId {
