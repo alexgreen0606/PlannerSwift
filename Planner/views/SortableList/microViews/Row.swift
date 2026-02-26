@@ -22,7 +22,6 @@ struct RowView<
     BottomAdornment: View
 >: View {
     @Bindable var item: Item
-    @Binding var focusedId: UUID?
     let tint: (_ item: Item) -> Color
     let showChecked: Bool
     let showUpperDivider: Bool
@@ -48,7 +47,7 @@ struct RowView<
     @State private var debounceTask: Task<Void, Never>? = nil
 
     private var isFocused: Bool {
-        focusedId == item.stableId
+        listManager.focusedId == item.stableId
     }
 
     private var tintColor: Color {
@@ -78,6 +77,14 @@ struct RowView<
             .listRowInsets(EdgeInsets())
             .discreetListItem()
             .padding(.horizontal)
+
+            // Trigger focus on render for new items.
+            .onAppear {
+                if listManager.pendingFocusId == item.stableId {
+                    listManager.pendingFocusId = nil
+                    listManager.focusedId = item.stableId
+                }
+            }
 
         if let namespace {
             row
@@ -111,7 +118,7 @@ struct RowView<
     // Item Text
     private var textStack: some View {
         VStack(spacing: 0) {
-            
+
             // Upper Item Trigger
             NewRowTriggerView(
                 showUpperDivider: showUpperDivider,
@@ -124,9 +131,9 @@ struct RowView<
                     onCreateItem(item.stableId, 0)
                 }
             )
-            
+
             HStack(alignment: .top, spacing: 4) {
-                
+
                 // Left Adornment
                 if let leftAdornment = leftAdornment {
                     leftAdornment(item)
@@ -136,14 +143,14 @@ struct RowView<
                             alignment: .center
                         )
                 }
-                
+
                 // Title
                 ZStack(alignment: .leading) {
                     titleText
                     editableField
                 }
                 .padding(.vertical, RowConstants.verticalTextPadding)
-                
+
                 // Right Adornment
                 if let rightAdornment = rightAdornment {
                     rightAdornment(item)
@@ -153,15 +160,15 @@ struct RowView<
                             alignment: .center
                         )
                 }
-                
+
             }
             .frame(minHeight: RowConstants.horizontalAdornmentHeight)
-            
+
             // Bottom Adornment
             if let bottomAdornment {
                 bottomAdornment(item)
             }
-            
+
             // Lower Item Trigger
             NewRowTriggerView(
                 showLowerDivider: true,
@@ -194,7 +201,7 @@ struct RowView<
                 }
 
                 if !isChecked && !item.isChecked {
-                    focusedId = item.stableId
+                    listManager.focusedId = item.stableId
                 }
             }
     }
@@ -203,7 +210,7 @@ struct RowView<
     private var editableField: some View {
         RowTextfieldView(
             itemId: item.stableId,
-            focusedId: $focusedId,
+            focusedId: $listManager.focusedId,
             text: $item.title,
             height: $height,
             toolbarIcons: toolbarIcons,
@@ -215,7 +222,7 @@ struct RowView<
                 if !item.title.isEmpty {
                     onCreateItem(item.stableId, 1)
                 } else {
-                    focusedId = nil
+                    listManager.focusedId = nil
                 }
             }
         )

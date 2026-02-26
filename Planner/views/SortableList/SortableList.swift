@@ -20,7 +20,6 @@ struct SortableListView<
 {
     let uncheckedItems: [Item]
     let checkedItems: [Item]
-    @Binding var focusedId: UUID?
     let showChecked: Bool
     let floatingInfo: FloatingInfo?
     let customToggleConfig: RowToggleConfig<Item>?
@@ -59,7 +58,6 @@ struct SortableListView<
                 ForEach(uncheckedItems, id: \.stableId) { item in
                     RowView(
                         item: item,
-                        focusedId: $focusedId,
                         tint: tint,
                         showChecked: showChecked,
                         showUpperDivider: item.stableId == uncheckedItems.first?.stableId,
@@ -102,7 +100,6 @@ struct SortableListView<
                     ForEach(checkedItems, id: \.stableId) { item in
                         RowView(
                             item: item,
-                            focusedId: $focusedId,
                             tint: tint,
                             showChecked: true,
                             showUpperDivider: item.stableId
@@ -143,20 +140,19 @@ struct SortableListView<
                 EmptyLabel(emptyUncheckedLabel)
             }
         }
-
-        // Blur the textfield when the list unmounts (deletes empty items).
-        .onDisappear {
-            focusedId = nil
-        }
-        
         .animateSynchronousAction(from: uncheckedItems.count)
         .animateSynchronousAction(from: listManager.newlyCheckedIds)
         .animateSynchronousAction(from: listManager.newlyUncheckedIds)
+
+        // Blur the textfield when the list unmounts (deletes empty items).
+        .onDisappear {
+            listManager.focusedId = nil
+        }
         
         // Blur the textfields when the app exits focus.
         .onChange(of: appPhase) { _, phase in
             if phase == .inactive {
-                focusedId = nil
+                listManager.focusedId = nil
             }
         }
 
@@ -186,7 +182,7 @@ struct SortableListView<
 
     private func handleToolbarPress(_ iconName: String, _ item: Item) {
         tapToolbar?(iconName, item)
-        focusedId = nil
+        listManager.focusedId = nil
     }
 
 }

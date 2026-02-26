@@ -10,10 +10,8 @@ import SwiftUI
 import UIKit
 
 struct RowTextfieldView: UIViewRepresentable {
-
     let itemId: UUID
     @Binding var focusedId: UUID?
-
     @Binding var text: String
     @Binding var height: CGFloat
     var toolbarIcons: [String]

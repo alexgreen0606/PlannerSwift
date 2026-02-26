@@ -45,7 +45,6 @@ struct ChecklistView: View {
 
     @State private var showDeleteCompletedConfirm = false
     @State private var showDeleteChecklistConfirm = false
-    @State private var focusedId: UUID?
 
     private var hasCheckedItems: Bool {
         items.contains(where: \.isChecked)
@@ -104,7 +103,6 @@ struct ChecklistView: View {
                 SortableListView(
                     uncheckedItems: sortedUncheckedItems,
                     checkedItems: sortedCheckedItems,
-                    focusedId: $focusedId,
                     showChecked: checklist.showCompleted,
                     floatingInfo: EmptyView(),
                     customToggleConfig: nil,
@@ -353,7 +351,7 @@ struct ChecklistView: View {
             offset: offset,
             parent: checklist
         ) {
-            focusedId = newId
+            listManager.pendingFocusId = newId
         }
     }
 

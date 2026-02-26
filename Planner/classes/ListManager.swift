@@ -41,6 +41,10 @@ final class ListManager<Item: ListItem>: ObservableObject {
 
     // Controls fading of checked items.
     @Published var fadingOpacity: Double = 1
+    
+    @Published var focusedId: UUID? = nil
+    
+    @Published var pendingFocusId: UUID? = nil
 
     private var task: Task<Void, Never>?
     private var toggleType: ListToggleType = .check
