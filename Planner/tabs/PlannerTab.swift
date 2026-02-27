@@ -89,7 +89,7 @@ struct PlannerTabView: View {
                         plannerEvent: nil,
                         calendarEvent: nil,
                         settings: settings
-                    ) { _ in
+                    ) {
                         // TODO: show indiactor of event creation
                     }
                     .navigationTransition(

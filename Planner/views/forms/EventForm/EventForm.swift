@@ -200,6 +200,10 @@ struct EventFormView: View {
     private var isCreateForm: Bool {
         initialPlannerEvent == nil && initialCalendarEvent == nil
     }
+    
+    private var defaultLocation: Location? {
+        sourcePlanner?.location(settings: settings, deviceLocation: deviceLocationManager.location) ?? settings.validHomeLocation(deviceLocation: deviceLocationManager.location)
+    }
 
     var body: some View {
         Group {
@@ -217,6 +221,10 @@ struct EventFormView: View {
             [.height(460), .height(2600)],
             selection: $selectedDetent
         )
+        
+        // Enforce the event always has a location.
+        .externalData(key: deviceLocationManager.location, ready: true, load: ensureLocation)
+        
     }
 
     // MARK: - Planner Event Form
@@ -253,6 +261,7 @@ struct EventFormView: View {
 
                     Toggle("Time", isOn: $draftPlannerEvent.hasTime)
                         .tint(accentColor.swiftUIColor)
+                        .disabled(!draftPlannerEvent.hasTime && defaultLocation == nil)
                 }
 
                 Section {
@@ -482,5 +491,11 @@ struct EventFormView: View {
             || draft.hasTime != initial?.hasTime
             || draft.location != initial?.location
     }
-
+    
+    private func ensureLocation() {
+        if draftPlannerEvent.location == nil, defaultLocation != nil {
+            draftPlannerEvent.location = defaultLocation
+        }
+    }
+    
 }

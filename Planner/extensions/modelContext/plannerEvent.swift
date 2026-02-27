@@ -156,7 +156,7 @@ extension ModelContext {
         for event in events {
             event.date = event.date + days
             event.sortDate = event.sortDate + days
-            
+
             if let calEvent = event.calendarEvent {
                 guard calEvent.calendar.allowsContentModifications else {
                     print(
@@ -164,19 +164,25 @@ extension ModelContext {
                     )
                     continue
                 }
-                
-                settings.calendarSortDateMap[calEvent.calendarItemExternalIdentifier] = event.sortDate
+
+                settings.calendarSortDateMap[
+                    calEvent.calendarItemExternalIdentifier
+                ] = event.sortDate
 
                 // Shift start and end dates
                 calEvent.startDate = calEvent.startDate + days
                 calEvent.endDate = calEvent.endDate + days
 
                 do {
-                    try eventStore.save(calEvent, span: .thisEvent, commit: true)
+                    try eventStore.save(
+                        calEvent,
+                        span: .thisEvent,
+                        commit: true
+                    )
                 } catch {
                     print("ERROR plannerEvent.shiftPlannerEvents: \(error)")
                 }
-                
+
             }
 
             // TODO 2: place the sortDate at the back of the planner
@@ -236,9 +242,11 @@ extension ModelContext {
         initialPlannerEvent: PlannerEvent?,
         initialCalendarEvent: EKEvent?
     ) {
-        
+
         if draftPlannerEvent.hasTime && draftPlannerEvent.location == nil {
-            assertionFailure("ERROR plannerEvent.saveEventFormChanges(PlannerEvent): Draft event must have a location assigned if it has a time.")
+            assertionFailure(
+                "ERROR plannerEvent.saveEventFormChanges(PlannerEvent): Draft event must have a location assigned if it has a time."
+            )
         }
 
         if let initialPlannerEvent {
@@ -250,6 +258,9 @@ extension ModelContext {
             initialPlannerEvent.hasTime = draftPlannerEvent.hasTime
             initialPlannerEvent.calendarEvent = nil
             initialPlannerEvent.location = draftPlannerEvent.location
+
+            // Re-insert the event in case it was previously transient.
+            insert(initialPlannerEvent)
 
         } else {
 
