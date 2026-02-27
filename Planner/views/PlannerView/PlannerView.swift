@@ -467,7 +467,9 @@ struct PlannerView: View {
             settings: settings,
             deviceLocation: deviceLocationManager.location,
             accentColor: accentColor
-        )
+        ) {
+            openPlannerEventSheet(event)
+        }
     }
 
     // Toggle confirmation config for calendar events.

@@ -72,14 +72,7 @@ final class DeviceLocationManager: NSObject, ObservableObject,
         deviceClLocation = roundedLocation
 
         Task {
-            if let city = await reverseGeocode(roundedLocation) {
-                location = Location(
-                    name: city,
-                    latitude: roundedCoordinate.latitude,
-                    longitude: roundedCoordinate.longitude,
-                    timeZoneIdentifier: TimeZone.current.identifier
-                )
-            }
+            await reverseGeocode(roundedLocation, coordinate: roundedCoordinate)
         }
     }
 
@@ -99,20 +92,28 @@ final class DeviceLocationManager: NSObject, ObservableObject,
         }
     }
 
-    private func reverseGeocode(_ location: CLLocation) async -> String? {
-        if let request = MKReverseGeocodingRequest(location: location) {
+    private func reverseGeocode(
+        _ clLocation: CLLocation,
+        coordinate: CLLocationCoordinate2D
+    ) async {
+        if let request = MKReverseGeocodingRequest(location: clLocation) {
             do {
                 let mapItems = try await request.mapItems
                 if let item = mapItems.first,
                     let addressInfo = item.addressRepresentations,
-                    let city = addressInfo.cityName
+                    let city = addressInfo.cityWithContext
                 {
-                    return city
+                    location = Location(
+                        name: city,
+                        subtitle: addressInfo.regionName,
+                        latitude: coordinate.latitude,
+                        longitude: coordinate.longitude,
+                        timeZoneIdentifier: TimeZone.current.identifier
+                    )
                 }
             } catch {
                 print("ERROR DeviceLocationManager.reverseGeocode:", error)
             }
         }
-        return nil
     }
 }

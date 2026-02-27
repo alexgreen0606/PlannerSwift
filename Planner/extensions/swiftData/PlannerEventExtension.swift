@@ -160,96 +160,66 @@ extension PlannerEvent {
         in planner: Planner,
         settings: PlannerSettings,
         deviceLocation: Location?,
-        accentColor: AccentColor
+        accentColor: AccentColor,
+        openEventSheet: @escaping () -> Void
     ) -> some View {
 
         let plannerRegion = planner.region(settings: settings)
-
-        if let calendarEvent,
-            let values = calendarEvent.bottomAdornmentValues(
-                plannerRegion: plannerRegion
-            )
-        {
-            HStack {
-
-                if let location = values.location {
-                    HStack(alignment: .top, spacing: 4) {
-                        Image(systemName: "mappin.and.ellipse")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 10, height: 10)
-                            .foregroundStyle(
-                                calendarEvent.calendar.color,
-                                Color.secondary
-                            )
-
-                        Text(location)
-                            .font(.system(size: 10))
-                            .foregroundColor(.secondary)
-                    }
-                }
-
-                Spacer()
-
-                if let time = values.time {
-                    Text(time)
-                        .font(.system(size: 9))
-                        .foregroundColor(.secondary)
-                }
-
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.bottom, 4)
-        }
-
-        let eventRegion = region(planner: planner, settings: settings, deviceLocation: deviceLocation)
-        let locationLabel = locationLabel(
-            planner: planner,
-            settings: settings,
-            deviceLocation: deviceLocation,
-        )
         let plannerLocationLabel = planner.locationLabel(
             settings: settings,
             deviceLocation: deviceLocation
         )
 
-        if locationLabel != plannerLocationLabel {
-            HStack {
+        // --- Calendar Event Case ---
+        if let calendarEvent,
+            let values = calendarEvent.bottomAdornmentValues(
+                plannerRegion: plannerRegion,
+                plannerLocationLabel: plannerLocationLabel
+            )
+        {
+            LocationBottomAdornmentView(
+                icon: IconConfig(
+                    name: "mappin.and.ellipse",
+                    primaryColor: calendarEvent.calendar.color
+                ),
+                locationText: values.location,
+                timeText: values.time,
+                openEventSheet: openEventSheet
+            )
+        }
 
-                let iconConfig = locationIconConfig(
+        // --- Planner Event Case ---
+        let eventRegion = region(
+            planner: planner,
+            settings: settings,
+            deviceLocation: deviceLocation
+        )
+
+        let locationLabel = locationLabel(
+            planner: planner,
+            settings: settings,
+            deviceLocation: deviceLocation
+        )
+
+        if locationLabel != plannerLocationLabel {
+
+            let timeString: String? = {
+                if eventRegion != plannerRegion, hasTime {
+                    return DateInRegion(date, region: eventRegion)
+                        .timeWithTimezone
+                }
+                return nil
+            }()
+
+            LocationBottomAdornmentView(
+                icon: locationIconConfig(
                     settings: settings,
                     accentColor: accentColor
-                )
-
-                HStack(alignment: .top, spacing: 4) {
-                    Image(systemName: iconConfig.name)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 10, height: 10)
-                        .foregroundStyle(
-                            iconConfig.primaryColor,
-                            iconConfig.secondaryColor
-                        )
-
-                    Text(locationLabel)
-                        .font(.system(size: 10))
-                        .foregroundColor(.secondary)
-                }
-
-                Spacer()
-
-                if eventRegion != plannerRegion, hasTime,
-                    let timeString =
-                        DateInRegion(date, region: eventRegion).timeWithTimezone
-                {
-                    Text(timeString)
-                        .font(.system(size: 9))
-                        .foregroundColor(.secondary)
-                }
-
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.bottom, 4)
+                ),
+                locationText: locationLabel,
+                timeText: timeString,
+                openEventSheet: openEventSheet
+            )
         }
     }
 

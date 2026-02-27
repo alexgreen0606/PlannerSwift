@@ -20,14 +20,20 @@ extension EKEvent {
     }
 
     func bottomAdornmentValues(
-        plannerRegion: Region
+        plannerRegion: Region,
+        plannerLocationLabel: String
     ) -> (location: String?, time: String?)? {
+        
+        let locationTitle = structuredLocation?.title
 
-        // Location Label
-        let location =
-            structuredLocation?.title?.isEmpty == false
-            ? structuredLocation?.title
-            : nil
+        let location: String? =
+            if let title = locationTitle,
+               !title.isEmpty,
+               title != plannerLocationLabel {
+                title
+            } else {
+                nil
+            }
 
         // Time Label (only if event timezone differs from planner timezone)
         var timeString: String? = nil
