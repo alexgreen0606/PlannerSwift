@@ -128,12 +128,14 @@ extension ModelContext {
     func handleTitleChange(
         _ event: PlannerEvent,
         startOfDay: DateInRegion,
-        eventKitStore: EKEventStore
+        eventKitStore: EKEventStore,
+        defaultLocation: Location?
     ) {
 
         event.handleTitleChange(
             startOfDay: startOfDay,
-            eventKitStore: eventKitStore
+            eventKitStore: eventKitStore,
+            defaultLocation: defaultLocation
         )
 
         do {

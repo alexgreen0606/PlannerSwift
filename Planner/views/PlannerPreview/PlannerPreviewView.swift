@@ -99,7 +99,10 @@ struct PlannerPreviewView: View {
     }
 
     private var location: Location? {
-        planner.location(settings: settings, deviceLocation: deviceLocationManager.location)
+        planner.location(
+            settings: settings,
+            deviceLocation: deviceLocationManager.location
+        )
     }
 
     private var locationLabel: String? {
@@ -128,7 +131,7 @@ struct PlannerPreviewView: View {
             .sorted { $0.sortDate < $1.sortDate }
     }
 
-    private var uncheckedCalendarPlannerEvents: [PlannerEvent] {
+    private var openCalendarPlannerEvents: [PlannerEvent] {
         calendarPlannerEvents.filter {
             !isCalendarEventChecked($0.calendarEvent)
         }
@@ -155,7 +158,7 @@ struct PlannerPreviewView: View {
 
         let singleDayPlannerEvents =
             Array(
-                uncheckedCalendarPlannerEvents
+                openCalendarPlannerEvents
                     .prefix(remainingSlots)
             )
 
@@ -186,7 +189,7 @@ struct PlannerPreviewView: View {
 
     private var remainingPlansLabel: String {
         let totalCount =
-            allDayEvents.count + uncheckedCalendarPlannerEvents.count
+            allDayEvents.count + openCalendarPlannerEvents.count
             + sortedOpenPlannerEvents.count
 
         let previewCount = allDayEvents.count + previewPlannerEvents.count
@@ -205,7 +208,7 @@ struct PlannerPreviewView: View {
 
     private var hasPlans: Bool {
         sortedOpenPlannerEvents.count + allDayEvents.count
-            + calendarPlannerEvents.count
+            + openCalendarPlannerEvents.count
             > 0
     }
 
@@ -262,18 +265,15 @@ struct PlannerPreviewView: View {
                 )
             }
         }
-        
-        // TODO: why is the sorting off?
-        // Re-build the calendar events when the sort orders change.
-//        .onChange(of: settings) { _, _ in
-//            if let calendarData {
-//                calendarPlannerEvents =
-//                modelContext.buildCalendarPlannerEvents(
-//                    calendarEvents: calendarData.timedEvents,
-//                    settings: settings
-//                )
-//            }
-//        }
+
+        // Re-build the calendar events when their sort orders change.
+        .onChange(of: settings.calendarSortDateMap) { _, _ in
+            if let calendarData {
+                buildCalendarPlannerEvents(
+                    timedEvents: calendarData.timedEvents
+                )
+            }
+        }
 
         if type == .planner {
             content
@@ -424,10 +424,8 @@ struct PlannerPreviewView: View {
                                         .scaledToFit()
                                         .frame(width: 11, height: 11)
                                         .foregroundStyle(
-                                            locationIconConfig.primaryColor
-                                                ?? .secondary,
+                                            locationIconConfig.primaryColor,
                                             locationIconConfig.secondaryColor
-                                                ?? .secondary
                                         )
                                 }
 
@@ -490,13 +488,17 @@ struct PlannerPreviewView: View {
             hiddenCalendarIds: settings.hiddenCalendarIds
         )
 
-        calendarPlannerEvents =
-            modelContext.buildCalendarPlannerEvents(
-                calendarEvents: calendarData.timedEvents,
-                settings: settings
-            )
+        buildCalendarPlannerEvents(timedEvents: calendarData.timedEvents)
 
         self.calendarData = calendarData
+    }
+
+    private func buildCalendarPlannerEvents(timedEvents: [EKEvent]) {
+        calendarPlannerEvents =
+            modelContext.buildCalendarPlannerEvents(
+                calendarEvents: timedEvents,
+                settings: settings
+            )
     }
 
     private func isCalendarEventChecked(_ event: EKEvent?) -> Bool {

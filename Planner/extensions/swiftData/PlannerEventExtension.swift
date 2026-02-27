@@ -83,7 +83,8 @@ extension PlannerEvent {
 
     func handleTitleChange(
         startOfDay: DateInRegion,
-        eventKitStore: EKEventStore
+        eventKitStore: EKEventStore,
+        defaultLocation: Location?
     ) {
 
         // Case 1: Update the device calendar with the new title.
@@ -105,7 +106,7 @@ extension PlannerEvent {
         }
 
         // Case 2: Scan the new title for a time value.
-        guard
+        guard let defaultLocation,
             let (timeValue, updatedText) = self.title.separateTimeValue()
         else {
             return
@@ -120,6 +121,7 @@ extension PlannerEvent {
         }
 
         self.title = updatedText
+        self.location = defaultLocation
         self.hasTime = true
 
         // Change the event's date, but preserve its sort position.

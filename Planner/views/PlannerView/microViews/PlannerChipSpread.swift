@@ -19,6 +19,7 @@ struct PlannerChipSpreadView: View {
     let iconMap: [String: String]
     var namespace: Namespace.ID
     let settings: PlannerSettings
+    let location: Location?
     let openCalendarEventSheet: (EKEvent) -> Void
     let weatherUnit: UnitTemperature =
         Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
@@ -47,10 +48,6 @@ struct PlannerChipSpreadView: View {
 
     private var countdownLabel: String? {
         startOfDay.countdown
-    }
-
-    private var location: Location? {
-        planner.location(settings: settings, deviceLocation: deviceLocationManager.location)
     }
 
     private var locationLabel: String {

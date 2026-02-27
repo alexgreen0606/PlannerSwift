@@ -96,6 +96,10 @@ struct PlannerView: View {
         planner.datestamp <= todaystampManager.todaystamp
             ? .pastOrPresent : .future
     }
+    
+    private var location: Location? {
+        planner.location(settings: settings, deviceLocation: deviceLocationManager.location)
+    }
 
     private var showChecked: Bool {
         plannerType == .future ? planner.showCanceled : planner.showCompleted
@@ -418,6 +422,7 @@ struct PlannerView: View {
             iconMap: settings.iconMap,
             namespace: namespace,
             settings: settings,
+            location: location,
             openCalendarEventSheet: { calEvent in
                 eventSheetContext =
                     EventSheetContext(
@@ -571,7 +576,8 @@ struct PlannerView: View {
         modelContext.handleTitleChange(
             event,
             startOfDay: startOfDay,
-            eventKitStore: calendarStore.ekEventStore
+            eventKitStore: calendarStore.ekEventStore,
+            defaultLocation: location
         )
     }
 
