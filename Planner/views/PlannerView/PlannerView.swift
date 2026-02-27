@@ -89,7 +89,6 @@ struct PlannerView: View {
     @State private var eventSheetContext: EventSheetContext?
     @Namespace private var namespace
 
-    @State private var pendingScroll: PlannerEventPositionChange?
     @State private var showDeleteCheckedConfirmation = false
     @State private var showTransferSheet = false
 
@@ -199,18 +198,6 @@ struct PlannerView: View {
                     bottomToolbar(scrollProxy: scrollProxy)
                 }
                 .animateSynchronousAction(from: plannerManager.isSelectMode)
-
-                // Slide to modified events once the UI has settled.
-                .onChange(of: sortedOpenPlans.map(\.stableId)) { _, _ in
-                    attemptScrollToEvent(
-                        scrollProxy: scrollProxy
-                    )
-                }
-                .onChange(of: pendingScroll) { _, _ in
-                    attemptScrollToEvent(
-                        scrollProxy: scrollProxy
-                    )
-                }
             }
         }
 
@@ -221,8 +208,8 @@ struct PlannerView: View {
                 plannerEvent: context.plannerEvent,
                 calendarEvent: context.calendarEvent,
                 settings: settings,
-            ) { change in
-                // pendingScroll = change
+            ) {
+               // TODO: show transfer snackbar
             }
             .navigationTransition(
                 .zoom(
@@ -604,56 +591,10 @@ struct PlannerView: View {
 
     }
 
-    // MARK: - Overflow Actions
+    // MARK: - Helpers
 
     private func deleteAllCheckedEvents() {
         modelContext.deletePlannerEvents(rawCheckedEvents)
-    }
-
-    // MARK: - Helpers
-
-    private func attemptScrollToEvent(
-        scrollProxy: ScrollViewProxy
-    ) {
-        guard let pending = pendingScroll, pending.isScrollable else {
-            return
-        }
-
-        let targetEvent: PlannerEvent? = {
-            if let plannerId = pending.plannerId {
-                return sortedOpenPlans.first(where: { $0.stableId == plannerId }
-                )
-            }
-
-            if let calendarId = pending.calendarId {
-                return sortedOpenPlans.first(
-                    where: {
-                        $0.calendarEvent?.calendarItemExternalIdentifier
-                            == calendarId
-                    }
-                )
-            }
-
-            return nil
-        }()
-
-        guard
-            let event = targetEvent,
-            let targetSortDate = pending.targetSortDate,
-            event.sortDate == targetSortDate
-        else {
-            // List not ready yet. Wait for next change.
-            print("List not ready for scroll. Skipping.")
-            return
-        }
-
-        DispatchQueue.main.async {
-            withAnimation {
-                scrollProxy.scrollTo(event.stableId, anchor: .center)
-            }
-        }
-
-        pendingScroll = nil
     }
 
     private func eventTint(event: PlannerEvent) -> Color {

@@ -18,14 +18,14 @@ struct EventFormView: View {
     private let initialPlannerEvent: PlannerEvent?
     private let initialCalendarEvent: EKEvent?
     private let settings: PlannerSettings
-    private let handleEventChange: (PlannerEventPositionChange) -> Void
+    private let handleEventChange: () -> Void
 
     init(
         sourcePlanner: Planner? = nil,
         plannerEvent: PlannerEvent?,
         calendarEvent: EKEvent?,
         settings: PlannerSettings,
-        handleEventChange: @escaping (PlannerEventPositionChange) -> Void
+        handleEventChange: @escaping () -> Void
     ) {
         self.initialPlannerEvent = plannerEvent
         self.sourcePlanner = sourcePlanner
