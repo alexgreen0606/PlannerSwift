@@ -9,6 +9,12 @@ import SwiftUI
 
 struct IconConfig {
     let name: String
-    let primaryColor: Color?
-    let secondaryColor: Color?
+    let primaryColor: Color
+    let secondaryColor: Color
+    
+    init(name: String, primaryColor: Color = .secondary, secondaryColor: Color = .secondary) {
+        self.name = name
+        self.primaryColor = primaryColor
+        self.secondaryColor = secondaryColor
+    }
 }

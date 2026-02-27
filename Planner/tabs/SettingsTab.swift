@@ -124,27 +124,24 @@ struct SettingsTabView: View {
                     }
 
                     NavigationLink {
-                        LocationSearchView(
-                            initialLocation: settings?.homeLocation,
-                            initialLocationSource: settings?.homeLocation
-                                != nil ? .custom : .current,
-                            title: "Edit Home Location",
-                            mode: .home
-                        ) { source, location in
-                            guard let settings else {
-                                return
-                            }
-
-                            settings.homeLocation =
-                                source == .custom ? location : nil
-
-                            // TODO: move to model context
-                            do {
-                                try modelContext.save()
-                            } catch {
-                                assertionFailure(
-                                    "Failed to save home location: \(error)"
-                                )
+                        if let settings {
+                            LocationSearchView(
+                                title: "Edit Home Location",
+                                mode: .home,
+                                settings: settings,
+                                initialLocation: settings.homeLocation,
+                            ) { location in
+                                
+                                settings.homeLocation = location
+                                
+                                // TODO: move to model context
+                                do {
+                                    try modelContext.save()
+                                } catch {
+                                    assertionFailure(
+                                        "Failed to save home location: \(error)"
+                                    )
+                                }
                             }
                         }
                     } label: {
@@ -156,7 +153,7 @@ struct SettingsTabView: View {
 
                             Text(
                                 settings?.homeLocation?.name
-                                    ?? deviceLocationManager.cityName
+                                    ?? "Current Location"
                             )
                             .font(.subheadline)
                             .foregroundStyle(.secondary)

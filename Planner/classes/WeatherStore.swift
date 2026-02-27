@@ -60,7 +60,7 @@ final class WeatherStore: ObservableObject {
             return
         } else {
             print(
-                "\(location?.name ?? locationManager.cityName ?? "Current Location"): Cache miss. Fetching."
+                "\(location?.name ?? "Current Location"): Cache miss. Fetching."
             )
             loadedLocationKeys.insert(locationKey)
         }

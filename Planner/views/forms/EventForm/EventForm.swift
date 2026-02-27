@@ -41,7 +41,7 @@ struct EventFormView: View {
 
         if sourcePlanner == nil {
             // Use the home location for new events that are not tied to a planner (Planner homepage).
-            draftPlannerEvent.locationSource = .home
+            draftPlannerEvent.location = settings.homeLocation
         }
 
         if let calEvent = plannerEvent?.calendarEvent ?? calendarEvent {
@@ -71,8 +71,6 @@ struct EventFormView: View {
                         ?? Region.local.timeZone.identifier
                 )
 
-                draftPlannerEvent.locationSource = .custom
-
             }
 
             // Max out the sheet height if this event can be edited.
@@ -91,7 +89,6 @@ struct EventFormView: View {
             draftPlannerEvent.title = plannerEvent.title
             draftPlannerEvent.hasTime = plannerEvent.hasTime
             draftPlannerEvent.location = plannerEvent.location
-            draftPlannerEvent.locationSource = plannerEvent.locationSource
 
             if !plannerEvent.hasTime {
 
@@ -247,8 +244,9 @@ struct EventFormView: View {
                         \.timeZone,
                         draftPlannerEvent
                             .region(
+                                planner: sourcePlanner,
                                 settings: settings,
-                                planner: sourcePlanner
+                                deviceLocation: deviceLocationManager.location
                             )
                             .timeZone
                     )
@@ -260,18 +258,13 @@ struct EventFormView: View {
                 Section {
                     NavigationLink {
                         LocationSearchView(
-                            initialLocation: draftPlannerEvent.location,
-                            initialLocationSource: draftPlannerEvent
-                                .locationSource,
                             title: "Edit Event Location",
+                            mode: .event,
+                            settings: settings,
+                            initialLocation: draftPlannerEvent.location,
                             sourcePlanner: sourcePlanner,
-                            mode: .event
-                        ) { source, location in
-
-                            draftPlannerEvent.location = location
-                            draftPlannerEvent.locationSource = source
-
-                        }
+                            saveSelection: handleLocationChange
+                        )
                     } label: {
                         HStack {
 
@@ -281,10 +274,9 @@ struct EventFormView: View {
 
                             Text(
                                 draftPlannerEvent.locationLabel(
-                                    localCityName: deviceLocationManager
-                                        .cityName,
+                                    planner: sourcePlanner,
                                     settings: settings,
-                                    planner: sourcePlanner
+                                    deviceLocation: deviceLocationManager.location
                                 )
                             )
                             .font(.subheadline)
@@ -296,8 +288,9 @@ struct EventFormView: View {
                     let timeZoneAbbreviation =
                         draftPlannerEvent
                         .region(
+                            planner: sourcePlanner,
                             settings: settings,
-                            planner: sourcePlanner
+                            deviceLocation: deviceLocationManager.location
                         )
                         .timeZone
                         .abbreviation() ?? "Unknown Time Zone"
@@ -361,6 +354,12 @@ struct EventFormView: View {
 
         dismiss()
 
+    }
+
+    private func handleLocationChange(
+        _ location: Location?
+    ) {
+        draftPlannerEvent.location = location
     }
 
     // MARK: - Calendar Event Form
@@ -473,14 +472,15 @@ struct EventFormView: View {
         draftPlannerEvent.calendarEvent = nil
         selectedDetent = .height(460)
     }
-    
-    private func isDraftDirty(draft: DraftPlannerEvent, initial: PlannerEvent?) -> Bool {
+
+    private func isDraftDirty(draft: DraftPlannerEvent, initial: PlannerEvent?)
+        -> Bool
+    {
         draft.date != initial?.date
             || draft.title != initial?.title
             || draft.calendarEvent != initial?.calendarEvent
             || draft.hasTime != initial?.hasTime
             || draft.location != initial?.location
-            || draft.locationSource != initial?.locationSource
     }
 
 }

@@ -6,6 +6,7 @@
 //
 
 import SwiftData
+import SwiftUI
 
 @Model
 class Location {
@@ -14,6 +15,9 @@ class Location {
     var latitude: Double
     var longitude: Double
     var timeZoneIdentifier: String
+    
+    // Used for displaying recents in the LocationSearchForm
+    var selectedOn: Date
 
     init(
         name: String,
@@ -27,5 +31,6 @@ class Location {
         self.latitude = latitude
         self.longitude = longitude
         self.timeZoneIdentifier = timeZoneIdentifier
+        self.selectedOn = .now
     }
 }

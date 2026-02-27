@@ -205,8 +205,7 @@ struct TransferChecklistItemsFormView: View {
             subtitle: source.title,
             iconConfig: IconConfig(
                 name: source.type.iconName,
-                primaryColor: source.color.swiftUIColor.opacity(0.8),
-                secondaryColor: nil
+                primaryColor: source.color.swiftUIColor.opacity(0.8)
             )
         )
         .glassChip(color: nil, onTap: nil, height: 36)
@@ -217,8 +216,7 @@ struct TransferChecklistItemsFormView: View {
             title: selectedItem.title,
             iconConfig: IconConfig(
                 name: selectedItem.type.iconName,
-                primaryColor: selectedItem.color.swiftUIColor,
-                secondaryColor: nil
+                primaryColor: selectedItem.color.swiftUIColor
             )
         )
         .glassChip(color: nil, onTap: nil, height: 40)

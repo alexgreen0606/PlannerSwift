@@ -5,6 +5,7 @@
 //  Created by Alex Green on 2/12/26.
 //
 
+import EventKit
 import SwiftData
 import SwiftDate
 import SwiftUI
@@ -31,10 +32,15 @@ struct TransferEventsFormView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
+    @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var plannerManager: ListManager<PlannerEvent>
 
     @State private var destinationDate: Date
     @State private var hasCalendarEvents: Bool = false
+
+    private var destinationDay: DateInRegion {
+        DateInRegion(destinationDate, region: sourceStartOfDay.region)
+    }
 
     private var transferCount: String {
         let count = plannerManager.selectedItems.count
@@ -53,6 +59,10 @@ struct TransferEventsFormView: View {
                             .cutoffDate...todaystampWatcher
                             .maxCalendarDate,
                         displayedComponents: .date
+                    )
+                    .environment(
+                        \.timeZone,
+                        sourceStartOfDay.region.timeZone
                     )
                     .datePickerStyle(.graphical)
                     .discreetListItem()
@@ -129,44 +139,44 @@ struct TransferEventsFormView: View {
             title: transferCount,
             subtitle: sourceStartOfDay.dynamicHeader,
             iconConfig: IconConfig(
-                name: "note",
-                primaryColor: nil,
-                secondaryColor: nil
+                name: "note"
             )
         )
     }
 
     private var destinationChip: some View {
         TransferDestinationIndicatorView(
-            title: "TODO", // destinationDate.dynamicHeader,
+            title: destinationDay.dynamicHeader,
             iconConfig: IconConfig(
-                name: "TODO", // destinationDate.datestamp.calendarSymbolName,
-                primaryColor: nil,
-                secondaryColor: nil
+                name: destinationDay.datestamp.calendarSymbolName
             )
         )
     }
 
     private func handleTransfer() {
-        let targetDatestamp = "TODO"// destinationDate.datestamp
-        let planner = modelContext.loadPlanner(for: targetDatestamp)
 
-        var plannerEvents: [PlannerEvent] = []
+        let daysBetween = sourceStartOfDay.date.getInterval(
+            toDate: destinationDay.date,
+            component: .day
+        )
+        let days = Int(daysBetween).days
 
-        for event in plannerManager.selectedItems {
-            if let calEvent = event.calendarEvent {
+        modelContext.shiftPlannerEvents(
+            plannerManager.selectedItems,
+            days: days,
+            settings: settings,
+            eventStore: calendarStore.ekEventStore
+        )
 
-            } else {
-                plannerEvents.append(event)
-            }
-        }
-        
-        // TODO: find the target startOfDay
-        let targetStartOfDay = DateInRegion(Date(), region: .local)
-        modelContext.transferPlannerEvents(plannerEvents, to: targetStartOfDay)
+        calendarStore.loadFreshCache(
+            hiddenCalendarIds: settings.hiddenCalendarIds
+        )
 
-        plannerManager.toggleSelectMode()
         dismiss()
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(700)) {
+            plannerManager.toggleSelectMode()
+        }
     }
 
 }

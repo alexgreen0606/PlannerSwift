@@ -23,8 +23,9 @@ class PlannerEvent: ListItem {
 
     // Default events to generic, untimed events.
     var hasTime: Bool = false
-
-    var locationSource = LocationSource.planner
+    
+    // MUST exist when hasTime is true.
+    @Relationship(deleteRule: .cascade)
     var location: Location?
 
     @Transient

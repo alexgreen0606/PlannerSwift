@@ -213,7 +213,6 @@ struct PlannerView: View {
                 }
             }
         }
-        .environmentObject(plannerManager)
 
         // Event Sheet
         .sheet(item: $eventSheetContext) { context in
@@ -258,6 +257,8 @@ struct PlannerView: View {
             ready: true,
             load: loadCalendarData
         )
+        
+        .environmentObject(plannerManager)
 
     }
 
@@ -477,7 +478,7 @@ struct PlannerView: View {
         event.locationValueView(
             in: planner,
             settings: settings,
-            localCityName: deviceLocationManager.cityName,
+            deviceLocation: deviceLocationManager.location,
             accentColor: accentColor
         )
     }

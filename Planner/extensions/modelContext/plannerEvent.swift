@@ -146,39 +146,47 @@ extension ModelContext {
     }
 
     @MainActor
-    func transferPlannerEvents(
+    func shiftPlannerEvents(
         _ events: [PlannerEvent],
-        to startOfDay: DateInRegion,
-        preserveTimeOfDay: Bool = true
+        days: DateComponents,
+        settings: PlannerSettings,
+        eventStore: EKEventStore
     ) {
 
-        let targetRegion = startOfDay.region
-
         for event in events {
-            if !event.hasTime {
-                event.date = startOfDay.date
-            } else {
+            event.date = event.date + days
+            event.sortDate = event.sortDate + days
+            
+            if let calEvent = event.calendarEvent {
+                guard calEvent.calendar.allowsContentModifications else {
+                    print(
+                        "Calendar event is read-only. Skipping event: \(event.title)"
+                    )
+                    continue
+                }
+                
+                settings.calendarSortDateMap[calEvent.calendarItemExternalIdentifier] = event.sortDate
 
-                // TODO: shift date and preserve time of day if needed.
+                // Shift start and end dates
+                calEvent.startDate = calEvent.startDate + days
+                calEvent.endDate = calEvent.endDate + days
 
-                //                if let newDate = event.date.shiftDate(to: self.datestamp, in: region) {
-                //                    print("P: \(event.date) -> \(newDate)")
-                //                    event.date = newDate
-                //                } else {
-                //                    assertionFailure(
-                //                        "ERROR PlannerEventExtension.inheritEvents: Failed to shift event to new date."
-                //                    )
-                //                    // TODO: still need to shift event somehow
-                //                    event.untimed = true
-                //                }
+                do {
+                    try eventStore.save(calEvent, span: .thisEvent, commit: true)
+                } catch {
+                    print("ERROR plannerEvent.shiftPlannerEvents: \(error)")
+                }
+                
             }
+
+            // TODO 2: place the sortDate at the back of the planner
         }
 
         do {
             try save()
         } catch {
             assertionFailure(
-                "ERROR plannerEvent.transferPlannerEvents: \(error)"
+                "ERROR plannerEvent.shiftPlannerEvents: \(error)"
             )
         }
     }
@@ -228,6 +236,10 @@ extension ModelContext {
         initialPlannerEvent: PlannerEvent?,
         initialCalendarEvent: EKEvent?
     ) {
+        
+        if draftPlannerEvent.hasTime && draftPlannerEvent.location == nil {
+            assertionFailure("ERROR plannerEvent.saveEventFormChanges(PlannerEvent): Draft event must have a location assigned if it has a time.")
+        }
 
         if let initialPlannerEvent {
 
@@ -238,8 +250,6 @@ extension ModelContext {
             initialPlannerEvent.hasTime = draftPlannerEvent.hasTime
             initialPlannerEvent.calendarEvent = nil
             initialPlannerEvent.location = draftPlannerEvent.location
-            initialPlannerEvent.locationSource =
-                draftPlannerEvent.locationSource
 
         } else {
 
@@ -255,7 +265,6 @@ extension ModelContext {
             newEvent.hasTime = draftPlannerEvent.hasTime
             newEvent.calendarEvent = nil
             newEvent.location = draftPlannerEvent.location
-            newEvent.locationSource = draftPlannerEvent.locationSource
 
             // TODO: add event to bottom of planner
 
@@ -280,21 +289,23 @@ extension ModelContext {
                 // Event was not deleted. Use the original planner event's sort date for the new event.
                 settings.calendarSortDateMap[
                     calendarEvent.calendarItemExternalIdentifier
-                ] =
-                    initialPlannerEvent.sortDate
+                ] = initialPlannerEvent.sortDate
 
             }
 
+            // TODO: why is this needed?
             Task { @MainActor in
-                self.delete(initialPlannerEvent)
-            }
 
-            do {
-                try save()
-            } catch {
-                assertionFailure(
-                    "ERROR plannerEvent.saveEventFormChanges(EKEvent): \(error)"
-                )
+                self.delete(initialPlannerEvent)
+
+                do {
+                    try save()
+                } catch {
+                    assertionFailure(
+                        "ERROR plannerEvent.saveEventFormChanges(EKEvent): \(error)"
+                    )
+                }
+
             }
         }
     }

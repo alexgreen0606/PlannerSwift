@@ -14,6 +14,11 @@ extension PlannerSettings {
     var homeRegion: Region {
         homeLocation?.region ?? .local
     }
+    
+    // Only ever nil if the device location is loading.
+    func validHomeLocation(deviceLocation: Location?) -> Location? {
+        homeLocation ?? deviceLocation
+    }
 
     func homeLocationLabel(localCityName: String) -> String {
         homeLocation?.name ?? localCityName
@@ -21,9 +26,7 @@ extension PlannerSettings {
 
     var homeLocationIconConfig: IconConfig {
         IconConfig(
-            name: homeLocation != nil ? "house" : "location",
-            primaryColor: Color.secondary,
-            secondaryColor: nil
+            name: homeLocation != nil ? "house" : "location"
         )
     }
 

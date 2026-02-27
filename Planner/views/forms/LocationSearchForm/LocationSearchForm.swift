@@ -17,29 +17,30 @@ enum LocationSearchMode {
 }
 
 struct LocationSearchView: View {
-    private let initialLocation: Location?
-    private let initialLocationSource: LocationSource
     private let title: String
-    private let sourcePlanner: Planner?
     private let mode: LocationSearchMode
-    private let onSave: (LocationSource, Location?) -> Void
+    private let settings: PlannerSettings
+    private let initialLocation: Location?
+    private let sourcePlanner: Planner?
+    private let plannerLocation: Location?
+    private let saveSelection: (Location?) -> Void
 
     init(
-        initialLocation: Location?,
-        initialLocationSource: LocationSource,
         title: String,
-        sourcePlanner: Planner? = nil,
         mode: LocationSearchMode,
-        onSave: @escaping (LocationSource, Location?) -> Void
+        settings: PlannerSettings,
+        initialLocation: Location?,
+        sourcePlanner: Planner? = nil,
+        saveSelection: @escaping (Location?) -> Void
     ) {
-        self.initialLocation = initialLocation
-        self.initialLocationSource = initialLocationSource
         self.title = title
-        self.sourcePlanner = sourcePlanner
         self.mode = mode
-        self.onSave = onSave
+        self.settings = settings
+        self.initialLocation = initialLocation
+        self.sourcePlanner = sourcePlanner
+        self.plannerLocation = sourcePlanner?.location
+        self.saveSelection = saveSelection
 
-        _selectedLocationSource = State(initialValue: initialLocationSource)
         _selectedLocation = State(initialValue: initialLocation)
     }
 
@@ -47,44 +48,48 @@ struct LocationSearchView: View {
         AccentColor.blue
 
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var locationManager: DeviceLocationManager
+    @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
-    @Query private var plannerSettingsList: [PlannerSettings]
-    @Query private var locations: [Location]
+    @Query(sort: \Location.selectedOn, order: .reverse)
+    private var locations: [Location]
 
     @StateObject private var locationFinder = LocationFinder()
-    @State private var selectedLocationSource: LocationSource
-    @State private var selectedLocation: Location?
-    @State private var existingLocations: [Location] = []
+    @State private var recentLocations: [Location] = []
     @State private var noTimeZoneKeys = Set<String>()
+
+    // Will only be nil if the device location has not loaded yet.
+    @State private var selectedLocation: Location?
 
     private var topSuggestionId: String? {
         optionId(locationFinder.suggestions.first)
     }
 
-    private var settings: PlannerSettings? {
-        plannerSettingsList.first
+    private var deviceLocation: Location? {
+        deviceLocationManager.location
+    }
+
+    private var homeLocation: Location? {
+        settings.homeLocation
     }
 
     private var showCurrentOption: Bool {
-        selectedLocationSource != .current
-            && !(selectedLocationSource == .home
-                && settings?.homeLocation == nil)
-            && !(selectedLocationSource == .planner
-                && settings?.homeLocation == nil)
+        deviceLocation != nil
+            && selectedLocation != deviceLocation
     }
 
     private var showHomeOption: Bool {
         mode != .home
-            && selectedLocationSource != .home
-            && settings?.homeLocation != nil
+            && homeLocation != nil
+            && selectedLocation != homeLocation
+            && homeLocation != deviceLocation
     }
 
     private var showPlannerOption: Bool {
         mode == .event
-            && selectedLocationSource != .planner
-            && sourcePlanner?.location != nil
-            && sourcePlanner?.datestamp.calendarSymbolName != nil
+            && plannerLocation != nil
+            && selectedLocation != plannerLocation
+            && plannerLocation != homeLocation
+            && plannerLocation != deviceLocation
     }
 
     var body: some View {
@@ -128,11 +133,9 @@ struct LocationSearchView: View {
             } else {
                 Button(
                     "Back",
-                    systemImage: "chevron.left"
-                ) {
-                    onSave(selectedLocationSource, selectedLocation)
-                    dismiss()
-                }
+                    systemImage: "chevron.left",
+                    action: handleSave
+                )
             }
         }
     }
@@ -141,11 +144,8 @@ struct LocationSearchView: View {
     private var topRightToolbar: some ToolbarContent {
         if mode == .planner {
             ToolbarItem(placement: .confirmationAction) {
-                Button("Confirm", systemImage: "checkmark") {
-                    onSave(selectedLocationSource, selectedLocation)
-                    dismiss()
-                }
-                .tint(accentColor.swiftUIColor)
+                Button("Confirm", systemImage: "checkmark", action: handleSave)
+                    .tint(accentColor.swiftUIColor)
             }
         }
     }
@@ -165,12 +165,17 @@ struct LocationSearchView: View {
         }
         .padding(.horizontal)
         .animateSynchronousAction(from: selectedLocation)
-        .animateSynchronousAction(from: selectedLocationSource)
     }
 
     @ViewBuilder
     private var selectionIndicator: some View {
-        if let selectedLocation, selectedLocationSource == .custom {
+        if let homeLocation, selectedLocation == homeLocation {
+            homeLocationIndicator(homeLocation)
+        } else if let plannerLocation, selectedLocation == plannerLocation {
+            // TODO: planner location indicator
+        } else if selectedLocation == deviceLocation {
+            currentLocationIndicator
+        } else if let selectedLocation {
             PlannerChipView(
                 title: selectedLocation.name,
                 iconConfig: IconConfig(
@@ -181,61 +186,26 @@ struct LocationSearchView: View {
                 color: nil,
                 onTap: nil
             )
-        } else if let home = settings?.homeLocation,
-            selectedLocationSource == .home
-        {
-            homeLocationIndicator(home)
         } else {
             currentLocationIndicator
         }
     }
 
+    @ViewBuilder
     private var currentLocationIndicator: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "location")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 18, height: 18)
-                .foregroundStyle(Color.secondary)
-
-            VStack(alignment: .leading) {
-                Text("Current Location")
-                    .font(.system(size: 14, weight: .medium))
-
-                if locationManager.cityName != "Current Location" {
-                    Text(locationManager.cityName)
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(
-                            Color.secondary
-                        )
-                }
-            }
-        }
-        .glassChip(color: nil, onTap: nil, height: 40)
+        LabelValueView(
+            label: "Current Location",
+            value: deviceLocationManager.location?.name,
+            iconConfig: IconConfig(name: "location")
+        )
     }
 
-    @ViewBuilder
     private func homeLocationIndicator(_ home: Location) -> some View {
-        HStack(spacing: 6) {
-            Image(systemName: "house")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 18, height: 18)
-                .foregroundStyle(Color.secondary)
-
-            VStack(alignment: .leading) {
-                Text("Home")
-                    .font(.system(size: 14, weight: .medium))
-
-                Text(home.name)
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(
-                        Color.secondary
-                    )
-            }
-
-        }
-        .glassChip(color: nil, onTap: nil, height: 40)
+        LabelValueView(
+            label: "Home",
+            value: home.name,
+            iconConfig: IconConfig(name: "house")
+        )
     }
 
     private var inputField: some View {
@@ -251,12 +221,12 @@ struct LocationSearchView: View {
 
     @ViewBuilder
     private var currentLocationButton: some View {
-        if showCurrentOption {
+        if showCurrentOption, let deviceLocation {
             AccentButtonView(
                 label: "Current",
                 systemImage: "location"
             ) {
-                selectedLocationSource = .current
+                selectedLocation = deviceLocation
             }
 
             Spacer()
@@ -265,19 +235,21 @@ struct LocationSearchView: View {
 
     @ViewBuilder
     private var homeLocationButton: some View {
-        if showHomeOption {
+        if showHomeOption, let homeLocation {
             AccentButtonView(
                 label: "Home",
                 systemImage: "house"
             ) {
-                selectedLocationSource = .home
+                selectedLocation = homeLocation
             }
         }
     }
 
     @ViewBuilder
     private var plannerLocationButton: some View {
-        if let sourcePlannerIcon = sourcePlanner?.datestamp.calendarSymbolName {
+        if let plannerLocation,
+            let sourcePlannerIcon = sourcePlanner?.datestamp.calendarSymbolName
+        {
             if showPlannerOption {
 
                 if showHomeOption {
@@ -288,7 +260,7 @@ struct LocationSearchView: View {
                     label: "Planner",
                     systemImage: sourcePlannerIcon
                 ) {
-                    selectedLocationSource = .planner
+                    selectedLocation = plannerLocation
                 }
             }
         }
@@ -299,7 +271,7 @@ struct LocationSearchView: View {
     @ViewBuilder
     private var fillerSuggestions: some View {
         List {
-            ForEach(existingLocations, id: \.id) { option in
+            ForEach(recentLocations, id: \.id) { option in
                 suggestionRow(option)
             }
         }
@@ -307,10 +279,7 @@ struct LocationSearchView: View {
         .background(Color(uiColor: .systemBackground).ignoresSafeArea())
     }
 
-    @ViewBuilder
     private func suggestionRow(_ suggestion: Location) -> some View {
-        let isSelected = isSuggestionSelected(suggestion)
-
         HStack {
             VStack(alignment: .leading) {
                 Text(suggestion.name)
@@ -325,14 +294,13 @@ struct LocationSearchView: View {
 
             Spacer()
 
-            if isSelected {
+            if selectedLocation == suggestion {
                 Image(systemName: "checkmark")
             }
         }
         .discreetListItem()
         .contentShape(Rectangle())
         .onTapGesture {
-            selectedLocationSource = .custom
             selectedLocation = suggestion
         }
     }
@@ -423,32 +391,14 @@ struct LocationSearchView: View {
                     return
                 }
 
-                // Re-use existing locations if they already exists in storage.
-                let coordinateKey = CLLocationCoordinate2D(
+                selectedLocation = Location(
+                    name: result.name,
+                    subtitle: result.subtitle,
                     latitude: result.latitude,
-                    longitude: result.longitude
-                ).key
+                    longitude: result.longitude,
+                    timeZoneIdentifier: timeZoneIdentifier
+                )
 
-                selectedLocationSource = .custom
-
-                guard
-                    let existing = existingLocations.first(where: {
-                        $0.coordinateKey == coordinateKey
-                    })
-                else {
-
-                    selectedLocation = Location(
-                        name: result.name,
-                        subtitle: result.subtitle,
-                        latitude: result.latitude,
-                        longitude: result.longitude,
-                        timeZoneIdentifier: timeZoneIdentifier
-                    )
-
-                    return
-                }
-
-                selectedLocation = existing
             }
         }
     }
@@ -458,7 +408,7 @@ struct LocationSearchView: View {
     private func isOptionSelected(_ option: MKLocalSearchCompletion)
         -> Bool
     {
-        guard selectedLocationSource == .custom, let selectedLocation else {
+        guard let selectedLocation else {
             return false
         }
 
@@ -472,12 +422,6 @@ struct LocationSearchView: View {
         return noTimeZoneKeys.contains(optionId)
     }
 
-    private func isSuggestionSelected(_ suggestion: Location)
-        -> Bool
-    {
-        selectedLocationSource == .custom && selectedLocation == suggestion
-    }
-
     private func optionId(_ option: MKLocalSearchCompletion?) -> String? {
         guard let option else { return nil }
 
@@ -485,25 +429,29 @@ struct LocationSearchView: View {
     }
 
     private func buildSuggestedLocations() {
-        var firstByKey: [String: Location] = [:]
+        var recentLocations: [Location] = []
+
+        var added: Set<String> = []
 
         for location in locations {
             let key = location.coordinateKey
 
-            if firstByKey[key] == nil {
-                firstByKey[key] = location
+            if !added.contains(key) {
+                added.insert(key)
+                recentLocations.append(location)
             }
         }
 
-        let sortedLocations = firstByKey.values.sorted { lhs, rhs in
-            if lhs.name != rhs.name {
-                return lhs.name < rhs.name
-            }
+        self.recentLocations = recentLocations
+    }
 
-            return (lhs.subtitle ?? "") < (rhs.subtitle ?? "")
-        }
+    private func handleSave() {
 
-        existingLocations = sortedLocations
+        // Mark the location as selected so it displays at the top of the recents list.
+        selectedLocation?.selectedOn = .now
+
+        saveSelection(selectedLocation)
+        dismiss()
     }
 
 }

@@ -77,7 +77,7 @@ struct PlannerPreviewView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var weatherStore: WeatherStore
     @EnvironmentObject private var calendarStore: CalendarStore
-    @EnvironmentObject private var locationManager: DeviceLocationManager
+    @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
     @Query private var plannerEvents: [PlannerEvent]
 
@@ -99,13 +99,13 @@ struct PlannerPreviewView: View {
     }
 
     private var location: Location? {
-        planner.location(settings: settings)
+        planner.location(settings: settings, deviceLocation: deviceLocationManager.location)
     }
 
     private var locationLabel: String? {
         planner.locationLabel(
-            localCityName: locationManager.cityName,
-            settings: settings
+            settings: settings,
+            deviceLocation: deviceLocationManager.location
         )
     }
 
@@ -355,10 +355,8 @@ struct PlannerPreviewView: View {
                                         .scaledToFit()
                                         .frame(width: 11, height: 11)
                                         .foregroundStyle(
-                                            locationIconConfig.primaryColor
-                                                ?? .secondary,
+                                            locationIconConfig.primaryColor,
                                             locationIconConfig.secondaryColor
-                                                ?? .secondary
                                         )
                                 }
 

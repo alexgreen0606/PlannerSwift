@@ -11,60 +11,62 @@ import SwiftUI
 
 extension PlannerEvent {
 
-    // MARK: - Location Helpers
+    // MARK: - Location Variables
 
     // Nil means the current device location is used.
-    private func location(settings: PlannerSettings, planner: Planner?)
+    private func location(
+        planner: Planner?,
+        settings: PlannerSettings,
+        deviceLocation: Location?
+    )
         -> Location?
     {
         eventLocation(
-            locationSource: locationSource,
             location: location,
             planner: planner,
-            settings: settings
+            settings: settings,
+            deviceLocation: deviceLocation
         )
+    }
+
+    func region(
+        planner: Planner?,
+        settings: PlannerSettings,
+        deviceLocation: Location?
+    ) -> Region {
+        location(
+            planner: planner,
+            settings: settings,
+            deviceLocation: deviceLocation
+        )?.region ?? .local
+    }
+
+    func locationLabel(
+        planner: Planner?,
+        settings: PlannerSettings,
+        deviceLocation: Location?
+    ) -> String {
+        location(
+            planner: planner,
+            settings: settings,
+            deviceLocation: deviceLocation
+        )?.name ?? "Current Location"
     }
 
     func locationIconConfig(
         settings: PlannerSettings,
-        planner: Planner,
         accentColor: AccentColor
     )
         -> IconConfig
     {
-        switch locationSource {
-        case .custom:
-            return IconConfig(
-                name: "mappin.and.ellipse",
-                primaryColor: accentColor.swiftUIColor,
-                secondaryColor: Color.secondary
-            )
-        case .home:
-            return settings.homeLocationIconConfig
-        case .current:
-            return IconConfig(
-                name: "Location",
-                primaryColor: Color.secondary,
-                secondaryColor: nil
-            )
-        case .planner:
-            return planner.locationIconConfig(
-                settings: settings,
-                accentColor: accentColor
-            )
+        if let homeLocation = settings.homeLocation, location == homeLocation {
+            return IconConfig(name: "house")
         }
-    }
 
-    func region(settings: PlannerSettings, planner: Planner?) -> Region {
-        location(settings: settings, planner: planner)?.region ?? .local
-    }
-
-    func locationLabel(
-        localCityName: String,
-        settings: PlannerSettings,
-        planner: Planner?
-    ) -> String {
-        location(settings: settings, planner: planner)?.name ?? localCityName
+        return IconConfig(
+            name: "mappin.and.ellipse",
+            primaryColor: accentColor.swiftUIColor
+        )
     }
 
     // MARK: - Style Helpers
@@ -157,7 +159,7 @@ extension PlannerEvent {
     func locationValueView(
         in planner: Planner,
         settings: PlannerSettings,
-        localCityName: String,
+        deviceLocation: Location?,
         accentColor: AccentColor
     ) -> some View {
 
@@ -200,15 +202,15 @@ extension PlannerEvent {
             .padding(.bottom, 4)
         }
 
-        let eventRegion = region(settings: settings, planner: planner)
+        let eventRegion = region(planner: planner, settings: settings, deviceLocation: deviceLocation)
         let locationLabel = locationLabel(
-            localCityName: localCityName,
+            planner: planner,
             settings: settings,
-            planner: planner
+            deviceLocation: deviceLocation,
         )
         let plannerLocationLabel = planner.locationLabel(
-            localCityName: localCityName,
-            settings: settings
+            settings: settings,
+            deviceLocation: deviceLocation
         )
 
         if locationLabel != plannerLocationLabel {
@@ -216,7 +218,6 @@ extension PlannerEvent {
 
                 let iconConfig = locationIconConfig(
                     settings: settings,
-                    planner: planner,
                     accentColor: accentColor
                 )
 
@@ -226,8 +227,8 @@ extension PlannerEvent {
                         .scaledToFit()
                         .frame(width: 10, height: 10)
                         .foregroundStyle(
-                            iconConfig.primaryColor ?? Color.secondary,
-                            iconConfig.secondaryColor ?? Color.secondary
+                            iconConfig.primaryColor,
+                            iconConfig.secondaryColor
                         )
 
                     Text(locationLabel)
@@ -237,11 +238,10 @@ extension PlannerEvent {
 
                 Spacer()
 
-                if eventRegion != plannerRegion && hasTime {
-                    let dateInRegion = DateInRegion(date, region: eventRegion)
+                if eventRegion != plannerRegion, hasTime,
                     let timeString =
-                        dateInRegion.timeWithTimezone ?? "Unknown Time Zone"
-
+                        DateInRegion(date, region: eventRegion).timeWithTimezone
+                {
                     Text(timeString)
                         .font(.system(size: 9))
                         .foregroundColor(.secondary)

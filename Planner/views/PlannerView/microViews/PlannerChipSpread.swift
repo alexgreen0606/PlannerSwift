@@ -33,7 +33,7 @@ struct PlannerChipSpreadView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var weatherStore: WeatherStore
-    @EnvironmentObject private var locationManager: DeviceLocationManager
+    @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
     @State private var isLocationSheetOpen = false
 
@@ -50,13 +50,13 @@ struct PlannerChipSpreadView: View {
     }
 
     private var location: Location? {
-        planner.location(settings: settings)
+        planner.location(settings: settings, deviceLocation: deviceLocationManager.location)
     }
 
     private var locationLabel: String {
         planner.locationLabel(
-            localCityName: locationManager.cityName,
-            settings: settings
+            settings: settings,
+            deviceLocation: deviceLocationManager.location
         )
     }
 
@@ -82,16 +82,15 @@ struct PlannerChipSpreadView: View {
         // Location Sheet
         .sheet(isPresented: $isLocationSheetOpen) {
             LocationSearchView(
-                initialLocation: planner.location,
-                initialLocationSource: planner.locationSource,
                 title: "Edit Location",
-                mode: .planner
-            ) { source, location in
+                mode: .planner,
+                settings: settings,
+                initialLocation: planner.location,
+            ) { location in
                 
                 modelContext.updateLocation(
                     for: planner,
-                    location: location,
-                    locationSource: source
+                    location: location
                 )
                 
                 let newRegion = planner.region(settings: settings)
@@ -211,9 +210,7 @@ struct PlannerChipSpreadView: View {
             title: event.title,
             iconConfig: IconConfig(
                 name: iconMap[event.calendar.calendarIdentifier]
-                    ?? event.calendar.iconName,
-                primaryColor: nil,
-                secondaryColor: nil
+                    ?? event.calendar.iconName
             ),
             color: Color(event.calendar.cgColor)
         ) {

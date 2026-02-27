@@ -16,7 +16,7 @@ class Planner {
     var showCompleted: Bool = false
     var showCanceled: Bool = false
     
-    var locationSource = LocationSource.home
+    @Relationship(deleteRule: .cascade)
     var location: Location?
     
     init(datestamp: String, location: Location?) {

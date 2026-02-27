@@ -53,8 +53,17 @@ extension ModelContext {
 
             return planner
         } catch {
-            assertionFailure("Failed to load in the planner: \(error)")
-            return Planner(datestamp: datestamp, location: nil)
+            let newPlanner = Planner(datestamp: datestamp, location: nil)
+            
+            insert(newPlanner)
+            
+            do {
+                try save()
+            } catch {
+                print("ERROR planner.loadPlanner: \(error)")
+            }
+            
+            return newPlanner
         }
     }
     
@@ -62,11 +71,9 @@ extension ModelContext {
     func updateLocation(
         for planner: Planner,
         location: Location?,
-        locationSource: LocationSource
     ) {
         
         planner.location = location
-        planner.locationSource = locationSource
 
         do {
             try save()

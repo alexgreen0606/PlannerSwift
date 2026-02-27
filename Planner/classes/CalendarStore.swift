@@ -161,17 +161,4 @@ class CalendarStore: ObservableObject {
         }
     }
 
-    func transfer(event: EKEvent, into date: Date) {
-        guard event.calendar.allowsContentModifications else {
-            print("Cannot transfer event. Calendar is read-only.")
-            return
-        }
-
-        do {
-            // TODO: transfer event start date to new date. Maintain time range.
-        } catch {
-            assertionFailure("Failed to transfer event: \(error)")
-        }
-    }
-
 }
