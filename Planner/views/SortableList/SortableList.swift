@@ -182,7 +182,6 @@ struct SortableListView<
 
     private func handleToolbarPress(_ iconName: String, _ item: Item) {
         tapToolbar?(iconName, item)
-        listManager.focusedId = nil
     }
 
 }

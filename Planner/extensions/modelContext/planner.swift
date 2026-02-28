@@ -5,13 +5,13 @@
 //  Created by Alex Green on 2/12/26.
 //
 
+import EventKit
 import SwiftData
 import SwiftDate
 import SwiftUI
-import EventKit
 
 extension ModelContext {
-    
+
     @MainActor
     func ensurePlanner(
         planners: [Planner],
@@ -32,7 +32,7 @@ extension ModelContext {
             )
         }
     }
-    
+
     @MainActor
     func loadPlanner(
         for datestamp: String
@@ -54,26 +54,43 @@ extension ModelContext {
             return planner
         } catch {
             let newPlanner = Planner(datestamp: datestamp, location: nil)
-            
+
             insert(newPlanner)
-            
+
             do {
                 try save()
             } catch {
                 print("ERROR planner.loadPlanner: \(error)")
             }
-            
+
             return newPlanner
         }
     }
-    
+
     @MainActor
     func updateLocation(
         for planner: Planner,
         location: Location?,
+        region: Region,
+        events: [PlannerEvent]
     ) {
-        
+
+        guard let newStartOfDay = planner.datestamp.startOfDay(in: region)
+        else {
+            assertionFailure(
+                "ERROR planner.updateLocation: Could not create new startOfDay for \(planner.datestamp)"
+            )
+            return
+        }
+
         planner.location = location
+
+        // Update the date of all untimed events to ensure they appear in the new Planner window.
+        for event in events {
+            if !event.hasTime {
+                event.date = newStartOfDay.date
+            }
+        }
 
         do {
             try save()
@@ -83,7 +100,7 @@ extension ModelContext {
             )
         }
     }
-    
+
     @MainActor
     func deleteOldPlanners(
         from planners: [Planner],
@@ -102,5 +119,5 @@ extension ModelContext {
         // Sepcial case: do NOT save the context here. This will be done in the parent
         // function that called this.
     }
-    
+
 }

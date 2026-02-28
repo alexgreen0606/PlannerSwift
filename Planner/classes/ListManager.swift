@@ -45,6 +45,9 @@ final class ListManager<Item: ListItem>: ObservableObject {
     @Published var focusedId: UUID? = nil
     
     @Published var pendingFocusId: UUID? = nil
+    
+    // Protects items from being deleted on blur of their textfield.
+    @Published var protectedId: UUID? = nil
 
     private var task: Task<Void, Never>?
     private var toggleType: ListToggleType = .check

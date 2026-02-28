@@ -261,8 +261,8 @@ extension ModelContext {
             initialPlannerEvent.calendarEvent = nil
             initialPlannerEvent.location = draftPlannerEvent.location
 
-            // Re-insert the event in case it was previously transient.
-            insert(initialPlannerEvent)
+            // Insert the event if it was previously transient.
+            insertEventIfNeeded(initialPlannerEvent)
 
         } else {
 
@@ -321,6 +321,18 @@ extension ModelContext {
 
             }
         }
+    }
+    
+    // MARK: - Helper Functions
+    
+    private func insertEventIfNeeded(_ event: PlannerEvent) {
+        let id = event.persistentModelID
+
+        if self.registeredModel(for: id) as PlannerEvent? != nil {
+            return
+        }
+
+        insert(event)
     }
 
 }

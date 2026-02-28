@@ -221,6 +221,9 @@ struct PlannerView: View {
                     in: namespace
                 )
             )
+            .onDisappear {
+                plannerManager.protectedId = nil
+            }
         }
 
         // Transfer Event Sheet
@@ -423,6 +426,7 @@ struct PlannerView: View {
             namespace: namespace,
             settings: settings,
             location: location,
+            plannerEvents: plannerEvents,
             openCalendarEventSheet: { calEvent in
                 eventSheetContext =
                     EventSheetContext(
@@ -618,6 +622,9 @@ struct PlannerView: View {
             plannerManager.toggleItem(event)
             return
         }
+        
+        plannerManager.protectedId = event.stableId
+        plannerManager.focusedId = nil
 
         eventSheetContext =
             EventSheetContext(

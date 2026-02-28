@@ -150,6 +150,7 @@ struct RowView<
                     editableField
                 }
                 .padding(.vertical, RowConstants.verticalTextPadding)
+                .opacity(opacity)
 
                 // Right Adornment
                 if let rightAdornment = rightAdornment {
@@ -167,6 +168,7 @@ struct RowView<
             // Bottom Adornment
             if let bottomAdornment {
                 bottomAdornment(item)
+                    .opacity(opacity)
             }
 
             // Lower Item Trigger
@@ -182,7 +184,6 @@ struct RowView<
                 }
             )
         }
-        .opacity(opacity)
     }
 
     // Static Text
@@ -252,9 +253,13 @@ struct RowView<
                 )
 
                 if trimmed.isEmpty {
-                    Task { @MainActor in
-                        modelContext.delete(item)
-                    }
+                    if listManager.protectedId != item.stableId {
+                        Task { @MainActor in
+                            modelContext.delete(item)
+                            
+                            try! modelContext.save()
+                        }
+                     }
                 } else {
                     item.title = trimmed
                     onTitleChange(item)

@@ -20,6 +20,7 @@ struct PlannerChipSpreadView: View {
     var namespace: Namespace.ID
     let settings: PlannerSettings
     let location: Location?
+    let plannerEvents: [PlannerEvent]
     let openCalendarEventSheet: (EKEvent) -> Void
     let weatherUnit: UnitTemperature =
         Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
@@ -85,12 +86,14 @@ struct PlannerChipSpreadView: View {
                 initialLocation: planner.location,
             ) { location in
                 
+                let newRegion = planner.region(settings: settings)
+                
                 modelContext.updateLocation(
                     for: planner,
-                    location: location
+                    location: location,
+                    region: newRegion,
+                    events: plannerEvents
                 )
-                
-                let newRegion = planner.region(settings: settings)
                 
                 Task {
                     await weatherStore.loadWeatherIfNeeded(
