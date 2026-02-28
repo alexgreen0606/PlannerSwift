@@ -38,11 +38,7 @@ extension Planner {
     func locationIconConfig(settings: PlannerSettings, accentColor: AccentColor)
         -> IconConfig
     {
-        if let location {
-            if location == settings.homeLocation {
-                return IconConfig(name: "house")
-            }
-
+        if location != nil {
             return IconConfig(
                 name: "mappin.and.ellipse",
                 primaryColor: accentColor.swiftUIColor

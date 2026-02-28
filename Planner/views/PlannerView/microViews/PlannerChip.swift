@@ -21,9 +21,8 @@ struct PlannerChipView: View {
                     .scaledToFit()
                     .frame(width: 14, height: 14)
                     .foregroundStyle(
-                        iconConfig.primaryColor ?? color
-                            ?? Color.label,
-                        iconConfig.secondaryColor ?? Color.label
+                        iconConfig.primaryColor,
+                        iconConfig.secondaryColor
                     )
             }
 

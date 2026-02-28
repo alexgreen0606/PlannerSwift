@@ -73,23 +73,43 @@ struct LocationSearchView: View {
     }
 
     private var showCurrentOption: Bool {
-        deviceLocation != nil
-            && selectedLocation != deviceLocation
+        switch mode {
+        case .home:
+            return selectedLocation != nil
+        case .planner, .event:
+            return false
+        }
     }
 
     private var showHomeOption: Bool {
-        mode != .home
-            && homeLocation != nil
-            && selectedLocation != homeLocation
-            && homeLocation != deviceLocation
+        switch mode {
+        case .planner:
+            return homeLocation != nil && selectedLocation != nil
+        case .home, .event:
+            return false
+        }
     }
 
-    private var showPlannerOption: Bool {
-        mode == .event
-            && plannerLocation != nil
-            && selectedLocation != plannerLocation
-            && plannerLocation != homeLocation
-            && plannerLocation != deviceLocation
+    private var showHomeIndicator: Bool {
+        switch mode {
+        case .planner:
+            return selectedLocation == nil
+        case .home, .event:
+            return false
+        }
+    }
+
+    private var showCurrentIndicator: Bool {
+        switch mode {
+        case .home:
+            return selectedLocation == nil
+        case .planner, .event:
+            return false
+        }
+    }
+
+    private var isDirty: Bool {
+        selectedLocation != initialLocation
     }
 
     var body: some View {
@@ -110,6 +130,7 @@ struct LocationSearchView: View {
             }
             .safeAreaInset(edge: .top) {
                 selectionHeader
+                    .frame(maxWidth: .infinity)
             }
             .overlay {
                 emptyOptionsLabel
@@ -146,6 +167,7 @@ struct LocationSearchView: View {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Confirm", systemImage: "checkmark", action: handleSave)
                     .tint(accentColor.swiftUIColor)
+                    .disabled(!isDirty)
             }
         }
     }
@@ -160,7 +182,7 @@ struct LocationSearchView: View {
             HStack {
                 currentLocationButton
                 homeLocationButton
-                plannerLocationButton
+                Spacer()
             }
         }
         .padding(.horizontal)
@@ -169,13 +191,16 @@ struct LocationSearchView: View {
 
     @ViewBuilder
     private var selectionIndicator: some View {
-        if let homeLocation, selectedLocation == homeLocation {
-            homeLocationIndicator(homeLocation)
-        } else if let plannerLocation, selectedLocation == plannerLocation {
-            // TODO: planner location indicator
-        } else if selectedLocation == deviceLocation {
+        if showCurrentIndicator {
+
             currentLocationIndicator
+
+        } else if showHomeIndicator, let homeLocation {
+
+            homeLocationIndicator(homeLocation)
+
         } else if let selectedLocation {
+
             PlannerChipView(
                 title: selectedLocation.name,
                 iconConfig: IconConfig(
@@ -186,16 +211,14 @@ struct LocationSearchView: View {
                 color: nil,
                 onTap: nil
             )
-        } else {
-            currentLocationIndicator
+
         }
     }
 
-    @ViewBuilder
     private var currentLocationIndicator: some View {
         LabelValueView(
             label: "Current Location",
-            value: deviceLocationManager.location?.name,
+            value: deviceLocation?.name,
             iconConfig: IconConfig(name: "location")
         )
     }
@@ -221,47 +244,24 @@ struct LocationSearchView: View {
 
     @ViewBuilder
     private var currentLocationButton: some View {
-        if showCurrentOption, let deviceLocation {
+        if showCurrentOption {
             AccentButtonView(
-                label: "Current",
+                label: "Use Current Location",
                 systemImage: "location"
             ) {
-                selectedLocation = deviceLocation
+                selectedLocation = nil
             }
-
-            Spacer()
         }
     }
 
     @ViewBuilder
     private var homeLocationButton: some View {
-        if showHomeOption, let homeLocation {
+        if showHomeOption {
             AccentButtonView(
-                label: "Home",
+                label: "Use Home Location",
                 systemImage: "house"
             ) {
-                selectedLocation = homeLocation
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var plannerLocationButton: some View {
-        if let plannerLocation,
-            let sourcePlannerIcon = sourcePlanner?.datestamp.calendarSymbolName
-        {
-            if showPlannerOption {
-
-                if showHomeOption {
-                    Spacer()
-                }
-
-                AccentButtonView(
-                    label: "Planner",
-                    systemImage: sourcePlannerIcon
-                ) {
-                    selectedLocation = plannerLocation
-                }
+                selectedLocation = nil
             }
         }
     }
@@ -282,8 +282,29 @@ struct LocationSearchView: View {
     private func suggestionRow(_ suggestion: Location) -> some View {
         HStack {
             VStack(alignment: .leading) {
-                Text(suggestion.name)
-                    .font(.headline)
+
+                HStack {
+
+                    if suggestion == homeLocation {
+                        Image(systemName: "house")
+                            .foregroundStyle(.secondary)
+                            .imageScale(.small)
+                    } else if suggestion == deviceLocation {
+                        Image(systemName: "location")
+                            .foregroundStyle(.secondary)
+                            .imageScale(.small)
+                    } else if suggestion == plannerLocation,
+                        let plannerIcon = sourcePlanner?.datestamp
+                            .calendarSymbolName
+                    {
+                        Image(systemName: plannerIcon)
+                            .foregroundStyle(.secondary)
+                            .imageScale(.small)
+                    }
+
+                    Text(suggestion.name)
+                        .font(.headline)
+                }
 
                 if let subtitle = suggestion.subtitle {
                     Text(subtitle)
@@ -428,12 +449,26 @@ struct LocationSearchView: View {
         return "\(option.title)-\(option.subtitle)"
     }
 
+    // TODO: run this when device location loads in
     private func buildSuggestedLocations() {
-        var recentLocations: [Location] = []
+        var sortedLocations = locations
 
+        if let plannerLocation {
+            sortedLocations.insert(plannerLocation, at: 0)
+        }
+
+        if let deviceLocation {
+            sortedLocations.insert(deviceLocation, at: 0)
+        }
+
+        if let homeLocation {
+            sortedLocations.insert(homeLocation, at: 0)
+        }
+
+        var recentLocations: [Location] = []
         var added: Set<String> = []
 
-        for location in locations {
+        for location in sortedLocations {
             let key = location.coordinateKey
 
             if !added.contains(key) {

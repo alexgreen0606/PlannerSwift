@@ -53,22 +53,6 @@ extension PlannerEvent {
         )?.name ?? "Current Location"
     }
 
-    func locationIconConfig(
-        settings: PlannerSettings,
-        accentColor: AccentColor
-    )
-        -> IconConfig
-    {
-        if let homeLocation = settings.homeLocation, location == homeLocation {
-            return IconConfig(name: "house")
-        }
-
-        return IconConfig(
-            name: "mappin.and.ellipse",
-            primaryColor: accentColor.swiftUIColor
-        )
-    }
-
     // MARK: - Style Helpers
 
     func tint(accentColor: AccentColor) -> Color {
@@ -214,9 +198,9 @@ extension PlannerEvent {
             }()
 
             LocationBottomAdornmentView(
-                icon: locationIconConfig(
-                    settings: settings,
-                    accentColor: accentColor
+                icon: IconConfig(
+                    name: "mappin.and.ellipse",
+                    primaryColor: accentColor.swiftUIColor
                 ),
                 locationText: locationLabel,
                 timeText: timeString,

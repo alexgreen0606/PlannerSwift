@@ -9,7 +9,7 @@ import SwiftData
 import SwiftUI
 
 enum RowConstants {
-    static let horizontalAdornmentHeight: CGFloat = 34
+    static let horizontalAdornmentHeight: CGFloat = 32
     static let verticalTextPadding: CGFloat = 6
     static let separatorHeight: CGFloat = 10
     static let toggleHeight: CGFloat = 54
