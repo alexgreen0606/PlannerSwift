@@ -44,7 +44,7 @@ struct PlannerBuilderView: View {
     var body: some View {
         ZStack {
             if let planner {
-                PlannerView(
+                PlannerEventBuilderView(
                     planner: planner,
                     settings: settings,
                     previewType: previewType,

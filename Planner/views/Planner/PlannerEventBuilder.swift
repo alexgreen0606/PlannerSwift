@@ -1,5 +1,5 @@
 //
-//  PlannerView.swift
+//  PlannerEventBuilderView.swift
 //  Planner
 //
 //  Created by Alex Green on 2/28/26.
@@ -9,7 +9,7 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-struct PlannerView: View {
+struct PlannerEventBuilderView: View {
     private let planner: Planner
     private let settings: PlannerSettings
     private let previewType: PlannerPreviewType?
@@ -132,6 +132,11 @@ struct PlannerView: View {
                 id: planner.datestamp,
                 in: namespace
             )
+
+            // Rebuild the calendar events when their positions change.
+            .onChange(of: settings.calendarSortDateMap) { _, _ in
+                buildCalendarPlannerEvents(calendarData: calendarData)
+            }
         }
     }
 
@@ -143,6 +148,12 @@ struct PlannerView: View {
             hiddenCalendarIds: settings.hiddenCalendarIds
         )
 
+        buildCalendarPlannerEvents(calendarData: calendarData)
+
+        self.calendarData = calendarData
+    }
+
+    private func buildCalendarPlannerEvents(calendarData: PlannerCalendarData) {
         calendarPlannerEvents =
             modelContext.buildCalendarPlannerEvents(
                 calendarEvents: calendarData.timedEvents,
@@ -150,8 +161,6 @@ struct PlannerView: View {
                 startOfDay: plannerStartOfDay,
                 settings: settings,
             )
-
-        self.calendarData = calendarData
     }
 
     private func loadWeatherData() {

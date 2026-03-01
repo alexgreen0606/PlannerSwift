@@ -1,5 +1,5 @@
 //
-//  PlannerCardVertical.swift
+//  PlannerPreviewView.swift
 //  Planner
 //
 //  Created by Alex Green on 12/25/25.
