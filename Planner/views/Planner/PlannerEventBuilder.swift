@@ -39,8 +39,13 @@ struct PlannerEventBuilderView: View {
         let startOfNextDay = (startOfDay + 1.days)
 
         _storageEvents = Query(
-            filter: #Predicate<PlannerEvent> {
-                $0.date >= startOfDay.date && $0.date < startOfNextDay.date
+            filter: #Predicate<PlannerEvent> { event in
+                if !event.hasTime {
+                    return event.date == startOfDay.date
+                } else {
+                    return event.date >= startOfDay.date &&
+                           event.date < startOfNextDay.date
+                }
             }
         )
 

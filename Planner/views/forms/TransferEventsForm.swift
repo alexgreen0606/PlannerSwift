@@ -36,7 +36,6 @@ struct TransferEventsFormView: View {
     @EnvironmentObject private var plannerManager: ListManager<PlannerEvent>
 
     @State private var destinationDate: Date
-    @State private var hasCalendarEvents: Bool = false
 
     private var destinationDay: DateInRegion {
         DateInRegion(destinationDate, region: sourceStartOfDay.region)
@@ -46,6 +45,14 @@ struct TransferEventsFormView: View {
         let count = plannerManager.selectedItems.count
         return
             "\(count == 0 ? "No" : String(count)) event\(count == 1 ? "" : "s")"
+    }
+
+    private var dayOffset: Int {
+        let daysBetween = sourceStartOfDay.date.getInterval(
+            toDate: destinationDay.date,
+            component: .day
+        )
+        return Int(daysBetween)
     }
 
     var body: some View {
@@ -66,11 +73,18 @@ struct TransferEventsFormView: View {
                     )
                     .datePickerStyle(.graphical)
                     .discreetListItem()
-                } footer: {
-                    if hasCalendarEvents {
+                } header: {
+                    HStack {
+                        Spacer()
+                        let absOffset = abs(dayOffset)
                         Text(
-                            "Calendar events will be moved to the selected date while keeping their original start and end times. Event duration will not change."
+                            "\(absOffset) day\(absOffset == 1 ? "" : "s") \(dayOffset > 0 ? "later" : "earlier")"
                         )
+                        .font(
+                            .system(size: 12, weight: .bold, design: .rounded)
+                        )
+                        .foregroundStyle(Color.secondary)
+                        .opacity(dayOffset == 0 ? 0 : 1)
                     }
                 }
                 .discreetListItem()
@@ -78,7 +92,7 @@ struct TransferEventsFormView: View {
             }
             .scrollDisabled(true)
             .navigationTitle(
-                "Transfer Events"
+                "Reschedule Plans"
             )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -88,13 +102,7 @@ struct TransferEventsFormView: View {
                 transferIndicator
             }
         }
-        .presentationDetents([.height(hasCalendarEvents ? 580 : 500)])
-
-        .task {
-            hasCalendarEvents = plannerManager.selectedItems.contains(where: {
-                $0.calendarEvent != nil
-            })
-        }
+        .presentationDetents([.height(500)])
     }
 
     // MARK: - Toolbars
@@ -155,17 +163,13 @@ struct TransferEventsFormView: View {
 
     private func handleTransfer() {
 
-        let daysBetween = sourceStartOfDay.date.getInterval(
-            toDate: destinationDay.date,
-            component: .day
-        )
-        let days = Int(daysBetween).days
-
         modelContext.shiftPlannerEvents(
             plannerManager.selectedItems,
-            days: days,
+            days: dayOffset.days,
+            datestamp: destinationDay.datestamp,
             settings: settings,
-            eventStore: calendarStore.ekEventStore
+            eventStore: calendarStore.ekEventStore,
+            loadCalendarEvents: calendarStore.loadPlannerData
         )
 
         calendarStore.loadFreshCache(

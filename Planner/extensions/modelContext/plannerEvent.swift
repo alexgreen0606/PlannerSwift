@@ -43,9 +43,9 @@ extension ModelContext {
         )
 
         let newEvent = PlannerEvent(
-            date: sortDate,
+            date: startOfDay.date,
+            sortDate: sortDate,
             calendarEvent: nil,
-            sortIndex: 0
         )
 
         insert(newEvent)
@@ -62,7 +62,7 @@ extension ModelContext {
     }
 
     @MainActor
-    func getEvents(
+    func getStorageEvents(
         for startOfDay: DateInRegion
     ) -> [PlannerEvent] {
 
@@ -151,13 +151,34 @@ extension ModelContext {
     func shiftPlannerEvents(
         _ events: [PlannerEvent],
         days: DateComponents,
+        datestamp: String,
         settings: PlannerSettings,
-        eventStore: EKEventStore
+        eventStore: EKEventStore,
+        loadCalendarEvents: (
+            _ planner: Planner,
+            _ startOfDay: DateInRegion,
+            _ hiddenCalendarIds: Set<String>
+        ) -> PlannerCalendarData
     ) {
 
-        for event in events {
-            event.date = event.date + days
-            event.sortDate = event.sortDate + days
+        let sortedEvents = events.sorted { $0.sortDate > $1.sortDate }
+        
+        let planner = loadPlanner(for: datestamp)
+        
+        let plannerStartOfDay = planner.datestamp.startOfDay(in: planner.region(settings: settings))
+
+        for event in sortedEvents {
+            
+            if !event.hasTime {
+                guard let plannerStartOfDay else {
+                    assertionFailure("ERROR plannerEvent.shiftPlannerEvents: Could not build plannerStartOfDay from \(datestamp)")
+                    continue
+                }
+                // Untimed events MUST have their date set to the planner's startOfDay.
+                event.date = plannerStartOfDay.date
+            } else {
+                event.date = event.date + days
+            }
 
             if let calEvent = event.calendarEvent {
                 guard calEvent.calendar.allowsContentModifications else {
@@ -166,10 +187,6 @@ extension ModelContext {
                     )
                     continue
                 }
-
-                settings.calendarSortDateMap[
-                    calEvent.calendarItemExternalIdentifier
-                ] = event.sortDate
 
                 // Shift start and end dates
                 calEvent.startDate = calEvent.startDate + days
@@ -183,11 +200,27 @@ extension ModelContext {
                     )
                 } catch {
                     print("ERROR plannerEvent.shiftPlannerEvents: \(error)")
+                    continue
                 }
 
+                let newSortDate = getTransferedEventSortDate(
+                    date: calEvent.startDate,
+                    settings: settings,
+                    loadCalendarEvents: loadCalendarEvents
+                )
+
+                settings.calendarSortDateMap[
+                    calEvent.calendarItemExternalIdentifier
+                ] = newSortDate
+
+                continue
             }
 
-            // TODO 2: place the sortDate at the back of the planner
+            event.sortDate = getTransferedEventSortDate(
+                date: event.date,
+                settings: settings,
+                loadCalendarEvents: loadCalendarEvents
+            )
         }
 
         do {
@@ -197,6 +230,66 @@ extension ModelContext {
                 "ERROR plannerEvent.shiftPlannerEvents: \(error)"
             )
         }
+    }
+
+    // Places the event at the top of its earliest possible planner.
+    @MainActor
+    private func getTransferedEventSortDate(
+        date: Date,
+        settings: PlannerSettings,
+        loadCalendarEvents: (
+            _ planner: Planner,
+            _ startOfDay: DateInRegion,
+            _ hiddenCalendarIds: Set<String>
+        ) -> PlannerCalendarData
+    ) -> Date {
+
+        let chronologicalPossibleDatestamps =
+            getChronologicalPossibleDatestamps(for: date)
+
+        for datestamp in chronologicalPossibleDatestamps {
+            let planner = loadPlanner(for: datestamp)
+
+            guard
+                let plannerStartOfDay = planner.datestamp.startOfDay(
+                    in: planner.region(settings: settings)
+                )
+            else {
+                assertionFailure(
+                    "ERROR plannerEvent.getTransferedEventSortDate: Could not build plannerStartOfDay from \(planner.datestamp)"
+                )
+                continue
+            }
+
+            if !date.belongsTo(plannerStartOfDay) {
+                print("debug | Event doesnt exist in \(datestamp)")
+                continue
+            }
+
+            // Note: This WILL contain the event. This is fine.
+            let plannerEvents = loadAllSortedPlannerEvents(
+                for: planner,
+                startOfDay: plannerStartOfDay,
+                settings: settings,
+                loadCalendarEvents: loadCalendarEvents
+            )
+
+            print(
+                "debug | Placing event at top of \(plannerEvents.count) existing events"
+            )
+
+            return generateSortDate(
+                startOfDay: plannerStartOfDay,
+                index: 0,
+                events: plannerEvents,
+                settings: settings
+            )
+        }
+
+        print("debug | Event doesnt exist in any planners.")
+
+        // Event does not belong to any planners. Use its actual date as the sortDate.
+        return date
     }
 
     @MainActor
@@ -270,7 +363,7 @@ extension ModelContext {
 
             let newEvent = PlannerEvent(
                 date: draftPlannerEvent.date,
-                sortIndex: 0
+                sortDate: draftPlannerEvent.date
             )
 
             newEvent.title = draftPlannerEvent.title
@@ -279,7 +372,7 @@ extension ModelContext {
             newEvent.calendarEvent = nil
             newEvent.location = draftPlannerEvent.location
 
-            // TODO: add event to bottom of planner
+            // TODO: add event to top of planner
 
             insert(newEvent)
 
@@ -322,9 +415,9 @@ extension ModelContext {
             }
         }
     }
-    
+
     // MARK: - Helper Functions
-    
+
     private func insertEventIfNeeded(_ event: PlannerEvent) {
         let id = event.persistentModelID
 

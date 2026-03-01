@@ -19,19 +19,4 @@ extension Date {
         return convertedSelf >= startOfDay && convertedSelf < startOfNextDay
     }
 
-    // TODO: is this needed?
-    func shiftDate(to startOfDay: DateInRegion, from sourceStartOfDay: DateInRegion) -> Date {
-
-        // TODO: Preserve the time of day.
-        // Example, if date is 3PM in EST, and is now transfering to GST, the time should now be 3PM in GST
-
-        return Date()
-        
-//        original.dateBySet([
-//            .year: newDate.year,
-//            .month: newDate.month,
-//            .day: newDate.day,
-//        ])?.date
-    }
-
 }

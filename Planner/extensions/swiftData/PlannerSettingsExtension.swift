@@ -86,11 +86,10 @@ extension PlannerSettings {
                 // Build the dummy event for UI representation. No persistence to storage.
                 let plannerEvent = PlannerEvent(
                     date: calEvent.startDate,
+                    sortDate: customSortDate,
                     calendarEvent: calEvent,
-                    sortIndex: 0
                 )
                 plannerEvent.hasTime = true
-                plannerEvent.sortDate = customSortDate
                 plannerEvents.append(plannerEvent)
             } else {
                 newEvents.append(calEvent)
@@ -115,11 +114,10 @@ extension PlannerSettings {
 
             let plannerEvent = PlannerEvent(
                 date: newEvent.startDate,
-                calendarEvent: newEvent,
-                sortIndex: 0
+                sortDate: newSortDate,
+                calendarEvent: newEvent
             )
             plannerEvent.hasTime = true
-            plannerEvent.sortDate = newSortDate
             plannerEvents.append(plannerEvent)
             sortedExisting.insert(plannerEvent, at: 0)
             

@@ -28,6 +28,14 @@ extension PlannerEvent {
             deviceLocation: deviceLocation
         )
     }
+    
+    func existsInRange(start: Date, end: Date) -> Bool {
+        if !hasTime {
+            return date == start.date
+        }
+
+        return date >= start && date < end
+    }
 
     func region(
         planner: Planner?,

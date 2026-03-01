@@ -33,16 +33,16 @@ class PlannerEvent: ListItem {
 
     init(
         date: Date,
+        sortDate: Date,
         calendarEvent: EKEvent? = nil,
-        sortIndex: Double,
     ) {
 
         let initialDate = calendarEvent?.startDate ?? date
 
         self.date = initialDate
-        self.sortDate = initialDate
+        self.sortDate = sortDate
 
-        super.init(sortIndex: sortIndex)
+        super.init(sortIndex: 0)
 
         self.calendarEvent = calendarEvent
         self.title = calendarEvent?.title ?? ""
