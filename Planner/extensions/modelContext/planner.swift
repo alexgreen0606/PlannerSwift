@@ -71,10 +71,11 @@ extension ModelContext {
     func updateLocation(
         for planner: Planner,
         location: Location?,
-        region: Region,
         settings: PlannerSettings,
         storageEvents: [PlannerEvent]
     ) {
+        
+        let region = location?.region ?? settings.homeRegion
 
         guard let newStartOfDay = planner.datestamp.startOfDay(in: region)
         else {

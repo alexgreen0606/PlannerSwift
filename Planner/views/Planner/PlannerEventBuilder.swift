@@ -64,6 +64,10 @@ struct PlannerEventBuilderView: View {
         )
     }
 
+    private var plannerRegion: Region {
+        planner.region(settings: settings)
+    }
+
     private var allSortedPlannerEvents: [PlannerEvent] {
         (storageEvents + calendarPlannerEvents)
             .sorted {
@@ -94,9 +98,16 @@ struct PlannerEventBuilderView: View {
             load: loadWeatherData
         )
 
-        // Reload the calendar when the time zone changes.
-        .onChange(of: plannerStartOfDay.region.timeZone) { _, _ in
+        // Reload the weather and events when the location changes.
+        .onChange(of: plannerLocation) { _, _ in
             loadCalendarData()
+
+            Task {
+                await weatherStore.loadWeatherIfNeeded(
+                    location: plannerLocation,
+                    region: plannerRegion
+                )
+            }
         }
     }
 

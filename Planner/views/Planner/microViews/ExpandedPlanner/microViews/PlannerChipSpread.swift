@@ -85,9 +85,7 @@ struct PlannerChipSpreadView: View {
                 settings: settings,
                 initialLocation: planner.location,
             ) { location in
-                
-                let newRegion = planner.region(settings: settings)
-                
+
                 modelContext.updateLocation(
                     for: planner,
                     location: location,
@@ -95,14 +93,7 @@ struct PlannerChipSpreadView: View {
                     settings: settings,
                     storageEvents: storageEvents
                 )
-                
-                Task {
-                    await weatherStore.loadWeatherIfNeeded(
-                        location: location,
-                        region: newRegion
-                    )
-                }
-                
+
             }
             .navigationTransition(
                 .zoom(
@@ -129,24 +120,24 @@ struct PlannerChipSpreadView: View {
 
     @ViewBuilder
     private var locationChip: some View {
-        
-            let locationIconConfig = planner.locationIconConfig(
-                settings: settings,
-                accentColor: accentColor
-            )
-            
-            PlannerChipView(
-                title: locationLabel,
-                iconConfig: locationIconConfig,
-                color: nil,
-                onTap: {
-                    isLocationSheetOpen = true
-                }
-            )
-            .matchedTransitionSource(
-                id: "LOCATION",
-                in: namespace
-            )
+
+        let locationIconConfig = planner.locationIconConfig(
+            settings: settings,
+            accentColor: accentColor
+        )
+
+        PlannerChipView(
+            title: locationLabel,
+            iconConfig: locationIconConfig,
+            color: nil,
+            onTap: {
+                isLocationSheetOpen = true
+            }
+        )
+        .matchedTransitionSource(
+            id: "LOCATION",
+            in: namespace
+        )
     }
 
     @ViewBuilder
@@ -223,5 +214,5 @@ struct PlannerChipSpreadView: View {
         guard let url = URL(string: "weather://") else { return }
         UIApplication.shared.open(url)
     }
-    
+
 }
