@@ -26,6 +26,17 @@ extension Color {
             }
         )
     }
+    
+    static var sheetBackground: Color {
+        let light = UIColor.secondarySystemBackground
+        let dark = UIColor.systemBackground
+
+        return Color(
+            UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? dark : light
+            }
+        )
+    }
 
     static var cardBackground: Color {
         let light = UIColor.systemBackground

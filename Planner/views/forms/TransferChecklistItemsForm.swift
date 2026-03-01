@@ -116,9 +116,9 @@ struct TransferChecklistItemsFormView: View {
                     }
                     .listSectionMargins(.top, 0)
                 }
+                .id(currentFolder.stableId)
+                .transition(folderSlideTransition)
             }
-            .id(currentFolder.stableId)
-            .transition(folderSlideTransition)
             .overlay {
                 if currentOptions.isEmpty {
                     EmptyLabel(
@@ -130,7 +130,6 @@ struct TransferChecklistItemsFormView: View {
                 "Transfer \(destinationType.childrenLabel.capitalizedFirst)"
             )
             .navigationBarTitleDisplayMode(.inline)
-            .background(Color(.systemBackground))
             .toolbar {
                 topRightToolbar
                 topLeftToolbar
@@ -139,6 +138,7 @@ struct TransferChecklistItemsFormView: View {
                 transferIndicator
             }
         }
+        .background(Color.sheetBackground.ignoresSafeArea())
     }
 
     // MARK: - Toolbars
@@ -174,7 +174,7 @@ struct TransferChecklistItemsFormView: View {
         HStack(spacing: 16) {
             sourceChip
 
-            if let destination {
+            if let destination, destination != source {
                 Image(systemName: "arrow.right")
                     .resizable()
                     .scaledToFit()
