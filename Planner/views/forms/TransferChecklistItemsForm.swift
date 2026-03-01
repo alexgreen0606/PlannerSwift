@@ -17,22 +17,22 @@ struct TransferChecklistItemsFormView: View {
     private let source: ChecklistItem
 
     init(source: ChecklistItem, selectedIds: Set<UUID>) {
-        var fp =
+        var folderPointer =
             source.type == .folder
             ? source
             : source.parent!
 
         // Step backwards through folders until you find one with a selectable item.
-        while !fp.hasChildType(
+        while !folderPointer.hasChildType(
             source.type,
             excluding: Set(selectedIds + [source.stableId])
         ),
-            let parent = fp.parent
+            let parent = folderPointer.parent
         {
-            fp = parent
+            folderPointer = parent
         }
 
-        self.currentFolder = fp
+        self.currentFolder = folderPointer
 
         self.destinationType =
             source.type == .folder ? .folder : .checklist
@@ -155,21 +155,12 @@ struct TransferChecklistItemsFormView: View {
     @ToolbarContentBuilder
     private var topRightToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
-            Button("Submit", systemImage: "checkmark", role: .confirm) {
-                guard let destination, destination.stableId != source.stableId
-                else {
-                    return
-                }
-
-                modelContext.transferChecklistItems(
-                    into: destination,
-                    items: listManager.selectedItems
-                )
-
-                listManager.toggleSelectMode()
-
-                dismiss()
-            }
+            Button(
+                "Submit",
+                systemImage: "checkmark",
+                role: .confirm,
+                action: handleTransfer
+            )
             .disabled(
                 destination == nil || destination!.stableId == source.stableId
             )
@@ -301,6 +292,22 @@ struct TransferChecklistItemsFormView: View {
                 currentFolder = item
             }
         }
+    }
+
+    private func handleTransfer() {
+        guard let destination, destination.stableId != source.stableId
+        else {
+            return
+        }
+
+        modelContext.transferChecklistItems(
+            into: destination,
+            items: listManager.selectedItems
+        )
+
+        listManager.toggleSelectMode()
+
+        dismiss()
     }
 
 }
