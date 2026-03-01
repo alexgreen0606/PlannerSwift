@@ -35,11 +35,17 @@ extension ModelContext {
     @MainActor
     func buildCalendarPlannerEvents(
         calendarEvents events: [EKEvent],
+        storageEvents: [PlannerEvent],
+        startOfDay: DateInRegion,
         settings: PlannerSettings
     ) -> [PlannerEvent] {
 
         let calendarPlannerEvents =
-            settings.buildCalendarPlannerEvents(calendarEvents: events)
+            settings.buildCalendarPlannerEvents(
+                calendarEvents: events,
+                storageEvents: storageEvents,
+                startOfDay: startOfDay
+            )
 
         do {
             try save()

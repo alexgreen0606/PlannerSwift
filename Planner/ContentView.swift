@@ -78,6 +78,7 @@ struct ContentView: View {
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
     @EnvironmentObject private var weatherStore: WeatherStore
+    @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
 
     @Query private var plannerSettingsList: [PlannerSettings]
     @Query private var foldersList: [ChecklistItem]
@@ -85,6 +86,8 @@ struct ContentView: View {
 
     @State private var selectedTab: AppTab = .planner
     @State private var plannerSearchText: String = ""
+
+    @Namespace private var namespace
 
     private var settings: PlannerSettings? {
         plannerSettingsList.first
@@ -103,7 +106,8 @@ struct ContentView: View {
             Tab(value: .planner) {
                 if let settings {
                     PlannerTabView(
-                        settings: settings
+                        settings: settings,
+                        namespace: namespace
                     )
                 }
             } label: {
@@ -143,7 +147,8 @@ struct ContentView: View {
                 if let settings {
                     PlannerSearchTabView(
                         searchText: $plannerSearchText,
-                        settings: settings
+                        settings: settings,
+                        namespace: namespace
                     )
                     .searchable(
                         text: $plannerSearchText,
@@ -154,6 +159,19 @@ struct ContentView: View {
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
+
+        // Planner Cover
+        .fullScreenCover(item: $plannerCoverManager.context) { context in
+            if let settings {
+                PlannerBuilderView(datestamp: context.datestamp, settings: settings)
+                    .navigationTransition(
+                        .zoom(
+                            sourceID: context.id,
+                            in: namespace
+                        )
+                    )
+            }
+        }
 
         // Ensure all global storage objects exist.
         .task {

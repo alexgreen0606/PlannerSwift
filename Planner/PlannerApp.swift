@@ -29,6 +29,7 @@ struct PlannerApp: App {
     @StateObject private var weatherStore: WeatherStore
     @StateObject private var calendarStore = CalendarStore()
     @StateObject private var todaystampWatcher = TodaystampWatcher()
+    @StateObject private var plannerCoverManager = PlannerCoverManager()
 
     var body: some Scene {
         WindowGroup {
@@ -39,6 +40,7 @@ struct PlannerApp: App {
                 .environmentObject(weatherStore)
                 .environmentObject(calendarStore)
                 .environmentObject(locationManager)
+                .environmentObject(plannerCoverManager)
         }
         .modelContainer(for: [
             Planner.self, ChecklistItem.self, PlannerSettings.self,

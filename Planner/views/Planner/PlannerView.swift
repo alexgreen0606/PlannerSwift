@@ -1,0 +1,165 @@
+//
+//  PlannerView.swift
+//  Planner
+//
+//  Created by Alex Green on 2/28/26.
+//
+
+import SwiftData
+import SwiftDate
+import SwiftUI
+
+struct PlannerView: View {
+    private let planner: Planner
+    private let settings: PlannerSettings
+    private let previewType: PlannerPreviewType?
+    private let namespace: Namespace.ID?
+
+    private let plannerStartOfDay: DateInRegion
+
+    init(
+        planner: Planner,
+        settings: PlannerSettings,
+        previewType: PlannerPreviewType? = nil,
+        namespace: Namespace.ID? = nil
+    ) {
+        self.planner = planner
+        self.previewType = previewType
+        self.settings = settings
+        self.namespace = namespace
+
+        let region = planner.region(settings: settings)
+
+        guard let startOfDay = planner.datestamp.startOfDay(in: region) else {
+            fatalError(
+                "ERROR PlannerDataBuilder.init: Could not get DateInRegion from: \(planner.datestamp)"
+            )
+        }
+
+        let startOfNextDay = (startOfDay + 1.days)
+
+        _storageEvents = Query(
+            filter: #Predicate<PlannerEvent> {
+                $0.date >= startOfDay.date && $0.date < startOfNextDay.date
+            }
+        )
+
+        self.plannerStartOfDay = startOfDay
+    }
+
+    @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var weatherStore: WeatherStore
+    @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
+
+    @Query private var storageEvents: [PlannerEvent]
+
+    @State private var calendarData: PlannerCalendarData? = nil
+    @State private var calendarPlannerEvents: [PlannerEvent] = []
+
+    private var plannerLocation: Location? {
+        planner.location(
+            settings: settings,
+            deviceLocation: deviceLocationManager.location
+        )
+    }
+
+    private var allSortedPlannerEvents: [PlannerEvent] {
+        (storageEvents + calendarPlannerEvents)
+            .sorted {
+                $0.sortDate < $1.sortDate
+            }
+    }
+
+    var body: some View {
+        ZStack {
+            if previewType != nil {
+                previewView
+            } else {
+                expandedView
+            }
+        }
+
+        // Calendar data tracking.
+        .externalData(
+            key: calendarStore.loadTrigger,
+            ready: true,
+            load: loadCalendarData
+        )
+
+        // Weather data tracking.
+        .externalData(
+            key: weatherStore.loadTrigger,
+            ready: true,
+            load: loadWeatherData
+        )
+
+        // Reload the calendar when the time zone changes.
+        .onChange(of: plannerStartOfDay.region.timeZone) { _, _ in
+            loadCalendarData()
+        }
+    }
+
+    @ViewBuilder
+    private var expandedView: some View {
+        if let calendarData {
+            ExpandedPlannerView(
+                planner: planner,
+                plannerStartOfDay: plannerStartOfDay,
+                plannerLocation: plannerLocation,
+                storageEvents: storageEvents,
+                allSortedPlannerEvents: allSortedPlannerEvents,
+                calendarData: calendarData,
+                settings: settings
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var previewView: some View {
+        if let previewType, let calendarData, let namespace {
+            PlannerPreviewView(
+                planner: planner,
+                plannerStartOfDay: plannerStartOfDay,
+                plannerLocation: plannerLocation,
+                storageEvents: storageEvents,
+                calendarPlannerEvents: calendarPlannerEvents,
+                calendarData: calendarData,
+                settings: settings,
+                type: previewType
+            )
+            .matchedTransitionSource(
+                id: planner.datestamp,
+                in: namespace
+            )
+        }
+    }
+
+    private func loadCalendarData() {
+
+        let calendarData = calendarStore.loadPlannerData(
+            plannerKey: planner.key,
+            startOfDay: plannerStartOfDay,
+            hiddenCalendarIds: settings.hiddenCalendarIds
+        )
+
+        calendarPlannerEvents =
+            modelContext.buildCalendarPlannerEvents(
+                calendarEvents: calendarData.timedEvents,
+                storageEvents: storageEvents,
+                startOfDay: plannerStartOfDay,
+                settings: settings,
+            )
+
+        self.calendarData = calendarData
+    }
+
+    private func loadWeatherData() {
+        Task {
+            await weatherStore.loadWeatherIfNeeded(
+                location: plannerLocation,
+                region: plannerStartOfDay.region
+            )
+        }
+    }
+}

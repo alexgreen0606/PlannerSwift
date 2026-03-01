@@ -12,6 +12,7 @@ import SwiftUI
 
 struct PlannerTabView: View {
     let settings: PlannerSettings
+    let namespace: Namespace.ID
 
     @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
         KeepPastPlansDuration =
@@ -22,10 +23,7 @@ struct PlannerTabView: View {
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject private var weatherStore: WeatherStore
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
-
-    @State private var openDatestamp: PlannerDatestamp? = nil
-    @State private var openPlanner: Planner? = nil
-    @Namespace private var namespace
+    @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
 
     @State private var selectedCalendarDate: Date = Date()
     @State private var showNewEventSheet = false
@@ -54,15 +52,11 @@ struct PlannerTabView: View {
                             HStack {
                                 ForEach(thisWeekDatestamps, id: \.self) {
                                     datestamp in
-                                    PlannerPreviewBuilderView(
+                                    PlannerBuilderView(
                                         datestamp: datestamp,
-                                        type: .planner,
                                         settings: settings,
-                                        openPlanner: $openPlanner
-                                    )
-                                    .matchedTransitionSource(
-                                        id: datestamp,
-                                        in: namespace
+                                        previewType: .planner,
+                                        namespace: namespace
                                     )
                                 }
                             }
@@ -95,38 +89,6 @@ struct PlannerTabView: View {
                     .navigationTransition(
                         .zoom(
                             sourceID: "ADD_EVENT",
-                            in: namespace
-                        )
-                    )
-                }
-
-                // Open a planner (from a card)
-                .fullScreenCover(item: $openPlanner) { planner in
-                    PlannerView(
-                        planner: planner,
-                        settings: settings
-                    ) {
-                        openPlanner = nil
-                    }
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: planner.datestamp,
-                            in: namespace
-                        )
-                    )
-                }
-
-                // Open a Planner (from calendar)
-                .fullScreenCover(item: $openDatestamp) { datestamp in
-                    PlannerBuilderView(
-                        datestamp: datestamp.id,
-                        settings: settings,
-                    ) {
-                        openDatestamp = nil
-                    }
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: "CALENDAR",
                             in: namespace
                         )
                     )
@@ -172,8 +134,9 @@ struct PlannerTabView: View {
                         )
 
                         DispatchQueue.main.async {
-                            openDatestamp = PlannerDatestamp(
-                                id: localDate.datestamp
+                            plannerCoverManager.context = PlannerCoverContext(
+                                datestamp: localDate.datestamp,
+                                source: "CALENDAR"
                             )
                         }
                     }

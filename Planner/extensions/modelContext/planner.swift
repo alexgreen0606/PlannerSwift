@@ -72,7 +72,8 @@ extension ModelContext {
         for planner: Planner,
         location: Location?,
         region: Region,
-        events: [PlannerEvent]
+        settings: PlannerSettings,
+        storageEvents: [PlannerEvent]
     ) {
 
         guard let newStartOfDay = planner.datestamp.startOfDay(in: region)
@@ -86,7 +87,7 @@ extension ModelContext {
         planner.location = location
 
         // Update the date of all untimed events to ensure they appear in the new Planner window.
-        for event in events {
+        for event in storageEvents {
             if !event.hasTime {
                 event.date = newStartOfDay.date
             }
@@ -119,5 +120,35 @@ extension ModelContext {
         // Sepcial case: do NOT save the context here. This will be done in the parent
         // function that called this.
     }
+
+    // TODO: deprecated for now.
+    //    @MainActor
+    //    private func loadAllPlannerEvents(
+    //        for planner: Planner,
+    //        startOfDay: DateInRegion,
+    //        settings: PlannerSettings,
+    //        loadCalendarEvents: (
+    //            _ plannerKey: String,
+    //            _ startOfDay: DateInRegion,
+    //            _ hiddenCalendarIds: Set<String>
+    //        ) -> PlannerCalendarData
+    //    ) -> [PlannerEvent] {
+    //        let plannerEvents = getEvents(for: startOfDay)
+    //
+    //        let calendarData = loadCalendarEvents(
+    //            planner.key,
+    //            startOfDay,
+    //            settings.hiddenCalendarIds
+    //        )
+    //
+    //        let calendarPlannerEvents = buildCalendarPlannerEvents(
+    //            calendarEvents: calendarData.timedEvents,
+    //            settings: settings
+    //        )
+    //
+    //        return (plannerEvents + calendarPlannerEvents).sorted {
+    //            $0.sortDate < $1.sortDate
+    //        }
+    //    }
 
 }

@@ -54,7 +54,7 @@ private func midpoint(between a: Date, and b: Date) -> Date {
 }
 
 @MainActor
-func normalizeEvents(
+private func normalizeEvents(
     events: [PlannerEvent],
     startOfDay: DateInRegion,
     settings: PlannerSettings

@@ -165,7 +165,6 @@ struct EventFormView: View {
 
         self.contact = contact
         self.draftPlannerEvent = draftPlannerEvent
-
     }
 
     // Overrides all other behavior in this sheet and displays the Contact form (Birthday events only).

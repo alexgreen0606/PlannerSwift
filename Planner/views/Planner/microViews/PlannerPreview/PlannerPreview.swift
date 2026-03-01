@@ -22,47 +22,16 @@ enum PlannerPreviewType {
 }
 
 struct PlannerPreviewView: View {
-    private let planner: Planner
-    private let type: PlannerPreviewType
-    private let settings: PlannerSettings
-    @Binding private var openPlanner: Planner?
-
-    private let startOfDay: DateInRegion
-    private let plannerRegion: Region
+    let planner: Planner
+    let plannerStartOfDay: DateInRegion
+    let plannerLocation: Location?
+    let storageEvents: [PlannerEvent]
+    let calendarPlannerEvents: [PlannerEvent]
+    let calendarData: PlannerCalendarData
+    let settings: PlannerSettings
+    let type: PlannerPreviewType
 
     private let maxPreviewEvents = 5
-
-    init(
-        planner: Planner,
-        type: PlannerPreviewType,
-        settings: PlannerSettings,
-        openPlanner: Binding<Planner?>
-    ) {
-        self.planner = planner
-        self.type = type
-        self.settings = settings
-        self._openPlanner = openPlanner
-
-        let region = planner.region(settings: settings)
-
-        guard let startOfDay = planner.datestamp.startOfDay(in: region) else {
-            fatalError(
-                "ERROR PlannerCardVertical.init: Could not get DateInRegion from: \(planner.datestamp)"
-            )
-        }
-
-        let startOfNextDay = (startOfDay + 1.days)
-
-        // Set the query to find this date's events.
-        _plannerEvents = Query(
-            filter: #Predicate<PlannerEvent> {
-                $0.date >= startOfDay.date && $0.date < startOfNextDay.date
-            }
-        )
-
-        self.startOfDay = startOfDay
-        self.plannerRegion = region
-    }
 
     let weatherUnit: UnitTemperature =
         Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
@@ -78,11 +47,7 @@ struct PlannerPreviewView: View {
     @EnvironmentObject private var weatherStore: WeatherStore
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
-
-    @Query private var plannerEvents: [PlannerEvent]
-
-    @State private var calendarPlannerEvents: [PlannerEvent] = []
-    @State private var calendarData: PlannerCalendarData? = nil
+    @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
 
     var isDarkMode: Bool {
         switch appColorScheme {
@@ -95,14 +60,7 @@ struct PlannerPreviewView: View {
     // MARK: - Weather Data
 
     private var weatherData: DayWeather? {
-        weatherStore.getWeather(for: startOfDay, at: location)
-    }
-
-    private var location: Location? {
-        planner.location(
-            settings: settings,
-            deviceLocation: deviceLocationManager.location
-        )
+        weatherStore.getWeather(for: plannerStartOfDay, at: plannerLocation)
     }
 
     private var locationLabel: String? {
@@ -122,11 +80,11 @@ struct PlannerPreviewView: View {
     // MARK: - Event Data
 
     private var allDayEvents: [EKEvent] {
-        calendarData?.allDayEvents ?? []
+        calendarData.allDayEvents
     }
 
     private var sortedOpenPlannerEvents: [PlannerEvent] {
-        plannerEvents
+        storageEvents
             .filter { !$0.isChecked }
             .sorted { $0.sortDate < $1.sortDate }
     }
@@ -233,7 +191,7 @@ struct PlannerPreviewView: View {
             )
 
             PreviewPlannerEventListView(
-                plannerRegion: plannerRegion,
+                plannerRegion: plannerStartOfDay.region,
                 events: previewPlannerEvents
             )
 
@@ -243,36 +201,9 @@ struct PlannerPreviewView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            openPlanner = planner
-        }
-
-        // Calendar data tracking.
-        .externalData(
-            key: calendarStore.loadTrigger,
-            ready: true,
-            load: loadCalendarData
-        )
-
-        // Weather data tracking.
-        .externalData(
-            key: weatherStore.loadTrigger,
-            ready: true
-        ) {
-            Task {
-                await weatherStore.loadWeatherIfNeeded(
-                    location: location,
-                    region: startOfDay.region
-                )
-            }
-        }
-
-        // Re-build the calendar events when their sort orders change.
-        .onChange(of: settings.calendarSortDateMap) { _, _ in
-            if let calendarData {
-                buildCalendarPlannerEvents(
-                    timedEvents: calendarData.timedEvents
-                )
-            }
+            plannerCoverManager.context = PlannerCoverContext(
+                datestamp: planner.datestamp
+            )
         }
 
         if type == .planner {
@@ -289,7 +220,6 @@ struct PlannerPreviewView: View {
         } else {
             content
                 .frame(maxWidth: .infinity)
-                .listRowBackground(Color.clear)
         }
     }
 
@@ -478,27 +408,6 @@ struct PlannerPreviewView: View {
             .animateAsynchronousAction(from: weatherData != nil)
             .animateAsynchronousAction(from: locationLabel != nil)
         }
-    }
-
-    private func loadCalendarData() {
-
-        let calendarData = calendarStore.loadPlannerData(
-            plannerKey: planner.key,
-            startOfDay: startOfDay,
-            hiddenCalendarIds: settings.hiddenCalendarIds
-        )
-
-        buildCalendarPlannerEvents(timedEvents: calendarData.timedEvents)
-
-        self.calendarData = calendarData
-    }
-
-    private func buildCalendarPlannerEvents(timedEvents: [EKEvent]) {
-        calendarPlannerEvents =
-            modelContext.buildCalendarPlannerEvents(
-                calendarEvents: timedEvents,
-                settings: settings
-            )
     }
 
     private func isCalendarEventChecked(_ event: EKEvent?) -> Bool {

@@ -32,18 +32,6 @@ struct TimeValueView: View {
                     disabled ? Color(uiColor: .tertiaryLabel) : Color.secondary
                 )
         }
-        .overlay(alignment: .topLeading) {
-            if let detail = day.timeValues.detail {
-                // Multi-Day Detail (START / END)
-                Text(detail)
-                    .font(.system(size: 7 * scale, weight: .medium))
-                    .foregroundStyle(
-                        disabled
-                            ? Color(uiColor: .tertiaryLabel) : Color.secondary
-                    )
-                    .offset(y: 16 * scale)
-            }
-        }
         
         if let openEventSheet {
             val

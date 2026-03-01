@@ -13,6 +13,7 @@ import SwiftUI
 struct PlannerSearchTabView: View {
     @Binding var searchText: String
     let settings: PlannerSettings
+    let namespace: Namespace.ID
 
     @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
         KeepPastPlansDuration =
@@ -24,10 +25,6 @@ struct PlannerSearchTabView: View {
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject private var weatherStore: WeatherStore
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
-
-    @State private var openPlanner: Planner? = nil
-    @State private var openPlannerDatestamp: PlannerDatestamp? = nil
-    @Namespace private var namespace
 
     @State private var filterDebounce: Task<Void, Never>?
     @State private var filterCalendarIds: Set<String> = []
@@ -75,16 +72,13 @@ struct PlannerSearchTabView: View {
                                     id: \.self
                                 ) {
                                     datestamp in
-                                    PlannerPreviewBuilderView(
+                                    PlannerBuilderView(
                                         datestamp: datestamp,
-                                        type: .search,
                                         settings: settings,
-                                        openPlanner: $openPlanner
+                                        previewType: .search,
+                                        namespace: namespace
                                     )
-                                    .matchedTransitionSource(
-                                        id: datestamp,
-                                        in: namespace
-                                    )
+                                    .listRowBackground(Color.clear)
                                     .id(datestamp)
                                 }
                             } header: {
@@ -107,22 +101,6 @@ struct PlannerSearchTabView: View {
                     }
                     .toolbar {
                         topLeftToolbar
-                    }
-
-                    // Open a planner.
-                    .fullScreenCover(item: $openPlanner) { planner in
-                        PlannerView(
-                            planner: planner,
-                            settings: settings
-                        ) {
-                            openPlanner = nil
-                        }
-                        .navigationTransition(
-                            .zoom(
-                                sourceID: planner.datestamp,
-                                in: namespace
-                            )
-                        )
                     }
 
                     // Keep the list scrolled to the top whenever the results change.
@@ -272,21 +250,6 @@ struct PlannerSearchTabView: View {
                 .menuActionDismissBehavior(.disabled)
             }
         }
-    }
-
-    private func planner(datestamp: String) -> some View {
-        PlannerBuilderView(
-            datestamp: datestamp,
-            settings: settings
-        ) {
-            openPlannerDatestamp = nil
-        }
-        .navigationTransition(
-            .zoom(
-                sourceID: datestamp,
-                in: namespace
-            )
-        )
     }
 
     @ViewBuilder

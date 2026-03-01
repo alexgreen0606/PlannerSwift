@@ -256,8 +256,6 @@ struct RowView<
                     if listManager.protectedId != item.stableId {
                         Task { @MainActor in
                             modelContext.delete(item)
-                            
-                            try! modelContext.save()
                         }
                      }
                 } else {

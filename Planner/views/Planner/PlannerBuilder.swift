@@ -2,7 +2,7 @@
 //  PlannerBuilder.swift
 //  Planner
 //
-//  Created by Alex Green on 2/14/26.
+//  Created by Alex Green on 2/15/26.
 //
 
 import SwiftData
@@ -12,19 +12,24 @@ import SwiftUI
 struct PlannerBuilderView: View {
     private let datestamp: String
     private let settings: PlannerSettings
-    private let dismiss: () -> Void
-
+    private let previewType: PlannerPreviewType?
+    private let namespace: Namespace.ID?
+    
     init(
         datestamp: String,
         settings: PlannerSettings,
-        dismiss: @escaping () -> Void
+        previewType: PlannerPreviewType? = nil,
+        namespace: Namespace.ID? = nil
     ) {
         self.datestamp = datestamp
+        self.previewType = previewType
         self.settings = settings
-        self.dismiss = dismiss
+        self.namespace = namespace
 
         _planners = Query(
-            filter: #Predicate<Planner> { $0.datestamp == datestamp }
+            filter: #Predicate<Planner> {
+                $0.datestamp == datestamp
+            }
         )
     }
 
@@ -42,7 +47,8 @@ struct PlannerBuilderView: View {
                 PlannerView(
                     planner: planner,
                     settings: settings,
-                    dismiss: dismiss
+                    previewType: previewType,
+                    namespace: namespace
                 )
             }
         }

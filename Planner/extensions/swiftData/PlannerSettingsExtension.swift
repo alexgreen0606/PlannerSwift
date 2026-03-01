@@ -14,7 +14,7 @@ extension PlannerSettings {
     var homeRegion: Region {
         homeLocation?.region ?? .local
     }
-    
+
     // Only ever nil if the device location is loading.
     func validHomeLocation(deviceLocation: Location?) -> Location? {
         homeLocation ?? deviceLocation
@@ -67,36 +67,63 @@ extension PlannerSettings {
         return true
     }
 
-    // Note: May want to consider adding events with a chronological sort.
+    @MainActor
     func buildCalendarPlannerEvents(
-        calendarEvents: [EKEvent]
+        calendarEvents: [EKEvent],
+        storageEvents: [PlannerEvent],
+        startOfDay: DateInRegion
     ) -> [PlannerEvent] {
 
         var plannerEvents: [PlannerEvent] = []
+        var newEvents: [EKEvent] = []
 
         for calEvent in calendarEvents {
-
-            // Build the dummy event for UI representation. No persistence to storage.
-            let plannerEvent = PlannerEvent(
-                date: calEvent.startDate,
-                calendarEvent: calEvent,
-                sortIndex: 0
-            )
-            plannerEvent.hasTime = true
 
             // Use the user-defined sort date if one exists.
             if let customSortDate = self.calendarSortDateMap[
                 calEvent.calendarItemExternalIdentifier
             ] {
+                // Build the dummy event for UI representation. No persistence to storage.
+                let plannerEvent = PlannerEvent(
+                    date: calEvent.startDate,
+                    calendarEvent: calEvent,
+                    sortIndex: 0
+                )
+                plannerEvent.hasTime = true
                 plannerEvent.sortDate = customSortDate
+                plannerEvents.append(plannerEvent)
             } else {
-                self.calendarSortDateMap[
-                    calEvent.calendarItemExternalIdentifier
-                ] = calEvent.startDate
+                newEvents.append(calEvent)
             }
 
-            plannerEvents.append(plannerEvent)
+        }
 
+        var sortedExisting = (storageEvents + plannerEvents).sorted {
+            $0.sortDate < $1.sortDate
+        }
+
+        let sortedNewEvents = newEvents.sorted { $0.startDate > $1.startDate }
+
+        for newEvent in sortedNewEvents {
+
+            let newSortDate = generateSortDate(
+                startOfDay: startOfDay,
+                index: 0,
+                events: sortedExisting,
+                settings: self
+            )
+
+            let plannerEvent = PlannerEvent(
+                date: newEvent.startDate,
+                calendarEvent: newEvent,
+                sortIndex: 0
+            )
+            plannerEvent.hasTime = true
+            plannerEvent.sortDate = newSortDate
+            plannerEvents.append(plannerEvent)
+            sortedExisting.insert(plannerEvent, at: 0)
+            
+            self.calendarSortDateMap[newEvent.calendarItemExternalIdentifier] = newSortDate
         }
 
         return plannerEvents

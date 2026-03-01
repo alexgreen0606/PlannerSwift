@@ -20,7 +20,7 @@ struct PlannerChipSpreadView: View {
     var namespace: Namespace.ID
     let settings: PlannerSettings
     let location: Location?
-    let plannerEvents: [PlannerEvent]
+    let storageEvents: [PlannerEvent]
     let openCalendarEventSheet: (EKEvent) -> Void
     let weatherUnit: UnitTemperature =
         Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
@@ -92,7 +92,8 @@ struct PlannerChipSpreadView: View {
                     for: planner,
                     location: location,
                     region: newRegion,
-                    events: plannerEvents
+                    settings: settings,
+                    storageEvents: storageEvents
                 )
                 
                 Task {
@@ -110,13 +111,6 @@ struct PlannerChipSpreadView: View {
                 )
             )
         }
-
-        // Weather Data -> Refresh when user overscrolls.
-        .externalData(
-            key: weatherStore.loadTrigger,
-            ready: true,
-            load: loadWeather
-        )
     }
 
     // MARK: - Chips
@@ -229,13 +223,5 @@ struct PlannerChipSpreadView: View {
         guard let url = URL(string: "weather://") else { return }
         UIApplication.shared.open(url)
     }
-
-    private func loadWeather() {
-        Task {
-            await weatherStore.loadWeatherIfNeeded(
-                location: location,
-                region: startOfDay.region
-            )
-        }
-    }
+    
 }

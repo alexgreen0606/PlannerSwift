@@ -107,7 +107,7 @@ extension DateInRegion {
 
     var timeValues:
         (
-            timeValue: String, indicator: String, detail: String?
+            timeValue: String, indicator: String
         )
     {  // Ex: 12:37, PM, END
 
@@ -119,7 +119,7 @@ extension DateInRegion {
         // Determine AM or PM
         let indicator = hour < 12 ? "AM" : "PM"
 
-        return (timeValue: String(trimmed), indicator: indicator, detail: nil)
+        return (timeValue: String(trimmed), indicator: indicator)
     }
 
     private var longDate: String {  // Ex: May 12, 2025
