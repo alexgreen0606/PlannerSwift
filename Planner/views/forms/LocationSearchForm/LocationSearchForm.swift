@@ -76,7 +76,7 @@ struct LocationSearchView: View {
         switch mode {
         case .home:
             return selectedLocation != nil
-        case .planner, .event:
+        case .event, .planner:
             return false
         }
     }
@@ -84,8 +84,19 @@ struct LocationSearchView: View {
     private var showHomeOption: Bool {
         switch mode {
         case .planner:
-            return homeLocation != nil && selectedLocation != nil
+            return selectedLocation != nil
         case .home, .event:
+            return false
+        }
+    }
+    
+    private var showCurrentIndicator: Bool {
+        switch mode {
+        case .home:
+            return selectedLocation == nil
+        case .planner:
+            return selectedLocation == nil && homeLocation == nil
+        case .event:
             return false
         }
     }
@@ -95,15 +106,6 @@ struct LocationSearchView: View {
         case .planner:
             return selectedLocation == nil
         case .home, .event:
-            return false
-        }
-    }
-
-    private var showCurrentIndicator: Bool {
-        switch mode {
-        case .home:
-            return selectedLocation == nil
-        case .planner, .event:
             return false
         }
     }
