@@ -143,8 +143,8 @@ struct PlannerEventBuilderView: View {
     private func loadCalendarData() {
 
         let calendarData = calendarStore.loadPlannerData(
-            plannerKey: planner.key,
-            startOfDay: plannerStartOfDay,
+            for: planner,
+            plannerStartOfDay: plannerStartOfDay,
             hiddenCalendarIds: settings.hiddenCalendarIds
         )
 

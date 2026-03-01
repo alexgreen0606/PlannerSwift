@@ -102,22 +102,25 @@ class CalendarStore: ObservableObject {
     }
 
     func loadPlannerData(
-        plannerKey: String,
-        startOfDay: DateInRegion,
+        for planner: Planner,
+        plannerStartOfDay: DateInRegion,
         hiddenCalendarIds: Set<String>
     ) -> PlannerCalendarData {
+
+        let plannerKey = planner.key
 
         // Return cached data.
         if let existingData = cache[plannerKey] {
             return existingData
         }
 
-        let startOfNextDay = startOfDay + 1.days
+        let plannerRegion = plannerStartOfDay.region
+        let plannerDatestamp = planner.datestamp
+        let startOfNextPlannerDay = plannerStartOfDay + 1.days
 
-        // TODO: is event returned if it ends on this date? It should.
         let predicate = eventStore.predicateForEvents(
-            withStart: startOfDay.date,
-            end: startOfNextDay.date,
+            withStart: plannerStartOfDay.date,
+            end: startOfNextPlannerDay.date,
             calendars: nil
         )
 
@@ -135,6 +138,25 @@ class CalendarStore: ObservableObject {
             if event.isAllDay {
                 allDayEvents.append(event)
             } else {
+                let startDatestamp = DateInRegion(
+                    event.startDate,
+                    region: plannerRegion
+                ).datestamp
+                let endDatestamp = DateInRegion(
+                    event.endDate,
+                    region: plannerRegion
+                ).datestamp
+
+                if startDatestamp != endDatestamp {
+                    allDayEvents.append(event)
+
+                    if startDatestamp == plannerDatestamp {
+                        timedEvents.append(event)
+                    }
+
+                    continue
+                }
+
                 timedEvents.append(event)
             }
         }
