@@ -30,28 +30,35 @@ extension ChecklistItem {
     var deleteWarning: String {
         "\(self.items.isEmpty ? "" : "All \(type.childrenLabel) will be lost. ")This action is irreversible."
     }
-    
-    // TODO: Fails due to forcing self to re-evaluate its items on each iteration.
-    func inheritItems(_ itemsToMove: [ChecklistItem]) {
-        let items = itemsToMove
 
-        for item in items {
-            print("\(item.parent!.title) -> \(item.title) -> \(self.title)")
+    @MainActor
+    func inheritItems(_ itemsToMove: [ChecklistItem]) {
+
+        var sortedExistingItems = items.sorted { $0.sortIndex < $1.sortIndex }
+        let sortedItemsToMove = itemsToMove.sorted {
+            $0.sortIndex < $1.sortIndex
+        }
+
+        for item in sortedItemsToMove {
+
+            // Add item to the bottom of the new list.
+            let newSortIndex = generateSortIndex(
+                index: sortedExistingItems.count,
+                items: sortedExistingItems
+            )
+            item.sortIndex = newSortIndex
+            sortedExistingItems.append(item)
+
+            items.append(item)
             item.parent = self
         }
 
-        normalizeSortIndexesSafely()
-    }
-    
-    private func normalizeSortIndexesSafely() {
-        let sorted = items.sorted { $0.sortIndex < $1.sortIndex }
-
-        for (index, item) in sorted.enumerated() {
-            item.sortIndex = Double(index)
-        }
     }
 
-    func hasChildType(_ type: ChecklistItemType, excluding excludedIds: Set<UUID>) -> Bool {
+    func hasChildType(
+        _ type: ChecklistItemType,
+        excluding excludedIds: Set<UUID>
+    ) -> Bool {
         for item in items {
             if excludedIds.contains(item.stableId) { continue }
 

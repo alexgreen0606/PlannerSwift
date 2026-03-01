@@ -122,8 +122,24 @@ extension ModelContext {
             try save()
         } catch {
             assertionFailure(
-                "Failed to delete checklist items: \(error)"
+                "ERROR checklistItem.deleteChecklistItems: \(error)"
             )
         }
     }
+
+    @MainActor
+    func transferChecklistItems(into destination: ChecklistItem, items: [ChecklistItem])
+    {
+        do {
+            try transaction {
+                destination.inheritItems(items)
+            }
+            
+            try save()
+        } catch {
+            assertionFailure("ERROR checklistItem.transferItems: \(error)")
+            return
+        }
+    }
+
 }

@@ -85,15 +85,12 @@ struct PlannerChipSpreadView: View {
                 settings: settings,
                 initialLocation: planner.location,
             ) { location in
-
                 modelContext.updateLocation(
                     for: planner,
                     location: location,
-                    region: newRegion,
                     settings: settings,
                     storageEvents: storageEvents
                 )
-
             }
             .navigationTransition(
                 .zoom(

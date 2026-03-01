@@ -156,24 +156,23 @@ struct TransferChecklistItemsFormView: View {
     private var topRightToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Button("Submit", systemImage: "checkmark", role: .confirm) {
-                guard let destination, destination.stableId != source.stableId else {
+                guard let destination, destination.stableId != source.stableId
+                else {
                     return
                 }
 
-                do {
-                    try modelContext.transaction {
-                        destination.inheritItems(listManager.selectedItems)
-                    }
-                } catch {
-                    assertionFailure("Failed to transfer items: \(error)")
-                    return
-                }
+                modelContext.transferChecklistItems(
+                    into: destination,
+                    items: listManager.selectedItems
+                )
 
                 listManager.toggleSelectMode()
 
                 dismiss()
             }
-            .disabled(destination == nil || destination!.stableId == source.stableId)
+            .disabled(
+                destination == nil || destination!.stableId == source.stableId
+            )
             .tint(accentColor.swiftUIColor)
         }
     }

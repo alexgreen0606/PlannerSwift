@@ -34,7 +34,7 @@ func generateSortDate(
     if interval < 1.0 {
 
         // Interval too small → normalize all events
-        normalizeEvents(
+        normalizeSortDates(
             events: events,
             startOfDay: startOfDay,
             settings: settings
@@ -54,7 +54,7 @@ private func midpoint(between a: Date, and b: Date) -> Date {
 }
 
 @MainActor
-private func normalizeEvents(
+private func normalizeSortDates(
     events: [PlannerEvent],
     startOfDay: DateInRegion,
     settings: PlannerSettings
