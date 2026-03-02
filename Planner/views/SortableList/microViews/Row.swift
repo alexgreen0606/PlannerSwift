@@ -144,10 +144,12 @@ struct RowView<
                         )
                 }
 
-                // Title
                 ZStack(alignment: .leading) {
-                    titleText
-                    editableField
+                    if isFocused {
+                        editableField
+                    } else {
+                        titleText
+                    }
                 }
                 .padding(.vertical, RowConstants.verticalTextPadding)
                 .opacity(opacity)
@@ -184,12 +186,33 @@ struct RowView<
                 }
             )
         }
+        
+        // Handle focus side effects.
+        .onChange(of: isFocused) { wasFocused, isFocused in
+            if wasFocused, !isFocused {
+                debounceTask?.cancel()
+
+                let trimmed = item.title.trimmingCharacters(
+                    in: .whitespacesAndNewlines
+                )
+
+                if trimmed.isEmpty {
+                    if listManager.protectedId != item.stableId {
+                        Task { @MainActor in
+                            modelContext.delete(item)
+                        }
+                    }
+                } else {
+                    item.title = trimmed
+                    onTitleChange(item)
+                }
+            }
+        }
     }
 
     // Static Text
     private var titleText: some View {
         Text(item.title)
-            .opacity(isFocused ? 0 : 1)
             .font(.system(size: UIConstants.listItemFontSize))
             .lineLimit(nil)
             .fixedSize(horizontal: false, vertical: true)
@@ -229,7 +252,6 @@ struct RowView<
         )
         .tint(tintColor)
         .frame(height: height)
-        .opacity(isFocused ? 1 : 0)
         .frame(maxWidth: .infinity, alignment: .leading)
         .fixedSize(horizontal: false, vertical: true)
 
@@ -240,28 +262,6 @@ struct RowView<
                 try? await Task.sleep(nanoseconds: 1_000_000_000)  // 1 second
                 guard !Task.isCancelled else { return }
                 onTitleChange(item)
-            }
-        }
-
-        // Handle focus side effects.
-        .onChange(of: isFocused) { wasFocused, isFocused in
-            if wasFocused, !isFocused {
-                debounceTask?.cancel()
-
-                let trimmed = item.title.trimmingCharacters(
-                    in: .whitespacesAndNewlines
-                )
-
-                if trimmed.isEmpty {
-                    if listManager.protectedId != item.stableId {
-                        Task { @MainActor in
-                            modelContext.delete(item)
-                        }
-                     }
-                } else {
-                    item.title = trimmed
-                    onTitleChange(item)
-                }
             }
         }
     }
