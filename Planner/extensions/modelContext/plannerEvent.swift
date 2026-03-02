@@ -169,7 +169,8 @@ extension ModelContext {
     func transferPlannerEvents(
         _ events: [PlannerEvent],
         days: DateComponents,
-        datestamp: String,
+        previousDatestamp: String,
+        targetDatestamp: String,
         settings: PlannerSettings,
         eventStore: EKEventStore,
         loadCalendarEvents: (
@@ -180,7 +181,7 @@ extension ModelContext {
     ) {
 
         // Used for untimed events only.
-        let targetPlanner = loadPlanner(for: datestamp)
+        let targetPlanner = loadPlanner(for: targetDatestamp)
         let targetPlannerStartOfDay = targetPlanner.datestamp.startOfDay(
             in: targetPlanner.region(settings: settings)
         )
@@ -192,7 +193,7 @@ extension ModelContext {
             if !event.hasTime {
                 guard let targetPlannerStartOfDay else {
                     assertionFailure(
-                        "ERROR plannerEvent.transferPlannerEvents: Could not build plannerStartOfDay from \(datestamp)"
+                        "ERROR plannerEvent.transferPlannerEvents: Could not build plannerStartOfDay from \(targetDatestamp)"
                     )
                     continue
                 }
@@ -228,8 +229,9 @@ extension ModelContext {
                 }
 
                 let newSortDate = getUpperSortDate(
-                    for: calEvent.startDate,
+                    for: event,
                     settings: settings,
+                    previousPlannerDatestamp: previousDatestamp,
                     loadCalendarEvents: loadCalendarEvents
                 )
 
@@ -241,8 +243,9 @@ extension ModelContext {
             }
 
             event.sortDate = getUpperSortDate(
-                for: event.date,
+                for: event,
                 settings: settings,
+                previousPlannerDatestamp: previousDatestamp,
                 loadCalendarEvents: loadCalendarEvents
             )
         }
@@ -259,10 +262,16 @@ extension ModelContext {
     @MainActor
     func handlePlannerEventChange(
         _ draftPlannerEvent: DraftPlannerEvent,
+        previousDatestamp: String?,
         targetDatestamp: String,
         settings: PlannerSettings,
         initialPlannerEvent: PlannerEvent?,
-        initialCalendarEvent: EKEvent?
+        initialCalendarEvent: EKEvent?,
+        loadCalendarEvents: (
+            _ planner: Planner,
+            _ startOfDay: DateInRegion,
+            _ hiddenCalendarIds: Set<String>
+        ) -> PlannerCalendarData
     ) {
 
         if draftPlannerEvent.hasTime && draftPlannerEvent.location == nil {
@@ -285,8 +294,6 @@ extension ModelContext {
         event.calendarEvent = nil
         event.location = draftPlannerEvent.location
 
-        insertEventIfNeeded(event)
-
         // Untimed events must have their date set to the start date of their planner.
         if !event.hasTime {
 
@@ -304,6 +311,19 @@ extension ModelContext {
 
             event.date = targetPlannerStartOfDay.date
         }
+        
+        // TODO: only move if the event date has changed planners
+        
+        let newSortDate = getUpperSortDate(
+            for: event,
+            settings: settings,
+            previousPlannerDatestamp: previousDatestamp,
+            loadCalendarEvents: loadCalendarEvents
+        )
+        
+        event.sortDate = newSortDate
+        
+        insertEventIfNeeded(event)
 
         // Note: Saving the context here will delete the location. Allow the model context to auto-save when needed.
 
@@ -403,8 +423,9 @@ extension ModelContext {
 
     @MainActor
     private func getUpperSortDate(
-        for date: Date,
+        for event: PlannerEvent,
         settings: PlannerSettings,
+        previousPlannerDatestamp: String?,
         loadCalendarEvents: (
             _ planner: Planner,
             _ startOfDay: DateInRegion,
@@ -412,10 +433,15 @@ extension ModelContext {
         ) -> PlannerCalendarData
     ) -> Date {
 
-        let chronologicalPossibleDatestamps =
-            getChronologicalPossibleDatestamps(for: date)
+        let chronologicalPossibleDatestamps = getChronologicalPossibleDatestamps(for: event.date)
 
         for datestamp in chronologicalPossibleDatestamps {
+            
+            // Event has not moved from its current planner. Keep its existing position.
+            if datestamp == previousPlannerDatestamp {
+                return event.sortDate
+            }
+            
             let planner = loadPlanner(for: datestamp)
 
             guard
@@ -429,7 +455,7 @@ extension ModelContext {
                 continue
             }
 
-            if !date.belongsTo(plannerStartOfDay) {
+            if !event.date.belongsTo(plannerStartOfDay) {
                 print("debug | Event doesnt exist in \(datestamp)")
                 continue
             }
@@ -452,7 +478,7 @@ extension ModelContext {
         }
 
         // Event does not belong to any planners. Use its actual date as the sortDate.
-        return date
+        return event.date
     }
 
     @MainActor
