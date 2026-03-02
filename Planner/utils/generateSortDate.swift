@@ -16,7 +16,7 @@ func generateSortDate(
     events: [PlannerEvent],
     settings: PlannerSettings
 ) -> Date {
-
+    
     let dayStart = startOfDay.date
     let dayEnd = (startOfDay + 1.days).date
 

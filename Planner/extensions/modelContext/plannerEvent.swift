@@ -24,6 +24,8 @@ extension ModelContext {
     ) -> UUID? {
 
         var targetIndex: Int? = 0
+        
+        print("debug | EventCount: \(events.count)")
 
         if let baseId {
             targetIndex = generateTargetIndex(
@@ -32,7 +34,7 @@ extension ModelContext {
                 offset: offset
             )
         }
-
+        
         guard let targetIndex else {
             return nil
         }
@@ -52,7 +54,7 @@ extension ModelContext {
 
         insert(newEvent)
 
-        // Note: Task makes the UI smoother as new events animate in.
+        // TODO; really?? : Task makes the UI smoother as new events animate in.
         Task { @MainActor in
             do {
                 try self.save()

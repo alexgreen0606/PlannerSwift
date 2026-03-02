@@ -26,7 +26,7 @@ func generateTargetIndex<Item: ListItem>(
         )
         return nil
     }
-
+        
     let targetIndex = baseIndex + offset
 
     // Don't create the new item if it is next to an empty item.

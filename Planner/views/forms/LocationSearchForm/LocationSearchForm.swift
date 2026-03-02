@@ -151,6 +151,10 @@ struct LocationSearchView: View {
                 }
             }
             .onAppear(perform: buildSuggestedLocations)
+            
+            .onChange(of: deviceLocationManager.location) { _, _ in
+                buildSuggestedLocations()
+            }
         }
     }
 
@@ -469,7 +473,6 @@ struct LocationSearchView: View {
         return "\(option.title)-\(option.subtitle)"
     }
 
-    // TODO: run this when device location loads in
     private func buildSuggestedLocations() {
         var sortedLocations = locations
 

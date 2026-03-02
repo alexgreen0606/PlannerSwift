@@ -100,10 +100,10 @@ struct ExpandedPlannerView: View {
 
     private var visibleEvents: [PlannerEvent] {
         if showChecked {
-            return sortedOpenPlans + sortedCheckedPlans
+            return sortedOpenPlannerEvents + sortedCheckedPlans
         }
 
-        return sortedOpenPlans
+        return sortedOpenPlannerEvents
     }
 
     private var isAllSelected: Bool {
@@ -123,7 +123,7 @@ struct ExpandedPlannerView: View {
 
     // MARK: - UI Lists
 
-    private var sortedOpenPlans: [PlannerEvent] {
+    private var sortedOpenPlannerEvents: [PlannerEvent] {
         allSortedPlannerEvents
             .filter {
                 (!(settings.isPlannerEventChecked($0))
@@ -145,7 +145,7 @@ struct ExpandedPlannerView: View {
         NavigationStack {
             ScrollViewReader { scrollProxy in
                 SortableListView(
-                    uncheckedItems: sortedOpenPlans,
+                    uncheckedItems: sortedOpenPlannerEvents,
                     checkedItems: sortedCheckedPlans,
                     showChecked: showChecked,
                     floatingInfo: chipSpread,
@@ -188,7 +188,7 @@ struct ExpandedPlannerView: View {
                 calendarEvent: context.calendarEvent,
                 settings: settings,
             ) {
-               // TODO: show transfer snackbar
+                // TODO: show transfer snackbar
             }
             .id(context.id)
             .navigationTransition(
@@ -220,7 +220,7 @@ struct ExpandedPlannerView: View {
         .onAppear {
             plannerManager.setToggleItem(togglePlannerEvent)
         }
-        
+
         .environmentObject(plannerManager)
 
     }
@@ -510,7 +510,7 @@ struct ExpandedPlannerView: View {
         offset: Int = 0
     ) {
         if let newId = modelContext.createStorageEvent(
-            in: sortedOpenPlans,
+            in: sortedOpenPlannerEvents,
             near: baseId,
             offset: offset,
             startOfDay: plannerStartOfDay,
@@ -525,7 +525,7 @@ struct ExpandedPlannerView: View {
             from: from,
             to: to,
             startOfDay: plannerStartOfDay,
-            events: sortedOpenPlans,
+            events: sortedOpenPlannerEvents,
             settings: settings
         )
     }
@@ -542,7 +542,7 @@ struct ExpandedPlannerView: View {
     private func createLowerEvent(scrollProxy: ScrollViewProxy) {
 
         createEvent(
-            near: sortedOpenPlans.last?.stableId,
+            near: sortedOpenPlannerEvents.last?.stableId,
             offset: 1
         )
 
@@ -576,7 +576,7 @@ struct ExpandedPlannerView: View {
             plannerManager.toggleItem(event)
             return
         }
-        
+
         plannerManager.protectedId = event.stableId
         plannerManager.focusedId = nil
 
