@@ -13,6 +13,9 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
+// TODO: when the event does NOT have a time initially, the TimeZone footer is broken.
+// TODO: when the event does not have a time initially, the submit button is enabled on mount
+
 struct EventFormView: View {
     private let sourcePlanner: Planner?
     private let initialPlannerEvent: PlannerEvent?
@@ -38,11 +41,6 @@ struct EventFormView: View {
         // ------------------------------------------------------------------
 
         var draftPlannerEvent = DraftPlannerEvent()
-
-        if sourcePlanner == nil {
-            // Use the home location for new events that are not tied to a planner (Planner homepage).
-            draftPlannerEvent.location = settings.homeLocation
-        }
 
         if let calEvent = plannerEvent?.calendarEvent ?? calendarEvent {
 
@@ -190,10 +188,7 @@ struct EventFormView: View {
 
     private var canSave: Bool {
         !draftPlannerEvent.title.isEmpty
-            && isDraftDirty(
-                draft: draftPlannerEvent,
-                initial: initialPlannerEvent
-            )
+            && isLocationValid
     }
 
     private var isCreateForm: Bool {
@@ -210,8 +205,21 @@ struct EventFormView: View {
             )
     }
 
+    private var isLocationValid: Bool {
+        !draftPlannerEvent.hasTime || draftPlannerEvent.location != nil
+    }
+
+    private var eventRegion: Region {
+        draftPlannerEvent
+            .region(
+                planner: sourcePlanner,
+                settings: settings,
+                deviceLocation: deviceLocationManager.location
+            )
+    }
+
     var body: some View {
-        Group {
+        ZStack {
             if let contact {
                 ContactFormView(contact: contact)
                     .ignoresSafeArea()
@@ -227,12 +235,17 @@ struct EventFormView: View {
             selection: $selectedDetent
         )
 
-        // Enforce the event always has a location.
+        // Enforce timed event location existence when the device location loads in.
         .externalData(
             key: deviceLocationManager.location,
-            ready: true,
-            load: ensureLocation
+            ready: deviceLocationManager.location != nil,
+            load: ensureLocationForTimedEvent
         )
+
+        // Enforce the event's location when it has a time associated with it.
+        .onChange(of: draftPlannerEvent.hasTime) { _, _ in
+            ensureLocationForTimedEvent()
+        }
 
     }
 
@@ -259,13 +272,7 @@ struct EventFormView: View {
                     )
                     .environment(
                         \.timeZone,
-                        draftPlannerEvent
-                            .region(
-                                planner: sourcePlanner,
-                                settings: settings,
-                                deviceLocation: deviceLocationManager.location
-                            )
-                            .timeZone
+                        eventRegion.timeZone
                     )
 
                     Toggle("Time", isOn: $draftPlannerEvent.hasTime)
@@ -296,12 +303,14 @@ struct EventFormView: View {
                                 Spacer()
 
                                 Text(
-                                    draftPlannerEvent.locationLabel(
-                                        planner: sourcePlanner,
-                                        settings: settings,
-                                        deviceLocation: deviceLocationManager
-                                            .location
-                                    )
+                                    draftPlannerEvent.location != nil
+                                        ? draftPlannerEvent.locationLabel(
+                                            planner: sourcePlanner,
+                                            settings: settings,
+                                            deviceLocation:
+                                                deviceLocationManager
+                                                .location
+                                        ) : "Select a location"
                                 )
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
@@ -310,17 +319,20 @@ struct EventFormView: View {
                         }
                         .disabled(defaultLocation == nil)
                     } footer: {
-                        let timeZoneAbbreviation =
-                            draftPlannerEvent
-                            .region(
-                                planner: sourcePlanner,
-                                settings: settings,
-                                deviceLocation: deviceLocationManager.location
-                            )
-                            .timeZone
-                            .abbreviation() ?? "Unknown Time Zone"
+                        if draftPlannerEvent.hasTime {
+                            let timeZoneAbbreviation =
+                                draftPlannerEvent
+                                .region(
+                                    planner: sourcePlanner,
+                                    settings: settings,
+                                    deviceLocation: deviceLocationManager
+                                        .location
+                                )
+                                .timeZone
+                                .abbreviation() ?? "Unknown Time Zone"
 
-                        Text("Time Zone: \(timeZoneAbbreviation)")
+                            Text("Time Zone: \(timeZoneAbbreviation)")
+                        }
                     }
                 }
 
@@ -339,6 +351,7 @@ struct EventFormView: View {
     private var plannerEventTopRightToolbar: some ToolbarContent {
         ToolbarItem(placement: .confirmationAction) {
             Button("Save", systemImage: "checkmark", action: savePlannerEvent)
+                .buttonStyle(.glassProminent)
                 .disabled(!canSave)
                 .tint(accentColor.swiftUIColor)
         }
@@ -360,19 +373,22 @@ struct EventFormView: View {
 
     private func savePlannerEvent() {
 
+        // Add the default location to the event if the event is timed and has no location.
         if draftPlannerEvent.hasTime && draftPlannerEvent.location == nil {
-            guard let defaultLocation else {
-                assertionFailure(
-                    "ERROR EventForm.savePlannerEvent: Event must have a location when a time is selected."
-                )
-                return
-            }
-
-            draftPlannerEvent.location = defaultLocation
+            assertionFailure(
+                "ERROR EventForm.savePlannerEvent: Event must have a location when a time is selected."
+            )
         }
 
-        modelContext.saveEventFormChanges(
+        let targetDatestamp = DateInRegion(
+            draftPlannerEvent.date,
+            region: eventRegion
+        ).datestamp
+
+        modelContext.handlePlannerEventChange(
             draftPlannerEvent,
+            targetDatestamp: targetDatestamp,
+            settings: settings,
             initialPlannerEvent: initialPlannerEvent,
             initialCalendarEvent: initialCalendarEvent
         )
@@ -431,7 +447,7 @@ struct EventFormView: View {
 
     private func handleCalendarEventChange(_ event: EKEvent?) {
 
-        modelContext.saveEventFormChanges(
+        modelContext.handleCalendarEventChange(
             event,
             initialPlannerEvent: initialPlannerEvent,
             settings: settings
@@ -504,18 +520,8 @@ struct EventFormView: View {
         selectedDetent = .height(460)
     }
 
-    private func isDraftDirty(draft: DraftPlannerEvent, initial: PlannerEvent?)
-        -> Bool
-    {
-        draft.date != initial?.date
-            || draft.title != initial?.title
-            || draft.calendarEvent != initial?.calendarEvent
-            || draft.hasTime != initial?.hasTime
-            || draft.location != initial?.location
-    }
-
-    private func ensureLocation() {
-        if draftPlannerEvent.location == nil, defaultLocation != nil {
+    private func ensureLocationForTimedEvent() {
+        if draftPlannerEvent.hasTime, draftPlannerEvent.location == nil {
             draftPlannerEvent.location = defaultLocation
         }
     }

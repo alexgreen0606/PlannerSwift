@@ -163,7 +163,7 @@ struct TransferEventsFormView: View {
 
     private func handleTransfer() {
 
-        modelContext.shiftPlannerEvents(
+        modelContext.transferPlannerEvents(
             plannerManager.selectedItems,
             days: dayOffset.days,
             datestamp: destinationDay.datestamp,

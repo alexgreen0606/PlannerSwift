@@ -140,7 +140,7 @@ struct SortableListView<
                 EmptyLabel(emptyUncheckedLabel)
             }
         }
-        .animateSynchronousAction(from: uncheckedItems.count)
+        .animateSynchronousAction(from: uncheckedItems)
         .animateSynchronousAction(from: listManager.newlyCheckedIds)
         .animateSynchronousAction(from: listManager.newlyUncheckedIds)
 

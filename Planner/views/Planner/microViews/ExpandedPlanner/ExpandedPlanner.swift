@@ -355,7 +355,7 @@ struct ExpandedPlannerView: View {
 
                     // Delete non-calendar events.
                     if !plannerOnlyEvents.isEmpty {
-                        modelContext.deletePlannerEvents(plannerOnlyEvents)
+                        modelContext.deleteStorageEvents(plannerOnlyEvents)
                     }
 
                     refreshCalendar()
@@ -508,7 +508,7 @@ struct ExpandedPlannerView: View {
         near baseId: UUID?,
         offset: Int = 0
     ) {
-        if let newId = modelContext.createEvent(
+        if let newId = modelContext.createStorageEvent(
             in: sortedOpenPlans,
             near: baseId,
             offset: offset,
@@ -520,7 +520,7 @@ struct ExpandedPlannerView: View {
     }
 
     private func moveUncheckedEvent(from: Int, to: Int) {
-        modelContext.moveEvent(
+        modelContext.movePlannerEvent(
             from: from,
             to: to,
             startOfDay: plannerStartOfDay,
@@ -530,7 +530,7 @@ struct ExpandedPlannerView: View {
     }
 
     private func handleEventTitleChange(event: PlannerEvent) {
-        modelContext.handleTitleChange(
+        modelContext.handlePlannerEventTitleChange(
             event,
             startOfDay: plannerStartOfDay,
             eventKitStore: calendarStore.ekEventStore,
@@ -559,7 +559,7 @@ struct ExpandedPlannerView: View {
     // MARK: - Helpers
 
     private func deleteAllCheckedEvents() {
-        modelContext.deletePlannerEvents(rawCheckedEvents)
+        modelContext.deleteStorageEvents(rawCheckedEvents)
     }
 
     private func eventTint(event: PlannerEvent) -> Color {

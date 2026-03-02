@@ -12,8 +12,10 @@ import SwiftUI
 
 extension ModelContext {
 
+    // MARK: - Create New Events
+
     @MainActor
-    func createEvent(
+    func createStorageEvent(
         in events: [PlannerEvent],
         near baseId: UUID?,
         offset: Int,
@@ -50,44 +52,58 @@ extension ModelContext {
 
         insert(newEvent)
 
+        // Note: Task makes the UI smoother as new events animate in.
         Task { @MainActor in
             do {
                 try self.save()
             } catch {
-                print("ERROR plannerEvent.createEvent: \(error)")
+                print("ERROR plannerEvent.createStorageEvent: \(error)")
             }
         }
 
         return newEvent.stableId
     }
 
+    // TODO: what about calendar events?
     @MainActor
-    func getStorageEvents(
-        for startOfDay: DateInRegion
-    ) -> [PlannerEvent] {
+    func deleteStorageEvents(_ events: [PlannerEvent]) {
 
-        let startOfNextDay = (startOfDay + 1.days)
-
-        let descriptor = FetchDescriptor<PlannerEvent>(
-            predicate: #Predicate {
-                $0.date >= startOfDay.date && $0.date < startOfNextDay.date
-            }
-        )
-
-        do {
-            return try fetch(descriptor)
-        } catch {
-            assertionFailure(
-                "ERROR plannerEvent.getEvents: \(error)"
-            )
+        for event in events {
+            delete(event)
         }
 
-        return []
-
+        do {
+            try save()
+        } catch {
+            assertionFailure(
+                "ERROR plannerEvent.deleteStorageEvents: \(error)"
+            )
+        }
     }
 
+    // TODO: what about calendar events?
     @MainActor
-    func moveEvent(
+    func deleteCheckedStorageEvents(from events: [PlannerEvent]) {
+
+        for event in events {
+            if event.isChecked {
+                delete(event)
+            }
+        }
+
+        do {
+            try save()
+        } catch {
+            assertionFailure(
+                "ERROR plannerEvent.deleteCheckedStorageEvents: \(error)"
+            )
+        }
+    }
+
+    // MARK: - List Handlers
+
+    @MainActor
+    func movePlannerEvent(
         from: Int,
         to: Int,
         startOfDay: DateInRegion,
@@ -119,13 +135,13 @@ extension ModelContext {
             try save()
         } catch {
             assertionFailure(
-                "ERROR: plannerEvent.moveEvent: \(error)"
+                "ERROR: plannerEvent.movePlannerEvent: \(error)"
             )
         }
     }
 
     @MainActor
-    func handleTitleChange(
+    func handlePlannerEventTitleChange(
         _ event: PlannerEvent,
         startOfDay: DateInRegion,
         eventKitStore: EKEventStore,
@@ -142,13 +158,15 @@ extension ModelContext {
             try save()
         } catch {
             assertionFailure(
-                "ERROR: plannerEvent.handleTitleChange: \(error)"
+                "ERROR: plannerEvent.handlePlannerEventTitleChange: \(error)"
             )
         }
     }
 
+    // MARK: - Form Handlers
+
     @MainActor
-    func shiftPlannerEvents(
+    func transferPlannerEvents(
         _ events: [PlannerEvent],
         days: DateComponents,
         datestamp: String,
@@ -161,21 +179,27 @@ extension ModelContext {
         ) -> PlannerCalendarData
     ) {
 
+        // Used for untimed events only.
+        let targetPlanner = loadPlanner(for: datestamp)
+        let targetPlannerStartOfDay = targetPlanner.datestamp.startOfDay(
+            in: targetPlanner.region(settings: settings)
+        )
+
         let sortedEvents = events.sorted { $0.sortDate > $1.sortDate }
-        
-        let planner = loadPlanner(for: datestamp)
-        
-        let plannerStartOfDay = planner.datestamp.startOfDay(in: planner.region(settings: settings))
 
         for event in sortedEvents {
-            
+
             if !event.hasTime {
-                guard let plannerStartOfDay else {
-                    assertionFailure("ERROR plannerEvent.shiftPlannerEvents: Could not build plannerStartOfDay from \(datestamp)")
+                guard let targetPlannerStartOfDay else {
+                    assertionFailure(
+                        "ERROR plannerEvent.transferPlannerEvents: Could not build plannerStartOfDay from \(datestamp)"
+                    )
                     continue
                 }
+
                 // Untimed events MUST have their date set to the planner's startOfDay.
-                event.date = plannerStartOfDay.date
+                event.date = targetPlannerStartOfDay.date
+
             } else {
                 event.date = event.date + days
             }
@@ -199,12 +223,12 @@ extension ModelContext {
                         commit: true
                     )
                 } catch {
-                    print("ERROR plannerEvent.shiftPlannerEvents: \(error)")
+                    print("ERROR plannerEvent.tarnsferPlannerEvents: \(error)")
                     continue
                 }
 
-                let newSortDate = getTransferedEventSortDate(
-                    date: calEvent.startDate,
+                let newSortDate = getUpperSortDate(
+                    for: calEvent.startDate,
                     settings: settings,
                     loadCalendarEvents: loadCalendarEvents
                 )
@@ -216,8 +240,8 @@ extension ModelContext {
                 continue
             }
 
-            event.sortDate = getTransferedEventSortDate(
-                date: event.date,
+            event.sortDate = getUpperSortDate(
+                for: event.date,
                 settings: settings,
                 loadCalendarEvents: loadCalendarEvents
             )
@@ -227,15 +251,159 @@ extension ModelContext {
             try save()
         } catch {
             assertionFailure(
-                "ERROR plannerEvent.shiftPlannerEvents: \(error)"
+                "ERROR plannerEvent.transferPlannerEvents: \(error)"
             )
         }
     }
 
-    // Places the event at the top of its earliest possible planner.
     @MainActor
-    private func getTransferedEventSortDate(
-        date: Date,
+    func handlePlannerEventChange(
+        _ draftPlannerEvent: DraftPlannerEvent,
+        targetDatestamp: String,
+        settings: PlannerSettings,
+        initialPlannerEvent: PlannerEvent?,
+        initialCalendarEvent: EKEvent?
+    ) {
+
+        if draftPlannerEvent.hasTime && draftPlannerEvent.location == nil {
+            assertionFailure(
+                "ERROR plannerEvent.handlePlannerEventChange: Draft event must have a location assigned if it has a time."
+            )
+            return
+        }
+
+        let event =
+            initialPlannerEvent
+            ?? PlannerEvent(
+                date: draftPlannerEvent.date,
+                sortDate: draftPlannerEvent.date
+            )
+
+        event.title = draftPlannerEvent.title
+        event.date = draftPlannerEvent.date
+        event.hasTime = draftPlannerEvent.hasTime
+        event.calendarEvent = nil
+        event.location = draftPlannerEvent.location
+
+        insertEventIfNeeded(event)
+
+        // Untimed events must have their date set to the start date of their planner.
+        if !event.hasTime {
+
+            let targetPlanner = loadPlanner(for: targetDatestamp)
+
+            guard
+                let targetPlannerStartOfDay = targetPlanner.datestamp
+                    .startOfDay(in: targetPlanner.region(settings: settings))
+            else {
+                assertionFailure(
+                    "ERROR: Could not create plannerStartOfDay from \(targetPlanner.datestamp)"
+                )
+                return
+            }
+
+            event.date = targetPlannerStartOfDay.date
+        }
+
+        // Note: Saving the context here will delete the location. Allow the model context to auto-save when needed.
+
+    }
+
+    @MainActor
+    func handleCalendarEventChange(
+        _ calendarEvent: EKEvent?,
+        initialPlannerEvent: PlannerEvent?,
+        settings: PlannerSettings
+    ) {
+        if let initialPlannerEvent {
+
+            if let calendarEvent {
+
+                // Use the original planner event's sort date for the new event.
+                settings.calendarSortDateMap[
+                    calendarEvent.calendarItemExternalIdentifier
+                ] = initialPlannerEvent.sortDate
+
+            }
+
+            // TODO: why is this needed?
+            Task { @MainActor in
+
+                self.delete(initialPlannerEvent)
+
+                do {
+                    try save()
+                } catch {
+                    assertionFailure(
+                        "ERROR plannerEvent.saveEventFormChanges(EKEvent): \(error)"
+                    )
+                }
+
+            }
+        }
+    }
+
+    // MARK: - Helper Functions
+
+    @MainActor
+    private func getAllSortedPlannerEvents(
+        for planner: Planner,
+        startOfDay: DateInRegion,
+        settings: PlannerSettings,
+        loadCalendarEvents: (
+            _ planner: Planner,
+            _ startOfDay: DateInRegion,
+            _ hiddenCalendarIds: Set<String>
+        ) -> PlannerCalendarData
+    ) -> [PlannerEvent] {
+        let storageEvents = getStorageEvents(for: startOfDay)
+
+        let calendarData = loadCalendarEvents(
+            planner,
+            startOfDay,
+            settings.hiddenCalendarIds
+        )
+
+        let calendarPlannerEvents = buildCalendarPlannerEvents(
+            calendarEvents: calendarData.timedEvents,
+            storageEvents: storageEvents,
+            startOfDay: startOfDay,
+            settings: settings
+        )
+
+        return (storageEvents + calendarPlannerEvents).sorted {
+            $0.sortDate < $1.sortDate
+        }
+    }
+
+    @MainActor
+    private func getStorageEvents(for plannerStartOfDay: DateInRegion)
+        -> [PlannerEvent]
+    {
+
+        let startOfNextDay = (plannerStartOfDay + 1.days)
+
+        let descriptor = FetchDescriptor<PlannerEvent>(
+            predicate: #Predicate {
+                $0.date >= plannerStartOfDay.date
+                    && $0.date < startOfNextDay.date
+            }
+        )
+
+        do {
+            return try fetch(descriptor)
+        } catch {
+            assertionFailure(
+                "ERROR plannerEvent.getStorageEvents: \(error)"
+            )
+        }
+
+        return []
+    }
+
+    @MainActor
+    private func getUpperSortDate(
+        for date: Date,
         settings: PlannerSettings,
         loadCalendarEvents: (
             _ planner: Planner,
@@ -266,16 +434,13 @@ extension ModelContext {
                 continue
             }
 
+            // TODO: filter out the event.
             // Note: This WILL contain the event. This is fine.
-            let plannerEvents = loadAllSortedPlannerEvents(
+            let plannerEvents = getAllSortedPlannerEvents(
                 for: planner,
                 startOfDay: plannerStartOfDay,
                 settings: settings,
                 loadCalendarEvents: loadCalendarEvents
-            )
-
-            print(
-                "debug | Placing event at top of \(plannerEvents.count) existing events"
             )
 
             return generateSortDate(
@@ -286,145 +451,13 @@ extension ModelContext {
             )
         }
 
-        print("debug | Event doesnt exist in any planners.")
-
         // Event does not belong to any planners. Use its actual date as the sortDate.
         return date
     }
 
     @MainActor
-    func deletePlannerEvents(
-        _ events: [PlannerEvent]
-    ) {
-
-        for event in events {
-            delete(event)
-        }
-
-        do {
-            try save()
-        } catch {
-            assertionFailure(
-                "Failed to delete plan: \(error)"
-            )
-        }
-    }
-
-    @MainActor
-    func deleteCheckedPlans(
-        from plans: [PlannerEvent]
-    ) {
-
-        for event in plans {
-            if event.isChecked {
-                print("Deleting checked event: \(event.stableId)")
-                delete(event)
-            }
-        }
-
-        do {
-            try save()
-        } catch {
-            assertionFailure(
-                "Failed to delete checked plans: \(error)"
-            )
-        }
-    }
-
-    @MainActor
-    func saveEventFormChanges(
-        _ draftPlannerEvent: DraftPlannerEvent,
-        initialPlannerEvent: PlannerEvent?,
-        initialCalendarEvent: EKEvent?
-    ) {
-
-        if draftPlannerEvent.hasTime && draftPlannerEvent.location == nil {
-            assertionFailure(
-                "ERROR plannerEvent.saveEventFormChanges(PlannerEvent): Draft event must have a location assigned if it has a time."
-            )
-        }
-
-        if let initialPlannerEvent {
-
-            // Reuse the existing planner event.
-
-            initialPlannerEvent.title = draftPlannerEvent.title
-            initialPlannerEvent.date = draftPlannerEvent.date
-            initialPlannerEvent.hasTime = draftPlannerEvent.hasTime
-            initialPlannerEvent.calendarEvent = nil
-            initialPlannerEvent.location = draftPlannerEvent.location
-
-            // Insert the event if it was previously transient.
-            insertEventIfNeeded(initialPlannerEvent)
-
-        } else {
-
-            // Save the draft planner event to the context.
-
-            let newEvent = PlannerEvent(
-                date: draftPlannerEvent.date,
-                sortDate: draftPlannerEvent.date
-            )
-
-            newEvent.title = draftPlannerEvent.title
-            newEvent.date = draftPlannerEvent.date
-            newEvent.hasTime = draftPlannerEvent.hasTime
-            newEvent.calendarEvent = nil
-            newEvent.location = draftPlannerEvent.location
-
-            // TODO: add event to top of planner
-
-            insert(newEvent)
-
-        }
-
-        // Note: Saving the context here will delete the location. Allow the model context to auto-save as needed.
-
-    }
-
-    @MainActor
-    func saveEventFormChanges(
-        _ calendarEvent: EKEvent?,
-        initialPlannerEvent: PlannerEvent?,
-        settings: PlannerSettings
-    ) {
-        if let initialPlannerEvent {
-
-            if let calendarEvent {
-
-                // Event was not deleted. Use the original planner event's sort date for the new event.
-                settings.calendarSortDateMap[
-                    calendarEvent.calendarItemExternalIdentifier
-                ] = initialPlannerEvent.sortDate
-
-            }
-
-            // TODO: why is this needed?
-            Task { @MainActor in
-
-                self.delete(initialPlannerEvent)
-
-                do {
-                    try save()
-                } catch {
-                    assertionFailure(
-                        "ERROR plannerEvent.saveEventFormChanges(EKEvent): \(error)"
-                    )
-                }
-
-            }
-        }
-    }
-
-    // MARK: - Helper Functions
-
     private func insertEventIfNeeded(_ event: PlannerEvent) {
-        let id = event.persistentModelID
-
-        if self.registeredModel(for: id) as PlannerEvent? != nil {
-            return
-        }
-
+        guard event.modelContext == nil else { return }
         insert(event)
     }
 

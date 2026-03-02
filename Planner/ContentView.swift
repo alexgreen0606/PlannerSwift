@@ -247,7 +247,7 @@ struct ContentView: View {
                     // TODO: need to load in all the plans for this day
 
                     // Delete canceled plans from today's planner.
-                    modelContext.deleteCheckedPlans(from: [])
+                    modelContext.deleteCheckedStorageEvents(from: [])
                 }
             } catch {
                 assertionFailure(

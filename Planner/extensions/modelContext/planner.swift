@@ -122,35 +122,4 @@ extension ModelContext {
         // function that called this.
     }
 
-        @MainActor
-        func loadAllSortedPlannerEvents(
-            for planner: Planner,
-            startOfDay: DateInRegion,
-            settings: PlannerSettings,
-            loadCalendarEvents: (
-                _ planner: Planner,
-                _ startOfDay: DateInRegion,
-                _ hiddenCalendarIds: Set<String>
-            ) -> PlannerCalendarData
-        ) -> [PlannerEvent] {
-            let storageEvents = getStorageEvents(for: startOfDay)
-    
-            let calendarData = loadCalendarEvents(
-                planner,
-                startOfDay,
-                settings.hiddenCalendarIds
-            )
-    
-            let calendarPlannerEvents = buildCalendarPlannerEvents(
-                calendarEvents: calendarData.timedEvents,
-                storageEvents: storageEvents,
-                startOfDay: startOfDay,
-                settings: settings
-            )
-    
-            return (storageEvents + calendarPlannerEvents).sorted {
-                $0.sortDate < $1.sortDate
-            }
-        }
-
 }

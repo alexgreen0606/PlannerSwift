@@ -89,7 +89,16 @@ struct LocationSearchView: View {
             return false
         }
     }
-    
+
+    private var showNoOption: Bool {
+        switch mode {
+        case .event:
+            return selectedLocation != nil
+        case .home, .planner:
+            return false
+        }
+    }
+
     private var showCurrentIndicator: Bool {
         switch mode {
         case .home:
@@ -108,10 +117,6 @@ struct LocationSearchView: View {
         case .home, .event:
             return false
         }
-    }
-
-    private var isDirty: Bool {
-        selectedLocation != initialLocation
     }
 
     var body: some View {
@@ -136,6 +141,14 @@ struct LocationSearchView: View {
             }
             .overlay {
                 emptyOptionsLabel
+            }
+            .overlay {
+                VStack {
+                    Spacer()
+                    currentLocationButton
+                    homeLocationButton
+                    noLocationButton
+                }
             }
             .onAppear(perform: buildSuggestedLocations)
         }
@@ -169,7 +182,6 @@ struct LocationSearchView: View {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Confirm", systemImage: "checkmark", action: handleSave)
                     .tint(accentColor.swiftUIColor)
-                    .disabled(!isDirty)
             }
         }
     }
@@ -180,12 +192,6 @@ struct LocationSearchView: View {
         VStack(spacing: 16) {
             selectionIndicator
             inputField
-
-            HStack {
-                currentLocationButton
-                homeLocationButton
-                Spacer()
-            }
         }
         .padding(.horizontal)
         .animateSynchronousAction(from: selectedLocation)
@@ -262,6 +268,18 @@ struct LocationSearchView: View {
             AccentButtonView(
                 label: "Use Home Location",
                 systemImage: "house"
+            ) {
+                selectedLocation = nil
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var noLocationButton: some View {
+        if showNoOption {
+            AccentButtonView(
+                label: "No Location",
+                systemImage: "xmark"
             ) {
                 selectedLocation = nil
             }
