@@ -173,11 +173,7 @@ extension ModelContext {
         targetDatestamp: String,
         settings: PlannerSettings,
         eventStore: EKEventStore,
-        loadCalendarEvents: (
-            _ planner: Planner,
-            _ startOfDay: DateInRegion,
-            _ hiddenCalendarIds: Set<String>
-        ) -> PlannerCalendarData
+        loadCalendarData: @escaping PlannerDataLoader
     ) {
 
         // Used for untimed events only.
@@ -232,7 +228,7 @@ extension ModelContext {
                     for: event,
                     settings: settings,
                     previousPlannerDatestamp: previousDatestamp,
-                    loadCalendarEvents: loadCalendarEvents
+                    loadCalendarData: loadCalendarData
                 )
 
                 settings.calendarSortDateMap[
@@ -246,7 +242,7 @@ extension ModelContext {
                 for: event,
                 settings: settings,
                 previousPlannerDatestamp: previousDatestamp,
-                loadCalendarEvents: loadCalendarEvents
+                loadCalendarData: loadCalendarData
             )
         }
 
@@ -267,11 +263,7 @@ extension ModelContext {
         settings: PlannerSettings,
         initialPlannerEvent: PlannerEvent?,
         initialCalendarEvent: EKEvent?,
-        loadCalendarEvents: (
-            _ planner: Planner,
-            _ startOfDay: DateInRegion,
-            _ hiddenCalendarIds: Set<String>
-        ) -> PlannerCalendarData
+        loadCalendarData: @escaping PlannerDataLoader
     ) {
 
         if draftPlannerEvent.hasTime && draftPlannerEvent.location == nil {
@@ -311,18 +303,16 @@ extension ModelContext {
 
             event.date = targetPlannerStartOfDay.date
         }
-        
-        // TODO: only move if the event date has changed planners
-        
+
         let newSortDate = getUpperSortDate(
             for: event,
             settings: settings,
             previousPlannerDatestamp: previousDatestamp,
-            loadCalendarEvents: loadCalendarEvents
+            loadCalendarData: loadCalendarData
         )
-        
+
         event.sortDate = newSortDate
-        
+
         insertEventIfNeeded(event)
 
         // Note: Saving the context here will delete the location. Allow the model context to auto-save when needed.
@@ -346,20 +336,16 @@ extension ModelContext {
 
             }
 
-            // TODO: why is this needed?
-            Task { @MainActor in
+            self.delete(initialPlannerEvent)
 
-                self.delete(initialPlannerEvent)
-
-                do {
-                    try save()
-                } catch {
-                    assertionFailure(
-                        "ERROR plannerEvent.saveEventFormChanges(EKEvent): \(error)"
-                    )
-                }
-
+            do {
+                try save()
+            } catch {
+                assertionFailure(
+                    "ERROR plannerEvent.handleCalendarEventChange: \(error)"
+                )
             }
+
         }
     }
 
@@ -370,16 +356,13 @@ extension ModelContext {
         for planner: Planner,
         startOfDay: DateInRegion,
         settings: PlannerSettings,
-        loadCalendarEvents: (
-            _ planner: Planner,
-            _ startOfDay: DateInRegion,
-            _ hiddenCalendarIds: Set<String>
-        ) -> PlannerCalendarData
+        loadCalendarData: @escaping PlannerDataLoader
     ) -> [PlannerEvent] {
         let storageEvents = getStorageEvents(for: startOfDay)
 
-        let calendarData = loadCalendarEvents(
+        let calendarData = loadCalendarData(
             planner,
+            true,
             startOfDay,
             settings.hiddenCalendarIds
         )
@@ -426,22 +409,19 @@ extension ModelContext {
         for event: PlannerEvent,
         settings: PlannerSettings,
         previousPlannerDatestamp: String?,
-        loadCalendarEvents: (
-            _ planner: Planner,
-            _ startOfDay: DateInRegion,
-            _ hiddenCalendarIds: Set<String>
-        ) -> PlannerCalendarData
+        loadCalendarData: @escaping PlannerDataLoader
     ) -> Date {
 
-        let chronologicalPossibleDatestamps = getChronologicalPossibleDatestamps(for: event.date)
-
+        let chronologicalPossibleDatestamps =
+            getChronologicalPossibleDatestamps(for: event.date)
+        
         for datestamp in chronologicalPossibleDatestamps {
-            
+
             // Event has not moved from its current planner. Keep its existing position.
             if datestamp == previousPlannerDatestamp {
                 return event.sortDate
             }
-            
+
             let planner = loadPlanner(for: datestamp)
 
             guard
@@ -456,19 +436,25 @@ extension ModelContext {
             }
 
             if !event.date.belongsTo(plannerStartOfDay) {
-                print("debug | Event doesnt exist in \(datestamp)")
                 continue
             }
 
-            // TODO: filter out the event.
-            // Note: This WILL contain the event. This is fine.
             let plannerEvents = getAllSortedPlannerEvents(
                 for: planner,
                 startOfDay: plannerStartOfDay,
                 settings: settings,
-                loadCalendarEvents: loadCalendarEvents
+                loadCalendarData: loadCalendarData
             )
-
+            // Filter out the event.
+            .filter { other in
+                if let calEvent = event.calendarEvent {
+                    return other.calendarEvent?.calendarItemExternalIdentifier
+                        != calEvent.calendarItemExternalIdentifier
+                } else {
+                    return other.stableId != event.stableId
+                }
+            }
+            
             return generateSortDate(
                 startOfDay: plannerStartOfDay,
                 index: 0,

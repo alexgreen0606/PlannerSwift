@@ -25,7 +25,7 @@ class PlannerEvent: ListItem {
     var hasTime: Bool = false
     
     // MUST exist when hasTime is true.
-    @Relationship(deleteRule: .cascade)
+    @Relationship(deleteRule: .nullify)
     var location: Location?
 
     @Transient

@@ -57,7 +57,7 @@ struct PlannerPreviewView: View {
         }
     }
 
-    // MARK: - Weather Data
+    // MARK: - Weather and Location Data
 
     private var weatherData: DayWeather? {
         weatherStore.getWeather(for: plannerStartOfDay, at: plannerLocation)
@@ -89,17 +89,17 @@ struct PlannerPreviewView: View {
             .sorted { $0.sortDate < $1.sortDate }
     }
 
-    private var openCalendarPlannerEvents: [PlannerEvent] {
-        calendarPlannerEvents.filter {
-            !isCalendarEventChecked($0.calendarEvent)
-        }
+    private var sortedOpenCalendarPlannerEvents: [PlannerEvent] {
+        calendarPlannerEvents
+            .filter { !isCalendarEventChecked($0.calendarEvent) }
+            .sorted { $0.sortDate < $1.sortDate }
     }
 
-    private var timedPlannerEvents: [PlannerEvent] {
+    private var timedStorageEvents: [PlannerEvent] {
         sortedOpenPlannerEvents.filter { $0.hasTime }
     }
 
-    private var untimedPlannerEvents: [PlannerEvent] {
+    private var untimedStorageEvents: [PlannerEvent] {
         sortedOpenPlannerEvents.filter { !$0.hasTime }
     }
 
@@ -107,52 +107,58 @@ struct PlannerPreviewView: View {
         Array(allDayEvents.prefix(maxPreviewEvents))
     }
 
-    private var previewPlannerEvents: [PlannerEvent] {
+    private var sortedPreviewPlannerEvents: [PlannerEvent] {
 
-        let remainingSlots = max(
+        var previewEvents: [PlannerEvent] = []
+        var remainingSlots = max(
             0,
             maxPreviewEvents - previewAllDayEvents.count
         )
 
-        let singleDayPlannerEvents =
-            Array(
-                openCalendarPlannerEvents
+        // Priority 1: Timed Calendar Events
+        previewEvents.append(
+            contentsOf:
+                sortedOpenCalendarPlannerEvents
                     .prefix(remainingSlots)
-            )
-
-        let slotsAfterSingleDay = max(
-            0,
-            remainingSlots - singleDayPlannerEvents.count
         )
 
-        let timedPlannerEventsToAdd =
-            timedPlannerEvents
-            .prefix(slotsAfterSingleDay)
-
-        let slotsAfterTimed = max(
+        remainingSlots = max(
             0,
-            remainingSlots - singleDayPlannerEvents.count
-                - timedPlannerEventsToAdd.count
+            maxPreviewEvents - previewAllDayEvents.count - previewEvents.count
         )
 
-        let untimedPlannerEventsToAdd =
-            untimedPlannerEvents
-            .prefix(slotsAfterTimed)
+        // Priority 2: Timed Storage Events
+        previewEvents.append(
+            contentsOf:
+                timedStorageEvents
+                .prefix(remainingSlots)
+        )
+
+        remainingSlots = max(
+            0,
+            maxPreviewEvents - previewAllDayEvents.count - previewEvents.count
+        )
+
+        // Priority 3: Untimed Storage Events
+        previewEvents.append(
+            contentsOf:
+                untimedStorageEvents
+                .prefix(remainingSlots)
+        )
 
         return
-            (singleDayPlannerEvents + timedPlannerEventsToAdd
-            + untimedPlannerEventsToAdd)
+            previewEvents
             .sorted { $0.sortDate < $1.sortDate }
     }
 
     private var remainingPlansLabel: String {
-        let totalCount =
-            allDayEvents.count + openCalendarPlannerEvents.count
+        let totalEventCount =
+            allDayEvents.count + sortedOpenCalendarPlannerEvents.count
             + sortedOpenPlannerEvents.count
 
-        let previewCount = allDayEvents.count + previewPlannerEvents.count
+        let previewCount = previewAllDayEvents.count + sortedPreviewPlannerEvents.count
 
-        let remainingCount = totalCount - previewCount
+        let remainingCount = totalEventCount - previewCount
 
         if remainingCount == 0 {
             if previewCount > 0 {
@@ -165,9 +171,7 @@ struct PlannerPreviewView: View {
     }
 
     private var hasPlans: Bool {
-        sortedOpenPlannerEvents.count + allDayEvents.count
-            + openCalendarPlannerEvents.count
-            > 0
+        (previewAllDayEvents.count + sortedPreviewPlannerEvents.count) > 0
     }
 
     var body: some View {
@@ -192,7 +196,7 @@ struct PlannerPreviewView: View {
 
             PreviewPlannerEventListView(
                 plannerRegion: plannerStartOfDay.region,
-                events: previewPlannerEvents
+                events: sortedPreviewPlannerEvents
             )
 
             remainingPlansIndicator

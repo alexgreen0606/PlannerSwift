@@ -16,6 +16,10 @@ extension Color {
         Color(uiColor: .secondaryLabel)
     }
     
+    static var tertiary: Color {
+        Color(uiColor: .tertiaryLabel)
+    }
+    
     static var appBackground: Color {
         let light = UIColor.secondarySystemBackground
         let dark = UIColor.black

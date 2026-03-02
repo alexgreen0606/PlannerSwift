@@ -116,8 +116,8 @@ struct TransferEventsFormView: View {
                 role: .confirm,
                 action: handleTransfer
             )
-            .disabled(destinationDate == sourceDate)
             .tint(accentColor.swiftUIColor)
+            .disabled(destinationDate == sourceDate)
         }
     }
 
@@ -162,7 +162,7 @@ struct TransferEventsFormView: View {
     }
 
     private func handleTransfer() {
-
+        
         modelContext.transferPlannerEvents(
             plannerManager.selectedItems,
             days: dayOffset.days,
@@ -170,7 +170,7 @@ struct TransferEventsFormView: View {
             targetDatestamp: destinationDay.datestamp,
             settings: settings,
             eventStore: calendarStore.ekEventStore,
-            loadCalendarEvents: calendarStore.loadPlannerData
+            loadCalendarData: calendarStore.loadPlannerData
         )
 
         calendarStore.loadFreshCache(

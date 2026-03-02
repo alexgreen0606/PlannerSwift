@@ -8,7 +8,7 @@
 import Foundation
 import SwiftDate
 
-func getChronologicalPossibleDatestamps(for date: Date) -> Set<String> {
+func getChronologicalPossibleDatestamps(for date: Date) -> [String] {
     guard
         let earliestZone = TimeZone(secondsFromGMT: -12 * 3600),
         let latestZone = TimeZone(secondsFromGMT: 14 * 3600)

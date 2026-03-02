@@ -190,6 +190,7 @@ struct ExpandedPlannerView: View {
             ) {
                // TODO: show transfer snackbar
             }
+            .id(context.id)
             .navigationTransition(
                 .zoom(
                     sourceID: context.id,

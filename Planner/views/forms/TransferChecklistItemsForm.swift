@@ -161,10 +161,10 @@ struct TransferChecklistItemsFormView: View {
                 role: .confirm,
                 action: handleTransfer
             )
+            .tint(accentColor.swiftUIColor)
             .disabled(
                 destination == nil || destination!.stableId == source.stableId
             )
-            .tint(accentColor.swiftUIColor)
         }
     }
 

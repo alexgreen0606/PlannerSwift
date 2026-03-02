@@ -14,7 +14,6 @@ import SwiftDate
 import SwiftUI
 
 // TODO: when the event does NOT have a time initially, the TimeZone footer is broken.
-// TODO: when the event does not have a time initially, the submit button is enabled when I switch the draft location to nil
 
 struct EventFormView: View {
     private let sourcePlanner: Planner?
@@ -233,6 +232,7 @@ struct EventFormView: View {
             [.height(460), .height(2600)],
             selection: $selectedDetent
         )
+        .tint(accentColor.swiftUIColor)
 
         // Enforce timed event location existence when the device location loads in.
         .externalData(
@@ -275,12 +275,12 @@ struct EventFormView: View {
                     )
 
                     Toggle("Time", isOn: $draftPlannerEvent.hasTime)
-                        .tint(accentColor.swiftUIColor)
                         .disabled(
                             !draftPlannerEvent.hasTime && defaultLocation == nil
                         )
                 }
 
+                // Section {
                 Section {
                     NavigationLink {
                         LocationSearchView(
@@ -294,33 +294,33 @@ struct EventFormView: View {
                         }
                     } label: {
                         HStack {
-
+                            
                             Text("Location")
-
+                            
                             Spacer()
-
+                            
                             Text(
                                 draftPlannerEvent.location != nil
-                                    ? draftPlannerEvent.locationLabel(
-                                        planner: sourcePlanner,
-                                        settings: settings,
-                                        deviceLocation:
-                                            deviceLocationManager
-                                            .location
-                                    ) : "Select a location"
+                                ? draftPlannerEvent.locationLabel(
+                                    planner: sourcePlanner,
+                                    settings: settings,
+                                    deviceLocation:
+                                        deviceLocationManager
+                                        .location
+                                ) : "Select a location"
                             )
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
-
+                            
                         }
                     }
                     .disabled(defaultLocation == nil)
                 } footer: {
                     if draftPlannerEvent.hasTime,
-                        draftPlannerEvent.location != nil
+                       draftPlannerEvent.location != nil
                     {
                         let timeZoneAbbreviation =
-                            draftPlannerEvent
+                        draftPlannerEvent
                             .region(
                                 planner: sourcePlanner,
                                 settings: settings,
@@ -329,7 +329,7 @@ struct EventFormView: View {
                             )
                             .timeZone
                             .abbreviation() ?? "Unknown Time Zone"
-
+                        
                         Text("Time Zone: \(timeZoneAbbreviation)")
                     }
                 }
@@ -349,8 +349,8 @@ struct EventFormView: View {
         ToolbarItem(placement: .confirmationAction) {
             Button("Save", systemImage: "checkmark", action: savePlannerEvent)
                 .buttonStyle(.glassProminent)
+                .tint(canSave ? accentColor.swiftUIColor : .tertiary)
                 .disabled(!canSave)
-                .tint(accentColor.swiftUIColor)
         }
     }
 
@@ -389,7 +389,7 @@ struct EventFormView: View {
             settings: settings,
             initialPlannerEvent: initialPlannerEvent,
             initialCalendarEvent: initialCalendarEvent,
-            loadCalendarEvents: calendarStore.loadPlannerData
+            loadCalendarData: calendarStore.loadPlannerData
         )
 
         if let initialCalendarEvent {

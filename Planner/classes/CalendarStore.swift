@@ -15,6 +15,13 @@ struct PlannerCalendarData {
     let timedEvents: [EKEvent]
 }
 
+typealias PlannerDataLoader = (
+    _ planner: Planner,
+    _ skipCache: Bool,
+    _ plannerStartOfDay: DateInRegion,
+    _ hiddenCalendarIds: Set<String>
+) -> PlannerCalendarData
+
 @MainActor
 class CalendarStore: ObservableObject {
 
@@ -103,6 +110,7 @@ class CalendarStore: ObservableObject {
 
     func loadPlannerData(
         for planner: Planner,
+        skipCache: Bool = false,
         plannerStartOfDay: DateInRegion,
         hiddenCalendarIds: Set<String>
     ) -> PlannerCalendarData {
@@ -110,7 +118,7 @@ class CalendarStore: ObservableObject {
         let plannerKey = planner.key
 
         // Return cached data.
-        if let existingData = cache[plannerKey] {
+        if !skipCache, let existingData = cache[plannerKey] {
             return existingData
         }
 
