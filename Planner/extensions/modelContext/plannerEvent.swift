@@ -24,8 +24,6 @@ extension ModelContext {
     ) -> UUID? {
 
         var targetIndex: Int? = 0
-        
-        print("debug | EventCount: \(events.count)")
 
         if let baseId {
             targetIndex = generateTargetIndex(
@@ -34,7 +32,7 @@ extension ModelContext {
                 offset: offset
             )
         }
-        
+
         guard let targetIndex else {
             return nil
         }
@@ -42,14 +40,12 @@ extension ModelContext {
         let sortDate = generateSortDate(
             startOfDay: startOfDay,
             index: targetIndex,
-            events: events,
-            settings: settings
+            events: events
         )
 
         let newEvent = PlannerEvent(
             date: startOfDay.date,
-            sortDate: sortDate,
-            calendarEvent: nil,
+            sortDate: sortDate
         )
 
         insert(newEvent)
@@ -64,6 +60,54 @@ extension ModelContext {
         }
 
         return newEvent.stableId
+    }
+
+    @MainActor
+    func addCalendarEventToPlanner(
+        _ calendarEvent: EKEvent,
+        plannerStartOfDay: DateInRegion
+    ) {
+
+        guard
+            let calendarItemExternalIdentifier = calendarEvent
+                .calendarItemExternalIdentifier
+        else {
+            assertionFailure(
+                "ERROR plannerEvent.addCalendarEventToPlanner: Calendar event does not have an external identifier."
+            )
+            return
+        }
+
+        let descriptor = FetchDescriptor<PlannerEvent>(
+            predicate: #Predicate<PlannerEvent> {
+                if let calId = $0.calendarItemExternalIdentifier {
+                    return calId == calendarItemExternalIdentifier
+                } else {
+                    return false
+                }
+            }
+        )
+
+        do {
+            let storageEvents = try fetch(descriptor)
+
+            guard let storageEvent = storageEvents.first else {
+                createCalendarPlannerEvent(
+                    for: calendarEvent,
+                    in: plannerStartOfDay
+                )
+                return
+            }
+
+            storageEvent.syncWithCalendarEvent(calendarEvent)
+            storageEvent.sortDate = getUpperSortDate(for: plannerStartOfDay)
+
+        } catch {
+            createCalendarPlannerEvent(
+                for: calendarEvent,
+                in: plannerStartOfDay
+            )
+        }
     }
 
     // TODO: what about calendar events?
@@ -109,8 +153,7 @@ extension ModelContext {
         from: Int,
         to: Int,
         startOfDay: DateInRegion,
-        events: [PlannerEvent],
-        settings: PlannerSettings
+        events: [PlannerEvent]
     ) {
         guard from != to else { return }
 
@@ -122,16 +165,8 @@ extension ModelContext {
         movedEvent.sortDate = generateSortDate(
             startOfDay: startOfDay,
             index: to,
-            events: eventsWithoutEvent,
-            settings: settings
+            events: eventsWithoutEvent
         )
-
-        // Handle calendar event position changes.
-        if let calEvent = movedEvent.calendarEvent {
-            settings.calendarSortDateMap[
-                calEvent.calendarItemExternalIdentifier
-            ] = movedEvent.sortDate
-        }
 
         do {
             try save()
@@ -174,34 +209,25 @@ extension ModelContext {
         previousDatestamp: String,
         targetDatestamp: String,
         settings: PlannerSettings,
-        eventStore: EKEventStore,
-        loadCalendarData: @escaping PlannerDataLoader
+        eventStore: EKEventStore
     ) {
 
         // Used for untimed events only.
         let targetPlanner = loadPlanner(for: targetDatestamp)
-        let targetPlannerStartOfDay = targetPlanner.datestamp.startOfDay(
-            in: targetPlanner.region(settings: settings)
-        )
+        guard
+            let targetPlannerStartOfDay = targetPlanner.datestamp.startOfDay(
+                in: targetPlanner.region(settings: settings)
+            )
+        else {
+            assertionFailure(
+                "ERROR plannerEvent.transferPlannerEvents: Could not build plannerStartOfDay from \(targetDatestamp)"
+            )
+            return
+        }
 
         let sortedEvents = events.sorted { $0.sortDate > $1.sortDate }
 
         for event in sortedEvents {
-
-            if !event.hasTime {
-                guard let targetPlannerStartOfDay else {
-                    assertionFailure(
-                        "ERROR plannerEvent.transferPlannerEvents: Could not build plannerStartOfDay from \(targetDatestamp)"
-                    )
-                    continue
-                }
-
-                // Untimed events MUST have their date set to the planner's startOfDay.
-                event.date = targetPlannerStartOfDay.date
-
-            } else {
-                event.date = event.date + days
-            }
 
             if let calEvent = event.calendarEvent {
                 guard calEvent.calendar.allowsContentModifications else {
@@ -225,26 +251,21 @@ extension ModelContext {
                     print("ERROR plannerEvent.tarnsferPlannerEvents: \(error)")
                     continue
                 }
-
-                let newSortDate = getUpperSortDate(
-                    for: event,
-                    settings: settings,
-                    previousPlannerDatestamp: previousDatestamp,
-                    loadCalendarData: loadCalendarData
-                )
-
-                settings.calendarSortDateMap[
-                    calEvent.calendarItemExternalIdentifier
-                ] = newSortDate
-
-                continue
             }
 
-            event.sortDate = getUpperSortDate(
+            if !event.hasTime {
+
+                // Untimed events MUST have their date set to the planner's startOfDay.
+                event.date = targetPlannerStartOfDay.date
+
+            } else {
+                event.date = event.date + days
+            }
+
+            event.sortDate = getUpperSortDateIfNewToPlanner(
                 for: event,
                 settings: settings,
-                previousPlannerDatestamp: previousDatestamp,
-                loadCalendarData: loadCalendarData
+                previousPlannerDatestamp: previousDatestamp
             )
         }
 
@@ -263,9 +284,9 @@ extension ModelContext {
         previousDatestamp: String?,
         targetDatestamp: String,
         settings: PlannerSettings,
+        ekEventStore: EKEventStore,
         initialPlannerEvent: PlannerEvent?,
-        initialCalendarEvent: EKEvent?,
-        loadCalendarData: @escaping PlannerDataLoader
+        initialCalendarEvent: EKEvent?
     ) {
 
         if draftPlannerEvent.hasTime && draftPlannerEvent.location == nil {
@@ -282,13 +303,6 @@ extension ModelContext {
                 sortDate: draftPlannerEvent.date
             )
 
-        event.title = draftPlannerEvent.title
-        event.date = draftPlannerEvent.date
-        event.hasTime = draftPlannerEvent.hasTime
-        event.calendarEvent = nil
-        event.location = draftPlannerEvent.location
-
-        // Untimed events must have their date set to the start date of their planner.
         if !event.hasTime {
 
             let targetPlanner = loadPlanner(for: targetDatestamp)
@@ -303,19 +317,29 @@ extension ModelContext {
                 return
             }
 
+            // Set the untimed event's date to the start of its planner.
             event.date = targetPlannerStartOfDay.date
+
+        } else {
+            event.date = draftPlannerEvent.date
         }
 
-        let newSortDate = getUpperSortDate(
+        event.title = draftPlannerEvent.title
+        event.hasTime = draftPlannerEvent.hasTime
+        event.calendarEvent = nil
+        event.location = draftPlannerEvent.location
+        event.sortDate = getUpperSortDateIfNewToPlanner(
             for: event,
             settings: settings,
-            previousPlannerDatestamp: previousDatestamp,
-            loadCalendarData: loadCalendarData
+            previousPlannerDatestamp: previousDatestamp
         )
 
-        event.sortDate = newSortDate
-
         insertEventIfNeeded(event)
+
+        // Delete the old calendar event.
+        if let initialCalendarEvent {
+            ekEventStore.deleteEvent(initialCalendarEvent)
+        }
 
         // Note: Saving the context here will delete the location. Allow the model context to auto-save when needed.
 
@@ -324,65 +348,58 @@ extension ModelContext {
     @MainActor
     func handleCalendarEventChange(
         _ calendarEvent: EKEvent?,
+        previousDatestamp: String?,
         initialPlannerEvent: PlannerEvent?,
-        settings: PlannerSettings
+        settings: PlannerSettings,
+        ekEventStore: EKEventStore
     ) {
+
         if let initialPlannerEvent {
-
-            if let calendarEvent {
-
-                // Use the original planner event's sort date for the new event.
-                settings.calendarSortDateMap[
-                    calendarEvent.calendarItemExternalIdentifier
-                ] = initialPlannerEvent.sortDate
-
+            guard let calendarEvent, !calendarEvent.isAllDay else {
+                delete(initialPlannerEvent)
+                return
             }
 
-            self.delete(initialPlannerEvent)
+            initialPlannerEvent.syncWithCalendarEvent(calendarEvent)
+            initialPlannerEvent.sortDate = getUpperSortDateIfNewToPlanner(
+                for: initialPlannerEvent,
+                settings: settings,
+                previousPlannerDatestamp: previousDatestamp
+            )
 
-            do {
-                try save()
-            } catch {
-                assertionFailure(
-                    "ERROR plannerEvent.handleCalendarEventChange: \(error)"
-                )
-            }
+        } else if let calendarEvent {
 
+            let plannerStartOfDay: DateInRegion? = {
+                guard
+                    let (planner, plannerStartOfDay) = getEarliestPlanner(
+                        for: calendarEvent.startDate,
+                        settings: settings
+                    )
+                else {
+                    return nil
+                }
+                return plannerStartOfDay
+            }()
+            createCalendarPlannerEvent(
+                for: calendarEvent,
+                in: plannerStartOfDay
+            )
+
+        }
+
+        do {
+            try save()
+        } catch {
+            assertionFailure(
+                "ERROR plannerEvent.handleCalendarEventChange: \(error)"
+            )
         }
     }
 
     // MARK: - Helper Functions
 
     @MainActor
-    private func getAllSortedPlannerEvents(
-        for planner: Planner,
-        startOfDay: DateInRegion,
-        settings: PlannerSettings,
-        loadCalendarData: @escaping PlannerDataLoader
-    ) -> [PlannerEvent] {
-        let storageEvents = getStorageEvents(for: startOfDay)
-
-        let calendarData = loadCalendarData(
-            planner,
-            true,
-            startOfDay,
-            settings.hiddenCalendarIds
-        )
-
-        let calendarPlannerEvents = buildCalendarPlannerEvents(
-            calendarEvents: calendarData.timedEvents,
-            storageEvents: storageEvents,
-            startOfDay: startOfDay,
-            settings: settings
-        )
-
-        return (storageEvents + calendarPlannerEvents).sorted {
-            $0.sortDate < $1.sortDate
-        }
-    }
-
-    @MainActor
-    private func getStorageEvents(for plannerStartOfDay: DateInRegion)
+    private func getSortedStorageEvents(for plannerStartOfDay: DateInRegion)
         -> [PlannerEvent]
     {
 
@@ -392,14 +409,17 @@ extension ModelContext {
             predicate: #Predicate {
                 $0.date >= plannerStartOfDay.date
                     && $0.date < startOfNextDay.date
-            }
+            },
+            sortBy: [
+                SortDescriptor(\PlannerEvent.sortDate)
+            ]
         )
 
         do {
             return try fetch(descriptor)
         } catch {
             assertionFailure(
-                "ERROR plannerEvent.getStorageEvents: \(error)"
+                "ERROR plannerEvent.getSortedStorageEvents: \(error)"
             )
         }
 
@@ -407,22 +427,88 @@ extension ModelContext {
     }
 
     @MainActor
-    private func getUpperSortDate(
+    private func getUpperSortDateIfNewToPlanner(
         for event: PlannerEvent,
         settings: PlannerSettings,
-        previousPlannerDatestamp: String?,
-        loadCalendarData: @escaping PlannerDataLoader
+        previousPlannerDatestamp: String? = nil
     ) -> Date {
 
         let chronologicalPossibleDatestamps =
             getChronologicalPossibleDatestamps(for: event.date)
-        
-        for datestamp in chronologicalPossibleDatestamps {
 
-            // Event has not moved from its current planner. Keep its existing position.
-            if datestamp == previousPlannerDatestamp {
-                return event.sortDate
+        // Priority 1: Reuse the event's existing position if it has not moved.
+        if let previousPlannerDatestamp,
+            chronologicalPossibleDatestamps.contains(previousPlannerDatestamp)
+        {
+            return event.sortDate
+        }
+
+        guard
+            let (planner, plannerStartOfDay) = getEarliestPlanner(
+                for: event.date,
+                settings: settings
+            )
+        else {
+            // Event does not belong to any planners. Use its actual date as the sortDate.
+            return event.date
+        }
+
+        let sortedStorageEventsWithoutEvent = getSortedStorageEvents(
+            for: plannerStartOfDay
+        )
+        .filter { $0.stableId != event.stableId }
+
+        return generateSortDate(
+            startOfDay: plannerStartOfDay,
+            index: 0,
+            events: sortedStorageEventsWithoutEvent
+        )
+    }
+
+    @MainActor
+    private func getUpperSortDate(for plannerStartOfDay: DateInRegion) -> Date {
+        let storageEvents = getSortedStorageEvents(for: plannerStartOfDay)
+        return generateSortDate(
+            startOfDay: plannerStartOfDay,
+            index: 0,
+            events: storageEvents
+        )
+    }
+
+    @MainActor
+    private func createCalendarPlannerEvent(
+        for calendarEvent: EKEvent,
+        in plannerStartOfDay: DateInRegion?
+    ) {
+
+        let sortDate = {
+            if let plannerStartOfDay {
+                return self.getUpperSortDate(for: plannerStartOfDay)
             }
+            return calendarEvent.startDate
+        }()
+
+        let event = PlannerEvent(
+            date: calendarEvent.startDate,
+            sortDate: sortDate,
+            calendarEvent: calendarEvent
+        )
+
+        insert(event)
+
+        // Note: Don't save the context. This function is part of a larger pipeline.
+    }
+
+    @MainActor
+    private func getEarliestPlanner(
+        for date: Date,
+        settings: PlannerSettings
+    ) -> (planner: Planner, plannerStartOfDay: DateInRegion)? {
+
+        let chronologicalPossibleDatestamps =
+            getChronologicalPossibleDatestamps(for: date)
+
+        for datestamp in chronologicalPossibleDatestamps {
 
             let planner = loadPlanner(for: datestamp)
 
@@ -432,41 +518,18 @@ extension ModelContext {
                 )
             else {
                 assertionFailure(
-                    "ERROR plannerEvent.getTransferedEventSortDate: Could not build plannerStartOfDay from \(planner.datestamp)"
+                    "ERROR getValidPlanner: Could not build plannerStartOfDay from \(planner.datestamp)"
                 )
                 continue
             }
 
-            if !event.date.belongsTo(plannerStartOfDay) {
-                continue
+            if date.belongsTo(plannerStartOfDay) {
+                return (planner: planner, plannerStartOfDay: plannerStartOfDay)
             }
-
-            let plannerEvents = getAllSortedPlannerEvents(
-                for: planner,
-                startOfDay: plannerStartOfDay,
-                settings: settings,
-                loadCalendarData: loadCalendarData
-            )
-            // Filter out the event.
-            .filter { other in
-                if let calEvent = event.calendarEvent {
-                    return other.calendarEvent?.calendarItemExternalIdentifier
-                        != calEvent.calendarItemExternalIdentifier
-                } else {
-                    return other.stableId != event.stableId
-                }
-            }
-            
-            return generateSortDate(
-                startOfDay: plannerStartOfDay,
-                index: 0,
-                events: plannerEvents,
-                settings: settings
-            )
         }
 
-        // Event does not belong to any planners. Use its actual date as the sortDate.
-        return event.date
+        // Date does not belong to any planner.
+        return nil
     }
 
     @MainActor

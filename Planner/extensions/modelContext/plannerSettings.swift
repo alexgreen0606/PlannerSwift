@@ -33,65 +33,12 @@ extension ModelContext {
     }
 
     @MainActor
-    func buildCalendarPlannerEvents(
-        calendarEvents events: [EKEvent],
-        storageEvents: [PlannerEvent],
-        startOfDay: DateInRegion,
-        settings: PlannerSettings
-    ) -> [PlannerEvent] {
-
-        let calendarPlannerEvents =
-            settings.buildCalendarPlannerEvents(
-                calendarEvents: events,
-                storageEvents: storageEvents,
-                startOfDay: startOfDay
-            )
-
-        do {
-            try save()
-        } catch {
-            assertionFailure(
-                "ERROR settings.buildCalendarPlannerEvents: \(error)"
-            )
-        }
-
-        return calendarPlannerEvents
-    }
-
-    @MainActor
-    func togglePlannerEvent(
-        _ event: PlannerEvent,
-        settings: PlannerSettings
-    ) -> Bool {
-
-        let wasContextUpdated = settings.toggleEvent(event)
-
-        if wasContextUpdated {
-            do {
-                try save()
-            } catch {
-                assertionFailure(
-                    "ERROR settings.togglePlannerEvent: \(error)"
-                )
-            }
-        }
-
-        return wasContextUpdated
-    }
-
-    @MainActor
     func deleteStaleCalendarEventPositions(
         in settings: PlannerSettings,
         with eventIds: Set<String>
     ) {
-
-        // Remove any sort index whose event ID no longer exists in the calendar.
-        settings.calendarSortDateMap.keys
-            .filter { !eventIds.contains($0) }
-            .forEach { staleKey in
-                print("Deleting sort index for calendar event: \(staleKey)")
-                settings.calendarSortDateMap.removeValue(forKey: staleKey)
-            }
+        
+        // TODO: implement
 
         // Sepcial case: do NOT save the context here. This will be done in the parent
         // function that called this.

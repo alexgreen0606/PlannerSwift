@@ -90,5 +90,36 @@ extension EKEvent {
             return fallback
         }
     }
+    
+    func location(
+        storageEvent: PlannerEvent? = nil
+    ) -> Location? {
+
+        if let structuredLocation = self.structuredLocation,
+            let latitude = structuredLocation.geoLocation?.coordinate
+                .latitude,
+            let longitude = structuredLocation.geoLocation?.coordinate
+                .longitude,
+            let locationLabel = self.location
+        {
+            let newLocation = Location(
+                name: locationLabel,
+                latitude: latitude,
+                longitude: longitude,
+                timeZoneIdentifier: self.timeZone?.identifier
+                    ?? Region.local.timeZone.identifier
+            )
+
+            guard let existingLocation = storageEvent?.location,
+                existingLocation.coordinateKey == newLocation.coordinateKey
+            else {
+                return newLocation
+            }
+
+            return existingLocation
+        }
+
+        return nil
+    }
 
 }

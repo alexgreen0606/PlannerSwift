@@ -128,11 +128,6 @@ struct PlannerSearchTabView: View {
         .onChange(of: filterCalendarIds) { _, _ in
             scheduleFilterDebounce()
         }
-        .onChange(of: settings.checkedCalendarEventIds) {
-            _,
-            _ in
-            scheduleFilterDebounce()
-        }
 
         // Reload the data from the page.
         .refreshable {
@@ -273,16 +268,6 @@ struct PlannerSearchTabView: View {
     private var bottomSpacer: some View {
         Color.clear.frame(
             height: isSearching ? toolbarHeight : 0
-        )
-    }
-
-    private func isCalendarEventChecked(event: EKEvent?) -> Bool {
-        guard let event else {
-            return false
-        }
-
-        return settings.checkedCalendarEventIds.contains(
-            event.calendarItemExternalIdentifier
         )
     }
 

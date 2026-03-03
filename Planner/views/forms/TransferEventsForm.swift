@@ -169,8 +169,7 @@ struct TransferEventsFormView: View {
             previousDatestamp: sourceStartOfDay.datestamp,
             targetDatestamp: destinationDay.datestamp,
             settings: settings,
-            eventStore: calendarStore.ekEventStore,
-            loadCalendarData: calendarStore.loadPlannerData
+            eventStore: calendarStore.ekEventStore
         )
 
         calendarStore.loadFreshCache(

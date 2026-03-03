@@ -120,6 +120,17 @@ extension PlannerEvent {
         self.date = date
 
     }
+    
+    // MARK: - Calendar Helpers
+    
+    func syncWithCalendarEvent(_ calendarEvent: EKEvent) {
+        self.title = calendarEvent.title
+        self.date = calendarEvent.startDate
+        self.location = calendarEvent.location(
+            storageEvent: self
+        )
+        self.calendarEvent = calendarEvent
+    }
 
     // MARK: - View Builders
 

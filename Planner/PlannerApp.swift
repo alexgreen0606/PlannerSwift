@@ -24,6 +24,8 @@ struct PlannerApp: App {
 
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
         .system
+    
+    @Environment(\.modelContext) private var modelContext
 
     @StateObject private var locationManager = DeviceLocationManager()
     @StateObject private var weatherStore: WeatherStore

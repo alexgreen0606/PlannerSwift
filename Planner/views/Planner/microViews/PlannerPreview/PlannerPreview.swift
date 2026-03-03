@@ -25,9 +25,8 @@ struct PlannerPreviewView: View {
     let planner: Planner
     let plannerStartOfDay: DateInRegion
     let plannerLocation: Location?
-    let storageEvents: [PlannerEvent]
-    let calendarPlannerEvents: [PlannerEvent]
-    let calendarData: PlannerCalendarData
+    let sortedPlannerEvents: [PlannerEvent]
+    let allDayEvents: [EKEvent]
     let settings: PlannerSettings
     let type: PlannerPreviewType
 
@@ -79,27 +78,16 @@ struct PlannerPreviewView: View {
 
     // MARK: - Event Data
 
-    private var allDayEvents: [EKEvent] {
-        calendarData.allDayEvents
-    }
-
     private var sortedOpenPlannerEvents: [PlannerEvent] {
-        storageEvents
+        sortedPlannerEvents
             .filter { !$0.isChecked }
-            .sorted { $0.sortDate < $1.sortDate }
     }
 
-    private var sortedOpenCalendarPlannerEvents: [PlannerEvent] {
-        calendarPlannerEvents
-            .filter { !isCalendarEventChecked($0.calendarEvent) }
-            .sorted { $0.sortDate < $1.sortDate }
-    }
-
-    private var timedStorageEvents: [PlannerEvent] {
+    private var timedSortedPlannerEvents: [PlannerEvent] {
         sortedOpenPlannerEvents.filter { $0.hasTime }
     }
 
-    private var untimedStorageEvents: [PlannerEvent] {
+    private var untimedSortedPlannerEvents: [PlannerEvent] {
         sortedOpenPlannerEvents.filter { !$0.hasTime }
     }
 
@@ -112,25 +100,13 @@ struct PlannerPreviewView: View {
         var previewEvents: [PlannerEvent] = []
         var remainingSlots = max(
             0,
-            maxPreviewEvents - previewAllDayEvents.count
-        )
-
-        // Priority 1: Timed Calendar Events
-        previewEvents.append(
-            contentsOf:
-                sortedOpenCalendarPlannerEvents
-                    .prefix(remainingSlots)
-        )
-
-        remainingSlots = max(
-            0,
             maxPreviewEvents - previewAllDayEvents.count - previewEvents.count
         )
 
-        // Priority 2: Timed Storage Events
+        // Priority 1: Timed Storage Events
         previewEvents.append(
             contentsOf:
-                timedStorageEvents
+                timedSortedPlannerEvents
                 .prefix(remainingSlots)
         )
 
@@ -139,10 +115,10 @@ struct PlannerPreviewView: View {
             maxPreviewEvents - previewAllDayEvents.count - previewEvents.count
         )
 
-        // Priority 3: Untimed Storage Events
+        // Priority 2: Untimed Storage Events
         previewEvents.append(
             contentsOf:
-                untimedStorageEvents
+                untimedSortedPlannerEvents
                 .prefix(remainingSlots)
         )
 
@@ -153,8 +129,7 @@ struct PlannerPreviewView: View {
 
     private var remainingPlansLabel: String {
         let totalEventCount =
-            allDayEvents.count + sortedOpenCalendarPlannerEvents.count
-            + sortedOpenPlannerEvents.count
+            allDayEvents.count + sortedOpenPlannerEvents.count
 
         let previewCount = previewAllDayEvents.count + sortedPreviewPlannerEvents.count
 
@@ -412,14 +387,6 @@ struct PlannerPreviewView: View {
             .animateAsynchronousAction(from: weatherData != nil)
             .animateAsynchronousAction(from: locationLabel != nil)
         }
-    }
-
-    private func isCalendarEventChecked(_ event: EKEvent?) -> Bool {
-        guard let event else {
-            return false
-        }
-
-        return settings.isCalendarEventChecked(event)
     }
 
 }

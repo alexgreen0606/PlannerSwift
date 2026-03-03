@@ -72,7 +72,7 @@ extension ModelContext {
         for planner: Planner,
         location: Location?,
         settings: PlannerSettings,
-        storageEvents: [PlannerEvent]
+        plannerEvents: [PlannerEvent]
     ) {
         
         let region = location?.region ?? settings.homeRegion
@@ -88,7 +88,7 @@ extension ModelContext {
         planner.location = location
 
         // Update the date of all untimed events to ensure they appear in the new Planner window.
-        for event in storageEvents {
+        for event in plannerEvents {
             if !event.hasTime {
                 event.date = newStartOfDay.date
             }

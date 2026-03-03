@@ -29,38 +29,12 @@ struct EventSheetContext: Identifiable {
 }
 
 struct ExpandedPlannerView: View {
-    private let planner: Planner
-    private let plannerStartOfDay: DateInRegion
-    private let plannerLocation: Location?
-    private let storageEvents: [PlannerEvent]
-    private let allSortedPlannerEvents: [PlannerEvent]
-    private let calendarData: PlannerCalendarData
-    private let settings: PlannerSettings
-
-    init(
-        planner: Planner,
-        plannerStartOfDay: DateInRegion,
-        plannerLocation: Location?,
-        storageEvents: [PlannerEvent],
-        allSortedPlannerEvents: [PlannerEvent],
-        calendarData: PlannerCalendarData,
-        settings: PlannerSettings
-    ) {
-        self.planner = planner
-        self.plannerStartOfDay = plannerStartOfDay
-        self.plannerLocation = plannerLocation
-        self.storageEvents = storageEvents
-        self.allSortedPlannerEvents = allSortedPlannerEvents
-        self.calendarData = calendarData
-        self.settings = settings
-
-        _plannerManager = StateObject(
-            wrappedValue: ListManager<PlannerEvent>(
-                isItemChecked: settings.isPlannerEventChecked
-            )
-        )
-
-    }
+    let planner: Planner
+    let plannerStartOfDay: DateInRegion
+    let plannerLocation: Location?
+    let sortedPlannerEvents: [PlannerEvent]
+    let allDayEvents: [EKEvent]
+    let settings: PlannerSettings
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -71,7 +45,7 @@ struct ExpandedPlannerView: View {
     @EnvironmentObject private var todaystampManager: TodaystampWatcher
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
-    @StateObject private var plannerManager: ListManager<PlannerEvent>
+    @StateObject private var plannerManager = ListManager<PlannerEvent>()
 
     @State private var eventSheetContext: EventSheetContext?
     @Namespace private var namespace
@@ -88,12 +62,8 @@ struct ExpandedPlannerView: View {
         plannerType == .future ? planner.showCanceled : planner.showCompleted
     }
 
-    private var allDayEvents: [EKEvent] {
-        calendarData.allDayEvents
-    }
-
     private var rawCheckedEvents: [PlannerEvent] {
-        allSortedPlannerEvents.filter { settings.isPlannerEventChecked($0) }
+        sortedPlannerEvents.filter { $0.isChecked }
     }
 
     // MARK: - Select Mode
@@ -124,18 +94,18 @@ struct ExpandedPlannerView: View {
     // MARK: - UI Lists
 
     private var sortedOpenPlannerEvents: [PlannerEvent] {
-        allSortedPlannerEvents
+        sortedPlannerEvents
             .filter {
-                (!(settings.isPlannerEventChecked($0))
+                (!$0.isChecked
                     && !plannerManager.newlyUncheckedIds.contains($0.stableId))
                     || plannerManager.newlyCheckedIds.contains($0.stableId)
             }
     }
 
     private var sortedCheckedPlans: [PlannerEvent] {
-        allSortedPlannerEvents
+        sortedPlannerEvents
             .filter {
-                (settings.isPlannerEventChecked($0)
+                ($0.isChecked
                     && !plannerManager.newlyCheckedIds.contains($0.stableId))
                     || plannerManager.newlyUncheckedIds.contains($0.stableId)
             }
@@ -167,7 +137,7 @@ struct ExpandedPlannerView: View {
                     createItem: createEvent,
                     handleTitleChange: handleEventTitleChange,
                     moveItem: moveUncheckedEvent,
-                    isItemChecked: settings.isPlannerEventChecked
+                    isItemChecked: nil // TODO: may want to remove this
                 )
                 .navigationTitle(plannerStartOfDay.dynamicHeader)
                 .navigationSubtitle(subtitle)
@@ -214,11 +184,6 @@ struct ExpandedPlannerView: View {
                     in: namespace
                 )
             )
-        }
-
-        // Pass the custom toggler to the planner manager.
-        .onAppear {
-            plannerManager.setToggleItem(togglePlannerEvent)
         }
 
         .environmentObject(plannerManager)
@@ -348,7 +313,7 @@ struct ExpandedPlannerView: View {
                     for event in selectedEvents {
                         if let calEvent = event.calendarEvent {
                             // Delete from device calendar.
-                            calendarStore.delete(event: calEvent)
+                            calendarStore.ekEventStore.deleteEvent(calEvent)
                         } else {
                             plannerOnlyEvents.append(event)
                         }
@@ -397,7 +362,7 @@ struct ExpandedPlannerView: View {
             namespace: namespace,
             settings: settings,
             location: plannerLocation,
-            storageEvents: storageEvents,
+            sortedPlannerEvents: sortedPlannerEvents,
             openCalendarEventSheet: { calEvent in
                 eventSheetContext =
                     EventSheetContext(
@@ -466,16 +431,16 @@ struct ExpandedPlannerView: View {
                     message: "Hiding only affects visibility in this planner.",
                     needsConfirmation: { event in
                         event.calendarEvent != nil
-                            && !settings.isPlannerEventChecked(
-                                event
-                            )
+                        && !event.isChecked
                     },
                     actions: [
                         ConfirmationAction(
                             title: "Hide",
                             role: nil
                         ) { event in
-                            _ = settings.toggleEvent(event)
+                            event.isChecked = true
+                            
+                            // TODO: save context
                         },
 
                         ConfirmationAction(
@@ -486,7 +451,7 @@ struct ExpandedPlannerView: View {
                                 return
                             }
 
-                            calendarStore.delete(event: calEvent)
+                            calendarStore.ekEventStore.deleteEvent(calEvent)
                             refreshCalendar()
                         },
                     ]
@@ -525,8 +490,7 @@ struct ExpandedPlannerView: View {
             from: from,
             to: to,
             startOfDay: plannerStartOfDay,
-            events: sortedOpenPlannerEvents,
-            settings: settings
+            events: sortedOpenPlannerEvents
         )
     }
 
@@ -585,13 +549,6 @@ struct ExpandedPlannerView: View {
                 plannerEvent: event,
                 calendarEvent: nil
             )
-    }
-
-    private func togglePlannerEvent(_ event: PlannerEvent) -> Bool {
-        return modelContext.togglePlannerEvent(
-            event,
-            settings: settings
-        )
     }
 
 }

@@ -13,8 +13,6 @@ import SwiftData
 @Model
 class PlannerEvent: ListItem {
 
-    // Controlled by the EventModal.
-    // Any changes to this value will overwrite the sortDate.
     var date: Date
 
     // Controlled by drag-and-drop.
@@ -30,21 +28,28 @@ class PlannerEvent: ListItem {
 
     @Transient
     var calendarEvent: EKEvent?
+    
+    var calendarItemExternalIdentifier: String?
 
     init(
         date: Date,
         sortDate: Date,
         calendarEvent: EKEvent? = nil,
     ) {
-
-        let initialDate = calendarEvent?.startDate ?? date
-
-        self.date = initialDate
+        self.date = date
         self.sortDate = sortDate
 
         super.init(sortIndex: 0)
+        
+        // Handle calendar event synchronization.
+        if let calendarEvent {
+            self.date = calendarEvent.startDate
+            self.calendarEvent = calendarEvent
+            self.title = calendarEvent.title
+            self.calendarItemExternalIdentifier = calendarEvent.calendarItemExternalIdentifier
+            self.location = calendarEvent.location(storageEvent: nil)
+            self.hasTime = true
+        }
 
-        self.calendarEvent = calendarEvent
-        self.title = calendarEvent?.title ?? ""
     }
 }

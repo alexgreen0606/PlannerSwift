@@ -8,6 +8,7 @@
 import SwiftData
 import SwiftDate
 import SwiftUI
+import EventKit
 
 struct PlannerEventBuilderView: View {
     private let planner: Planner
@@ -38,7 +39,7 @@ struct PlannerEventBuilderView: View {
 
         let startOfNextDay = (startOfDay + 1.days)
 
-        _storageEvents = Query(
+        _sortedPlannerEvents = Query(
             filter: #Predicate<PlannerEvent> { event in
                 if !event.hasTime {
                     return event.date == startOfDay.date
@@ -46,7 +47,8 @@ struct PlannerEventBuilderView: View {
                     return event.date >= startOfDay.date &&
                            event.date < startOfNextDay.date
                 }
-            }
+            },
+            sort: \.sortDate
         )
 
         self.plannerStartOfDay = startOfDay
@@ -57,10 +59,9 @@ struct PlannerEventBuilderView: View {
     @EnvironmentObject private var weatherStore: WeatherStore
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
-    @Query private var storageEvents: [PlannerEvent]
+    @Query private var sortedPlannerEvents: [PlannerEvent]
 
-    @State private var calendarData: PlannerCalendarData? = nil
-    @State private var calendarPlannerEvents: [PlannerEvent] = []
+    @State private var allDayEvents: [EKEvent] = []
 
     private var plannerLocation: Location? {
         planner.location(
@@ -71,13 +72,6 @@ struct PlannerEventBuilderView: View {
 
     private var plannerRegion: Region {
         planner.region(settings: settings)
-    }
-
-    private var allSortedPlannerEvents: [PlannerEvent] {
-        (storageEvents + calendarPlannerEvents)
-            .sorted {
-                $0.sortDate < $1.sortDate
-            }
     }
 
     var body: some View {
@@ -118,29 +112,25 @@ struct PlannerEventBuilderView: View {
 
     @ViewBuilder
     private var expandedView: some View {
-        if let calendarData {
             ExpandedPlannerView(
                 planner: planner,
                 plannerStartOfDay: plannerStartOfDay,
                 plannerLocation: plannerLocation,
-                storageEvents: storageEvents,
-                allSortedPlannerEvents: allSortedPlannerEvents,
-                calendarData: calendarData,
+                sortedPlannerEvents: sortedPlannerEvents,
+                allDayEvents: allDayEvents,
                 settings: settings
             )
-        }
     }
 
     @ViewBuilder
     private var previewView: some View {
-        if let previewType, let calendarData, let namespace {
+        if let previewType, let namespace {
             PlannerPreviewView(
                 planner: planner,
                 plannerStartOfDay: plannerStartOfDay,
                 plannerLocation: plannerLocation,
-                storageEvents: storageEvents,
-                calendarPlannerEvents: calendarPlannerEvents,
-                calendarData: calendarData,
+                sortedPlannerEvents: sortedPlannerEvents,
+                allDayEvents: allDayEvents,
                 settings: settings,
                 type: previewType
             )
@@ -148,35 +138,17 @@ struct PlannerEventBuilderView: View {
                 id: planner.datestamp,
                 in: namespace
             )
-
-            // Rebuild the calendar events when their positions change.
-            .onChange(of: settings.calendarSortDateMap) { _, _ in
-                buildCalendarPlannerEvents(calendarData: calendarData)
-            }
         }
     }
 
     private func loadCalendarData() {
-
-        let calendarData = calendarStore.loadPlannerData(
+        allDayEvents = calendarStore.syncCalendarEvents(
             for: planner,
+            storageEvents: sortedPlannerEvents,
             plannerStartOfDay: plannerStartOfDay,
-            hiddenCalendarIds: settings.hiddenCalendarIds
+            hiddenCalendarIds: settings.hiddenCalendarIds,
+            modelContext: modelContext
         )
-
-        buildCalendarPlannerEvents(calendarData: calendarData)
-
-        self.calendarData = calendarData
-    }
-
-    private func buildCalendarPlannerEvents(calendarData: PlannerCalendarData) {
-        calendarPlannerEvents =
-            modelContext.buildCalendarPlannerEvents(
-                calendarEvents: calendarData.timedEvents,
-                storageEvents: storageEvents,
-                startOfDay: plannerStartOfDay,
-                settings: settings,
-            )
     }
 
     private func loadWeatherData() {
@@ -187,4 +159,5 @@ struct PlannerEventBuilderView: View {
             )
         }
     }
+    
 }

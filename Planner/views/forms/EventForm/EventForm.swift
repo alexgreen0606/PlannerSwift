@@ -369,43 +369,19 @@ struct EventFormView: View {
     }
 
     private func savePlannerEvent() {
-
-        // Add the default location to the event if the event is timed and has no location.
-        if draftPlannerEvent.hasTime && draftPlannerEvent.location == nil {
-            assertionFailure(
-                "ERROR EventForm.savePlannerEvent: Event must have a location when a time is selected."
-            )
-        }
-
-        let targetDatestamp = DateInRegion(
-            draftPlannerEvent.date,
-            region: eventRegion
-        ).datestamp
-
         modelContext.handlePlannerEventChange(
             draftPlannerEvent,
             previousDatestamp: sourcePlanner?.datestamp,
-            targetDatestamp: targetDatestamp,
+            targetDatestamp: DateInRegion(
+                draftPlannerEvent.date,
+                region: eventRegion
+            ).datestamp,
             settings: settings,
+            ekEventStore: calendarStore.ekEventStore,
             initialPlannerEvent: initialPlannerEvent,
-            initialCalendarEvent: initialCalendarEvent,
-            loadCalendarData: calendarStore.loadPlannerData
+            initialCalendarEvent: initialCalendarEvent
         )
-
-        if let initialCalendarEvent {
-
-            // Delete the original calendar event and refresh the store.
-
-            calendarStore.delete(event: initialCalendarEvent)
-
-            calendarStore.loadFreshCache(
-                hiddenCalendarIds: settings.hiddenCalendarIds
-            )
-
-        }
-
         dismiss()
-
     }
 
     // MARK: - Calendar Event Form
@@ -422,7 +398,7 @@ struct EventFormView: View {
                     return
                 }
 
-                handleCalendarEventChange(event)
+                saveCalendarEvent(event)
             }
             .tint(accentColor.swiftUIColor)
             .ignoresSafeArea()
@@ -444,27 +420,29 @@ struct EventFormView: View {
         }
     }
 
-    private func handleCalendarEventChange(_ event: EKEvent?) {
+    private func saveCalendarEvent(_ event: EKEvent?) {
 
         modelContext.handleCalendarEventChange(
             event,
+            previousDatestamp: sourcePlanner?.datestamp,
             initialPlannerEvent: initialPlannerEvent,
-            settings: settings
+            settings: settings,
+            ekEventStore: calendarStore.ekEventStore
         )
 
-        reloadGlobalCalendarData()
-
+        // TODO: should I refresh calendar in case of recurring changes?
+        
         dismiss()
     }
 
     // MARK: - Helper Functions
 
     // Deletes stale planner event and reloads the calendar.
-    private func reloadGlobalCalendarData() {
-        calendarStore.loadFreshCache(
-            hiddenCalendarIds: settings.hiddenCalendarIds
-        )
-    }
+//    private func reloadGlobalCalendarData() {
+//        calendarStore.loadFreshCache(
+//            hiddenCalendarIds: settings.hiddenCalendarIds
+//        )
+//    }
 
     private func addEventToCalendar() {
 

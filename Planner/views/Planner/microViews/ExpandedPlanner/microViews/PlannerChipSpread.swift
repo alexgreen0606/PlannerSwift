@@ -20,7 +20,7 @@ struct PlannerChipSpreadView: View {
     var namespace: Namespace.ID
     let settings: PlannerSettings
     let location: Location?
-    let storageEvents: [PlannerEvent]
+    let sortedPlannerEvents: [PlannerEvent]
     let openCalendarEventSheet: (EKEvent) -> Void
     let weatherUnit: UnitTemperature =
         Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
@@ -89,7 +89,7 @@ struct PlannerChipSpreadView: View {
                     for: planner,
                     location: location,
                     settings: settings,
-                    storageEvents: storageEvents
+                    plannerEvents: sortedPlannerEvents
                 )
             }
             .navigationTransition(

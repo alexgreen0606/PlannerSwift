@@ -11,6 +11,8 @@ import SwiftUI
 
 typealias StatusGuard<Item> = (_ item: Item) -> Bool
 
+// TODO: may be able to move custom logic assuming Routines work without it
+
 @MainActor
 final class ListManager<Item: ListItem>: ObservableObject {
     private var toggleItem: StatusGuard<Item>?

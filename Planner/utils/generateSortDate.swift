@@ -13,8 +13,7 @@ import SwiftUI
 func generateSortDate(
     startOfDay: DateInRegion,
     index: Int,
-    events: [PlannerEvent],
-    settings: PlannerSettings
+    events: [PlannerEvent]
 ) -> Date {
     
     let dayStart = startOfDay.date
@@ -36,8 +35,7 @@ func generateSortDate(
         // Interval too small → normalize all events
         normalizeSortDates(
             events: events,
-            startOfDay: startOfDay,
-            settings: settings
+            startOfDay: startOfDay
         )
 
         // Recalculate after normalization
@@ -56,8 +54,7 @@ private func midpoint(between a: Date, and b: Date) -> Date {
 @MainActor
 private func normalizeSortDates(
     events: [PlannerEvent],
-    startOfDay: DateInRegion,
-    settings: PlannerSettings
+    startOfDay: DateInRegion
 ) {
     guard !events.isEmpty else { return }
 
@@ -69,11 +66,5 @@ private func normalizeSortDates(
 
     for (i, event) in events.enumerated() {
         event.sortDate = dayStart.addingTimeInterval(increment * Double(i + 1))
-
-        if let calEvent = event.calendarEvent {
-            settings.calendarSortDateMap[
-                calEvent.calendarItemExternalIdentifier
-            ] = event.sortDate
-        }
     }
 }
