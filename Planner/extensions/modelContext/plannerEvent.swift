@@ -62,54 +62,6 @@ extension ModelContext {
         return newEvent.stableId
     }
 
-    @MainActor
-    func addCalendarEventToPlanner(
-        _ calendarEvent: EKEvent,
-        plannerStartOfDay: DateInRegion
-    ) {
-
-        guard
-            let calendarItemExternalIdentifier = calendarEvent
-                .calendarItemExternalIdentifier
-        else {
-            assertionFailure(
-                "ERROR plannerEvent.addCalendarEventToPlanner: Calendar event does not have an external identifier."
-            )
-            return
-        }
-
-        let descriptor = FetchDescriptor<PlannerEvent>(
-            predicate: #Predicate<PlannerEvent> {
-                if let calId = $0.calendarItemExternalIdentifier {
-                    return calId == calendarItemExternalIdentifier
-                } else {
-                    return false
-                }
-            }
-        )
-
-        do {
-            let storageEvents = try fetch(descriptor)
-
-            guard let storageEvent = storageEvents.first else {
-                createCalendarPlannerEvent(
-                    for: calendarEvent,
-                    in: plannerStartOfDay
-                )
-                return
-            }
-
-            storageEvent.syncWithCalendarEvent(calendarEvent)
-            storageEvent.sortDate = getUpperSortDate(for: plannerStartOfDay)
-
-        } catch {
-            createCalendarPlannerEvent(
-                for: calendarEvent,
-                in: plannerStartOfDay
-            )
-        }
-    }
-
     // TODO: what about calendar events?
     @MainActor
     func deleteStorageEvents(_ events: [PlannerEvent]) {
@@ -144,6 +96,138 @@ extension ModelContext {
                 "ERROR plannerEvent.deleteCheckedStorageEvents: \(error)"
             )
         }
+    }
+    
+    // MARK: - Calendar Event Synchronization
+    
+    // Returns a list of all-day events.
+    // Timed events will be synced to the store.
+    @MainActor
+    func syncCalendarEvents(
+        for planner: Planner,
+        storageEvents: [PlannerEvent],
+        plannerStartOfDay: DateInRegion,
+        hiddenCalendarIds: Set<String>,
+        ekEventStore: EKEventStore
+    ) -> [EKEvent] {
+            
+            print("debug | ----- START -- \(plannerStartOfDay.dynamicHeader) -- START -----")
+            
+            for e in storageEvents {
+                print("debug | \(e.title)")
+            }
+            
+            let plannerRegion = plannerStartOfDay.region
+            let plannerDatestamp = planner.datestamp
+            let startOfNextPlannerDay = plannerStartOfDay + 1.days
+            
+            let predicate = ekEventStore.predicateForEvents(
+                withStart: plannerStartOfDay.date,
+                end: startOfNextPlannerDay.date,
+                calendars: nil
+            )
+            
+            var existingStorageCalendarEvents: [String: PlannerEvent] = [:]
+            for event in storageEvents
+            where event.calendarItemExternalIdentifier != nil {
+                existingStorageCalendarEvents[
+                    event.calendarItemExternalIdentifier!
+                ] = event
+            }
+            
+            // Updates the calendar event if it exists in this planner, otherwise it is added in.
+            func upsertCalendarEvent(_ calendarEvent: EKEvent) {
+                guard
+                    let storageEvent = existingStorageCalendarEvents[
+                        calendarEvent.calendarItemExternalIdentifier
+                    ]
+                else {
+                    addCalendarEventToPlanner(
+                        calendarEvent,
+                        plannerStartOfDay: plannerStartOfDay
+                    )
+                    return
+                }
+                
+                existingStorageCalendarEvents.removeValue(
+                    forKey: calendarEvent.calendarItemExternalIdentifier
+                )
+                
+                storageEvent.syncWithCalendarEvent(calendarEvent)
+            }
+            
+            // Sort events in reverse order so they are chronological at the top of their planners.
+            let events = ekEventStore.events(matching: predicate).sorted {
+                $0.startDate > $1.startDate
+            }
+            
+            var allDayEvents: [EKEvent] = []
+            
+            for event in events {
+                
+                print("debug | Evaluating: \(event.title) in \(plannerStartOfDay.date)")
+                
+                if hiddenCalendarIds.contains(event.calendar.calendarIdentifier) {
+                    continue
+                }
+                
+                if event.isAllDay {
+                    allDayEvents.append(event)
+                    
+                    if let storageEvent = existingStorageCalendarEvents[
+                        event.calendarItemExternalIdentifier
+                    ] {
+                        // The event was previously timed. Remove it from this planner.
+                        delete(storageEvent)
+                        
+                        existingStorageCalendarEvents.removeValue(
+                            forKey: event.calendarItemExternalIdentifier
+                        )
+                    }
+                } else {
+                    
+                    let startDatestamp = DateInRegion(
+                        event.startDate,
+                        region: plannerRegion
+                    ).datestamp
+                    let endDatestamp = DateInRegion(
+                        event.endDate,
+                        region: plannerRegion
+                    ).datestamp
+                    
+                    if startDatestamp != endDatestamp {
+                        
+                        // Event is multi-day.
+                        allDayEvents.append(event)
+                        
+                        if startDatestamp == plannerDatestamp {
+                            
+                            // This is the first day of the event.
+                            upsertCalendarEvent(event)
+                            
+                        }
+                        
+                    } else {
+                        upsertCalendarEvent(event)
+                    }
+                    
+                }
+            }
+            
+            // Update any stale calendar events from this planner.
+            updateStorageEvents(
+                Array(existingStorageCalendarEvents.values),
+                ekEventStore: ekEventStore
+            )
+            
+            do {
+                try save()
+            } catch {
+                assertionFailure("ERROR plannerEvent.syncCalendarEvents: \(error)")
+            }
+            
+            print("debug | ----- END -- \(plannerStartOfDay.dynamicHeader) -- END -----")
+            return allDayEvents
     }
 
     // MARK: - List Handlers
@@ -262,7 +346,7 @@ extension ModelContext {
                 event.date = event.date + days
             }
 
-            event.sortDate = getUpperSortDateIfNewToPlanner(
+            event.sortDate = getSortDate(
                 for: event,
                 settings: settings,
                 previousPlannerDatestamp: previousDatestamp
@@ -328,7 +412,7 @@ extension ModelContext {
         event.hasTime = draftPlannerEvent.hasTime
         event.calendarEvent = nil
         event.location = draftPlannerEvent.location
-        event.sortDate = getUpperSortDateIfNewToPlanner(
+        event.sortDate = getSortDate(
             for: event,
             settings: settings,
             previousPlannerDatestamp: previousDatestamp
@@ -361,7 +445,7 @@ extension ModelContext {
             }
 
             initialPlannerEvent.syncWithCalendarEvent(calendarEvent)
-            initialPlannerEvent.sortDate = getUpperSortDateIfNewToPlanner(
+            initialPlannerEvent.sortDate = getSortDate(
                 for: initialPlannerEvent,
                 settings: settings,
                 previousPlannerDatestamp: previousDatestamp
@@ -369,20 +453,12 @@ extension ModelContext {
 
         } else if let calendarEvent {
 
-            let plannerStartOfDay: DateInRegion? = {
-                guard
-                    let (planner, plannerStartOfDay) = getEarliestPlanner(
-                        for: calendarEvent.startDate,
-                        settings: settings
-                    )
-                else {
-                    return nil
-                }
-                return plannerStartOfDay
-            }()
             createCalendarPlannerEvent(
                 for: calendarEvent,
-                in: plannerStartOfDay
+                in: getEarliestPlannerStartOfDay(
+                    for: calendarEvent.startDate,
+                    settings: settings
+                )
             )
 
         }
@@ -397,6 +473,121 @@ extension ModelContext {
     }
 
     // MARK: - Helper Functions
+    
+    // ---------- Calendar Event Helpers ----------
+    
+    @MainActor
+    private func createCalendarPlannerEvent(
+        for calendarEvent: EKEvent,
+        in plannerStartOfDay: DateInRegion?
+    ) {
+
+        let sortDate = {
+            if let plannerStartOfDay {
+                return self.getUpperSortDate(for: plannerStartOfDay)
+            }
+            return calendarEvent.startDate
+        }()
+
+        let event = PlannerEvent(
+            date: calendarEvent.startDate,
+            sortDate: sortDate,
+            calendarEvent: calendarEvent
+        )
+
+        print("debug | Creating new event for \(calendarEvent.title)")
+        insert(event)
+
+        // Note: Don't save the context. This function is part of a larger pipeline.
+    }
+    
+    @MainActor
+    private func addCalendarEventToPlanner(
+        _ calendarEvent: EKEvent,
+        plannerStartOfDay: DateInRegion
+    ) {
+        
+        if calendarEvent.occurrenceId != nil {
+            createCalendarPlannerEvent(
+                for: calendarEvent,
+                in: plannerStartOfDay
+            )
+            return
+        }
+
+        guard
+            let calendarItemExternalIdentifier = calendarEvent
+                .calendarItemExternalIdentifier
+        else {
+            assertionFailure(
+                "ERROR plannerEvent.addCalendarEventToPlanner: Calendar event does not have an external identifier."
+            )
+            return
+        }
+
+        let descriptor = FetchDescriptor<PlannerEvent>(
+            predicate: #Predicate<PlannerEvent> {
+                if let calId = $0.calendarItemExternalIdentifier {
+                    return calId == calendarItemExternalIdentifier
+                } else {
+                    return false
+                }
+            }
+        )
+
+        do {
+            let storageEvents = try fetch(descriptor)
+            
+            guard let storageEvent = storageEvents.first else {
+                createCalendarPlannerEvent(
+                    for: calendarEvent,
+                    in: plannerStartOfDay
+                )
+                return
+            }
+            
+            storageEvent.syncWithCalendarEvent(calendarEvent)
+            storageEvent.sortDate = getUpperSortDate(for: plannerStartOfDay)
+
+        } catch {
+            createCalendarPlannerEvent(
+                for: calendarEvent,
+                in: plannerStartOfDay
+            )
+        }
+    }
+    
+    @MainActor
+    private func updateStorageEvents(
+        _ storageEvents: [PlannerEvent],
+        ekEventStore: EKEventStore
+    ) {
+        for storageEvent in storageEvents {
+            
+            guard
+                let externalIdentifier = storageEvent
+                    .calendarItemExternalIdentifier
+            else {
+                // Skip event if it is not linked to a calendar event.
+                continue
+            }
+            
+            guard
+                let calendarEvent = ekEventStore.calendarItems(
+                    withExternalIdentifier: externalIdentifier
+                ).first as? EKEvent,
+                calendarEvent.isAllDay == false,
+                calendarEvent.occurrenceId == nil
+            else {
+                delete(storageEvent)
+                continue
+            }
+
+            storageEvent.syncWithCalendarEvent(calendarEvent)
+        }
+    }
+    
+    // ---------- Planner Event Helpers ----------
 
     @MainActor
     private func getSortedStorageEvents(for plannerStartOfDay: DateInRegion)
@@ -427,7 +618,7 @@ extension ModelContext {
     }
 
     @MainActor
-    private func getUpperSortDateIfNewToPlanner(
+    private func getSortDate(
         for event: PlannerEvent,
         settings: PlannerSettings,
         previousPlannerDatestamp: String? = nil
@@ -444,7 +635,7 @@ extension ModelContext {
         }
 
         guard
-            let (planner, plannerStartOfDay) = getEarliestPlanner(
+            let plannerStartOfDay = getEarliestPlannerStartOfDay(
                 for: event.date,
                 settings: settings
             )
@@ -458,6 +649,7 @@ extension ModelContext {
         )
         .filter { $0.stableId != event.stableId }
 
+        // Place the event at the start of its new planner.
         return generateSortDate(
             startOfDay: plannerStartOfDay,
             index: 0,
@@ -476,34 +668,10 @@ extension ModelContext {
     }
 
     @MainActor
-    private func createCalendarPlannerEvent(
-        for calendarEvent: EKEvent,
-        in plannerStartOfDay: DateInRegion?
-    ) {
-
-        let sortDate = {
-            if let plannerStartOfDay {
-                return self.getUpperSortDate(for: plannerStartOfDay)
-            }
-            return calendarEvent.startDate
-        }()
-
-        let event = PlannerEvent(
-            date: calendarEvent.startDate,
-            sortDate: sortDate,
-            calendarEvent: calendarEvent
-        )
-
-        insert(event)
-
-        // Note: Don't save the context. This function is part of a larger pipeline.
-    }
-
-    @MainActor
-    private func getEarliestPlanner(
+    private func getEarliestPlannerStartOfDay(
         for date: Date,
         settings: PlannerSettings
-    ) -> (planner: Planner, plannerStartOfDay: DateInRegion)? {
+    ) -> DateInRegion? {
 
         let chronologicalPossibleDatestamps =
             getChronologicalPossibleDatestamps(for: date)
@@ -524,7 +692,7 @@ extension ModelContext {
             }
 
             if date.belongsTo(plannerStartOfDay) {
-                return (planner: planner, plannerStartOfDay: plannerStartOfDay)
+                return plannerStartOfDay
             }
         }
 

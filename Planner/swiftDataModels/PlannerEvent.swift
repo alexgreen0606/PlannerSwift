@@ -30,6 +30,9 @@ class PlannerEvent: ListItem {
     var calendarEvent: EKEvent?
     
     var calendarItemExternalIdentifier: String?
+    
+    // Uniquely identifies recurring event occurences (Calendar Events only).
+    var occurrenceId: String?
 
     init(
         date: Date,
@@ -47,6 +50,7 @@ class PlannerEvent: ListItem {
             self.calendarEvent = calendarEvent
             self.title = calendarEvent.title
             self.calendarItemExternalIdentifier = calendarEvent.calendarItemExternalIdentifier
+            self.occurrenceId = calendarEvent.occurrenceId
             self.location = calendarEvent.location(storageEvent: nil)
             self.hasTime = true
         }

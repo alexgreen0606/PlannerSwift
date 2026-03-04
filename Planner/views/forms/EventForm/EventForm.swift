@@ -43,6 +43,8 @@ struct EventFormView: View {
 
         if let calEvent = plannerEvent?.calendarEvent ?? calendarEvent {
 
+            print("debug | \(calEvent.startDate.date)")
+
             // ----------------------------------------------------------
             // Initialize the calendar event form.
             // Carry calendar event data over to the draft planner event.
@@ -51,24 +53,9 @@ struct EventFormView: View {
             draftPlannerEvent.title = calEvent.title
             draftPlannerEvent.date = calEvent.startDate
             draftPlannerEvent.hasTime = true
-
-            // Build a location object for the draft if the calendar event has a location.
-            if let structuredLocation = calEvent.structuredLocation,
-                let latitude = structuredLocation.geoLocation?.coordinate
-                    .latitude,
-                let longitude = structuredLocation.geoLocation?.coordinate
-                    .longitude, let locationLabel = calEvent.location
-            {
-
-                draftPlannerEvent.location = Location(
-                    name: locationLabel,
-                    latitude: latitude,
-                    longitude: longitude,
-                    timeZoneIdentifier: calEvent.timeZone?.identifier
-                        ?? Region.local.timeZone.identifier
-                )
-
-            }
+            draftPlannerEvent.location = calEvent.location(
+                storageEvent: initialPlannerEvent
+            )
 
             // Max out the sheet height if this event can be edited.
             if calEvent.calendar.allowsContentModifications {
@@ -204,7 +191,7 @@ struct EventFormView: View {
     }
 
     private var isLocationValid: Bool {
-        !draftPlannerEvent.hasTime || draftPlannerEvent.location != nil
+        !(draftPlannerEvent.hasTime && draftPlannerEvent.location == nil)
     }
 
     private var eventRegion: Region {
@@ -280,7 +267,6 @@ struct EventFormView: View {
                         )
                 }
 
-                // Section {
                 Section {
                     NavigationLink {
                         LocationSearchView(
@@ -294,33 +280,33 @@ struct EventFormView: View {
                         }
                     } label: {
                         HStack {
-                            
+
                             Text("Location")
-                            
+
                             Spacer()
-                            
+
                             Text(
                                 draftPlannerEvent.location != nil
-                                ? draftPlannerEvent.locationLabel(
-                                    planner: sourcePlanner,
-                                    settings: settings,
-                                    deviceLocation:
-                                        deviceLocationManager
-                                        .location
-                                ) : "Select a location"
+                                    ? draftPlannerEvent.locationLabel(
+                                        planner: sourcePlanner,
+                                        settings: settings,
+                                        deviceLocation:
+                                            deviceLocationManager
+                                            .location
+                                    ) : "Select a location"
                             )
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
-                            
+
                         }
                     }
                     .disabled(defaultLocation == nil)
                 } footer: {
                     if draftPlannerEvent.hasTime,
-                       draftPlannerEvent.location != nil
+                        draftPlannerEvent.location != nil
                     {
                         let timeZoneAbbreviation =
-                        draftPlannerEvent
+                            draftPlannerEvent
                             .region(
                                 planner: sourcePlanner,
                                 settings: settings,
@@ -329,7 +315,7 @@ struct EventFormView: View {
                             )
                             .timeZone
                             .abbreviation() ?? "Unknown Time Zone"
-                        
+
                         Text("Time Zone: \(timeZoneAbbreviation)")
                     }
                 }
@@ -369,6 +355,7 @@ struct EventFormView: View {
     }
 
     private func savePlannerEvent() {
+
         modelContext.handlePlannerEventChange(
             draftPlannerEvent,
             previousDatestamp: sourcePlanner?.datestamp,
@@ -381,6 +368,12 @@ struct EventFormView: View {
             initialPlannerEvent: initialPlannerEvent,
             initialCalendarEvent: initialCalendarEvent
         )
+
+        // Refresh calendar in case of recurring events.
+        DispatchQueue.main.async {
+            reloadCalendarData()
+        }
+
         dismiss()
     }
 
@@ -430,19 +423,21 @@ struct EventFormView: View {
             ekEventStore: calendarStore.ekEventStore
         )
 
-        // TODO: should I refresh calendar in case of recurring changes?
-        
+        // Refresh calendar in case of recurring events.
+        DispatchQueue.main.async {
+            reloadCalendarData()
+        }
+
         dismiss()
     }
 
     // MARK: - Helper Functions
 
-    // Deletes stale planner event and reloads the calendar.
-//    private func reloadGlobalCalendarData() {
-//        calendarStore.loadFreshCache(
-//            hiddenCalendarIds: settings.hiddenCalendarIds
-//        )
-//    }
+    private func reloadCalendarData() {
+        calendarStore.loadFreshCache(
+            hiddenCalendarIds: settings.hiddenCalendarIds
+        )
+    }
 
     private func addEventToCalendar() {
 

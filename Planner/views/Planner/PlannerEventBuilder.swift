@@ -142,13 +142,24 @@ struct PlannerEventBuilderView: View {
     }
 
     private func loadCalendarData() {
-        allDayEvents = calendarStore.syncCalendarEvents(
+        
+        let plannerKey = planner.key
+
+        // Return cached data.
+        if let existingData = calendarStore.cache[plannerKey] {
+            allDayEvents = existingData
+            return
+        }
+        
+        allDayEvents = modelContext.syncCalendarEvents(
             for: planner,
             storageEvents: sortedPlannerEvents,
             plannerStartOfDay: plannerStartOfDay,
             hiddenCalendarIds: settings.hiddenCalendarIds,
-            modelContext: modelContext
+            ekEventStore: calendarStore.ekEventStore
         )
+        
+        calendarStore.cache[plannerKey] = allDayEvents
     }
 
     private func loadWeatherData() {

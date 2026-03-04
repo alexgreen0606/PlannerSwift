@@ -15,6 +15,21 @@ extension EKEvent {
         "\(String(describing: self.eventIdentifier))"
     }
 
+    // Uniquely identifies occurrences of recurring events.
+    var occurrenceId: String? {
+        guard
+            hasRecurrenceRules,
+            let externalId = calendarItemExternalIdentifier
+        else {
+            return nil
+        }
+
+        let dateInRegion = DateInRegion(startDate, region: .UTC)
+        let startString = dateInRegion.toISO()
+
+        return "\(externalId)_\(startString)"
+    }
+
     func dateInRegion(region: Region) -> DateInRegion {
         DateInRegion(self.startDate, region: region)
     }
@@ -23,13 +38,14 @@ extension EKEvent {
         plannerRegion: Region,
         plannerLocationLabel: String
     ) -> (location: String?, time: String?)? {
-        
+
         let locationTitle = structuredLocation?.title
 
         let location: String? =
             if let title = locationTitle,
-               !title.isEmpty,
-               title != plannerLocationLabel {
+                !title.isEmpty,
+                title != plannerLocationLabel
+            {
                 title
             } else {
                 nil
@@ -39,8 +55,9 @@ extension EKEvent {
         var timeString: String? = nil
         let eventRegion = region(fallback: plannerRegion)
 
-        if eventRegion.timeZone.identifier != plannerRegion.timeZone.identifier {
-            
+        if eventRegion.timeZone.identifier != plannerRegion.timeZone.identifier
+        {
+
             let dateInRegion = DateInRegion(startDate, region: eventRegion)
             timeString = dateInRegion.timeWithTimezone
         }
@@ -90,7 +107,7 @@ extension EKEvent {
             return fallback
         }
     }
-    
+
     func location(
         storageEvent: PlannerEvent? = nil
     ) -> Location? {

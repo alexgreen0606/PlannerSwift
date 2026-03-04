@@ -33,7 +33,7 @@ struct PreviewCalendarEventListView: View {
                             .font(.system(size: 14, weight: .medium))
                     }
                     .foregroundStyle(
-                        calendarStore.calendarColor(for: event.calendar.calendarIdentifier)
+                        event.calendar.color
                     )
                 }
             }

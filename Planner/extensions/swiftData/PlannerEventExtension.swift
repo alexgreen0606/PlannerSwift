@@ -28,7 +28,7 @@ extension PlannerEvent {
             deviceLocation: deviceLocation
         )
     }
-    
+
     func existsInRange(start: Date, end: Date) -> Bool {
         if !hasTime {
             return date == start.date
@@ -120,9 +120,9 @@ extension PlannerEvent {
         self.date = date
 
     }
-    
+
     // MARK: - Calendar Helpers
-    
+
     func syncWithCalendarEvent(_ calendarEvent: EKEvent) {
         self.title = calendarEvent.title
         self.date = calendarEvent.startDate
@@ -130,6 +130,10 @@ extension PlannerEvent {
             storageEvent: self
         )
         self.calendarEvent = calendarEvent
+        self.calendarItemExternalIdentifier =
+            calendarEvent.calendarItemExternalIdentifier
+        self.occurrenceId = calendarEvent.occurrenceId
+        self.hasTime = true
     }
 
     // MARK: - View Builders
