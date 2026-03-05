@@ -7,7 +7,9 @@
 
 import SwiftUI
 
-enum IDConstants {
+// Clean
+
+enum IdConstants {
     static let UNCHECKED_ITEMS: String = "UNCHECKED_ITEMS"
     static let CHECKED_ITEMS: String = "CHECKED_ITEMS"
     static let TRANSFER_BUTTON: String = "TRANSFER_BUTTON"

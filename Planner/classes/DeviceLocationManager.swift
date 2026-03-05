@@ -8,6 +8,8 @@
 import Combine
 import MapKit
 
+// Clean
+
 @MainActor
 final class DeviceLocationManager: NSObject, ObservableObject,
     CLLocationManagerDelegate
@@ -25,21 +27,20 @@ final class DeviceLocationManager: NSObject, ObservableObject,
         refreshTask?.cancel()
     }
 
-    private let manager = CLLocationManager()
-
-    private var refreshTask: Task<Void, Never>?
-
     @Published var deviceClLocation: CLLocation?
-    @Published var location: Location?
-
-    func fetchLocation() {
+    @Published var deviceLocation: Location?
+    
+    private let manager = CLLocationManager()
+    private var refreshTask: Task<Void, Never>?
+    
+    func loadDeviceLocation() {
         manager.requestLocation()
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         switch manager.authorizationStatus {
         case .authorizedWhenInUse, .authorizedAlways:
-            fetchLocation()
+            loadDeviceLocation()
             startPeriodicRefresh()
         case .denied, .restricted:
             print("Location access denied or restricted.")
@@ -72,7 +73,7 @@ final class DeviceLocationManager: NSObject, ObservableObject,
         deviceClLocation = roundedLocation
 
         Task {
-            await reverseGeocode(roundedLocation, coordinate: roundedCoordinate)
+            await buildDeviceLocation(clLocation: roundedLocation, coordinate: roundedCoordinate)
         }
     }
 
@@ -82,18 +83,21 @@ final class DeviceLocationManager: NSObject, ObservableObject,
     ) {
         print("ERROR DeviceLocationManager:", error)
     }
+    
+    // MARK: - Helper Functions
 
+    // Runs every 10 minutes.
     private func startPeriodicRefresh() {
         refreshTask = Task { @MainActor in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(600))
-                fetchLocation()
+                loadDeviceLocation()
             }
         }
     }
 
-    private func reverseGeocode(
-        _ clLocation: CLLocation,
+    private func buildDeviceLocation(
+        clLocation: CLLocation,
         coordinate: CLLocationCoordinate2D
     ) async {
         if let request = MKReverseGeocodingRequest(location: clLocation) {
@@ -103,7 +107,7 @@ final class DeviceLocationManager: NSObject, ObservableObject,
                     let addressInfo = item.addressRepresentations,
                     let city = addressInfo.cityWithContext
                 {
-                    location = Location(
+                    deviceLocation = Location(
                         name: city,
                         subtitle: addressInfo.regionName,
                         latitude: coordinate.latitude,
@@ -112,8 +116,9 @@ final class DeviceLocationManager: NSObject, ObservableObject,
                     )
                 }
             } catch {
-                print("ERROR DeviceLocationManager.reverseGeocode:", error)
+                print("ERROR DeviceLocationManager.buildDeviceLocation:", error)
             }
         }
     }
+    
 }

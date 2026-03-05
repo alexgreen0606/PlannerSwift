@@ -8,6 +8,8 @@
 import SwiftDate
 import SwiftUI
 
+// Clean
+
 enum ToggleTransitionDuration: String, Codable, CaseIterable {
     case twoSeconds
     case threeSeconds
@@ -31,7 +33,7 @@ enum ToggleTransitionDuration: String, Codable, CaseIterable {
         }
     }
 
-    var duration: Duration {
+    var value: Duration {
         switch self {
         case .twoSeconds:
             return .seconds(2)
@@ -42,4 +44,5 @@ enum ToggleTransitionDuration: String, Codable, CaseIterable {
         case .instant: return Duration.zero
         }
     }
+    
 }

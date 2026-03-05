@@ -68,7 +68,7 @@ extension PlannerEvent {
             return calendar.color
         }
 
-        return accentColor.swiftUIColor
+        return accentColor.value
     }
 
     // MARK: - Title Change Helper
@@ -156,7 +156,7 @@ extension PlannerEvent {
             TimeValueView(
                 day: DateInRegion(self.date, region: plannerRegion),
                 disabled: false,
-                color: accentColor.swiftUIColor,
+                color: accentColor.value,
                 scale: 1,
                 openEventSheet: openSheet
             )
@@ -223,7 +223,7 @@ extension PlannerEvent {
             LocationBottomAdornmentView(
                 icon: IconConfig(
                     name: "mappin.and.ellipse",
-                    primaryColor: accentColor.swiftUIColor
+                    primaryColor: accentColor.value
                 ),
                 locationText: locationLabel,
                 timeText: timeString,

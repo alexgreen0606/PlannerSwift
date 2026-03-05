@@ -7,12 +7,14 @@
 
 import SwiftUI
 
+// Clean
+
 enum AppColorScheme: String, CaseIterable {
     case system
     case light
     case dark
 
-    var colorScheme: ColorScheme? {
+    var value: ColorScheme? {
         switch self {
         case .system: return nil
         case .light: return .light

@@ -5,6 +5,8 @@
 //  Created by Alex Green on 1/20/26.
 //
 
+// Clean
+
 enum ChecklistItemType: String, Codable {
     case folder
     case checklist
@@ -17,7 +19,7 @@ enum ChecklistItemType: String, Codable {
         case .item: return "exclamationmark"
         }
     }
-    
+
     var childrenLabel: String {
         self == .checklist ? "items" : "contents"
     }

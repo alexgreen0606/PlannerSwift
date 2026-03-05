@@ -9,20 +9,21 @@ import EventKit
 import Foundation
 import SwiftData
 
+// Clean
+
 @available(iOS 26.0, *)
 @Model
 class PlannerEvent: ListItem {
 
     var date: Date
+    var hasTime: Bool = false
 
     // Controlled by drag-and-drop.
     // May go out of sync with the date.
     var sortDate: Date
-
-    // Default events to generic, untimed events.
-    var hasTime: Bool = false
     
     // MUST exist when hasTime is true.
+    // TODO: Why? Maybe don't require this.
     @Relationship(deleteRule: .nullify)
     var location: Location?
 
@@ -31,8 +32,8 @@ class PlannerEvent: ListItem {
     
     var calendarItemExternalIdentifier: String?
     
-    // Uniquely identifies recurring event occurences (Calendar Events only).
-    var occurrenceId: String?
+    // Uniquely identifies recurring event occurrences (calendar events only).
+    @Attribute(.unique) var occurrenceId: String?
 
     init(
         date: Date,
@@ -44,7 +45,7 @@ class PlannerEvent: ListItem {
 
         super.init(sortIndex: 0)
         
-        // Handle calendar event synchronization.
+        // Calendar event synchronization.
         if let calendarEvent {
             self.date = calendarEvent.startDate
             self.calendarEvent = calendarEvent

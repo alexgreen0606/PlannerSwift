@@ -66,7 +66,7 @@ struct PlannerEventBuilderView: View {
     private var plannerLocation: Location? {
         planner.location(
             settings: settings,
-            deviceLocation: deviceLocationManager.location
+            deviceLocation: deviceLocationManager.deviceLocation
         )
     }
 
@@ -85,14 +85,14 @@ struct PlannerEventBuilderView: View {
 
         // Calendar data tracking.
         .externalData(
-            key: calendarStore.loadTrigger,
+            key: calendarStore.reloadTrigger,
             ready: true,
             load: loadCalendarData
         )
 
         // Weather data tracking.
         .externalData(
-            key: weatherStore.loadTrigger,
+            key: weatherStore.reloadTrigger,
             ready: true,
             load: loadWeatherData
         )
@@ -146,7 +146,7 @@ struct PlannerEventBuilderView: View {
         let plannerKey = planner.key
 
         // Return cached data.
-        if let existingData = calendarStore.cache[plannerKey] {
+        if let existingData = calendarStore.allDayEventsByPlannerKey[plannerKey] {
             allDayEvents = existingData
             return
         }
@@ -159,7 +159,7 @@ struct PlannerEventBuilderView: View {
             ekEventStore: calendarStore.ekEventStore
         )
         
-        calendarStore.cache[plannerKey] = allDayEvents
+        calendarStore.storeAllDayEvents(allDayEvents, plannerKey: plannerKey)
     }
 
     private func loadWeatherData() {

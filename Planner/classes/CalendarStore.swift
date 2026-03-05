@@ -11,6 +11,8 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
+// Clean
+
 @MainActor
 class CalendarStore: ObservableObject {
 
@@ -18,12 +20,15 @@ class CalendarStore: ObservableObject {
         KeepPastPlansDuration =
             KeepPastPlansDuration.oneMonth
 
+    @Published private(set) var allDayEventsByPlannerKey: [String: [EKEvent]] =
+        [:]
+    @Published private(set) var calendarAccessDenied: Bool = true
+
+    // Tells views to re-load their calendar data.
+    @Published private(set) var reloadTrigger: UUID? = nil
+
     private let eventStore = EKEventStore()
     private var calendarsById: [String: EKCalendar] = [:]
-    
-    @Published  var cache: [String: [EKEvent]] = [:]
-    @Published var loadTrigger: UUID = UUID()
-    @Published var accessDenied: Bool = true
 
     var ekEventStore: EKEventStore {
         eventStore
@@ -37,13 +42,15 @@ class CalendarStore: ObservableObject {
             }
     }
 
-    func loadFreshCache(
-        hiddenCalendarIds: Set<String>
-    ) {
+    func storeAllDayEvents(_ allDayEvents: [EKEvent], plannerKey: String) {
+        allDayEventsByPlannerKey[plannerKey] = allDayEvents
+    }
+
+    func attemptFreshReload(hiddenCalendarIds: Set<String>) {
         switch EKEventStore.authorizationStatus(for: .event) {
         case .authorized:
-            accessDenied = false
-            beginCacheRefresh(
+            calendarAccessDenied = false
+            beginFreshReload(
                 hiddenCalendarIds: hiddenCalendarIds
             )
         case .notDetermined:
@@ -51,7 +58,7 @@ class CalendarStore: ObservableObject {
                 hiddenCalendarIds: hiddenCalendarIds
             )
         case .denied:
-            accessDenied = true
+            calendarAccessDenied = true
         default:
             break
         }
@@ -59,23 +66,23 @@ class CalendarStore: ObservableObject {
 
     // MARK: - Helper Functions
 
+    private func beginFreshReload(hiddenCalendarIds: Set<String>) {
+        loadCalendars()
+        allDayEventsByPlannerKey = [:]
+        reloadTrigger = UUID()
+    }
+
     private func requestAccess(hiddenCalendarIds: Set<String>) {
         eventStore.requestFullAccessToEvents { granted, error in
             Task { @MainActor in
                 if granted {
-                    self.accessDenied = false
-                    self.beginCacheRefresh(hiddenCalendarIds: hiddenCalendarIds)
+                    self.calendarAccessDenied = false
+                    self.beginFreshReload(hiddenCalendarIds: hiddenCalendarIds)
                 } else {
-                    self.accessDenied = true
+                    self.calendarAccessDenied = true
                 }
             }
         }
-    }
-
-    private func beginCacheRefresh(hiddenCalendarIds: Set<String>) {
-        loadCalendars()
-        cache = [:]
-        loadTrigger = UUID()
     }
 
     private func loadCalendars() {

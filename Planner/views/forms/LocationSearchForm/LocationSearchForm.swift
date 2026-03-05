@@ -65,7 +65,7 @@ struct LocationSearchView: View {
     }
 
     private var deviceLocation: Location? {
-        deviceLocationManager.location
+        deviceLocationManager.deviceLocation
     }
 
     private var homeLocation: Location? {
@@ -152,7 +152,7 @@ struct LocationSearchView: View {
             }
             .onAppear(perform: buildSuggestedLocations)
             
-            .onChange(of: deviceLocationManager.location) { _, _ in
+            .onChange(of: deviceLocationManager.deviceLocation) { _, _ in
                 buildSuggestedLocations()
             }
         }
@@ -185,7 +185,7 @@ struct LocationSearchView: View {
         if mode == .planner {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Confirm", systemImage: "checkmark", action: handleSave)
-                    .tint(accentColor.swiftUIColor)
+                    .tint(accentColor.value)
             }
         }
     }
@@ -217,7 +217,7 @@ struct LocationSearchView: View {
                 title: selectedLocation.name,
                 iconConfig: IconConfig(
                     name: "mappin.and.ellipse",
-                    primaryColor: accentColor.swiftUIColor,
+                    primaryColor: accentColor.value,
                     secondaryColor: Color.secondary
                 ),
                 color: nil,
@@ -251,7 +251,7 @@ struct LocationSearchView: View {
         .frame(maxHeight: 50)
         .padding(.horizontal)
         .glassEffect(.regular.interactive())
-        .tint(accentColor.swiftUIColor)
+        .tint(accentColor.value)
     }
 
     @ViewBuilder

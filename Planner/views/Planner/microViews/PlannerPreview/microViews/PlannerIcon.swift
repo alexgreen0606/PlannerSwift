@@ -18,7 +18,7 @@ struct PlannerIcon: View {
 
     private var iconColor: Color {
         datestamp == todaystampManager.todaystamp
-            ? accentColor.swiftUIColor : Color.secondary
+            ? accentColor.value : Color.secondary
     }
 
     var body: some View {

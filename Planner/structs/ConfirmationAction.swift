@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+// Clean
+
 struct ConfirmationAction<Item> {
     let title: String
     let role: ButtonRole?

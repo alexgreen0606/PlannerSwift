@@ -8,10 +8,12 @@
 import SwiftDate
 import SwiftUI
 
+// Clean
+
 enum KeepCanceledPlansDuration: String, Codable, CaseIterable {
     case startOfDay
     case forever
-    
+
     var title: String {
         "Keep Canceled Plans"
     }
@@ -24,5 +26,5 @@ enum KeepCanceledPlansDuration: String, Codable, CaseIterable {
             return "Forever"
         }
     }
-    
+
 }

@@ -93,7 +93,7 @@ struct RowToggleView<Item: ListItem>: View {
     @State private var isConfirmationOpen: Bool = false
 
     private var activeTint: Color {
-        listManager.isSelectMode ? accentColor.swiftUIColor : tint
+        listManager.isSelectMode ? accentColor.value : tint
     }
 
     var body: some View {

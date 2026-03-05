@@ -9,33 +9,35 @@ import Combine
 import Foundation
 import SwiftDate
 
+// Clean
+
 @MainActor
 class TodaystampWatcher: ObservableObject {
-    
+
     init() {
         scheduleMidnightUpdate()
     }
-
-    @Published private(set) var todaystamp: String =
-        TodaystampWatcher.makeStamp()
-    
-    @Published private(set) var maxCalendarDate: Date =
-        TodaystampWatcher.makeMaxCalendarDate()
-
-    private var timer: Timer?
 
     deinit {
         timer?.invalidate()
     }
 
-    private static func makeStamp() -> String {
+    @Published private(set) var todaystamp: String =
+        TodaystampWatcher.buildTodaystamp()
+
+    @Published private(set) var maxCalendarDate: Date =
+        TodaystampWatcher.buildMaxCalendarDate()
+
+    private var timer: Timer?
+
+    private static func buildTodaystamp() -> String {
         DateInRegion(region: .local).toFormat(
             "yyyy-MM-dd",
             locale: Locale.current
         )
     }
-    
-    private static func makeMaxCalendarDate() -> Date {
+
+    private static func buildMaxCalendarDate() -> Date {
         DateInRegion(Date(), region: .local)
             .dateByAdding(3, .year)
             .date
@@ -44,8 +46,7 @@ class TodaystampWatcher: ObservableObject {
     private func scheduleMidnightUpdate() {
         timer?.invalidate()
 
-        let now = DateInRegion(region: .local)
-        let nextMidnight = now.dateAt(.tomorrowAtStart)
+        let nextMidnight = DateInRegion(region: .local).dateAt(.tomorrowAtStart)
 
         timer = Timer(
             fireAt: nextMidnight.date,
@@ -60,10 +61,11 @@ class TodaystampWatcher: ObservableObject {
     }
 
     @objc private func updateStamp() {
-        todaystamp = Self.makeStamp()
-        maxCalendarDate = Self.makeMaxCalendarDate()
+        todaystamp = Self.buildTodaystamp()
+        maxCalendarDate = Self.buildMaxCalendarDate()
 
         // Reschedule for tomorrow.
         scheduleMidnightUpdate()
     }
+
 }

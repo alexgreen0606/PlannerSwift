@@ -84,7 +84,6 @@ struct ContentView: View {
     @Query private var foldersList: [ChecklistItem]
     @Query private var planners: [Planner]
 
-    @State private var selectedTab: AppTab = .planner
     @State private var plannerSearchText: String = ""
 
     @Namespace private var namespace
@@ -102,63 +101,50 @@ struct ContentView: View {
     }
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            Tab(value: .planner) {
-                if let settings {
-                    PlannerTabView(
-                        settings: settings,
-                        namespace: namespace
-                    )
-                }
-            } label: {
-                Label(
-                    "",
-                    systemImage: todaystampWatcher.todaystamp.calendarSymbolName
-                )
-            }
-
-            Tab(value: .checklists) {
-                ChecklistsTabView()
-            } label: {
-                Label(
-                    "",
-                    systemImage: "checklist"
-                )
-            }
-
-            Tab(value: .routines) {
-                NavigationStack {
-                    VStack {
-
+        ZStack {
+            if let settings {
+                TabView {
+                    Tab("", systemImage: todaystampWatcher.todaystamp.calendarSymbolName) {
+                        PlannerTabView(
+                            settings: settings,
+                            namespace: namespace
+                        )
                     }
-                    .navigationTitle("Routines")
+                    
+                    Tab("", systemImage: "checklist") {
+                        ChecklistsTabView()
+                    }
+                    
+                    Tab("", systemImage: "repeat") {
+                        NavigationStack {
+                            VStack {
+                                
+                            }
+                            .navigationTitle("Routines")
+                        }
+                    }
+                    
+                    Tab("", systemImage: "gear") {
+                        SettingsTabView()
+                    }
+                    
+                    
+                    Tab(role: .search) {
+                        PlannerSearchTabView(
+                            searchText: $plannerSearchText,
+                            settings: settings,
+                            namespace: namespace
+                        )
+                        .searchable(
+                            text: $plannerSearchText,
+                            prompt: "Search planner..."
+                        )
+                        .searchPresentationToolbarBehavior(.avoidHidingContent)
+                    }
                 }
-            } label: {
-                Label("", systemImage: "repeat")
-            }
-
-            Tab(value: .settings) {
-                SettingsTabView()
-            } label: {
-                Label("", systemImage: "gear")
-            }
-
-            Tab(value: .search, role: .search) {
-                if let settings {
-                    PlannerSearchTabView(
-                        searchText: $plannerSearchText,
-                        settings: settings,
-                        namespace: namespace
-                    )
-                    .searchable(
-                        text: $plannerSearchText,
-                        prompt: "Search planner..."
-                    )
-                    .searchPresentationToolbarBehavior(.avoidHidingContent)
-                }
+                .tabBarMinimizeBehavior(.onScrollDown)
             }
         }
-        .tabBarMinimizeBehavior(.onScrollDown)
 
         // Planner Cover
         .fullScreenCover(item: $plannerCoverManager.context) { context in
@@ -181,7 +167,7 @@ struct ContentView: View {
 
             modelContext.ensureRootFolder(folders: foldersList)
 
-            calendarStore.loadFreshCache(
+            calendarStore.attemptFreshReload(
                 hiddenCalendarIds: settings!.hiddenCalendarIds
             )
 
@@ -201,7 +187,7 @@ struct ContentView: View {
             _,
             _ in
             print("Device location has changed. Refetching weather...")
-            weatherStore.loadFreshCache()
+            weatherStore.beginFreshReload()
         }
     }
 

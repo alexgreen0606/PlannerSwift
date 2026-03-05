@@ -161,7 +161,7 @@ struct TransferChecklistItemsFormView: View {
                 role: .confirm,
                 action: handleTransfer
             )
-            .tint(accentColor.swiftUIColor)
+            .tint(accentColor.value)
             .disabled(
                 destination == nil || destination!.stableId == source.stableId
             )
@@ -255,7 +255,7 @@ struct TransferChecklistItemsFormView: View {
             .frame(height: 19)
 
             Text(item.title)
-                .font(.system(size: UIConstants.listItemFontSize))
+                .font(.system(size: UiConstants.listItemFontSize))
                 .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)

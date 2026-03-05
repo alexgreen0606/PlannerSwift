@@ -145,7 +145,7 @@ struct ChecklistView: View {
                     }
                 }
                 .navigationTransition(
-                    .zoom(sourceID: IDConstants.ELLIPSIS_BUTTON, in: namespace)
+                    .zoom(sourceID: IdConstants.ELLIPSIS_BUTTON, in: namespace)
                 )
             }
         }
@@ -158,7 +158,7 @@ struct ChecklistView: View {
             )
             .navigationTransition(
                 .zoom(
-                    sourceID: IDConstants.TRANSFER_BUTTON,
+                    sourceID: IdConstants.TRANSFER_BUTTON,
                     in: namespace
                 )
             )
@@ -233,7 +233,7 @@ struct ChecklistView: View {
                     Image(systemName: "ellipsis")
                 }
                 .matchedTransitionSource(
-                    id: IDConstants.ELLIPSIS_BUTTON,
+                    id: IdConstants.ELLIPSIS_BUTTON,
                     in: namespace
                 )
                 .confirmationDialog(
@@ -316,7 +316,7 @@ struct ChecklistView: View {
                     !canTransferItems || listManager.selectedItemIds.isEmpty
                 )
                 .matchedTransitionSource(
-                    id: IDConstants.TRANSFER_BUTTON,
+                    id: IdConstants.TRANSFER_BUTTON,
                     in: namespace
                 )
             }
@@ -382,7 +382,7 @@ struct ChecklistView: View {
         DispatchQueue.main.async {
             withAnimation {
                 scrollProxy.scrollTo(
-                    IDConstants.UNCHECKED_ITEMS,
+                    IdConstants.UNCHECKED_ITEMS,
                     anchor: .bottom
                 )
             }

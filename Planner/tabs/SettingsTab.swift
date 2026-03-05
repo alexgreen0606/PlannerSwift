@@ -52,7 +52,7 @@ struct SettingsTabView: View {
                             option in
                             Image(systemName: "circle.fill")
                                 .symbolRenderingMode(.palette)
-                                .foregroundStyle(option.swiftUIColor)
+                                .foregroundStyle(option.value)
                                 .tag(option)
                         }
                     }
@@ -71,7 +71,7 @@ struct SettingsTabView: View {
                     .pickerStyle(.menu)
 
                     Toggle("Show List Separators", isOn: $showListSeparators)
-                        .tint(accentColor.swiftUIColor)
+                        .tint(accentColor.value)
 
                 } header: {
                     Text("Appearance")

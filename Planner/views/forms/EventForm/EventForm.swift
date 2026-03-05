@@ -183,10 +183,10 @@ struct EventFormView: View {
     private var defaultLocation: Location? {
         sourcePlanner?.location(
             settings: settings,
-            deviceLocation: deviceLocationManager.location
+            deviceLocation: deviceLocationManager.deviceLocation
         )
             ?? settings.validHomeLocation(
-                deviceLocation: deviceLocationManager.location
+                deviceLocation: deviceLocationManager.deviceLocation
             )
     }
 
@@ -199,7 +199,7 @@ struct EventFormView: View {
             .region(
                 planner: sourcePlanner,
                 settings: settings,
-                deviceLocation: deviceLocationManager.location
+                deviceLocation: deviceLocationManager.deviceLocation
             )
     }
 
@@ -219,12 +219,12 @@ struct EventFormView: View {
             [.height(460), .height(2600)],
             selection: $selectedDetent
         )
-        .tint(accentColor.swiftUIColor)
+        .tint(accentColor.value)
 
         // Enforce timed event location existence when the device location loads in.
         .externalData(
-            key: deviceLocationManager.location,
-            ready: deviceLocationManager.location != nil,
+            key: deviceLocationManager.deviceLocation,
+            ready: deviceLocationManager.deviceLocation != nil,
             load: ensureLocationForTimedEvent
         )
 
@@ -292,7 +292,7 @@ struct EventFormView: View {
                                         settings: settings,
                                         deviceLocation:
                                             deviceLocationManager
-                                            .location
+                                            .deviceLocation
                                     ) : "Select a location"
                             )
                             .font(.subheadline)
@@ -311,7 +311,7 @@ struct EventFormView: View {
                                 planner: sourcePlanner,
                                 settings: settings,
                                 deviceLocation: deviceLocationManager
-                                    .location
+                                    .deviceLocation
                             )
                             .timeZone
                             .abbreviation() ?? "Unknown Time Zone"
@@ -335,14 +335,14 @@ struct EventFormView: View {
         ToolbarItem(placement: .confirmationAction) {
             Button("Save", systemImage: "checkmark", action: savePlannerEvent)
                 .buttonStyle(.glassProminent)
-                .tint(canSave ? accentColor.swiftUIColor : .tertiary)
+                .tint(canSave ? accentColor.value : .tertiary)
                 .disabled(!canSave)
         }
     }
 
     @ToolbarContentBuilder
     private var plannerEventBottomToolbar: some ToolbarContent {
-        if !calendarStore.accessDenied {
+        if !calendarStore.calendarAccessDenied {
             ToolbarItem(placement: .bottomBar) {
                 AccentButtonView(
                     label: "Add To Calendar",
@@ -393,7 +393,7 @@ struct EventFormView: View {
 
                 saveCalendarEvent(event)
             }
-            .tint(accentColor.swiftUIColor)
+            .tint(accentColor.value)
             .ignoresSafeArea()
             .overlay {
                 VStack {
@@ -434,7 +434,7 @@ struct EventFormView: View {
     // MARK: - Helper Functions
 
     private func reloadCalendarData() {
-        calendarStore.loadFreshCache(
+        calendarStore.attemptFreshReload(
             hiddenCalendarIds: settings.hiddenCalendarIds
         )
     }

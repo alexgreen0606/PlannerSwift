@@ -1,11 +1,13 @@
 //
-//  CustomIconConfig.swift
+//  IconConfig.swift
 //  Planner
 //
 //  Created by Alex Green on 2/10/26.
 //
 
 import SwiftUI
+
+// Clean
 
 struct IconConfig {
     let name: String

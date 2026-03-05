@@ -8,6 +8,8 @@
 import SwiftData
 import SwiftUI
 
+// Clean
+
 @available(iOS 26.0, *)
 @Model
 class ChecklistItem: ListItem {

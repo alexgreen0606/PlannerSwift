@@ -15,7 +15,7 @@ struct PlannerApp: App {
         let locationManager = DeviceLocationManager()
         _locationManager = StateObject(wrappedValue: locationManager)
         _weatherStore = StateObject(
-            wrappedValue: WeatherStore(locationManager: locationManager)
+            wrappedValue: WeatherStore(deviceLocationManager: locationManager)
         )
     }
 
@@ -36,8 +36,8 @@ struct PlannerApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .preferredColorScheme(appColorScheme.colorScheme)
-                .accentColor(accentColor.swiftUIColor)
+                .preferredColorScheme(appColorScheme.value)
+                .accentColor(accentColor.value)
                 .environmentObject(todaystampWatcher)
                 .environmentObject(weatherStore)
                 .environmentObject(calendarStore)

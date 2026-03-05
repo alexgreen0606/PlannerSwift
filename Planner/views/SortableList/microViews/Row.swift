@@ -190,7 +190,7 @@ struct RowView<
     private var titleText: some View {
         Text(item.title)
             .opacity(isFocused ? 0 : 1)
-            .font(.system(size: UIConstants.listItemFontSize))
+            .font(.system(size: UiConstants.listItemFontSize))
             .lineLimit(nil)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)

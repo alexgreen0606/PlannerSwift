@@ -8,12 +8,14 @@
 import SwiftDate
 import SwiftUI
 
+// Clean
+
 enum KeepPastPlansDuration: String, Codable, CaseIterable {
     case oneMonth
     case threeMonths
     case sixMonths
     case forever
-    
+
     var title: String {
         "Keep Past Plans"
     }
@@ -32,22 +34,25 @@ enum KeepPastPlansDuration: String, Codable, CaseIterable {
     }
 
     var cutoffDate: Date {
-
-        var monthOffset: Int = 0
-        
-        switch self {
-        case .oneMonth:
-            monthOffset = 1
-        case .threeMonths:
-            monthOffset = 3
-        case .sixMonths:
-            monthOffset = 6
-        case .forever: return .distantPast
-        }
+        guard let monthOffset = monthOffset else { return .distantPast }
 
         return DateInRegion(Date(), region: .local)
-            .dateByAdding(-monthOffset, .month)
+            .dateByAdding(monthOffset, .month)
             .date
-
     }
+
+    // MARK: - Helper Variables
+
+    private var monthOffset: Int? {
+        switch self {
+        case .oneMonth:
+            return -1
+        case .threeMonths:
+            return -3
+        case .sixMonths:
+            return -6
+        case .forever: return nil
+        }
+    }
+
 }

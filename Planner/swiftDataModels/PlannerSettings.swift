@@ -8,15 +8,18 @@
 import SwiftData
 import SwiftUI
 
+// Clean
+
 @Model
 class PlannerSettings {
 
-    // Maps Calendar events IDs to system image names.
+    // Maps calendar event IDs to system image names.
     var iconMap: [String: String] = [:]
     
     // Set of calendar IDs to exclude from planners.
     var hiddenCalendarIds: Set<String> = []
     
+    // Planners default to this location, else the current device location is used (not recommended).
     var homeLocation: Location?
 
     init() {}

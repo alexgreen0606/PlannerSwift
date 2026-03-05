@@ -1,11 +1,13 @@
 //
-//  ExternalData.swift
+//  externalData.swift
 //  Planner
 //
 //  Created by Alex Green on 2/7/26.
 //
 
 import SwiftUI
+
+// Clean
 
 struct ExternalDataModifier<Key: Equatable>: ViewModifier {
     let key: Key

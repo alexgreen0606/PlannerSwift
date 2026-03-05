@@ -116,7 +116,7 @@ struct TransferEventsFormView: View {
                 role: .confirm,
                 action: handleTransfer
             )
-            .tint(accentColor.swiftUIColor)
+            .tint(accentColor.value)
             .disabled(destinationDate == sourceDate)
         }
     }
@@ -172,7 +172,7 @@ struct TransferEventsFormView: View {
             eventStore: calendarStore.ekEventStore
         )
 
-        calendarStore.loadFreshCache(
+        calendarStore.attemptFreshReload(
             hiddenCalendarIds: settings.hiddenCalendarIds
         )
 

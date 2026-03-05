@@ -131,17 +131,17 @@ struct PlannerSearchTabView: View {
 
         // Reload the data from the page.
         .refreshable {
-            weatherStore.loadFreshCache()
-            calendarStore.loadFreshCache(
+            weatherStore.beginFreshReload()
+            calendarStore.attemptFreshReload(
                 hiddenCalendarIds: settings
                     .hiddenCalendarIds
             )
-            deviceLocationManager.fetchLocation()
+            deviceLocationManager.loadDeviceLocation()
         }
 
         // Calendar Data
         .externalData(
-            key: calendarStore.loadTrigger,
+            key: calendarStore.reloadTrigger,
             ready: true,
             load: computeFilteredEventMap
         )
@@ -149,7 +149,7 @@ struct PlannerSearchTabView: View {
 
     @ViewBuilder
     private var calendarFilter: some View {
-        if !calendarStore.accessDenied {
+        if !calendarStore.calendarAccessDenied {
             Menu {
                 Text("Filter Calendars")
                     .font(.footnote)
@@ -198,7 +198,7 @@ struct PlannerSearchTabView: View {
 
     @ToolbarContentBuilder
     private var topLeftToolbar: some ToolbarContent {
-        if !calendarStore.accessDenied {
+        if !calendarStore.calendarAccessDenied {
             ToolbarItemGroup(placement: .topBarLeading) {
                 Menu {
                     Text("Filter Calendars")

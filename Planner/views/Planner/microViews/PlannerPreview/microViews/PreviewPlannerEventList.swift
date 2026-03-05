@@ -24,7 +24,7 @@ struct PreviewPlannerEventListView: View {
                 ForEach(events, id: \.stableId) { event in
                     HStack(alignment: .top, spacing: 12) {
                         Text(event.title)
-                            .font(.system(size: UIConstants.listItemFontSize * 0.8))
+                            .font(.system(size: UiConstants.listItemFontSize * 0.8))
 
                         Spacer()
 

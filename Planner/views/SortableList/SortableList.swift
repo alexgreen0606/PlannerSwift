@@ -81,7 +81,7 @@ struct SortableListView<
                 }
                 .discreetListItem()
                 .listRowInsets(EdgeInsets())
-                .id(IDConstants.UNCHECKED_ITEMS)
+                .id(IdConstants.UNCHECKED_ITEMS)
 
                 if uncheckedItems.isEmpty && showChecked {
                     EmptyLabel(emptyUncheckedLabel)
@@ -128,7 +128,7 @@ struct SortableListView<
                     }
                 }
                 .discreetListItem()
-                .id(IDConstants.CHECKED_ITEMS)
+                .id(IdConstants.CHECKED_ITEMS)
             }
         }
         .listStyle(.plain)
@@ -160,7 +160,7 @@ struct SortableListView<
         .withScrollTrigger(
             scrollProxy: scrollProxy,
             trigger: showChecked,
-            id: IDConstants.CHECKED_ITEMS,
+            id: IdConstants.CHECKED_ITEMS,
             disabled: !showChecked
         )
     }

@@ -54,7 +54,7 @@ struct PlannerChipSpreadView: View {
     private var locationLabel: String {
         planner.locationLabel(
             settings: settings,
-            deviceLocation: deviceLocationManager.location
+            deviceLocation: deviceLocationManager.deviceLocation
         )
     }
 

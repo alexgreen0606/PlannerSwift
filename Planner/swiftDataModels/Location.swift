@@ -8,6 +8,8 @@
 import SwiftData
 import SwiftUI
 
+// Clean
+
 @Model
 class Location {
     var name: String
@@ -16,7 +18,7 @@ class Location {
     var longitude: Double
     var timeZoneIdentifier: String
     
-    // Used for displaying recents in the LocationSearchForm
+    // Used for displaying recents in LocationSearchForm
     var selectedOn: Date
 
     init(

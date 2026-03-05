@@ -180,7 +180,7 @@ struct ExpandedPlannerView: View {
             )
             .navigationTransition(
                 .zoom(
-                    sourceID: IDConstants.TRANSFER_BUTTON,
+                    sourceID: IdConstants.TRANSFER_BUTTON,
                     in: namespace
                 )
             )
@@ -298,7 +298,7 @@ struct ExpandedPlannerView: View {
                 Button("Add", systemImage: "plus") {
                     createLowerEvent(scrollProxy: scrollProxy)
                 }
-                .tint(accentColor.swiftUIColor)
+                .tint(accentColor.value)
             } else {
                 DeleteSelectedButtonView(
                     itemsLabel: "events",
@@ -343,7 +343,7 @@ struct ExpandedPlannerView: View {
                 }
                 .disabled(plannerManager.selectedItemIds.isEmpty)
                 .matchedTransitionSource(
-                    id: IDConstants.TRANSFER_BUTTON,
+                    id: IdConstants.TRANSFER_BUTTON,
                     in: namespace
                 )
             }
@@ -410,7 +410,7 @@ struct ExpandedPlannerView: View {
         event.locationValueView(
             in: planner,
             settings: settings,
-            deviceLocation: deviceLocationManager.location,
+            deviceLocation: deviceLocationManager.deviceLocation,
             accentColor: accentColor
         ) {
             openPlannerEventSheet(event)
@@ -463,7 +463,7 @@ struct ExpandedPlannerView: View {
     // MARK: - Data Handlers
 
     private func refreshCalendar() {
-        calendarStore.loadFreshCache(
+        calendarStore.attemptFreshReload(
             hiddenCalendarIds: settings.hiddenCalendarIds
         )
     }
@@ -513,7 +513,7 @@ struct ExpandedPlannerView: View {
         DispatchQueue.main.async {
             withAnimation {
                 scrollProxy.scrollTo(
-                    IDConstants.UNCHECKED_ITEMS,
+                    IdConstants.UNCHECKED_ITEMS,
                     anchor: .bottom
                 )
             }

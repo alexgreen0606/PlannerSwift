@@ -11,26 +11,27 @@ import SwiftDate
 import SwiftUI
 import WeatherKit
 
+// Clean
+
 @MainActor
 final class WeatherStore: ObservableObject {
-    private let locationManager: DeviceLocationManager
+    private let deviceLocationManager: DeviceLocationManager
 
-    init(locationManager: DeviceLocationManager) {
-        self.locationManager = locationManager
+    init(deviceLocationManager: DeviceLocationManager) {
+        self.deviceLocationManager = deviceLocationManager
     }
+
+    // Location Key -> Planner Start of Day -> Weather
+    @Published var weatherCache: [String: [Date: DayWeather]] = [:]
+
+    @Published var reloadTrigger: UUID? = nil
+    @Published var loadedLocationKeys: Set<String> = []
 
     private let weatherService = WeatherService()
 
-    // Location Key -> Date (Region Start Of Day) -> Weather
-    @Published var weatherMap: [String: [Date: DayWeather]] =
-        [:]
-
-    @Published var loadTrigger: UUID = UUID()
-    @Published var loadedLocationKeys: Set<String> = []
-
-    func loadFreshCache() {
+    func beginFreshReload() {
         loadedLocationKeys = []
-        loadTrigger = UUID()
+        reloadTrigger = UUID()
     }
 
     func getWeather(for startOfDay: DateInRegion, at location: Location?)
@@ -40,41 +41,39 @@ final class WeatherStore: ObservableObject {
             return nil
         }
 
-        return weatherMap[locationKey]?[startOfDay.date]
+        return weatherCache[locationKey]?[startOfDay.date]
     }
 
     func loadWeatherIfNeeded(
         location: Location?,
         region: Region
     ) async {
-        let weatherLocation: CLLocation
-
         guard let locationKey = getLocationKey(for: location) else {
             print(
-                "ERROR WeatherStore.loadWeatherIfNeeded: Failed to build a locationKey."
+                "ERROR WeatherStore.loadWeatherIfNeeded: Device location does not exist."
             )
             return
         }
 
+        // Priority 1: Return cached data for this day/location.
         if loadedLocationKeys.contains(locationKey) {
             return
         } else {
-            print(
-                "\(location?.name ?? "Current Location"): Cache miss. Fetching."
-            )
             loadedLocationKeys.insert(locationKey)
         }
+
+        let weatherLocation: CLLocation
 
         if let location {
             weatherLocation = CLLocation(
                 latitude: location.latitude,
                 longitude: location.longitude
             )
-        } else if let deviceLocation = locationManager.deviceClLocation {
+        } else if let deviceLocation = deviceLocationManager.deviceClLocation {
             weatherLocation = deviceLocation
         } else {
             print(
-                "ERROR WeatherStore.loadWeatherIfNeeded: Failed to build a weatherLocation."
+                "ERROR WeatherStore.loadWeatherIfNeeded: Device location does not exist."
             )
             return
         }
@@ -84,14 +83,16 @@ final class WeatherStore: ObservableObject {
 
             for dayWeather in weather.dailyForecast {
 
-                let dayInPlannerRegion = DateInRegion(
+                let startOfDay = DateInRegion(
                     dayWeather.date,
                     region: region
                 )
                 .dateAt(.startOfDay)
 
-                weatherMap[locationKey, default: [:]][dayInPlannerRegion.date] =
-                    dayWeather
+                weatherCache[locationKey, default: [:]][
+                    startOfDay.date
+                ] = dayWeather
+                
             }
 
         } catch {
@@ -100,8 +101,11 @@ final class WeatherStore: ObservableObject {
 
     }
 
+    // MARK: - Helper Function
+
     private func getLocationKey(for location: Location?) -> String? {
-        location?.coordinateKey ?? locationManager.deviceClLocation?.coordinate.key
+        location?.coordinateKey
+            ?? deviceLocationManager.deviceClLocation?.coordinate.key
     }
 
 }

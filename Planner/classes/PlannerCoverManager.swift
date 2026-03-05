@@ -8,15 +8,17 @@
 import Combine
 import SwiftUI
 
+// Clean
+
 struct PlannerCoverContext: Identifiable, Equatable {
     let datestamp: String
     let source: String?
-    
+
     init(datestamp: String, source: String? = nil) {
         self.datestamp = datestamp
         self.source = source
     }
-    
+
     var id: String { source ?? datestamp }
 }
 

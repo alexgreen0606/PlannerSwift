@@ -76,7 +76,7 @@ struct FolderView: View {
                     pendingScrollItem = savedItem
                 }
                 .navigationTransition(
-                    .zoom(sourceID: IDConstants.ADD_BUTTON, in: namespace)
+                    .zoom(sourceID: IdConstants.ADD_BUTTON, in: namespace)
                 )
             }
 
@@ -90,7 +90,7 @@ struct FolderView: View {
                     }
                 }
                 .navigationTransition(
-                    .zoom(sourceID: IDConstants.ELLIPSIS_BUTTON, in: namespace)
+                    .zoom(sourceID: IdConstants.ELLIPSIS_BUTTON, in: namespace)
                 )
             }
 
@@ -103,7 +103,7 @@ struct FolderView: View {
                 .environmentObject(selectManager)
                 .navigationTransition(
                     .zoom(
-                        sourceID: IDConstants.TRANSFER_BUTTON,
+                        sourceID: IdConstants.TRANSFER_BUTTON,
                         in: namespace
                     )
                 )
@@ -197,7 +197,7 @@ struct FolderView: View {
                 } label: {
                     Image(systemName: "ellipsis")
                 }
-                .matchedTransitionSource(id: IDConstants.ELLIPSIS_BUTTON, in: namespace)
+                .matchedTransitionSource(id: IdConstants.ELLIPSIS_BUTTON, in: namespace)
                 .confirmationDialog(
                     folder.deleteConfirmation,
                     isPresented: $showDeleteFolderConfirm,
@@ -214,7 +214,7 @@ struct FolderView: View {
                     showCreateSheet = true
                 }
                 .matchedTransitionSource(
-                    id: IDConstants.ADD_BUTTON,
+                    id: IdConstants.ADD_BUTTON,
                     in: namespace
                 )
             }
@@ -249,7 +249,7 @@ struct FolderView: View {
                     showTransferSheet = true
                 }
                 .matchedTransitionSource(
-                    id: IDConstants.TRANSFER_BUTTON,
+                    id: IdConstants.TRANSFER_BUTTON,
                     in: namespace
                 )
                 .disabled(
@@ -285,7 +285,7 @@ struct FolderView: View {
             .frame(height: 19)
 
             Text(item.title)
-                .font(.system(size: UIConstants.listItemFontSize))
+                .font(.system(size: UiConstants.listItemFontSize))
                 .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)

@@ -96,11 +96,11 @@ struct PlannerTabView: View {
 
                 // Reload the data from the page.
                 .refreshable {
-                    weatherStore.loadFreshCache()
-                    calendarStore.loadFreshCache(
+                    weatherStore.beginFreshReload()
+                    calendarStore.attemptFreshReload(
                         hiddenCalendarIds: settings.hiddenCalendarIds
                     )
-                    deviceLocationManager.fetchLocation()
+                    deviceLocationManager.loadDeviceLocation()
                 }
             }
         }

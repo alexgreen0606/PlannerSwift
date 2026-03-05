@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+// Clean
+
 enum ChecklistItemColor: String, Codable, CaseIterable {
     case red
     case orange
