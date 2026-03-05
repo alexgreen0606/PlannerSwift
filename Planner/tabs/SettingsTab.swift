@@ -1,9 +1,11 @@
 //
-//  Settings.swift
+//  SettingsTab.swift
 //  Planner
 //
 //  Created by Alex Green on 1/4/26.
 //
+
+// Clean
 
 import Combine
 import EventKit
@@ -11,6 +13,7 @@ import SwiftData
 import SwiftUI
 
 struct SettingsTabView: View {
+    let settings: PlannerSettings
 
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
         .system
@@ -34,42 +37,39 @@ struct SettingsTabView: View {
             ToggleTransitionDuration.threeSeconds
 
     @Environment(\.modelContext) private var modelContext
-    @Query private var plannerSettingsList: [PlannerSettings]
-
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
-
-    private var settings: PlannerSettings? {
-        plannerSettingsList.first
-    }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
 
+                    // Accent Color
                     Picker(accentColor.title, selection: $accentColor) {
                         ForEach(AccentColor.allCases, id: \.self) {
-                            option in
+                            color in
                             Image(systemName: "circle.fill")
                                 .symbolRenderingMode(.palette)
-                                .foregroundStyle(option.value)
-                                .tag(option)
+                                .foregroundStyle(color.value)
+                                .tag(color)
                         }
                     }
                     .pickerStyle(.menu)
 
+                    // Toggle Transition Duration
                     Picker(
                         toggleTransitionDuration.title,
                         selection: $toggleTransitionDuration
                     ) {
                         ForEach(ToggleTransitionDuration.allCases, id: \.self) {
-                            scheme in
-                            Text(scheme.label)
-                                .tag(scheme)
+                            duration in
+                            Text(duration.label)
+                                .tag(duration)
                         }
                     }
                     .pickerStyle(.menu)
 
+                    // List Separators
                     Toggle("Show List Separators", isOn: $showListSeparators)
                         .tint(accentColor.value)
 
@@ -78,11 +78,12 @@ struct SettingsTabView: View {
                 }
                 .listSectionMargins(.bottom, 0)
 
+                // App Theme
                 Picker("App Theme", selection: $appColorScheme) {
                     ForEach(AppColorScheme.allCases, id: \.rawValue) {
-                        scheme in
-                        Text(scheme.rawValue.capitalized)
-                            .tag(scheme)
+                        colorScheme in
+                        Text(colorScheme.rawValue.capitalized)
+                            .tag(colorScheme)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -90,18 +91,21 @@ struct SettingsTabView: View {
                 .listSectionMargins(.all, 0)
 
                 Section {
+
+                    // Keep Past Plans Duration
                     Picker(
                         keepPastPlansDuration.title,
                         selection: $keepPastPlansDuration
                     ) {
                         ForEach(KeepPastPlansDuration.allCases, id: \.self) {
-                            option in
-                            Text(option.label)
-                                .tag(option)
+                            duration in
+                            Text(duration.label)
+                                .tag(duration)
                         }
                     }
                     .pickerStyle(.menu)
 
+                    // Keep Canceled Plans Duration
                     Picker(
                         keepCanceledPlansDuration.title,
                         selection: $keepCanceledPlansDuration
@@ -110,39 +114,30 @@ struct SettingsTabView: View {
                             KeepCanceledPlansDuration.allCases,
                             id: \.self
                         ) {
-                            option in
-                            Text(option.label)
-                                .tag(option)
+                            duration in
+                            Text(duration.label)
+                                .tag(duration)
                         }
                     }
                     .pickerStyle(.menu)
 
+                    // Calendars
                     NavigationLink("Calendars") {
-                        if let settings {
-                            CalendarsFormView(settings: settings)
-                        }
+                        CalendarsFormView(settings: settings)
                     }
 
+                    // Home Location
                     NavigationLink {
-                        if let settings {
-                            LocationSearchView(
-                                title: "Edit Home Location",
-                                mode: .home,
-                                settings: settings,
-                                initialLocation: settings.homeLocation,
-                            ) { location in
-                                
-                                settings.homeLocation = location
-                                
-                                // TODO: move to model context
-                                do {
-                                    try modelContext.save()
-                                } catch {
-                                    assertionFailure(
-                                        "Failed to save home location: \(error)"
-                                    )
-                                }
-                            }
+                        LocationSearchView(
+                            title: "Edit Home Location",
+                            mode: .home,
+                            settings: settings,
+                            initialLocation: settings.homeLocation,
+                        ) { location in
+                            modelContext.updateHomeLocation(
+                                in: settings,
+                                to: location
+                            )
                         }
                     } label: {
                         HStack {
@@ -152,7 +147,7 @@ struct SettingsTabView: View {
                             Spacer()
 
                             Text(
-                                settings?.homeLocation?.name
+                                settings.homeLocation?.name
                                     ?? "Current Location"
                             )
                             .font(.subheadline)

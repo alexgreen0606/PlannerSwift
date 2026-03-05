@@ -191,8 +191,7 @@ struct PlannerChipSpreadView: View {
         PlannerChipView(
             title: event.title,
             iconConfig: IconConfig(
-                name: iconMap[event.calendar.calendarIdentifier]
-                    ?? event.calendar.iconName,
+                name: event.calendar.iconName(settings: settings),
                 primaryColor: event.calendar.color
             ),
             color: event.calendar.color

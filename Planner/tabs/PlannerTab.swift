@@ -10,6 +10,8 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
+// Clean
+
 struct PlannerTabView: View {
     let settings: PlannerSettings
     let namespace: Namespace.ID
@@ -18,96 +20,92 @@ struct PlannerTabView: View {
         KeepPastPlansDuration =
             KeepPastPlansDuration.oneMonth
 
-    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject private var weatherStore: WeatherStore
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
     @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
 
-    @State private var selectedCalendarDate: Date = Date()
     @State private var showNewEventSheet = false
     @State private var showCalendarPicker = false
 
-    private var thisWeekDatestamps: [String] {
-        let region = Region.local
-        let today = DateInRegion(Date(), region: region)
+    @State private var selectedCalendarDate: Date = Date()
 
-        return (0..<7).map {
-            today
-                .dateByAdding($0, .day)
-                .toFormat("yyyy-MM-dd")
-        }.sorted()
-    }
+    @State private var thisWeekDatestamps: [String] = []
 
     var body: some View {
         NavigationStack {
-            ScrollViewReader { scrollProxy in
-                List {
-                    Section {
-                        Text("This week")
-                            .sectionLabel()
+            List {
+                Section {
+                    Text("This week")
+                        .sectionLabel()
 
-                        ScrollView(.horizontal) {
-                            HStack {
-                                ForEach(thisWeekDatestamps, id: \.self) {
-                                    datestamp in
-                                    PlannerBuilderView(
-                                        datestamp: datestamp,
-                                        settings: settings,
-                                        previewType: .planner,
-                                        namespace: namespace
-                                    )
-                                }
+                    ScrollView(.horizontal) {
+                        HStack {
+                            ForEach(thisWeekDatestamps, id: \.self) {
+                                datestamp in
+                                PlannerBuilderView(
+                                    datestamp: datestamp,
+                                    settings: settings,
+                                    previewType: .planner,
+                                    namespace: namespace
+                                )
                             }
-                            .padding(.horizontal)
-                            .animateAsynchronousAction(from: thisWeekDatestamps)
                         }
-                        .scrollIndicators(.hidden)
-                        .background(Color.clear)
+                        .padding(.horizontal)
+                        .animateAsynchronousAction(from: thisWeekDatestamps)
                     }
-                    .listRowInsets(EdgeInsets())
-                    .discreetListItem()
+                    .scrollIndicators(.hidden)
+                    .background(Color.clear)
                 }
-                .listStyle(.plain)
-                .background(Color.appBackground)
-                .navigationTitle("Planner")
-                .toolbar {
-                    topLeftToolbar
-                    topRightToolbar
-                }
+                .listRowInsets(EdgeInsets())
+                .discreetListItem()
+            }
+            .listStyle(.plain)
+            .background(Color.appBackground)
+            .navigationTitle("Planner")
+            .toolbar {
+                datePickerToolbarPopover
+                newEventToolbarButton
+            }
+            .refreshable {
+                weatherStore.beginFreshReload()
+                calendarStore.attemptFreshReload(
+                    hiddenCalendarIds: settings.hiddenCalendarIds
+                )
+                deviceLocationManager.loadDeviceLocation()
+            }
 
-                // Create new event.
-                .sheet(isPresented: $showNewEventSheet) {
-                    EventFormView(
-                        plannerEvent: nil,
-                        calendarEvent: nil,
-                        settings: settings
-                    ) {
-                        // TODO: show indiactor of event creation
-                    }
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: "ADD_EVENT",
-                            in: namespace
-                        )
-                    )
+            // New Event Form
+            .sheet(isPresented: $showNewEventSheet) {
+                EventFormView(
+                    plannerEvent: nil,
+                    calendarEvent: nil,
+                    settings: settings
+                ) {
+                    // TODO: show indiactor of event creation
                 }
-
-                // Reload the data from the page.
-                .refreshable {
-                    weatherStore.beginFreshReload()
-                    calendarStore.attemptFreshReload(
-                        hiddenCalendarIds: settings.hiddenCalendarIds
+                .navigationTransition(
+                    .zoom(
+                        sourceID: IdConstants.ADD_BUTTON,
+                        in: namespace
                     )
-                    deviceLocationManager.loadDeviceLocation()
-                }
+                )
             }
         }
+
+        // Build the week's datestamps at midnight.
+        .externalData(
+            key: todaystampWatcher.todaystamp,
+            ready: true,
+            load: buildThisWeekDatestamps
+        )
     }
 
+    // MARK: - Toolbars
+
     @ToolbarContentBuilder
-    private var topLeftToolbar: some ToolbarContent {
+    private var datePickerToolbarPopover: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             Button("Calendar", systemImage: "calendar") {
                 showCalendarPicker = true
@@ -123,44 +121,58 @@ struct PlannerTabView: View {
                         displayedComponents: .date
                     )
                     .datePickerStyle(.graphical)
-                    .onChange(of: selectedCalendarDate) {
-                        _,
-                        targetPlannerDate in
-                        showCalendarPicker = false
 
-                        let localDate = DateInRegion(
-                            targetPlannerDate,
-                            region: .local
-                        )
-
-                        DispatchQueue.main.async {
-                            plannerCoverManager.context = PlannerCoverContext(
-                                datestamp: localDate.datestamp,
-                                source: "CALENDAR"
-                            )
-                        }
+                    // Open planner when a new date is selected from the picker.
+                    .onChange(of: selectedCalendarDate) { _, _ in
+                        handlePlannerDateSelect()
                     }
+
                 }
                 .frame(width: 340, height: 320)
                 .padding()
                 .presentationCompactAdaptation(.popover)
             }
             .matchedTransitionSource(
-                id: "CALENDAR",
+                id: IdConstants.CALENDAR_BUTTON,
                 in: namespace
             )
         }
     }
 
-    @ToolbarContentBuilder
-    private var topRightToolbar: some ToolbarContent {
+    private var newEventToolbarButton: some ToolbarContent {
         ToolbarItemGroup(placement: .topBarTrailing) {
             Button("New Event", systemImage: "plus") {
                 showNewEventSheet = true
             }
             .matchedTransitionSource(
-                id: "ADD_EVENT",
+                id: IdConstants.ADD_BUTTON,
                 in: namespace
+            )
+        }
+    }
+
+    // MARK: - Helper Functions
+
+    private func buildThisWeekDatestamps() {
+        thisWeekDatestamps = (0..<6).map {
+            DateInRegion(Date(), region: .local)
+                .dateByAdding($0, .day)
+                .toFormat("yyyy-MM-dd")
+        }.sorted()
+    }
+
+    private func handlePlannerDateSelect() {
+        showCalendarPicker = false
+
+        let localDate = DateInRegion(
+            selectedCalendarDate,
+            region: .local
+        )
+
+        DispatchQueue.main.async {
+            plannerCoverManager.context = PlannerCoverContext(
+                datestamp: localDate.datestamp,
+                source: IdConstants.CALENDAR_BUTTON
             )
         }
     }

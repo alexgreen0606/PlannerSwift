@@ -33,11 +33,28 @@ extension ModelContext {
     }
 
     @MainActor
+    func updateHomeLocation(
+        in settings: PlannerSettings,
+        to location: Location?
+    ) {
+
+        settings.homeLocation = location
+
+        do {
+            try save()
+        } catch {
+            assertionFailure(
+                "ERROR plannerSettings.updateHomeLocation: \(error)"
+            )
+        }
+    }
+
+    @MainActor
     func deleteStaleCalendarEventPositions(
         in settings: PlannerSettings,
         with eventIds: Set<String>
     ) {
-        
+
         // TODO: implement
 
         // Sepcial case: do NOT save the context here. This will be done in the parent

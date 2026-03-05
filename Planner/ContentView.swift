@@ -125,7 +125,7 @@ struct ContentView: View {
                     }
                     
                     Tab("", systemImage: "gear") {
-                        SettingsTabView()
+                        SettingsTabView(settings: settings)
                     }
                     
                     

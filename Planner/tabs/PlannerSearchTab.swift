@@ -1,5 +1,5 @@
 //
-//  PlannerSearch.swift
+//  PlannerSearchTab.swift
 //  Planner
 //
 //  Created by Alex Green on 12/16/25.
@@ -9,6 +9,8 @@ import EventKit
 import SwiftData
 import SwiftDate
 import SwiftUI
+
+// Clean
 
 struct PlannerSearchTabView: View {
     @Binding var searchText: String
@@ -20,25 +22,23 @@ struct PlannerSearchTabView: View {
             KeepPastPlansDuration.oneMonth
 
     @Environment(\.isSearching) private var isSearching
-    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject private var weatherStore: WeatherStore
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
-    @State private var filterDebounce: Task<Void, Never>?
-    @State private var filterCalendarIds: Set<String> = []
-    @State private var scrollToTopTrigger: UUID = UUID()
+    @State private var filteredCalendarIds: Set<String> = []
+    @State private var scrollToSoonestDatestampTrigger: UUID = UUID()
+
     @State private var toolbarHeight: CGFloat = 0
     @State private var topInsetHeight: CGFloat = 49
 
-    // Holds all calendar data displayed in the UI.
-    @State private var eventMap: [String: [String]] = [:]
+    // Year (YYYY) -> Datestamps (YYYY-MM-DD)
+    @State private var plannerMap: [String: [String]] = [:]
+    @State private var plannerMapTask: Task<Void, Never>?
 
-    private var sortedUpcomingYears: [String] {
-        return ["2026"]
-        Array(eventMap.keys).sorted()
-    }
+    // Sorted keys from plannerMap.
+    @State private var sortedUpcomingYears: [String] = ["2026"]
 
     private var sortedCalendars: [EKCalendar] {
         calendarStore.sortedCalendars.filter {
@@ -48,12 +48,13 @@ struct PlannerSearchTabView: View {
         }
     }
 
+    // TODO: this should store the datestamp closest to today
     private var topDatestamp: String? {
         guard let firstYear = sortedUpcomingYears.first else {
             return nil
         }
 
-        return eventMap[firstYear]?.first
+        return plannerMap[firstYear]?.first
     }
 
     var body: some View {
@@ -64,10 +65,10 @@ struct PlannerSearchTabView: View {
                         ForEach(sortedUpcomingYears, id: \.self) { year in
                             Section {
                                 ForEach(
-                                    eventMap[year] ?? [
-                                        "2026-02-15", "2026-02-16",
-                                        "2026-02-17", "2026-02-18",
-                                        "2026-02-19",
+                                    plannerMap[year] ?? [
+                                        "2026-03-06", "2026-03-07",
+                                        "2026-03-08", "2026-03-09",
+                                        "2026-03-10",
                                     ],
                                     id: \.self
                                 ) {
@@ -100,17 +101,26 @@ struct PlannerSearchTabView: View {
                         bottomSpacer
                     }
                     .toolbar {
-                        topLeftToolbar
+                        calendarFilterToolbarMenu
+                    }
+                    .refreshable {
+                        weatherStore.beginFreshReload()
+                        calendarStore.attemptFreshReload(
+                            hiddenCalendarIds: settings
+                                .hiddenCalendarIds
+                        )
+                        deviceLocationManager.loadDeviceLocation()
                     }
 
                     // Keep the list scrolled to the top whenever the results change.
+                    // TODO: scroll to the date >= today
                     .withScrollTrigger(
                         scrollProxy: scrollProxy,
-                        trigger: scrollToTopTrigger,
+                        trigger: scrollToSoonestDatestampTrigger,
                         id: topDatestamp
                     )
 
-                    // Calculate the layout values once the UI settles.
+                    // Calculate the layout for the manual safe areas once the UI settles.
                     .onAppear {
                         DispatchQueue.main.async {
                             toolbarHeight = geo.safeAreaInsets.bottom
@@ -122,82 +132,26 @@ struct PlannerSearchTabView: View {
             }
         }
 
-        // Debounce the filtering of calendar events when needed.
-        .onChange(of: searchText) { _, _ in scheduleFilterDebounce()
-        }
-        .onChange(of: filterCalendarIds) { _, _ in
-            scheduleFilterDebounce()
-        }
-
-        // Reload the data from the page.
-        .refreshable {
-            weatherStore.beginFreshReload()
-            calendarStore.attemptFreshReload(
-                hiddenCalendarIds: settings
-                    .hiddenCalendarIds
-            )
-            deviceLocationManager.loadDeviceLocation()
-        }
-
-        // Calendar Data
+        // Build the planner map whenever the calendar store refreshes.
         .externalData(
             key: calendarStore.reloadTrigger,
             ready: true,
-            load: computeFilteredEventMap
+            load: buildPlannerMap
         )
-    }
 
-    @ViewBuilder
-    private var calendarFilter: some View {
-        if !calendarStore.calendarAccessDenied {
-            Menu {
-                Text("Filter Calendars")
-                    .font(.footnote)
-                Divider()
-                ForEach(sortedCalendars, id: \.calendarIdentifier) {
-                    calendar in
-                    Toggle(
-                        isOn: Binding(
-                            get: {
-                                filterCalendarIds.contains(
-                                    calendar.calendarIdentifier
-                                )
-                            },
-                            set: { isOn in
-                                if isOn {
-                                    filterCalendarIds.insert(
-                                        calendar.calendarIdentifier
-                                    )
-                                } else {
-                                    filterCalendarIds.remove(
-                                        calendar.calendarIdentifier
-                                    )
-                                }
-                            }
-                        )
-                    ) {
-                        HStack(spacing: 8) {
-                            Image(
-                                systemName:
-                                    settings.iconMap[
-                                        calendar.calendarIdentifier
-                                    ] ?? calendar.iconName
-                            )
-                            .tint(calendar.color)
+        // Schedule a build of the planner map when the search query changes.
+        .onChange(of: searchText) { _, _ in schedulePlannerMapBuild() }
 
-                            Text(calendar.title)
-                        }
-                    }
-                }
-            } label: {
-                Image(systemName: "line.3.horizontal.decrease")
-            }
-            .menuActionDismissBehavior(.disabled)
+        // Schedule a build of the planner map when the filtered calendars change.
+        .onChange(of: filteredCalendarIds) { _, _ in
+            schedulePlannerMapBuild()
         }
     }
 
+    // MARK: - Toolbar
+
     @ToolbarContentBuilder
-    private var topLeftToolbar: some ToolbarContent {
+    private var calendarFilterToolbarMenu: some ToolbarContent {
         if !calendarStore.calendarAccessDenied {
             ToolbarItemGroup(placement: .topBarLeading) {
                 Menu {
@@ -209,29 +163,28 @@ struct PlannerSearchTabView: View {
                         Toggle(
                             isOn: Binding(
                                 get: {
-                                    filterCalendarIds.contains(
+                                    filteredCalendarIds.contains(
                                         calendar.calendarIdentifier
                                     )
                                 },
                                 set: { isOn in
                                     if isOn {
-                                        filterCalendarIds.insert(
+                                        filteredCalendarIds.insert(
                                             calendar.calendarIdentifier
                                         )
                                     } else {
-                                        filterCalendarIds.remove(
+                                        filteredCalendarIds.remove(
                                             calendar.calendarIdentifier
                                         )
                                     }
                                 }
                             )
                         ) {
-                            HStack(spacing: 8) {
+                            HStack {
                                 Image(
-                                    systemName:
-                                        settings.iconMap[
-                                            calendar.calendarIdentifier
-                                        ] ?? calendar.iconName
+                                    systemName: calendar.iconName(
+                                        settings: settings
+                                    )
                                 )
                                 .tint(calendar.color)
 
@@ -246,6 +199,8 @@ struct PlannerSearchTabView: View {
             }
         }
     }
+
+    // MARK: - View Helpers
 
     @ViewBuilder
     private var emptyPlannersLabel: some View {
@@ -274,126 +229,30 @@ struct PlannerSearchTabView: View {
     private func upcomingYearHeader(_ year: String) -> some View {
         Text(year)
             .font(.system(size: 22, weight: .heavy, design: .rounded))
-            .foregroundColor(.secondary).frame(
+            .foregroundColor(.secondary)
+            .frame(
                 maxWidth: .infinity,
                 alignment: .trailing
             )
     }
 
-    // TODO: this should gather all calendar events for the next year, plus planners for the next year
-    private func computeFilteredEventMap() {
-        //        let today = todaystampWatcher.todaystamp
-        //        let todayDate = today.toDate("yyyy-MM-dd", region: .local)?.date
-        //        let maxDate = todaystampWatcher.maxCalendarDate
-        //
-        //        // ------------------------------------------------------------------
-        //        // 1. Collect all datestamps that have events (all-day + single-day)
-        //        // ------------------------------------------------------------------
-        //        let eventDatestamps = Set(
-        //            calendarStore.allDayEventsByDatestamp.keys
-        //        ).union(
-        //            calendarStore.singleDayEventsByDatestamp.keys
-        //        )
-        //
-        //        // ------------------------------------------------------------------
-        //        // 2. Trim datestamps to the desired date range
-        //        // ------------------------------------------------------------------
-        //        let dateRangeFiltered: [(year: String, datestamp: String)] =
-        //            eventDatestamps.compactMap { datestamp in
-        //                guard
-        //                    let date = datestamp.toDate("yyyy-MM-dd", region: .local)?
-        //                        .date,
-        //                    let todayDate,
-        //                    date > todayDate,
-        //                    date < maxDate
-        //                else { return nil }
-        //
-        //                return (String(date.year), datestamp)
-        //            }
-        //
-        //        // ------------------------------------------------------------------
-        //        // 3. Filter events by:
-        //        //    a) calendar IDs (if provided)
-        //        //    b) checked status
-        //        //    c) search text in title (if provided)
-        //        //    Remove datestamps with zero remaining events
-        //        // ------------------------------------------------------------------
-        //        let filteredDatestamps = dateRangeFiltered.compactMap {
-        //            entry -> (year: String, datestamp: String)? in
-        //            let datestamp = entry.datestamp
-        //
-        //            // Combine all events for this datestamp
-        //            let events =
-        //                (calendarStore.allDayEventsByDatestamp[datestamp] ?? [])
-        //                + (calendarStore.singleDayEventsByDatestamp[datestamp] ?? [])
-        //
-        //            // Filter by calendar identifiers (skip if none selected)
-        //            let calendarFiltered =
-        //                filterCalendarIds.isEmpty
-        //                ? events
-        //                : events.filter {
-        //                    filterCalendarIds.contains($0.calendar.calendarIdentifier)
-        //                }
-        //
-        //            // Filter out checked events
-        //            let checkedFiltered =
-        //                settings == nil
-        //                ? calendarFiltered
-        //                : calendarFiltered.filter {
-        //                    !settings.checkedCalendarEventIds.contains(
-        //                        $0.calendarItemExternalIdentifier
-        //                    )
-        //                }
-        //
-        //            let trimmedSearchText = searchText.trimmingCharacters(
-        //                in: .whitespacesAndNewlines
-        //            )
-        //
-        //            // Filter by search text in title (skip if empty)
-        //            let searchFiltered =
-        //                trimmedSearchText.isEmpty
-        //                ? checkedFiltered
-        //                : checkedFiltered.filter {
-        //                    $0.title.localizedCaseInsensitiveContains(
-        //                        trimmedSearchText
-        //                    )
-        //                }
-        //
-        //            // Remove this datestamp entirely if no events remain
-        //            guard !searchFiltered.isEmpty else { return nil }
-        //
-        //            return entry
-        //        }
-        //
-        //        // ------------------------------------------------------------------
-        //        // 4. Group remaining datestamps by year
-        //        // ------------------------------------------------------------------
-        //        let grouped = Dictionary(grouping: filteredDatestamps, by: { $0.year })
-        //
-        //        // ------------------------------------------------------------------
-        //        // 5. Sort datestamps within each year
-        //        // ------------------------------------------------------------------
-        //        eventMap = grouped.mapValues { values in
-        //            values
-        //                .map { $0.datestamp }
-        //                .sorted()
-        //        }
-        //
-        //        scrollToTopTrigger = UUID()
+    // MARK: - Datestamp Builders
+
+    private func buildPlannerMap() {
+        // TODO: implement complex calculation
     }
 
-    private func scheduleFilterDebounce() {
-        filterDebounce?.cancel()
+    private func schedulePlannerMapBuild() {
+        plannerMapTask?.cancel()
 
-        filterDebounce = Task {
+        plannerMapTask = Task {
             do {
                 try await Task.sleep(for: .milliseconds(500))
                 guard !Task.isCancelled else { return }
 
-                // Recompute filtered event map.
-                computeFilteredEventMap()
-            } catch {
-            }
+                buildPlannerMap()
+
+            } catch {}
         }
     }
 

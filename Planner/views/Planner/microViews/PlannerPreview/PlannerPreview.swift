@@ -166,7 +166,7 @@ struct PlannerPreviewView: View {
 
             PreviewCalendarEventListView(
                 events: allDayEvents,
-                iconMap: settings.iconMap
+                settings: settings
             )
 
             PreviewPlannerEventListView(

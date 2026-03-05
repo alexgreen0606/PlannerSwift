@@ -58,6 +58,7 @@ class CalendarStore: ObservableObject {
                 hiddenCalendarIds: hiddenCalendarIds
             )
         case .denied:
+            // TODO: Delete all calendar events here.
             calendarAccessDenied = true
         default:
             break
@@ -79,6 +80,7 @@ class CalendarStore: ObservableObject {
                     self.calendarAccessDenied = false
                     self.beginFreshReload(hiddenCalendarIds: hiddenCalendarIds)
                 } else {
+                    // TODO: Delete all calendar events here.
                     self.calendarAccessDenied = true
                 }
             }

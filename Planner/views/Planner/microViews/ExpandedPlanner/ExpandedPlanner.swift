@@ -382,9 +382,7 @@ struct ExpandedPlannerView: View {
         {
             Image(
                 systemName:
-                    settings.iconMap[
-                        calendar.calendarIdentifier
-                    ] ?? calendar.iconName
+                    calendar.iconName(settings: settings)
             )
             .foregroundStyle(calendar.color)
             .padding(.trailing, 6)

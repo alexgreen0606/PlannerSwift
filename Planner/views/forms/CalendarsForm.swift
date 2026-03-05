@@ -90,9 +90,7 @@ struct CalendarsFormView: View {
                         }
                     } label: {
                         Image(
-                            systemName: settings.iconMap[
-                                calendar.calendarIdentifier
-                            ] ?? calendar.iconName
+                            systemName: calendar.iconName(settings: settings)
                         )
                         .foregroundStyle(Color(calendar.cgColor))
                     }
