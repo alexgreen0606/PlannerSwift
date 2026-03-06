@@ -22,7 +22,7 @@ struct PlannerDateInfoView: View {
             return datestamp
         }
         
-        return isSoon ? startOfDay.weekday : startOfDay.countdown ?? ""
+        return isSoon ? startOfDay.weekday : startOfDay.countdown
     }
 
     private var subtitle: String {
@@ -31,7 +31,7 @@ struct PlannerDateInfoView: View {
         }
         
         let countdown = startOfDay.countdown
-        if isSoon, let countdown {
+        if isSoon {
             return countdown
         }
 

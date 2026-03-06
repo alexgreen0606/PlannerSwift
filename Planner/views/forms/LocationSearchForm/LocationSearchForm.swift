@@ -185,7 +185,7 @@ struct LocationSearchView: View {
         if mode == .planner {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Confirm", systemImage: "checkmark", action: handleSave)
-                    .tint(accentColor.value)
+                    .tint(accentColor.color)
             }
         }
     }
@@ -217,7 +217,7 @@ struct LocationSearchView: View {
                 title: selectedLocation.name,
                 iconConfig: IconConfig(
                     name: "mappin.and.ellipse",
-                    primaryColor: accentColor.value,
+                    primaryColor: accentColor.color,
                     secondaryColor: Color.secondary
                 ),
                 color: nil,
@@ -251,7 +251,7 @@ struct LocationSearchView: View {
         .frame(maxHeight: 50)
         .padding(.horizontal)
         .glassEffect(.regular.interactive())
-        .tint(accentColor.value)
+        .tint(accentColor.color)
     }
 
     @ViewBuilder

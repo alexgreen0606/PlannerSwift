@@ -43,8 +43,8 @@ struct PlannerApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .preferredColorScheme(appColorScheme.value)
-                .accentColor(accentColor.value)
+                .preferredColorScheme(appColorScheme.colorScheme)
+                .accentColor(accentColor.color)
                 .environmentObject(todaystampWatcher)
                 .environmentObject(weatherStore)
                 .environmentObject(calendarStore)

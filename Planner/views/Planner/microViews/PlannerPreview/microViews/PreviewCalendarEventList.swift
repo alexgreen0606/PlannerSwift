@@ -20,7 +20,7 @@ struct PreviewCalendarEventListView: View {
                 ForEach(events, id: \.calendarItemExternalIdentifier) { event in
                     HStack(spacing: 4) {
                         Image(
-                            systemName: event.calendar.iconName(settings: settings)
+                            systemName: event.calendar.systemImageName(settings: settings)
                         )
                         .resizable()
                         .scaledToFit()

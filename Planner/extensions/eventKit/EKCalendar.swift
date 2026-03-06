@@ -8,33 +8,34 @@
 import EventKit
 import SwiftUI
 
+// Clean
+
 extension EKCalendar {
-
-    func iconName(settings: PlannerSettings) -> String {
-        guard
-            let customSystemImage = settings.iconMap[
-                calendarIdentifier
-            ]
-        else {
-
-            let title = self.title.lowercased()
-
-            if title.contains("birthday") {
-                return "birthday.cake.fill"
-            }
-
-            if title.contains("holiday") {
-                return "globe.americas.fill"
-            }
-
-            return "calendar"
-        }
-
-        return customSystemImage
-    }
 
     var color: Color {
         Color(cgColor: self.cgColor)
+    }
+
+    func systemImageName(settings: PlannerSettings) -> String {
+        if let customSystemImage = settings.iconMap[
+            calendarIdentifier
+        ] {
+            return customSystemImage
+        }
+
+        let lowercaseTitle = self.title.lowercased()
+
+        // Default birthday icon.
+        if lowercaseTitle.contains("birthday") {
+            return "birthday.cake.fill"
+        }
+
+        // Default holiday icon.
+        if lowercaseTitle.contains("holiday") {
+            return "globe.americas.fill"
+        }
+
+        return "calendar"
     }
 
 }

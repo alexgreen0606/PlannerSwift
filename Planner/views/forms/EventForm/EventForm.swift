@@ -219,7 +219,7 @@ struct EventFormView: View {
             [.height(460), .height(2600)],
             selection: $selectedDetent
         )
-        .tint(accentColor.value)
+        .tint(accentColor.color)
 
         // Enforce timed event location existence when the device location loads in.
         .externalData(
@@ -335,7 +335,7 @@ struct EventFormView: View {
         ToolbarItem(placement: .confirmationAction) {
             Button("Save", systemImage: "checkmark", action: savePlannerEvent)
                 .buttonStyle(.glassProminent)
-                .tint(canSave ? accentColor.value : .tertiary)
+                .tint(canSave ? accentColor.color : .tertiary)
                 .disabled(!canSave)
         }
     }
@@ -393,7 +393,7 @@ struct EventFormView: View {
 
                 saveCalendarEvent(event)
             }
-            .tint(accentColor.value)
+            .tint(accentColor.color)
             .ignoresSafeArea()
             .overlay {
                 VStack {

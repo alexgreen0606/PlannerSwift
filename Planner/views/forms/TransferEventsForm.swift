@@ -116,7 +116,7 @@ struct TransferEventsFormView: View {
                 role: .confirm,
                 action: handleTransfer
             )
-            .tint(accentColor.value)
+            .tint(accentColor.color)
             .disabled(destinationDate == sourceDate)
         }
     }

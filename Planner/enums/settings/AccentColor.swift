@@ -18,7 +18,7 @@ enum AccentColor: String, Codable, CaseIterable {
     case indigo
     case purple
 
-    var title: String {
+    static var title: String {
         "Accent Color"
     }
 
@@ -26,7 +26,7 @@ enum AccentColor: String, Codable, CaseIterable {
         rawValue.capitalized
     }
 
-    var value: Color {
+    var color: Color {
         switch self {
         case .red: return .red
         case .orange: return .orange

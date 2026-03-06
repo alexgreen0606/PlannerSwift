@@ -68,7 +68,7 @@ extension PlannerEvent {
             return calendar.color
         }
 
-        return accentColor.value
+        return accentColor.color
     }
 
     // MARK: - Title Change Helper
@@ -99,15 +99,7 @@ extension PlannerEvent {
 
         // Case 2: Scan the new title for a time value.
         guard let defaultLocation,
-            let (timeValue, updatedText) = self.title.separateTimeValue()
-        else {
-            return
-        }
-
-        guard
-            let date = timeValue.toDate(
-                for: startOfDay
-            )
+              let (date, updatedText) = self.title.separateDate(for: startOfDay)
         else {
             return
         }
@@ -142,22 +134,23 @@ extension PlannerEvent {
     func timeValueView(
         in plannerRegion: Region,
         accentColor: AccentColor,
+        scale: Double = 1,
         openSheet: (() -> Void)?
     ) -> some View {
         if let calendarEvent {
 
             calendarEvent.timeValueView(
                 in: plannerRegion,
+                scale: scale,
                 openSheet: openSheet
             )
 
         } else if self.hasTime {
 
             TimeValueView(
-                day: DateInRegion(self.date, region: plannerRegion),
-                disabled: false,
-                color: accentColor.value,
-                scale: 1,
+                timeInRegion: DateInRegion(self.date, region: plannerRegion),
+                color: accentColor.color,
+                scale: scale,
                 openEventSheet: openSheet
             )
 
@@ -174,28 +167,29 @@ extension PlannerEvent {
     ) -> some View {
 
         let plannerRegion = planner.region(settings: settings)
+        let plannerTimeZoneIdentifier = plannerRegion.timeZone.identifier
         let plannerLocationLabel = planner.locationLabel(
             settings: settings,
             deviceLocation: deviceLocation
         )
 
         // --- Calendar Event Case ---
-        if let calendarEvent,
-            let values = calendarEvent.bottomAdornmentValues(
-                plannerRegion: plannerRegion,
-                plannerLocationLabel: plannerLocationLabel
-            )
-        {
-            LocationBottomAdornmentView(
-                icon: IconConfig(
-                    name: "mappin.and.ellipse",
-                    primaryColor: calendarEvent.calendar.color
-                ),
-                locationText: values.location,
-                timeText: values.time,
-                openEventSheet: openEventSheet
-            )
-        }
+//        if let calendarEvent,
+//            let values = calendarEvent.bottomAdornmentValues(
+//                plannerRegion: plannerRegion,
+//                plannerLocationLabel: plannerLocationLabel
+//            )
+//        {
+//            LocationBottomAdornmentView(
+//                icon: IconConfig(
+//                    name: "mappin.and.ellipse",
+//                    primaryColor: calendarEvent.calendar.color
+//                ),
+//                locationText: values.location,
+//                timeText: values.time,
+//                openEventSheet: openEventSheet
+//            )
+//        }
 
         // --- Planner Event Case ---
         let eventRegion = region(
@@ -203,19 +197,23 @@ extension PlannerEvent {
             settings: settings,
             deviceLocation: deviceLocation
         )
+        
+        let eventTimeZoneIdentifier = eventRegion.timeZone.identifier
 
-        let locationLabel = locationLabel(
+        let eventLocationLabel = locationLabel(
             planner: planner,
             settings: settings,
             deviceLocation: deviceLocation
         )
 
-        if locationLabel != plannerLocationLabel {
+        if eventLocationLabel != plannerLocationLabel || eventTimeZoneIdentifier != plannerTimeZoneIdentifier {
 
             let timeString: String? = {
-                if eventRegion != plannerRegion, hasTime {
-                    return DateInRegion(date, region: eventRegion)
-                        .timeWithTimezone
+                if hasTime {
+                    return DateInRegion(
+                        date,
+                        region: eventRegion
+                    ).timeWithTimezone
                 }
                 return nil
             }()
@@ -223,9 +221,9 @@ extension PlannerEvent {
             LocationBottomAdornmentView(
                 icon: IconConfig(
                     name: "mappin.and.ellipse",
-                    primaryColor: accentColor.value
+                    primaryColor: accentColor.color
                 ),
-                locationText: locationLabel,
+                locationText: eventLocationLabel,
                 timeText: timeString,
                 openEventSheet: openEventSheet
             )

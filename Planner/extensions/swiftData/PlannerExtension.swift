@@ -41,7 +41,7 @@ extension Planner {
         if location != nil {
             return IconConfig(
                 name: "mappin.and.ellipse",
-                primaryColor: accentColor.value
+                primaryColor: accentColor.color
             )
         }
 

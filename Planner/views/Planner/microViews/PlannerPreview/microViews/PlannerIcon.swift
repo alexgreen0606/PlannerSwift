@@ -18,7 +18,7 @@ struct PlannerIcon: View {
 
     private var iconColor: Color {
         datestamp == todaystampManager.todaystamp
-            ? accentColor.value : Color.secondary
+            ? accentColor.color : Color.secondary
     }
 
     var body: some View {

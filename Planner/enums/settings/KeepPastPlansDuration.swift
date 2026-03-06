@@ -16,7 +16,7 @@ enum KeepPastPlansDuration: String, Codable, CaseIterable {
     case sixMonths
     case forever
 
-    var title: String {
+    static var title: String {
         "Keep Past Plans"
     }
 

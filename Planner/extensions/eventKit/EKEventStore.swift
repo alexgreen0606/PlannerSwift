@@ -7,6 +7,8 @@
 
 import EventKit
 
+// Clean
+
 extension EKEventStore {
 
     func deleteEvent(_ event: EKEvent) {
@@ -16,7 +18,11 @@ extension EKEventStore {
         }
 
         do {
-            try remove(event, span: .thisEvent, commit: true)
+            try remove(
+                event,
+                span: .thisEvent,
+                commit: true
+            )
         } catch {
             assertionFailure("ERROR EKEventStore.deleteEvent: \(error)")
         }

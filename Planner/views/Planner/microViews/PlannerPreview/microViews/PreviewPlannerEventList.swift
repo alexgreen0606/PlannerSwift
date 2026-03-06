@@ -31,6 +31,7 @@ struct PreviewPlannerEventListView: View {
                         event.timeValueView(
                             in: plannerRegion,
                             accentColor: accentColor,
+                            scale: 0.8,
                             openSheet: nil
                         )
                     }

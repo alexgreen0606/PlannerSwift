@@ -7,7 +7,10 @@
 
 import SwiftUI
 
+// Clean
+
 extension Color {
+    
     static var label: Color {
         Color(uiColor: .label)
     }
@@ -63,4 +66,5 @@ extension Color {
             }
         )
     }
+    
 }

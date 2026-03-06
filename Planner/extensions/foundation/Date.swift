@@ -8,15 +8,14 @@
 import SwiftDate
 import SwiftUI
 
+// Clean
+
 extension Date {
     
-    func belongsTo(_ day: DateInRegion) -> Bool {
-        let startOfDay = day.dateAt(.startOfDay)
-        let startOfNextDay = startOfDay + 1.days
-
-        let convertedSelf = self.convertTo(region: day.region)
-
-        return convertedSelf >= startOfDay && convertedSelf < startOfNextDay
+    func belongsTo(_ plannerStartOfDay: DateInRegion) -> Bool {
+        let startOfNextDay = plannerStartOfDay + 1.days
+        let selfInRegion = self.convertTo(region: plannerStartOfDay.region)
+        return selfInRegion >= plannerStartOfDay && selfInRegion < startOfNextDay
     }
 
 }

@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+// Clean
+
 extension Double {
 
     func roundDecimals(to precision: Int = 4) -> Double {

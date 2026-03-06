@@ -182,7 +182,7 @@ struct PlannerSearchTabView: View {
                         ) {
                             HStack {
                                 Image(
-                                    systemName: calendar.iconName(
+                                    systemName: calendar.systemImageName(
                                         settings: settings
                                     )
                                 )

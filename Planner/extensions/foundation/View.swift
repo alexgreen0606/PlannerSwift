@@ -7,14 +7,18 @@
 
 import SwiftUI
 
+// Clean
+
 extension View {
 
+    // Hides list separator and background.
     func discreetListItem() -> some View {
         self
             .listRowSeparator(.hidden)
             .listRowBackground(Color.clear)
     }
 
+    // Same style as default section headers.
     func sectionLabel() -> some View {
         self
             .font(.headline)
@@ -24,6 +28,7 @@ extension View {
             .discreetListItem()
     }
 
+    // Pill-shaped, glass chip.
     func glassChip(color: Color?, onTap: (() -> Void)?, height: Double? = nil)
         -> some View
     {
@@ -42,10 +47,13 @@ extension View {
                         .interactive(onTap != nil)
                     : .regular
                         .interactive(onTap != nil),
-                in: .rect(cornerRadius: (height ?? UiConstants.plannerChipHeight) / 2)
+                in: .rect(
+                    cornerRadius: (height ?? UiConstants.plannerChipHeight) / 2
+                )
             )
     }
 
+    // Initiates a scroll whenever the trigger changes.
     func withScrollTrigger<Trigger: Equatable, ID: Hashable>(
         scrollProxy: ScrollViewProxy,
         trigger: Trigger,
@@ -63,7 +71,10 @@ extension View {
         }
     }
 
-    func animateSynchronousAction<Trigger: Equatable>(from trigger: Trigger) -> some View {
+    // Jumpy, fast animation caused by user action (such as a click).
+    func animateSynchronousAction<Trigger: Equatable>(from trigger: Trigger)
+        -> some View
+    {
         self
             .animation(
                 .spring(
@@ -73,12 +84,15 @@ extension View {
                 value: trigger
             )
     }
-    
-    func animateAsynchronousAction<Trigger: Equatable>(from trigger: Trigger) -> some View {
+
+    // Smooth, slick animation caused by asynchronous response (such as weather response).
+    func animateAsynchronousAction<Trigger: Equatable>(from trigger: Trigger)
+        -> some View
+    {
         self
             .animation(
                 .spring(
-                    response: 0.9,
+                    response: 1,
                     dampingFraction: 0.4
                 ),
                 value: trigger

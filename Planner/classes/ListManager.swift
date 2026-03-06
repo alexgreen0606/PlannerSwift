@@ -148,13 +148,13 @@ final class ListManager<Item: ListItem>: ObservableObject {
                 try await Task.sleep(for: .milliseconds(500))
 
                 withAnimation(
-                    .linear(duration: toggleTransitionDuration.value.seconds)
+                    .linear(duration: toggleTransitionDuration.seconds)
                 ) {
                     self.fadingOpacity = 0
                 }
 
                 // Keep items around before transitioning them to their new list.
-                try await Task.sleep(for: toggleTransitionDuration.value)
+                try await Task.sleep(for: toggleTransitionDuration.duration)
 
                 self.newlyCheckedIds = []
                 self.newlyUncheckedIds = []

@@ -14,7 +14,7 @@ enum AppColorScheme: String, CaseIterable {
     case light
     case dark
 
-    var value: ColorScheme? {
+    var colorScheme: ColorScheme? {
         switch self {
         case .system: return nil
         case .light: return .light

@@ -298,7 +298,7 @@ struct ExpandedPlannerView: View {
                 Button("Add", systemImage: "plus") {
                     createLowerEvent(scrollProxy: scrollProxy)
                 }
-                .tint(accentColor.value)
+                .tint(accentColor.color)
             } else {
                 DeleteSelectedButtonView(
                     itemsLabel: "events",
@@ -382,7 +382,7 @@ struct ExpandedPlannerView: View {
         {
             Image(
                 systemName:
-                    calendar.iconName(settings: settings)
+                    calendar.systemImageName(settings: settings)
             )
             .foregroundStyle(calendar.color)
             .padding(.trailing, 6)

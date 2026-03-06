@@ -7,6 +7,8 @@
 
 import MapKit
 
+// Clean
+
 extension CLLocationCoordinate2D {
     
     var key: String {

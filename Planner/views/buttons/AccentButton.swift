@@ -25,6 +25,6 @@ struct AccentButtonView: View {
             }
             .font(.system(size: 14, weight: .bold, design: .rounded))
         }
-        .tint(accentColor.value)
+        .tint(accentColor.color)
     }
 }

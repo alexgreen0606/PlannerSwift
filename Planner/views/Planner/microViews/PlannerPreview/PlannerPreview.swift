@@ -282,7 +282,7 @@ struct PlannerPreviewView: View {
                         if let weatherData {
                             HStack(alignment: .center, spacing: 4) {
                                 Text(
-                                    weatherData.highTempString(in: weatherUnit)
+                                    weatherData.highTemp(in: weatherUnit)
                                 )
                                 .font(
                                     .system(
@@ -292,7 +292,7 @@ struct PlannerPreviewView: View {
                                     )
                                 )
                                 Divider().frame(height: 16)
-                                Text(weatherData.lowTempString(in: weatherUnit))
+                                Text(weatherData.lowTemp(in: weatherUnit))
                                     .font(
                                         .system(
                                             size: 10,
@@ -363,7 +363,7 @@ struct PlannerPreviewView: View {
 
                 if let weatherData {
                     HStack(alignment: .center, spacing: 4) {
-                        Text(weatherData.highTempString(in: weatherUnit))
+                        Text(weatherData.highTemp(in: weatherUnit))
                             .font(
                                 .system(
                                     size: 11,
@@ -372,7 +372,7 @@ struct PlannerPreviewView: View {
                                 )
                             )
                         Divider().frame(height: 16)
-                        Text(weatherData.lowTempString(in: weatherUnit))
+                        Text(weatherData.lowTemp(in: weatherUnit))
                             .font(
                                 .system(
                                     size: 10,

@@ -34,7 +34,7 @@ struct SettingsTabView: View {
 
     @AppStorage("toggleTransitionDuration") private
         var toggleTransitionDuration: ToggleTransitionDuration =
-            ToggleTransitionDuration.threeSeconds
+    ToggleTransitionDuration.threeSeconds
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
@@ -45,12 +45,12 @@ struct SettingsTabView: View {
                 Section {
 
                     // Accent Color
-                    Picker(accentColor.title, selection: $accentColor) {
+                    Picker(AccentColor.title, selection: $accentColor) {
                         ForEach(AccentColor.allCases, id: \.self) {
                             color in
                             Image(systemName: "circle.fill")
                                 .symbolRenderingMode(.palette)
-                                .foregroundStyle(color.value)
+                                .foregroundStyle(color.color)
                                 .tag(color)
                         }
                     }
@@ -58,7 +58,7 @@ struct SettingsTabView: View {
 
                     // Toggle Transition Duration
                     Picker(
-                        toggleTransitionDuration.title,
+                        ToggleTransitionDuration.title,
                         selection: $toggleTransitionDuration
                     ) {
                         ForEach(ToggleTransitionDuration.allCases, id: \.self) {
@@ -71,7 +71,7 @@ struct SettingsTabView: View {
 
                     // List Separators
                     Toggle("Show List Separators", isOn: $showListSeparators)
-                        .tint(accentColor.value)
+                        .tint(accentColor.color)
 
                 } header: {
                     Text("Appearance")
@@ -94,7 +94,7 @@ struct SettingsTabView: View {
 
                     // Keep Past Plans Duration
                     Picker(
-                        keepPastPlansDuration.title,
+                        KeepPastPlansDuration.title,
                         selection: $keepPastPlansDuration
                     ) {
                         ForEach(KeepPastPlansDuration.allCases, id: \.self) {
@@ -107,7 +107,7 @@ struct SettingsTabView: View {
 
                     // Keep Canceled Plans Duration
                     Picker(
-                        keepCanceledPlansDuration.title,
+                        KeepCanceledPlansDuration.title,
                         selection: $keepCanceledPlansDuration
                     ) {
                         ForEach(

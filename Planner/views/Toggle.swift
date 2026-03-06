@@ -23,7 +23,7 @@ struct ToggleView: View {
     private var primaryColor: Color {
         !isOn
             ? Color.secondary
-            : tint ?? accentColor.value
+            : tint ?? accentColor.color
     }
 
     var body: some View {

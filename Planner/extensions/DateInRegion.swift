@@ -8,90 +8,12 @@
 import SwiftDate
 import SwiftUI
 
+// Clean
+
 extension DateInRegion {
 
-    // Shows day of week for the next week. Otherwise the full date is shown.
-    var dynamicHeader: String {
-        let date = self.dateAt(.startOfDay)
-        let today = DateInRegion(region: region).dateAt(.startOfDay)
-
-        if date < today {
-            // Past date
-            let currentYear = today.year
-            return date.year == currentYear ? shortDate : longDate
-        }
-
-        let daysFromToday = date.difference(in: .day, from: today) ?? 0
-
-        if daysFromToday <= 6 {
-            // Within next week
-            return weekday
-        }
-
-        // Future beyond a week
-        let currentYear = today.year
-        return date.year == currentYear ? shortDate : longDate
-    }
-
-    // Shows the full date for the next week. Otherwise the day of week is shown.
-    var dynamicSubheader: String {
-        let date = self.dateAt(.startOfDay)
-        let today = DateInRegion(region: region).dateAt(.startOfDay)
-
-        if date < today {
-            // Past date
-            return weekday
-        }
-
-        let daysFromToday = date.difference(in: .day, from: today) ?? 0
-
-        if daysFromToday <= 6 {
-            // Within next week
-            let currentYear = today.year
-            return date.year == currentYear ? shortDate : longDate
-        }
-
-        // Future beyond a week
-        return weekday
-    }
-
-    var timeWithTimezone: String? {  // EX: 3PM CST, 3:59AM GMT
-        var time = ""
-        
-        if date.minute == 0 {
-            time = self.toFormat("ha")
-        } else {
-            time = self.toFormat("h:mma")
-        }
-        
-        guard !time.isEmpty, let timeZoneAbbreviation = self.region.timeZone.abbreviation() else {
-            return nil
-        }
-
-        return "\(time) \(timeZoneAbbreviation)"
-    }
-
-    var countdown: String? {  // Ex: Today, Tomorrow, 3 days away, 3 days ago
-        let target = self.dateAt(.startOfDay)
-        let today = DateInRegion(Date(), region: .local).dateAt(.startOfDay)
-
-        guard let diff = today.difference(in: .day, from: target) else {
-            return ""
-        }
-
-        if diff == 0 {
-            return "Today"
-        } else if today.isBeforeDate(target, granularity: .day) {
-            if diff == 1 {
-                return "Tomorrow"
-            }
-            return "\(diff) days away"
-        } else {
-            if diff == 1 {
-                return "Yesterday"
-            }
-            return "\(diff) days ago"
-        }
+    var datestamp: String {  // Ex: 2025-12-31
+        self.toFormat("yyyy-MM-dd")
     }
 
     var weekday: String {  // Ex: Wednesday
@@ -100,36 +22,106 @@ extension DateInRegion {
             locale: Locale.current
         )
     }
-
-    var datestamp: String {  // Ex: 2025-12-31
-        self.toFormat("yyyy-MM-dd")
+    
+    var dynamicHeader: String {
+        isThisWeek ? weekday : dateLabel
     }
 
-    var timeValues:
-        (
-            timeValue: String, indicator: String
-        )
-    {  // Ex: 12:37, PM, END
+    var dynamicSubheader: String {
+        isThisWeek ? dateLabel : weekday
+    }
 
-        // Convert to 12-hour format
+    var timeWithTimezone: String? {  // EX: 3PM CST, 3:59AM GMT
+        guard let timeZoneAbbreviation = region.timeZone.abbreviation() else {
+            return nil
+        }
+
+        let format = date.minute == 0 ? "ha" : "h:mma"
+        let timeString = self.toFormat(format)
+
+        return "\(timeString) \(timeZoneAbbreviation)"
+    }
+
+    var countdown: String {  // Ex: Today, Tomorrow, 3 days away, 3 days ago
+        let startOfToday = DateInRegion(Date(), region: .local).dateAt(
+            .startOfDay
+        )
+
+        guard let diff = startOfToday.difference(in: .day, from: startOfDay)
+        else {
+            return ""
+        }
+
+        if diff == 0 {
+            return "Today"
+
+        } else if startOfToday.isBeforeDate(startOfDay, granularity: .day) {
+            if diff == 1 {
+                return "Tomorrow"
+            }
+
+            return "\(diff) days away"
+
+        } else {
+            if diff == 1 {
+                return "Yesterday"
+            }
+
+            return "\(diff) days ago"
+        }
+    }
+
+    var timeValue: (timeValue: String, indicator: String) {  // Ex: (12:37, PM)
+        // Convert to 12-hour format.
         let hour12 = self.hour % 12 == 0 ? 12 : hour % 12
         let timeValue = String(format: "%02d:%02d", hour12, self.minute)
+
+        // Drop off leading 0's.
         let trimmed = timeValue.drop(while: { $0 == "0" })
 
-        // Determine AM or PM
+        // Determine AM or PM.
         let indicator = hour < 12 ? "AM" : "PM"
 
         return (timeValue: String(trimmed), indicator: indicator)
     }
 
-    private var longDate: String {  // Ex: May 12, 2025
+    // MARK: - Helper Variables
+
+    private var startOfDay: DateInRegion {
+        self.dateAt(.startOfDay)
+    }
+
+    private var dateLabel: String {
+        let startOfToday = DateInRegion(region: region).dateAt(.startOfDay)
+        let currentYear = startOfToday.year
+        return startOfDay.year == currentYear ? dateWithoutYear : dateWithYear
+    }
+
+    private var isThisWeek: Bool {
+        let startOfDay = self.dateAt(.startOfDay)
+        let startOfToday = DateInRegion(region: region).dateAt(.startOfDay)
+
+        if startOfDay < startOfToday {
+            return false
+        }
+
+        let daysFromToday =
+            startOfDay.difference(in: .day, from: startOfToday) ?? 0
+        if daysFromToday <= 6 {
+            return true
+        }
+
+        return false
+    }
+
+    private var dateWithYear: String {  // Ex: May 12, 2025
         self.toFormat(
             "MMMM d, yyyy",
             locale: Locale.current
         )
     }
 
-    private var shortDate: String {  // Ex: May 12
+    private var dateWithoutYear: String {  // Ex: May 12
         self.toFormat(
             "MMMM d",
             locale: Locale.current

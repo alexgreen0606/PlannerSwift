@@ -9,6 +9,8 @@ import EventKit
 import SwiftDate
 import SwiftUI
 
+// Clean
+
 extension EKEvent {
 
     var transitionId: String {
@@ -16,6 +18,7 @@ extension EKEvent {
     }
 
     // Uniquely identifies occurrences of recurring events.
+    // Changes anytime the date of the event changes.
     var occurrenceId: String? {
         guard
             hasRecurrenceRules,
@@ -30,73 +33,57 @@ extension EKEvent {
         return "\(externalId)_\(startString)"
     }
 
-    func dateInRegion(region: Region) -> DateInRegion {
-        DateInRegion(self.startDate, region: region)
-    }
+    func location(
+        storageEvent: PlannerEvent? = nil
+    ) -> Location? {
 
-    func bottomAdornmentValues(
-        plannerRegion: Region,
-        plannerLocationLabel: String
-    ) -> (location: String?, time: String?)? {
+        if let locationLabel = self.location,
+            let structuredLocation = self.structuredLocation,
+            let latitude = structuredLocation.geoLocation?.coordinate
+                .latitude,
+            let longitude = structuredLocation.geoLocation?.coordinate
+                .longitude,
+            let timeZone = self.timeZone
+        {
+            let newLocation = Location(
+                name: locationLabel,
+                latitude: latitude,
+                longitude: longitude,
+                timeZoneIdentifier: timeZone.identifier
+            )
 
-        let locationTitle = structuredLocation?.title
-
-        let location: String? =
-            if let title = locationTitle,
-                !title.isEmpty,
-                title != plannerLocationLabel
-            {
-                title
-            } else {
-                nil
+            guard let existingLocation = storageEvent?.location,
+                existingLocation.coordinateKey == newLocation.coordinateKey
+            else {
+                return newLocation
             }
 
-        // Time Label (only if event timezone differs from planner timezone)
-        var timeString: String? = nil
-        let eventRegion = region(fallback: plannerRegion)
-
-        if eventRegion.timeZone.identifier != plannerRegion.timeZone.identifier
-        {
-
-            let dateInRegion = DateInRegion(startDate, region: eventRegion)
-            timeString = dateInRegion.timeWithTimezone
+            // Priority 1: Re-use the location in storage as long as it matches the event's location.
+            return existingLocation
         }
 
-        if location == nil && timeString == nil {
-            return nil
-        }
-
-        return (location, timeString)
+        return nil
     }
+
+    // MARK: - View Builders
 
     @ViewBuilder
     func timeValueView(
         in plannerRegion: Region,
-        usePlannerRegion: Bool = true,
         scale: Double = 1,
         openSheet: (() -> Void)?
     ) -> some View {
-
-        let eventRegion =
-            usePlannerRegion
-            ? plannerRegion : self.region(fallback: plannerRegion)
-
         TimeValueView(
-            day: DateInRegion(self.startDate, region: eventRegion),
-            disabled: false,
-            color: !usePlannerRegion ? .secondary : self.calendar.color,
+            timeInRegion: DateInRegion(self.startDate, region: plannerRegion),
+            color: self.calendar.color,
             scale: scale,
             openEventSheet: openSheet
         )
-
     }
 
-    func region(fallback: Region) -> Region {
+    // MARK: - Helper Functions
 
-        // TODO: is this true???
-        // Note: Event start and end may be in different timezones.
-        // As of now, Apple does not provide access to these different timezones.
-
+    private func region(fallback: Region) -> Region {
         if let timeZone = self.timeZone {
             return Region(
                 calendar: fallback.calendar,
@@ -106,37 +93,6 @@ extension EKEvent {
         } else {
             return fallback
         }
-    }
-
-    func location(
-        storageEvent: PlannerEvent? = nil
-    ) -> Location? {
-
-        if let structuredLocation = self.structuredLocation,
-            let latitude = structuredLocation.geoLocation?.coordinate
-                .latitude,
-            let longitude = structuredLocation.geoLocation?.coordinate
-                .longitude,
-            let locationLabel = self.location
-        {
-            let newLocation = Location(
-                name: locationLabel,
-                latitude: latitude,
-                longitude: longitude,
-                timeZoneIdentifier: self.timeZone?.identifier
-                    ?? Region.local.timeZone.identifier
-            )
-
-            guard let existingLocation = storageEvent?.location,
-                existingLocation.coordinateKey == newLocation.coordinateKey
-            else {
-                return newLocation
-            }
-
-            return existingLocation
-        }
-
-        return nil
     }
 
 }

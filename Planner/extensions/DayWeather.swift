@@ -5,17 +5,21 @@
 //  Created by Alex Green on 1/2/26.
 //
 
-import WeatherKit
 import Foundation
+import WeatherKit
+
+// Clean
 
 extension DayWeather {
-    func highTempString(in unit: UnitTemperature) -> String {
-        let temp = self.highTemperature.converted(to: unit)
-        return "\(Int(ceil(temp.value)))°"
+
+    func highTemp(in unit: UnitTemperature) -> String {
+        let temp = self.highTemperature.converted(to: unit).value
+        return "\(Int(ceil(temp)))°"
     }
 
-    func lowTempString(in unit: UnitTemperature) -> String  {
-        let temp = self.lowTemperature.converted(to: unit)
-        return "\(Int(ceil(temp.value)))°"
+    func lowTemp(in unit: UnitTemperature) -> String {
+        let temp = self.lowTemperature.converted(to: unit).value
+        return "\(Int(ceil(temp)))°"
     }
+
 }

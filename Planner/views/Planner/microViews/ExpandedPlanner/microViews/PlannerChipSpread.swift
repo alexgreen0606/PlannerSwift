@@ -157,7 +157,7 @@ struct PlannerChipSpreadView: View {
                 }
 
                 HStack(alignment: .center, spacing: 4) {
-                    Text(weatherData.highTempString(in: weatherUnit))
+                    Text(weatherData.highTemp(in: weatherUnit))
                         .font(
                             .system(
                                 size: 11,
@@ -169,7 +169,7 @@ struct PlannerChipSpreadView: View {
 
                     Divider().frame(height: 16)
 
-                    Text(weatherData.lowTempString(in: weatherUnit))
+                    Text(weatherData.lowTemp(in: weatherUnit))
                         .font(
                             .system(
                                 size: 10,
@@ -191,7 +191,7 @@ struct PlannerChipSpreadView: View {
         PlannerChipView(
             title: event.title,
             iconConfig: IconConfig(
-                name: event.calendar.iconName(settings: settings),
+                name: event.calendar.systemImageName(settings: settings),
                 primaryColor: event.calendar.color
             ),
             color: event.calendar.color
