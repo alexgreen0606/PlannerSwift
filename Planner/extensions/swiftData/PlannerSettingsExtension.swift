@@ -12,11 +12,11 @@ import SwiftUI
 extension PlannerSettings {
 
     var homeRegion: Region {
-        homeLocation?.region ?? .local
+        self.homeLocation?.region ?? .local
     }
 
     // Only ever nil if the device location is loading.
-    func validHomeLocation(deviceLocation: Location?) -> Location? {
+    func homeLocation(deviceLocation: Location?) -> Location? {
         homeLocation ?? deviceLocation
     }
 

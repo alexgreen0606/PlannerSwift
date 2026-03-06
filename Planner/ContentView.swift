@@ -12,11 +12,16 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
+// Clean
+
 struct ContentView: View {
 
-    // Set the rounded design for all navigation titles.
     init() {
-        // Large Title
+
+        // Set all date pickers to 5 minute intervals.
+        UIDatePicker.appearance().minuteInterval = 5
+
+        // Give large nav titles rounded font.
         if var descriptor =
             UIFontDescriptor
             .preferredFontDescriptor(withTextStyle: .largeTitle)
@@ -38,7 +43,7 @@ struct ContentView: View {
             ]
         }
 
-        // Inline Title
+        // Give inline nav titles rounded font.
         if var descriptor =
             UIFontDescriptor
             .preferredFontDescriptor(withTextStyle: .headline)
@@ -61,8 +66,6 @@ struct ContentView: View {
         }
     }
 
-    let contactsStore = CNContactStore()
-
     @AppStorage("keepCanceledPlansDuration") private
         var keepCanceledPlansDuration: KeepCanceledPlansDuration =
             KeepCanceledPlansDuration.startOfDay
@@ -81,54 +84,52 @@ struct ContentView: View {
     @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
 
     @Query private var plannerSettingsList: [PlannerSettings]
-    @Query private var foldersList: [ChecklistItem]
+    @Query private var checklistItems: [ChecklistItem]
     @Query private var planners: [Planner]
 
     @State private var plannerSearchText: String = ""
+    @State private var isPlannerSearchFocused: Bool = false
 
     @Namespace private var namespace
 
+    private let contactsStore = CNContactStore()
+
     private var settings: PlannerSettings? {
         plannerSettingsList.first
-    }
-
-    // TODO: fix
-    private var eventsForToday: [EKEvent] {
-        []
-        //        return calendarStore.allDayEventsByDatestamp[
-        //            todaystampWatcher.todaystamp
-        //        ] ?? []
     }
 
     var body: some View {
         ZStack {
             if let settings {
                 TabView {
-                    Tab("", systemImage: todaystampWatcher.todaystamp.calendarSymbolName) {
+                    Tab(
+                        "",
+                        systemImage: todaystampWatcher.todaystamp
+                            .calendarSymbolName
+                    ) {
                         PlannerTabView(
                             settings: settings,
                             namespace: namespace
                         )
                     }
-                    
+
                     Tab("", systemImage: "checklist") {
                         ChecklistsTabView()
                     }
-                    
+
                     Tab("", systemImage: "repeat") {
                         NavigationStack {
                             VStack {
-                                
+
                             }
                             .navigationTitle("Routines")
                         }
                     }
-                    
+
                     Tab("", systemImage: "gear") {
                         SettingsTabView(settings: settings)
                     }
-                    
-                    
+
                     Tab(role: .search) {
                         PlannerSearchTabView(
                             searchText: $plannerSearchText,
@@ -137,48 +138,44 @@ struct ContentView: View {
                         )
                         .searchable(
                             text: $plannerSearchText,
-                            prompt: "Search planner..."
+                            isPresented: $isPlannerSearchFocused,
+                            prompt: "Search planner...",
                         )
                         .searchPresentationToolbarBehavior(.avoidHidingContent)
+                        .onAppear {
+                            DispatchQueue.main.async {
+                                isPlannerSearchFocused = true
+                            }
+                        }
                     }
                 }
                 .tabBarMinimizeBehavior(.onScrollDown)
             }
         }
+        .onAppear(perform: initializeAppData)
 
-        // Planner Cover
+        // Expanded Planner Cover
         .fullScreenCover(item: $plannerCoverManager.context) { context in
             if let settings {
-                PlannerBuilderView(datestamp: context.datestamp, settings: settings)
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: context.id,
-                            in: namespace
-                        )
+                PlannerBuilderView(
+                    datestamp: context.datestamp,
+                    settings: settings
+                )
+                .navigationTransition(
+                    .zoom(
+                        sourceID: context.id,
+                        in: namespace
                     )
+                )
             }
         }
 
-        // Ensure all global storage objects exist.
-        .task {
-            modelContext.ensurePlannerSettings(
-                settings: plannerSettingsList
-            )
-
-            modelContext.ensureRootFolder(folders: foldersList)
-
-            calendarStore.attemptFreshReload(
-                hiddenCalendarIds: settings!.hiddenCalendarIds
-            )
-
-            cleanseStorage()
-
-            do {
-                try await contactsStore.requestAccess(for: .contacts)
-            } catch {
-                assertionFailure(
-                    "Failed to request contacts access: \(error)"
-                )
+        // Delete all calendar records when the calendar access is denied.
+        .onChange(of: calendarStore.calendarAccessDenied == true) {
+            _,
+            accessDenied in
+            if accessDenied {
+                // TODO: delete all calendar planner events from storage
             }
         }
 
@@ -186,7 +183,6 @@ struct ContentView: View {
         .onChange(of: deviceLocationManager.deviceClLocation?.coordinate.key) {
             _,
             _ in
-            print("Device location has changed. Refetching weather...")
             weatherStore.beginFreshReload()
         }
     }
@@ -237,13 +233,34 @@ struct ContentView: View {
                 }
             } catch {
                 assertionFailure(
-                    "Failed to delete canceled plans: \(error)"
+                    "ERROR ContentView.cleanseStorage: \(error)"
                 )
             }
         }
     }
-}
 
-#Preview {
-    ContentView()
+    private func initializeAppData() {
+        modelContext.ensurePlannerSettings(
+            settings: plannerSettingsList
+        )
+
+        modelContext.ensureRootFolder(folders: checklistItems)
+
+        calendarStore.attemptFreshLoad(
+            hiddenCalendarIds: settings!.hiddenCalendarIds
+        )
+
+        cleanseStorage()
+
+        Task {
+            do {
+                try await contactsStore.requestAccess(for: .contacts)
+            } catch {
+                assertionFailure(
+                    "ERROR ContentView.initializeAppData: \(error)"
+                )
+            }
+        }
+    }
+
 }

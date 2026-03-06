@@ -8,14 +8,22 @@
 import SwiftData
 import SwiftUI
 
+// Clean
+
 @main
 struct PlannerApp: App {
 
     init() {
-        let locationManager = DeviceLocationManager()
-        _locationManager = StateObject(wrappedValue: locationManager)
+
+        let deviceLocationManager = DeviceLocationManager()
+
+        _deviceLocationManager = StateObject(
+            wrappedValue: deviceLocationManager
+        )
         _weatherStore = StateObject(
-            wrappedValue: WeatherStore(deviceLocationManager: locationManager)
+            wrappedValue: WeatherStore(
+                deviceLocationManager: deviceLocationManager
+            )
         )
     }
 
@@ -24,14 +32,13 @@ struct PlannerApp: App {
 
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
         .system
-    
-    @Environment(\.modelContext) private var modelContext
 
-    @StateObject private var locationManager = DeviceLocationManager()
-    @StateObject private var weatherStore: WeatherStore
     @StateObject private var calendarStore = CalendarStore()
     @StateObject private var todaystampWatcher = TodaystampWatcher()
     @StateObject private var plannerCoverManager = PlannerCoverManager()
+
+    @StateObject private var weatherStore: WeatherStore
+    @StateObject private var deviceLocationManager: DeviceLocationManager
 
     var body: some Scene {
         WindowGroup {
@@ -41,12 +48,14 @@ struct PlannerApp: App {
                 .environmentObject(todaystampWatcher)
                 .environmentObject(weatherStore)
                 .environmentObject(calendarStore)
-                .environmentObject(locationManager)
+                .environmentObject(deviceLocationManager)
                 .environmentObject(plannerCoverManager)
         }
         .modelContainer(for: [
-            Planner.self, ChecklistItem.self, PlannerSettings.self,
-            PlannerSettings.self, PlannerEvent.self
+            PlannerSettings.self,
+            Planner.self,
+            PlannerEvent.self,
+            ChecklistItem.self,
         ])
     }
 }

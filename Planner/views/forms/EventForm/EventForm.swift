@@ -185,7 +185,7 @@ struct EventFormView: View {
             settings: settings,
             deviceLocation: deviceLocationManager.deviceLocation
         )
-            ?? settings.validHomeLocation(
+            ?? settings.homeLocation(
                 deviceLocation: deviceLocationManager.deviceLocation
             )
     }
@@ -342,7 +342,7 @@ struct EventFormView: View {
 
     @ToolbarContentBuilder
     private var plannerEventBottomToolbar: some ToolbarContent {
-        if !calendarStore.calendarAccessDenied {
+        if calendarStore.calendarAccessDenied == false {
             ToolbarItem(placement: .bottomBar) {
                 AccentButtonView(
                     label: "Add To Calendar",
@@ -434,7 +434,7 @@ struct EventFormView: View {
     // MARK: - Helper Functions
 
     private func reloadCalendarData() {
-        calendarStore.attemptFreshReload(
+        calendarStore.attemptFreshLoad(
             hiddenCalendarIds: settings.hiddenCalendarIds
         )
     }

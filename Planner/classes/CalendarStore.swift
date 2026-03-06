@@ -22,7 +22,7 @@ class CalendarStore: ObservableObject {
 
     @Published private(set) var allDayEventsByPlannerKey: [String: [EKEvent]] =
         [:]
-    @Published private(set) var calendarAccessDenied: Bool = true
+    @Published private(set) var calendarAccessDenied: Bool? = nil
 
     // Tells views to re-load their calendar data.
     @Published private(set) var reloadTrigger: UUID? = nil
@@ -46,7 +46,7 @@ class CalendarStore: ObservableObject {
         allDayEventsByPlannerKey[plannerKey] = allDayEvents
     }
 
-    func attemptFreshReload(hiddenCalendarIds: Set<String>) {
+    func attemptFreshLoad(hiddenCalendarIds: Set<String>) {
         switch EKEventStore.authorizationStatus(for: .event) {
         case .authorized:
             calendarAccessDenied = false
@@ -58,7 +58,6 @@ class CalendarStore: ObservableObject {
                 hiddenCalendarIds: hiddenCalendarIds
             )
         case .denied:
-            // TODO: Delete all calendar events here.
             calendarAccessDenied = true
         default:
             break
@@ -80,7 +79,6 @@ class CalendarStore: ObservableObject {
                     self.calendarAccessDenied = false
                     self.beginFreshReload(hiddenCalendarIds: hiddenCalendarIds)
                 } else {
-                    // TODO: Delete all calendar events here.
                     self.calendarAccessDenied = true
                 }
             }

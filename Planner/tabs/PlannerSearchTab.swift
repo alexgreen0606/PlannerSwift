@@ -105,7 +105,7 @@ struct PlannerSearchTabView: View {
                     }
                     .refreshable {
                         weatherStore.beginFreshReload()
-                        calendarStore.attemptFreshReload(
+                        calendarStore.attemptFreshLoad(
                             hiddenCalendarIds: settings
                                 .hiddenCalendarIds
                         )
@@ -152,7 +152,7 @@ struct PlannerSearchTabView: View {
 
     @ToolbarContentBuilder
     private var calendarFilterToolbarMenu: some ToolbarContent {
-        if !calendarStore.calendarAccessDenied {
+        if calendarStore.calendarAccessDenied == false {
             ToolbarItemGroup(placement: .topBarLeading) {
                 Menu {
                     Text("Filter Calendars")

@@ -44,7 +44,7 @@ extension ChecklistItem {
             // Add item to the bottom of the new list.
             let newSortIndex = generateSortIndex(
                 index: sortedExistingItems.count,
-                items: sortedExistingItems
+                sortedItems: sortedExistingItems
             )
             item.sortIndex = newSortIndex
             sortedExistingItems.append(item)

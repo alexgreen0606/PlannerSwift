@@ -172,7 +172,7 @@ struct TransferEventsFormView: View {
             eventStore: calendarStore.ekEventStore
         )
 
-        calendarStore.attemptFreshReload(
+        calendarStore.attemptFreshLoad(
             hiddenCalendarIds: settings.hiddenCalendarIds
         )
 

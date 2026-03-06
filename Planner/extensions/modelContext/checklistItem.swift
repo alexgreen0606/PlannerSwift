@@ -59,7 +59,7 @@ extension ModelContext {
 
         let sortIndex = generateSortIndex(
             index: targetIndex,
-            items: items
+            sortedItems: items
         )
 
         let newItem = ChecklistItem(sortIndex: sortIndex, parent: parent)
@@ -88,7 +88,7 @@ extension ModelContext {
 
         movedEvent.sortIndex = generateSortIndex(
             index: to,
-            items: remainingItems
+            sortedItems: remainingItems
         )
 
         do {

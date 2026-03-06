@@ -70,7 +70,7 @@ struct PlannerTabView: View {
             }
             .refreshable {
                 weatherStore.beginFreshReload()
-                calendarStore.attemptFreshReload(
+                calendarStore.attemptFreshLoad(
                     hiddenCalendarIds: settings.hiddenCalendarIds
                 )
                 deviceLocationManager.loadDeviceLocation()
@@ -154,7 +154,7 @@ struct PlannerTabView: View {
     // MARK: - Helper Functions
 
     private func buildThisWeekDatestamps() {
-        thisWeekDatestamps = (0..<6).map {
+        thisWeekDatestamps = (0..<7).map {
             DateInRegion(Date(), region: .local)
                 .dateByAdding($0, .day)
                 .toFormat("yyyy-MM-dd")

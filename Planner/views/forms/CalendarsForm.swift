@@ -115,7 +115,7 @@ struct CalendarsFormView: View {
                 guard !Task.isCancelled else { return }
 
                 // Refresh the calendar data.
-                calendarStore.attemptFreshReload(
+                calendarStore.attemptFreshLoad(
                     hiddenCalendarIds: settings.hiddenCalendarIds
                 )
             } catch {

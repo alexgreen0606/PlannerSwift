@@ -21,7 +21,7 @@ extension Planner {
     func location(settings: PlannerSettings, deviceLocation: Location?)
         -> Location?
     {
-        location ?? settings.validHomeLocation(deviceLocation: deviceLocation)
+        location ?? settings.homeLocation(deviceLocation: deviceLocation)
     }
 
     func region(settings: PlannerSettings) -> Region {

@@ -1,5 +1,5 @@
 //
-//  validateNewItem.swift
+//  generateTargetIndex.swift
 //  Planner
 //
 //  Created by Alex Green on 2/24/26.
@@ -7,39 +7,39 @@
 
 import SwiftUI
 
-// Generates a target index for a new item as long as the item's neighbors are not empty.
-// Returns nil otherwise.
+// Clean
 
+// Generates a target index for a new item.
+// Returns nil if either of its neighbors are empty.
 func generateTargetIndex<Item: ListItem>(
-    in items: [Item],
+    in sortedItems: [Item],
     near baseId: UUID,
     offset: Int
 ) -> Int? {
-
     guard
-        let baseIndex = items.firstIndex(where: {
+        let baseIndex = sortedItems.firstIndex(where: {
             $0.stableId == baseId
         })
     else {
         assertionFailure(
-            "ERROR generateTargetIndex: Item does not exist in the list with ID \(baseId)"
+            "ERROR generateTargetIndex: Item does not exist in list with ID \(baseId)"
         )
         return nil
     }
         
     let targetIndex = baseIndex + offset
 
-    // Don't create the new item if it is next to an empty item.
-
+    // New item's upper neighbor is empty. Don't create it.
     let upperEvent =
-        targetIndex > 0 ? items[targetIndex - 1] : nil
+        targetIndex > 0 ? sortedItems[targetIndex - 1] : nil
     if let upper = upperEvent, upper.title.isEmpty {
         return nil
     }
 
+    // New item's lower neighbor is empty. Don't create it.
     let lowerEvent =
-        targetIndex < items.count
-        ? items[targetIndex] : nil
+        targetIndex < sortedItems.count
+        ? sortedItems[targetIndex] : nil
     if let lower = lowerEvent, lower.title.isEmpty {
         return nil
     }

@@ -461,7 +461,7 @@ struct ExpandedPlannerView: View {
     // MARK: - Data Handlers
 
     private func refreshCalendar() {
-        calendarStore.attemptFreshReload(
+        calendarStore.attemptFreshLoad(
             hiddenCalendarIds: settings.hiddenCalendarIds
         )
     }
