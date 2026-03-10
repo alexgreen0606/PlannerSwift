@@ -8,6 +8,8 @@
 import SwiftData
 import SwiftUI
 
+// Clean
+
 enum RowConstants {
     static let horizontalAdornmentHeight: CGFloat = 32
     static let verticalTextPadding: CGFloat = 6
@@ -28,13 +30,13 @@ struct RowView<
     private let leftAdornment: LeftAdornment
     private let rightAdornment: RightAdornment
     private let bottomAdornment: BottomAdornment
-    private let toolbarIcons: [String]
-    private let customToggleConfig: RowToggleConfig<Item>?
+    private let toolbarSystemImageNames: [String]
+    private let customToggleConfig: ToggleConfig<Item>?
     private let namespace: Namespace.ID?
     private let createItem: ((_ baseId: UUID?, _ offset: Int) -> Void)?
     private let onToolbarTap: ((String, Item) -> Void)?
     private let onTitleChange: ((_ item: Item) -> Void)?
-    
+
     init(
         item: Item,
         showChecked: Bool,
@@ -43,8 +45,8 @@ struct RowView<
         leftAdornment: LeftAdornment,
         rightAdornment: RightAdornment,
         bottomAdornment: BottomAdornment,
-        toolbarIcons: [String]? = [],
-        customToggleConfig: RowToggleConfig<Item>? = nil,
+        toolbarSystemImageNames: [String]? = [],
+        customToggleConfig: ToggleConfig<Item>? = nil,
         namespace: Namespace.ID? = nil,
         createItem: ((_: UUID?, _: Int) -> Void)? = nil,
         onToolbarTap: ((String, Item) -> Void)? = nil,
@@ -57,7 +59,7 @@ struct RowView<
         self.leftAdornment = leftAdornment
         self.rightAdornment = rightAdornment
         self.bottomAdornment = bottomAdornment
-        self.toolbarIcons = toolbarIcons ?? []
+        self.toolbarSystemImageNames = toolbarSystemImageNames ?? []
         self.createItem = createItem
         self.customToggleConfig = customToggleConfig
         self.namespace = namespace
@@ -71,37 +73,36 @@ struct RowView<
     // Will be updated dynamically within the TextfieldView.
     @State private var height: CGFloat = 0
 
-    @State private var debounceTask: Task<Void, Never>? = nil
+    @State private var textfieldId = UUID()
+    @State private var titleChangeHandlerTask: Task<Void, Never>? = nil
 
     private var isFocused: Bool {
         listManager.focusedId == item.stableId
-    }
-
-    private var opacity: Double {
-        guard !showChecked else { return 1 }
-
-        let isPending = listManager.fadingItemIds.contains(item.stableId)
-
-        return isPending ? listManager.fadingOpacity : 1
     }
 
     private var isChecked: Bool {
         if listManager.isSelectMode {
             return listManager.selectedItemIds.contains(item.stableId)
         }
-
         return item.isChecked
+    }
+
+    private var opacity: Double {
+        if !showChecked, listManager.fadingItemIds.contains(item.stableId) {
+            return listManager.fadingOpacity
+        }
+        return 1
     }
 
     var body: some View {
         let row =
-            rowContent
+            row
             .frame(maxWidth: .infinity, alignment: .top)
             .listRowInsets(EdgeInsets())
             .discreetListItem()
             .padding(.horizontal)
 
-            // Trigger focus on render for new items.
+            // Trigger focus for new items.
             .onAppear {
                 if listManager.pendingFocusId == item.stableId {
                     listManager.pendingFocusId = nil
@@ -117,36 +118,34 @@ struct RowView<
         }
     }
 
-    // Row Content
-    private var rowContent: some View {
+    // MARK: - View Builders
+
+    private var row: some View {
         HStack(alignment: .top, spacing: 12) {
             toggle
-            textStack
+            content
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    // Item Toggle
     private var toggle: some View {
-        RowToggleView(
+        ListItemToggleView(
             item: item,
             tint: tint,
             isChecked: isChecked,
             opacity: opacity,
-            customIconConfig: customToggleConfig
+            customToggleConfig: customToggleConfig
         )
         .frame(height: RowConstants.toggleHeight, alignment: .center)
     }
 
-    // Item Text
-    private var textStack: some View {
+    private var content: some View {
         VStack(spacing: 0) {
 
-            // Upper Item Trigger
-            NewRowTriggerView(
+            SeparatorView(
                 showUpperDivider: isUpperItem,
-                onCreateItem: {
-                    guard !listManager.isSelectMode else {
+                onTap: {
+                    if listManager.isSelectMode {
                         listManager.toggleItem(item)
                         return
                     }
@@ -157,42 +156,37 @@ struct RowView<
 
             HStack(alignment: .top, spacing: 4) {
 
-                // Left Adornment
-                    leftAdornment
-                        .opacity(opacity)
-                        .frame(
-                            height: RowConstants.horizontalAdornmentHeight,
-                            alignment: .center
-                        )
+                leftAdornment
+                    .opacity(opacity)
+                    .frame(
+                        height: RowConstants.horizontalAdornmentHeight,
+                        alignment: .center
+                    )
 
-                // Title
                 ZStack(alignment: .leading) {
-                    titleText
-                    editableField
+                    text
+                    textfield
                 }
                 .padding(.vertical, RowConstants.verticalTextPadding)
                 .opacity(opacity)
 
-                // Right Adornment
                 rightAdornment
                     .opacity(opacity)
-                        .frame(
-                            height: RowConstants.horizontalAdornmentHeight,
-                            alignment: .center
-                        )
-                
+                    .frame(
+                        height: RowConstants.horizontalAdornmentHeight,
+                        alignment: .center
+                    )
+
             }
             .frame(minHeight: RowConstants.horizontalAdornmentHeight)
 
-            // Bottom Adornment
-                bottomAdornment
-                    .opacity(opacity)
+            bottomAdornment
+                .opacity(opacity)
 
-            // Lower Item Trigger
-            NewRowTriggerView(
+            SeparatorView(
                 showLowerDivider: true,
-                onCreateItem: {
-                    guard !listManager.isSelectMode else {
+                onTap: {
+                    if listManager.isSelectMode {
                         listManager.toggleItem(item)
                         return
                     }
@@ -203,8 +197,7 @@ struct RowView<
         }
     }
 
-    // Static Text
-    private var titleText: some View {
+    private var text: some View {
         Text(item.title)
             .opacity(isFocused ? 0 : 1)
             .font(.system(size: UiConstants.listItemFontSize))
@@ -213,26 +206,25 @@ struct RowView<
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
             .onTapGesture {
-                guard !listManager.isSelectMode else {
+                if listManager.isSelectMode {
                     listManager.toggleItem(item)
                     return
                 }
 
-                if !isChecked && !item.isChecked {
+                if !isChecked {
                     listManager.focusedId = item.stableId
                 }
             }
     }
 
-    // Textfield
-    private var editableField: some View {
+    private var textfield: some View {
         RowTextfieldView(
-            itemId: item.stableId,
             focusedId: $listManager.focusedId,
             text: $item.title,
             height: $height,
-            toolbarIcons: toolbarIcons,
+            itemId: item.stableId,
             accentColor: tint,
+            toolbarSystemImageNames: toolbarSystemImageNames,
             onTapToolbar: { iconName in
                 onToolbarTap?(iconName, item)
             },
@@ -240,6 +232,7 @@ struct RowView<
                 if !item.title.isEmpty {
                     createItem?(item.stableId, 1)
                 } else {
+                    // Triggers a deletion of the item in the below handler.
                     listManager.focusedId = nil
                 }
             }
@@ -249,18 +242,20 @@ struct RowView<
         .opacity(isFocused ? 1 : 0)
         .frame(maxWidth: .infinity, alignment: .leading)
         .fixedSize(horizontal: false, vertical: true)
-        
+
         // Note: This ensures that focused textfields have up-to-date snapshots of onCreateItem
-        .id("\(item.stableId)-\(isFocused)")
+        .id(textfieldId)
 
         // Debounce the external save each time the text changes.
         .onChange(of: item.title) { _, newTitle in
             guard let onTitleChange else { return }
-            
-            debounceTask?.cancel()
-            debounceTask = Task {
+
+            titleChangeHandlerTask?.cancel()
+
+            titleChangeHandlerTask = Task {
                 try? await Task.sleep(nanoseconds: 1_000_000_000)  // 1 second
                 guard !Task.isCancelled else { return }
+
                 onTitleChange(item)
             }
         }
@@ -268,7 +263,7 @@ struct RowView<
         // Handle focus side effects.
         .onChange(of: isFocused) { wasFocused, isFocused in
             if wasFocused, !isFocused {
-                debounceTask?.cancel()
+                titleChangeHandlerTask?.cancel()
 
                 let trimmed = item.title.trimmingCharacters(
                     in: .whitespacesAndNewlines
@@ -284,6 +279,10 @@ struct RowView<
                     item.title = trimmed
                     onTitleChange?(item)
                 }
+
+            } else if isFocused, !wasFocused {
+                // Re-render focused textfields so they get a fresh snapshot of onCreateItem.
+                textfieldId = UUID()
             }
         }
     }

@@ -205,8 +205,8 @@ struct PlannerSearchTabView: View {
     @ViewBuilder
     private var emptyPlannersLabel: some View {
         if sortedUpcomingYears.isEmpty {
-            EmptyLabel(
-                searchText.isEmpty
+            EmptyLabelView(
+                text: searchText.isEmpty
                     ? "No Upcoming Events"
                     : "No Matching Events"
             )

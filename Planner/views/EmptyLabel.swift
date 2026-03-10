@@ -7,10 +7,10 @@
 
 import SwiftUI
 
-struct EmptyLabel: View {
-    private let text: String
+// Clean
 
-    init(_ text: String) { self.text = text }
+struct EmptyLabelView: View {
+    let text: String
 
     var body: some View {
         Text(text)

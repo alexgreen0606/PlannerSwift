@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+// Clean
+
 struct TransferSourceIndicatorView: View {
     let title: String
     let subtitle: String
@@ -22,9 +24,9 @@ struct TransferSourceIndicatorView: View {
                 Image(systemName: iconConfig.name)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 8, height: 8)
+                    .frame(width: 10, height: 10)
                     .foregroundStyle(
-                        iconConfig.primaryColor ?? Color.secondary
+                        iconConfig.primaryColor
                     )
 
                 Text(subtitle)

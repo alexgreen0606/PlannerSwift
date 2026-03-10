@@ -168,8 +168,10 @@ final class ListManager<Item: ListItem>: ObservableObject {
                 // Keep items around before transitioning them to their new list.
                 try await Task.sleep(for: toggleTransitionDuration.duration)
 
-                self.newlyCheckedIds = []
-                self.newlyUncheckedIds = []
+                withAnimation {
+                    self.newlyCheckedIds = []
+                    self.newlyUncheckedIds = []
+                }
 
                 // Extra delay before displaying faded items in UI (allow time for SwiftData query to update).
                 try await Task.sleep(for: .seconds(1))

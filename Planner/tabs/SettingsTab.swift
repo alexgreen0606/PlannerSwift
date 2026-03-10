@@ -21,7 +21,7 @@ struct SettingsTabView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
 
-    @AppStorage("showListSeparators") private var showListSeparators: Bool =
+    @AppStorage("showListDividers") private var showListDividers: Bool =
         true
 
     @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
@@ -77,7 +77,7 @@ struct SettingsTabView: View {
                     .pickerStyle(.menu)
 
                     // List Separators
-                    Toggle("Show List Separators", isOn: $showListSeparators)
+                    Toggle("Show List Separators", isOn: $showListDividers)
                         .tint(accentColor.color)
 
                 } header: {

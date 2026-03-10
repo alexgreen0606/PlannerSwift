@@ -21,6 +21,9 @@ struct FolderView: View {
     let canTranferItems: Bool
     let updateTransferAvailability: (Set<UUID>) -> Void
 
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        AccentColor.blue
+
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
@@ -83,9 +86,12 @@ struct FolderView: View {
             // Edit Form
             .sheet(isPresented: $showEditSheet) {
                 ChecklistItemFormView(item: folder, parent: folder.parent)
-                .navigationTransition(
-                    .zoom(sourceID: IdConstants.ELLIPSIS_BUTTON, in: namespace)
-                )
+                    .navigationTransition(
+                        .zoom(
+                            sourceID: IdConstants.ELLIPSIS_BUTTON,
+                            in: namespace
+                        )
+                    )
             }
 
             // Transfer Form
@@ -94,7 +100,6 @@ struct FolderView: View {
                     source: folder,
                     selectedIds: selectManager.selectedItemIds
                 )
-                .environmentObject(selectManager)
                 .navigationTransition(
                     .zoom(
                         sourceID: IdConstants.TRANSFER_BUTTON,
@@ -120,9 +125,10 @@ struct FolderView: View {
         // Empty Folder Label
         .overlay {
             if folder.items.isEmpty {
-                EmptyLabel("No contents")
+                EmptyLabelView(text: "No contents")
             }
         }
+        .environmentObject(selectManager)
     }
 
     // MARK: - Toolbars
@@ -191,7 +197,10 @@ struct FolderView: View {
                 } label: {
                     Image(systemName: "ellipsis")
                 }
-                .matchedTransitionSource(id: IdConstants.ELLIPSIS_BUTTON, in: namespace)
+                .matchedTransitionSource(
+                    id: IdConstants.ELLIPSIS_BUTTON,
+                    in: namespace
+                )
                 .confirmationDialog(
                     folder.deleteConfirmation,
                     isPresented: $showDeleteFolderConfirm,
@@ -259,18 +268,14 @@ struct FolderView: View {
         HStack(alignment: .top, spacing: LayoutConstants.ROW_SPACING) {
             HStack(spacing: selectManager.isSelectMode ? 16 : 0) {
 
-                ToggleView(
-                    isOn: selectManager.selectedItemIds.contains(
+                ListItemToggleView(
+                    item: item,
+                    tint: accentColor.color,
+                    isChecked: selectManager.selectedItemIds.contains(
                         item.stableId
                     ),
-                    tint: nil,
-                    opacity: selectManager.isSelectMode ? 1 : 0,
-                ) {
-                    selectManager.toggleItem(item)
-                    updateTransferAvailability(
-                        Set(selectManager.selectedItemIds + [folder.stableId])
-                    )
-                }
+                    opacity: selectManager.isSelectMode ? 1 : 0
+                )
                 .frame(width: selectManager.isSelectMode ? 22 : 0)
                 .allowsHitTesting(selectManager.isSelectMode)
 
@@ -355,7 +360,7 @@ struct FolderView: View {
         dismiss()
         modelContext.deleteChecklistItem(folder)
     }
-    
+
     private func scrollToBottom(scrollProxy: ScrollViewProxy) {
         DispatchQueue.main.async {
             withAnimation {

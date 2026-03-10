@@ -7,16 +7,16 @@
 
 import SwiftUI
 
+// Clean
+
 struct TransferDestinationIndicatorView: View {
     let title: String
     let iconConfig: IconConfig
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack {
             Image(systemName: iconConfig.name)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 16, height: 16)
+                .imageScale(.medium)
                 .foregroundStyle(
                     iconConfig.primaryColor
                 )

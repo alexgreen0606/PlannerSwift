@@ -126,10 +126,10 @@ struct ExpandedPlannerView: View {
                     createItem: createEvent,
                     moveItem: moveUncheckedEvent,
                     floatingInfo: chipSpread,
-                    customToggleConfig: toggleEventIconConfig,
+                    customRowToggleConfig: toggleEventIconConfig,
                     namespace: namespace,
-                    toolbarIcons: ["clock"],
-                    tapToolbar: handleToolbarTap,
+                    toolbarSystemImageNames: ["clock"],
+                    onToolbarTap: handleToolbarTap,
                     leftAdornment: leftAdornment,
                     rightAdornment: rightAdornment,
                     bottomAdornment: bottomAdornment,
@@ -413,15 +413,16 @@ struct ExpandedPlannerView: View {
     }
 
     // Toggle confirmation config for calendar events.
-    private var toggleEventIconConfig: RowToggleConfig<PlannerEvent>? {
+    private var toggleEventIconConfig: ToggleConfig<PlannerEvent>? {
         switch plannerType {
         case .pastOrPresent: return nil
         case .future:
-            return RowToggleConfig(
-                name: "circle.slash",
-                primaryColor: .red,
-                secondaryColor: .secondary,
-                confirmation: RowConfirmationConfig(
+            return ToggleConfig(
+                iconConfig: IconConfig(
+                    name: "circle.slash",
+                    primaryColor: .red,
+                ),
+                confirmation: ConfirmationConfig(
                     title: "Delete from calendar?",
                     message: "Hiding only affects visibility in this planner.",
                     needsConfirmation: { event in

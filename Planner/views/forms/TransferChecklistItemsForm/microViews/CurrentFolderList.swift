@@ -12,15 +12,13 @@ import SwiftUI
 struct CurrentFolderListView: View {
     @Binding var selectedItem: ChecklistItem?
     @Binding var currentFolder: ChecklistItem
+    @Binding var folderNavDirection: FolderNavigationDirection
     let source: ChecklistItem
     let destinationType: ChecklistItemType
 
     @EnvironmentObject private var listManager: ListManager<ChecklistItem>
 
     @State private var selectableItems: [ChecklistItem] = []
-
-    // Controls the animation of the folder navigator.
-    @State private var folderNavDirection: FolderNavigationDirection = .forward
 
     private var folderSlideTransition: AnyTransition {
         switch folderNavDirection {
@@ -53,8 +51,8 @@ struct CurrentFolderListView: View {
         .transition(folderSlideTransition)
         .overlay {
             if selectableItems.isEmpty {
-                EmptyLabel(
-                    "No Available \(destinationType.rawValue.capitalizedFirst)s"
+                EmptyLabelView(
+                    text: "No Available \(destinationType.rawValue.capitalizedFirst)s"
                 )
             }
         }

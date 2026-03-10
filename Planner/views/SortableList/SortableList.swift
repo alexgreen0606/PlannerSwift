@@ -9,6 +9,8 @@ import Combine
 import SwiftData
 import SwiftUI
 
+// Clean
+
 struct SortableListView<
     Item: ListItem,
     LeftAdornment: View,
@@ -20,15 +22,15 @@ struct SortableListView<
     private let checkedItems: [Item]
     private let showChecked: Bool
     private let floatingInfo: FloatingInfo?
-    private let customToggleConfig: RowToggleConfig<Item>?
+    private let customRowToggleConfig: ToggleConfig<Item>?
     private let checkedHeader: String
     private let checkedFooter: String?
     private let emptyUncheckedLabel: String
     private let emptyCheckedLabel: String
     private let namespace: Namespace.ID?
     private let tint: (_ item: Item) -> Color
-    private let toolbarIcons: [String]
-    private let tapToolbar: ((String, Item) -> Void)?
+    private let toolbarSystemImageNames: [String]
+    private let onToolbarTap: ((String, Item) -> Void)?
     private let leftAdornment: (_ item: Item) -> LeftAdornment
     private let rightAdornment: (_ item: Item) -> RightAdornment
     private let bottomAdornment: (_ item: Item) -> BottomAdornment
@@ -49,11 +51,12 @@ struct SortableListView<
         createItem: @escaping (_: UUID?, _: Int) -> Void,
         moveItem: @escaping (_: Int, _: Int) -> Void,
         floatingInfo: FloatingInfo? = EmptyView(),
-        customToggleConfig: RowToggleConfig<Item>? = nil,
+        customRowToggleConfig: ToggleConfig<Item>? = nil,
         namespace: Namespace.ID? = nil,
-        toolbarIcons: [String] = [],
-        tapToolbar: ((String, Item) -> Void)? = nil,
-        leftAdornment: @escaping (_: Item) -> LeftAdornment = { _ in EmptyView() as! LeftAdornment
+        toolbarSystemImageNames: [String] = [],
+        onToolbarTap: ((String, Item) -> Void)? = nil,
+        leftAdornment: @escaping (_: Item) -> LeftAdornment = { _ in
+            EmptyView() as! LeftAdornment
         },
         rightAdornment: @escaping (_: Item) -> RightAdornment = { _ in
             EmptyView() as! RightAdornment
@@ -68,15 +71,15 @@ struct SortableListView<
         self.checkedItems = checkedItems
         self.showChecked = showChecked
         self.floatingInfo = floatingInfo
-        self.customToggleConfig = customToggleConfig
+        self.customRowToggleConfig = customRowToggleConfig
         self.checkedHeader = checkedHeader
         self.checkedFooter = checkedFooter
         self.emptyUncheckedLabel = emptyUncheckedLabel
         self.emptyCheckedLabel = emptyCheckedLabel
         self.namespace = namespace
         self.tint = tint
-        self.toolbarIcons = toolbarIcons
-        self.tapToolbar = tapToolbar
+        self.toolbarSystemImageNames = toolbarSystemImageNames
+        self.onToolbarTap = onToolbarTap
         self.leftAdornment = leftAdornment
         self.rightAdornment = rightAdornment
         self.bottomAdornment = bottomAdornment
@@ -91,84 +94,8 @@ struct SortableListView<
 
     var body: some View {
         List {
-            Section {
-                NewRowTriggerView {
-                    createItem(
-                        uncheckedItems.first?.stableId,
-                        0
-                    )
-                }
-                .discreetListItem()
-                .listRowInsets(EdgeInsets())
-
-                ForEach(uncheckedItems, id: \.stableId) { item in
-                    RowView(
-                        item: item,
-                        showChecked: showChecked,
-                        isUpperItem: item.stableId
-                            == uncheckedItems.first?.stableId,
-                        tint: tint(item),
-                        leftAdornment: leftAdornment(item),
-                        rightAdornment: rightAdornment(item),
-                        bottomAdornment: bottomAdornment(item),
-                        toolbarIcons: toolbarIcons,
-                        customToggleConfig: customToggleConfig,
-                        namespace: namespace,
-                        createItem: createItem,
-                        onToolbarTap: handleToolbarPress,
-                        onTitleChange: handleTitleChange
-                    )
-                    .id(item.stableId)
-                }
-                .onMove(perform: moveUncheckedItem)
-
-                NewRowTriggerView {
-                    createItem(uncheckedItems.last?.stableId, 1)
-                }
-                .discreetListItem()
-                .listRowInsets(EdgeInsets())
-                .id(IdConstants.UNCHECKED_ITEMS)
-
-                if uncheckedItems.isEmpty && showChecked {
-                    EmptyLabel(emptyUncheckedLabel)
-                        .discreetListItem()
-                        .frame(maxWidth: .infinity)
-                }
-
-            } header: {
-                floatingInfo
-                    .listRowInsets(.top, 0)
-            }
-            .listSectionSeparator(.hidden)
-
-            if showChecked {
-                Section {
-                    ForEach(checkedItems, id: \.stableId) { item in
-                        RowView(
-                            item: item,
-                            showChecked: showChecked,
-                            isUpperItem: item.stableId
-                                == checkedItems.first?.stableId,
-                            tint: tint(item),
-                            leftAdornment: leftAdornment(item),
-                            rightAdornment: rightAdornment(item),
-                            bottomAdornment: bottomAdornment(item)
-                        )
-                    }
-                } header: {
-                    Text(
-                        checkedItems.isEmpty ? emptyCheckedLabel : checkedHeader
-                    )
-                } footer: {
-                    if checkedFooter != nil && !checkedItems.isEmpty {
-                        Text(checkedFooter!)
-                            .font(.footnote)
-                            .foregroundStyle(Color.secondary)
-                    }
-                }
-                .discreetListItem()
-                .id(IdConstants.CHECKED_ITEMS)
-            }
+            uncheckedList
+            checkedList
         }
         .listStyle(.plain)
         .environment(\.defaultMinListRowHeight, 0)
@@ -176,19 +103,17 @@ struct SortableListView<
         .background(Color.appBackground.edgesIgnoringSafeArea(.all))
         .overlay {
             if uncheckedItems.isEmpty && !showChecked {
-                EmptyLabel(emptyUncheckedLabel)
+                EmptyLabelView(text: emptyUncheckedLabel)
             }
         }
         .animateSynchronousAction(from: uncheckedItems)
-        .animateSynchronousAction(from: listManager.newlyCheckedIds)
-        .animateSynchronousAction(from: listManager.newlyUncheckedIds)
 
         // Blur the textfield when the list unmounts (deletes empty items).
         .onDisappear {
             listManager.focusedId = nil
         }
 
-        // Blur the textfields when the app exits focus.
+        // Blur the textfield when the app exits focus (deletes empty items).
         .onChange(of: appPhase) { _, phase in
             if phase == .inactive {
                 listManager.focusedId = nil
@@ -204,23 +129,107 @@ struct SortableListView<
         )
     }
 
-    private func moveUncheckedItem(
+    // MARK: - View Builders
+
+    private var uncheckedList: some View {
+        Section {
+            SeparatorView {
+                createItem(
+                    uncheckedItems.first?.stableId,
+                    0
+                )
+            }
+            .discreetListItem()
+            .listRowInsets(EdgeInsets())
+
+            ForEach(uncheckedItems, id: \.stableId) { item in
+                RowView(
+                    item: item,
+                    showChecked: showChecked,
+                    isUpperItem: item.stableId
+                        == uncheckedItems.first?.stableId,
+                    tint: tint(item),
+                    leftAdornment: leftAdornment(item),
+                    rightAdornment: rightAdornment(item),
+                    bottomAdornment: bottomAdornment(item),
+                    toolbarSystemImageNames: toolbarSystemImageNames,
+                    customToggleConfig: customRowToggleConfig,
+                    namespace: namespace,
+                    createItem: createItem,
+                    onToolbarTap: onToolbarTap,
+                    onTitleChange: handleTitleChange
+                )
+                .id(item.stableId)
+            }
+            .onMove(perform: handleRowMove)
+
+            SeparatorView {
+                createItem(uncheckedItems.last?.stableId, 1)
+            }
+            .discreetListItem()
+            .listRowInsets(EdgeInsets())
+            .id(IdConstants.UNCHECKED_ITEMS)
+
+            if uncheckedItems.isEmpty && showChecked {
+                EmptyLabelView(text: emptyUncheckedLabel)
+                    .discreetListItem()
+                    .frame(maxWidth: .infinity)
+            }
+
+        } header: {
+            floatingInfo
+                .listRowInsets(.top, 0)
+        }
+        .listSectionSeparator(.hidden)
+    }
+
+    @ViewBuilder
+    private var checkedList: some View {
+        if showChecked {
+            Section {
+                ForEach(checkedItems, id: \.stableId) { item in
+                    RowView(
+                        item: item,
+                        showChecked: showChecked,
+                        isUpperItem: item.stableId
+                            == checkedItems.first?.stableId,
+                        tint: tint(item),
+                        leftAdornment: leftAdornment(item),
+                        rightAdornment: rightAdornment(item),
+                        bottomAdornment: bottomAdornment(item),
+                        customToggleConfig: customRowToggleConfig
+                    )
+                }
+            } header: {
+                Text(
+                    checkedItems.isEmpty ? emptyCheckedLabel : checkedHeader
+                )
+            } footer: {
+                if checkedFooter != nil && !checkedItems.isEmpty {
+                    Text(checkedFooter!)
+                        .font(.footnote)
+                        .foregroundStyle(Color.secondary)
+                }
+            }
+            .discreetListItem()
+            .id(IdConstants.CHECKED_ITEMS)
+        }
+    }
+
+    // MARK: - Functions
+
+    private func handleRowMove(
         from sources: IndexSet,
         to destination: Int
     ) {
         for source in sources {
             var to = destination
-
             if to > source {
                 to -= 1
             }
 
             moveItem(source, to)
         }
-    }
-
-    private func handleToolbarPress(_ iconName: String, _ item: Item) {
-        tapToolbar?(iconName, item)
     }
 
 }

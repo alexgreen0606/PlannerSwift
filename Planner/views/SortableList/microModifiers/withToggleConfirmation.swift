@@ -8,7 +8,7 @@
 import SwiftUI
 
 private struct RowToggleConfirmationModifier<Item: ListItem>: ViewModifier {
-    let config: RowConfirmationConfig<Item>?
+    let config: ConfirmationConfig<Item>?
     let item: Item
     @Binding var isPresented: Bool
 
@@ -47,7 +47,7 @@ private struct RowToggleConfirmationModifier<Item: ListItem>: ViewModifier {
 extension View {
 
     func withToggleConfirmation<Item: ListItem>(
-        _ config: RowConfirmationConfig<Item>?,
+        _ config: ConfirmationConfig<Item>?,
         item: Item,
         isPresented: Binding<Bool>
     ) -> some View {

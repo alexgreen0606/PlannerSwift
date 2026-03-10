@@ -1,5 +1,5 @@
 //
-//  RowTextfieldView.swift
+//  RowTextfield.swift
 //  Planner
 //
 //  Created by Alex Green on 12/1/25.
@@ -9,13 +9,15 @@ import SwiftData
 import SwiftUI
 import UIKit
 
+// Clean
+
 struct RowTextfieldView: UIViewRepresentable {
-    let itemId: UUID
     @Binding var focusedId: UUID?
     @Binding var text: String
     @Binding var height: CGFloat
-    var toolbarIcons: [String]
+    let itemId: UUID
     var accentColor: Color
+    var toolbarSystemImageNames: [String]
     var onTapToolbar: (String) -> Void
     var onEnter: () -> Void
 
@@ -53,6 +55,7 @@ struct RowTextfieldView: UIViewRepresentable {
         )
 
         guard height != size.height else { return }
+
         DispatchQueue.main.async {
             height = size.height
         }
@@ -66,8 +69,10 @@ struct RowTextfieldView: UIViewRepresentable {
         calculateHeight(view: uiView)
 
         if focusedId == itemId && !uiView.isFirstResponder {
+            // Focus textfield when clicked.
             uiView.becomeFirstResponder()
         } else if focusedId == nil && uiView.isFirstResponder {
+            // Blur textfield when no items should be focused.
             uiView.resignFirstResponder()
         }
     }
@@ -96,7 +101,7 @@ struct RowTextfieldView: UIViewRepresentable {
             }
         }
 
-        // Intercept return key so it doesn't add a newline.
+        // Override return key so it doesn't add a newline.
         func textView(
             _ textView: UITextView,
             shouldChangeTextIn range: NSRange,
@@ -111,11 +116,11 @@ struct RowTextfieldView: UIViewRepresentable {
 
         func configureKeyboardToolbar(for textView: UITextView) {
             let toolbarHeight: CGFloat = 44
-            let extraHeight: CGFloat = 8
+            let toolbarBottomPadding: CGFloat = 8
 
             let container = UIView()
             container.translatesAutoresizingMaskIntoConstraints = false
-            container.frame.size.height = toolbarHeight + extraHeight
+            container.frame.size.height = toolbarHeight + toolbarBottomPadding
 
             let toolbar = UIToolbar()
             toolbar.translatesAutoresizingMaskIntoConstraints = false
@@ -126,26 +131,29 @@ struct RowTextfieldView: UIViewRepresentable {
                 action: nil
             )
 
-            let iconButtons: [UIBarButtonItem] = parent.toolbarIcons.map {
-                iconName in
-                let image = UIImage(systemName: iconName)
-                let button = UIBarButtonItem(
-                    image: image,
-                    style: .plain,
-                    target: self,
-                    action: #selector(toolbarButtonTapped(sender:))
-                )
+            // Custom Buttons.
+            let iconButtons: [UIBarButtonItem] = parent.toolbarSystemImageNames
+                .map {
+                    systemImageName in
+                    let image = UIImage(systemName: systemImageName)
+                    let button = UIBarButtonItem(
+                        image: image,
+                        style: .plain,
+                        target: self,
+                        action: #selector(toolbarButtonTapped(sender:))
+                    )
 
-                objc_setAssociatedObject(
-                    button,
-                    AssociatedKeys.keyPointer,
-                    iconName,
-                    .OBJC_ASSOCIATION_RETAIN_NONATOMIC
-                )
+                    objc_setAssociatedObject(
+                        button,
+                        AssociatedKeys.keyPointer,
+                        systemImageName,
+                        .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+                    )
 
-                return button
-            }
+                    return button
+                }
 
+            // Done Button.
             let done = UIBarButtonItem(
                 barButtonSystemItem: .done,
                 target: self,
@@ -153,10 +161,9 @@ struct RowTextfieldView: UIViewRepresentable {
             )
             done.tintColor = UIColor(parent.accentColor)
 
+            // Build the toolbar.
             toolbar.items = iconButtons + [flexibleSpace] + [done]
-
             container.addSubview(toolbar)
-
             NSLayoutConstraint.activate([
                 toolbar.leadingAnchor.constraint(
                     equalTo: container.leadingAnchor
@@ -167,7 +174,6 @@ struct RowTextfieldView: UIViewRepresentable {
                 toolbar.topAnchor.constraint(equalTo: container.topAnchor),
                 toolbar.heightAnchor.constraint(equalToConstant: toolbarHeight),
             ])
-
             textView.inputAccessoryView = container
         }
 
@@ -179,11 +185,11 @@ struct RowTextfieldView: UIViewRepresentable {
         }
 
         @objc private func toolbarButtonTapped(sender: UIButton) {
-            if let iconName = objc_getAssociatedObject(
+            if let systemImageName = objc_getAssociatedObject(
                 sender,
                 AssociatedKeys.keyPointer
             ) as? String {
-                parent.onTapToolbar(iconName)
+                parent.onTapToolbar(systemImageName)
             }
         }
 

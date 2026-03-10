@@ -50,6 +50,9 @@ struct TransferChecklistItemsFormView: View {
     @State private var destinationType: ChecklistItemType
     @State private var selectedItem: ChecklistItem?
     @State private var currentFolder: ChecklistItem
+    
+    // Controls the animation of the folder navigator.
+    @State private var folderNavDirection: FolderNavigationDirection = .forward
 
     private var transferCount: String {
         let count = listManager.selectedItems.count
@@ -71,6 +74,7 @@ struct TransferChecklistItemsFormView: View {
                 CurrentFolderListView(
                     selectedItem: $selectedItem,
                     currentFolder: $currentFolder,
+                    folderNavDirection: $folderNavDirection,
                     source: source,
                     destinationType: destinationType
                 )
