@@ -1,5 +1,5 @@
 //
-//  SearchCompleter.swift
+//  LocationFinder.swift
 //  Planner
 //
 //  Created by Alex Green on 2/5/26.
@@ -22,17 +22,17 @@ class LocationFinder: NSObject, ObservableObject,
 
     private let completer = MKLocalSearchCompleter()
 
-    @Published var queryFragment: String = "" {
+    @Published var locationSearchText: String = "" {
         didSet {
-            completer.queryFragment = queryFragment
+            completer.queryFragment = locationSearchText
         }
     }
-    @Published var suggestions: [MKLocalSearchCompletion] = []
+    @Published var results: [MKLocalSearchCompletion] = []
     @Published var hasNetworkError: Bool = false
 
     func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
         hasNetworkError = false
-        suggestions = completer.results
+        results = completer.results
     }
 
     func completer(
@@ -48,7 +48,7 @@ class LocationFinder: NSObject, ObservableObject,
         }
     }
 
-    func selectCompletion(_ completion: MKLocalSearchCompletion) async -> (
+    func getOptionLocationInfo(_ completion: MKLocalSearchCompletion) async -> (
         name: String, subtitle: String, latitude: Double, longitude: Double,
         timeZoneIdentifier: String?
     )? {
@@ -73,7 +73,7 @@ class LocationFinder: NSObject, ObservableObject,
             )
 
         } catch {
-            print("ERROR: LocationFinder.selectCompletion: \(error)")
+            print("ERROR: LocationFinder.getOptionLocationInfo: \(error)")
             return nil
         }
     }

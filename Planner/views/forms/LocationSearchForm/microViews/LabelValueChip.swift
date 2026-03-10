@@ -7,20 +7,20 @@
 
 import SwiftUI
 
-struct LabelValueView: View {
+// Clean
+
+struct LabelValueChipView: View {
     let label: String
     let value: String?
     let iconConfig: IconConfig
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack {
             Image(systemName: iconConfig.name)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 18, height: 18)
+                .imageScale(.medium)
                 .foregroundStyle(
-                    iconConfig.primaryColor ?? .secondary,
-                    iconConfig.secondaryColor ?? .secondary
+                    iconConfig.primaryColor,
+                    iconConfig.secondaryColor
                 )
 
             VStack(alignment: .leading) {

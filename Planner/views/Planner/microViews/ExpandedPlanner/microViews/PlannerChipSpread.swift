@@ -79,7 +79,7 @@ struct PlannerChipSpreadView: View {
 
         // Location Sheet
         .sheet(isPresented: $isLocationSheetOpen) {
-            LocationSearchView(
+            LocationSearchFormView(
                 title: "Edit Planner Location",
                 mode: .planner,
                 settings: settings,

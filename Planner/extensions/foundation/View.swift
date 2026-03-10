@@ -29,7 +29,7 @@ extension View {
     }
 
     // Pill-shaped, glass chip.
-    func glassChip(color: Color?, onTap: (() -> Void)?, height: Double? = nil)
+    func glassChip(color: Color? = nil, onTap: (() -> Void)? = nil, height: Double? = nil)
         -> some View
     {
         self

@@ -34,10 +34,17 @@ struct SettingsTabView: View {
 
     @AppStorage("toggleTransitionDuration") private
         var toggleTransitionDuration: ToggleTransitionDuration =
-    ToggleTransitionDuration.threeSeconds
+            ToggleTransitionDuration.threeSeconds
 
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
+
+    private var activeCalendarCount: String {
+        String(calendarStore.sortedCalendars.filter {
+            !settings.hiddenCalendarIds.contains($0.calendarIdentifier)
+        }.count)
+    }
 
     var body: some View {
         NavigationStack {
@@ -122,13 +129,27 @@ struct SettingsTabView: View {
                     .pickerStyle(.menu)
 
                     // Calendars
-                    NavigationLink("Calendars") {
+                    NavigationLink {
                         CalendarsFormView(settings: settings)
+                    } label: {
+                        HStack {
+
+                            Text("Calendars")
+
+                            Spacer()
+
+                            Text(
+                                activeCalendarCount
+                            )
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+
+                        }
                     }
 
                     // Home Location
                     NavigationLink {
-                        LocationSearchView(
+                        LocationSearchFormView(
                             title: "Edit Home Location",
                             mode: .home,
                             settings: settings,

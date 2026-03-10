@@ -10,19 +10,12 @@ import EventKit
 import SwiftData
 import SwiftUI
 
+// Clean
+
 struct CalendarsFormView: View {
     let settings: PlannerSettings
 
-    init(settings: PlannerSettings) {
-        self.settings = settings
-    }
-
-    @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var calendarStore: CalendarStore
-
-    @State private var calendarRefreshDebounce: Task<Void, Never>?
-
-    private var iconOptions: [String] = [
+    private let systemImageNameOptions: [String] = [
         "briefcase.fill",
         "airplane",
         "suitcase.fill",
@@ -36,85 +29,91 @@ struct CalendarsFormView: View {
         "basketball.fill",
     ]
 
+    @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var calendarStore: CalendarStore
+
+    @State private var calendarStoreRefreshTask: Task<Void, Never>?
+
     var body: some View {
         List {
             ForEach(
                 calendarStore.sortedCalendars,
                 id: \.calendarIdentifier
             ) { calendar in
-                HStack {
-                    Image(
-                        systemName: settings.hiddenCalendarIds
-                            .contains(calendar.calendarIdentifier)
-                            == false
-                            ? "checkmark.circle" : "circle"
-                    )
-                    .foregroundStyle(Color(calendar.cgColor))
-                    .contentShape(Rectangle())
-                    .contentTransition(
-                        .symbolEffect(
-                            .replace.magic(fallback: .replace)
-                        )
-                    )
-                    .onTapGesture {
-                        if settings.hiddenCalendarIds.contains(
-                            calendar.calendarIdentifier
-                        ) {
-                            settings.hiddenCalendarIds.remove(
-                                calendar.calendarIdentifier
-                            )
-                        } else {
-                            settings.hiddenCalendarIds.insert(
-                                calendar.calendarIdentifier
-                            )
-                        }
-
-                        try! modelContext.save()
-                    }
-
-                    Text(calendar.title)
-
-                    Spacer()
-
-                    Menu {
-                        ForEach(iconOptions, id: \.self) { iconName in
-                            Button("", systemImage: iconName) {
-
-                                settings.iconMap[
-                                    calendar.calendarIdentifier
-                                ] = iconName
-
-                                // TODO: move to model context
-                                try! modelContext.save()
-                            }
-                        }
-                    } label: {
-                        Image(
-                            systemName: calendar.systemImageName(settings: settings)
-                        )
-                        .foregroundStyle(Color(calendar.cgColor))
-                    }
-                }
+                row(for: calendar)
             }
         }
         .navigationTitle("Calendars")
         .navigationBarTitleDisplayMode(.inline)
 
-        // Refresh the calendar when the hidden calendars change.
+        // Refresh the calendar store when the hidden calendars change.
         .onChange(of: settings.hiddenCalendarIds) { _, _ in
-            scheduleCalendarRefreshDebounce()
+            scheduleCalendarStoreRefresh()
         }
     }
 
-    private func scheduleCalendarRefreshDebounce() {
-        calendarRefreshDebounce?.cancel()
+    // MARK: - View Builders
 
-        calendarRefreshDebounce = Task {
+    private func row(for calendar: EKCalendar) -> some View {
+        HStack {
+            Image(
+                systemName: settings.hiddenCalendarIds
+                    .contains(calendar.calendarIdentifier)
+                    == false
+                    ? "checkmark.circle" : "circle"
+            )
+            .imageScale(.large)
+            .fontWeight(.light)
+            .padding(.trailing, 6)
+            .contentTransition(
+                .symbolEffect(
+                    .replace.magic(fallback: .replace)
+                )
+            )
+
+            Text(calendar.title)
+
+            Spacer()
+
+            Menu {
+                ForEach(systemImageNameOptions, id: \.self) {
+                    systemImageName in
+                    Button("", systemImage: systemImageName) {
+                        modelContext.updateCalendarIcon(
+                            in: settings,
+                            for: calendar,
+                            to: systemImageName
+                        )
+                    }
+                }
+            } label: {
+                Image(
+                    systemName: calendar.systemImageName(
+                        settings: settings
+                    )
+                )
+                .foregroundStyle(calendar.color)
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            modelContext.toggleCalendarVisibility(
+                in: settings,
+                for: calendar
+            )
+        }
+    }
+
+    // MARK: - Functions
+
+    private func scheduleCalendarStoreRefresh() {
+        calendarStoreRefreshTask?.cancel()
+
+        calendarStoreRefreshTask = Task {
             do {
-                try await Task.sleep(for: .milliseconds(500))
+                try await Task.sleep(for: .milliseconds(1000))
                 guard !Task.isCancelled else { return }
 
-                // Refresh the calendar data.
                 calendarStore.attemptFreshLoad(
                     hiddenCalendarIds: settings.hiddenCalendarIds
                 )

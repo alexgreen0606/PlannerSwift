@@ -17,10 +17,8 @@ struct ChecklistActionMenu: View {
     let completedItems: [ChecklistItem]
     let visibleItems: [ChecklistItem]
 
-    // Can pass a folder to navigate into (passes itself when it is transformed into a folder).
-    let closeChecklist: (ChecklistItem?) -> Void
-
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var listManager: ListManager<ChecklistItem>
 
     @State private var showDeleteCompletedConfirm = false
@@ -135,7 +133,7 @@ struct ChecklistActionMenu: View {
     }
 
     private func deleteEntireChecklist() {
-        closeChecklist(nil)
+        dismiss()
         modelContext.deleteChecklistItem(checklist)
     }
 

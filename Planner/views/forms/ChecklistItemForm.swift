@@ -8,22 +8,24 @@
 import SwiftData
 import SwiftUI
 
+// Clean
+
 struct ChecklistItemFormView: View {
     private let sourceItem: ChecklistItem?
     private let parent: ChecklistItem?
-    private let onSave: (ChecklistItem) -> Void
-    
+    private let onSave: (() -> Void)?
+
     init(
         item: ChecklistItem? = nil,
         parent: ChecklistItem?,
-        onSave: @escaping (ChecklistItem) -> Void
+        onSave: (() -> Void)? = nil
     ) {
         self.sourceItem = item
         self.parent = parent
         self.onSave = onSave
 
         if let item {
-            _draft = State(
+            _draftChecklistItem = State(
                 initialValue: ChecklistItem(
                     type: item.type,
                     title: item.title,
@@ -32,7 +34,7 @@ struct ChecklistItemFormView: View {
                 )
             )
         } else {
-            _draft = State(
+            _draftChecklistItem = State(
                 initialValue: ChecklistItem(
                     sortIndex: 0
                 )
@@ -43,33 +45,27 @@ struct ChecklistItemFormView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @State private var draft: ChecklistItem
+    @State private var draftChecklistItem: ChecklistItem
 
-    private var isDirty: Bool {
-        draft.title != sourceItem?.title || draft.color != sourceItem?.color
-            || draft.type != sourceItem?.type
-    }
-    
-    private var showTypePicker: Bool {
-        guard let sourceItem else {
-            return true
-        }
-        
-        return sourceItem.items.isEmpty && parent != nil
+    private var canSave: Bool {
+        !draftChecklistItem.title.isEmpty
+            && (draftChecklistItem.title != sourceItem?.title
+                || draftChecklistItem.color != sourceItem?.color
+                || draftChecklistItem.type != sourceItem?.type)
     }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Title", text: $draft.title)
+                    TextField("Title", text: $draftChecklistItem.title)
                         .textInputAutocapitalization(.words)
                 }
                 .listSectionMargins(.top, 0)
 
-                if showTypePicker {
+                if sourceItem == nil {
                     Section {
-                        Picker("Type", selection: $draft.type) {
+                        Picker("Type", selection: $draftChecklistItem.type) {
                             Text("Checklist").tag(ChecklistItemType.checklist)
                             Text("Folder").tag(ChecklistItemType.folder)
                         }
@@ -83,18 +79,19 @@ struct ChecklistItemFormView: View {
                 Section {
                     HStack {
                         ForEach(ChecklistItemColor.allCases, id: \.self) {
-                            c in
+                            itemColor in
                             Image(
-                                systemName: c == draft.color
+                                systemName: itemColor
+                                    == draftChecklistItem.color
                                     ? "circle.fill" : "circle"
                             )
-                            .foregroundColor(c.swiftUIColor)
+                            .foregroundColor(itemColor.swiftUIColor)
                             .imageScale(.large)
                             .onTapGesture {
-                                draft.color = c
+                                draftChecklistItem.color = itemColor
                             }
 
-                            if c != ChecklistItemColor.allCases.last {
+                            if itemColor != ChecklistItemColor.allCases.last {
                                 Spacer()
                             }
                         }
@@ -108,62 +105,40 @@ struct ChecklistItemFormView: View {
             .navigationTitle(
                 sourceItem == nil
                     ? "Create Item"
-                    : "Edit \(draft.type.rawValue.capitalizedFirst)"
+                    : "Edit \(draftChecklistItem.type.rawValue.capitalizedFirst)"
             )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Submit", systemImage: "checkmark") {
-                        handleSave()
-                    }
-                    .tint(
-                        draft.title.isEmpty
-                            ? Color.label : draft.color.swiftUIColor
-                    )
-                    .disabled(draft.title.isEmpty || !isDirty)
-                }
+                submitButton
             }
         }
         .presentationDetents([.height(250)])
     }
 
+    // MARK: - Toolbars
+
+    private var submitButton: some ToolbarContent {
+        ToolbarItem(placement: .confirmationAction) {
+            Button("Submit", systemImage: "checkmark", action: handleSave)
+                .tint(
+                    draftChecklistItem.title.isEmpty
+                        ? Color.label : draftChecklistItem.color.swiftUIColor
+                )
+                .disabled(!canSave)
+        }
+    }
+
+    // MARK: - Functions
+
     private func handleSave() {
-        let savedItem: ChecklistItem
-        
-        if let sourceItem {
-            // Edit the existing item.
-            sourceItem.title = draft.title
-            sourceItem.color = draft.color
-            sourceItem.type = draft.type
-            
-            savedItem = sourceItem
-        } else {
-            // Create the new item.
-            let sorted = parent?.items.sorted {
-                $0.sortIndex < $1.sortIndex
-            }
-            let sortIndex = (sorted?.last?.sortIndex ?? 0) + 8
-            let newItem = ChecklistItem(
-                type: draft.type,
-                title: draft.title,
-                color: draft.color,
-                sortIndex: sortIndex,
-                parent: parent
-            )
-            modelContext.insert(newItem)
+        modelContext.handleChecklistItemChange(
+            sourceItem: sourceItem,
+            parent: parent,
+            draftChecklistItem: draftChecklistItem
+        )
 
-            savedItem = newItem
-        }
-
-        do {
-            try modelContext.save()
-        } catch {
-            assertionFailure(
-                "Error saving checklist item: \(error)"
-            )
-        }
-        
-        onSave(savedItem)
+        onSave?()
         dismiss()
     }
+
 }

@@ -1,5 +1,5 @@
 //
-//  LocationSearch.swift
+//  LocationSearchForm.swift
 //  Planner
 //
 //  Created by Alex Green on 2/5/26.
@@ -10,13 +10,15 @@ import MapKit
 import SwiftData
 import SwiftUI
 
+// Clean
+
 enum LocationSearchMode {
     case home
     case planner
     case event
 }
 
-struct LocationSearchView: View {
+struct LocationSearchFormView: View {
     private let title: String
     private let mode: LocationSearchMode
     private let settings: PlannerSettings
@@ -51,26 +53,11 @@ struct LocationSearchView: View {
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
     @Query(sort: \Location.selectedOn, order: .reverse)
-    private var locations: [Location]
+    private var recentLocations: [Location]
 
     @StateObject private var locationFinder = LocationFinder()
-    @State private var recentLocations: [Location] = []
-    @State private var noTimeZoneKeys = Set<String>()
-
-    // Will only be nil if the device location has not loaded yet.
+    @State private var suggestedLocations: [Location] = []
     @State private var selectedLocation: Location?
-
-    private var topSuggestionId: String? {
-        optionId(locationFinder.suggestions.first)
-    }
-
-    private var deviceLocation: Location? {
-        deviceLocationManager.deviceLocation
-    }
-
-    private var homeLocation: Location? {
-        settings.homeLocation
-    }
 
     private var showCurrentOption: Bool {
         switch mode {
@@ -99,45 +86,39 @@ struct LocationSearchView: View {
         }
     }
 
-    private var showCurrentIndicator: Bool {
-        switch mode {
-        case .home:
-            return selectedLocation == nil
-        case .planner:
-            return selectedLocation == nil && homeLocation == nil
-        case .event:
-            return false
-        }
-    }
-
-    private var showHomeIndicator: Bool {
-        switch mode {
-        case .planner:
-            return selectedLocation == nil
-        case .home, .event:
-            return false
-        }
-    }
-
     var body: some View {
         NavigationStack {
             ScrollViewReader { scrollProxy in
-                if locationFinder.queryFragment.count < 2 {
-                    fillerSuggestions
+                if locationFinder.locationSearchText.count < 2 {
+                    SuggestedLocationsListView(
+                        selectedLocation: $selectedLocation,
+                        suggestedLocations: suggestedLocations,
+                        sourcePlanner: sourcePlanner,
+                        homeLocation: settings.homeLocation,
+                        plannerLocation: plannerLocation,
+                    )
                 } else {
-                    searchResults(scrollProxy: scrollProxy)
+                    ResultLocationsListView(
+                        selectedLocation: $selectedLocation,
+                        locationFinder: locationFinder,
+                        scrollProxy: scrollProxy
+                    )
                 }
             }
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
             .toolbar {
-                topLeftToolbar
-                topRightToolbar
+                backButton
+                saveButton
             }
             .safeAreaInset(edge: .top) {
-                selectionHeader
-                    .frame(maxWidth: .infinity)
+                LocationSearchHeaderView(
+                    locationFinder: locationFinder,
+                    mode: mode,
+                    selectedLocation: selectedLocation,
+                    homeLocation: settings.homeLocation,
+                )
             }
             .overlay {
                 emptyOptionsLabel
@@ -151,7 +132,8 @@ struct LocationSearchView: View {
                 }
             }
             .onAppear(perform: buildSuggestedLocations)
-            
+
+            // Re-build the suggestions once the device location loads.
             .onChange(of: deviceLocationManager.deviceLocation) { _, _ in
                 buildSuggestedLocations()
             }
@@ -161,7 +143,7 @@ struct LocationSearchView: View {
     // MARK: - Toolbars
 
     @ToolbarContentBuilder
-    private var topLeftToolbar: some ToolbarContent {
+    private var backButton: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             if mode == .planner {
                 Button(
@@ -181,7 +163,7 @@ struct LocationSearchView: View {
     }
 
     @ToolbarContentBuilder
-    private var topRightToolbar: some ToolbarContent {
+    private var saveButton: some ToolbarContent {
         if mode == .planner {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Confirm", systemImage: "checkmark", action: handleSave)
@@ -190,69 +172,7 @@ struct LocationSearchView: View {
         }
     }
 
-    // MARK: - Selection Header
-
-    private var selectionHeader: some View {
-        VStack(spacing: 16) {
-            selectionIndicator
-            inputField
-        }
-        .padding(.horizontal)
-        .animateSynchronousAction(from: selectedLocation)
-    }
-
-    @ViewBuilder
-    private var selectionIndicator: some View {
-        if showCurrentIndicator {
-
-            currentLocationIndicator
-
-        } else if showHomeIndicator, let homeLocation {
-
-            homeLocationIndicator(homeLocation)
-
-        } else if let selectedLocation {
-
-            PlannerChipView(
-                title: selectedLocation.name,
-                iconConfig: IconConfig(
-                    name: "mappin.and.ellipse",
-                    primaryColor: accentColor.color,
-                    secondaryColor: Color.secondary
-                ),
-                color: nil,
-                onTap: nil
-            )
-
-        }
-    }
-
-    private var currentLocationIndicator: some View {
-        LabelValueView(
-            label: "Current Location",
-            value: deviceLocation?.name,
-            iconConfig: IconConfig(name: "location")
-        )
-    }
-
-    private func homeLocationIndicator(_ home: Location) -> some View {
-        LabelValueView(
-            label: "Home",
-            value: home.name,
-            iconConfig: IconConfig(name: "house")
-        )
-    }
-
-    private var inputField: some View {
-        TextField(
-            "Search cities and addresses...",
-            text: $locationFinder.queryFragment
-        )
-        .frame(maxHeight: 50)
-        .padding(.horizontal)
-        .glassEffect(.regular.interactive())
-        .tint(accentColor.color)
-    }
+    // MARK: - View Builders
 
     @ViewBuilder
     private var currentLocationButton: some View {
@@ -290,89 +210,10 @@ struct LocationSearchView: View {
         }
     }
 
-    // MARK: - Suggestions List
-
-    @ViewBuilder
-    private var fillerSuggestions: some View {
-        List {
-            ForEach(recentLocations, id: \.id) { option in
-                suggestionRow(option)
-            }
-        }
-        .listStyle(.plain)
-        .background(Color(uiColor: .systemBackground).ignoresSafeArea())
-    }
-
-    private func suggestionRow(_ suggestion: Location) -> some View {
-        HStack {
-            VStack(alignment: .leading) {
-
-                HStack {
-
-                    if suggestion == homeLocation {
-                        Image(systemName: "house")
-                            .foregroundStyle(.secondary)
-                            .imageScale(.small)
-                    } else if suggestion == deviceLocation {
-                        Image(systemName: "location")
-                            .foregroundStyle(.secondary)
-                            .imageScale(.small)
-                    } else if suggestion == plannerLocation,
-                        let plannerIcon = sourcePlanner?.datestamp
-                            .calendarSymbolName
-                    {
-                        Image(systemName: plannerIcon)
-                            .foregroundStyle(.secondary)
-                            .imageScale(.small)
-                    }
-
-                    Text(suggestion.name)
-                        .font(.headline)
-                }
-
-                if let subtitle = suggestion.subtitle {
-                    Text(subtitle)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-            }
-
-            Spacer()
-
-            if selectedLocation == suggestion {
-                Image(systemName: "checkmark")
-            }
-        }
-        .discreetListItem()
-        .contentShape(Rectangle())
-        .onTapGesture {
-            selectedLocation = suggestion
-        }
-    }
-
-    // MARK: - Search Results List
-
-    private func searchResults(scrollProxy: ScrollViewProxy) -> some View {
-        List {
-            ForEach(locationFinder.suggestions, id: \.self) { option in
-                optionRow(option)
-            }
-        }
-        .listStyle(.plain)
-        .background(Color(uiColor: .systemBackground).ignoresSafeArea())
-
-        // Keep the list scrolled to the top when results change.
-        .withScrollTrigger(
-            scrollProxy: scrollProxy,
-            trigger: locationFinder.suggestions,
-            id: topSuggestionId
-        )
-    }
-
     @ViewBuilder
     private var emptyOptionsLabel: some View {
-        if locationFinder.suggestions.isEmpty
-            && locationFinder.queryFragment.count > 2
+        if locationFinder.results.isEmpty
+            && locationFinder.locationSearchText.count > 2
         {
             EmptyLabel(
                 locationFinder.hasNetworkError
@@ -381,126 +222,37 @@ struct LocationSearchView: View {
         }
     }
 
-    @ViewBuilder
-    private func optionRow(_ option: MKLocalSearchCompletion) -> some View {
-        let hasNoTimeZone = optionHasNoTimeZone(option)
-        let isSelected = isOptionSelected(option)
-
-        HStack {
-            VStack(alignment: .leading) {
-                Text(option.title)
-                    .font(.headline)
-                    .opacity(hasNoTimeZone ? 0.3 : 1)
-
-                if !option.subtitle.isEmpty {
-                    Text(option.subtitle)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .opacity(hasNoTimeZone ? 0.3 : 1)
-                }
-
-                if hasNoTimeZone {
-                    Text("This location has no time zone and cannot be used.")
-                        .font(
-                            .system(size: 12, weight: .medium, design: .rounded)
-                        )
-                        .foregroundColor(.red)
-                        .padding(.top, 2)
-                }
-            }
-
-            Spacer()
-
-            if isSelected {
-                Image(systemName: "checkmark")
-            }
-        }
-        .animateSynchronousAction(from: hasNoTimeZone)
-        .id(optionId(option))
-        .discreetListItem()
-        .contentShape(Rectangle())
-        .onTapGesture {
-            Task {
-                guard let optionId = optionId(option) else { return }
-
-                guard !noTimeZoneKeys.contains(optionId) else { return }
-
-                guard let result = await locationFinder.selectCompletion(option)
-                else {
-                    return
-                }
-
-                // Skip locations that do not have a TimeZone.
-                guard let timeZoneIdentifier = result.timeZoneIdentifier else {
-                    noTimeZoneKeys.insert(optionId)
-                    return
-                }
-
-                selectedLocation = Location(
-                    name: result.name,
-                    subtitle: result.subtitle,
-                    latitude: result.latitude,
-                    longitude: result.longitude,
-                    timeZoneIdentifier: timeZoneIdentifier
-                )
-
-            }
-        }
-    }
-
-    // MARK: - Helper Function
-
-    private func isOptionSelected(_ option: MKLocalSearchCompletion)
-        -> Bool
-    {
-        guard let selectedLocation else {
-            return false
-        }
-
-        return selectedLocation.name == option.title
-            && selectedLocation.subtitle == option.subtitle
-    }
-
-    func optionHasNoTimeZone(_ option: MKLocalSearchCompletion) -> Bool {
-        guard let optionId = optionId(option) else { return false }
-
-        return noTimeZoneKeys.contains(optionId)
-    }
-
-    private func optionId(_ option: MKLocalSearchCompletion?) -> String? {
-        guard let option else { return nil }
-
-        return "\(option.title)-\(option.subtitle)"
-    }
+    // MARK: - Functions
 
     private func buildSuggestedLocations() {
-        var sortedLocations = locations
+        var combinedLocations = recentLocations
 
+        // Add the common locations to the top of the recents list.
         if let plannerLocation {
-            sortedLocations.insert(plannerLocation, at: 0)
+            combinedLocations.insert(plannerLocation, at: 0)
+        }
+        if let deviceLocation = deviceLocationManager.deviceLocation {
+            combinedLocations.insert(deviceLocation, at: 0)
+        }
+        if let homeLocation = settings.homeLocation {
+            combinedLocations.insert(homeLocation, at: 0)
         }
 
-        if let deviceLocation {
-            sortedLocations.insert(deviceLocation, at: 0)
-        }
+        // Build a unique list of locations.
 
-        if let homeLocation {
-            sortedLocations.insert(homeLocation, at: 0)
-        }
-
-        var recentLocations: [Location] = []
+        var suggestedLocations: [Location] = []
         var added: Set<String> = []
 
-        for location in sortedLocations {
+        for location in combinedLocations {
             let key = location.coordinateKey
 
             if !added.contains(key) {
                 added.insert(key)
-                recentLocations.append(location)
+                suggestedLocations.append(location)
             }
         }
 
-        self.recentLocations = recentLocations
+        self.suggestedLocations = suggestedLocations
     }
 
     private func handleSave() {

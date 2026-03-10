@@ -91,6 +91,38 @@ extension ModelContext {
     }
 
     @MainActor
+    func handleChecklistItemChange(
+        sourceItem: ChecklistItem?,
+        parent: ChecklistItem?,
+        draftChecklistItem: ChecklistItem
+    ) {
+        if let sourceItem {
+            // Edit the existing item.
+            sourceItem.title = draftChecklistItem.title
+            sourceItem.color = draftChecklistItem.color
+            sourceItem.type = draftChecklistItem.type
+
+        } else {
+            // Create the new item.
+            let sorted = parent?.items.sorted {
+                $0.sortIndex < $1.sortIndex
+            }
+            let sortIndex = (sorted?.last?.sortIndex ?? 0) + 8
+            let newItem = ChecklistItem(
+                type: draftChecklistItem.type,
+                title: draftChecklistItem.title,
+                color: draftChecklistItem.color,
+                sortIndex: sortIndex,
+                parent: parent
+            )
+
+            self.insert(newItem)
+        }
+
+        self.safeSave("checklistItem.handleChecklistItemChange")
+    }
+
+    @MainActor
     func transferChecklistItems(
         into destination: ChecklistItem,
         items: [ChecklistItem]

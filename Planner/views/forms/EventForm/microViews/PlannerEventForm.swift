@@ -87,7 +87,7 @@ struct PlannerEventFormView: View {
 
                 Section {
                     NavigationLink {
-                        LocationSearchView(
+                        LocationSearchFormView(
                             title: "Edit Event Location",
                             mode: .event,
                             settings: settings,

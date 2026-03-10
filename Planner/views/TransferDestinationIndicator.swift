@@ -18,7 +18,7 @@ struct TransferDestinationIndicatorView: View {
                 .scaledToFit()
                 .frame(width: 16, height: 16)
                 .foregroundStyle(
-                    iconConfig.primaryColor ?? Color.secondary
+                    iconConfig.primaryColor
                 )
 
             Text(title)

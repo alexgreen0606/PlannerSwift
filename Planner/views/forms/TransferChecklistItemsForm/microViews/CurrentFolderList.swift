@@ -1,0 +1,176 @@
+//
+//  CurrentFolderList.swift
+//  Planner
+//
+//  Created by Alex Green on 3/10/26.
+//
+
+import SwiftUI
+
+// Clean
+
+struct CurrentFolderListView: View {
+    @Binding var selectedItem: ChecklistItem?
+    @Binding var currentFolder: ChecklistItem
+    let source: ChecklistItem
+    let destinationType: ChecklistItemType
+
+    @EnvironmentObject private var listManager: ListManager<ChecklistItem>
+
+    @State private var selectableItems: [ChecklistItem] = []
+
+    // Controls the animation of the folder navigator.
+    @State private var folderNavDirection: FolderNavigationDirection = .forward
+
+    private var folderSlideTransition: AnyTransition {
+        switch folderNavDirection {
+        case .forward:
+            return .asymmetric(
+                insertion: .move(edge: .trailing),
+                removal: .move(edge: .leading)
+            )
+        case .backward:
+            return .asymmetric(
+                insertion: .move(edge: .leading),
+                removal: .move(edge: .trailing)
+            )
+        }
+    }
+
+    var body: some View {
+        List {
+            Section {
+                ForEach(selectableItems, id: \.stableId) { item in
+                    itemRow(for: item)
+                }
+            } header: {
+                folderLabel
+            }
+            .listSectionMargins(.top, 0)
+        }
+        .onAppear(perform: buildSelectableItems)
+        .id(currentFolder.stableId)
+        .transition(folderSlideTransition)
+        .overlay {
+            if selectableItems.isEmpty {
+                EmptyLabel(
+                    "No Available \(destinationType.rawValue.capitalizedFirst)s"
+                )
+            }
+        }
+    }
+
+    // MARK: - View Builders
+
+    private var folderLabel: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let parent = currentFolder.parent {
+                ActionButtonView(
+                    label: parent.title,
+                    systemImage: "chevron.left"
+                ) {
+                    folderNavDirection = .backward
+
+                    withAnimation {
+                        currentFolder = parent
+                    }
+
+                    if destinationType == .folder {
+                        // Select the folder we are navigating back to.
+                        selectedItem = parent
+                    }
+                }
+            }
+
+            Text(currentFolder.title)
+        }
+    }
+
+    private func itemRow(for item: ChecklistItem) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading) {
+                Image(
+                    systemName: item.type.iconName
+                )
+                .foregroundColor(item.color.swiftUIColor)
+                .imageScale(.medium)
+                .frame(
+                    width: 26,
+                    height: 53,
+                    alignment: .center
+                )
+            }
+            .frame(height: 19)
+
+            Text(item.title)
+                .font(.system(size: UiConstants.listItemFontSize))
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            if item.type == .folder {
+                HStack(alignment: .center) {
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(
+                            Color(uiColor: .tertiaryLabel)
+                        )
+                }
+                .frame(height: 19)
+            }
+
+            if selectedItem == item {
+                Image(systemName: "checkmark")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 18, height: 18)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if item.type == .checklist || destinationType == .folder {
+                selectedItem = item
+
+                if item.type == .checklist { return }
+            }
+
+            folderNavDirection = .forward
+
+            withAnimation {
+                currentFolder = item
+            }
+        }
+    }
+
+    // MARK: - Functions
+
+    private func buildSelectableItems() {
+        selectableItems = currentFolder.items
+            .filter { item in
+                guard
+                    item.stableId != source.stableId
+                        && !listManager.selectedItemIds
+                            .contains(
+                                item.stableId
+                            )
+                else { return false }
+
+                if destinationType == .folder {
+                    // Onlt show folders when selecting folders.
+                    return item.type == .folder
+                }
+
+                if destinationType == .checklist, item.type == .folder {
+                    // Only show folders when selecting checklists IF the folder contains a checklist.
+                    return item.hasChildType(
+                        .checklist,
+                        excluding: Set([source.stableId])
+                    )
+                }
+
+                return true
+            }
+            .sorted { $0.sortIndex < $1.sortIndex }
+    }
+
+}

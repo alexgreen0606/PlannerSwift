@@ -15,10 +15,8 @@ struct ChecklistView: View {
     let sortedItems: [ChecklistItem]
     let canTransferItems: Bool
 
-    // Can pass a folder to navigate into (passes itself when it is transformed into a folder).
-    let closeChecklist: (ChecklistItem?) -> Void
-
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var listManager: ListManager<ChecklistItem>
 
     @State private var isEditSheetOpen = false
@@ -94,12 +92,7 @@ struct ChecklistView: View {
         // Edit Form
         .sheet(isPresented: $isEditSheetOpen) {
             if let parent = checklist.parent {
-                ChecklistItemFormView(item: checklist, parent: parent) {
-                    savedList in
-                    if savedList.type == .folder {
-                        closeChecklist(savedList)
-                    }
-                }
+                ChecklistItemFormView(item: checklist, parent: parent)
                 .navigationTransition(
                     .zoom(sourceID: IdConstants.ELLIPSIS_BUTTON, in: namespace)
                 )
@@ -169,7 +162,7 @@ struct ChecklistView: View {
             "Back",
             systemImage: "chevron.left",
         ) {
-            closeChecklist(nil)
+            dismiss()
         }
     }
 
@@ -190,8 +183,7 @@ struct ChecklistView: View {
             namespace: namespace,
             hasCheckedItem: hasCheckedItem,
             completedItems: sortedCheckedItems,
-            visibleItems: visibleItems,
-            closeChecklist: closeChecklist
+            visibleItems: visibleItems
         )
     }
 

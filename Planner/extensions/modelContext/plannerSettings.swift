@@ -40,6 +40,40 @@ extension ModelContext {
     }
 
     @MainActor
+    func updateCalendarIcon(
+        in settings: PlannerSettings,
+        for calendar: EKCalendar,
+        to systemImageName: String
+    ) {
+
+        settings.iconMap[
+            calendar.calendarIdentifier
+        ] = systemImageName
+
+        self.safeSave("plannerSettings.updateCalendarIcon")
+    }
+
+    @MainActor
+    func toggleCalendarVisibility(
+        in settings: PlannerSettings,
+        for calendar: EKCalendar
+    ) {
+        if settings.hiddenCalendarIds.contains(
+            calendar.calendarIdentifier
+        ) {
+            settings.hiddenCalendarIds.remove(
+                calendar.calendarIdentifier
+            )
+        } else {
+            settings.hiddenCalendarIds.insert(
+                calendar.calendarIdentifier
+            )
+        }
+
+        self.safeSave("plannerSettings.toggleCalendarVisibility")
+    }
+
+    @MainActor
     func deleteStaleCalendarEvents(
         in settings: PlannerSettings,
         with eventIds: Set<String>

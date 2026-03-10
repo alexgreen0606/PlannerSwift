@@ -10,6 +10,8 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
+// Clean
+
 struct TransferEventsFormView: View {
     private let sourceDate: Date
     private let sourceStartOfDay: DateInRegion
@@ -19,6 +21,7 @@ struct TransferEventsFormView: View {
         self.sourceDate = startOfDay.date
         self.sourceStartOfDay = startOfDay
         self.settings = settings
+
         _destinationDate = State(initialValue: startOfDay.date)
     }
 
@@ -29,8 +32,8 @@ struct TransferEventsFormView: View {
         KeepPastPlansDuration =
             KeepPastPlansDuration.oneMonth
 
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var plannerManager: ListManager<PlannerEvent>
@@ -44,7 +47,7 @@ struct TransferEventsFormView: View {
     private var transferCount: String {
         let count = plannerManager.selectedItems.count
         return
-            "\(count == 0 ? "No" : String(count)) event\(count == 1 ? "" : "s")"
+            "\(String(count)) event\(count == 1 ? "" : "s")"
     }
 
     private var dayOffset: Int {
@@ -53,6 +56,10 @@ struct TransferEventsFormView: View {
             component: .day
         )
         return Int(daysBetween)
+    }
+
+    private var canSave: Bool {
+        destinationDay != sourceStartOfDay
     }
 
     var body: some View {
@@ -73,30 +80,19 @@ struct TransferEventsFormView: View {
                     )
                     .datePickerStyle(.graphical)
                     .discreetListItem()
+
                 } header: {
-                    HStack {
-                        Spacer()
-                        let absOffset = abs(dayOffset)
-                        Text(
-                            "\(absOffset) day\(absOffset == 1 ? "" : "s") \(dayOffset > 0 ? "later" : "earlier")"
-                        )
-                        .font(
-                            .system(size: 12, weight: .bold, design: .rounded)
-                        )
-                        .foregroundStyle(Color.secondary)
-                        .opacity(dayOffset == 0 ? 0 : 1)
-                    }
+                    offsetCountIndicator
                 }
                 .discreetListItem()
                 .listSectionMargins(.top, 0)
+
             }
             .scrollDisabled(true)
-            .navigationTitle(
-                "Reschedule Plans"
-            )
+            .navigationTitle("Reschedule Plans")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                topRightToolbar
+                saveButton
             }
             .safeAreaInset(edge: .top) {
                 transferIndicator
@@ -108,23 +104,22 @@ struct TransferEventsFormView: View {
     // MARK: - Toolbars
 
     @ToolbarContentBuilder
-    private var topRightToolbar: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
+    private var saveButton: some ToolbarContent {
+        ToolbarItem(placement: .confirmationAction) {
             Button(
-                "Submit",
+                "Save",
                 systemImage: "checkmark",
-                role: .confirm,
                 action: handleTransfer
             )
             .tint(accentColor.color)
-            .disabled(destinationDate == sourceDate)
+            .disabled(!canSave)
         }
     }
 
-    // MARK: - Transfer Indicator
+    // MARK: - View Builders
 
     private var transferIndicator: some View {
-        HStack(spacing: 16) {
+        HStack {
             sourceChip
 
             if destinationDate != sourceDate {
@@ -161,8 +156,26 @@ struct TransferEventsFormView: View {
         )
     }
 
+    @ViewBuilder
+    private var offsetCountIndicator: some View {
+        let absOffset = abs(dayOffset)
+
+        HStack {
+            Spacer()
+            Text(
+                "\(absOffset) day\(absOffset == 1 ? "" : "s") \(dayOffset > 0 ? "later" : "earlier")"
+            )
+            .font(
+                .system(size: 12, weight: .bold, design: .rounded)
+            )
+            .foregroundStyle(Color.secondary)
+            .opacity(dayOffset == 0 ? 0 : 1)
+        }
+    }
+
+    // MARK: - Functions
+
     private func handleTransfer() {
-        
         modelContext.transferPlannerEvents(
             plannerManager.selectedItems,
             days: dayOffset.days,
@@ -172,15 +185,8 @@ struct TransferEventsFormView: View {
             eventStore: calendarStore.ekEventStore
         )
 
-        calendarStore.attemptFreshLoad(
-            hiddenCalendarIds: settings.hiddenCalendarIds
-        )
-
+        plannerManager.toggleSelectMode()
         dismiss()
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(700)) {
-            plannerManager.toggleSelectMode()
-        }
     }
 
 }

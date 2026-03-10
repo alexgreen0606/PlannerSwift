@@ -72,8 +72,8 @@ struct FolderView: View {
 
             // Create Item Form
             .sheet(isPresented: $showCreateSheet) {
-                ChecklistItemFormView(item: nil, parent: folder) { savedItem in
-                    pendingScrollItem = savedItem
+                ChecklistItemFormView(parent: folder) {
+                    scrollToBottom(scrollProxy: scrollProxy)
                 }
                 .navigationTransition(
                     .zoom(sourceID: IdConstants.ADD_BUTTON, in: namespace)
@@ -82,13 +82,7 @@ struct FolderView: View {
 
             // Edit Form
             .sheet(isPresented: $showEditSheet) {
-                ChecklistItemFormView(item: folder, parent: folder.parent) {
-                    savedItem in
-                    if savedItem.type == .checklist {
-                        dismiss()
-                        openItem(savedItem)
-                    }
-                }
+                ChecklistItemFormView(item: folder, parent: folder.parent)
                 .navigationTransition(
                     .zoom(sourceID: IdConstants.ELLIPSIS_BUTTON, in: namespace)
                 )
@@ -360,6 +354,17 @@ struct FolderView: View {
     private func deleteEntireFolder() {
         dismiss()
         modelContext.deleteChecklistItem(folder)
+    }
+    
+    private func scrollToBottom(scrollProxy: ScrollViewProxy) {
+        DispatchQueue.main.async {
+            withAnimation {
+                scrollProxy.scrollTo(
+                    IdConstants.UNCHECKED_ITEMS,
+                    anchor: .bottom
+                )
+            }
+        }
     }
 
 }

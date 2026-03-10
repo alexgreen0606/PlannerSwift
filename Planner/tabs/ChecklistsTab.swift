@@ -64,13 +64,7 @@ struct ChecklistsTabView: View {
             ChecklistBuilderView(
                 checklistId: checklistId.id,
                 canTransferItems: canTransferChecklistItems
-            ) { folderToOpen in
-                checklistCoverId = nil
-
-                if let folderToOpen {
-                    openItem(folderToOpen)
-                }
-            }
+            )
             .environmentObject(checklistsManager)
             .navigationTransition(
                 .zoom(
