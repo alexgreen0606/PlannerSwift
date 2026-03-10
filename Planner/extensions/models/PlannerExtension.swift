@@ -9,6 +9,8 @@ import EventKit
 import SwiftDate
 import SwiftUI
 
+// Clean
+
 extension Planner {
 
     var key: String {
@@ -47,4 +49,5 @@ extension Planner {
 
         return settings.homeLocationIconConfig
     }
+
 }

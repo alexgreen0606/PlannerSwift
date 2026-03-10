@@ -201,7 +201,7 @@ struct ContentView: View {
             // TODO: fix this
             // Delete sort indices for events that no longer exist in the calendar.
             if let settings {
-                modelContext.deleteStaleCalendarEventPositions(
+                modelContext.deleteStaleCalendarEvents(
                     in: settings,
                     with: []
                 )

@@ -13,33 +13,33 @@ import SwiftUI
 
 @MainActor
 func generateSortDate(
-    startOfDay: DateInRegion,
+    plannerStartOfDay: DateInRegion,
     index: Int,
-    events: [PlannerEvent]
+    sortedEvents: [PlannerEvent] // May or may not contain the event being placed.
 ) -> Date {
 
-    let dayStart = startOfDay.date
-    let dayEnd = (startOfDay + 1.days).date
+    let dayStart = plannerStartOfDay.date
+    let dayEnd = (plannerStartOfDay + 1.days).date
 
     // No events for the day. Place at noon.
-    if events.isEmpty {
+    if sortedEvents.isEmpty {
         return dayStart + 12.hours
     }
 
-    var prevDate = index == 0 ? dayStart : events[index - 1].sortDate
-    var nextDate = index >= events.count ? dayEnd : events[index].sortDate
+    var prevDate = index == 0 ? dayStart : sortedEvents[index - 1].sortDate
+    var nextDate = index >= sortedEvents.count ? dayEnd : sortedEvents[index].sortDate
     let interval = nextDate.timeIntervalSince(prevDate)
 
     if interval < 1.0 {
 
         // Interval too small. Normalize all events.
         normalizeSortDates(
-            events: events,
-            startOfDay: startOfDay
+            events: sortedEvents,
+            startOfDay: plannerStartOfDay
         )
 
-        prevDate = index == 0 ? dayStart : events[index - 1].sortDate
-        nextDate = index >= events.count ? dayEnd : events[index].sortDate
+        prevDate = index == 0 ? dayStart : sortedEvents[index - 1].sortDate
+        nextDate = index >= sortedEvents.count ? dayEnd : sortedEvents[index].sortDate
     }
 
     return midpoint(between: prevDate, and: nextDate)

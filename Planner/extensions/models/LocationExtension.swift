@@ -9,6 +9,8 @@ import Foundation
 import MapKit
 import SwiftDate
 
+// Clean
+
 extension Location {
 
     var coordinateKey: String {
@@ -32,4 +34,5 @@ extension Location {
             locale: Locale.current
         )
     }
+    
 }

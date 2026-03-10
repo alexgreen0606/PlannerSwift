@@ -21,22 +21,49 @@ struct RowView<
     RightAdornment: View,
     BottomAdornment: View
 >: View {
-    @Bindable var item: Item
-    let tint: (_ item: Item) -> Color
-    let showChecked: Bool
-    let showUpperDivider: Bool
-    let toolbarIcons: [String]
-    let tapToolbar: ((String, Item) -> Void)?
-    let leftAdornment: ((_ item: Item) -> LeftAdornment)?
-    let rightAdornment: ((_ item: Item) -> RightAdornment)?
-    let bottomAdornment: ((_ item: Item) -> BottomAdornment)?
-    let namespace: Namespace.ID?
-    let customToggleConfig: RowToggleConfig<Item>?
-    let onCreateItem:
-        (_ baseId: UUID?, _ offset: Int) ->
-            Void
-    let onTitleChange: (_ item: Item) -> Void
-    let isItemChecked: ((_ item: Item) -> Bool)?
+    @Bindable private var item: Item
+    private let showChecked: Bool
+    private let isUpperItem: Bool
+    private let tint: Color
+    private let leftAdornment: LeftAdornment
+    private let rightAdornment: RightAdornment
+    private let bottomAdornment: BottomAdornment
+    private let toolbarIcons: [String]
+    private let customToggleConfig: RowToggleConfig<Item>?
+    private let namespace: Namespace.ID?
+    private let createItem: ((_ baseId: UUID?, _ offset: Int) -> Void)?
+    private let onToolbarTap: ((String, Item) -> Void)?
+    private let onTitleChange: ((_ item: Item) -> Void)?
+    
+    init(
+        item: Item,
+        showChecked: Bool,
+        isUpperItem: Bool,
+        tint: Color,
+        leftAdornment: LeftAdornment,
+        rightAdornment: RightAdornment,
+        bottomAdornment: BottomAdornment,
+        toolbarIcons: [String]? = [],
+        customToggleConfig: RowToggleConfig<Item>? = nil,
+        namespace: Namespace.ID? = nil,
+        createItem: ((_: UUID?, _: Int) -> Void)? = nil,
+        onToolbarTap: ((String, Item) -> Void)? = nil,
+        onTitleChange: ((_: Item) -> Void)? = nil
+    ) {
+        self.item = item
+        self.showChecked = showChecked
+        self.isUpperItem = isUpperItem
+        self.tint = tint
+        self.leftAdornment = leftAdornment
+        self.rightAdornment = rightAdornment
+        self.bottomAdornment = bottomAdornment
+        self.toolbarIcons = toolbarIcons ?? []
+        self.createItem = createItem
+        self.customToggleConfig = customToggleConfig
+        self.namespace = namespace
+        self.onToolbarTap = onToolbarTap
+        self.onTitleChange = onTitleChange
+    }
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var listManager: ListManager<Item>
@@ -48,10 +75,6 @@ struct RowView<
 
     private var isFocused: Bool {
         listManager.focusedId == item.stableId
-    }
-
-    private var tintColor: Color {
-        tint(item)
     }
 
     private var opacity: Double {
@@ -67,7 +90,7 @@ struct RowView<
             return listManager.selectedItemIds.contains(item.stableId)
         }
 
-        return isItemChecked?(item) == true || item.isChecked
+        return item.isChecked
     }
 
     var body: some View {
@@ -107,7 +130,7 @@ struct RowView<
     private var toggle: some View {
         RowToggleView(
             item: item,
-            tint: tintColor,
+            tint: tint,
             isChecked: isChecked,
             opacity: opacity,
             customIconConfig: customToggleConfig
@@ -121,28 +144,26 @@ struct RowView<
 
             // Upper Item Trigger
             NewRowTriggerView(
-                showUpperDivider: showUpperDivider,
+                showUpperDivider: isUpperItem,
                 onCreateItem: {
                     guard !listManager.isSelectMode else {
                         listManager.toggleItem(item)
                         return
                     }
 
-                    onCreateItem(item.stableId, 0)
+                    createItem?(item.stableId, 0)
                 }
             )
 
             HStack(alignment: .top, spacing: 4) {
 
                 // Left Adornment
-                if let leftAdornment = leftAdornment {
-                    leftAdornment(item)
+                    leftAdornment
                         .opacity(opacity)
                         .frame(
                             height: RowConstants.horizontalAdornmentHeight,
                             alignment: .center
                         )
-                }
 
                 // Title
                 ZStack(alignment: .leading) {
@@ -153,23 +174,19 @@ struct RowView<
                 .opacity(opacity)
 
                 // Right Adornment
-                if let rightAdornment = rightAdornment {
-                    rightAdornment(item)
-                        .opacity(opacity)
+                rightAdornment
+                    .opacity(opacity)
                         .frame(
                             height: RowConstants.horizontalAdornmentHeight,
                             alignment: .center
                         )
-                }
-
+                
             }
             .frame(minHeight: RowConstants.horizontalAdornmentHeight)
 
             // Bottom Adornment
-            if let bottomAdornment {
-                bottomAdornment(item)
+                bottomAdornment
                     .opacity(opacity)
-            }
 
             // Lower Item Trigger
             NewRowTriggerView(
@@ -180,7 +197,7 @@ struct RowView<
                         return
                     }
 
-                    onCreateItem(item.stableId, 1)
+                    createItem?(item.stableId, 1)
                 }
             )
         }
@@ -215,19 +232,19 @@ struct RowView<
             text: $item.title,
             height: $height,
             toolbarIcons: toolbarIcons,
-            accentColor: tintColor,
+            accentColor: tint,
             onTapToolbar: { iconName in
-                tapToolbar?(iconName, item)
+                onToolbarTap?(iconName, item)
             },
             onEnter: {
                 if !item.title.isEmpty {
-                    onCreateItem(item.stableId, 1)
+                    createItem?(item.stableId, 1)
                 } else {
                     listManager.focusedId = nil
                 }
             }
         )
-        .tint(tintColor)
+        .tint(tint)
         .frame(height: height)
         .opacity(isFocused ? 1 : 0)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -238,6 +255,8 @@ struct RowView<
 
         // Debounce the external save each time the text changes.
         .onChange(of: item.title) { _, newTitle in
+            guard let onTitleChange else { return }
+            
             debounceTask?.cancel()
             debounceTask = Task {
                 try? await Task.sleep(nanoseconds: 1_000_000_000)  // 1 second
@@ -263,7 +282,7 @@ struct RowView<
                     }
                 } else {
                     item.title = trimmed
-                    onTitleChange(item)
+                    onTitleChange?(item)
                 }
             }
         }

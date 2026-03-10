@@ -45,6 +45,7 @@ extension EKEvent {
                 .longitude,
             let timeZone = self.timeZone
         {
+            
             let newLocation = Location(
                 name: locationLabel,
                 latitude: latitude,
@@ -63,22 +64,6 @@ extension EKEvent {
         }
 
         return nil
-    }
-
-    // MARK: - View Builders
-
-    @ViewBuilder
-    func timeValueView(
-        in plannerRegion: Region,
-        scale: Double = 1,
-        openSheet: (() -> Void)?
-    ) -> some View {
-        TimeValueView(
-            timeInRegion: DateInRegion(self.startDate, region: plannerRegion),
-            color: self.calendar.color,
-            scale: scale,
-            openEventSheet: openSheet
-        )
     }
 
     // MARK: - Helper Functions

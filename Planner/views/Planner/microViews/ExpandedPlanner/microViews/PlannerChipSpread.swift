@@ -85,11 +85,11 @@ struct PlannerChipSpreadView: View {
                 settings: settings,
                 initialLocation: planner.location,
             ) { location in
-                modelContext.updateLocation(
+                modelContext.updatePlannerLocation(
                     for: planner,
-                    location: location,
+                    to: location,
                     settings: settings,
-                    plannerEvents: sortedPlannerEvents
+                    storageEvents: sortedPlannerEvents
                 )
             }
             .navigationTransition(

@@ -28,7 +28,7 @@ final class ListManager<Item: ListItem>: ObservableObject {
 
     // Protects items from being deleted on blur of their textfield.
     @Published var protectedId: UUID? = nil
-    
+
     @Published var toggleType: ListToggleType = .check
 
     @Published private(set) var newlyCheckedIds: Set<UUID> = []
@@ -86,6 +86,18 @@ final class ListManager<Item: ListItem>: ObservableObject {
         case .check:
             toggleCheck(item)
         }
+    }
+
+    func isItemInUncheckedList(_ item: Item) -> Bool {
+        (!item.isChecked
+            && !newlyUncheckedIds.contains(item.stableId))
+            || newlyCheckedIds.contains(item.stableId)
+    }
+
+    func isItemInCheckedList(_ item: Item) -> Bool {
+        (item.isChecked
+            && !newlyCheckedIds.contains(item.stableId))
+            || newlyUncheckedIds.contains(item.stableId)
     }
 
     // MARK: - Helper Functions

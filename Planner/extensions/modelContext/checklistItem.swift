@@ -10,6 +10,8 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
+// Clean
+
 extension ModelContext {
 
     @MainActor
@@ -29,117 +31,82 @@ extension ModelContext {
             )
         )
 
-        do {
-            try save()
-        } catch {
-            assertionFailure("Failed to create the Root Folder: \(error)")
-        }
+        self.safeSave("checklistItem.ensureRootFolder")
     }
 
     @MainActor
     func createChecklistItem(
-        in items: [ChecklistItem],
+        in sortedItems: [ChecklistItem],
         near baseId: UUID?,
         offset: Int,
         parent: ChecklistItem
     ) -> UUID? {
-        var targetIndex: Int? = 0
-
-        if let baseId {
-            targetIndex = generateTargetIndex(
-                in: items,
+        guard
+            let targetIndex = generateTargetIndex(
+                in: sortedItems,
                 near: baseId,
                 offset: offset
             )
-        }
-
-        guard let targetIndex else {
+        else {
             return nil
         }
 
         let sortIndex = generateSortIndex(
             index: targetIndex,
-            sortedItems: items
+            sortedItems: sortedItems
         )
 
         let newItem = ChecklistItem(sortIndex: sortIndex, parent: parent)
-
         insert(newItem)
 
-        Task { @MainActor in
-            do {
-                try self.save()
-            } catch {
-                print("ERROR checklistItem.createChecklistItem: \(error)")
-            }
-        }
+        self.safeSave("checklistItem.createChecklistItem")
 
         return newItem.stableId
     }
 
     @MainActor
-    func moveChecklistItem(in items: [ChecklistItem], from: Int, to: Int) {
+    func moveChecklistItem(in sortedItems: [ChecklistItem], from: Int, to: Int)
+    {
         guard from != to else { return }
 
-        let movedEvent = items[from]
-        let remainingItems = items.filter {
-            $0.stableId != movedEvent.stableId
-        }
-
-        movedEvent.sortIndex = generateSortIndex(
+        let movedItem = sortedItems[from]
+        movedItem.sortIndex = generateSortIndex(
             index: to,
-            sortedItems: remainingItems
+            sortedItems: sortedItems
         )
 
-        do {
-            try save()
-        } catch {
-            assertionFailure(
-                "ERROR checklistItem.moveChecklistItem: \(error)"
-            )
-        }
+        self.safeSave("checklistItem.moveChecklistItem")
     }
 
     @MainActor
     func deleteChecklistItem(_ item: ChecklistItem) {
-
-        delete(item)
-
-        do {
-            try save()
-        } catch {
-            assertionFailure(
-                "ERROR checklistItem.deleteChecklistItem: \(error)"
-            )
-        }
+        self.delete(item)
+        self.safeSave("checklistItem.deleteChecklistItem")
     }
 
     @MainActor
     func deleteChecklistItems(_ items: [ChecklistItem]) {
-        items.forEach { delete($0) }
-
-        do {
-            try save()
-        } catch {
-            assertionFailure(
-                "ERROR checklistItem.deleteChecklistItems: \(error)"
-            )
-        }
+        items.forEach { self.delete($0) }
+        self.safeSave("checklistItem.deleteChecklistItems")
     }
 
     @MainActor
-    func transferChecklistItems(into destination: ChecklistItem, items: [ChecklistItem])
-    {
+    func transferChecklistItems(
+        into destination: ChecklistItem,
+        items: [ChecklistItem]
+    ) {
         do {
             try transaction {
                 destination.inheritItems(items)
             }
-            
-            try save()
         } catch {
-            assertionFailure("ERROR checklistItem.transferItems: \(error)")
+            assertionFailure(
+                "ERROR checklistItem.transferChecklistItems: \(error)"
+            )
             return
         }
+
+        self.safeSave("checklistItem.transferChecklistItems")
     }
 
 }

@@ -223,7 +223,7 @@ struct FolderView: View {
                 DeleteSelectedButtonView(
                     itemsLabel: "contents",
                     disabled: selectManager.selectedItemIds.isEmpty,
-                    warningMessage: nil
+                    message: nil
                 ) {
                     withAnimation {
                         modelContext.deleteChecklistItems(

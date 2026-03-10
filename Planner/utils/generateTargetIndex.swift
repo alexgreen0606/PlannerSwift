@@ -13,9 +13,13 @@ import SwiftUI
 // Returns nil if either of its neighbors are empty.
 func generateTargetIndex<Item: ListItem>(
     in sortedItems: [Item],
-    near baseId: UUID,
+    near baseId: UUID?,
     offset: Int
 ) -> Int? {
+    guard let baseId else {
+        return 0
+    }
+    
     guard
         let baseIndex = sortedItems.firstIndex(where: {
             $0.stableId == baseId

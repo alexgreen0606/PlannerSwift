@@ -217,7 +217,7 @@ struct TransferChecklistItemsFormView: View {
     private var folderLabel: some View {
         VStack(alignment: .leading, spacing: 6) {
             if let parent = currentFolder.parent {
-                AccentButtonView(
+                ActionButtonView(
                     label: parent.title,
                     systemImage: "chevron.left"
                 ) {

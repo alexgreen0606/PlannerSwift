@@ -257,7 +257,7 @@ struct LocationSearchView: View {
     @ViewBuilder
     private var currentLocationButton: some View {
         if showCurrentOption {
-            AccentButtonView(
+            ActionButtonView(
                 label: "Use Current Location",
                 systemImage: "location"
             ) {
@@ -269,7 +269,7 @@ struct LocationSearchView: View {
     @ViewBuilder
     private var homeLocationButton: some View {
         if showHomeOption {
-            AccentButtonView(
+            ActionButtonView(
                 label: "Use Home Location",
                 systemImage: "house"
             ) {
@@ -281,7 +281,7 @@ struct LocationSearchView: View {
     @ViewBuilder
     private var noLocationButton: some View {
         if showNoOption {
-            AccentButtonView(
+            ActionButtonView(
                 label: "No Location",
                 systemImage: "xmark"
             ) {

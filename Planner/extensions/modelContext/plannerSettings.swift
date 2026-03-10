@@ -1,5 +1,5 @@
 //
-//  settings.swift
+//  plannerSettings.swift
 //  Planner
 //
 //  Created by Alex Green on 2/12/26.
@@ -9,6 +9,8 @@ import EventKit
 import SwiftData
 import SwiftDate
 import SwiftUI
+
+// Clean
 
 extension ModelContext {
 
@@ -23,13 +25,7 @@ extension ModelContext {
         let newSettings = PlannerSettings()
         insert(newSettings)
 
-        do {
-            try save()
-        } catch {
-            assertionFailure(
-                "Failed to create initial PlannerSettings: \(error)"
-            )
-        }
+        self.safeSave("plannerSettings.ensurePlannerSettings")
     }
 
     @MainActor
@@ -40,17 +36,11 @@ extension ModelContext {
 
         settings.homeLocation = location
 
-        do {
-            try save()
-        } catch {
-            assertionFailure(
-                "ERROR plannerSettings.updateHomeLocation: \(error)"
-            )
-        }
+        self.safeSave("plannerSettings.updateHomeLocation")
     }
 
     @MainActor
-    func deleteStaleCalendarEventPositions(
+    func deleteStaleCalendarEvents(
         in settings: PlannerSettings,
         with eventIds: Set<String>
     ) {

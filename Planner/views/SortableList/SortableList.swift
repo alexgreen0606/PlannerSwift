@@ -15,30 +15,76 @@ struct SortableListView<
     RightAdornment: View,
     BottomAdornment: View,
     FloatingInfo: View
->:
-    View
-{
-    let uncheckedItems: [Item]
-    let checkedItems: [Item]
-    let showChecked: Bool
-    let floatingInfo: FloatingInfo?
-    let customToggleConfig: RowToggleConfig<Item>?
-    let checkedHeader: String
-    let checkedFooter: String?
-    let emptyUncheckedLabel: String
-    let emptyCheckedLabel: String
-    let namespace: Namespace.ID?
-    let tint: (_ item: Item) -> Color
-    let toolbarIcons: [String]
-    let tapToolbar: ((String, Item) -> Void)?
-    let leftAdornment: ((_ item: Item) -> LeftAdornment)?
-    let rightAdornment: ((_ item: Item) -> RightAdornment)?
-    let bottomAdornment: ((_ item: Item) -> BottomAdornment)?
-    let scrollProxy: ScrollViewProxy
-    let createItem: (_ baseId: UUID?, _ offset: Int) -> Void
-    let handleTitleChange: (_ item: Item) -> Void
-    let moveItem: (_ from: Int, _ to: Int) -> Void
-    let isItemChecked: ((_ item: Item) -> Bool)?
+>: View {
+    private let uncheckedItems: [Item]
+    private let checkedItems: [Item]
+    private let showChecked: Bool
+    private let floatingInfo: FloatingInfo?
+    private let customToggleConfig: RowToggleConfig<Item>?
+    private let checkedHeader: String
+    private let checkedFooter: String?
+    private let emptyUncheckedLabel: String
+    private let emptyCheckedLabel: String
+    private let namespace: Namespace.ID?
+    private let tint: (_ item: Item) -> Color
+    private let toolbarIcons: [String]
+    private let tapToolbar: ((String, Item) -> Void)?
+    private let leftAdornment: (_ item: Item) -> LeftAdornment
+    private let rightAdornment: (_ item: Item) -> RightAdornment
+    private let bottomAdornment: (_ item: Item) -> BottomAdornment
+    private let scrollProxy: ScrollViewProxy
+    private let createItem: (_ baseId: UUID?, _ offset: Int) -> Void
+    private let handleTitleChange: ((_ item: Item) -> Void)?
+    private let moveItem: (_ from: Int, _ to: Int) -> Void
+
+    init(
+        uncheckedItems: [Item],
+        checkedItems: [Item],
+        showChecked: Bool,
+        checkedHeader: String,
+        emptyUncheckedLabel: String,
+        emptyCheckedLabel: String,
+        tint: @escaping (_: Item) -> Color,
+        scrollProxy: ScrollViewProxy,
+        createItem: @escaping (_: UUID?, _: Int) -> Void,
+        moveItem: @escaping (_: Int, _: Int) -> Void,
+        floatingInfo: FloatingInfo? = EmptyView(),
+        customToggleConfig: RowToggleConfig<Item>? = nil,
+        namespace: Namespace.ID? = nil,
+        toolbarIcons: [String] = [],
+        tapToolbar: ((String, Item) -> Void)? = nil,
+        leftAdornment: @escaping (_: Item) -> LeftAdornment = { _ in EmptyView() as! LeftAdornment
+        },
+        rightAdornment: @escaping (_: Item) -> RightAdornment = { _ in
+            EmptyView() as! RightAdornment
+        },
+        bottomAdornment: @escaping (_: Item) -> BottomAdornment = { _ in
+            EmptyView() as! BottomAdornment
+        },
+        handleTitleChange: ((_: Item) -> Void)? = nil,
+        checkedFooter: String? = nil,
+    ) {
+        self.uncheckedItems = uncheckedItems
+        self.checkedItems = checkedItems
+        self.showChecked = showChecked
+        self.floatingInfo = floatingInfo
+        self.customToggleConfig = customToggleConfig
+        self.checkedHeader = checkedHeader
+        self.checkedFooter = checkedFooter
+        self.emptyUncheckedLabel = emptyUncheckedLabel
+        self.emptyCheckedLabel = emptyCheckedLabel
+        self.namespace = namespace
+        self.tint = tint
+        self.toolbarIcons = toolbarIcons
+        self.tapToolbar = tapToolbar
+        self.leftAdornment = leftAdornment
+        self.rightAdornment = rightAdornment
+        self.bottomAdornment = bottomAdornment
+        self.scrollProxy = scrollProxy
+        self.createItem = createItem
+        self.handleTitleChange = handleTitleChange
+        self.moveItem = moveItem
+    }
 
     @Environment(\.scenePhase) private var appPhase
     @EnvironmentObject private var listManager: ListManager<Item>
@@ -58,19 +104,19 @@ struct SortableListView<
                 ForEach(uncheckedItems, id: \.stableId) { item in
                     RowView(
                         item: item,
-                        tint: tint,
                         showChecked: showChecked,
-                        showUpperDivider: item.stableId == uncheckedItems.first?.stableId,
+                        isUpperItem: item.stableId
+                            == uncheckedItems.first?.stableId,
+                        tint: tint(item),
+                        leftAdornment: leftAdornment(item),
+                        rightAdornment: rightAdornment(item),
+                        bottomAdornment: bottomAdornment(item),
                         toolbarIcons: toolbarIcons,
-                        tapToolbar: handleToolbarPress,
-                        leftAdornment: leftAdornment,
-                        rightAdornment: rightAdornment,
-                        bottomAdornment: bottomAdornment,
-                        namespace: namespace,
                         customToggleConfig: customToggleConfig,
-                        onCreateItem: createItem,
-                        onTitleChange: handleTitleChange,
-                        isItemChecked: isItemChecked
+                        namespace: namespace,
+                        createItem: createItem,
+                        onToolbarTap: handleToolbarPress,
+                        onTitleChange: handleTitleChange
                     )
                     .id(item.stableId)
                 }
@@ -100,20 +146,13 @@ struct SortableListView<
                     ForEach(checkedItems, id: \.stableId) { item in
                         RowView(
                             item: item,
-                            tint: tint,
-                            showChecked: true,
-                            showUpperDivider: item.stableId
+                            showChecked: showChecked,
+                            isUpperItem: item.stableId
                                 == checkedItems.first?.stableId,
-                            toolbarIcons: toolbarIcons,
-                            tapToolbar: { _, _ in },
-                            leftAdornment: leftAdornment,
-                            rightAdornment: rightAdornment,
-                            bottomAdornment: bottomAdornment,
-                            namespace: namespace,
-                            customToggleConfig: customToggleConfig,
-                            onCreateItem: { _, _ in },
-                            onTitleChange: { _ in },
-                            isItemChecked: isItemChecked
+                            tint: tint(item),
+                            leftAdornment: leftAdornment(item),
+                            rightAdornment: rightAdornment(item),
+                            bottomAdornment: bottomAdornment(item)
                         )
                     }
                 } header: {
@@ -148,7 +187,7 @@ struct SortableListView<
         .onDisappear {
             listManager.focusedId = nil
         }
-        
+
         // Blur the textfields when the app exits focus.
         .onChange(of: appPhase) { _, phase in
             if phase == .inactive {

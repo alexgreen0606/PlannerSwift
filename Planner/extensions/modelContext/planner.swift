@@ -10,6 +10,8 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
+// Clean
+
 extension ModelContext {
 
     @MainActor
@@ -21,63 +23,41 @@ extension ModelContext {
             return
         }
 
-        let planner = Planner(datestamp: datestamp, location: nil)
-        insert(planner)
-
-        do {
-            try save()
-        } catch {
-            assertionFailure(
-                "Failed to create Planner for \(datestamp): \(error)"
-            )
-        }
+        let _ = self.createPlanner(for: datestamp)
     }
 
     @MainActor
     func loadPlanner(
         for datestamp: String
     ) -> Planner {
-
-        let descriptor = FetchDescriptor<Planner>(
-            predicate: #Predicate<Planner> { planner in
-                planner.datestamp == datestamp
-            }
-        )
-
         do {
-            let planners = try fetch(descriptor)
+            let planners = try fetch(
+                FetchDescriptor<Planner>(
+                    predicate: #Predicate<Planner> { planner in
+                        planner.datestamp == datestamp
+                    }
+                )
+            )
 
-            guard let planner = planners.first else {
-                return Planner(datestamp: datestamp, location: nil)
-            }
-
-            return planner
+            return planners.first ?? self.createPlanner(for: datestamp)
         } catch {
-            let newPlanner = Planner(datestamp: datestamp, location: nil)
-
-            insert(newPlanner)
-
-            do {
-                try save()
-            } catch {
-                print("ERROR planner.loadPlanner: \(error)")
-            }
-
-            return newPlanner
+            return self.createPlanner(for: datestamp)
         }
     }
 
-    @MainActor
-    func updateLocation(
-        for planner: Planner,
-        location: Location?,
-        settings: PlannerSettings,
-        plannerEvents: [PlannerEvent]
-    ) {
-        
-        let region = location?.region ?? settings.homeRegion
+    // MARK: - Data Modifiers
 
-        guard let newStartOfDay = planner.datestamp.startOfDay(in: region)
+    @MainActor
+    func updatePlannerLocation(
+        for planner: Planner,
+        to newLocation: Location?,
+        settings: PlannerSettings,
+        storageEvents: [PlannerEvent]
+    ) {
+
+        let newRegion = newLocation?.region ?? settings.homeRegion
+
+        guard let newStartOfDay = planner.datestamp.startOfDay(in: newRegion)
         else {
             assertionFailure(
                 "ERROR planner.updateLocation: Could not create new startOfDay for \(planner.datestamp)"
@@ -85,22 +65,14 @@ extension ModelContext {
             return
         }
 
-        planner.location = location
+        planner.location = newLocation
 
-        // Update the date of all untimed events to ensure they appear in the new Planner window.
-        for event in plannerEvents {
-            if !event.hasTime {
-                event.date = newStartOfDay.date
-            }
+        // Set all untimed events' dates to the start of day in the planner's new location.
+        for event in storageEvents where !event.hasTime {
+            event.date = newStartOfDay.date
         }
 
-        do {
-            try save()
-        } catch {
-            assertionFailure(
-                "ERROR planner.updateLocation: \(error)"
-            )
-        }
+        self.safeSave("planner.updatePlannerLocation")
     }
 
     @MainActor
@@ -111,6 +83,7 @@ extension ModelContext {
 
         let cutoffDatestamp = cutoffDate.toFormat("yyyy-MM-dd")
 
+        // TODO: predicate this
         for planner in planners {
             if planner.datestamp < cutoffDatestamp {
                 print("Deleting planner: \(planner.datestamp)")
@@ -118,8 +91,21 @@ extension ModelContext {
             }
         }
 
-        // Sepcial case: do NOT save the context here. This will be done in the parent
-        // function that called this.
+        // TODO: delete planner events as well
+
+        // Note: Don't save the context.
+        // This is part of a larger pipeline.
+    }
+
+    // MARK: - Helper Functions
+
+    private func createPlanner(for datestamp: String) -> Planner {
+        let planner = Planner(datestamp: datestamp, location: nil)
+        insert(planner)
+
+        self.safeSave("planner.createPlanner")
+
+        return planner
     }
 
 }

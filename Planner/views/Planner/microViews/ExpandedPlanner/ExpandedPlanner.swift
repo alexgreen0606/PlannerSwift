@@ -118,26 +118,25 @@ struct ExpandedPlannerView: View {
                     uncheckedItems: sortedOpenPlannerEvents,
                     checkedItems: sortedCheckedPlans,
                     showChecked: showChecked,
-                    floatingInfo: chipSpread,
-                    customToggleConfig: toggleEventIconConfig,
                     checkedHeader: plannerType.checkedHeader,
-                    checkedFooter: plannerType.getCheckedFooter(
-                        for: plannerStartOfDay
-                    ),
                     emptyUncheckedLabel: "No plans",
                     emptyCheckedLabel: plannerType.emptyCheckedLabel,
-                    namespace: namespace,
                     tint: eventTint,
+                    scrollProxy: scrollProxy,
+                    createItem: createEvent,
+                    moveItem: moveUncheckedEvent,
+                    floatingInfo: chipSpread,
+                    customToggleConfig: toggleEventIconConfig,
+                    namespace: namespace,
                     toolbarIcons: ["clock"],
                     tapToolbar: handleToolbarTap,
                     leftAdornment: leftAdornment,
                     rightAdornment: rightAdornment,
                     bottomAdornment: bottomAdornment,
-                    scrollProxy: scrollProxy,
-                    createItem: createEvent,
                     handleTitleChange: handleEventTitleChange,
-                    moveItem: moveUncheckedEvent,
-                    isItemChecked: nil // TODO: may want to remove this
+                    checkedFooter: plannerType.getCheckedFooter(
+                        for: plannerStartOfDay
+                    ),
                 )
                 .navigationTitle(plannerStartOfDay.dynamicHeader)
                 .navigationSubtitle(subtitle)
@@ -157,9 +156,7 @@ struct ExpandedPlannerView: View {
                 plannerEvent: context.plannerEvent,
                 calendarEvent: context.calendarEvent,
                 settings: settings,
-            ) {
-                // TODO: show transfer snackbar
-            }
+            )
             .id(context.id)
             .navigationTransition(
                 .zoom(
@@ -303,7 +300,7 @@ struct ExpandedPlannerView: View {
                 DeleteSelectedButtonView(
                     itemsLabel: "events",
                     disabled: plannerManager.selectedItemIds.isEmpty,
-                    warningMessage:
+                    message:
                         "Calendar and planner events will be lost."
                 ) {
                     let selectedEvents = plannerManager.selectedItems
@@ -487,15 +484,15 @@ struct ExpandedPlannerView: View {
         modelContext.movePlannerEvent(
             from: from,
             to: to,
-            startOfDay: plannerStartOfDay,
-            events: sortedOpenPlannerEvents
+            plannerStartOfDay: plannerStartOfDay,
+            sortedEvents: sortedOpenPlannerEvents
         )
     }
 
     private func handleEventTitleChange(event: PlannerEvent) {
         modelContext.handlePlannerEventTitleChange(
             event,
-            startOfDay: plannerStartOfDay,
+            plannerStartOfDay: plannerStartOfDay,
             eventKitStore: calendarStore.ekEventStore,
             defaultLocation: plannerLocation
         )

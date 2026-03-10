@@ -1,5 +1,5 @@
 //
-//  AccentButton.swift
+//  ActionButton.swift
 //  Planner
 //
 //  Created by Alex Green on 2/8/26.
@@ -7,7 +7,9 @@
 
 import SwiftUI
 
-struct AccentButtonView: View {
+// Clean
+
+struct ActionButtonView: View {
     let label: String
     let systemImage: String
     let onTap: () -> Void
@@ -19,11 +21,12 @@ struct AccentButtonView: View {
         Button {
             onTap()
         } label: {
-            HStack(spacing: 6) {
+            HStack {
                 Image(systemName: systemImage)
                 Text(label)
             }
             .font(.system(size: 14, weight: .bold, design: .rounded))
+            .padding(.bottom, 8)
         }
         .tint(accentColor.color)
     }

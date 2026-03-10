@@ -82,9 +82,7 @@ struct PlannerTabView: View {
                     plannerEvent: nil,
                     calendarEvent: nil,
                     settings: settings
-                ) {
-                    // TODO: show indiactor of event creation
-                }
+                )
                 .navigationTransition(
                     .zoom(
                         sourceID: IdConstants.ADD_BUTTON,

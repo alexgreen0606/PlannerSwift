@@ -1,5 +1,5 @@
 //
-//  EditCalendarEventFormView.swift
+//  EditCalendarEventForm.swift
 //  Planner
 //
 //  Created by Alex Green on 12/17/25.
@@ -9,19 +9,21 @@ import EventKit
 import EventKitUI
 import SwiftUI
 
+// Clean
+
 struct EditCalendarEventFormView: UIViewControllerRepresentable {
     let event: EKEvent
-    let eventStore: EKEventStore
-    let onComplete: (EKEventEditViewAction, EKEvent?) -> Void
+    let ekEventStore: EKEventStore
+    let onSave: (EKEventEditViewAction, EKEvent?) -> Void
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onComplete: onComplete)
+        Coordinator(onSave: onSave)
     }
 
     func makeUIViewController(context: Context) -> EKEventEditViewController {
         let vc = EKEventEditViewController()
-        
-        vc.eventStore = eventStore
+
+        vc.eventStore = ekEventStore
         vc.event = event
         vc.editViewDelegate = context.coordinator
         vc.additionalSafeAreaInsets.bottom = 30
@@ -35,17 +37,17 @@ struct EditCalendarEventFormView: UIViewControllerRepresentable {
     ) {}
 
     class Coordinator: NSObject, EKEventEditViewDelegate {
-        let onComplete: (EKEventEditViewAction, EKEvent?) -> Void
+        let onSave: (EKEventEditViewAction, EKEvent?) -> Void
 
-        init(onComplete: @escaping (EKEventEditViewAction, EKEvent?) -> Void) {
-            self.onComplete = onComplete
+        init(onSave: @escaping (EKEventEditViewAction, EKEvent?) -> Void) {
+            self.onSave = onSave
         }
 
         func eventEditViewController(
             _ controller: EKEventEditViewController,
             didCompleteWith action: EKEventEditViewAction
         ) {
-            onComplete(action, controller.event)
+            onSave(action, controller.event)
         }
     }
 }

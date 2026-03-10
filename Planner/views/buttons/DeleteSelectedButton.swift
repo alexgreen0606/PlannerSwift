@@ -7,37 +7,51 @@
 
 import SwiftUI
 
+// Clean
+
 struct DeleteSelectedButtonView: View {
     let itemsLabel: String
     let disabled: Bool
-    let warningMessage: String?
-    let onDelete: () -> Void
+    let message: String?
+    let delete: () -> Void
 
-    @State private var showDeleteSelectedConfirm = false
+    init(
+        itemsLabel: String,
+        disabled: Bool,
+        message: String? = nil,
+        delete: @escaping () -> Void
+    ) {
+        self.itemsLabel = itemsLabel
+        self.disabled = disabled
+        self.message = message
+        self.delete = delete
+    }
 
-    private var message: String {
+    @State private var showConfirmation = false
+
+    private var fullMessage: String {
         let baseMessage = "This action is irreversible."
 
-        guard let warningMessage else {
+        guard let message else {
             return baseMessage
         }
 
-        return "\(warningMessage) This action is irreversible."
+        return "\(message) This action is irreversible."
     }
 
     var body: some View {
         Button("Delete", systemImage: "trash") {
-            showDeleteSelectedConfirm = true
+            showConfirmation = true
         }
         .disabled(disabled)
         .confirmationDialog(
             "Delete selected \(itemsLabel)?",
-            isPresented: $showDeleteSelectedConfirm,
-            titleVisibility: .visible
+            isPresented: $showConfirmation,
+            titleVisibility: .visible,
         ) {
-            Button("Confirm", role: .destructive, action: onDelete)
+            Button("Confirm", role: .destructive, action: delete)
         } message: {
-            Text(message)
+            Text(fullMessage)
         }
     }
 }

@@ -71,13 +71,13 @@ struct ChecklistsTabView: View {
                     openItem(folderToOpen)
                 }
             }
+            .environmentObject(checklistsManager)
             .navigationTransition(
                 .zoom(
                     sourceID: checklistId.id,
                     in: namespace
                 )
             )
-            .environmentObject(checklistsManager)
         }
     }
 

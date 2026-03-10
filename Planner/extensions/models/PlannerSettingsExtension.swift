@@ -9,19 +9,20 @@ import EventKit
 import SwiftDate
 import SwiftUI
 
+// Clean
+
 extension PlannerSettings {
 
     var homeRegion: Region {
         self.homeLocation?.region ?? .local
     }
 
-    // Only ever nil if the device location is loading.
-    func homeLocation(deviceLocation: Location?) -> Location? {
-        homeLocation ?? deviceLocation
+    var homeLocationLabel: String {
+        homeLocation?.name ?? "Current Location"
     }
 
-    func homeLocationLabel(localCityName: String) -> String {
-        homeLocation?.name ?? localCityName
+    func homeLocation(deviceLocation: Location?) -> Location? {
+        homeLocation ?? deviceLocation  // nil means the current device location is used and hasn't loaded yet
     }
 
     var homeLocationIconConfig: IconConfig {

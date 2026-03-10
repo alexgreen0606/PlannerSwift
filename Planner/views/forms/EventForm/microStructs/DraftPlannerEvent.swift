@@ -9,6 +9,8 @@ import SwiftUI
 import EventKit
 import SwiftDate
 
+// Clean
+
 struct DraftPlannerEvent {
     var title: String = ""
     var date: Date = Date()
@@ -16,13 +18,12 @@ struct DraftPlannerEvent {
     var location: Location? = nil
     var calendarEvent: EKEvent? = nil
 
-    // Nil means the current device location is used.
     private func location(
         planner: Planner?,
         settings: PlannerSettings,
         deviceLocation: Location?
     )
-        -> Location?
+        -> Location? // nil means the current device location is used
     {
         eventLocation(
             location: location,
@@ -55,4 +56,5 @@ struct DraftPlannerEvent {
             deviceLocation: deviceLocation
         )?.name ?? "Current Location"
     }
+    
 }
