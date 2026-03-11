@@ -66,6 +66,20 @@ struct ChecklistActionMenu: View {
     }
 
     // MARK: - View Builders
+    
+    private var showCompletedToggle: some View {
+        Button {
+            checklist.showCompleted.toggle()
+        } label: {
+            Label(
+                checklist.showCompleted
+                    ? "Hide completed"
+                    : "Show completed",
+                systemImage: checklist.showCompleted
+                    ? "eye.slash" : "eye"
+            )
+        }
+    }
 
     private var editChecklistButton: some View {
         Button {
@@ -88,20 +102,6 @@ struct ChecklistActionMenu: View {
             )
         }
         .disabled(visibleItems.isEmpty)
-    }
-
-    private var showCompletedToggle: some View {
-        Button {
-            checklist.showCompleted.toggle()
-        } label: {
-            Label(
-                checklist.showCompleted
-                    ? "Hide completed"
-                    : "Show completed",
-                systemImage: checklist.showCompleted
-                    ? "eye.slash" : "eye"
-            )
-        }
     }
 
     private var deleteActionMenu: some View {

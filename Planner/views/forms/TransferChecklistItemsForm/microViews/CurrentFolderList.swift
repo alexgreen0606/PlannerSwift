@@ -38,9 +38,7 @@ struct CurrentFolderListView: View {
     var body: some View {
         List {
             Section {
-                ForEach(selectableItems, id: \.stableId) { item in
-                    itemRow(for: item)
-                }
+                ForEach(selectableItems, id: \.stableId, content: row)
             } header: {
                 folderLabel
             }
@@ -52,7 +50,8 @@ struct CurrentFolderListView: View {
         .overlay {
             if selectableItems.isEmpty {
                 EmptyLabelView(
-                    text: "No Available \(destinationType.rawValue.capitalizedFirst)s"
+                    text:
+                        "No Available \(destinationType.rawValue.capitalizedFirst)s"
                 )
             }
         }
@@ -84,7 +83,7 @@ struct CurrentFolderListView: View {
         }
     }
 
-    private func itemRow(for item: ChecklistItem) -> some View {
+    private func row(for item: ChecklistItem) -> some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading) {
                 Image(

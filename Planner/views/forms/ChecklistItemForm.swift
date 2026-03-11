@@ -13,12 +13,12 @@ import SwiftUI
 struct ChecklistItemFormView: View {
     private let sourceItem: ChecklistItem?
     private let parent: ChecklistItem?
-    private let onSave: (() -> Void)?
+    private let onSave: ((UUID?) -> Void)?
 
     init(
         item: ChecklistItem? = nil,
         parent: ChecklistItem?,
-        onSave: (() -> Void)? = nil
+        onSave: ((UUID?) -> Void)? = nil
     ) {
         self.sourceItem = item
         self.parent = parent
@@ -47,6 +47,8 @@ struct ChecklistItemFormView: View {
 
     @State private var draftChecklistItem: ChecklistItem
 
+    @FocusState private var isFocused: Bool
+
     private var canSave: Bool {
         !draftChecklistItem.title.isEmpty
             && (draftChecklistItem.title != sourceItem?.title
@@ -60,6 +62,13 @@ struct ChecklistItemFormView: View {
                 Section {
                     TextField("Title", text: $draftChecklistItem.title)
                         .textInputAutocapitalization(.words)
+
+                        // Increase the focusable area of the field.
+                        .focused($isFocused)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            isFocused = true
+                        }
                 }
                 .listSectionMargins(.top, 0)
 
@@ -131,14 +140,14 @@ struct ChecklistItemFormView: View {
     // MARK: - Functions
 
     private func handleSave() {
-        modelContext.handleChecklistItemChange(
+        let newItemId = modelContext.handleChecklistItemChange(
             sourceItem: sourceItem,
             parent: parent,
             draftChecklistItem: draftChecklistItem
         )
 
-        onSave?()
         dismiss()
+        onSave?(newItemId)
     }
 
 }

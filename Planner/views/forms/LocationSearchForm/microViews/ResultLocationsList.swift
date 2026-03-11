@@ -23,9 +23,7 @@ struct ResultLocationsListView: View {
 
     var body: some View {
         List {
-            ForEach(locationFinder.results, id: \.self) { result in
-                row(for: result)
-            }
+            ForEach(locationFinder.results, id: \.self, content: row)
         }
         .listStyle(.plain)
         .background(Color(uiColor: .systemBackground).ignoresSafeArea())

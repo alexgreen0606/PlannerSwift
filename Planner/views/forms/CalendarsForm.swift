@@ -38,10 +38,9 @@ struct CalendarsFormView: View {
         List {
             ForEach(
                 calendarStore.sortedCalendars,
-                id: \.calendarIdentifier
-            ) { calendar in
-                row(for: calendar)
-            }
+                id: \.calendarIdentifier,
+                content: row
+            )
         }
         .navigationTitle("Calendars")
         .navigationBarTitleDisplayMode(.inline)

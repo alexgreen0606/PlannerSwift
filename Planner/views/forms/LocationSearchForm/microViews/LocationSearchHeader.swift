@@ -97,10 +97,12 @@ struct LocationSearchHeaderView: View {
             "Search cities and addresses...",
             text: $locationFinder.locationSearchText
         )
-        .focused($isFocused)
         .padding()
         .glassEffect(.regular.interactive())
         .tint(accentColor.color)
+        
+        // Increase the focusable area of the field.
+        .focused($isFocused)
         .contentShape(Rectangle())
         .onTapGesture {
             isFocused = true

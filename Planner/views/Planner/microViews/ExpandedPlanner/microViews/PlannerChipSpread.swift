@@ -69,9 +69,7 @@ struct PlannerChipSpreadView: View {
             locationChip
             weatherChip
 
-            ForEach(allDayEvents, id: \.eventIdentifier) { event in
-                eventChip(event)
-            }
+            ForEach(allDayEvents, id: \.eventIdentifier, content: eventChip)
         }
         .animateAsynchronousAction(from: weatherData)
         .animateAsynchronousAction(from: locationLabel)

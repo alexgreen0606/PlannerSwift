@@ -20,9 +20,7 @@ struct SuggestedLocationsListView: View {
 
     var body: some View {
         List {
-            ForEach(suggestedLocations, id: \.id) { suggestion in
-                row(for: suggestion)
-            }
+            ForEach(suggestedLocations, id: \.id, content: row)
         }
         .listStyle(.plain)
         .background(Color(uiColor: .systemBackground).ignoresSafeArea())

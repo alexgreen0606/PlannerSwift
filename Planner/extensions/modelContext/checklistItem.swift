@@ -95,7 +95,9 @@ extension ModelContext {
         sourceItem: ChecklistItem?,
         parent: ChecklistItem?,
         draftChecklistItem: ChecklistItem
-    ) {
+    ) -> UUID? {
+        var newItemId: UUID? = nil
+        
         if let sourceItem {
             // Edit the existing item.
             sourceItem.title = draftChecklistItem.title
@@ -116,10 +118,12 @@ extension ModelContext {
                 parent: parent
             )
 
+            newItemId = newItem.stableId
             self.insert(newItem)
         }
 
         self.safeSave("checklistItem.handleChecklistItemChange")
+        return newItemId
     }
 
     @MainActor
