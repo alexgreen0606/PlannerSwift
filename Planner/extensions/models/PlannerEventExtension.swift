@@ -129,7 +129,7 @@ extension PlannerEvent {
         openSheet: (() -> Void)?
     ) -> some View {
         if self.hasTime {
-            TimeValueView(
+            TimeView(
                 timeInRegion: DateInRegion(self.date, region: plannerRegion),
                 color: self.tint(accentColor: accentColor),
                 scale: scale,
@@ -192,13 +192,13 @@ extension PlannerEvent {
             return nil
         }()
 
-        LocationBottomAdornmentView(
-            icon: IconConfig(
+        EventBottomAdornmentView(
+            iconConfig: IconConfig(
                 name: "mappin.and.ellipse",
                 primaryColor: accentColor.color
             ),
-            locationText: locationText,
-            timeText: timeText,
+            locationLabel: locationText,
+            timeLabel: timeText,
             openEventSheet: openEventSheet
         )
     }

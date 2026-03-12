@@ -11,10 +11,11 @@ import EventKit
 
 extension EKEventStore {
 
-    func deleteEvent(_ event: EKEvent) {
+    func deleteEvent(_ event: EKEvent) -> Bool {
         guard event.calendar.allowsContentModifications else {
             print("Cannot delete event. Calendar is read-only.")
-            return
+            
+            return false
         }
 
         do {
@@ -23,9 +24,13 @@ extension EKEventStore {
                 span: .thisEvent,
                 commit: true
             )
+            
+            return true
         } catch {
             assertionFailure("ERROR EKEventStore.deleteEvent: \(error)")
         }
+        
+        return false
     }
 
 }

@@ -22,7 +22,7 @@ extension DateInRegion {
             locale: Locale.current
         )
     }
-    
+
     var dynamicHeader: String {
         isThisWeek ? weekday : dateLabel
     }
@@ -47,26 +47,22 @@ extension DateInRegion {
             .startOfDay
         )
 
-        guard let diff = startOfToday.difference(in: .day, from: startOfDay)
-        else {
-            return ""
-        }
+        let diff =
+            Calendar.current.dateComponents(
+                [.day],
+                from: startOfDay.date,
+                to: startOfToday.date
+            ).day ?? 0
 
         if diff == 0 {
             return "Today"
 
         } else if startOfToday.isBeforeDate(startOfDay, granularity: .day) {
-            if diff == 1 {
-                return "Tomorrow"
-            }
-
-            return "\(diff) days away"
+            if abs(diff) == 1 { return "Tomorrow" }
+            return "\(abs(diff)) days away"
 
         } else {
-            if diff == 1 {
-                return "Yesterday"
-            }
-
+            if diff == 1 { return "Yesterday" }
             return "\(diff) days ago"
         }
     }

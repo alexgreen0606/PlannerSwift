@@ -33,9 +33,9 @@ extension View {
         -> some View
     {
         self
-            .padding(.horizontal, (height ?? UiConstants.plannerChipHeight) / 3)
+            .padding(.horizontal, (height ?? PlannerLayout.CHIP_HEIGHT) / 3)
             .padding(.vertical, 4)
-            .frame(height: height ?? UiConstants.plannerChipHeight)
+            .frame(height: height ?? PlannerLayout.CHIP_HEIGHT)
             .contentShape(Rectangle())
             .onTapGesture {
                 onTap?()
@@ -48,7 +48,7 @@ extension View {
                     : .regular
                         .interactive(onTap != nil),
                 in: .rect(
-                    cornerRadius: (height ?? UiConstants.plannerChipHeight) / 2
+                    cornerRadius: (height ?? PlannerLayout.CHIP_HEIGHT) / 2
                 )
             )
     }

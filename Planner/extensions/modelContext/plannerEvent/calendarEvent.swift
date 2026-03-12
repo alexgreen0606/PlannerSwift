@@ -12,6 +12,19 @@ import SwiftDate
 // Clean
 
 extension ModelContext {
+    
+    @MainActor
+    func deleteCalendarEvent(_ event: PlannerEvent, ekEventStore: EKEventStore) {
+        guard let calEvent = event.calendarEvent else {
+            return
+        }
+
+        if ekEventStore.deleteEvent(calEvent) {
+            self.delete(event)
+        }
+        
+        self.safeSave("calendarEvent.deleteCalendarEvent")
+    }
 
     @MainActor
     func syncCalendarEvents(

@@ -1,5 +1,5 @@
 //
-//  PreviewEventList.swift
+//  PlannerEventList.swift
 //  Planner
 //
 //  Created by Alex Green on 12/27/25.
@@ -9,14 +9,16 @@ import EventKit
 import SwiftDate
 import SwiftUI
 
-struct PreviewPlannerEventListView: View {
+// Clean
+
+struct PlannerEventListView: View {
     let plannerRegion: Region
     let events: [PlannerEvent]
 
-    @Environment(\.displayScale) private var displayScale
-
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
+    
+    @Environment(\.displayScale) private var displayScale
 
     var body: some View {
         if !events.isEmpty {
@@ -24,7 +26,7 @@ struct PreviewPlannerEventListView: View {
                 ForEach(events, id: \.stableId) { event in
                     HStack(alignment: .top, spacing: 12) {
                         Text(event.title)
-                            .font(.system(size: UiConstants.listItemFontSize * 0.8))
+                            .font(.system(size: ListLayout.FONT_SIZE * 0.8))
 
                         Spacer()
 
@@ -51,7 +53,7 @@ struct PreviewPlannerEventListView: View {
             .overlay(
                 Rectangle()
                     .stroke(
-                        Color(uiColor: .tertiaryLabel),
+                        .tertiary,
                         style: StrokeStyle(
                             lineWidth: lineWidth,
                             dash: [2, 6]

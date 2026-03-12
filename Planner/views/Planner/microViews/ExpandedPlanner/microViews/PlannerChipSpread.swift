@@ -1,5 +1,5 @@
 //
-//  PlannerChipSpreadView.swift
+//  PlannerChipSpread.swift
 //  Planner
 //
 //  Created by Alex Green on 12/17/25.
@@ -12,16 +12,18 @@ import SwiftUI
 import WeatherKit
 import WrappingHStack
 
+// Clean
+
 struct PlannerChipSpreadView: View {
     let planner: Planner
-    let startOfDay: DateInRegion
+    let plannerStartOfDay: DateInRegion
+    let sortedPlannerEvents: [PlannerEvent]
     let allDayEvents: [EKEvent]
-    let iconMap: [String: String]
     var namespace: Namespace.ID
     let settings: PlannerSettings
-    let location: Location?
-    let sortedPlannerEvents: [PlannerEvent]
+    let plannerLocation: Location?
     let openCalendarEventSheet: (EKEvent) -> Void
+
     let weatherUnit: UnitTemperature =
         Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
 
@@ -39,17 +41,7 @@ struct PlannerChipSpreadView: View {
 
     @State private var isLocationSheetOpen = false
 
-    private var isDarkMode: Bool {
-        switch appColorScheme {
-        case .dark: return true
-        case .light: return false
-        case .system: return systemColorScheme == .dark
-        }
-    }
-
-    private var countdownLabel: String? {
-        startOfDay.countdown
-    }
+    // MARK: - Computed Variables
 
     private var locationLabel: String {
         planner.locationLabel(
@@ -58,27 +50,42 @@ struct PlannerChipSpreadView: View {
         )
     }
 
-    private var weatherData: DayWeather? {
-        weatherStore.getWeather(for: startOfDay, at: location)
+    private var locationIconConfig: IconConfig {
+        planner.locationIconConfig(
+            settings: settings,
+            accentColor: accentColor
+        )
     }
+
+    private var weatherData: DayWeather? {
+        weatherStore.getWeather(for: plannerStartOfDay, at: plannerLocation)
+    }
+
+    private var isDarkMode: Bool {
+        switch appColorScheme {
+        case .dark: return true
+        case .light: return false
+        case .system: return systemColorScheme == .dark
+        }
+    }
+
+    // MARK: - Body
 
     var body: some View {
         WrappingHStack(alignment: .leading) {
-
             countdownChip
             locationChip
             weatherChip
-
             ForEach(allDayEvents, id: \.eventIdentifier, content: eventChip)
         }
         .animateAsynchronousAction(from: weatherData)
         .animateAsynchronousAction(from: locationLabel)
-        .animateAsynchronousAction(from: allDayEvents)
+        .animateAsynchronousAction(from: allDayEvents.map(\.title))
 
         // Location Sheet
         .sheet(isPresented: $isLocationSheetOpen) {
             LocationSearchFormView(
-                title: "Edit Planner Location",
+                title: "\(plannerStartOfDay.dynamicHeader) Location",
                 mode: .planner,
                 settings: settings,
                 initialLocation: planner.location,
@@ -92,35 +99,27 @@ struct PlannerChipSpreadView: View {
             }
             .navigationTransition(
                 .zoom(
-                    sourceID: "LOCATION",
+                    sourceID: IdConstants.LOCATION_CHIP,
                     in: namespace
                 )
             )
         }
     }
 
-    // MARK: - Chips
+    // MARK: - View Builders
 
     @ViewBuilder
     private var countdownChip: some View {
-        if let countdownLabel {
-            PlannerChipView(
-                title: countdownLabel,
-                iconConfig: nil,
-                color: nil,
-                onTap: nil
-            )
-        }
+        PlannerChipView(
+            title: plannerStartOfDay.countdown,
+            iconConfig: nil,
+            color: nil,
+            onTap: nil
+        )
     }
 
     @ViewBuilder
     private var locationChip: some View {
-
-        let locationIconConfig = planner.locationIconConfig(
-            settings: settings,
-            accentColor: accentColor
-        )
-
         PlannerChipView(
             title: locationLabel,
             iconConfig: locationIconConfig,
@@ -130,7 +129,7 @@ struct PlannerChipSpreadView: View {
             }
         )
         .matchedTransitionSource(
-            id: "LOCATION",
+            id: IdConstants.LOCATION_CHIP,
             in: namespace
         )
     }
@@ -202,7 +201,7 @@ struct PlannerChipSpreadView: View {
         )
     }
 
-    // MARK: - Helper Function
+    // MARK: - Functions
 
     private func openWeatherApp() {
         guard let url = URL(string: "weather://") else { return }

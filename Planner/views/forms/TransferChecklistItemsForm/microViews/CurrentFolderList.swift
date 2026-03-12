@@ -100,7 +100,7 @@ struct CurrentFolderListView: View {
             .frame(height: 19)
 
             Text(item.title)
-                .font(.system(size: UiConstants.listItemFontSize))
+                .font(.system(size: ListLayout.FONT_SIZE))
                 .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)

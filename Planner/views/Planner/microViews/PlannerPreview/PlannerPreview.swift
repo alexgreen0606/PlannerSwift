@@ -1,5 +1,5 @@
 //
-//  PlannerPreviewView.swift
+//  PlannerPreview.swift
 //  Planner
 //
 //  Created by Alex Green on 12/25/25.
@@ -12,83 +12,34 @@ import SwiftUI
 import WeatherKit
 import WrappingHStack
 
-enum PlannerPreviewType {
-    case planner
-    case search
-
-    var isSoon: Bool {
-        self == .planner
-    }
-}
+// Clean
 
 struct PlannerPreviewView: View {
+    let type: PlannerPreviewType
     let planner: Planner
     let plannerStartOfDay: DateInRegion
     let plannerLocation: Location?
-    let sortedPlannerEvents: [PlannerEvent]
+    let plannerEvents: [PlannerEvent]
     let allDayEvents: [EKEvent]
     let settings: PlannerSettings
-    let type: PlannerPreviewType
 
     private let maxPreviewEvents = 5
 
-    let weatherUnit: UnitTemperature =
-        Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
-
-    @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
-        .system
-
-    @AppStorage("accentColor") var accentColor: AccentColor =
-        AccentColor.blue
-
-    @Environment(\.colorScheme) private var systemColorScheme
-    @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var weatherStore: WeatherStore
-    @EnvironmentObject private var calendarStore: CalendarStore
-    @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
     @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
 
-    var isDarkMode: Bool {
-        switch appColorScheme {
-        case .dark: return true
-        case .light: return false
-        case .system: return systemColorScheme == .dark
-        }
-    }
+    // MARK: - Computed Variables
 
-    // MARK: - Weather and Location Data
-
-    private var weatherData: DayWeather? {
-        weatherStore.getWeather(for: plannerStartOfDay, at: plannerLocation)
-    }
-
-    private var locationLabel: String? {
-        planner.locationLabel(
-            settings: settings,
-            deviceLocation: deviceLocationManager.deviceLocation
-        )
-    }
-
-    private var locationIconConfig: IconConfig {
-        planner.locationIconConfig(
-            settings: settings,
-            accentColor: accentColor
-        )
-    }
-
-    // MARK: - Event Data
-
-    private var sortedOpenPlannerEvents: [PlannerEvent] {
-        sortedPlannerEvents
+    private var openPlannerEvents: [PlannerEvent] {
+        plannerEvents
             .filter { !$0.isChecked }
     }
 
-    private var timedSortedPlannerEvents: [PlannerEvent] {
-        sortedOpenPlannerEvents.filter { $0.hasTime }
+    private var timedPlannerEvents: [PlannerEvent] {
+        openPlannerEvents.filter { $0.hasTime }
     }
 
-    private var untimedSortedPlannerEvents: [PlannerEvent] {
-        sortedOpenPlannerEvents.filter { !$0.hasTime }
+    private var untimedPlannerEvents: [PlannerEvent] {
+        openPlannerEvents.filter { !$0.hasTime }
     }
 
     private var previewAllDayEvents: [EKEvent] {
@@ -96,42 +47,21 @@ struct PlannerPreviewView: View {
     }
 
     private var sortedPreviewPlannerEvents: [PlannerEvent] {
+        let slots = max(0, maxPreviewEvents - previewAllDayEvents.count)
 
-        var previewEvents: [PlannerEvent] = []
-        var remainingSlots = max(
-            0,
-            maxPreviewEvents - previewAllDayEvents.count - previewEvents.count
-        )
+        let timed = Array(timedPlannerEvents.prefix(slots))
+        let remaining = slots - timed.count
+        let untimed = untimedPlannerEvents.prefix(max(0, remaining))
 
-        // Priority 1: Timed Storage Events
-        previewEvents.append(
-            contentsOf:
-                timedSortedPlannerEvents
-                .prefix(remainingSlots)
-        )
-
-        remainingSlots = max(
-            0,
-            maxPreviewEvents - previewAllDayEvents.count - previewEvents.count
-        )
-
-        // Priority 2: Untimed Storage Events
-        previewEvents.append(
-            contentsOf:
-                untimedSortedPlannerEvents
-                .prefix(remainingSlots)
-        )
-
-        return
-            previewEvents
-            .sorted { $0.sortDate < $1.sortDate }
+        return (timed + untimed).sorted { $0.sortDate < $1.sortDate }
     }
 
     private var remainingPlansLabel: String {
         let totalEventCount =
-            allDayEvents.count + sortedOpenPlannerEvents.count
+            allDayEvents.count + openPlannerEvents.count
 
-        let previewCount = previewAllDayEvents.count + sortedPreviewPlannerEvents.count
+        let previewCount =
+            previewAllDayEvents.count + sortedPreviewPlannerEvents.count
 
         let remainingCount = totalEventCount - previewCount
 
@@ -149,34 +79,40 @@ struct PlannerPreviewView: View {
         (previewAllDayEvents.count + sortedPreviewPlannerEvents.count) > 0
     }
 
+    // MARK: - Body
+
     var body: some View {
         let content = VStack(alignment: .leading, spacing: 12) {
 
             HStack(alignment: .top) {
                 PlannerDateInfoView(
-                    datestamp: planner.datestamp,
-                    region: planner.region(settings: settings),
-                    isSoon: type.isSoon
+                    plannerStartOfDay: plannerStartOfDay,
+                    isThisWeek: type.isThisWeek
                 )
 
                 Spacer()
 
-                topRightWeatherInfo
+                if type == .search {
+                    weatherInfo
+                }
             }
 
-            PreviewCalendarEventListView(
+            AllDayEventListView(
                 events: allDayEvents,
                 settings: settings
             )
 
-            PreviewPlannerEventListView(
+            PlannerEventListView(
                 plannerRegion: plannerStartOfDay.region,
                 events: sortedPreviewPlannerEvents
             )
 
             remainingPlansIndicator
             emptyPlannerIndicator
-            bottomWeatherInfo
+
+            if type == .planner {
+                weatherInfo
+            }
         }
         .contentShape(Rectangle())
         .onTapGesture {
@@ -200,6 +136,18 @@ struct PlannerPreviewView: View {
             content
                 .frame(maxWidth: .infinity)
         }
+    }
+
+    // MARK: - View Builders
+
+    private var weatherInfo: some View {
+        WeatherInfoView(
+            previewType: type,
+            planner: planner,
+            plannerStartOfDay: plannerStartOfDay,
+            plannerLocation: plannerLocation,
+            settings: settings
+        )
     }
 
     @ViewBuilder
@@ -230,162 +178,6 @@ struct PlannerPreviewView: View {
                 maxHeight: .infinity,
                 alignment: .center
             )
-        }
-    }
-
-    @ViewBuilder
-    private var bottomWeatherInfo: some View {
-        if type == .planner {
-            HStack(alignment: .bottom) {
-                if let weatherData {
-                    Image(systemName: weatherData.symbolName)
-                        .symbolVariant(isDarkMode ? .fill : .none)
-                        .symbolRenderingMode(
-                            isDarkMode ? .multicolor : .monochrome
-                        )
-                        .imageScale(.medium)
-                        .frame(maxHeight: .infinity)
-                }
-
-                VStack(alignment: .leading, spacing: 0) {
-
-                    if let weatherData {
-                        Text(weatherData.condition.description)
-                            .font(.system(size: 12, design: .rounded))
-                    }
-
-                    HStack {
-
-                        if let locationLabel {
-                            HStack(spacing: 6) {
-                                if weatherData == nil {
-                                    Image(systemName: locationIconConfig.name)
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 11, height: 11)
-                                        .foregroundStyle(
-                                            locationIconConfig.primaryColor,
-                                            locationIconConfig.secondaryColor
-                                        )
-                                }
-
-                                Text(locationLabel)
-                                    .foregroundStyle(
-                                        Color.secondary
-                                    )
-                                    .font(.system(size: 10))
-                            }
-                        }
-
-                        Spacer()
-
-                        if let weatherData {
-                            HStack(alignment: .center, spacing: 4) {
-                                Text(
-                                    weatherData.highTemp(in: weatherUnit)
-                                )
-                                .font(
-                                    .system(
-                                        size: 11,
-                                        weight: .bold,
-                                        design: .rounded
-                                    )
-                                )
-                                Divider().frame(height: 16)
-                                Text(weatherData.lowTemp(in: weatherUnit))
-                                    .font(
-                                        .system(
-                                            size: 10,
-                                            weight: .bold,
-                                            design: .rounded
-                                        )
-                                    )
-                            }
-                        }
-                    }
-                    .frame(maxHeight: .infinity, alignment: .bottom)
-                }
-            }
-            .frame(height: 30)
-            .animateAsynchronousAction(from: weatherData != nil)
-            .animateAsynchronousAction(from: locationLabel != nil)
-        }
-    }
-
-    @ViewBuilder
-    private var topRightWeatherInfo: some View {
-        if type == .search {
-            VStack(alignment: .trailing) {
-                HStack(alignment: .bottom) {
-
-                    VStack(alignment: .trailing, spacing: 0) {
-
-                        if let weatherData {
-                            Text(weatherData.condition.description)
-                                .font(.system(size: 12, design: .rounded))
-                        }
-
-                        if let locationLabel {
-                            HStack(spacing: 6) {
-                                if weatherData == nil, planner.location != nil {
-                                    Image(systemName: locationIconConfig.name)
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 11, height: 11)
-                                        .foregroundStyle(
-                                            locationIconConfig.primaryColor,
-                                            locationIconConfig.secondaryColor
-                                        )
-                                }
-
-                                if weatherData != nil || planner.location != nil
-                                {
-                                    Text(locationLabel)
-                                        .foregroundStyle(
-                                            Color.secondary
-                                        )
-                                        .font(.system(size: 10))
-                                }
-                            }
-                        }
-                    }
-
-                    if let weatherData {
-                        Image(systemName: weatherData.symbolName)
-                            .symbolVariant(isDarkMode ? .fill : .none)
-                            .symbolRenderingMode(
-                                isDarkMode ? .multicolor : .monochrome
-                            )
-                            .imageScale(.medium)
-                            .frame(maxHeight: .infinity)
-                    }
-                }
-
-                if let weatherData {
-                    HStack(alignment: .center, spacing: 4) {
-                        Text(weatherData.highTemp(in: weatherUnit))
-                            .font(
-                                .system(
-                                    size: 11,
-                                    weight: .bold,
-                                    design: .rounded
-                                )
-                            )
-                        Divider().frame(height: 16)
-                        Text(weatherData.lowTemp(in: weatherUnit))
-                            .font(
-                                .system(
-                                    size: 10,
-                                    weight: .bold,
-                                    design: .rounded
-                                )
-                            )
-                    }
-                }
-
-            }
-            .animateAsynchronousAction(from: weatherData != nil)
-            .animateAsynchronousAction(from: locationLabel != nil)
         }
     }
 

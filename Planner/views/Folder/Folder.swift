@@ -8,11 +8,7 @@
 import SwiftData
 import SwiftUI
 
-enum FolderLayout {
-    static let ICON_WIDTH: CGFloat = 26
-    static let ROW_SPACING: CGFloat = 12
-    static let ICON_CONTAINER_HEIGHT: CGFloat = 53
-}
+// Clean
 
 struct FolderView: View {
     let folder: ChecklistItem
@@ -164,27 +160,9 @@ struct FolderView: View {
     @ViewBuilder
     private var actionMenu: some View {
         Menu("Action Menu", systemImage: "ellipsis") {
-            Button {
-                showEditSheet = true
-            } label: {
-                Label("Edit folder details", systemImage: "pencil")
-            }
-
-            Button {
-                selectManager.toggleSelectMode()
-            } label: {
-                Label("Select contents", systemImage: "checkmark.circle")
-            }
-            .disabled(sortedItems.isEmpty)
-
-            if folder.parent != nil {
-                Button(role: .destructive) {
-                    showDeleteFolderConfirm = true
-                } label: {
-                    Label("Delete this folder", systemImage: "trash")
-                }
-            }
-
+            editFolderButton
+            selectItemsButton
+            deleteFolderButton
         }
         .matchedTransitionSource(
             id: IdConstants.ELLIPSIS_BUTTON,
@@ -200,6 +178,36 @@ struct FolderView: View {
             Text(folder.deleteWarning)
         }
     }
+
+    private var editFolderButton: some View {
+        Button {
+            showEditSheet = true
+        } label: {
+            Label("Edit folder", systemImage: "pencil")
+        }
+    }
+
+    private var selectItemsButton: some View {
+        Button {
+            selectManager.toggleSelectMode()
+        } label: {
+            Label("Select contents", systemImage: "checkmark.circle")
+        }
+        .disabled(sortedItems.isEmpty)
+    }
+
+    @ViewBuilder
+    private var deleteFolderButton: some View {
+        if folder.parent != nil {
+            Button(role: .destructive) {
+                showDeleteFolderConfirm = true
+            } label: {
+                Label("Delete this folder", systemImage: "trash")
+            }
+        }
+    }
+
+    // MARK: Add New Item Button
 
     @ViewBuilder
     private var addNewItemButton: some View {
@@ -220,37 +228,31 @@ struct FolderView: View {
             DeleteSelectedButtonView(
                 itemsLabel: "contents",
                 disabled: selectManager.selectedItemIds.isEmpty,
-                message: nil
-            ) {
-                withAnimation {
-                    modelContext.deleteChecklistItems(
-                        selectManager.selectedItems
-                    )
-                }
-
-                DispatchQueue.main.async {
-                    selectManager.toggleSelectMode()
-                }
-            }
+                delete: deleteSelectedItems
+            )
         }
 
         ToolbarSpacer(.fixed, placement: .topBarTrailing)
 
         ToolbarItem(placement: .topBarTrailing) {
-            Button(
-                "Transfer",
-                systemImage: "arrow.forward.folder"
-            ) {
-                showTransferSheet = true
-            }
-            .matchedTransitionSource(
-                id: IdConstants.TRANSFER_BUTTON,
-                in: namespace
-            )
-            .disabled(
-                !canTranferItems || selectManager.selectedItemIds.isEmpty
-            )
+            transferItemsButton
         }
+    }
+
+    private var transferItemsButton: some View {
+        Button(
+            "Transfer",
+            systemImage: "arrow.forward.folder"
+        ) {
+            showTransferSheet = true
+        }
+        .matchedTransitionSource(
+            id: IdConstants.TRANSFER_BUTTON,
+            in: namespace
+        )
+        .disabled(
+            !canTranferItems || selectManager.selectedItemIds.isEmpty
+        )
     }
 
     // MARK: - Functions
@@ -258,6 +260,18 @@ struct FolderView: View {
     private func deleteEntireFolder() {
         dismiss()
         modelContext.deleteChecklistItem(folder)
+    }
+
+    private func deleteSelectedItems() {
+        withAnimation {
+            modelContext.deleteChecklistItems(
+                selectManager.selectedItems
+            )
+        }
+
+        DispatchQueue.main.async {
+            selectManager.toggleSelectMode()
+        }
     }
 
     private func scrollTo(id: UUID?, scrollProxy: ScrollViewProxy) {

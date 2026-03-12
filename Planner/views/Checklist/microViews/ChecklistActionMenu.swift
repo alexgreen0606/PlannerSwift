@@ -66,7 +66,7 @@ struct ChecklistActionMenu: View {
     }
 
     // MARK: - View Builders
-    
+
     private var showCompletedToggle: some View {
         Button {
             checklist.showCompleted.toggle()
@@ -106,23 +106,30 @@ struct ChecklistActionMenu: View {
 
     private var deleteActionMenu: some View {
         Menu {
-            Button(role: .destructive) {
-                showDeleteCompletedConfirm = true
-            } label: {
-                Text("Delete completed items")
-            }
-            .disabled(!hasCheckedItem)
-
-            Button(role: .destructive) {
-                showDeleteChecklistConfirm = true
-            } label: {
-                Text("Delete this list")
-            }
+            deleteCompletedItemsButton
+            deleteListButton
         } label: {
             Label(
                 "Delete options",
                 systemImage: "trash"
             )
+        }
+    }
+
+    private var deleteCompletedItemsButton: some View {
+        Button(role: .destructive) {
+            showDeleteCompletedConfirm = true
+        } label: {
+            Text("Delete completed items")
+        }
+        .disabled(!hasCheckedItem)
+    }
+
+    private var deleteListButton: some View {
+        Button(role: .destructive) {
+            showDeleteChecklistConfirm = true
+        } label: {
+            Text("Delete this list")
         }
     }
 

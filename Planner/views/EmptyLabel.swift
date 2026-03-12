@@ -16,6 +16,6 @@ struct EmptyLabelView: View {
         Text(text)
             .font(.system(size: 16, weight: .heavy, design: .rounded))
             .foregroundStyle(Color(uiColor: .tertiaryLabel))
-            .frame(height: UiConstants.emptyLabelHeight)
+            .frame(height: ListLayout.EMPTY_LABEL_HEIGHT)
     }
 }

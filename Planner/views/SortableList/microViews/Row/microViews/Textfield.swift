@@ -1,5 +1,5 @@
 //
-//  RowTextfield.swift
+//  Textfield.swift
 //  Planner
 //
 //  Created by Alex Green on 12/1/25.
@@ -11,7 +11,7 @@ import UIKit
 
 // Clean
 
-struct RowTextfieldView: UIViewRepresentable {
+struct TextfieldView: UIViewRepresentable {
     @Binding var focusedId: UUID?
     @Binding var text: String
     @Binding var height: CGFloat
@@ -29,7 +29,7 @@ struct RowTextfieldView: UIViewRepresentable {
         context.coordinator.configureKeyboardToolbar(for: textField)
 
         textField.isEditable = true
-        textField.font = UIFont.systemFont(ofSize: UiConstants.listItemFontSize)
+        textField.font = UIFont.systemFont(ofSize: ListLayout.FONT_SIZE)
         textField.isSelectable = true
         textField.backgroundColor = .clear
         textField.isUserInteractionEnabled = true
@@ -82,10 +82,10 @@ struct RowTextfieldView: UIViewRepresentable {
     }
 
     final class Coordinator: NSObject, UITextViewDelegate {
-        let parent: RowTextfieldView
+        let parent: TextfieldView
         weak var textView: UITextView?
 
-        init(_ parent: RowTextfieldView) {
+        init(_ parent: TextfieldView) {
             self.parent = parent
         }
 

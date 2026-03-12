@@ -49,26 +49,39 @@ extension ModelContext {
 
         return newEvent.stableId
     }
-
-    // TODO: delete calendar events too
+    
     @MainActor
-    func deleteStorageEvents(_ events: [PlannerEvent]) {
-
-        for event in events {
-            self.delete(event)
-        }
-
-        self.safeSave("plannerEvent.deleteStorageEvents")
+    func checkPlannerEvent(_ event: PlannerEvent) {
+        event.isChecked = true
+        self.safeSave("plannerEvent.checkPlannerEvent")
     }
 
-    // TODO: delete calendar events too
     @MainActor
-    func deleteCheckedStorageEvents(from events: [PlannerEvent]) {
+    func deletePlannerEvents(
+        _ events: [PlannerEvent],
+        ekEventStore: EKEventStore? = nil  // deletes calendar events, otherwise they are preserved.
+    ) {
+        for event in events {
+            if let calendarEvent = event.calendarEvent {
+                guard let ekEventStore else {
+                    continue
+                }
 
-        for event in events where event.isChecked {
+                try? ekEventStore.remove(calendarEvent, span: .thisEvent)
+            }
             self.delete(event)
         }
 
+        self.safeSave("plannerEvent.deletePlannerEvents")
+    }
+
+    @MainActor
+    func deleteCheckedPlannerEvents(
+        from events: [PlannerEvent],
+        ekEventStore: EKEventStore? = nil  // deletes calendar events, otherwise they are preserved.
+    ) {
+        let checked = events.filter { $0.isChecked }
+        self.deletePlannerEvents(checked, ekEventStore: ekEventStore)
         self.safeSave("plannerEvent.deleteCheckedStorageEvents")
     }
 
@@ -244,7 +257,8 @@ extension ModelContext {
 
         // Delete the old calendar event.
         if let initialCalendarEvent {
-            ekEventStore.deleteEvent(initialCalendarEvent)
+            // TODO: only delete the storage record if this succeeds.
+            let _ = ekEventStore.deleteEvent(initialCalendarEvent)
         }
 
         // Note: Saving the context here will delete the location.

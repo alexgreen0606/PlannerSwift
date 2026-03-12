@@ -38,7 +38,10 @@ struct FolderContentsListView: View {
 
     private func row(for item: ChecklistItem) -> some View {
         HStack(alignment: .top, spacing: FolderLayout.ROW_SPACING) {
-            HStack(spacing: selectManager.isSelectMode ? 16 : 0) {
+            HStack(
+                spacing: selectManager.isSelectMode
+                    ? FolderLayout.TOGGLE_SPACING : 0
+            ) {
 
                 ListItemToggleView(
                     item: item,
@@ -48,32 +51,32 @@ struct FolderContentsListView: View {
                     ),
                     opacity: selectManager.isSelectMode ? 1 : 0
                 )
-                .frame(width: selectManager.isSelectMode ? 22 : 0)
+                .frame(
+                    width: selectManager.isSelectMode
+                        ? FolderLayout.TOGGLE_WIDTH : 0
+                )
                 .allowsHitTesting(selectManager.isSelectMode)
 
                 itemIcon(for: item)
             }
-            .frame(height: 19)
+            .frame(height: FolderLayout.HORIZONTAL_ADORNMENT_HEIGHT)
 
             Text(item.title)
-                .font(.system(size: UiConstants.listItemFontSize))
+                .font(.system(size: ListLayout.FONT_SIZE))
                 .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             HStack(alignment: .center) {
-                Text("\(item.items.filter{!$0.isChecked}.count)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                if item.type == .folder {
+                if item.type == .checklist {
+                    Text("\(item.items.filter{!$0.isChecked}.count)")
+                        .font(.caption)
+                } else {
                     Image(systemName: "chevron.right")
-                        .foregroundColor(
-                            Color(uiColor: .tertiaryLabel)
-                        )
                 }
             }
-            .frame(height: 19)
+            .frame(height: FolderLayout.HORIZONTAL_ADORNMENT_HEIGHT)
+            .foregroundColor(.secondary)
         }
         .id(item.stableId)
         .alignmentGuide(.listRowSeparatorLeading) { _ in
@@ -86,15 +89,7 @@ struct FolderContentsListView: View {
         )
         .contentShape(Rectangle())
         .onTapGesture {
-            if selectManager.isSelectMode {
-                selectManager.toggleItem(item)
-                updateTransferAvailability(
-                    Set(selectManager.selectedItemIds + [folder.stableId])
-                )
-                return
-            }
-
-            openItem(item)
+            handleTap(of: item)
         }
     }
 
@@ -126,6 +121,18 @@ struct FolderContentsListView: View {
                 to: targetIndex
             )
         }
+    }
+
+    private func handleTap(of item: ChecklistItem) {
+        if selectManager.isSelectMode {
+            selectManager.toggleItem(item)
+            updateTransferAvailability(
+                Set(selectManager.selectedItemIds + [folder.stableId])
+            )
+            return
+        }
+
+        openItem(item)
     }
 
 }

@@ -42,7 +42,7 @@ class CalendarStore: ObservableObject {
             }
     }
 
-    func storeAllDayEvents(_ allDayEvents: [EKEvent], plannerKey: String) {
+    func cacheAllDayEvents(_ allDayEvents: [EKEvent], plannerKey: String) {
         allDayEventsByPlannerKey[plannerKey] = allDayEvents
     }
 

@@ -8,39 +8,33 @@
 import Foundation
 import SwiftDate
 
+// Clean
+
 enum PlannerType: String {
     case pastOrPresent
     case future
 
     var emptyCheckedLabel: String {
-        switch self {
-        case .pastOrPresent: "No completed plans"
-        case .future: "No canceled plans"
-        }
+        "No \(checkedLabel) events"
     }
 
     var checkedHeader: String {
-        switch self {
-        case .pastOrPresent: "Completed plans"
-        case .future: "Cancelled plans"
-        }
+        "\(checkedLabel.capitalized) events"
     }
 
     var deleteCheckedLabel: String {
-        switch self {
-        case .pastOrPresent: "Delete completed plans"
-        case .future: "Delete canceled plans"
-        }
+        "Delete \(checkedLabel) events"
     }
 
     var deleteCheckedConfirmationTitle: String {
-        switch self {
-        case .pastOrPresent: "Delete completed plans from this planner?"
-        case .future: "Delete canceled plans from this planner?"
-        }
+        "Delete \(checkedLabel) events from this planner?"
     }
 
-    func getCheckedFooter(for startOfDay: DateInRegion) -> String? {
+    func toggleCheckedLabel(_ showHidden: Bool) -> String {
+        showHidden ? "Hide \(checkedLabel)" : "Show \(checkedLabel)"
+    }
+
+    func checkedFooter(for startOfDay: DateInRegion) -> String? {
         switch self {
         case .pastOrPresent:
             return nil
@@ -77,14 +71,17 @@ enum PlannerType: String {
                 : "the morning of \(formatted)"
 
             return
-                "These canceled plans will be deleted \(displayDate). Hidden calendar events will not be deleted."
+                "These canceled events will be deleted \(displayDate). Hidden calendar events will not be deleted."
         }
     }
 
-    func getToggleVisibilityLabel(_ showHidden: Bool) -> String {
+    // MARK: - Helper Variables
+
+    private var checkedLabel: String {
         switch self {
-        case .pastOrPresent: showHidden ? "Hide completed" : "Show completed"
-        case .future: showHidden ? "Hide canceled" : "Show canceled"
+        case .pastOrPresent: "completed"
+        case .future: "canceled"
         }
     }
+
 }

@@ -1,22 +1,22 @@
 //
-//  PlannerEventBuilderView.swift
+//  PlannerEventBuilder.swift
 //  Planner
 //
 //  Created by Alex Green on 2/28/26.
 //
 
+import EventKit
 import SwiftData
 import SwiftDate
 import SwiftUI
-import EventKit
+
+// Clean
 
 struct PlannerEventBuilderView: View {
     private let planner: Planner
     private let settings: PlannerSettings
     private let previewType: PlannerPreviewType?
     private let namespace: Namespace.ID?
-
-    private let plannerStartOfDay: DateInRegion
 
     init(
         planner: Planner,
@@ -30,13 +30,11 @@ struct PlannerEventBuilderView: View {
         self.namespace = namespace
 
         let region = planner.region(settings: settings)
-
         guard let startOfDay = planner.datestamp.startOfDay(in: region) else {
             fatalError(
                 "ERROR PlannerDataBuilder.init: Could not get DateInRegion from: \(planner.datestamp)"
             )
         }
-
         let startOfNextDay = (startOfDay + 1.days)
 
         _sortedPlannerEvents = Query(
@@ -44,8 +42,8 @@ struct PlannerEventBuilderView: View {
                 if !event.hasTime {
                     return event.date == startOfDay.date
                 } else {
-                    return event.date >= startOfDay.date &&
-                           event.date < startOfNextDay.date
+                    return event.date >= startOfDay.date
+                        && event.date < startOfNextDay.date
                 }
             },
             sort: \.sortDate
@@ -53,6 +51,8 @@ struct PlannerEventBuilderView: View {
 
         self.plannerStartOfDay = startOfDay
     }
+
+    private let plannerStartOfDay: DateInRegion
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
@@ -100,39 +100,35 @@ struct PlannerEventBuilderView: View {
         // Reload the weather and events when the location changes.
         .onChange(of: plannerLocation) { _, _ in
             loadCalendarData()
-
-            Task {
-                await weatherStore.loadWeatherIfNeeded(
-                    location: plannerLocation,
-                    region: plannerRegion
-                )
-            }
+            loadWeatherData()
         }
     }
+    
+    // MARK: - View Builders
 
     @ViewBuilder
     private var expandedView: some View {
-            ExpandedPlannerView(
-                planner: planner,
-                plannerStartOfDay: plannerStartOfDay,
-                plannerLocation: plannerLocation,
-                sortedPlannerEvents: sortedPlannerEvents,
-                allDayEvents: allDayEvents,
-                settings: settings
-            )
+        ExpandedPlannerView(
+            planner: planner,
+            plannerStartOfDay: plannerStartOfDay,
+            plannerLocation: plannerLocation,
+            sortedPlannerEvents: sortedPlannerEvents,
+            allDayEvents: allDayEvents,
+            settings: settings
+        )
     }
 
     @ViewBuilder
     private var previewView: some View {
         if let previewType, let namespace {
             PlannerPreviewView(
+                type: previewType,
                 planner: planner,
                 plannerStartOfDay: plannerStartOfDay,
                 plannerLocation: plannerLocation,
-                sortedPlannerEvents: sortedPlannerEvents,
+                plannerEvents: sortedPlannerEvents,
                 allDayEvents: allDayEvents,
-                settings: settings,
-                type: previewType
+                settings: settings
             )
             .matchedTransitionSource(
                 id: planner.datestamp,
@@ -141,16 +137,19 @@ struct PlannerEventBuilderView: View {
         }
     }
 
+    // MARK: - Functions
+
     private func loadCalendarData() {
-        
+
         let plannerKey = planner.key
 
         // Return cached data.
-        if let existingData = calendarStore.allDayEventsByPlannerKey[plannerKey] {
+        if let existingData = calendarStore.allDayEventsByPlannerKey[plannerKey]
+        {
             allDayEvents = existingData
             return
         }
-        
+
         allDayEvents = modelContext.syncCalendarEvents(
             for: planner,
             storageEvents: sortedPlannerEvents,
@@ -158,8 +157,8 @@ struct PlannerEventBuilderView: View {
             hiddenCalendarIds: settings.hiddenCalendarIds,
             ekEventStore: calendarStore.ekEventStore
         )
-        
-        calendarStore.storeAllDayEvents(allDayEvents, plannerKey: plannerKey)
+
+        calendarStore.cacheAllDayEvents(allDayEvents, plannerKey: plannerKey)
     }
 
     private func loadWeatherData() {
@@ -170,5 +169,5 @@ struct PlannerEventBuilderView: View {
             )
         }
     }
-    
+
 }

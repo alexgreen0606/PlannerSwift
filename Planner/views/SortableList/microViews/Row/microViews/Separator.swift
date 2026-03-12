@@ -30,7 +30,7 @@ struct SeparatorView: View {
     var body: some View {
         Rectangle()
             .fill(.clear)
-            .frame(height: RowConstants.separatorHeight)
+            .frame(height: ListLayout.SEPARATOR_HEIGHT)
             .overlay(
                 divider
             )

@@ -7,7 +7,9 @@
 
 import SwiftUI
 
-struct PlannerIcon: View {
+// Clean
+
+struct PlannerIconView: View {
     let datestamp: String
     let scale: CGFloat
 
@@ -18,7 +20,7 @@ struct PlannerIcon: View {
 
     private var iconColor: Color {
         datestamp == todaystampManager.todaystamp
-            ? accentColor.color : Color.secondary
+            ? accentColor.color : .secondary
     }
 
     var body: some View {

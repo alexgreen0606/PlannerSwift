@@ -10,13 +10,6 @@ import SwiftUI
 
 // Clean
 
-enum RowConstants {
-    static let horizontalAdornmentHeight: CGFloat = 32
-    static let verticalTextPadding: CGFloat = 6
-    static let separatorHeight: CGFloat = 10
-    static let toggleHeight: CGFloat = 54
-}
-
 struct RowView<
     Item: ListItem,
     LeftAdornment: View,
@@ -136,7 +129,7 @@ struct RowView<
             opacity: opacity,
             customToggleConfig: customToggleConfig
         )
-        .frame(height: RowConstants.toggleHeight, alignment: .center)
+        .frame(height: ListLayout.TOGGLE_HEIGHT, alignment: .center)
     }
 
     private var content: some View {
@@ -159,7 +152,7 @@ struct RowView<
                 leftAdornment
                     .opacity(opacity)
                     .frame(
-                        height: RowConstants.horizontalAdornmentHeight,
+                        height: ListLayout.HORIZONTAL_ADORNMENT_HEIGHT,
                         alignment: .center
                     )
 
@@ -167,18 +160,18 @@ struct RowView<
                     text
                     textfield
                 }
-                .padding(.vertical, RowConstants.verticalTextPadding)
+                .padding(.vertical, ListLayout.VERTICAL_TEXT_PADDING)
                 .opacity(opacity)
 
                 rightAdornment
                     .opacity(opacity)
                     .frame(
-                        height: RowConstants.horizontalAdornmentHeight,
+                        height: ListLayout.HORIZONTAL_ADORNMENT_HEIGHT,
                         alignment: .center
                     )
 
             }
-            .frame(minHeight: RowConstants.horizontalAdornmentHeight)
+            .frame(minHeight: ListLayout.HORIZONTAL_ADORNMENT_HEIGHT)
 
             bottomAdornment
                 .opacity(opacity)
@@ -200,7 +193,7 @@ struct RowView<
     private var text: some View {
         Text(item.title)
             .opacity(isFocused ? 0 : 1)
-            .font(.system(size: UiConstants.listItemFontSize))
+            .font(.system(size: ListLayout.FONT_SIZE))
             .lineLimit(nil)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -218,7 +211,7 @@ struct RowView<
     }
 
     private var textfield: some View {
-        RowTextfieldView(
+        TextfieldView(
             focusedId: $listManager.focusedId,
             text: $item.title,
             height: $height,

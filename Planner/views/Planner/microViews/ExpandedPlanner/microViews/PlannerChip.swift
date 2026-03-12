@@ -1,11 +1,13 @@
 //
-//  PlannerChipView.swift
+//  PlannerChip.swift
 //  Planner
 //
 //  Created by Alex Green on 12/16/25.
 //
 
 import SwiftUI
+
+// Clean
 
 struct PlannerChipView: View {
     let title: String

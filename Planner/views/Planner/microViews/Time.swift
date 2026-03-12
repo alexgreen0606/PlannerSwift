@@ -1,5 +1,5 @@
 //
-//  TimeValue.swift
+//  Time.swift
 //  Planner
 //
 //  Created by Alex Green on 12/3/25.
@@ -8,7 +8,9 @@
 import SwiftDate
 import SwiftUI
 
-struct TimeValueView: View {
+// Clean
+
+struct TimeView: View {
     let timeInRegion: DateInRegion
     let color: Color
     let scale: Double
@@ -16,9 +18,12 @@ struct TimeValueView: View {
 
     var body: some View {
         let val = HStack(alignment: .top, spacing: 1 * scale) {
+
             // Time Value (12:30)
             Text(timeInRegion.timeValue.timeValue)
-                .font(.system(size: 14 * scale, weight: .black, design: .rounded))
+                .font(
+                    .system(size: 14 * scale, weight: .black, design: .rounded)
+                )
                 .foregroundStyle(
                     color
                 )
@@ -30,7 +35,7 @@ struct TimeValueView: View {
                     Color.secondary
                 )
         }
-        
+
         if let openEventSheet {
             val
                 .contentShape(Rectangle())
