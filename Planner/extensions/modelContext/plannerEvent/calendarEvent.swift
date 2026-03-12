@@ -12,9 +12,10 @@ import SwiftDate
 // Clean
 
 extension ModelContext {
-    
+
     @MainActor
-    func deleteCalendarEvent(_ event: PlannerEvent, ekEventStore: EKEventStore) {
+    func deleteCalendarEvent(_ event: PlannerEvent, ekEventStore: EKEventStore)
+    {
         guard let calEvent = event.calendarEvent else {
             return
         }
@@ -22,7 +23,7 @@ extension ModelContext {
         if ekEventStore.deleteEvent(calEvent) {
             self.delete(event)
         }
-        
+
         self.safeSave("calendarEvent.deleteCalendarEvent")
     }
 
@@ -35,8 +36,6 @@ extension ModelContext {
         ekEventStore: EKEventStore
     ) -> [EKEvent]  // Planner chip events.
     {
-        let plannerRegion = plannerStartOfDay.region
-        let plannerDatestamp = planner.datestamp
         let startOfNextPlannerDay = plannerStartOfDay + 1.days
 
         // Existing events in storage for this planner range.
@@ -83,23 +82,16 @@ extension ModelContext {
 
                 // Event is timed.
 
-                let startDatestamp = DateInRegion(
-                    event.startDate,
-                    region: plannerRegion
-                ).datestamp
-                let endDatestamp = DateInRegion(
-                    event.endDate,
-                    region: plannerRegion
-                ).datestamp
-
-                if startDatestamp != endDatestamp {
+                if event.spansOutsidePlannerDay(
+                    plannerStartOfDay: plannerStartOfDay
+                ) {
 
                     // Event is multi-day. Display it as a planner chip.
                     plannerChipEvents.append(event)
 
                 }
 
-                if startDatestamp == plannerDatestamp {
+                if event.startDate.belongsTo(plannerStartOfDay) {
 
                     // This is the first day of the event. Display a planner event for it.
                     self.upsertCalendarEventToPlanner(
@@ -255,7 +247,9 @@ extension ModelContext {
             // A matching storage event exists. Sync it with the calendar event and move
             // it to the planner day.
             storageEvent.syncWithCalendarEvent(calendarEvent)
-            storageEvent.sortDate = self.getUpperSortDate(for: plannerStartOfDay)
+            storageEvent.sortDate = self.getUpperSortDate(
+                for: plannerStartOfDay
+            )
 
         } catch {
 

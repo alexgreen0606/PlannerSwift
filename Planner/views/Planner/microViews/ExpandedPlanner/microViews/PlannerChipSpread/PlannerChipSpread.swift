@@ -18,7 +18,7 @@ struct PlannerChipSpreadView: View {
     let planner: Planner
     let plannerStartOfDay: DateInRegion
     let sortedPlannerEvents: [PlannerEvent]
-    let allDayEvents: [EKEvent]
+    let plannerChipEvents: [EKEvent]
     var namespace: Namespace.ID
     let settings: PlannerSettings
     let plannerLocation: Location?
@@ -76,11 +76,11 @@ struct PlannerChipSpreadView: View {
             countdownChip
             locationChip
             weatherChip
-            ForEach(allDayEvents, id: \.eventIdentifier, content: eventChip)
+            ForEach(plannerChipEvents, id: \.eventIdentifier, content: eventChip)
         }
         .animateAsynchronousAction(from: weatherData)
         .animateAsynchronousAction(from: locationLabel)
-        .animateAsynchronousAction(from: allDayEvents.map(\.title))
+        .animateAsynchronousAction(from: plannerChipEvents.map(\.title))
 
         // Location Sheet
         .sheet(isPresented: $isLocationSheetOpen) {

@@ -42,8 +42,8 @@ class CalendarStore: ObservableObject {
             }
     }
 
-    func cacheAllDayEvents(_ allDayEvents: [EKEvent], plannerKey: String) {
-        allDayEventsByPlannerKey[plannerKey] = allDayEvents
+    func cachePlannerChips(_ plannerChipEvents: [EKEvent], plannerKey: String) {
+        allDayEventsByPlannerKey[plannerKey] = plannerChipEvents
     }
 
     func attemptFreshLoad(hiddenCalendarIds: Set<String>) {

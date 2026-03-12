@@ -33,6 +33,13 @@ extension EKEvent {
         return "\(externalId)_\(startString)"
     }
 
+    func spansOutsidePlannerDay(plannerStartOfDay: DateInRegion) -> Bool {
+        let startOfNextPlannerDay = plannerStartOfDay + 1.days
+
+        return self.startDate < plannerStartOfDay.date
+            || self.endDate > startOfNextPlannerDay.date
+    }
+
     func location(
         storageEvent: PlannerEvent? = nil
     ) -> Location? {
@@ -45,7 +52,7 @@ extension EKEvent {
                 .longitude,
             let timeZone = self.timeZone
         {
-            
+
             let newLocation = Location(
                 name: locationLabel,
                 latitude: latitude,

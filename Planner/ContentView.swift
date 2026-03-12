@@ -76,6 +76,7 @@ struct ContentView: View {
         KeepPastPlansDuration =
             KeepPastPlansDuration.oneMonth
 
+    @Environment(\.scenePhase) private var appPhase
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject private var calendarStore: CalendarStore
@@ -166,6 +167,15 @@ struct ContentView: View {
                         sourceID: context.id,
                         in: namespace
                     )
+                )
+            }
+        }
+
+        // Reload all calendar records when the app gains focus.
+        .onChange(of: appPhase) { _, phase in
+            if phase == .active, let settings {
+                calendarStore.attemptFreshLoad(
+                    hiddenCalendarIds: settings.hiddenCalendarIds
                 )
             }
         }

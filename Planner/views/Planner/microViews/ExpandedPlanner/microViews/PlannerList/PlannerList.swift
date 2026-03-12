@@ -20,7 +20,7 @@ struct PlannerListView: View {
     let sortedOpenPlannerEvents: [PlannerEvent]
     let sortedCheckedPlannerEvents: [PlannerEvent]
     let sortedPlannerEvents: [PlannerEvent]
-    let allDayEvents: [EKEvent]
+    let plannerChipEvents: [EKEvent]
     let showChecked: Bool
     let namespace: Namespace.ID
     let scrollProxy: ScrollViewProxy
@@ -109,7 +109,7 @@ struct PlannerListView: View {
             planner: planner,
             plannerStartOfDay: plannerStartOfDay,
             sortedPlannerEvents: sortedPlannerEvents,
-            allDayEvents: allDayEvents,
+            plannerChipEvents: plannerChipEvents,
             namespace: namespace,
             settings: settings,
             plannerLocation: plannerLocation,

@@ -50,7 +50,7 @@
 //        weatherStore.getWeather(for: todaystamp, at: planner?.location)
 //    }
 //
-//    private var allDayEvents: [EKEvent] {
+//    private var plannerChipEvents: [EKEvent] {
 //        return calendarStore.allDayEventsByDatestamp[
 //            todaystamp
 //        ] ?? []
@@ -68,7 +68,7 @@
 //            + singleDayEvents.count
 //
 //        if planCount == 0 {
-//            if allDayEvents.count > 0 {
+//            if plannerChipEvents.count > 0 {
 //                return "No more plans"
 //            }
 //            return "No plans"
@@ -90,9 +90,9 @@
 //                    )
 //
 //                HStack(alignment: .center, spacing: 6) {
-//                    if !allDayEvents.isEmpty {
+//                    if !plannerChipEvents.isEmpty {
 //                        HStack(alignment: .bottom, spacing: 2) {
-//                            ForEach(allDayEvents, id: \.self) { event in
+//                            ForEach(plannerChipEvents, id: \.self) { event in
 //                                Image(systemName: event.calendar.iconName)
 //                                    .font(.caption)
 //                                    .imageScale(.small)

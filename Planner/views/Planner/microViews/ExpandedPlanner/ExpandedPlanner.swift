@@ -17,7 +17,7 @@ struct ExpandedPlannerView: View {
     let plannerStartOfDay: DateInRegion
     let plannerLocation: Location?
     let sortedPlannerEvents: [PlannerEvent]
-    let allDayEvents: [EKEvent]
+    let plannerChipEvents: [EKEvent]
     let settings: PlannerSettings
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -103,7 +103,7 @@ struct ExpandedPlannerView: View {
                     sortedOpenPlannerEvents: sortedOpenPlannerEvents,
                     sortedCheckedPlannerEvents: sortedCheckedPlannerEvents,
                     sortedPlannerEvents: sortedPlannerEvents,
-                    allDayEvents: allDayEvents,
+                    plannerChipEvents: plannerChipEvents,
                     showChecked: showChecked,
                     namespace: namespace,
                     scrollProxy: scrollProxy,

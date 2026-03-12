@@ -20,7 +20,7 @@ struct PlannerPreviewView: View {
     let plannerStartOfDay: DateInRegion
     let plannerLocation: Location?
     let plannerEvents: [PlannerEvent]
-    let allDayEvents: [EKEvent]
+    let plannerChipEvents: [EKEvent]
     let settings: PlannerSettings
 
     private let maxPreviewEvents = 5
@@ -43,7 +43,7 @@ struct PlannerPreviewView: View {
     }
 
     private var previewAllDayEvents: [EKEvent] {
-        Array(allDayEvents.prefix(maxPreviewEvents))
+        Array(plannerChipEvents.prefix(maxPreviewEvents))
     }
 
     private var sortedPreviewPlannerEvents: [PlannerEvent] {
@@ -58,7 +58,7 @@ struct PlannerPreviewView: View {
 
     private var remainingPlansLabel: String {
         let totalEventCount =
-            allDayEvents.count + openPlannerEvents.count
+            plannerChipEvents.count + openPlannerEvents.count
 
         let previewCount =
             previewAllDayEvents.count + sortedPreviewPlannerEvents.count
@@ -98,7 +98,7 @@ struct PlannerPreviewView: View {
             }
 
             AllDayEventListView(
-                events: allDayEvents,
+                events: plannerChipEvents,
                 settings: settings
             )
 

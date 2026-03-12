@@ -61,7 +61,7 @@ struct PlannerEventBuilderView: View {
 
     @Query private var sortedPlannerEvents: [PlannerEvent]
 
-    @State private var allDayEvents: [EKEvent] = []
+    @State private var plannerChipEvents: [EKEvent] = []
 
     private var plannerLocation: Location? {
         planner.location(
@@ -113,7 +113,7 @@ struct PlannerEventBuilderView: View {
             plannerStartOfDay: plannerStartOfDay,
             plannerLocation: plannerLocation,
             sortedPlannerEvents: sortedPlannerEvents,
-            allDayEvents: allDayEvents,
+            plannerChipEvents: plannerChipEvents,
             settings: settings
         )
     }
@@ -127,7 +127,7 @@ struct PlannerEventBuilderView: View {
                 plannerStartOfDay: plannerStartOfDay,
                 plannerLocation: plannerLocation,
                 plannerEvents: sortedPlannerEvents,
-                allDayEvents: allDayEvents,
+                plannerChipEvents: plannerChipEvents,
                 settings: settings
             )
             .matchedTransitionSource(
@@ -146,11 +146,11 @@ struct PlannerEventBuilderView: View {
         // Return cached data.
         if let existingData = calendarStore.allDayEventsByPlannerKey[plannerKey]
         {
-            allDayEvents = existingData
+            plannerChipEvents = existingData
             return
         }
 
-        allDayEvents = modelContext.syncCalendarEvents(
+        plannerChipEvents = modelContext.syncCalendarEvents(
             for: planner,
             storageEvents: sortedPlannerEvents,
             plannerStartOfDay: plannerStartOfDay,
@@ -158,7 +158,7 @@ struct PlannerEventBuilderView: View {
             ekEventStore: calendarStore.ekEventStore
         )
 
-        calendarStore.cacheAllDayEvents(allDayEvents, plannerKey: plannerKey)
+        calendarStore.cachePlannerChips(plannerChipEvents, plannerKey: plannerKey)
     }
 
     private func loadWeatherData() {
