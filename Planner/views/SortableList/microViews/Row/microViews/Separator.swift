@@ -12,15 +12,18 @@ import SwiftUI
 struct SeparatorView: View {
     private let showLowerDivider: Bool
     private let showUpperDivider: Bool
+    private let opacity: Double
     private let onTap: () -> Void
 
     init(
         showLowerDivider: Bool = false,
         showUpperDivider: Bool = false,
+        opacity: Double = 1,
         onTap: @escaping () -> Void
     ) {
         self.showLowerDivider = showLowerDivider
         self.showUpperDivider = showUpperDivider
+        self.opacity = opacity
         self.onTap = onTap
     }
 
@@ -44,7 +47,7 @@ struct SeparatorView: View {
             VStack {
                 if showLowerDivider {
                     Spacer()
-                    Divider().background(.tertiary)
+                    Divider().background(.tertiary.opacity(opacity))
                 } else if showUpperDivider {
                     Divider().background(.tertiary)
                     Spacer()

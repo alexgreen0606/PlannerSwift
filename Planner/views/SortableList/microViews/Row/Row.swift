@@ -137,6 +137,7 @@ struct RowView<
 
             SeparatorView(
                 showUpperDivider: isUpperItem,
+                opacity: opacity,
                 onTap: {
                     if listManager.isSelectMode {
                         listManager.toggleItem(item)
@@ -178,6 +179,7 @@ struct RowView<
 
             SeparatorView(
                 showLowerDivider: true,
+                opacity: opacity,
                 onTap: {
                     if listManager.isSelectMode {
                         listManager.toggleItem(item)
