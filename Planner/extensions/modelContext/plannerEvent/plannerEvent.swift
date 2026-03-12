@@ -59,15 +59,17 @@ extension ModelContext {
     @MainActor
     func deletePlannerEvents(
         _ events: [PlannerEvent],
-        ekEventStore: EKEventStore? = nil  // deletes calendar events, otherwise they are preserved.
+        ekEventStore: EKEventStore? = nil  // deletes calendar events, otherwise they are preserved
     ) {
         for event in events {
             if let calendarEvent = event.calendarEvent {
                 guard let ekEventStore else {
                     continue
                 }
-
-                try? ekEventStore.remove(calendarEvent, span: .thisEvent)
+                
+                if !ekEventStore.deleteEvent(calendarEvent) {
+                    continue
+                }
             }
             self.delete(event)
         }
