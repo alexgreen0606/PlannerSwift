@@ -197,6 +197,7 @@ struct SortableListView<
                         leftAdornment: leftAdornment(item),
                         rightAdornment: rightAdornment(item),
                         bottomAdornment: bottomAdornment(item),
+                        toggleOnlyMode: true,
                         customToggleConfig: customRowToggleConfig
                     )
                 }

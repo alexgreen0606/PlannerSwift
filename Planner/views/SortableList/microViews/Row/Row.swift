@@ -23,6 +23,7 @@ struct RowView<
     private let leftAdornment: LeftAdornment
     private let rightAdornment: RightAdornment
     private let bottomAdornment: BottomAdornment
+    private let toggleOnlyMode: Bool
     private let toolbarSystemImageNames: [String]
     private let customToggleConfig: ToggleConfig<Item>?
     private let namespace: Namespace.ID?
@@ -38,6 +39,7 @@ struct RowView<
         leftAdornment: LeftAdornment,
         rightAdornment: RightAdornment,
         bottomAdornment: BottomAdornment,
+        toggleOnlyMode: Bool = false,
         toolbarSystemImageNames: [String]? = [],
         customToggleConfig: ToggleConfig<Item>? = nil,
         namespace: Namespace.ID? = nil,
@@ -52,6 +54,7 @@ struct RowView<
         self.leftAdornment = leftAdornment
         self.rightAdornment = rightAdornment
         self.bottomAdornment = bottomAdornment
+        self.toggleOnlyMode = toggleOnlyMode
         self.toolbarSystemImageNames = toolbarSystemImageNames ?? []
         self.createItem = createItem
         self.customToggleConfig = customToggleConfig
@@ -139,7 +142,7 @@ struct RowView<
                 showUpperDivider: isUpperItem,
                 opacity: opacity,
                 onTap: {
-                    if listManager.isSelectMode {
+                    if listManager.isSelectMode || toggleOnlyMode {
                         listManager.toggleItem(item)
                         return
                     }
@@ -181,7 +184,7 @@ struct RowView<
                 showLowerDivider: true,
                 opacity: opacity,
                 onTap: {
-                    if listManager.isSelectMode {
+                    if listManager.isSelectMode || toggleOnlyMode {
                         listManager.toggleItem(item)
                         return
                     }
@@ -201,7 +204,7 @@ struct RowView<
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
             .onTapGesture {
-                if listManager.isSelectMode {
+                if listManager.isSelectMode || toggleOnlyMode {
                     listManager.toggleItem(item)
                     return
                 }
