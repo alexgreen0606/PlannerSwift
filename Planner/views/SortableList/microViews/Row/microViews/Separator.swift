@@ -47,7 +47,8 @@ struct SeparatorView: View {
             VStack {
                 if showLowerDivider {
                     Spacer()
-                    Divider().background(.tertiary.opacity(opacity))
+                    Divider().background(.tertiary)
+                        .opacity(opacity)
                 } else if showUpperDivider {
                     Divider().background(.tertiary)
                     Spacer()
