@@ -103,7 +103,7 @@ struct PlannerEventBuilderView: View {
             loadWeatherData()
         }
     }
-    
+
     // MARK: - View Builders
 
     @ViewBuilder
@@ -150,7 +150,7 @@ struct PlannerEventBuilderView: View {
             return
         }
 
-        plannerChipEvents = modelContext.syncCalendarEvents(
+        let calendarSearchResults = modelContext.syncCalendarEvents(
             for: planner,
             storageEvents: sortedPlannerEvents,
             plannerStartOfDay: plannerStartOfDay,
@@ -158,7 +158,16 @@ struct PlannerEventBuilderView: View {
             ekEventStore: calendarStore.ekEventStore
         )
 
-        calendarStore.cachePlannerChips(plannerChipEvents, plannerKey: plannerKey)
+        plannerChipEvents = calendarSearchResults.plannerChipEvents
+
+        calendarStore.cachePlannerChips(
+            plannerChipEvents,
+            plannerKey: plannerKey
+        )
+
+        DispatchQueue.main.async {
+            hydrateCalendarEvents(calendarSearchResults: calendarSearchResults)
+        }
     }
 
     private func loadWeatherData() {
@@ -167,6 +176,26 @@ struct PlannerEventBuilderView: View {
                 location: plannerLocation,
                 region: plannerStartOfDay.region
             )
+        }
+    }
+
+    private func hydrateCalendarEvents(
+        calendarSearchResults: CalendarSearchResults
+    ) {
+        for event in sortedPlannerEvents {
+            if let calendarItemExternalIdentifier = event
+                .calendarItemExternalIdentifier
+            {
+                if let occurrenceId = event.occurrenceId {
+                    event.calendarEvent =
+                        calendarSearchResults.occurrenceEvents[occurrenceId]
+                } else {
+                    event.calendarEvent =
+                        calendarSearchResults.regularEvents[
+                            calendarItemExternalIdentifier
+                        ]
+                }
+            }
         }
     }
 

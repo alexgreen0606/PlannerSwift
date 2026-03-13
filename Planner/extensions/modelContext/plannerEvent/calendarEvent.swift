@@ -34,8 +34,7 @@ extension ModelContext {
         plannerStartOfDay: DateInRegion,
         hiddenCalendarIds: Set<String>,
         ekEventStore: EKEventStore
-    ) -> [EKEvent]  // Planner chip events.
-    {
+    ) -> CalendarSearchResults {
         let startOfNextPlannerDay = plannerStartOfDay + 1.days
 
         // Existing events in storage for this planner range.
@@ -65,12 +64,20 @@ extension ModelContext {
         // ------------------------------------------------------------------
 
         var plannerChipEvents: [EKEvent] = []
+        var occurrenceEvents: [String: EKEvent] = [:]
+        var regularEvents: [String: EKEvent] = [:]
 
         for event in events {
 
             // Skip events from calendars that are excluded in the app settings.
             if hiddenCalendarIds.contains(event.calendar.calendarIdentifier) {
                 continue
+            }
+
+            if let occurrenceId = event.occurrenceId {
+                occurrenceEvents[occurrenceId] = event
+            } else {
+                regularEvents[event.calendarItemExternalIdentifier] = event
             }
 
             if event.isAllDay {
@@ -80,26 +87,20 @@ extension ModelContext {
 
             } else {
 
-                // Event is timed.
-
+                // Display the event as a chip if it spans more than just this planner day.
                 if event.spansOutsidePlannerDay(
                     plannerStartOfDay: plannerStartOfDay
                 ) {
-
-                    // Event is multi-day. Display it as a planner chip.
                     plannerChipEvents.append(event)
-
                 }
 
+                // Display the event as a planner event if it starts during this planner day.
                 if event.startDate.belongsTo(plannerStartOfDay) {
-
-                    // This is the first day of the event. Display a planner event for it.
                     self.upsertCalendarEventToPlanner(
                         event,
                         existingCalendarEvents: &existingCalendarStorageEvents,
                         plannerStartOfDay: plannerStartOfDay
                     )
-
                 }
 
             }
@@ -116,7 +117,11 @@ extension ModelContext {
 
         self.safeSave("plannerEvent.syncCalendarEvents")
 
-        return plannerChipEvents
+        return CalendarSearchResults(
+            plannerChipEvents: plannerChipEvents,
+            occurrenceEvents: occurrenceEvents,
+            regularEvents: regularEvents
+        )
     }
 
     @MainActor
