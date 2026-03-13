@@ -109,15 +109,10 @@ struct FolderContentsListView: View {
 
     private func moveItem(from sources: IndexSet, to destination: Int) {
         for from in sources {
-            var targetIndex = destination
-            if targetIndex > from {
-                targetIndex -= 1
-            }
-
             modelContext.moveChecklistItem(
                 in: sortedItems,
                 from: from,
-                to: targetIndex
+                to: destination
             )
         }
     }

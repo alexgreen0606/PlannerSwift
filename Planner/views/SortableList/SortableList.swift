@@ -224,12 +224,7 @@ struct SortableListView<
         to destination: Int
     ) {
         for source in sources {
-            var to = destination
-            if to > source {
-                to -= 1
-            }
-
-            moveItem(source, to)
+            moveItem(source, destination)
         }
     }
 
