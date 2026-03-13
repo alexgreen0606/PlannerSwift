@@ -49,7 +49,7 @@ extension ModelContext {
 
         return newEvent.stableId
     }
-    
+
     @MainActor
     func checkPlannerEvent(_ event: PlannerEvent) {
         event.isChecked = true
@@ -66,7 +66,7 @@ extension ModelContext {
                 guard let ekEventStore else {
                     continue
                 }
-                
+
                 if !ekEventStore.deleteEvent(calendarEvent) {
                     continue
                 }
@@ -226,8 +226,21 @@ extension ModelContext {
                 sortDate: draftPlannerEvent.date
             )
 
+        event.title = draftPlannerEvent.title
+        event.hasTime = draftPlannerEvent.hasTime
+        event.calendarEvent = nil
+        event.calendarItemExternalIdentifier = nil
+        event.location = draftPlannerEvent.location
+        event.sortDate = getSortDate(
+            for: event,
+            settings: settings,
+            previousPlannerDatestamp: previousDatestamp
+        )
+
         if !event.hasTime {
-            let targetPlanner = loadPlanner(for: targetDatestamp)
+            let targetPlanner = loadPlanner(
+                for: targetDatestamp
+            )
             guard
                 let targetPlannerStartOfDay = targetPlanner.datestamp
                     .startOfDay(in: targetPlanner.region(settings: settings))
@@ -245,21 +258,10 @@ extension ModelContext {
             event.date = draftPlannerEvent.date
         }
 
-        event.title = draftPlannerEvent.title
-        event.hasTime = draftPlannerEvent.hasTime
-        event.calendarEvent = nil
-        event.location = draftPlannerEvent.location
-        event.sortDate = getSortDate(
-            for: event,
-            settings: settings,
-            previousPlannerDatestamp: previousDatestamp
-        )
-
         self.insertEventIfNeeded(event)
 
         // Delete the old calendar event.
         if let initialCalendarEvent {
-            // TODO: only delete the storage record if this succeeds.
             let _ = ekEventStore.deleteEvent(initialCalendarEvent)
         }
 
