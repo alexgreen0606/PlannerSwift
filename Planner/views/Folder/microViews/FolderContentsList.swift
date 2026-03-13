@@ -20,8 +20,7 @@ struct FolderContentsListView: View {
         AccentColor.blue
 
     @Environment(\.modelContext) private var modelContext
-
-    @StateObject private var selectManager = ListManager<ChecklistItem>()
+    @EnvironmentObject private var selectManager: ListManager<ChecklistItem>
 
     var body: some View {
         List {
