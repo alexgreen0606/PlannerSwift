@@ -50,6 +50,23 @@ struct PlannerEventFormView: View {
         !draftPlannerEvent.title.isEmpty
     }
 
+    private var showTimeZoneFooter: Bool {
+        initialPlannerEvent?.hasTime == true
+    }
+
+    private var timeZoneAbbreviation: String {
+        return
+            draftPlannerEvent
+            .region(
+                planner: sourcePlanner,
+                settings: settings,
+                deviceLocation: deviceLocationManager
+                    .deviceLocation
+            )
+            .timeZone
+            .abbreviation() ?? "Unknown Time Zone"
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -60,67 +77,90 @@ struct PlannerEventFormView: View {
                 .listSectionMargins(.top, 0)
 
                 Section {
-                    DatePicker(
-                        "Date",
-                        selection: $draftPlannerEvent.date,
-                        in: keepPastPlansDuration
-                            .cutoffDate...todaystampWatcher
-                            .maxCalendarDate,
-                        displayedComponents: draftPlannerEvent.hasTime
-                            ? [.date, .hourAndMinute] : .date
-                    )
-                    .environment(
-                        \.timeZone,
-                        eventRegion.timeZone
-                    )
-
-                    Toggle("Time", isOn: $draftPlannerEvent.hasTime)
-                }
-
-                Section {
-                    NavigationLink {
-                        LocationSearchFormView(
-                            title: "Edit Event Location",
-                            mode: .event,
-                            settings: settings,
-                            initialLocation: draftPlannerEvent.location,
-                            sourcePlanner: sourcePlanner
-                        ) { location in
-                            draftPlannerEvent.location = location
-                        }
+                    LabeledContent {
+                        DatePicker(
+                            "",
+                            selection: $draftPlannerEvent.date,
+                            in: keepPastPlansDuration
+                                .cutoffDate...todaystampWatcher
+                                .maxCalendarDate,
+                            displayedComponents: draftPlannerEvent.hasTime
+                                ? [.date, .hourAndMinute] : .date
+                        )
+                        .environment(
+                            \.timeZone,
+                            eventRegion.timeZone
+                        )
                     } label: {
-                        HStack {
-                            Text("Location")
-                            Spacer()
-                            Text(
-                                draftPlannerEvent.location != nil
-                                    ? draftPlannerEvent.locationLabel(
-                                        planner: sourcePlanner,
-                                        settings: settings,
-                                        deviceLocation:
-                                            deviceLocationManager
-                                            .deviceLocation
-                                    ) : "No location"
-                            )
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                        Label("Date", systemImage: "calendar")
+                            .foregroundStyle(Color.label)
+                    }
+                    .animation(nil, value: draftPlannerEvent.hasTime)
+
+                    LabeledContent {
+                        Toggle("", isOn: $draftPlannerEvent.hasTime)
+                    } label: {
+                        Label("Time", systemImage: "clock")
+                            .foregroundStyle(Color.label)
+                    }
+
+                    if !showTimeZoneFooter && draftPlannerEvent.hasTime {
+                        LabeledContent {
+                            Text(timeZoneAbbreviation)
+                        } label: {
+                            Label("Time Zone", systemImage: "globe")
+                                .foregroundStyle(Color.label)
                         }
                     }
                 } footer: {
-                    if draftPlannerEvent.hasTime
-                    {
-                        let timeZoneAbbreviation =
-                            draftPlannerEvent
-                            .region(
-                                planner: sourcePlanner,
-                                settings: settings,
-                                deviceLocation: deviceLocationManager
-                                    .deviceLocation
-                            )
-                            .timeZone
-                            .abbreviation() ?? "Unknown Time Zone"
+                    if showTimeZoneFooter && draftPlannerEvent.hasTime {
+                        HStack(alignment: .bottom, spacing: 4) {
+                            Text("Time Zone:")
+                            Text(timeZoneAbbreviation)
+                                .font(
+                                    .system(
+                                        size: 14,
+                                        weight: .black,
+                                        design: .rounded
+                                    )
+                                )
+                        }
+                    }
+                }
 
-                        Text("Time Zone: \(timeZoneAbbreviation)")
+                Section {
+                    HStack {
+                        Image(systemName: "mappin.and.ellipse")
+                            .imageScale(.medium)
+
+                        NavigationLink {
+                            LocationSearchFormView(
+                                title: "Edit Event Location",
+                                mode: .event,
+                                settings: settings,
+                                initialLocation: draftPlannerEvent.location,
+                                sourcePlanner: sourcePlanner
+                            ) { location in
+                                draftPlannerEvent.location = location
+                            }
+                        } label: {
+                            HStack {
+                                Text("Location")
+                                Spacer()
+                                Text(
+                                    draftPlannerEvent.location != nil
+                                        ? draftPlannerEvent.locationLabel(
+                                            planner: sourcePlanner,
+                                            settings: settings,
+                                            deviceLocation:
+                                                deviceLocationManager
+                                                .deviceLocation
+                                        ) : "Set a location"
+                                )
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            }
+                        }
                     }
                 }
             }
@@ -131,6 +171,7 @@ struct PlannerEventFormView: View {
                 saveButton
                 addToCalendarButton
             }
+            .animateSynchronousAction(from: draftPlannerEvent.hasTime)
         }
     }
 
@@ -159,6 +200,8 @@ struct PlannerEventFormView: View {
             .sharedBackgroundVisibility(.hidden)
         }
     }
+
+    // MARK: - Functions
 
     private func savePlannerEvent() {
 

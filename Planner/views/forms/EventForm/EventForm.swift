@@ -148,7 +148,7 @@ struct EventFormView: View {
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
-    @State private var sheetDetent: PresentationDetent = .height(460)
+    @State private var sheetDetent: PresentationDetent = .height(480)
     @State private var draftPlannerEvent: DraftPlannerEvent
 
     private var defaultLocation: Location? {
@@ -182,7 +182,7 @@ struct EventFormView: View {
         }
         .presentationDragIndicator(.hidden)
         .presentationDetents(
-            [.height(460), .large],
+            [.height(480), .large],
             selection: $sheetDetent
         )
         .tint(accentColor.color)
@@ -231,7 +231,7 @@ struct EventFormView: View {
     // MARK: - Functions
 
     private func saveCalendarEvent(_ event: EKEvent?) {
-        
+
         modelContext.handleCalendarEventChange(
             event,
             previousDatestamp: sourcePlanner?.datestamp,
@@ -253,7 +253,7 @@ struct EventFormView: View {
     private func removeEventFromCalendar() {
         // Note: EventKit does not give access to the updated EKEvent.
         draftPlannerEvent.calendarEvent = nil
-        sheetDetent = .height(460)
+        sheetDetent = .height(480)
     }
 
     private func ensureLocationWhenTimed() {
