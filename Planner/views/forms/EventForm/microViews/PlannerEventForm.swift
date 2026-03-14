@@ -42,17 +42,12 @@ struct PlannerEventFormView: View {
             )
     }
 
-    // TODO: no longer enforce this
-    private var isLocationValid: Bool {
-        !(draftPlannerEvent.hasTime && draftPlannerEvent.location == nil)
-    }
-
     private var isCreateForm: Bool {
         initialPlannerEvent == nil && initialCalendarEvent == nil
     }
 
     private var canSave: Bool {
-        !draftPlannerEvent.title.isEmpty && isLocationValid
+        !draftPlannerEvent.title.isEmpty
     }
 
     var body: some View {
@@ -80,9 +75,6 @@ struct PlannerEventFormView: View {
                     )
 
                     Toggle("Time", isOn: $draftPlannerEvent.hasTime)
-                        .disabled(
-                            !draftPlannerEvent.hasTime && defaultLocation == nil
-                        )
                 }
 
                 Section {
@@ -108,16 +100,14 @@ struct PlannerEventFormView: View {
                                         deviceLocation:
                                             deviceLocationManager
                                             .deviceLocation
-                                    ) : "Select a location"  // TODO: say Planner location too
+                                    ) : "No location"
                             )
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                         }
                     }
-                    .disabled(defaultLocation == nil)  // TODO: remove this
                 } footer: {
-                    if draftPlannerEvent.hasTime,
-                        draftPlannerEvent.location != nil
+                    if draftPlannerEvent.hasTime
                     {
                         let timeZoneAbbreviation =
                             draftPlannerEvent

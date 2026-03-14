@@ -59,6 +59,8 @@ struct LocationSearchFormView: View {
     @State private var suggestedLocations: [Location] = []
     @State private var selectedLocation: Location?
 
+    @FocusState private var isSearchFocused: Bool
+
     private var showCurrentOption: Bool {
         switch mode {
         case .home:
@@ -84,6 +86,14 @@ struct LocationSearchFormView: View {
         case .home, .planner:
             return false
         }
+    }
+
+    private var lowerOptionPadding: CGFloat {
+        if isSearchFocused {
+            return 8
+        }
+
+        return mode == .home ? 20 : 0
     }
 
     var body: some View {
@@ -115,6 +125,8 @@ struct LocationSearchFormView: View {
             .safeAreaInset(edge: .top) {
                 LocationSearchHeaderView(
                     locationFinder: locationFinder,
+                    isSearchFocused: $isSearchFocused,
+                    sourcePlanner: sourcePlanner,
                     mode: mode,
                     selectedLocation: selectedLocation,
                     homeLocation: settings.homeLocation,
@@ -130,6 +142,7 @@ struct LocationSearchFormView: View {
                     homeLocationButton
                     noLocationButton
                 }
+                .padding(.bottom, lowerOptionPadding)
             }
             .onAppear(perform: buildSuggestedLocations)
 

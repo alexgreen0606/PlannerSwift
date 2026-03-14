@@ -22,8 +22,6 @@ class PlannerEvent: ListItem {
     // May go out of sync with the date.
     var sortDate: Date
     
-    // MUST exist when hasTime is true.
-    // TODO: Why? Maybe don't require this.
     @Relationship(deleteRule: .nullify)
     var location: Location?
 

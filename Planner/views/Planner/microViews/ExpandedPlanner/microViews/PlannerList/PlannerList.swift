@@ -97,8 +97,9 @@ struct PlannerListView: View {
             handleTitleChange: handleEventTitleChange,
             checkedFooter: plannerType.checkedFooter(
                 for: plannerStartOfDay
-            ),
+            )
         )
+        .animateSynchronousAction(from: sortedOpenPlannerEvents.map(\.location?.name))
     }
 
     // MARK: - View Builders

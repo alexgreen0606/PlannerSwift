@@ -211,14 +211,6 @@ extension ModelContext {
         initialCalendarEvent: EKEvent?
     ) {
 
-        // TODO: this will not be enforced soon.
-        if draftPlannerEvent.hasTime && draftPlannerEvent.location == nil {
-            assertionFailure(
-                "ERROR plannerEvent.handlePlannerEventChange: Draft event must have a location assigned if it has a time."
-            )
-            return
-        }
-
         let event =
             initialPlannerEvent
             ?? PlannerEvent(

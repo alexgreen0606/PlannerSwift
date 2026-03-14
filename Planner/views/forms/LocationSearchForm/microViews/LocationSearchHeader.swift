@@ -5,12 +5,15 @@
 //  Created by Alex Green on 3/10/26.
 //
 
+import SwiftDate
 import SwiftUI
 
 // Clean
 
 struct LocationSearchHeaderView: View {
     @ObservedObject var locationFinder: LocationFinder
+    var isSearchFocused: FocusState<Bool>.Binding
+    let sourcePlanner: Planner?
     let mode: LocationSearchMode
     let selectedLocation: Location?
     let homeLocation: Location?
@@ -20,7 +23,9 @@ struct LocationSearchHeaderView: View {
 
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
-    @FocusState private var isFocused: Bool
+    private var plannerLocation: Location? {
+        sourcePlanner?.location
+    }
 
     private var showCurrentIndicator: Bool {
         switch mode {
@@ -29,16 +34,36 @@ struct LocationSearchHeaderView: View {
         case .planner:
             return selectedLocation == nil && homeLocation == nil
         case .event:
-            return false
+            return selectedLocation == nil && homeLocation == nil
+                && plannerLocation == nil
         }
     }
 
     private var showHomeIndicator: Bool {
+        guard homeLocation != nil else {
+            return false
+        }
+
         switch mode {
         case .planner:
             return selectedLocation == nil
-        case .home, .event:
+        case .event:
+            return selectedLocation == nil && plannerLocation == nil
+        case .home:
             return false
+        }
+    }
+
+    private var showPlannerIndicator: Bool {
+        guard sourcePlanner != nil else {
+            return false
+        }
+
+        switch mode {
+        case .planner, .home:
+            return false
+        case .event:
+            return selectedLocation == nil
         }
     }
 
@@ -60,6 +85,9 @@ struct LocationSearchHeaderView: View {
 
         } else if showHomeIndicator, let homeLocation {
             homeLocationIndicator(homeLocation)
+
+        } else if showPlannerIndicator, let plannerLocation {
+            plannerLocationIndicator(plannerLocation)
 
         } else if let selectedLocation {
             PlannerChipView(
@@ -86,9 +114,21 @@ struct LocationSearchHeaderView: View {
 
     private func homeLocationIndicator(_ home: Location) -> some View {
         LabelValueChipView(
-            label: "Home",
+            label: "Home Location",
             value: home.name,
             iconConfig: IconConfig(name: "house")
+        )
+    }
+
+    private func plannerLocationIndicator(_ plannerLocation: Location)
+        -> some View
+    {
+        LabelValueChipView(
+            label: "Planner Location",
+            value: plannerLocation.name,
+            iconConfig: IconConfig(
+                name: sourcePlanner?.datestamp.calendarSymbolName ?? "note"
+            )
         )
     }
 
@@ -100,12 +140,12 @@ struct LocationSearchHeaderView: View {
         .padding()
         .glassEffect(.regular.interactive())
         .tint(accentColor.color)
-        
+
         // Increase the focusable area of the field.
-        .focused($isFocused)
+        .focused(isSearchFocused)
         .contentShape(Rectangle())
         .onTapGesture {
-            isFocused = true
+            isSearchFocused.wrappedValue = true
         }
     }
 

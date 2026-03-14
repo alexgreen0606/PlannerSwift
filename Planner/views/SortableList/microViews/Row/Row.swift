@@ -97,7 +97,7 @@ struct RowView<
             .listRowInsets(EdgeInsets())
             .discreetListItem()
             .padding(.horizontal)
-
+        
             // Trigger focus for new items.
             .onAppear {
                 if listManager.pendingFocusId == item.stableId {

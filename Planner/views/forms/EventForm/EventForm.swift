@@ -187,13 +187,6 @@ struct EventFormView: View {
         )
         .tint(accentColor.color)
 
-        // Ensure timed event location existence when the device location loads in.
-        .externalData(
-            key: deviceLocationManager.deviceLocation,
-            ready: deviceLocationManager.deviceLocation != nil,
-            load: ensureLocationWhenTimed
-        )
-
         // Ensure event location exists when hasTime is set to true.
         .onChange(of: draftPlannerEvent.hasTime) { _, _ in
             ensureLocationWhenTimed()
@@ -238,7 +231,7 @@ struct EventFormView: View {
     // MARK: - Functions
 
     private func saveCalendarEvent(_ event: EKEvent?) {
-
+        
         modelContext.handleCalendarEventChange(
             event,
             previousDatestamp: sourcePlanner?.datestamp,

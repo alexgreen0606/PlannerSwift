@@ -98,7 +98,7 @@ extension PlannerEvent {
         }
 
         self.title = updatedText
-        self.location = defaultLocation  // TODO: can remove the default location
+        self.location = defaultLocation
         self.hasTime = true
         self.date = date
 
