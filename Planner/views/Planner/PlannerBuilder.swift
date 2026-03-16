@@ -15,16 +15,19 @@ struct PlannerBuilderView: View {
     private let datestamp: String
     private let settings: PlannerSettings
     private let previewType: PlannerPreviewType?
+    private let plannerSearchQuery: PlannerSearchQuery?
     private let namespace: Namespace.ID?
-    
+
     init(
         datestamp: String,
         settings: PlannerSettings,
         previewType: PlannerPreviewType? = nil,
+        plannerSearchQuery: PlannerSearchQuery? = nil,
         namespace: Namespace.ID? = nil
     ) {
         self.datestamp = datestamp
         self.previewType = previewType
+        self.plannerSearchQuery = plannerSearchQuery
         self.settings = settings
         self.namespace = namespace
 
@@ -50,6 +53,7 @@ struct PlannerBuilderView: View {
                     planner: planner,
                     settings: settings,
                     previewType: previewType,
+                    plannerSearchQuery: plannerSearchQuery,
                     namespace: namespace
                 )
             }

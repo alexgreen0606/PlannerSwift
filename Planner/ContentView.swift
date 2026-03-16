@@ -87,7 +87,7 @@ struct ContentView: View {
     @Query private var plannerSettingsList: [PlannerSettings]
     @Query private var checklistItems: [ChecklistItem]
     @Query private var planners: [Planner]
-
+    
     @State private var plannerSearchText: String = ""
     @State private var isPlannerSearchFocused: Bool = false
 

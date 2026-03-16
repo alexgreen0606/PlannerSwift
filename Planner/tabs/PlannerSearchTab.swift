@@ -22,6 +22,7 @@ struct PlannerSearchTabView: View {
             KeepPastPlansDuration.oneMonth
 
     @Environment(\.isSearching) private var isSearching
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject private var weatherStore: WeatherStore
@@ -36,9 +37,10 @@ struct PlannerSearchTabView: View {
     // Year (YYYY) -> Datestamps (YYYY-MM-DD)
     @State private var plannerMap: [String: [String]] = [:]
     @State private var plannerMapTask: Task<Void, Never>?
+    @State private var plannerSearchQuery: PlannerSearchQuery? = nil
 
     // Sorted keys from plannerMap.
-    @State private var sortedUpcomingYears: [String] = ["2026"]
+    @State private var sortedUpcomingYears: [String] = []
 
     private var sortedCalendars: [EKCalendar] {
         calendarStore.sortedCalendars.filter {
@@ -65,11 +67,7 @@ struct PlannerSearchTabView: View {
                         ForEach(sortedUpcomingYears, id: \.self) { year in
                             Section {
                                 ForEach(
-                                    plannerMap[year] ?? [
-                                        "2026-03-06", "2026-03-07",
-                                        "2026-03-08", "2026-03-09",
-                                        "2026-03-10",
-                                    ],
+                                    plannerMap[year] ?? [],
                                     id: \.self
                                 ) {
                                     datestamp in
@@ -77,6 +75,7 @@ struct PlannerSearchTabView: View {
                                         datestamp: datestamp,
                                         settings: settings,
                                         previewType: .search,
+                                        plannerSearchQuery: plannerSearchQuery,
                                         namespace: namespace
                                     )
                                     .listRowBackground(Color.clear)
@@ -239,7 +238,15 @@ struct PlannerSearchTabView: View {
     // MARK: - Datestamp Builders
 
     private func buildPlannerMap() {
-        // TODO: implement complex calculation
+        plannerSearchQuery = PlannerSearchQuery(
+            text: searchText,
+            filteredCalendarIds: filteredCalendarIds
+        )
+        plannerMap = modelContext.searchPlanner(
+            with: plannerSearchQuery,
+            ekEventStore: calendarStore.ekEventStore
+        )
+        sortedUpcomingYears = plannerMap.keys.sorted()
     }
 
     private func schedulePlannerMapBuild() {

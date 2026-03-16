@@ -146,7 +146,7 @@ extension ModelContext {
 
             // The calendar event is timed. Sync the storage record with the calendar event.
             initialPlannerEvent.syncWithCalendarEvent(calendarEvent)
-            initialPlannerEvent.sortDate = self.getSortDate(
+            self.updateSortDate(
                 for: initialPlannerEvent,
                 settings: settings,
                 previousPlannerDatestamp: previousDatestamp

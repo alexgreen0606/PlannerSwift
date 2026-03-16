@@ -16,6 +16,7 @@ import WrappingHStack
 
 struct PlannerPreviewView: View {
     let type: PlannerPreviewType
+    let searchQuery: PlannerSearchQuery?
     let planner: Planner
     let plannerStartOfDay: DateInRegion
     let plannerLocation: Location?
@@ -29,21 +30,24 @@ struct PlannerPreviewView: View {
 
     // MARK: - Computed Variables
 
-    private var openPlannerEvents: [PlannerEvent] {
-        plannerEvents
-            .filter { !$0.isChecked }
+    private var filteredPlannerEvents: [PlannerEvent] {
+        plannerEvents.filter(shouldShowPlannerEvent)
+    }
+
+    private var filteredChipEvents: [EKEvent] {
+        plannerChipEvents.filter(shouldShowChipEvent)
     }
 
     private var timedPlannerEvents: [PlannerEvent] {
-        openPlannerEvents.filter { $0.hasTime }
+        filteredPlannerEvents.filter { $0.hasTime }
     }
 
     private var untimedPlannerEvents: [PlannerEvent] {
-        openPlannerEvents.filter { !$0.hasTime }
+        filteredPlannerEvents.filter { !$0.hasTime }
     }
 
     private var previewAllDayEvents: [EKEvent] {
-        Array(plannerChipEvents.prefix(maxPreviewEvents))
+        Array(filteredChipEvents.prefix(maxPreviewEvents))
     }
 
     private var sortedPreviewPlannerEvents: [PlannerEvent] {
@@ -58,7 +62,7 @@ struct PlannerPreviewView: View {
 
     private var remainingPlansLabel: String {
         let totalEventCount =
-            plannerChipEvents.count + openPlannerEvents.count
+            plannerChipEvents.count + filteredPlannerEvents.count
 
         let previewCount =
             previewAllDayEvents.count + sortedPreviewPlannerEvents.count
@@ -179,6 +183,73 @@ struct PlannerPreviewView: View {
                 alignment: .center
             )
         }
+    }
+
+    // MARK: - Functions
+
+    private func shouldShowPlannerEvent(_ event: PlannerEvent) -> Bool {
+        if isCalendarHidden(event.calendarEvent?.calendar) {
+            return false
+        }
+
+        // Show every unchecked event when there is no search text.
+        guard let searchQuery, !searchQuery.text.isEmpty else {
+            return !event.isChecked
+        }
+
+        let lowercasedSearchText = searchQuery.text.lowercased()
+
+        if event.title.lowercased().contains(lowercasedSearchText) {
+            return true
+        }
+
+        if let location = event.location,
+            location.name.lowercased().contains(lowercasedSearchText)
+        {
+            return true
+        }
+
+        return false
+    }
+
+    private func shouldShowChipEvent(_ event: EKEvent) -> Bool {
+        if isCalendarHidden(event.calendar) {
+            return false
+        }
+
+        // Show every chip event when there is no search text.
+        guard let searchQuery, !searchQuery.text.isEmpty else {
+            return true
+        }
+
+        if searchQuery.text.isEmpty {
+            return true
+        }
+
+        let lowercasedSearchText = searchQuery.text.lowercased()
+
+        if event.title.lowercased().contains(lowercasedSearchText) {
+            return true
+        }
+
+        if let location = event.location,
+            location.lowercased().contains(lowercasedSearchText)
+        {
+            return true
+        }
+
+        return false
+    }
+
+    private func isCalendarHidden(_ calendar: EKCalendar?) -> Bool {
+        guard let searchQuery, let calendar else {
+            return false
+        }
+
+        return !searchQuery.filteredCalendarIds.isEmpty
+            && searchQuery.filteredCalendarIds.contains(
+                calendar.calendarIdentifier
+            )
     }
 
 }

@@ -190,7 +190,7 @@ extension ModelContext {
                 event.date = event.date + days
             }
 
-            event.sortDate = getSortDate(
+            updateSortDate(
                 for: event,
                 settings: settings,
                 previousPlannerDatestamp: previousDatestamp
@@ -223,11 +223,6 @@ extension ModelContext {
         event.calendarEvent = nil
         event.calendarItemExternalIdentifier = nil
         event.location = draftPlannerEvent.location
-        event.sortDate = getSortDate(
-            for: event,
-            settings: settings,
-            previousPlannerDatestamp: previousDatestamp
-        )
 
         if !event.hasTime {
             let targetPlanner = loadPlanner(
@@ -249,6 +244,12 @@ extension ModelContext {
         } else {
             event.date = draftPlannerEvent.date
         }
+        
+        updateSortDate(
+            for: event,
+            settings: settings,
+            previousPlannerDatestamp: previousDatestamp
+        )
 
         self.insertEventIfNeeded(event)
 
@@ -262,11 +263,11 @@ extension ModelContext {
     }
 
     @MainActor
-    func getSortDate(
+    func updateSortDate(
         for event: PlannerEvent,
         settings: PlannerSettings,
         previousPlannerDatestamp: String? = nil
-    ) -> Date {
+    ) {
 
         let chronologicalPossibleDatestamps =
             getChronologicalPossibleDatestamps(for: event.date)
@@ -275,7 +276,7 @@ extension ModelContext {
         if let previousPlannerDatestamp,
             chronologicalPossibleDatestamps.contains(previousPlannerDatestamp)
         {
-            return event.sortDate
+            return
         }
 
         guard
@@ -285,7 +286,8 @@ extension ModelContext {
             )
         else {
             // Event does not belong to any planners. Use its actual date as the sortDate.
-            return event.date
+            event.sortDate = event.date
+            return
         }
 
         let sortedStorageEvents = self.getSortedStorageEvents(
@@ -293,7 +295,7 @@ extension ModelContext {
         )
 
         // Place the event at the start of its new planner.
-        return generateSortDate(
+        event.sortDate = generateSortDate(
             plannerStartOfDay: plannerStartOfDay,
             index: 0,
             sortedEvents: sortedStorageEvents

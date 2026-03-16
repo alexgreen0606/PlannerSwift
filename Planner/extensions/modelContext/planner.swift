@@ -97,6 +97,27 @@ extension ModelContext {
         // This is part of a larger pipeline.
     }
 
+    @MainActor
+    func searchPlanner(
+        with query: PlannerSearchQuery?,
+        ekEventStore: EKEventStore
+    ) -> [String: [String]] {
+        var datestamps: Set<String> = []
+
+        var loadedPlanners: [String: Planner] = [:]
+
+        // 1. Load all planners whose location matches searchText. Add the datestamps to the Set.
+
+        // 1. Load all events that have a matching title or location.
+        // 2. Load all datestamps that CAN hold that event. If both already exist in the Set, continue.
+        // 3. Load the planner if it hasnt loaded, and check that the planner can hold the event.
+        // 4. If yes, add the planner datestamp to the Set.
+
+        // 5. Loop over the calendar events for the last 3 years and next 3 years. Assess them the same way as above.
+
+        return [:]
+    }
+
     // MARK: - Helper Functions
 
     private func createPlanner(for datestamp: String) -> Planner {

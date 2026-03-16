@@ -17,14 +17,18 @@ struct PlannerEventListView: View {
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
-    
+
     @Environment(\.displayScale) private var displayScale
 
     var body: some View {
         if !events.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(events, id: \.stableId) { event in
-                    HStack(alignment: .top, spacing: 12) {
+                    HStack(alignment: .top) {
+                        if event.isChecked {
+                            Image(systemName: "checkmark").imageScale(.small)
+                        }
+
                         Text(event.title)
                             .font(.system(size: ListLayout.FONT_SIZE * 0.8))
 

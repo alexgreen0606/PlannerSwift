@@ -16,16 +16,19 @@ struct PlannerEventBuilderView: View {
     private let planner: Planner
     private let settings: PlannerSettings
     private let previewType: PlannerPreviewType?
+    private let plannerSearchQuery: PlannerSearchQuery?
     private let namespace: Namespace.ID?
 
     init(
         planner: Planner,
         settings: PlannerSettings,
         previewType: PlannerPreviewType? = nil,
+        plannerSearchQuery: PlannerSearchQuery? = nil,
         namespace: Namespace.ID? = nil
     ) {
         self.planner = planner
         self.previewType = previewType
+        self.plannerSearchQuery = plannerSearchQuery
         self.settings = settings
         self.namespace = namespace
 
@@ -123,6 +126,7 @@ struct PlannerEventBuilderView: View {
         if let previewType, let namespace {
             PlannerPreviewView(
                 type: previewType,
+                searchQuery: plannerSearchQuery,
                 planner: planner,
                 plannerStartOfDay: plannerStartOfDay,
                 plannerLocation: plannerLocation,
