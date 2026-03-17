@@ -238,13 +238,26 @@ struct PlannerSearchTabView: View {
     // MARK: - Datestamp Builders
 
     private func buildPlannerMap() {
+        let queryText = {
+            let trimmed =
+                searchText
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+
+            if trimmed.count == 1 {
+                return ""
+            }
+
+            return trimmed.lowercased()
+        }()
+
         plannerSearchQuery = PlannerSearchQuery(
-            text: searchText,
+            text: queryText,
             filteredCalendarIds: filteredCalendarIds
         )
         plannerMap = modelContext.searchPlanner(
             with: plannerSearchQuery,
-            ekEventStore: calendarStore.ekEventStore
+            ekEventStore: calendarStore.ekEventStore,
+            settings: settings
         )
         sortedUpcomingYears = plannerMap.keys.sorted()
     }
@@ -254,7 +267,7 @@ struct PlannerSearchTabView: View {
 
         plannerMapTask = Task {
             do {
-                try await Task.sleep(for: .milliseconds(500))
+                try await Task.sleep(for: .milliseconds(1000))
                 guard !Task.isCancelled else { return }
 
                 buildPlannerMap()

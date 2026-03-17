@@ -38,4 +38,14 @@ extension EKCalendar {
         return "calendar"
     }
 
+    func isHidden(filteredCalendarIds: Set<String>?) -> Bool {
+        guard let filteredCalendarIds, !filteredCalendarIds.isEmpty else {
+            return false
+        }
+
+        return !filteredCalendarIds.contains(
+            self.calendarIdentifier
+        )
+    }
+
 }

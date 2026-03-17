@@ -89,7 +89,6 @@ struct ContentView: View {
     @Query private var planners: [Planner]
     
     @State private var plannerSearchText: String = ""
-    @State private var isPlannerSearchFocused: Bool = false
 
     @Namespace private var namespace
 
@@ -139,15 +138,9 @@ struct ContentView: View {
                         )
                         .searchable(
                             text: $plannerSearchText,
-                            isPresented: $isPlannerSearchFocused,
                             prompt: "Search planner...",
                         )
                         .searchPresentationToolbarBehavior(.avoidHidingContent)
-                        .onAppear {
-                            DispatchQueue.main.async {
-                                isPlannerSearchFocused = true
-                            }
-                        }
                     }
                 }
                 .tabBarMinimizeBehavior(.onScrollDown)

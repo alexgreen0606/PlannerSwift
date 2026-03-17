@@ -33,13 +33,6 @@ extension EKEvent {
         return "\(externalId)_\(startString)"
     }
 
-    func spansOutsidePlannerDay(plannerStartOfDay: DateInRegion) -> Bool {
-        let startOfNextPlannerDay = plannerStartOfDay + 1.days
-
-        return self.startDate < plannerStartOfDay.date
-            || self.endDate > startOfNextPlannerDay.date
-    }
-
     func location(
         storageEvent: PlannerEvent? = nil
     ) -> Location? {
@@ -71,6 +64,31 @@ extension EKEvent {
         }
 
         return nil
+    }
+    
+    func spansOutsidePlannerDay(plannerStartOfDay: DateInRegion) -> Bool {
+        let startOfNextPlannerDay = plannerStartOfDay + 1.days
+
+        return self.startDate < plannerStartOfDay.date
+            || self.endDate > startOfNextPlannerDay.date
+    }
+
+    func containsText(_ text: String?) -> Bool {
+        guard let text, !text.isEmpty else {
+            return true
+        }
+        
+        if self.title.localizedCaseInsensitiveContains(text) {
+            return true
+        }
+
+        if let location = self.location,
+            location.localizedCaseInsensitiveContains(text)
+        {
+            return true
+        }
+
+        return false
     }
 
     // MARK: - Helper Functions

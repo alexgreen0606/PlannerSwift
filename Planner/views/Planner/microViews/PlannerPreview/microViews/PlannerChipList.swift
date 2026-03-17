@@ -1,5 +1,5 @@
 //
-//  AllDayEventList.swift
+//  PlannerChipList.swift
 //  Planner
 //
 //  Created by Alex Green on 1/13/26.
@@ -10,7 +10,7 @@ import SwiftUI
 
 // Clean
 
-struct AllDayEventListView: View {
+struct PlannerChipListView: View {
     let events: [EKEvent]
     let settings: PlannerSettings
 

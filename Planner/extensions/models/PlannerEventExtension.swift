@@ -53,7 +53,7 @@ extension PlannerEvent {
             deviceLocation: deviceLocation
         )?.name ?? "Current Location"
     }
-    
+
     // MARK: - Style Variables
 
     func tint(accentColor: AccentColor) -> Color {
@@ -201,6 +201,26 @@ extension PlannerEvent {
             timeLabel: timeText,
             openEventSheet: openEventSheet
         )
+    }
+
+    // MARK: - Miscellaneous
+
+    func containsText(_ text: String?) -> Bool {
+        guard let text, !text.isEmpty else {
+            return true
+        }
+
+        if self.title.localizedCaseInsensitiveContains(text) {
+            return true
+        }
+
+        if let location = self.location,
+            location.name.localizedCaseInsensitiveContains(text)
+        {
+            return true
+        }
+
+        return false
     }
 
 }
