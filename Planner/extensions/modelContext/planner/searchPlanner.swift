@@ -24,6 +24,9 @@ extension ModelContext {
             let filteredCalendarIds = query?.filteredCalendarIds ?? []
             let homeRegion = settings.homeRegion
 
+            let onlySearchCalendar =
+                filteredCalendarIds.count > 0 && text.isEmpty
+
             var datestamps: Set<String> = []
 
             // ------------------------------------------------------------------
@@ -54,17 +57,18 @@ extension ModelContext {
             // Phase 2: Find planner events with matching locations or titles.
             // ------------------------------------------------------------------
 
-            var filteredPlannerEvents = try fetch(
-                FetchDescriptor<PlannerEvent>(
-                    predicate: #Predicate<PlannerEvent> { event in
-                        event.calendarItemExternalIdentifier == nil
-                    }
-                )
-            )
+            var filteredPlannerEvents: [PlannerEvent] = []
 
-            // Filter out events that don't match the text query.
-            if !text.isEmpty {
-                filteredPlannerEvents = filteredPlannerEvents.filter { event in
+            if !onlySearchCalendar {
+                filteredPlannerEvents = try fetch(
+                    FetchDescriptor<PlannerEvent>(
+                        predicate: #Predicate<PlannerEvent> { event in
+                            event.calendarItemExternalIdentifier == nil
+                        }
+                    )
+                )
+                // Filter out events that don't match the text query (too complex to be used in the predicate)
+                .filter { event in
                     event.containsText(text)
                 }
             }

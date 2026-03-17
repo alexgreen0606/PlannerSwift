@@ -14,6 +14,7 @@ import SwiftUI
 struct PlannerEventListView: View {
     let plannerRegion: Region
     let events: [PlannerEvent]
+    let isBottomOfCard: Bool
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -41,8 +42,10 @@ struct PlannerEventListView: View {
                             openSheet: nil
                         )
                     }
-
-                    dashedDivider
+                    
+                    if !isBottomOfCard || event.stableId != events.last!.stableId {
+                        dashedDivider
+                    }
                 }
             }
         }

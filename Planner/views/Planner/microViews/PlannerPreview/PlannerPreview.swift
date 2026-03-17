@@ -125,7 +125,8 @@ struct PlannerPreviewView: View {
 
             PlannerEventListView(
                 plannerRegion: plannerStartOfDay.region,
-                events: sortedPreviewPlannerEvents
+                events: sortedPreviewPlannerEvents,
+                isBottomOfCard: isSearching
             )
 
             remainingPlansIndicator
