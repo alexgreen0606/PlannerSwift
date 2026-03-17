@@ -29,10 +29,10 @@ extension ModelContext {
             // ------------------------------------------------------------------
             // Phase 1: Find planners with matching locations.
             // ------------------------------------------------------------------
-            
+
             var filteredPlanners: [Planner] = []
 
-            if filteredCalendarIds.isEmpty {
+            if filteredCalendarIds.isEmpty, !text.isEmpty {
                 filteredPlanners = try fetch(
                     FetchDescriptor<Planner>(
                         predicate: #Predicate<Planner> { planner in
@@ -55,9 +55,14 @@ extension ModelContext {
             // ------------------------------------------------------------------
 
             var filteredPlannerEvents = try fetch(
-                FetchDescriptor<PlannerEvent>()
+                FetchDescriptor<PlannerEvent>(
+                    predicate: #Predicate<PlannerEvent> { event in
+                        event.calendarItemExternalIdentifier == nil
+                    }
+                )
             )
 
+            // Filter out events that don't match the text query.
             if !text.isEmpty {
                 filteredPlannerEvents = filteredPlannerEvents.filter { event in
                     event.containsText(text)
@@ -68,12 +73,7 @@ extension ModelContext {
             var plannerCache: [String: DateInRegion] = [:]
 
             for plannerEvent in filteredPlannerEvents {
-                if plannerEvent.calendarItemExternalIdentifier != nil {
-                    // Skip calendar events. These will be assessed below.
-                    continue
-                }
-
-                // Add the planner datestamps that own this event.
+                // Add the datestamps that own this event.
                 try updateDatestamps(
                     with: plannerEvent.date,
                     datestamps: &datestamps,
@@ -97,17 +97,15 @@ extension ModelContext {
             )
 
             for calendarEvent in calendarEvents
-            where calendarEvent.containsText(text) {
-                if calendarEvent.calendar.isHidden(
+            where calendarEvent.containsText(text)
+                && !calendarEvent.calendar.isHidden(
                     filteredCalendarIds: filteredCalendarIds
-                ) {
-                    // Skip events whose calendar is hidden.
-                    continue
-                }
-
-                // Add the planner datestamps that own this event.
+                )
+            {
+                // Add the datestamps that own this event.
                 try updateDatestamps(
                     with: calendarEvent.startDate,
+                    ending: calendarEvent.endDate,
                     datestamps: &datestamps,
                     plannerCache: &plannerCache,
                     settings: settings,
@@ -152,14 +150,16 @@ extension ModelContext {
     // MARK: - Helper Functions
 
     private func updateDatestamps(
-        with date: Date,
+        with startDate: Date,
+        ending endDate: Date? = nil,
         datestamps: inout Set<String>,
         plannerCache: inout [String: DateInRegion],
         settings: PlannerSettings,
         homeRegion: Region
     ) throws {
         let possibleDatestamps = getChronologicalPossibleDatestamps(
-            for: date
+            for: startDate,
+            ending: endDate
         )
 
         for datestamp in possibleDatestamps {
@@ -171,7 +171,11 @@ extension ModelContext {
             if let cachedPlannerStartOfDay = plannerCache[
                 datestamp
             ] {
-                if date.belongsTo(cachedPlannerStartOfDay) {
+                if range(
+                    from: startDate,
+                    to: endDate,
+                    includes: cachedPlannerStartOfDay
+                ) {
                     datestamps.insert(datestamp)
                 }
                 continue
@@ -199,10 +203,24 @@ extension ModelContext {
             }
             plannerCache[datestamp] = plannerStartOfDay
 
-            if date.belongsTo(plannerStartOfDay) {
+            if range(from: startDate, to: endDate, includes: plannerStartOfDay)
+            {
                 datestamps.insert(datestamp)
             }
         }
+    }
+
+    private func range(
+        from start: Date,
+        to end: Date?,
+        includes plannerStartOfDay: DateInRegion
+    ) -> Bool {
+        let end = end ?? start
+
+        let dayStart = plannerStartOfDay.date
+        let nextDayStart = (plannerStartOfDay + 1.days).date
+
+        return start < nextDayStart && end >= dayStart
     }
 
 }

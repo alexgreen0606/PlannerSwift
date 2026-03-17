@@ -22,11 +22,20 @@ private let latestRegion = Region(
     locale: Locales.english
 )
 
-// Gets all possible datestamps a date can land in.
-// Example: A date could be nighttime in Los Angeles and morning the next day in Rome.
-func getChronologicalPossibleDatestamps(for date: Date) -> [String] {
-    return Set([
-        date.in(region: earliestRegion).datestamp,
-        date.in(region: latestRegion).datestamp,
-    ]).sorted()
+// Gets all possible datestamps an event can land in.
+// Example: An event could be nighttime in Los Angeles and morning the next day in Rome.
+func getChronologicalPossibleDatestamps(for date: Date, ending: Date? = nil)
+    -> [String]
+{
+    var current = date.in(region: earliestRegion).dateAtStartOf(.day)
+    let end = (ending ?? date).in(region: latestRegion).dateAtEndOf(.day)
+
+    var datestamps: Set<String> = [current.datestamp, end.datestamp]
+
+    while current <= end {
+        datestamps.insert(current.datestamp)
+        current = current + 1.days
+    }
+
+    return datestamps.sorted()
 }
