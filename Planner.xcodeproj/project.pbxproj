@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		071E4F9E2EF220A300418F1A /* WrappingHStack in Frameworks */ = {isa = PBXBuildFile; productRef = 071E4F9D2EF220A300418F1A /* WrappingHStack */; };
 		07BB27E92EDDFF6900593DD0 /* SwiftFormat in Frameworks */ = {isa = PBXBuildFile; productRef = 07BB27E82EDDFF6900593DD0 /* SwiftFormat */; };
+		07CA6BAB2F6B0F91001095BB /* Fuse in Frameworks */ = {isa = PBXBuildFile; productRef = 07CA6BAA2F6B0F91001095BB /* Fuse */; };
 		07DA27532EE28AC900265B25 /* SwiftDate in Frameworks */ = {isa = PBXBuildFile; productRef = 07DA27522EE28AC900265B25 /* SwiftDate */; };
 /* End PBXBuildFile section */
 
@@ -45,6 +46,7 @@
 				07DA27532EE28AC900265B25 /* SwiftDate in Frameworks */,
 				071E4F9E2EF220A300418F1A /* WrappingHStack in Frameworks */,
 				07BB27E92EDDFF6900593DD0 /* SwiftFormat in Frameworks */,
+				07CA6BAB2F6B0F91001095BB /* Fuse in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -90,6 +92,7 @@
 				07BB27E82EDDFF6900593DD0 /* SwiftFormat */,
 				07DA27522EE28AC900265B25 /* SwiftDate */,
 				071E4F9D2EF220A300418F1A /* WrappingHStack */,
+				07CA6BAA2F6B0F91001095BB /* Fuse */,
 			);
 			productName = Planner;
 			productReference = 07BB27D52EDDFB9400593DD0 /* Planner.app */;
@@ -123,6 +126,7 @@
 				07BB27E72EDDFF6900593DD0 /* XCRemoteSwiftPackageReference "SwiftFormat" */,
 				07DA27512EE28AC900265B25 /* XCRemoteSwiftPackageReference "SwiftDate" */,
 				071E4F9C2EF220A300418F1A /* XCRemoteSwiftPackageReference "WrappingHStack" */,
+				07CA6BA92F6B0F91001095BB /* XCRemoteSwiftPackageReference "fuse-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 07BB27D62EDDFB9400593DD0 /* Products */;
@@ -392,6 +396,14 @@
 				minimumVersion = 0.58.7;
 			};
 		};
+		07CA6BA92F6B0F91001095BB /* XCRemoteSwiftPackageReference "fuse-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/krisk/fuse-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.4.0;
+			};
+		};
 		07DA27512EE28AC900265B25 /* XCRemoteSwiftPackageReference "SwiftDate" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/malcommac/SwiftDate.git";
@@ -412,6 +424,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 07BB27E72EDDFF6900593DD0 /* XCRemoteSwiftPackageReference "SwiftFormat" */;
 			productName = SwiftFormat;
+		};
+		07CA6BAA2F6B0F91001095BB /* Fuse */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 07CA6BA92F6B0F91001095BB /* XCRemoteSwiftPackageReference "fuse-swift" */;
+			productName = Fuse;
 		};
 		07DA27522EE28AC900265B25 /* SwiftDate */ = {
 			isa = XCSwiftPackageProductDependency;

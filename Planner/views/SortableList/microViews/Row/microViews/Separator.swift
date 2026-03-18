@@ -51,6 +51,7 @@ struct SeparatorView: View {
                         .opacity(opacity)
                 } else if showUpperDivider {
                     Divider().background(.tertiary)
+                        .opacity(opacity)
                     Spacer()
                 }
             }

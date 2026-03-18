@@ -33,11 +33,15 @@ struct PlannerPreviewView: View {
     // MARK: Filtered Search Results
 
     private var filteredPlannerEvents: [PlannerEvent] {
-        plannerEvents.filter(shouldShowPlannerEvent)
+        plannerEvents.filter {
+            $0.searchQueryScore(searchQuery) != nil
+        }
     }
 
     private var filteredChipEvents: [EKEvent] {
-        plannerChipEvents.filter(shouldShowChipEvent)
+        plannerChipEvents.filter {
+            $0.searchQueryScore(searchQuery) != nil
+        }
     }
 
     // MARK: Separated Time Events
@@ -96,8 +100,7 @@ struct PlannerPreviewView: View {
             return false
         }
 
-        return !searchQuery.text.isEmpty
-            || !searchQuery.filteredCalendarIds.isEmpty
+        return searchQuery.isSearching
     }
 
     // MARK: - Body
@@ -164,15 +167,14 @@ struct PlannerPreviewView: View {
 
     @ViewBuilder
     private var weatherInfo: some View {
-        if !isSearching {
-            WeatherInfoView(
-                previewType: type,
-                planner: planner,
-                plannerStartOfDay: plannerStartOfDay,
-                plannerLocation: plannerLocation,
-                settings: settings
-            )
-        }
+        WeatherInfoView(
+            previewType: type,
+            plannerSearchQuery: searchQuery,
+            planner: planner,
+            plannerStartOfDay: plannerStartOfDay,
+            plannerLocation: plannerLocation,
+            settings: settings
+        )
     }
 
     @ViewBuilder
@@ -204,44 +206,6 @@ struct PlannerPreviewView: View {
                 alignment: .center
             )
         }
-    }
-
-    // MARK: - Functions
-
-    private func shouldShowPlannerEvent(_ event: PlannerEvent) -> Bool {
-
-        // Show every unchecked event when not searching.
-        guard isSearching else {
-            return !event.isChecked
-        }
-
-        // Don't show this event if its calendar is hidden.
-        if let calendar = event.calendarEvent?.calendar,
-            calendar.isHidden(
-                filteredCalendarIds: searchQuery?.filteredCalendarIds
-            )
-        {
-            return false
-        }
-
-        return event.containsText(searchQuery?.text)
-    }
-
-    private func shouldShowChipEvent(_ event: EKEvent) -> Bool {
-
-        // Show every chip when not searching.
-        guard isSearching else {
-            return true
-        }
-
-        // Don't show this event if its calendar is hidden.
-        if event.calendar.isHidden(
-            filteredCalendarIds: searchQuery?.filteredCalendarIds
-        ) {
-            return false
-        }
-
-        return event.containsText(searchQuery?.text)
     }
 
 }

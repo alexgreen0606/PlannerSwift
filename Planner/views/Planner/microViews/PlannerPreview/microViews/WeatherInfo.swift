@@ -13,6 +13,7 @@ import WeatherKit
 
 struct WeatherInfoView: View {
     let previewType: PlannerPreviewType
+    let plannerSearchQuery: PlannerSearchQuery?
     let planner: Planner
     let plannerStartOfDay: DateInRegion
     let plannerLocation: Location?
@@ -39,15 +40,30 @@ struct WeatherInfoView: View {
         }
     }
 
+    private var isSearching: Bool {
+        plannerSearchQuery?.isSearching ?? false
+    }
+
     private var weatherData: DayWeather? {
-        weatherStore.getWeather(for: plannerStartOfDay, at: plannerLocation)
+        guard !isSearching else {
+            // Hide the weather when searching.
+            return nil
+        }
+
+        return weatherStore.getWeather(
+            for: plannerStartOfDay,
+            at: plannerLocation
+        )
     }
 
     private var locationLabel: String? {
-        planner.locationLabel(
-            settings: settings,
-            deviceLocation: deviceLocationManager.deviceLocation
-        )
+        if planner.searchQueryScore(plannerSearchQuery) != nil {
+            return planner.locationLabel(
+                settings: settings,
+                deviceLocation: deviceLocationManager.deviceLocation
+            )
+        }
+        return nil
     }
 
     private var locationIconConfig: IconConfig {

@@ -58,11 +58,14 @@ extension DateInRegion {
             return "Today"
 
         } else if startOfToday.isBeforeDate(startOfDay, granularity: .day) {
-            if abs(diff) == 1 { return "Tomorrow" }
-            return "\(abs(diff)) days away"
+            let absDiff = abs(diff)
+            if absDiff == 1 { return "Tomorrow" }
+            
+            return "\(absDiff) days away"
 
         } else {
             if diff == 1 { return "Yesterday" }
+            
             return "\(diff) days ago"
         }
     }

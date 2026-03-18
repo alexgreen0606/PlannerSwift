@@ -25,6 +25,15 @@ extension String {
     }
 
     // Expects YYYY-MM-DD format.
+    var year: String {  // Ex: 2028
+        self
+            .toDate("yyyy-MM-dd", region: .local)?
+            .toFormat("YYYY")
+            .uppercased()
+            ?? "???"
+    }
+
+    // Expects YYYY-MM-DD format.
     var calendarSymbolName: String {
         let dd = self.suffix(2)
 

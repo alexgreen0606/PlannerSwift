@@ -6,6 +6,7 @@
 //
 
 import EventKit
+import Fuse
 import SwiftData
 import SwiftDate
 import SwiftUI
@@ -29,15 +30,16 @@ struct PlannerSearchTabView: View {
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
     @State private var filteredCalendarIds: Set<String> = []
-    @State private var scrollToSoonestDatestampTrigger: UUID = UUID()
+    @State private var filterPast: Bool = false
 
     @State private var toolbarHeight: CGFloat = 0
     @State private var topInsetHeight: CGFloat = 49
 
-    // Year (YYYY) -> Datestamps (YYYY-MM-DD)
-    @State private var plannerMap: [String: [String]] = [:]
     @State private var plannerMapTask: Task<Void, Never>?
     @State private var plannerSearchQuery: PlannerSearchQuery? = nil
+
+    // Year (YYYY) -> Datestamps (YYYY-MM-DD)
+    @State private var plannerMap: [String: [String]] = [:]
 
     // Sorted keys from plannerMap.
     @State private var sortedUpcomingYears: [String] = []
@@ -50,13 +52,17 @@ struct PlannerSearchTabView: View {
         }
     }
 
-    // TODO: this should store the datestamp closest to today
-    private var topDatestamp: String? {
-        guard let firstYear = sortedUpcomingYears.first else {
-            return nil
+    private var emptyResultsLabel: String {
+        guard let plannerSearchQuery else {
+            return ""
         }
 
-        return plannerMap[firstYear]?.first
+        if plannerSearchQuery.isSearching {
+            return "No matching events"
+        }
+
+        return plannerSearchQuery.filterPast
+            ? "No past events" : "No upcoming events"
     }
 
     var body: some View {
@@ -111,14 +117,6 @@ struct PlannerSearchTabView: View {
                         deviceLocationManager.loadDeviceLocation()
                     }
 
-                    // Keep the list scrolled to the top whenever the results change.
-                    // TODO: scroll to the date >= today
-                    .withScrollTrigger(
-                        scrollProxy: scrollProxy,
-                        trigger: scrollToSoonestDatestampTrigger,
-                        id: topDatestamp
-                    )
-
                     // Calculate the layout for the manual safe areas once the UI settles.
                     .onAppear {
                         DispatchQueue.main.async {
@@ -127,23 +125,32 @@ struct PlannerSearchTabView: View {
                                 geo.safeAreaInsets.top - toolbarHeight + 32
                         }
                     }
+
+                    // Build the planner map whenever the calendar store refreshes.
+                    .externalData(
+                        key: calendarStore.reloadTrigger,
+                        ready: true,
+                        load: {
+                            buildPlannerMap(scrollProxy: scrollProxy)
+                        }
+                    )
+
+                    // Schedule a build of the planner map when the search query changes.
+                    .onChange(of: searchText) { _, _ in
+                        schedulePlannerMapBuild(scrollProxy: scrollProxy)
+                    }
+
+                    // Schedule a build of the planner map when the filtered calendars change.
+                    .onChange(of: filteredCalendarIds) { _, _ in
+                        schedulePlannerMapBuild(scrollProxy: scrollProxy)
+                    }
+
+                    // Schedule a build of the planner map when the time range change.
+                    .onChange(of: filterPast) { _, _ in
+                        schedulePlannerMapBuild(scrollProxy: scrollProxy)
+                    }
                 }
             }
-        }
-
-        // Build the planner map whenever the calendar store refreshes.
-        .externalData(
-            key: calendarStore.reloadTrigger,
-            ready: true,
-            load: buildPlannerMap
-        )
-
-        // Schedule a build of the planner map when the search query changes.
-        .onChange(of: searchText) { _, _ in schedulePlannerMapBuild() }
-
-        // Schedule a build of the planner map when the filtered calendars change.
-        .onChange(of: filteredCalendarIds) { _, _ in
-            schedulePlannerMapBuild()
         }
     }
 
@@ -154,40 +161,57 @@ struct PlannerSearchTabView: View {
         if calendarStore.calendarAccessDenied == false {
             ToolbarItemGroup(placement: .topBarLeading) {
                 Menu {
-                    Text("Filter Calendars")
-                        .font(.footnote)
-                    Divider()
-                    ForEach(sortedCalendars, id: \.calendarIdentifier) {
-                        calendar in
+                    Section("Timeframe") {
                         Toggle(
+                            "Upcoming",
                             isOn: Binding(
                                 get: {
-                                    filteredCalendarIds.contains(
-                                        calendar.calendarIdentifier
-                                    )
+                                    !filterPast
                                 },
                                 set: { isOn in
-                                    if isOn {
-                                        filteredCalendarIds.insert(
-                                            calendar.calendarIdentifier
-                                        )
-                                    } else {
-                                        filteredCalendarIds.remove(
-                                            calendar.calendarIdentifier
-                                        )
-                                    }
+                                    filterPast.toggle()
                                 }
                             )
-                        ) {
-                            HStack {
-                                Image(
-                                    systemName: calendar.systemImageName(
-                                        settings: settings
-                                    )
-                                )
-                                .tint(calendar.color)
+                        )
+                        Toggle(
+                            "Past",
+                            isOn: $filterPast
+                        )
+                    }
 
-                                Text(calendar.title)
+                    Section("Calendars") {
+                        ForEach(sortedCalendars, id: \.calendarIdentifier) {
+                            calendar in
+                            Toggle(
+                                isOn: Binding(
+                                    get: {
+                                        filteredCalendarIds.contains(
+                                            calendar.calendarIdentifier
+                                        )
+                                    },
+                                    set: { isOn in
+                                        if isOn {
+                                            filteredCalendarIds.insert(
+                                                calendar.calendarIdentifier
+                                            )
+                                        } else {
+                                            filteredCalendarIds.remove(
+                                                calendar.calendarIdentifier
+                                            )
+                                        }
+                                    }
+                                )
+                            ) {
+                                HStack {
+                                    Image(
+                                        systemName: calendar.systemImageName(
+                                            settings: settings
+                                        )
+                                    )
+                                    .tint(calendar.color)
+
+                                    Text(calendar.title)
+                                }
                             }
                         }
                     }
@@ -205,9 +229,7 @@ struct PlannerSearchTabView: View {
     private var emptyPlannersLabel: some View {
         if sortedUpcomingYears.isEmpty {
             EmptyLabelView(
-                text: searchText.isEmpty
-                    ? "No Upcoming Events"
-                    : "No Matching Events"
+                text: emptyResultsLabel
             )
         }
     }
@@ -237,7 +259,7 @@ struct PlannerSearchTabView: View {
 
     // MARK: - Datestamp Builders
 
-    private func buildPlannerMap() {
+    private func buildPlannerMap(scrollProxy: ScrollViewProxy) {
         let queryText = {
             let trimmed =
                 searchText
@@ -250,9 +272,26 @@ struct PlannerSearchTabView: View {
             return trimmed.lowercased()
         }()
 
+        let todayPlanner = modelContext.loadPlanner(
+            for: todaystampWatcher.todaystamp
+        )
+        guard
+            let todayStartOfDay = todayPlanner.datestamp.startOfDay(
+                in: todayPlanner.region(settings: settings)
+            )
+        else {
+            assertionFailure(
+                "ERROR PlannerSearchTab.buildPlannerMap: Could not build startOfDay for \(todayPlanner.datestamp)"
+            )
+            return
+        }
+
         plannerSearchQuery = PlannerSearchQuery(
             text: queryText,
-            filteredCalendarIds: filteredCalendarIds
+            filteredCalendarIds: filteredCalendarIds,
+            filterPast: filterPast,
+            todayStartOfDay: todayStartOfDay,
+            fuse: Fuse()
         )
         plannerMap = modelContext.searchPlanner(
             with: plannerSearchQuery,
@@ -260,17 +299,28 @@ struct PlannerSearchTabView: View {
             settings: settings
         )
         sortedUpcomingYears = plannerMap.keys.sorted()
+
+        // Scroll to the top of the results.
+        if let firstYear = sortedUpcomingYears.first {
+            if let topDatestamp = plannerMap[firstYear]?.first {
+                DispatchQueue.main.async {
+                    withAnimation {
+                        scrollProxy.scrollTo(topDatestamp, anchor: .top)
+                    }
+                }
+            }
+        }
     }
 
-    private func schedulePlannerMapBuild() {
+    private func schedulePlannerMapBuild(scrollProxy: ScrollViewProxy) {
         plannerMapTask?.cancel()
 
         plannerMapTask = Task {
             do {
-                try await Task.sleep(for: .milliseconds(1000))
+                try await Task.sleep(for: .milliseconds(600))
                 guard !Task.isCancelled else { return }
 
-                buildPlannerMap()
+                buildPlannerMap(scrollProxy: scrollProxy)
 
             } catch {}
         }

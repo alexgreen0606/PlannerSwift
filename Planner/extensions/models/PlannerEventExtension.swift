@@ -6,6 +6,7 @@
 //
 
 import EventKit
+import Fuse
 import SwiftDate
 import SwiftUI
 
@@ -205,22 +206,60 @@ extension PlannerEvent {
 
     // MARK: - Miscellaneous
 
-    func containsText(_ text: String?) -> Bool {
-        guard let text, !text.isEmpty else {
-            return true
+    func searchQueryScore(_ query: PlannerSearchQuery?) -> Double? {
+        guard let query else {
+            if self.isChecked {
+                return nil
+            } else {
+                // Include if unchecked and no query is set.
+                return 0.0
+            }
         }
 
-        if self.title.localizedCaseInsensitiveContains(text) {
-            return true
+        if query.filterPast && self.date >= query.todayStartOfDay.date {
+            // Exclude if it doesnt match the time range.
+            return nil
+        }
+
+        if !query.filterPast && self.date < query.todayStartOfDay.date {
+            // Exclude if it doesnt match the time range.
+            return nil
+        }
+
+        if let calendarEvent = self.calendarEvent,
+            calendarEvent.calendar.isHidden(
+                filteredCalendarIds: query.filteredCalendarIds
+            )
+        {
+            // Exclude if the calendar is hidden.
+            return nil
+        }
+
+        if query.text.isEmpty {
+            if self.isChecked {
+                return nil
+            } else {
+                // Include if unchecked and no search text exists.
+                return 0.0
+            }
+        }
+
+        if let results = query.fuse.search(query.text, in: self.title),
+            results.score <= FuseConstants.fuzzyThreshold
+        {
+            // Include if the title matches the search text.
+            return results.score
         }
 
         if let location = self.location,
-            location.name.localizedCaseInsensitiveContains(text)
+           let results = query.fuse.search(query.text, in: location.name),
+            results.score <= FuseConstants.fuzzyThreshold
         {
-            return true
+            // Include if the location matches the search text.
+            return results.score
         }
 
-        return false
+        return nil
     }
 
 }

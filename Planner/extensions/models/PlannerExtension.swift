@@ -6,6 +6,7 @@
 //
 
 import EventKit
+import Fuse
 import SwiftDate
 import SwiftUI
 
@@ -48,6 +49,40 @@ extension Planner {
         }
 
         return settings.homeLocationIconConfig
+    }
+
+    func searchQueryScore(_ query: PlannerSearchQuery?) -> Double? {
+        guard let query else {
+            // Include when no query is set.
+            return 0.0
+        }
+
+        if query.filterPast && self.datestamp >= query.todayStartOfDay.datestamp
+        {
+            // Exclude if it doesnt match the time range.
+            return nil
+        }
+
+        if !query.filterPast && self.datestamp < query.todayStartOfDay.datestamp
+        {
+            // Exclude if it doesnt match the time range.
+            return nil
+        }
+
+        if query.text.isEmpty {
+            // Include if there is no search text.
+            return 0.0
+        }
+
+        if let location = self.location,
+           let results = query.fuse.search(query.text, in: location.name),
+            results.score <= FuseConstants.fuzzyThreshold
+        {
+            // Include if the location matches the search text.
+            return results.score
+        }
+
+        return nil
     }
 
 }

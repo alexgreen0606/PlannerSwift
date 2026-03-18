@@ -6,6 +6,7 @@
 //
 
 import EventKit
+import Fuse
 import SwiftDate
 import SwiftUI
 
@@ -65,7 +66,7 @@ extension EKEvent {
 
         return nil
     }
-    
+
     func spansOutsidePlannerDay(plannerStartOfDay: DateInRegion) -> Bool {
         let startOfNextPlannerDay = plannerStartOfDay + 1.days
 
@@ -73,22 +74,50 @@ extension EKEvent {
             || self.endDate > startOfNextPlannerDay.date
     }
 
-    func containsText(_ text: String?) -> Bool {
-        guard let text, !text.isEmpty else {
-            return true
+    func searchQueryScore(_ query: PlannerSearchQuery?) -> Double? {
+        guard let query else {
+            // Include when no query is set.
+            return 0.0
         }
-        
-        if self.title.localizedCaseInsensitiveContains(text) {
-            return true
+
+        if query.filterPast && self.startDate >= query.todayStartOfDay.date {
+            // Exclude if it doesnt match the time range.
+            return nil
+        }
+
+        if !query.filterPast && self.endDate < query.todayStartOfDay.date {
+            // Exclude if it doesnt match the time range.
+            return nil
+        }
+
+        if self.calendar.isHidden(
+            filteredCalendarIds: query.filteredCalendarIds
+        ) {
+            // Exclude if the calendar is hidden.
+            return nil
+        }
+
+        if query.text.isEmpty {
+            // Include if there is no search text.
+            return 0.0
+        }
+
+        if let results = query.fuse.search(query.text, in: self.title),
+           results.score <= FuseConstants.fuzzyThreshold
+        {
+            // Include if the title matches the search text.
+            return results.score
         }
 
         if let location = self.location,
-            location.localizedCaseInsensitiveContains(text)
+           let results = query.fuse.search(query.text, in: location),
+            results.score <= FuseConstants.fuzzyThreshold
         {
-            return true
+            // Include if the location matches the search text.
+            return results.score
         }
 
-        return false
+        return nil
     }
 
     // MARK: - Helper Functions

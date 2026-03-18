@@ -27,7 +27,10 @@ extension ModelContext {
             let onlySearchCalendar =
                 filteredCalendarIds.count > 0 && text.isEmpty
 
-            var datestamps: Set<String> = []
+            // Store loaded planners for efficiency.
+            var plannerCache: [String: DateInRegion] = [:]
+
+            var datestampScores: [String: Double] = [:]
 
             // ------------------------------------------------------------------
             // Phase 1: Find planners with matching locations.
@@ -35,22 +38,22 @@ extension ModelContext {
 
             var filteredPlanners: [Planner] = []
 
-            if filteredCalendarIds.isEmpty, !text.isEmpty {
+            if !text.isEmpty {
                 filteredPlanners = try fetch(
                     FetchDescriptor<Planner>(
                         predicate: #Predicate<Planner> { planner in
-                            if let location = planner.location {
-                                return location.name.contains(text)
-                            } else {
-                                return text.isEmpty
-                            }
+                            planner.location != nil
                         }
                     )
                 )
             }
 
             for planner in filteredPlanners {
-                datestamps.insert(planner.datestamp)
+                guard let score = planner.searchQueryScore(query) else {
+                    continue
+                }
+
+                datestampScores[planner.datestamp, default: 0] += (1.0 - score)
             }
 
             // ------------------------------------------------------------------
@@ -67,23 +70,21 @@ extension ModelContext {
                         }
                     )
                 )
-                // Filter out events that don't match the text query (too complex to be used in the predicate)
-                .filter { event in
-                    event.containsText(text)
-                }
             }
 
-            // Store loaded planners for efficiency.
-            var plannerCache: [String: DateInRegion] = [:]
-
             for plannerEvent in filteredPlannerEvents {
+                guard let score = plannerEvent.searchQueryScore(query) else {
+                    continue
+                }
+
                 // Add the datestamps that own this event.
                 try updateDatestamps(
                     with: plannerEvent.date,
-                    datestamps: &datestamps,
+                            datestampScores: &datestampScores,
                     plannerCache: &plannerCache,
                     settings: settings,
-                    homeRegion: homeRegion
+                    homeRegion: homeRegion,
+                    score: score
                 )
             }
 
@@ -100,20 +101,20 @@ extension ModelContext {
                 )
             )
 
-            for calendarEvent in calendarEvents
-            where calendarEvent.containsText(text)
-                && !calendarEvent.calendar.isHidden(
-                    filteredCalendarIds: filteredCalendarIds
-                )
-            {
+            for calendarEvent in calendarEvents {
+                guard let score = calendarEvent.searchQueryScore(query) else {
+                    continue
+                }
+
                 // Add the datestamps that own this event.
                 try updateDatestamps(
                     with: calendarEvent.startDate,
                     ending: calendarEvent.endDate,
-                    datestamps: &datestamps,
+                            datestampScores: &datestampScores,
                     plannerCache: &plannerCache,
                     settings: settings,
                     homeRegion: homeRegion,
+                    score: score
                 )
             }
 
@@ -121,30 +122,11 @@ extension ModelContext {
             // Phase 4: Assemble the data and display the top 10 results.
             // ------------------------------------------------------------------
 
-            let todaystamp = DateInRegion(region: .local).toFormat(
-                "yyyy-MM-dd",
-                locale: Locale.current
-            )
-
-            let filteredDatestamps = datestamps.filter { datestamp in
-                if text.isEmpty {
-                    // If there is no text parameter, only display current and future dates.
-                    return datestamp >= todaystamp
-                }
-                return true
+            if query?.isSearching == true {
+                return buildSearchResults(from: datestampScores)
+            } else {
+                return buildDefaultResults(from: datestampScores)
             }
-
-            let limitedDatestamps =
-                filteredDatestamps
-                .sorted()
-                .prefix(10)
-
-            let groupedByYear = Dictionary(grouping: limitedDatestamps) {
-                datestamp in
-                String(datestamp.prefix(4))
-            }.mapValues { Array($0).sorted() }
-
-            return groupedByYear
         } catch {
             assertionFailure("ERROR searchPlanner.searchPlanner: \(error)")
             return [:]
@@ -156,10 +138,11 @@ extension ModelContext {
     private func updateDatestamps(
         with startDate: Date,
         ending endDate: Date? = nil,
-        datestamps: inout Set<String>,
+                datestampScores: inout [String: Double],
         plannerCache: inout [String: DateInRegion],
         settings: PlannerSettings,
-        homeRegion: Region
+        homeRegion: Region,
+        score: Double
     ) throws {
         let possibleDatestamps = getChronologicalPossibleDatestamps(
             for: startDate,
@@ -167,9 +150,6 @@ extension ModelContext {
         )
 
         for datestamp in possibleDatestamps {
-            if datestamps.contains(datestamp) {
-                continue
-            }
 
             // Use the cached start of day for this datestamp to determine if the planner owns this event.
             if let cachedPlannerStartOfDay = plannerCache[
@@ -180,7 +160,7 @@ extension ModelContext {
                     to: endDate,
                     includes: cachedPlannerStartOfDay
                 ) {
-                    datestamps.insert(datestamp)
+                            datestampScores[datestamp, default: 0] += (1.0 - score)
                 }
                 continue
             }
@@ -209,9 +189,47 @@ extension ModelContext {
 
             if range(from: startDate, to: endDate, includes: plannerStartOfDay)
             {
-                datestamps.insert(datestamp)
+                        datestampScores[datestamp, default: 0] += (1.0 - score)
             }
         }
+    }
+
+    private func buildSearchResults(from datestampScores: [String: Double])
+        -> [String: [String]]
+    {
+        let topDatestamps =
+            datestampScores
+            .sorted {
+                if $0.value == $1.value {
+                    return $0.key < $1.key
+                } else {
+                    return $0.value > $1.value
+                }
+            }
+            .prefix(10)
+            .map { $0.key }
+        
+        if topDatestamps.isEmpty {
+            return [:]
+        }
+
+        return ["Top Results": Array(topDatestamps)]
+    }
+
+    private func buildDefaultResults(from datestampScores: [String: Double])
+        -> [String: [String]]
+    {
+        let limitedDatestamps =
+            datestampScores.keys
+            .sorted()
+            .prefix(10)
+
+        let groupedByYear = Dictionary(grouping: limitedDatestamps) {
+            datestamp in
+            String(datestamp.prefix(4))
+        }.mapValues { Array($0).sorted() }
+
+        return groupedByYear
     }
 
     private func range(
