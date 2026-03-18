@@ -31,6 +31,7 @@ struct PlannerSearchTabView: View {
 
     @State private var filteredCalendarIds: Set<String> = []
     @State private var filterPast: Bool = false
+    @State private var topDatestamp: String?
 
     @State private var toolbarHeight: CGFloat = 0
     @State private var topInsetHeight: CGFloat = 49
@@ -116,6 +117,14 @@ struct PlannerSearchTabView: View {
                         )
                         deviceLocationManager.loadDeviceLocation()
                     }
+
+                    // Scroll to top whenever the planner list changes.
+                    .withScrollTrigger(
+                        scrollProxy: scrollProxy,
+                        trigger: plannerMap,
+                        id: topDatestamp,
+                        disabled: topDatestamp == nil
+                    )
 
                     // Calculate the layout for the manual safe areas once the UI settles.
                     .onAppear {
@@ -302,13 +311,7 @@ struct PlannerSearchTabView: View {
 
         // Scroll to the top of the results.
         if let firstYear = sortedUpcomingYears.first {
-            if let topDatestamp = plannerMap[firstYear]?.first {
-                DispatchQueue.main.async {
-                    withAnimation {
-                        scrollProxy.scrollTo(topDatestamp, anchor: .top)
-                    }
-                }
-            }
+            topDatestamp = plannerMap[firstYear]?.first
         }
     }
 

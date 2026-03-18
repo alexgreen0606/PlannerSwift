@@ -80,7 +80,7 @@ extension ModelContext {
                 // Add the datestamps that own this event.
                 try updateDatestamps(
                     with: plannerEvent.date,
-                            datestampScores: &datestampScores,
+                    datestampScores: &datestampScores,
                     plannerCache: &plannerCache,
                     settings: settings,
                     homeRegion: homeRegion,
@@ -110,7 +110,7 @@ extension ModelContext {
                 try updateDatestamps(
                     with: calendarEvent.startDate,
                     ending: calendarEvent.endDate,
-                            datestampScores: &datestampScores,
+                    datestampScores: &datestampScores,
                     plannerCache: &plannerCache,
                     settings: settings,
                     homeRegion: homeRegion,
@@ -138,7 +138,7 @@ extension ModelContext {
     private func updateDatestamps(
         with startDate: Date,
         ending endDate: Date? = nil,
-                datestampScores: inout [String: Double],
+        datestampScores: inout [String: Double],
         plannerCache: inout [String: DateInRegion],
         settings: PlannerSettings,
         homeRegion: Region,
@@ -160,7 +160,7 @@ extension ModelContext {
                     to: endDate,
                     includes: cachedPlannerStartOfDay
                 ) {
-                            datestampScores[datestamp, default: 0] += (1.0 - score)
+                    datestampScores[datestamp, default: 0] += (1.0 - score)
                 }
                 continue
             }
@@ -189,7 +189,7 @@ extension ModelContext {
 
             if range(from: startDate, to: endDate, includes: plannerStartOfDay)
             {
-                        datestampScores[datestamp, default: 0] += (1.0 - score)
+                datestampScores[datestamp, default: 0] += (1.0 - score)
             }
         }
     }
@@ -200,20 +200,17 @@ extension ModelContext {
         let topDatestamps =
             datestampScores
             .sorted {
-                if $0.value == $1.value {
-                    return $0.key < $1.key
-                } else {
-                    return $0.value > $1.value
-                }
+                $0.value > $1.value
             }
             .prefix(10)
             .map { $0.key }
-        
-        if topDatestamps.isEmpty {
-            return [:]
-        }
 
-        return ["Top Results": Array(topDatestamps)]
+        let groupedByYear = Dictionary(grouping: topDatestamps) {
+            datestamp in
+            String(datestamp.prefix(4))
+        }.mapValues { Array($0).sorted() }
+
+        return groupedByYear
     }
 
     private func buildDefaultResults(from datestampScores: [String: Double])

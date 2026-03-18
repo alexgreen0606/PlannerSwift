@@ -43,30 +43,26 @@ extension DateInRegion {
     }
 
     var countdown: String {  // Ex: Today, Tomorrow, 3 days away, 3 days ago
-        let startOfToday = DateInRegion(Date(), region: .local).dateAt(
-            .startOfDay
-        )
+        let todaystamp = DateInRegion(Date(), region: .local).datestamp
+        let datestamp = self.datestamp
 
-        let diff =
-            Calendar.current.dateComponents(
-                [.day],
-                from: startOfDay.date,
-                to: startOfToday.date
-            ).day ?? 0
+        if self.datestamp == todaystamp { return "Today" }
 
-        if diff == 0 {
-            return "Today"
+        guard let dayDiff = dayDifference(from: datestamp, to: todaystamp)
+        else {
+            return ""
+        }
 
-        } else if startOfToday.isBeforeDate(startOfDay, granularity: .day) {
-            let absDiff = abs(diff)
+        if datestamp > todaystamp {
+            let absDiff = abs(dayDiff)
             if absDiff == 1 { return "Tomorrow" }
-            
+
             return "\(absDiff) days away"
 
         } else {
-            if diff == 1 { return "Yesterday" }
-            
-            return "\(diff) days ago"
+            if dayDiff == 1 { return "Yesterday" }
+
+            return "\(dayDiff) days ago"
         }
     }
 
@@ -111,6 +107,21 @@ extension DateInRegion {
         }
 
         return false
+    }
+
+    private func dayDifference(from: String, to: String) -> Int? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+
+        guard let start = formatter.date(from: from),
+            let end = formatter.date(from: to)
+        else {
+            return nil
+        }
+
+        let seconds = end.timeIntervalSince(start)
+        return Int(seconds / 86400)
     }
 
     private var dateWithYear: String {  // Ex: May 12, 2025

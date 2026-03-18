@@ -110,6 +110,7 @@ extension EKEvent {
         }
 
         if let location = self.location,
+           self.location(storageEvent: nil) != nil,
            let results = query.fuse.search(query.text, in: location),
             results.score <= FuseConstants.fuzzyThreshold
         {
