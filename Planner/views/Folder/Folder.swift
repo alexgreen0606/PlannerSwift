@@ -13,7 +13,7 @@ import SwiftUI
 struct FolderView: View {
     let folder: ChecklistItem
     let namespace: Namespace.ID
-    let openItem: (ChecklistItem) -> Void
+    let openItem: (ChecklistItem, ChecklistItem) -> Void
     let canTranferItems: Bool
     let updateTransferAvailability: (Set<UUID>) -> Void
 
@@ -23,6 +23,7 @@ struct FolderView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
+    @StateObject private var notificationManager = NotificationManager()
     @StateObject private var selectManager = ListManager<ChecklistItem>()
     @State private var showDeleteFolderConfirm = false
     @State private var showTransferSheet = false
@@ -90,7 +91,8 @@ struct FolderView: View {
             .sheet(isPresented: $showTransferSheet) {
                 TransferChecklistItemsFormView(
                     source: folder,
-                    selectedIds: selectManager.selectedItemIds
+                    selectedIds: selectManager.selectedItemIds,
+                    openItem: openItem
                 )
                 .navigationTransition(
                     .zoom(
@@ -105,7 +107,11 @@ struct FolderView: View {
                 EmptyLabelView(text: "No contents")
             }
         }
+        .overlay {
+            NotificationsView()
+        }
         .environmentObject(selectManager)
+        .environmentObject(notificationManager)
     }
 
     // MARK: - Toolbars

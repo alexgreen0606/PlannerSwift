@@ -17,8 +17,16 @@ enum FolderNavigationDirection {
 
 struct TransferChecklistItemsFormView: View {
     private let source: ChecklistItem
+    private let openItem: (ChecklistItem, ChecklistItem) -> Void
 
-    init(source: ChecklistItem, selectedIds: Set<UUID>) {
+    init(
+        source: ChecklistItem,
+        selectedIds: Set<UUID>,
+        openItem: @escaping (ChecklistItem, ChecklistItem) -> Void
+    ) {
+        self.source = source
+        self.openItem = openItem
+
         var folderPointer =
             source.type == .folder
             ? source
@@ -37,7 +45,6 @@ struct TransferChecklistItemsFormView: View {
         self.currentFolder = folderPointer
         self.destinationType =
             source.type == .folder ? .folder : .checklist
-        self.source = source
     }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -46,11 +53,12 @@ struct TransferChecklistItemsFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var listManager: ListManager<ChecklistItem>
+    @EnvironmentObject private var notificationManager: NotificationManager
 
     @State private var destinationType: ChecklistItemType
     @State private var selectedItem: ChecklistItem?
     @State private var currentFolder: ChecklistItem
-    
+
     // Controls the animation of the folder navigator.
     @State private var folderNavDirection: FolderNavigationDirection = .forward
 
@@ -171,13 +179,37 @@ struct TransferChecklistItemsFormView: View {
             return
         }
 
+        let itemCount = listManager.selectedItemIds.count
+
         modelContext.transferChecklistItems(
             into: selectedItem,
             items: listManager.selectedItems
         )
 
         listManager.toggleSelectMode()
+
         dismiss()
+
+        DispatchQueue.main.async {
+            notificationManager.addNotification(
+                NotificationConfig(
+                    id: UUID(),
+                    title:
+                        "Transferred \(itemCount) item\(itemCount == 1 ? "" : "s")",
+                    subtitle: "to \(selectedItem.title)",
+                    iconConfig: IconConfig(
+                        name: "checkmark",
+                        primaryColor: Color.green
+                    ),
+                    onClick: {
+                        openItem(
+                            selectedItem,
+                            destinationType == .folder ? source : source.parent!
+                        )
+                    }
+                )
+            )
+        }
     }
 
 }

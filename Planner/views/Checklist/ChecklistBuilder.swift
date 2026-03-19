@@ -13,12 +13,15 @@ import SwiftUI
 
 struct ChecklistBuilderView: View {
     private let canTransferItems: Bool
+    private let openItem: (ChecklistItem, ChecklistItem) -> Void
 
     init(
         checklistId: UUID,
-        canTransferItems: Bool
+        canTransferItems: Bool,
+        openItem: @escaping (ChecklistItem, ChecklistItem) -> Void
     ) {
         self.canTransferItems = canTransferItems
+        self.openItem = openItem
 
         _checklists = Query(
             filter: #Predicate<ChecklistItem> {
@@ -48,7 +51,8 @@ struct ChecklistBuilderView: View {
             ChecklistView(
                 checklist: checklist,
                 sortedItems: sortedItems,
-                canTransferItems: canTransferItems
+                canTransferItems: canTransferItems,
+                openItem: openItem
             )
         }
     }

@@ -42,8 +42,7 @@ struct NotificationChipView: View {
         )
         .transition(.move(edge: .leading).combined(with: .opacity))
         .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(800))
-            {
+            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(500)) {
                 withAnimation {
                     showImage = true
                 }

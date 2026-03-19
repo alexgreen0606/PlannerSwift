@@ -20,7 +20,7 @@ struct PlannerEventFormView: View {
     let sourcePlannerEvent: PlannerEvent?
     let sourcePlanner: Planner?
     let sourceDay: DateInRegion?
-    let showNotification: (DateInRegion?, DateInRegion?) -> Void
+    let showNotification: (DateInRegion?, DateInRegion?, EKEvent?) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -245,7 +245,7 @@ struct PlannerEventFormView: View {
 
         dismiss()
 
-        showNotification(sourceDay, destinationDay)
+        showNotification(sourceDay, destinationDay, nil)
     }
 
     private func addEventToCalendar() {

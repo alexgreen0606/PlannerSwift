@@ -263,12 +263,13 @@ struct EventFormView: View {
 
         dismiss()
 
-        showNotification(sourceDay: sourceDay, destinationDay: destinationDay)
+        showNotification(sourceDay: sourceDay, destinationDay: destinationDay, finalEkEvent: event)
     }
 
     private func showNotification(
         sourceDay: DateInRegion?,
         destinationDay: DateInRegion?,
+        finalEkEvent: EKEvent? = nil
     ) {
         var config: NotificationConfig?
 
@@ -306,8 +307,12 @@ struct EventFormView: View {
                     }
                 )
             }
-        } else if draftPlannerEvent.calendarEvent == nil,
-            sourceCalendarEvent != nil
+        }
+        
+        // Show the deletion message if no higher priority message is set.
+        if finalEkEvent == nil,
+            sourceCalendarEvent != nil,
+            config == nil
         {
             config = NotificationConfig(
                 id: UUID(),

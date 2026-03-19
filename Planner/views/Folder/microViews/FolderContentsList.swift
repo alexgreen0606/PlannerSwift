@@ -13,7 +13,7 @@ struct FolderContentsListView: View {
     let folder: ChecklistItem
     let sortedItems: [ChecklistItem]
     let namespace: Namespace.ID
-    let openItem: (ChecklistItem) -> Void
+    let openItem: (ChecklistItem, ChecklistItem) -> Void
     let updateTransferAvailability: (Set<UUID>) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -126,7 +126,7 @@ struct FolderContentsListView: View {
             return
         }
 
-        openItem(item)
+        openItem(item, folder)
     }
 
 }

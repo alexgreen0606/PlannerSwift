@@ -14,11 +14,13 @@ struct ChecklistView: View {
     let checklist: ChecklistItem
     let sortedItems: [ChecklistItem]
     let canTransferItems: Bool
+    let openItem: (ChecklistItem, ChecklistItem) -> Void
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var listManager: ListManager<ChecklistItem>
 
+    @StateObject private var notificationManager = NotificationManager()
     @State private var isEditSheetOpen = false
     @State private var isTransferSheetOpen = false
 
@@ -88,14 +90,20 @@ struct ChecklistView: View {
                 .animateSynchronousAction(from: listManager.isSelectMode)
             }
         }
+        .overlay {
+            NotificationsView()
+        }
 
         // Edit Form
         .sheet(isPresented: $isEditSheetOpen) {
             if let parent = checklist.parent {
                 ChecklistItemFormView(item: checklist, parent: parent)
-                .navigationTransition(
-                    .zoom(sourceID: IdConstants.ELLIPSIS_BUTTON, in: namespace)
-                )
+                    .navigationTransition(
+                        .zoom(
+                            sourceID: IdConstants.ELLIPSIS_BUTTON,
+                            in: namespace
+                        )
+                    )
             }
         }
 
@@ -103,7 +111,8 @@ struct ChecklistView: View {
         .sheet(isPresented: $isTransferSheetOpen) {
             TransferChecklistItemsFormView(
                 source: checklist,
-                selectedIds: listManager.selectedItemIds
+                selectedIds: listManager.selectedItemIds,
+                openItem: openItem
             )
             .navigationTransition(
                 .zoom(
@@ -112,6 +121,8 @@ struct ChecklistView: View {
                 )
             )
         }
+
+        .environmentObject(notificationManager)
     }
 
     // MARK: - Toolbars
