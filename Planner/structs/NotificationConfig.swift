@@ -14,14 +14,14 @@ struct NotificationConfig: Equatable {
     let title: String
     let subtitle: String?
     let iconConfig: IconConfig
-    let onClick: () -> Void
+    let onClick: (() -> Void)?
 
     init(
         id: UUID,
         title: String,
         subtitle: String? = nil,
         iconConfig: IconConfig,
-        onClick: @escaping () -> Void
+        onClick: (() -> Void)? = nil
     ) {
         self.id = id
         self.title = title
@@ -31,7 +31,8 @@ struct NotificationConfig: Equatable {
     }
 
     static func == (lhs: NotificationConfig, rhs: NotificationConfig) -> Bool {
-        lhs.id == rhs.id && lhs.title == rhs.title
+        lhs.id == rhs.id
+            && lhs.title == rhs.title
             && lhs.subtitle == rhs.subtitle
     }
 

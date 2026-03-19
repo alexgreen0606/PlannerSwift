@@ -26,11 +26,10 @@ struct PlannerTabView: View {
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
     @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
 
+    @StateObject private var notificationManager = NotificationManager()
     @State private var showNewEventSheet = false
     @State private var showCalendarPicker = false
-
     @State private var selectedCalendarDate: Date = Date()
-
     @State private var thisWeekDatestamps: [String] = []
 
     var body: some View {
@@ -89,7 +88,21 @@ struct PlannerTabView: View {
                         in: namespace
                     )
                 )
+                .environmentObject(notificationManager)
             }
+        }
+        .overlay {
+            VStack {
+                ForEach(notificationManager.notifications, id: \.id) {
+                    config in
+                    NotificationView(config: config)
+                }
+                Spacer()
+            }
+            .animation(
+                .linear,
+                value: notificationManager.notifications
+            )
         }
 
         // Build the week's datestamps at midnight.

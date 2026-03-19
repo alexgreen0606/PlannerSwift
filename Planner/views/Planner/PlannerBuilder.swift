@@ -60,6 +60,7 @@ struct PlannerBuilderView: View {
                 )
                 .environmentObject(notificationManager)
                 .overlay {
+                    // TODO: make a shared view for this
                     VStack {
                         ForEach(notificationManager.notifications, id: \.id) {
                             config in

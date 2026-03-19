@@ -20,7 +20,7 @@ struct EventFormView: View {
     private let sourcePlannerEvent: PlannerEvent?
     private let sourceCalendarEvent: EKEvent?
     private let settings: PlannerSettings
-    
+
     private let sourceDay: DateInRegion?
 
     init(
@@ -158,6 +158,7 @@ struct EventFormView: View {
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
     @EnvironmentObject private var notificationManager: NotificationManager
+    @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
 
     @State private var sheetDetent: PresentationDetent = .height(480)
     @State private var draftPlannerEvent: DraftPlannerEvent
@@ -274,39 +275,47 @@ struct EventFormView: View {
             if let destinationDay {
                 config = NotificationConfig(
                     id: UUID(),
-                    title: "Event Created",
-                    subtitle: "Scheduled for \(destinationDay.dynamicHeader).",
+                    title: "Event scheduled",
+                    subtitle: "for \(destinationDay.notificationDayLabel)",
                     iconConfig: IconConfig(
                         name: "checkmark",
                         primaryColor: Color.green
                     ),
-                    onClick: {} // TODO: open the target planner here
+                    onClick: {
+                        plannerCoverManager.context = PlannerCoverContext(
+                            datestamp: destinationDay.datestamp
+                        )
+                    }
                 )
             }
         } else if let destinationDay {
             if destinationDay.datestamp != sourceDay?.datestamp {
                 config = NotificationConfig(
                     id: UUID(),
-                    title: "Event Rescheduled",
-                    subtitle: "Moved to \(destinationDay.dynamicHeader).",
+                    title: "Event rescheduled",
+                    subtitle: "for \(destinationDay.notificationDayLabel)",
                     iconConfig: IconConfig(
                         name: "checkmark",
                         primaryColor: Color.green
                     ),
-                    onClick: {} // TODO: open the target planner here
+                    onClick: {
+                        plannerCoverManager.context = PlannerCoverContext(
+                            datestamp: destinationDay.datestamp
+                        )
+                    }
                 )
             }
         } else {
             if sourceCalendarEvent != nil {
                 config = NotificationConfig(
                     id: UUID(),
-                    title: "Event Deleted",
-                    subtitle: "Removed from calendar.",
+                    title: "Event deleted",
+                    subtitle: "from calendar",
                     iconConfig: IconConfig(
                         name: "checkmark",
                         primaryColor: Color.green
                     ),
-                    onClick: {}
+                    onClick: nil
                 )
             }
         }

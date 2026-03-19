@@ -31,6 +31,29 @@ extension DateInRegion {
         isThisWeek ? dateLabel : weekday
     }
 
+    var notificationDayLabel: String {
+        let todaystamp = DateInRegion(Date(), region: .local).datestamp
+
+        guard let dayDiff = dayDifference(from: datestamp, to: todaystamp)
+        else {
+            return dynamicHeader
+        }
+
+        if abs(dayDiff) < 2 {
+            return countdown.lowercased()
+        }
+
+        if dayDiff > 1 && dayDiff < 7 {
+            return "last \(weekday)"
+        }
+
+        if dayDiff < -1 && dayDiff > -7 {
+            return weekday
+        }
+
+        return dateLabel
+    }
+
     var timeWithTimezone: String? {  // EX: 3PM CST, 3:59AM GMT
         guard let timeZoneAbbreviation = region.timeZone.abbreviation() else {
             return nil

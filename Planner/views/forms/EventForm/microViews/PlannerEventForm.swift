@@ -33,6 +33,7 @@ struct PlannerEventFormView: View {
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject private var notificationManager: NotificationManager
+    @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
     private var eventRegion: Region {
@@ -239,10 +240,10 @@ struct PlannerEventFormView: View {
         }
 
         dismiss()
-        
+
         handleNotification(sourceDay: sourceDay, destinationDay: destinationDay)
     }
-    
+
     private func handleNotification(
         sourceDay: DateInRegion?,
         destinationDay: DateInRegion?,
@@ -253,13 +254,17 @@ struct PlannerEventFormView: View {
             if let destinationDay {
                 config = NotificationConfig(
                     id: UUID(),
-                    title: "Event created",
-                    subtitle: "for \(destinationDay.dynamicHeader)",
+                    title: "Event scheduled",
+                    subtitle: "for \(destinationDay.notificationDayLabel)",
                     iconConfig: IconConfig(
                         name: "checkmark",
                         primaryColor: Color.green
                     ),
-                    onClick: {} // TODO: open the target planner here
+                    onClick: {
+                        plannerCoverManager.context = PlannerCoverContext(
+                            datestamp: destinationDay.datestamp
+                        )
+                    }
                 )
             }
         } else if let destinationDay {
@@ -267,12 +272,16 @@ struct PlannerEventFormView: View {
                 config = NotificationConfig(
                     id: UUID(),
                     title: "Event rescheduled",
-                    subtitle: "for \(destinationDay.dynamicHeader)",
+                    subtitle: "for \(destinationDay.notificationDayLabel)",
                     iconConfig: IconConfig(
                         name: "checkmark",
                         primaryColor: Color.green
                     ),
-                    onClick: {} // TODO: open the target planner here
+                    onClick: {
+                        plannerCoverManager.context = PlannerCoverContext(
+                            datestamp: destinationDay.datestamp
+                        )
+                    }
                 )
             }
         }
