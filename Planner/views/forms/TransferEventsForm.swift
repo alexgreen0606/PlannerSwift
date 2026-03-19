@@ -179,7 +179,7 @@ struct TransferEventsFormView: View {
         modelContext.transferPlannerEvents(
             plannerManager.selectedItems,
             days: dayOffset.days,
-            previousDatestamp: sourceStartOfDay.datestamp,
+            sourceDay: sourceStartOfDay,
             targetDatestamp: destinationDay.datestamp,
             settings: settings,
             eventStore: calendarStore.ekEventStore

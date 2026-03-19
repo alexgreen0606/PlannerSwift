@@ -15,7 +15,7 @@ struct PlannerListView: View {
     @Binding var eventSheetContext: EventSheetContext?
     let plannerType: PlannerType
     let planner: Planner
-    let plannerStartOfDay: DateInRegion
+    let plannerDay: DateInRegion
     let plannerLocation: Location?
     let sortedOpenPlannerEvents: [PlannerEvent]
     let sortedCheckedPlannerEvents: [PlannerEvent]
@@ -96,7 +96,7 @@ struct PlannerListView: View {
             bottomAdornment: bottomAdornment,
             handleTitleChange: handleEventTitleChange,
             checkedFooter: plannerType.checkedFooter(
-                for: plannerStartOfDay
+                for: plannerDay
             )
         )
         .animateSynchronousAction(from: sortedOpenPlannerEvents.map(\.location?.name))
@@ -108,7 +108,7 @@ struct PlannerListView: View {
     private var chipSpread: some View {
         PlannerChipSpreadView(
             planner: planner,
-            plannerStartOfDay: plannerStartOfDay,
+            plannerDay: plannerDay,
             sortedPlannerEvents: sortedPlannerEvents,
             plannerChipEvents: plannerChipEvents,
             namespace: namespace,
@@ -145,7 +145,7 @@ struct PlannerListView: View {
     @ViewBuilder
     private func rightAdornment(event: PlannerEvent) -> some View {
         event.timeValueView(
-            in: plannerStartOfDay.region,
+            in: plannerDay.region,
             accentColor: accentColor,
         ) {
             openPlannerEventSheet(event)
@@ -186,7 +186,7 @@ struct PlannerListView: View {
         modelContext.movePlannerEvent(
             from: from,
             to: to,
-            plannerStartOfDay: plannerStartOfDay,
+            plannerDay: plannerDay,
             sortedEvents: sortedOpenPlannerEvents
         )
     }
@@ -194,7 +194,7 @@ struct PlannerListView: View {
     private func handleEventTitleChange(event: PlannerEvent) {
         modelContext.handlePlannerEventTitleChange(
             event,
-            plannerStartOfDay: plannerStartOfDay,
+            plannerDay: plannerDay,
             eventKitStore: calendarStore.ekEventStore,
             defaultLocation: plannerLocation
         )

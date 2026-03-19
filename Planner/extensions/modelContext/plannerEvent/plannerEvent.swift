@@ -34,7 +34,7 @@ extension ModelContext {
         }
 
         let sortDate = generateSortDate(
-            plannerStartOfDay: startOfDay,
+            plannerDay: startOfDay,
             index: targetIndex,
             sortedEvents: events
         )
@@ -91,14 +91,14 @@ extension ModelContext {
     func movePlannerEvent(
         from: Int,
         to: Int,
-        plannerStartOfDay: DateInRegion,
+        plannerDay: DateInRegion,
         sortedEvents: [PlannerEvent]
     ) {
         guard from != to else { return }
 
         let movedEvent = sortedEvents[from]
         movedEvent.sortDate = generateSortDate(
-            plannerStartOfDay: plannerStartOfDay,
+            plannerDay: plannerDay,
             index: to,
             sortedEvents: sortedEvents
         )
@@ -109,12 +109,12 @@ extension ModelContext {
     @MainActor
     func handlePlannerEventTitleChange(
         _ event: PlannerEvent,
-        plannerStartOfDay: DateInRegion,
+        plannerDay: DateInRegion,
         eventKitStore: EKEventStore,
         defaultLocation: Location?
     ) {
         event.handleTitleChange(
-            startOfDay: plannerStartOfDay,
+            startOfDay: plannerDay,
             eventKitStore: eventKitStore,
             defaultLocation: defaultLocation
         )
@@ -126,7 +126,7 @@ extension ModelContext {
     func transferPlannerEvents(
         _ events: [PlannerEvent],
         days: DateComponents,
-        previousDatestamp: String,
+        sourceDay: DateInRegion,
         targetDatestamp: String,
         settings: PlannerSettings,
         eventStore: EKEventStore
@@ -141,7 +141,7 @@ extension ModelContext {
             )
         else {
             assertionFailure(
-                "ERROR plannerEvent.transferPlannerEvents: Could not build plannerStartOfDay from \(targetDatestamp)"
+                "ERROR plannerEvent.transferPlannerEvents: Could not build plannerDay from \(targetDatestamp)"
             )
             return
         }
@@ -193,7 +193,7 @@ extension ModelContext {
             updateSortDate(
                 for: event,
                 settings: settings,
-                previousPlannerDatestamp: previousDatestamp
+                sourceDay: sourceDay
             )
         }
 
@@ -203,16 +203,16 @@ extension ModelContext {
     @MainActor
     func handlePlannerEventChange(
         _ draftPlannerEvent: DraftPlannerEvent,
-        previousDatestamp: String?,
+        sourceDay: DateInRegion?,
         targetDatestamp: String,
         settings: PlannerSettings,
         ekEventStore: EKEventStore,
-        initialPlannerEvent: PlannerEvent?,
-        initialCalendarEvent: EKEvent?
-    ) {
+        sourcePlannerEvent: PlannerEvent?,
+        sourceCalendarEvent: EKEvent?
+    ) -> DateInRegion? {
 
         let event =
-            initialPlannerEvent
+            sourcePlannerEvent
             ?? PlannerEvent(
                 date: draftPlannerEvent.date,
                 sortDate: draftPlannerEvent.date
@@ -229,93 +229,96 @@ extension ModelContext {
                 for: targetDatestamp
             )
             guard
-                let targetPlannerStartOfDay = targetPlanner.datestamp
+                let destinationDay = targetPlanner.datestamp
                     .startOfDay(in: targetPlanner.region(settings: settings))
             else {
                 assertionFailure(
-                    "ERROR: Could not create plannerStartOfDay from \(targetPlanner.datestamp)"
+                    "ERROR: Could not create plannerDay from \(targetPlanner.datestamp)"
                 )
-                return
+                return sourceDay
             }
 
             // Untimed events MUST have their date set to the planner's startOfDay.
-            event.date = targetPlannerStartOfDay.date
+            event.date = destinationDay.date
 
         } else {
             event.date = draftPlannerEvent.date
         }
-        
-        updateSortDate(
+
+        let destinationDay = updateSortDate(
             for: event,
             settings: settings,
-            previousPlannerDatestamp: previousDatestamp
+            sourceDay: sourceDay
         )
 
         self.insertEventIfNeeded(event)
 
         // Delete the old calendar event.
-        if let initialCalendarEvent {
-            let _ = ekEventStore.deleteEvent(initialCalendarEvent)
+        if let sourceCalendarEvent {
+            let _ = ekEventStore.deleteEvent(sourceCalendarEvent)
         }
 
         // Note: Saving the context here will delete the location.
         // Allow the context to auto-save when ready.
+
+        return destinationDay
     }
 
     @MainActor
     func updateSortDate(
         for event: PlannerEvent,
         settings: PlannerSettings,
-        previousPlannerDatestamp: String? = nil
-    ) {
-
-        let chronologicalPossibleDatestamps =
-            getChronologicalPossibleDatestamps(for: event.date)
-
-        // Priority 1: Reuse the event's existing position if it has not moved.
-        if let previousPlannerDatestamp,
-            chronologicalPossibleDatestamps.contains(previousPlannerDatestamp)
-        {
-            return
-        }
+        sourceDay: DateInRegion? = nil
+    ) -> DateInRegion? {
 
         guard
-            let plannerStartOfDay = self.getEarliestPlannerStartOfDay(
+            let plannerDay = self.getEarliestPlannerDay(
                 for: event.date,
-                settings: settings
+                settings: settings,
+                requireExactMatch: !event.hasTime
             )
         else {
             // Event does not belong to any planners. Use its actual date as the sortDate.
             event.sortDate = event.date
-            return
+            return nil
+        }
+
+        // Priority 1: Reuse the event's existing position if it has not moved planners.
+        if let sourceDay,
+            plannerDay.datestamp == sourceDay.datestamp
+        {
+            return sourceDay
         }
 
         let sortedStorageEvents = self.getSortedStorageEvents(
-            for: plannerStartOfDay
+            for: plannerDay
         )
 
         // Place the event at the start of its new planner.
         event.sortDate = generateSortDate(
-            plannerStartOfDay: plannerStartOfDay,
+            plannerDay: plannerDay,
             index: 0,
             sortedEvents: sortedStorageEvents
         )
+
+        return plannerDay
     }
 
     @MainActor
-    func getUpperSortDate(for plannerStartOfDay: DateInRegion) -> Date {
-        let storageEvents = getSortedStorageEvents(for: plannerStartOfDay)
+    func getUpperSortDate(for plannerDay: DateInRegion) -> Date {
+        let storageEvents = getSortedStorageEvents(for: plannerDay)
         return generateSortDate(
-            plannerStartOfDay: plannerStartOfDay,
+            plannerDay: plannerDay,
             index: 0,
             sortedEvents: storageEvents
         )
     }
 
     @MainActor
-    func getEarliestPlannerStartOfDay(
+    func getEarliestPlannerDay(
         for date: Date,
-        settings: PlannerSettings
+        settings: PlannerSettings,
+        requireExactMatch: Bool = false
     ) -> DateInRegion? {
 
         let chronologicalPossibleDatestamps =
@@ -325,18 +328,22 @@ extension ModelContext {
 
             let planner = loadPlanner(for: datestamp)
             guard
-                let plannerStartOfDay = planner.datestamp.startOfDay(
+                let plannerDay = planner.datestamp.startOfDay(
                     in: planner.region(settings: settings)
                 )
             else {
                 assertionFailure(
-                    "ERROR plannerEvent.getEarliestPlannerStartOfDay: Could not build plannerStartOfDay from \(planner.datestamp)"
+                    "ERROR plannerEvent.getEarliestPlannerStartOfDay: Could not build plannerDay from \(planner.datestamp)"
                 )
                 continue
             }
 
-            if date.belongsTo(plannerStartOfDay) {
-                return plannerStartOfDay
+            if requireExactMatch {
+                if date == plannerDay.date {
+                    return plannerDay
+                }
+            } else if date.belongsTo(plannerDay) {
+                return plannerDay
             }
         }
 
@@ -347,16 +354,16 @@ extension ModelContext {
     // MARK: - Helper Functions
 
     @MainActor
-    private func getSortedStorageEvents(for plannerStartOfDay: DateInRegion)
+    private func getSortedStorageEvents(for plannerDay: DateInRegion)
         -> [PlannerEvent]
     {
-        let startOfNextDay = (plannerStartOfDay + 1.days)
+        let startOfNextDay = (plannerDay + 1.days)
 
         do {
             return try fetch(
                 FetchDescriptor<PlannerEvent>(
                     predicate: #Predicate {
-                        $0.date >= plannerStartOfDay.date
+                        $0.date >= plannerDay.date
                             && $0.date < startOfNextDay.date
                     },
                     sortBy: [

@@ -17,9 +17,11 @@ import SwiftUI
 
 struct EventFormView: View {
     private let sourcePlanner: Planner?
-    private let initialPlannerEvent: PlannerEvent?
-    private let initialCalendarEvent: EKEvent?
+    private let sourcePlannerEvent: PlannerEvent?
+    private let sourceCalendarEvent: EKEvent?
     private let settings: PlannerSettings
+    
+    private let sourceDay: DateInRegion?
 
     init(
         sourcePlanner: Planner? = nil,
@@ -27,9 +29,9 @@ struct EventFormView: View {
         calendarEvent: EKEvent?,
         settings: PlannerSettings
     ) {
-        self.initialPlannerEvent = plannerEvent
+        self.sourcePlannerEvent = plannerEvent
         self.sourcePlanner = sourcePlanner
-        self.initialCalendarEvent = plannerEvent?.calendarEvent ?? calendarEvent
+        self.sourceCalendarEvent = plannerEvent?.calendarEvent ?? calendarEvent
         self.settings = settings
 
         // ------------------------------------------------------------------
@@ -49,7 +51,7 @@ struct EventFormView: View {
             draftPlannerEvent.date = calEvent.startDate
             draftPlannerEvent.hasTime = true
             draftPlannerEvent.location = calEvent.location(
-                storageEvent: initialPlannerEvent
+                storageEvent: sourcePlannerEvent
             )
             draftPlannerEvent.calendarEvent = calEvent
 
@@ -135,6 +137,14 @@ struct EventFormView: View {
 
         self.contact = contact
         self.draftPlannerEvent = draftPlannerEvent
+        self.sourceDay = {
+            guard let sourcePlanner else {
+                return nil
+            }
+            return sourcePlanner.datestamp.startOfDay(
+                in: sourcePlanner.region(settings: settings)
+            )
+        }()
     }
 
     // Displays the iOS Contact Form (birthday events only).
@@ -147,6 +157,7 @@ struct EventFormView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
+    @EnvironmentObject private var notificationManager: NotificationManager
 
     @State private var sheetDetent: PresentationDetent = .height(480)
     @State private var draftPlannerEvent: DraftPlannerEvent
@@ -174,9 +185,10 @@ struct EventFormView: View {
                     sheetDetent: $sheetDetent,
                     settings: settings,
                     defaultLocation: defaultLocation,
-                    initialCalendarEvent: initialCalendarEvent,
-                    initialPlannerEvent: initialPlannerEvent,
-                    sourcePlanner: sourcePlanner
+                    sourceCalendarEvent: sourceCalendarEvent,
+                    sourcePlannerEvent: sourcePlannerEvent,
+                    sourcePlanner: sourcePlanner,
+                    sourceDay: sourceDay
                 )
             }
         }
@@ -232,10 +244,10 @@ struct EventFormView: View {
 
     private func saveCalendarEvent(_ event: EKEvent?) {
 
-        modelContext.handleCalendarEventChange(
+        let destinationDay = modelContext.handleCalendarEventChange(
             event,
-            previousDatestamp: sourcePlanner?.datestamp,
-            initialPlannerEvent: initialPlannerEvent,
+            sourceDay: sourceDay,
+            sourcePlannerEvent: sourcePlannerEvent,
             settings: settings,
             ekEventStore: calendarStore.ekEventStore
         )
@@ -248,6 +260,62 @@ struct EventFormView: View {
         }
 
         dismiss()
+
+        handleNotification(sourceDay: sourceDay, destinationDay: destinationDay)
+    }
+
+    private func handleNotification(
+        sourceDay: DateInRegion?,
+        destinationDay: DateInRegion?,
+    ) {
+        var config: NotificationConfig?
+
+        if sourcePlanner == nil {
+            if let destinationDay {
+                config = NotificationConfig(
+                    id: UUID(),
+                    title: "Event Created",
+                    subtitle: "Scheduled for \(destinationDay.dynamicHeader).",
+                    iconConfig: IconConfig(
+                        name: "checkmark",
+                        primaryColor: Color.green
+                    ),
+                    onClick: {} // TODO: open the target planner here
+                )
+            }
+        } else if let destinationDay {
+            if destinationDay.datestamp != sourceDay?.datestamp {
+                config = NotificationConfig(
+                    id: UUID(),
+                    title: "Event Rescheduled",
+                    subtitle: "Moved to \(destinationDay.dynamicHeader).",
+                    iconConfig: IconConfig(
+                        name: "checkmark",
+                        primaryColor: Color.green
+                    ),
+                    onClick: {} // TODO: open the target planner here
+                )
+            }
+        } else {
+            if sourceCalendarEvent != nil {
+                config = NotificationConfig(
+                    id: UUID(),
+                    title: "Event Deleted",
+                    subtitle: "Removed from calendar.",
+                    iconConfig: IconConfig(
+                        name: "checkmark",
+                        primaryColor: Color.green
+                    ),
+                    onClick: {}
+                )
+            }
+        }
+
+        if let config {
+            DispatchQueue.main.async {
+                notificationManager.addNotification(config)
+            }
+        }
     }
 
     private func removeEventFromCalendar() {

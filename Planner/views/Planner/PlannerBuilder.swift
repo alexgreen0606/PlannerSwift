@@ -42,6 +42,8 @@ struct PlannerBuilderView: View {
 
     @Query private var planners: [Planner]
 
+    @StateObject private var notificationManager = NotificationManager()
+
     private var planner: Planner? {
         planners.first
     }
@@ -56,6 +58,20 @@ struct PlannerBuilderView: View {
                     plannerSearchQuery: plannerSearchQuery,
                     namespace: namespace
                 )
+                .environmentObject(notificationManager)
+                .overlay {
+                    VStack {
+                        ForEach(notificationManager.notifications, id: \.id) {
+                            config in
+                            NotificationView(config: config)
+                        }
+                        Spacer()
+                    }
+                    .animation(
+                        .linear,
+                        value: notificationManager.notifications
+                    )
+                }
             }
         }
         .task {

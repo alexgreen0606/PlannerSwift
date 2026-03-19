@@ -99,95 +99,95 @@ struct ContentView: View {
     }
 
     var body: some View {
-        ZStack {
-            if let settings {
-                TabView {
-                    Tab(
-                        "",
-                        systemImage: todaystampWatcher.todaystamp
-                            .calendarSymbolName
-                    ) {
-                        PlannerTabView(
-                            settings: settings,
-                            namespace: namespace
-                        )
-                    }
-
-                    Tab("", systemImage: "checklist") {
-                        ChecklistsTabView()
-                    }
-
-                    Tab("", systemImage: "repeat") {
-                        NavigationStack {
-                            VStack {
-
+            ZStack {
+                if let settings {
+                    TabView {
+                        Tab(
+                            "",
+                            systemImage: todaystampWatcher.todaystamp
+                                .calendarSymbolName
+                        ) {
+                            PlannerTabView(
+                                settings: settings,
+                                namespace: namespace
+                            )
+                        }
+                        
+                        Tab("", systemImage: "checklist") {
+                            ChecklistsTabView()
+                        }
+                        
+                        Tab("", systemImage: "repeat") {
+                            NavigationStack {
+                                VStack {
+                                    
+                                }
+                                .navigationTitle("Routines")
                             }
-                            .navigationTitle("Routines")
+                        }
+                        
+                        Tab("", systemImage: "gear") {
+                            SettingsTabView(settings: settings)
+                        }
+                        
+                        Tab(role: .search) {
+                            PlannerSearchTabView(
+                                searchText: $plannerSearchText,
+                                settings: settings,
+                                namespace: namespace
+                            )
+                            .searchable(
+                                text: $plannerSearchText,
+                                prompt: "Search planner...",
+                            )
+                            .searchPresentationToolbarBehavior(.avoidHidingContent)
                         }
                     }
-
-                    Tab("", systemImage: "gear") {
-                        SettingsTabView(settings: settings)
-                    }
-
-                    Tab(role: .search) {
-                        PlannerSearchTabView(
-                            searchText: $plannerSearchText,
-                            settings: settings,
-                            namespace: namespace
-                        )
-                        .searchable(
-                            text: $plannerSearchText,
-                            prompt: "Search planner...",
-                        )
-                        .searchPresentationToolbarBehavior(.avoidHidingContent)
-                    }
+                    .tabBarMinimizeBehavior(.onScrollDown)
                 }
-                .tabBarMinimizeBehavior(.onScrollDown)
             }
-        }
-        .onAppear(perform: initializeAppData)
-
-        // Expanded Planner Cover
-        .fullScreenCover(item: $plannerCoverManager.context) { context in
-            if let settings {
-                PlannerBuilderView(
-                    datestamp: context.datestamp,
-                    settings: settings
-                )
-                .navigationTransition(
-                    .zoom(
-                        sourceID: context.id,
-                        in: namespace
+            .onAppear(perform: initializeAppData)
+            
+            // Expanded Planner Cover
+            .fullScreenCover(item: $plannerCoverManager.context) { context in
+                if let settings {
+                    PlannerBuilderView(
+                        datestamp: context.datestamp,
+                        settings: settings
                     )
-                )
+                    .navigationTransition(
+                        .zoom(
+                            sourceID: context.id,
+                            in: namespace
+                        )
+                    )
+                }
             }
-        }
-
-        // Reload all calendar records when the app gains focus.
-        .onChange(of: appPhase) { _, phase in
-            if phase == .active, let settings {
-                calendarStore.attemptFreshLoad(
-                    hiddenCalendarIds: settings.hiddenCalendarIds
-                )
+            
+            // Reload all calendar records when the app gains focus.
+            .onChange(of: appPhase) { _, phase in
+                if phase == .active, let settings {
+                    calendarStore.attemptFreshLoad(
+                        hiddenCalendarIds: settings.hiddenCalendarIds
+                    )
+                }
             }
-        }
-
-        // Delete all calendar records when the calendar access is denied.
-        .onChange(of: calendarStore.calendarAccessDenied == true) {
-            _,
-            accessDenied in
-            if accessDenied {
-                // TODO: delete all calendar planner events from storage
+            
+            // Delete all calendar records when the calendar access is denied.
+            .onChange(of: calendarStore.calendarAccessDenied == true) {
+                _,
+                accessDenied in
+                if accessDenied {
+                    // TODO: delete all calendar planner events from storage
+                }
             }
-        }
-
-        // Re-load the weather when the device's location changes.
-        .onChange(of: deviceLocationManager.deviceClLocation?.coordinate.key) {
-            _,
-            _ in
-            weatherStore.beginFreshReload()
-        }
+            
+            // Re-load the weather when the device's location changes.
+            .onChange(of: deviceLocationManager.deviceClLocation?.coordinate.key) {
+                _,
+                _ in
+                weatherStore.beginFreshReload()
+            }
     }
 
     // Runs once at the start of every day to delete old data.

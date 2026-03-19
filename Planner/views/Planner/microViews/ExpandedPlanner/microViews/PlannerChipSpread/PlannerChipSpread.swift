@@ -16,7 +16,7 @@ import WrappingHStack
 
 struct PlannerChipSpreadView: View {
     let planner: Planner
-    let plannerStartOfDay: DateInRegion
+    let plannerDay: DateInRegion
     let sortedPlannerEvents: [PlannerEvent]
     let plannerChipEvents: [EKEvent]
     var namespace: Namespace.ID
@@ -58,7 +58,7 @@ struct PlannerChipSpreadView: View {
     }
 
     private var weatherData: DayWeather? {
-        weatherStore.getWeather(for: plannerStartOfDay, at: plannerLocation)
+        weatherStore.getWeather(for: plannerDay, at: plannerLocation)
     }
 
     private var isDarkMode: Bool {
@@ -85,7 +85,7 @@ struct PlannerChipSpreadView: View {
         // Location Sheet
         .sheet(isPresented: $isLocationSheetOpen) {
             LocationSearchFormView(
-                title: "\(plannerStartOfDay.dynamicHeader) Location",
+                title: "\(plannerDay.dynamicHeader) Location",
                 mode: .planner,
                 settings: settings,
                 initialLocation: planner.location,
@@ -111,7 +111,7 @@ struct PlannerChipSpreadView: View {
     @ViewBuilder
     private var countdownChip: some View {
         PlannerChipView(
-            title: plannerStartOfDay.countdown,
+            title: plannerDay.countdown,
             iconConfig: nil,
             color: nil,
             onTap: nil

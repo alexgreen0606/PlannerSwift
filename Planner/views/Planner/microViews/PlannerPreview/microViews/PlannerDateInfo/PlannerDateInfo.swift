@@ -11,20 +11,20 @@ import SwiftUI
 // Clean
 
 struct PlannerDateInfoView: View {
-    let plannerStartOfDay: DateInRegion
+    let plannerDay: DateInRegion
     let isThisWeek: Bool
 
     private var title: String {
         return isThisWeek
-            ? plannerStartOfDay.weekday : plannerStartOfDay.countdown
+            ? plannerDay.weekday : plannerDay.countdown
     }
 
     private var subtitle: String {
-        isThisWeek ? plannerStartOfDay.countdown : plannerStartOfDay.weekday
+        isThisWeek ? plannerDay.countdown : plannerDay.weekday
     }
 
     var body: some View {
-        PlannerIconView(datestamp: plannerStartOfDay.datestamp, scale: 1.4)
+        PlannerIconView(datestamp: plannerDay.datestamp, scale: 1.4)
         VStack(alignment: .leading) {
             Text(title)
                 .fontWeight(.bold)

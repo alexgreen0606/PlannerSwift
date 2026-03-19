@@ -14,7 +14,7 @@ import SwiftUI
 
 struct ExpandedPlannerView: View {
     let planner: Planner
-    let plannerStartOfDay: DateInRegion
+    let plannerDay: DateInRegion
     let plannerLocation: Location?
     let sortedPlannerEvents: [PlannerEvent]
     let plannerChipEvents: [EKEvent]
@@ -66,7 +66,7 @@ struct ExpandedPlannerView: View {
                 "\(count == 0 ? "No" : String(count)) plan\(count == 1 ? "" : "s") selected"
         }
 
-        return plannerStartOfDay.dynamicSubheader
+        return plannerDay.dynamicSubheader
     }
 
     // MARK: Event Lists
@@ -98,7 +98,7 @@ struct ExpandedPlannerView: View {
                     eventSheetContext: $eventSheetContext,
                     plannerType: plannerType,
                     planner: planner,
-                    plannerStartOfDay: plannerStartOfDay,
+                    plannerDay: plannerDay,
                     plannerLocation: plannerLocation,
                     sortedOpenPlannerEvents: sortedOpenPlannerEvents,
                     sortedCheckedPlannerEvents: sortedCheckedPlannerEvents,
@@ -110,7 +110,7 @@ struct ExpandedPlannerView: View {
                     settings: settings,
                     createEvent: createEvent
                 )
-                .navigationTitle(plannerStartOfDay.dynamicHeader)
+                .navigationTitle(plannerDay.dynamicHeader)
                 .navigationSubtitle(subtitle)
                 .toolbar {
                     upperLeftToolbar
@@ -143,7 +143,7 @@ struct ExpandedPlannerView: View {
         // Transfer Event Sheet
         .sheet(isPresented: $showTransferSheet) {
             TransferEventsFormView(
-                startOfDay: plannerStartOfDay,
+                startOfDay: plannerDay,
                 settings: settings
             )
             .navigationTransition(
@@ -258,7 +258,7 @@ struct ExpandedPlannerView: View {
             in: sortedOpenPlannerEvents,
             near: baseId,
             offset: offset,
-            startOfDay: plannerStartOfDay,
+            startOfDay: plannerDay,
             settings: settings
         )
     }

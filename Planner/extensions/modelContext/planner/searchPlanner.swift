@@ -179,15 +179,15 @@ extension ModelContext {
                 planners.first?.region(settings: settings) ?? homeRegion
 
             guard
-                let plannerStartOfDay = datestamp.startOfDay(
+                let plannerDay = datestamp.startOfDay(
                     in: plannerRegion
                 )
             else {
                 continue
             }
-            plannerCache[datestamp] = plannerStartOfDay
+            plannerCache[datestamp] = plannerDay
 
-            if range(from: startDate, to: endDate, includes: plannerStartOfDay)
+            if range(from: startDate, to: endDate, includes: plannerDay)
             {
                 datestampScores[datestamp, default: 0] += (1.0 - score)
             }
@@ -232,12 +232,12 @@ extension ModelContext {
     private func range(
         from start: Date,
         to end: Date?,
-        includes plannerStartOfDay: DateInRegion
+        includes plannerDay: DateInRegion
     ) -> Bool {
         let end = end ?? start
 
-        let dayStart = plannerStartOfDay.date
-        let nextDayStart = (plannerStartOfDay + 1.days).date
+        let dayStart = plannerDay.date
+        let nextDayStart = (plannerDay + 1.days).date
 
         return start < nextDayStart && end >= dayStart
     }

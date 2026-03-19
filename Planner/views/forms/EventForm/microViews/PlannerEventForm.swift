@@ -16,9 +16,10 @@ struct PlannerEventFormView: View {
     @Binding var sheetDetent: PresentationDetent
     let settings: PlannerSettings
     let defaultLocation: Location?
-    let initialCalendarEvent: EKEvent?
-    let initialPlannerEvent: PlannerEvent?
+    let sourceCalendarEvent: EKEvent?
+    let sourcePlannerEvent: PlannerEvent?
     let sourcePlanner: Planner?
+    let sourceDay: DateInRegion?
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -31,6 +32,7 @@ struct PlannerEventFormView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
+    @EnvironmentObject private var notificationManager: NotificationManager
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
     private var eventRegion: Region {
@@ -43,7 +45,7 @@ struct PlannerEventFormView: View {
     }
 
     private var isCreateForm: Bool {
-        initialPlannerEvent == nil && initialCalendarEvent == nil
+        sourcePlannerEvent == nil && sourceCalendarEvent == nil
     }
 
     private var canSave: Bool {
@@ -51,7 +53,7 @@ struct PlannerEventFormView: View {
     }
 
     private var showTimeZoneFooter: Bool {
-        initialPlannerEvent?.hasTime == true
+        sourcePlannerEvent?.hasTime == true
     }
 
     private var timeZoneAbbreviation: String {
@@ -216,17 +218,17 @@ struct PlannerEventFormView: View {
 
     private func savePlannerEvent() {
 
-        modelContext.handlePlannerEventChange(
+        let destinationDay = modelContext.handlePlannerEventChange(
             draftPlannerEvent,
-            previousDatestamp: sourcePlanner?.datestamp,
+            sourceDay: sourceDay,
             targetDatestamp: DateInRegion(
                 draftPlannerEvent.date,
                 region: eventRegion
             ).datestamp,
             settings: settings,
             ekEventStore: calendarStore.ekEventStore,
-            initialPlannerEvent: initialPlannerEvent,
-            initialCalendarEvent: initialCalendarEvent
+            sourcePlannerEvent: sourcePlannerEvent,
+            sourceCalendarEvent: sourceCalendarEvent
         )
 
         // Refresh calendar in case of recurring events.
@@ -237,18 +239,61 @@ struct PlannerEventFormView: View {
         }
 
         dismiss()
+        
+        handleNotification(sourceDay: sourceDay, destinationDay: destinationDay)
+    }
+    
+    private func handleNotification(
+        sourceDay: DateInRegion?,
+        destinationDay: DateInRegion?,
+    ) {
+        var config: NotificationConfig?
+
+        if sourcePlanner == nil {
+            if let destinationDay {
+                config = NotificationConfig(
+                    id: UUID(),
+                    title: "Event created",
+                    subtitle: "for \(destinationDay.dynamicHeader)",
+                    iconConfig: IconConfig(
+                        name: "checkmark",
+                        primaryColor: Color.green
+                    ),
+                    onClick: {} // TODO: open the target planner here
+                )
+            }
+        } else if let destinationDay {
+            if destinationDay.datestamp != sourceDay?.datestamp {
+                config = NotificationConfig(
+                    id: UUID(),
+                    title: "Event rescheduled",
+                    subtitle: "for \(destinationDay.dynamicHeader)",
+                    iconConfig: IconConfig(
+                        name: "checkmark",
+                        primaryColor: Color.green
+                    ),
+                    onClick: {} // TODO: open the target planner here
+                )
+            }
+        }
+
+        if let config {
+            DispatchQueue.main.async {
+                notificationManager.addNotification(config)
+            }
+        }
     }
 
     private func addEventToCalendar() {
 
         // Build a calendar event to represent the form values.
         let event =
-            initialCalendarEvent
+            sourceCalendarEvent
             ?? EKEvent(
                 eventStore: calendarStore.ekEventStore
             )
         event.calendar =
-            initialCalendarEvent?.calendar
+            sourceCalendarEvent?.calendar
             ?? calendarStore.ekEventStore
             .defaultCalendarForNewEvents
 

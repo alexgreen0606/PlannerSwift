@@ -15,7 +15,7 @@ struct WeatherInfoView: View {
     let previewType: PlannerPreviewType
     let plannerSearchQuery: PlannerSearchQuery?
     let planner: Planner
-    let plannerStartOfDay: DateInRegion
+    let plannerDay: DateInRegion
     let plannerLocation: Location?
     let settings: PlannerSettings
 
@@ -51,7 +51,7 @@ struct WeatherInfoView: View {
         }
 
         return weatherStore.getWeather(
-            for: plannerStartOfDay,
+            for: plannerDay,
             at: plannerLocation
         )
     }

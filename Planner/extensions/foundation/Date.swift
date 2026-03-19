@@ -12,10 +12,10 @@ import SwiftUI
 
 extension Date {
     
-    func belongsTo(_ plannerStartOfDay: DateInRegion) -> Bool {
-        let startOfNextDay = plannerStartOfDay + 1.days
-        let selfInRegion = self.convertTo(region: plannerStartOfDay.region)
-        return selfInRegion >= plannerStartOfDay && selfInRegion < startOfNextDay
+    func belongsTo(_ plannerDay: DateInRegion) -> Bool {
+        let startOfNextDay = plannerDay + 1.days
+        let selfInRegion = self.convertTo(region: plannerDay.region)
+        return selfInRegion >= plannerDay && selfInRegion < startOfNextDay
     }
 
 }

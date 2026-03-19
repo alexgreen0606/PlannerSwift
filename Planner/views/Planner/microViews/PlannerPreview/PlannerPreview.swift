@@ -18,7 +18,7 @@ struct PlannerPreviewView: View {
     let type: PlannerPreviewType
     let searchQuery: PlannerSearchQuery?
     let planner: Planner
-    let plannerStartOfDay: DateInRegion
+    let plannerDay: DateInRegion
     let plannerLocation: Location?
     let plannerEvents: [PlannerEvent]
     let plannerChipEvents: [EKEvent]
@@ -110,7 +110,7 @@ struct PlannerPreviewView: View {
 
             HStack(alignment: .top) {
                 PlannerDateInfoView(
-                    plannerStartOfDay: plannerStartOfDay,
+                    plannerDay: plannerDay,
                     isThisWeek: type.isThisWeek
                 )
 
@@ -127,7 +127,7 @@ struct PlannerPreviewView: View {
             )
 
             PlannerEventListView(
-                plannerRegion: plannerStartOfDay.region,
+                plannerRegion: plannerDay.region,
                 events: sortedPreviewPlannerEvents,
                 isBottomOfCard: isSearching
             )
@@ -171,7 +171,7 @@ struct PlannerPreviewView: View {
             previewType: type,
             plannerSearchQuery: searchQuery,
             planner: planner,
-            plannerStartOfDay: plannerStartOfDay,
+            plannerDay: plannerDay,
             plannerLocation: plannerLocation,
             settings: settings
         )

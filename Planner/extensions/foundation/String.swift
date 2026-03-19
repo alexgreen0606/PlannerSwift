@@ -48,7 +48,7 @@ extension String {
     }
 
     // Any user input expected.
-    func separateDate(for plannerStartOfDay: DateInRegion) -> (
+    func separateDate(for plannerDay: DateInRegion) -> (
         date: Date, updatedText: String
     )? {
 
@@ -77,13 +77,13 @@ extension String {
         var hour = hourPart % 12
         if periodPart == "PM" { hour += 12 }
 
-        // Build the final date relative to plannerStartOfDay.
-        var components = plannerStartOfDay.dateComponents
+        // Build the final date relative to plannerDay.
+        var components = plannerDay.dateComponents
         components.hour = hour
         components.minute = minutePart
         components.second = 0
 
-        guard let finalDate = plannerStartOfDay.calendar.date(from: components)
+        guard let finalDate = plannerDay.calendar.date(from: components)
         else {
             return nil
         }

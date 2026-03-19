@@ -52,10 +52,10 @@ struct PlannerEventBuilderView: View {
             sort: \.sortDate
         )
 
-        self.plannerStartOfDay = startOfDay
+        self.plannerDay = startOfDay
     }
 
-    private let plannerStartOfDay: DateInRegion
+    private let plannerDay: DateInRegion
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
@@ -113,7 +113,7 @@ struct PlannerEventBuilderView: View {
     private var expandedView: some View {
         ExpandedPlannerView(
             planner: planner,
-            plannerStartOfDay: plannerStartOfDay,
+            plannerDay: plannerDay,
             plannerLocation: plannerLocation,
             sortedPlannerEvents: sortedPlannerEvents,
             plannerChipEvents: plannerChipEvents,
@@ -128,7 +128,7 @@ struct PlannerEventBuilderView: View {
                 type: previewType,
                 searchQuery: plannerSearchQuery,
                 planner: planner,
-                plannerStartOfDay: plannerStartOfDay,
+                plannerDay: plannerDay,
                 plannerLocation: plannerLocation,
                 plannerEvents: sortedPlannerEvents,
                 plannerChipEvents: plannerChipEvents,
@@ -157,7 +157,7 @@ struct PlannerEventBuilderView: View {
         let calendarSearchResults = modelContext.syncCalendarEvents(
             for: planner,
             storageEvents: sortedPlannerEvents,
-            plannerStartOfDay: plannerStartOfDay,
+            plannerDay: plannerDay,
             hiddenCalendarIds: settings.hiddenCalendarIds,
             ekEventStore: calendarStore.ekEventStore
         )
@@ -178,7 +178,7 @@ struct PlannerEventBuilderView: View {
         Task {
             await weatherStore.loadWeatherIfNeeded(
                 location: plannerLocation,
-                region: plannerStartOfDay.region
+                region: plannerDay.region
             )
         }
     }

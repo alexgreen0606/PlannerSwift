@@ -67,10 +67,10 @@ extension EKEvent {
         return nil
     }
 
-    func spansOutsidePlannerDay(plannerStartOfDay: DateInRegion) -> Bool {
-        let startOfNextPlannerDay = plannerStartOfDay + 1.days
+    func spansOutsidePlannerDay(plannerDay: DateInRegion) -> Bool {
+        let startOfNextPlannerDay = plannerDay + 1.days
 
-        return self.startDate < plannerStartOfDay.date
+        return self.startDate < plannerDay.date
             || self.endDate > startOfNextPlannerDay.date
     }
 
