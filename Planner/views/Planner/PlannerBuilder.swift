@@ -60,7 +60,6 @@ struct PlannerBuilderView: View {
                 )
                 .overlay {
                     NotificationsView()
-                        .padding(.bottom, -20)
                 }
                 .environmentObject(notificationManager)
             }

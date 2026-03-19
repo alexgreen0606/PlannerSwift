@@ -93,6 +93,7 @@ struct PlannerTabView: View {
         }
         .overlay {
             NotificationsView()
+                .padding(.bottom)
                 .environmentObject(notificationManager)
         }
 

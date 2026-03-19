@@ -14,12 +14,12 @@ import SwiftUI
 
 struct TransferEventsFormView: View {
     private let sourceDate: Date
-    private let sourceStartOfDay: DateInRegion
+    private let sourceDay: DateInRegion
     private let settings: PlannerSettings
 
     init(startOfDay: DateInRegion, settings: PlannerSettings) {
         self.sourceDate = startOfDay.date
-        self.sourceStartOfDay = startOfDay
+        self.sourceDay = startOfDay
         self.settings = settings
 
         _destinationDate = State(initialValue: startOfDay.date)
@@ -36,12 +36,13 @@ struct TransferEventsFormView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var notificationManager: NotificationManager
     @EnvironmentObject private var plannerManager: ListManager<PlannerEvent>
 
     @State private var destinationDate: Date
 
     private var destinationDay: DateInRegion {
-        DateInRegion(destinationDate, region: sourceStartOfDay.region)
+        DateInRegion(destinationDate, region: sourceDay.region)
     }
 
     private var transferCount: String {
@@ -51,15 +52,22 @@ struct TransferEventsFormView: View {
     }
 
     private var dayOffset: Int {
-        let daysBetween = sourceStartOfDay.date.getInterval(
-            toDate: destinationDay.date,
-            component: .day
+        Int(
+            dayDifference(
+                from: sourceDay.datestamp,
+                to: destinationDay.datestamp
+            ) ?? 0
         )
-        return Int(daysBetween)
+    }
+
+    private var offsetLabel: String {
+        let absOffset = abs(dayOffset)
+        return
+            "\(absOffset) day\(absOffset == 1 ? "" : "s") \(dayOffset > 0 ? "later" : "earlier")"
     }
 
     private var canSave: Bool {
-        destinationDay != sourceStartOfDay
+        destinationDay != sourceDay
     }
 
     var body: some View {
@@ -76,7 +84,7 @@ struct TransferEventsFormView: View {
                     )
                     .environment(
                         \.timeZone,
-                        sourceStartOfDay.region.timeZone
+                        sourceDay.region.timeZone
                     )
                     .datePickerStyle(.graphical)
                     .discreetListItem()
@@ -89,7 +97,7 @@ struct TransferEventsFormView: View {
 
             }
             .scrollDisabled(true)
-            .navigationTitle("Reschedule Plans")
+            .navigationTitle("Reschedule Events")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 saveButton
@@ -140,7 +148,7 @@ struct TransferEventsFormView: View {
     private var sourceChip: some View {
         TransferSourceIndicatorView(
             title: transferCount,
-            subtitle: sourceStartOfDay.dynamicHeader,
+            subtitle: sourceDay.dynamicHeader,
             iconConfig: IconConfig(
                 name: "note"
             )
@@ -156,37 +164,51 @@ struct TransferEventsFormView: View {
         )
     }
 
-    @ViewBuilder
     private var offsetCountIndicator: some View {
-        let absOffset = abs(dayOffset)
-
         HStack {
             Spacer()
-            Text(
-                "\(absOffset) day\(absOffset == 1 ? "" : "s") \(dayOffset > 0 ? "later" : "earlier")"
-            )
-            .font(
-                .system(size: 12, weight: .bold, design: .rounded)
-            )
-            .foregroundStyle(Color.secondary)
-            .opacity(dayOffset == 0 ? 0 : 1)
+            Text(offsetLabel)
+                .font(
+                    .system(size: 12, weight: .bold, design: .rounded)
+                )
+                .foregroundStyle(Color.secondary)
+                .opacity(dayOffset == 0 ? 0 : 1)
         }
     }
 
     // MARK: - Functions
 
     private func handleTransfer() {
+
+        let eventCount = plannerManager.selectedItems.count
+
         modelContext.transferPlannerEvents(
             plannerManager.selectedItems,
             days: dayOffset.days,
-            sourceDay: sourceStartOfDay,
+            sourceDay: sourceDay,
             targetDatestamp: destinationDay.datestamp,
             settings: settings,
             eventStore: calendarStore.ekEventStore
         )
 
         plannerManager.toggleSelectMode()
+
         dismiss()
+
+        DispatchQueue.main.async {
+            notificationManager.addNotification(
+                NotificationConfig(
+                    id: UUID(),
+                    title:
+                        "Rescheduled \(eventCount) event\(eventCount == 1 ? "" : "s")",
+                    subtitle: offsetLabel,
+                    iconConfig: IconConfig(
+                        name: "checkmark",
+                        primaryColor: Color.green
+                    )
+                )
+            )
+        }
     }
 
 }

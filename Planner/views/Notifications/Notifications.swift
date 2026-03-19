@@ -22,7 +22,7 @@ struct NotificationsView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
+        .padding(.horizontal)
         .animation(
             .linear,
             value: notificationManager.notifications

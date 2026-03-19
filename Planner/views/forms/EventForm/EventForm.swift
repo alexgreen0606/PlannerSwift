@@ -295,7 +295,7 @@ struct EventFormView: View {
                 config = NotificationConfig(
                     id: UUID(),
                     title: "Event rescheduled",
-                    subtitle: "for \(destinationDay.notificationDayLabel)",
+                    subtitle: "to \(destinationDay.notificationDayLabel)",
                     iconConfig: IconConfig(
                         name: "checkmark",
                         primaryColor: Color.green
@@ -321,8 +321,7 @@ struct EventFormView: View {
                 iconConfig: IconConfig(
                     name: "checkmark",
                     primaryColor: Color.green
-                ),
-                onClick: nil
+                )
             )
         }
 
