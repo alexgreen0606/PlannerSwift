@@ -58,21 +58,11 @@ struct PlannerBuilderView: View {
                     plannerSearchQuery: plannerSearchQuery,
                     namespace: namespace
                 )
-                .environmentObject(notificationManager)
                 .overlay {
-                    // TODO: make a shared view for this
-                    VStack {
-                        ForEach(notificationManager.notifications, id: \.id) {
-                            config in
-                            NotificationView(config: config)
-                        }
-                        Spacer()
-                    }
-                    .animation(
-                        .linear,
-                        value: notificationManager.notifications
-                    )
+                    NotificationsView()
+                        .padding(.bottom, -20)
                 }
+                .environmentObject(notificationManager)
             }
         }
         .task {

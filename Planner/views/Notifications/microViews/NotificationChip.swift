@@ -1,5 +1,5 @@
 //
-//  Notification.swift
+//  NotificationChip.swift
 //  Planner
 //
 //  Created by Alex Green on 3/18/26.
@@ -7,18 +7,20 @@
 
 import SwiftUI
 
-struct NotificationView: View {
+struct NotificationChipView: View {
     let config: NotificationConfig
+
+    @State private var showImage = false
 
     var body: some View {
         HStack {
             Image(systemName: config.iconConfig.name)
+                .symbolEffect(.drawOn, isActive: !showImage)
                 .imageScale(.medium)
                 .foregroundStyle(
                     config.iconConfig.primaryColor,
                     config.iconConfig.secondaryColor
                 )
-                .transition(.symbolEffect(.drawOn))
 
             VStack(alignment: .leading) {
                 Text(config.title)
@@ -38,6 +40,14 @@ struct NotificationView: View {
             onTap: config.onClick,
             height: config.subtitle != nil ? 50 : 40
         )
-        .transition(.move(edge: .top).combined(with: .opacity))
+        .transition(.move(edge: .leading).combined(with: .opacity))
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(800))
+            {
+                withAnimation {
+                    showImage = true
+                }
+            }
+        }
     }
 }

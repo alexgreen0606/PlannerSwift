@@ -189,7 +189,8 @@ struct EventFormView: View {
                     sourceCalendarEvent: sourceCalendarEvent,
                     sourcePlannerEvent: sourcePlannerEvent,
                     sourcePlanner: sourcePlanner,
-                    sourceDay: sourceDay
+                    sourceDay: sourceDay,
+                    showNotification: showNotification
                 )
             }
         }
@@ -262,10 +263,10 @@ struct EventFormView: View {
 
         dismiss()
 
-        handleNotification(sourceDay: sourceDay, destinationDay: destinationDay)
+        showNotification(sourceDay: sourceDay, destinationDay: destinationDay)
     }
 
-    private func handleNotification(
+    private func showNotification(
         sourceDay: DateInRegion?,
         destinationDay: DateInRegion?,
     ) {
@@ -305,19 +306,19 @@ struct EventFormView: View {
                     }
                 )
             }
-        } else {
-            if sourceCalendarEvent != nil {
-                config = NotificationConfig(
-                    id: UUID(),
-                    title: "Event deleted",
-                    subtitle: "from calendar",
-                    iconConfig: IconConfig(
-                        name: "checkmark",
-                        primaryColor: Color.green
-                    ),
-                    onClick: nil
-                )
-            }
+        } else if draftPlannerEvent.calendarEvent == nil,
+            sourceCalendarEvent != nil
+        {
+            config = NotificationConfig(
+                id: UUID(),
+                title: "Event deleted",
+                subtitle: "from calendar",
+                iconConfig: IconConfig(
+                    name: "checkmark",
+                    primaryColor: Color.green
+                ),
+                onClick: nil
+            )
         }
 
         if let config {

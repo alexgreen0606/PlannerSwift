@@ -25,7 +25,7 @@ class NotificationManager: ObservableObject {
 
         Task {
             do {
-                try await Task.sleep(for: .seconds(5))
+                try await Task.sleep(for: .seconds(6))
 
                 if let index = notifications.firstIndex(where: {
                     $0.id == notification.id

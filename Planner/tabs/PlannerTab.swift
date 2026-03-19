@@ -92,17 +92,8 @@ struct PlannerTabView: View {
             }
         }
         .overlay {
-            VStack {
-                ForEach(notificationManager.notifications, id: \.id) {
-                    config in
-                    NotificationView(config: config)
-                }
-                Spacer()
-            }
-            .animation(
-                .linear,
-                value: notificationManager.notifications
-            )
+            NotificationsView()
+                .environmentObject(notificationManager)
         }
 
         // Build the week's datestamps at midnight.

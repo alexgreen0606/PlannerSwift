@@ -20,6 +20,7 @@ struct PlannerEventFormView: View {
     let sourcePlannerEvent: PlannerEvent?
     let sourcePlanner: Planner?
     let sourceDay: DateInRegion?
+    let showNotification: (DateInRegion?, DateInRegion?) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -83,7 +84,12 @@ struct PlannerEventFormView: View {
             .scrollDisabled(true)
             .toolbar {
                 saveButton
-                addToCalendarButton
+            }
+            .overlay {
+                VStack {
+                    Spacer()
+                    addToCalendarButton
+                }
             }
         }
     }
@@ -100,21 +106,19 @@ struct PlannerEventFormView: View {
         }
     }
 
-    @ToolbarContentBuilder
-    private var addToCalendarButton: some ToolbarContent {
+    // MARK: - View Builders
+
+    @ViewBuilder
+    private var addToCalendarButton: some View {
         if calendarStore.calendarAccessDenied == false {
-            ToolbarItem(placement: .bottomBar) {
-                ActionButtonView(
-                    label: "Add To Calendar",
-                    systemImage: "calendar.badge.plus",
-                    onTap: addEventToCalendar
-                )
-            }
-            .sharedBackgroundVisibility(.hidden)
+            ActionButtonView(
+                label: "Add To Calendar",
+                systemImage: "calendar.badge.plus",
+                onTap: addEventToCalendar
+            )
+            .padding(.bottom, 6)
         }
     }
-
-    // MARK: - View Builders
 
     private var titleSection: some View {
         Section {
@@ -241,56 +245,7 @@ struct PlannerEventFormView: View {
 
         dismiss()
 
-        handleNotification(sourceDay: sourceDay, destinationDay: destinationDay)
-    }
-
-    private func handleNotification(
-        sourceDay: DateInRegion?,
-        destinationDay: DateInRegion?,
-    ) {
-        var config: NotificationConfig?
-
-        if sourcePlanner == nil {
-            if let destinationDay {
-                config = NotificationConfig(
-                    id: UUID(),
-                    title: "Event scheduled",
-                    subtitle: "for \(destinationDay.notificationDayLabel)",
-                    iconConfig: IconConfig(
-                        name: "checkmark",
-                        primaryColor: Color.green
-                    ),
-                    onClick: {
-                        plannerCoverManager.context = PlannerCoverContext(
-                            datestamp: destinationDay.datestamp
-                        )
-                    }
-                )
-            }
-        } else if let destinationDay {
-            if destinationDay.datestamp != sourceDay?.datestamp {
-                config = NotificationConfig(
-                    id: UUID(),
-                    title: "Event rescheduled",
-                    subtitle: "for \(destinationDay.notificationDayLabel)",
-                    iconConfig: IconConfig(
-                        name: "checkmark",
-                        primaryColor: Color.green
-                    ),
-                    onClick: {
-                        plannerCoverManager.context = PlannerCoverContext(
-                            datestamp: destinationDay.datestamp
-                        )
-                    }
-                )
-            }
-        }
-
-        if let config {
-            DispatchQueue.main.async {
-                notificationManager.addNotification(config)
-            }
-        }
+        showNotification(sourceDay, destinationDay)
     }
 
     private func addEventToCalendar() {
