@@ -66,6 +66,7 @@ struct ChecklistsTabView: View {
                 canTransferItems: canTransferChecklistItems,
                 openItem: openItem
             )
+            .id(checklistId.id)
             .environmentObject(checklistsManager)
             .navigationTransition(
                 .zoom(
