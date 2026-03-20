@@ -133,55 +133,61 @@ struct PlannerListView: View {
     // MARK: - Functions
 
     private func toggleEvent(_ event: PlannerEvent) {
-        if event.isCanceled || plannerType == .future {
-            event.isCanceled.toggle()
-        } else {
-            event.isCompleted.toggle()
+
+        // If an event is canceled, reset its entire checked state.
+        if event.isCanceled {
+            event.isCanceled = false
+            event.isCompleted = false
+            return
         }
+
+        // If this is a future event, cancel it and clear the completed state.
+        if plannerType == .future {
+            event.isCanceled = true
+            event.isCompleted = false
+            return
+        }
+
+        // Otherwise just toggle the completed state.
+        event.isCompleted.toggle()
     }
 
     private func eventToggleConfig(_ event: PlannerEvent) -> ToggleConfig<
         PlannerEvent
     >? {
-        let canceledIconConfig = IconConfig(
-            name: "circle.slash",
-            primaryColor: Color.red,
-        )
-        let deleteFromCalendarConfig = ConfirmationConfig<PlannerEvent>(
-            title: "Delete from calendar?",
-            message: "Hiding only affects visibility in this planner.",
-            needsConfirmation: { event in
-                event.calendarEvent != nil
-                    && !event.isCanceled && plannerType == .future
-            },
-            actions: [
-                ConfirmationAction(
-                    title: "Hide",
-                    role: nil
-                ) { event in
-                    modelContext.cancelPlannerEvent(event)
+        ToggleConfig<PlannerEvent>(
+            iconConfig: IconConfig(
+                name: event.isCanceled ? "circle.slash" : "circle.inset.filled",
+                primaryColor: event.isCanceled
+                    ? Color.red : event.tint(accentColor: accentColor),
+            ),
+            confirmation: ConfirmationConfig<PlannerEvent>(
+                title: "Delete from calendar?",
+                message: "Hiding only affects visibility in this planner.",
+                needsConfirmation: { event in
+                    event.calendarEvent != nil
+                        && !event.isCanceled && plannerType == .future
                 },
+                actions: [
+                    ConfirmationAction(
+                        title: "Hide",
+                        role: nil
+                    ) { event in
+                        modelContext.cancelPlannerEvent(event)
+                    },
 
-                ConfirmationAction(
-                    title: "Delete",
-                    role: .destructive
-                ) { event in
-                    modelContext.deleteCalendarEvent(
-                        event,
-                        ekEventStore: calendarStore.ekEventStore
-                    )
-                },
-            ]
-        )
-
-        if plannerType == .future || event.isCanceled {
-            return ToggleConfig<PlannerEvent>(
-                iconConfig: canceledIconConfig,
-                confirmation: deleteFromCalendarConfig
+                    ConfirmationAction(
+                        title: "Delete",
+                        role: .destructive
+                    ) { event in
+                        modelContext.deleteCalendarEvent(
+                            event,
+                            ekEventStore: calendarStore.ekEventStore
+                        )
+                    },
+                ]
             )
-        }
-
-        return nil
+        )
     }
 
     private func openPlannerEventSheet(_ event: PlannerEvent) {
