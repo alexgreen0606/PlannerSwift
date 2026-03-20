@@ -16,18 +16,27 @@ struct CalendarsFormView: View {
     let settings: PlannerSettings
 
     private let systemImageNameOptions: [String] = [
-        "briefcase.fill",
+        "briefcase",
         "airplane",
-        "suitcase.fill",
+        "suitcase",
         "popcorn",
         "globe.americas.fill",
-        "birthday.cake.fill",
+        "birthday.cake",
         "calendar",
         "dollarsign",
-        "mountain.2.fill",
-        "dog.fill",
-        "basketball.fill",
+        "mountain.2",
+        "dog",
+        "cat",
+        "basketball",
+        "gamecontroller",
+        "american.football",
+        "camera",
+        "figure.2",
+        "figure.strengthtraining.traditional",
     ]
+
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        AccentColor.blue
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
@@ -53,16 +62,17 @@ struct CalendarsFormView: View {
 
     // MARK: - View Builders
 
+    @ViewBuilder
     private func row(for calendar: EKCalendar) -> some View {
+        let isActive = !settings.hiddenCalendarIds.contains(
+            calendar.calendarIdentifier
+        )
         HStack {
             Image(
-                systemName: settings.hiddenCalendarIds
-                    .contains(calendar.calendarIdentifier)
-                    == false
-                    ? "checkmark.circle" : "circle"
+                systemName: isActive ? "checkmark.circle" : "circle"
             )
+            .foregroundStyle(isActive ? accentColor.color : Color.secondary)
             .imageScale(.large)
-            .fontWeight(.light)
             .padding(.trailing, 6)
             .contentTransition(
                 .symbolEffect(
@@ -74,25 +84,29 @@ struct CalendarsFormView: View {
 
             Spacer()
 
-            Menu {
-                ForEach(systemImageNameOptions, id: \.self) {
-                    systemImageName in
-                    Button("", systemImage: systemImageName) {
-                        modelContext.updateCalendarIcon(
-                            in: settings,
-                            for: calendar,
-                            to: systemImageName
-                        )
-                    }
-                }
-            } label: {
-                Image(
-                    systemName: calendar.systemImageName(
-                        settings: settings
+            IconSelectorView(
+                selectedIconConfig: IconConfig(
+                    name: calendar.systemImageName(settings: settings),
+                    primaryColor: calendar.color
+                ),
+                options: systemImageNameOptions.map {
+                    let isSelected =
+                        $0 == calendar.systemImageName(settings: settings)
+                    return IconConfig(
+                        name: $0,
+                        primaryColor: isSelected ? calendar.color : .label,
+                        secondaryColor: .label
                     )
-                )
-                .foregroundStyle(calendar.color)
-            }
+                },
+                numColumns: 4,
+                onTap: { config in
+                    modelContext.updateCalendarIcon(
+                        in: settings,
+                        for: calendar,
+                        to: config.name
+                    )
+                }
+            )
         }
         .contentShape(Rectangle())
         .onTapGesture {

@@ -41,27 +41,60 @@ struct SettingsTabView: View {
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
     private var activeCalendarCount: String {
-        String(calendarStore.sortedCalendars.filter {
-            !settings.hiddenCalendarIds.contains($0.calendarIdentifier)
-        }.count)
+        String(
+            calendarStore.sortedCalendars.filter {
+                !settings.hiddenCalendarIds.contains($0.calendarIdentifier)
+            }.count
+        )
     }
 
     var body: some View {
         NavigationStack {
             Form {
+
+                // App Theme
+                Picker("App Theme", selection: $appColorScheme) {
+                    ForEach(AppColorScheme.allCases, id: \.rawValue) {
+                        colorScheme in
+                        Text(colorScheme.rawValue.capitalized)
+                            .tag(colorScheme)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .listRowBackground(Color.clear)
+
                 Section {
 
                     // Accent Color
-                    Picker(AccentColor.title, selection: $accentColor) {
-                        ForEach(AccentColor.allCases, id: \.self) {
-                            color in
-                            Image(systemName: "circle.fill")
-                                .symbolRenderingMode(.palette)
-                                .foregroundStyle(color.color)
-                                .tag(color)
-                        }
+                    HStack {
+                        Text(AccentColor.title)
+                        Spacer()
+                        IconSelectorView(
+                            selectedIconConfig: IconConfig(
+                                name: "circle.fill",
+                                primaryColor: accentColor.color
+                            ),
+                            options: AccentColor.allCases.map {
+                                let isSelected = $0 == accentColor
+                                return IconConfig(
+                                    name: isSelected ? "circle.fill" : "circle",
+                                    primaryColor: $0.color
+                                )
+                            },
+                            numColumns: 3,
+                            onTap: { config in
+                                if let selected = AccentColor.allCases.first(
+                                    where: { $0.color == config.primaryColor })
+                                {
+                                    accentColor = selected
+                                }
+                            }
+                        )
                     }
-                    .pickerStyle(.menu)
+
+                    // List Separators
+                    Toggle("Show List Separators", isOn: $showListDividers)
+                        .tint(accentColor.color)
 
                     // Toggle Transition Duration
                     Picker(
@@ -76,26 +109,8 @@ struct SettingsTabView: View {
                     }
                     .pickerStyle(.menu)
 
-                    // List Separators
-                    Toggle("Show List Separators", isOn: $showListDividers)
-                        .tint(accentColor.color)
-
-                } header: {
-                    Text("Appearance")
                 }
-                .listSectionMargins(.bottom, 0)
-
-                // App Theme
-                Picker("App Theme", selection: $appColorScheme) {
-                    ForEach(AppColorScheme.allCases, id: \.rawValue) {
-                        colorScheme in
-                        Text(colorScheme.rawValue.capitalized)
-                            .tag(colorScheme)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .listRowBackground(Color.clear)
-                .listSectionMargins(.all, 0)
+                .listSectionMargins(.top, 0)
 
                 Section {
 
