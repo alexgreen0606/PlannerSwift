@@ -29,7 +29,11 @@ struct ExpandedPlannerView: View {
     @EnvironmentObject private var todaystampManager: TodaystampWatcher
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
-    @StateObject private var plannerManager = ListManager<PlannerEvent>()
+    @StateObject private var plannerManager = ListManager<PlannerEvent>(
+        isItemChecked: { event in
+            event.isChecked
+        }
+    )
     @State private var eventSheetContext: EventSheetContext?
     @State private var showTransferSheet = false
 
@@ -42,12 +46,8 @@ struct ExpandedPlannerView: View {
             ? .pastOrPresent : .future
     }
 
-    private var showChecked: Bool {
-        plannerType == .future ? planner.showCanceled : planner.showCompleted
-    }
-
     private var visibleEvents: [PlannerEvent] {
-        if showChecked {
+        if planner.showChecked {
             return sortedOpenPlannerEvents + sortedCheckedPlannerEvents
         }
 
@@ -55,8 +55,8 @@ struct ExpandedPlannerView: View {
     }
 
     private var isAllSelected: Bool {
-        !visibleEvents.isEmpty &&
-        plannerManager.selectedItemIds.count == visibleEvents.count
+        !visibleEvents.isEmpty
+            && plannerManager.selectedItemIds.count == visibleEvents.count
     }
 
     private var subtitle: String {
@@ -72,21 +72,11 @@ struct ExpandedPlannerView: View {
     // MARK: Event Lists
 
     private var sortedOpenPlannerEvents: [PlannerEvent] {
-        sortedPlannerEvents
-            .filter {
-                (!$0.isChecked
-                    && !plannerManager.newlyUncheckedIds.contains($0.stableId))
-                    || plannerManager.newlyCheckedIds.contains($0.stableId)
-            }
+        sortedPlannerEvents.filter(plannerManager.isItemInUncheckedList)
     }
 
     private var sortedCheckedPlannerEvents: [PlannerEvent] {
-        sortedPlannerEvents
-            .filter {
-                ($0.isChecked
-                    && !plannerManager.newlyCheckedIds.contains($0.stableId))
-                    || plannerManager.newlyUncheckedIds.contains($0.stableId)
-            }
+        sortedPlannerEvents.filter(plannerManager.isItemInCheckedList)
     }
 
     // MARK: - Body
@@ -104,7 +94,7 @@ struct ExpandedPlannerView: View {
                     sortedCheckedPlannerEvents: sortedCheckedPlannerEvents,
                     sortedPlannerEvents: sortedPlannerEvents,
                     plannerChipEvents: plannerChipEvents,
-                    showChecked: showChecked,
+                    showChecked: planner.showChecked,
                     namespace: namespace,
                     scrollProxy: scrollProxy,
                     settings: settings,
@@ -153,7 +143,7 @@ struct ExpandedPlannerView: View {
                 )
             )
         }
-        
+
         // Inject the manager last so it can be accessed in the sheets.
         .environmentObject(plannerManager)
     }
@@ -199,7 +189,7 @@ struct ExpandedPlannerView: View {
                 PlannerActionMenuView(
                     plannerType: plannerType,
                     planner: planner,
-                    showChecked: showChecked,
+                    showChecked: planner.showChecked,
                     plannerEvents: sortedPlannerEvents,
                     visibleEvents: visibleEvents
                 )

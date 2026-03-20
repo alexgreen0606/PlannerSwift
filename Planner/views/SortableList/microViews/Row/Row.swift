@@ -80,7 +80,7 @@ struct RowView<
         if listManager.isSelectMode {
             return listManager.selectedItemIds.contains(item.stableId)
         }
-        return item.isChecked
+        return listManager.isItemChecked(item)
     }
 
     private var opacity: Double {

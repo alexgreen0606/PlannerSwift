@@ -51,9 +51,9 @@ extension ModelContext {
     }
 
     @MainActor
-    func checkPlannerEvent(_ event: PlannerEvent) {
-        event.isChecked = true
-        self.safeSave("plannerEvent.checkPlannerEvent")
+    func cancelPlannerEvent(_ event: PlannerEvent) {
+        event.isCanceled = true
+        self.safeSave("plannerEvent.cancelPlannerEvent")
     }
 
     @MainActor
@@ -82,7 +82,7 @@ extension ModelContext {
         from events: [PlannerEvent],
         ekEventStore: EKEventStore? = nil  // deletes calendar events, otherwise they are preserved.
     ) {
-        let checked = events.filter { $0.isChecked }
+        let checked = events.filter { $0.isCompleted }
         self.deletePlannerEvents(checked, ekEventStore: ekEventStore)
         self.safeSave("plannerEvent.deleteCheckedStorageEvents")
     }

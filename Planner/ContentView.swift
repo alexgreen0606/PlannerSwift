@@ -232,6 +232,7 @@ struct ContentView: View {
                     // TODO: need to load in all the plans for this day
 
                     // Delete canceled plans from today's planner.
+                    // TODO: fix the below function
                     modelContext.deleteCheckedPlannerEvents(from: [])
                 }
             } catch {

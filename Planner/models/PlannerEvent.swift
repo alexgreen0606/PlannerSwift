@@ -17,6 +17,7 @@ class PlannerEvent: ListItem {
 
     var date: Date
     var hasTime: Bool = false
+    var isCanceled: Bool = false
 
     // Controlled by drag-and-drop.
     // May go out of sync with the date.

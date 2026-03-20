@@ -16,8 +16,18 @@ enum ListToggleType: String {
     case select
 }
 
+typealias StatusGuard<Item> = (_ item: Item) -> Bool
+
 @MainActor
 final class ListManager<Item: ListItem>: ObservableObject {
+    private var toggleItem: ((Item) -> Void)?
+    private let customIsItemChecked: StatusGuard<Item>?
+
+    init(
+        isItemChecked: StatusGuard<Item>? = nil
+    ) {
+        self.customIsItemChecked = isItemChecked
+    }
 
     @AppStorage("toggleTransitionDuration") private
         var toggleTransitionDuration: ToggleTransitionDuration =
@@ -50,6 +60,10 @@ final class ListManager<Item: ListItem>: ObservableObject {
 
     var isSelectMode: Bool {
         toggleType == .select
+    }
+
+    func setToggleItem(_ toggleItem: @escaping (Item) -> Void) {
+        self.toggleItem = toggleItem
     }
 
     func toggleSelectMode() {
@@ -88,14 +102,21 @@ final class ListManager<Item: ListItem>: ObservableObject {
         }
     }
 
+    func isItemChecked(_ item: Item) -> Bool {
+        if let customIsItemChecked {
+            return customIsItemChecked(item)
+        }
+        return item.isCompleted
+    }
+
     func isItemInUncheckedList(_ item: Item) -> Bool {
-        (!item.isChecked
+        (!isItemChecked(item)
             && !newlyUncheckedIds.contains(item.stableId))
             || newlyCheckedIds.contains(item.stableId)
     }
 
     func isItemInCheckedList(_ item: Item) -> Bool {
-        (item.isChecked
+        (isItemChecked(item)
             && !newlyCheckedIds.contains(item.stableId))
             || newlyUncheckedIds.contains(item.stableId)
     }
@@ -125,7 +146,7 @@ final class ListManager<Item: ListItem>: ObservableObject {
         }
 
         if toggleTransitionDuration != .instant {
-            if item.isChecked {
+            if isItemChecked(item) {
                 if !newlyCheckedIds.contains(item.stableId) {
                     newlyUncheckedIds.insert(item.stableId)
                 } else {
@@ -148,7 +169,11 @@ final class ListManager<Item: ListItem>: ObservableObject {
             fadingItemIds = []
         }
 
-        item.isChecked.toggle()
+        if let toggleItem {
+            toggleItem(item)
+        } else {
+            item.isCompleted.toggle()
+        }
     }
 
     private func beginFade() {

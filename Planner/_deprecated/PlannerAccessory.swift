@@ -64,7 +64,7 @@
 //            ] ?? []
 //
 //        let planCount =
-//            (planner?.events.filter { !$0.isChecked }.count ?? 0)
+//            (planner?.events.filter { !$0.isCompleted }.count ?? 0)
 //            + singleDayEvents.count
 //
 //        if planCount == 0 {

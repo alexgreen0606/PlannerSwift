@@ -26,7 +26,7 @@ struct PlannerEventListView: View {
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(events, id: \.stableId) { event in
                     HStack(alignment: .top) {
-                        if event.isChecked {
+                        if event.isCompleted {
                             Image(systemName: "checkmark").imageScale(.small)
                         }
 

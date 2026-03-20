@@ -56,6 +56,10 @@ extension PlannerEvent {
     }
 
     // MARK: - Style Variables
+    
+    var isChecked: Bool {
+        self.isCompleted || self.isCanceled
+    }
 
     func tint(accentColor: AccentColor) -> Color {
         if let calendar = self.calendarEvent?.calendar {

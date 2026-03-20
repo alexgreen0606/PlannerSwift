@@ -17,7 +17,7 @@ class ListItem {
     var stableId = UUID()
     
     var title: String = ""
-    var isChecked: Bool = false
+    var isCompleted: Bool = false
     var sortIndex: Double
     
     init(sortIndex: Double) {

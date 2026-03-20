@@ -22,7 +22,6 @@ struct SortableListView<
     private let checkedItems: [Item]
     private let showChecked: Bool
     private let floatingInfo: FloatingInfo?
-    private let customRowToggleConfig: ToggleConfig<Item>?
     private let checkedHeader: String
     private let checkedFooter: String?
     private let emptyUncheckedLabel: String
@@ -31,6 +30,7 @@ struct SortableListView<
     private let tint: (_ item: Item) -> Color
     private let toolbarSystemImageNames: [String]
     private let onToolbarTap: ((String, Item) -> Void)?
+    private let toggleConfig: (_ item: Item) -> ToggleConfig<Item>?
     private let leftAdornment: (_ item: Item) -> LeftAdornment
     private let rightAdornment: (_ item: Item) -> RightAdornment
     private let bottomAdornment: (_ item: Item) -> BottomAdornment
@@ -51,10 +51,10 @@ struct SortableListView<
         createItem: @escaping (_: UUID?, _: Int) -> Void,
         moveItem: @escaping (_: Int, _: Int) -> Void,
         floatingInfo: FloatingInfo? = EmptyView(),
-        customRowToggleConfig: ToggleConfig<Item>? = nil,
         namespace: Namespace.ID? = nil,
         toolbarSystemImageNames: [String] = [],
         onToolbarTap: ((String, Item) -> Void)? = nil,
+        toggleConfig: @escaping (_: Item) -> ToggleConfig<Item>? = { _ in nil },
         leftAdornment: @escaping (_: Item) -> LeftAdornment = { _ in
             EmptyView() as! LeftAdornment
         },
@@ -71,7 +71,6 @@ struct SortableListView<
         self.checkedItems = checkedItems
         self.showChecked = showChecked
         self.floatingInfo = floatingInfo
-        self.customRowToggleConfig = customRowToggleConfig
         self.checkedHeader = checkedHeader
         self.checkedFooter = checkedFooter
         self.emptyUncheckedLabel = emptyUncheckedLabel
@@ -80,6 +79,7 @@ struct SortableListView<
         self.tint = tint
         self.toolbarSystemImageNames = toolbarSystemImageNames
         self.onToolbarTap = onToolbarTap
+        self.toggleConfig = toggleConfig
         self.leftAdornment = leftAdornment
         self.rightAdornment = rightAdornment
         self.bottomAdornment = bottomAdornment
@@ -153,7 +153,7 @@ struct SortableListView<
                     rightAdornment: rightAdornment(item),
                     bottomAdornment: bottomAdornment(item),
                     toolbarSystemImageNames: toolbarSystemImageNames,
-                    customToggleConfig: customRowToggleConfig,
+                    customToggleConfig: toggleConfig(item),
                     namespace: namespace,
                     createItem: createItem,
                     onToolbarTap: onToolbarTap,
@@ -198,7 +198,7 @@ struct SortableListView<
                         rightAdornment: rightAdornment(item),
                         bottomAdornment: bottomAdornment(item),
                         toggleOnlyMode: true,
-                        customToggleConfig: customRowToggleConfig
+                        customToggleConfig: toggleConfig(item)
                     )
                 }
             } header: {

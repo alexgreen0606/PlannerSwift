@@ -19,10 +19,15 @@ struct PlannerActionMenuView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var plannerManager: ListManager<PlannerEvent>
 
-    @State private var showDeleteCheckedConfirmation = false
+    @State private var showDeleteCompletedConfirmation = false
+    @State private var showDeleteCanceledConfirmation = false
 
-    private var checkedEvents: [PlannerEvent] {
-        plannerEvents.filter { $0.isChecked }
+    private var completedEvents: [PlannerEvent] {
+        plannerEvents.filter { $0.isCompleted }
+    }
+
+    private var canceledEvents: [PlannerEvent] {
+        plannerEvents.filter { $0.isCanceled }
     }
 
     var body: some View {
@@ -31,15 +36,32 @@ struct PlannerActionMenuView: View {
             selectEventsButton
             deleteActionsMenu
         }
+
         .confirmationDialog(
-            plannerType.deleteCheckedConfirmationTitle,
-            isPresented: $showDeleteCheckedConfirmation,
+            "Delete completed events from this planner?",
+            isPresented: $showDeleteCompletedConfirmation,
             titleVisibility: .visible
         ) {
             Button(
                 "Confirm",
                 role: .destructive,
-                action: deleteAllCheckedEvents
+                action: deleteCompletedEvents
+            )
+        } message: {
+            Text(
+                "Calendar events will not be deleted. This action is irreversible."
+            )
+        }
+
+        .confirmationDialog(
+            "Delete canceled events from this planner?",
+            isPresented: $showDeleteCanceledConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(
+                "Confirm",
+                role: .destructive,
+                action: deleteCanceledEvents
             )
         } message: {
             Text(
@@ -53,9 +75,7 @@ struct PlannerActionMenuView: View {
     private var showCheckedToggle: some View {
         Button(
             action: {
-                plannerType == .future
-                    ? planner.showCanceled.toggle()
-                    : planner.showCompleted.toggle()
+                planner.showChecked.toggle()
             },
             label: {
                 Label(
@@ -83,7 +103,8 @@ struct PlannerActionMenuView: View {
 
     private var deleteActionsMenu: some View {
         Menu {
-            deleteCheckedEventsButton
+            deleteCompletedEventsButton
+            deleteCanceledEventsButton
         } label: {
             Label(
                 "Delete options",
@@ -92,19 +113,32 @@ struct PlannerActionMenuView: View {
         }
     }
 
-    private var deleteCheckedEventsButton: some View {
-        Button(plannerType.deleteCheckedLabel, role: .destructive) {
-            showDeleteCheckedConfirmation = true
+    private var deleteCompletedEventsButton: some View {
+        Button("Delete completed", role: .destructive) {
+            showDeleteCompletedConfirmation = true
         }
-        .disabled(checkedEvents.isEmpty)
+        .disabled(completedEvents.isEmpty)
+    }
+
+    private var deleteCanceledEventsButton: some View {
+        Button("Delete canceled", role: .destructive) {
+            showDeleteCanceledConfirmation = true
+        }
+        .disabled(canceledEvents.isEmpty)
     }
 
     // MARK: - Functions
 
-    private func deleteAllCheckedEvents() {
+    private func deleteCompletedEvents() {
         // Note: Don't pass the EKEventStore here.
         // Calendar events are meant to survive mass-deletion so users can look back on their calendar.
-        modelContext.deletePlannerEvents(checkedEvents)
+        modelContext.deletePlannerEvents(completedEvents)
+    }
+
+    private func deleteCanceledEvents() {
+        // Note: Don't pass the EKEventStore here.
+        // Calendar events are meant to survive mass-deletion so users can look back on their calendar.
+        modelContext.deletePlannerEvents(canceledEvents)
     }
 
 }

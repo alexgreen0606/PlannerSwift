@@ -22,26 +22,18 @@ enum PlannerType: String {
         "\(checkedLabel.capitalized) events"
     }
 
-    var deleteCheckedLabel: String {
-        "Delete \(checkedLabel) events"
+    func toggleCheckedLabel(_ showChecked: Bool) -> String {
+        showChecked ? "Hide \(checkedLabel)" : "Show \(checkedLabel)"
     }
 
-    var deleteCheckedConfirmationTitle: String {
-        "Delete \(checkedLabel) events from this planner?"
-    }
-
-    func toggleCheckedLabel(_ showHidden: Bool) -> String {
-        showHidden ? "Hide \(checkedLabel)" : "Show \(checkedLabel)"
-    }
-
-    func checkedFooter(for startOfDay: DateInRegion) -> String? {
+    func checkedFooter(for plannerDay: DateInRegion) -> String? {
         switch self {
         case .pastOrPresent:
             return nil
 
         case .future:
 
-            var formatted = startOfDay.dynamicHeader
+            var formatted = plannerDay.dynamicHeader
 
             if !formatted.contains(",") {
                 if let dayString = formatted.split(separator: " ").last,
@@ -65,13 +57,15 @@ enum PlannerType: String {
                 }
             }
 
+            // TODO: dont show this if setting is disabled.
+
             let displayDate: String =
                 formatted.rangeOfCharacter(from: .decimalDigits) == nil
                 ? "\(formatted) morning"
                 : "the morning of \(formatted)"
 
             return
-                "These canceled events will be deleted \(displayDate). Hidden calendar events will not be deleted."
+                "These canceled events will be deleted \(displayDate). Calendar events will not be deleted."
         }
     }
 

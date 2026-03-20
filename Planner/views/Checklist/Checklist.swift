@@ -50,7 +50,7 @@ struct ChecklistView: View {
     }
 
     private var hasCheckedItem: Bool {
-        sortedItems.contains(where: \.isChecked)
+        sortedItems.contains(where: \.isCompleted)
     }
 
     private var subtitle: String {

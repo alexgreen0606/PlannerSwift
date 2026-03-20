@@ -35,45 +35,6 @@ struct PlannerListView: View {
     @EnvironmentObject private var plannerManager: ListManager<PlannerEvent>
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
-    private var eventToggleConfig: ToggleConfig<PlannerEvent>? {
-        switch plannerType {
-        case .pastOrPresent: return nil
-        case .future:
-            return ToggleConfig(
-                iconConfig: IconConfig(
-                    name: "circle.slash",
-                    primaryColor: .red,
-                ),
-                confirmation: ConfirmationConfig(
-                    title: "Delete from calendar?",
-                    message: "Hiding only affects visibility in this planner.",
-                    needsConfirmation: { event in
-                        event.calendarEvent != nil
-                            && !event.isChecked
-                    },
-                    actions: [
-                        ConfirmationAction(
-                            title: "Hide",
-                            role: nil
-                        ) { event in
-                            modelContext.checkPlannerEvent(event)
-                        },
-
-                        ConfirmationAction(
-                            title: "Delete",
-                            role: .destructive
-                        ) { event in
-                            modelContext.deleteCalendarEvent(
-                                event,
-                                ekEventStore: calendarStore.ekEventStore
-                            )
-                        },
-                    ]
-                )
-            )
-        }
-    }
-
     var body: some View {
         SortableListView(
             uncheckedItems: sortedOpenPlannerEvents,
@@ -87,10 +48,10 @@ struct PlannerListView: View {
             createItem: createEvent,
             moveItem: moveUncheckedEvent,
             floatingInfo: chipSpread,
-            customRowToggleConfig: eventToggleConfig,
             namespace: namespace,
             toolbarSystemImageNames: ["clock"],
             onToolbarTap: handleToolbarTap,
+            toggleConfig: eventToggleConfig,
             leftAdornment: leftAdornment,
             rightAdornment: rightAdornment,
             bottomAdornment: bottomAdornment,
@@ -99,7 +60,12 @@ struct PlannerListView: View {
                 for: plannerDay
             )
         )
-        .animateSynchronousAction(from: sortedOpenPlannerEvents.map(\.location?.name))
+        .animateSynchronousAction(
+            from: sortedOpenPlannerEvents.map(\.location?.name)
+        )
+        .task(id: planner.datestamp) {
+            plannerManager.setToggleItem(toggleEvent)
+        }
     }
 
     // MARK: - View Builders
@@ -166,8 +132,60 @@ struct PlannerListView: View {
 
     // MARK: - Functions
 
+    private func toggleEvent(_ event: PlannerEvent) {
+        if event.isCanceled || plannerType == .future {
+            event.isCanceled.toggle()
+        } else {
+            event.isCompleted.toggle()
+        }
+    }
+
+    private func eventToggleConfig(_ event: PlannerEvent) -> ToggleConfig<
+        PlannerEvent
+    >? {
+        let canceledIconConfig = IconConfig(
+            name: "circle.slash",
+            primaryColor: Color.red,
+        )
+        let deleteFromCalendarConfig = ConfirmationConfig<PlannerEvent>(
+            title: "Delete from calendar?",
+            message: "Hiding only affects visibility in this planner.",
+            needsConfirmation: { event in
+                event.calendarEvent != nil
+                    && !event.isCanceled && plannerType == .future
+            },
+            actions: [
+                ConfirmationAction(
+                    title: "Hide",
+                    role: nil
+                ) { event in
+                    modelContext.cancelPlannerEvent(event)
+                },
+
+                ConfirmationAction(
+                    title: "Delete",
+                    role: .destructive
+                ) { event in
+                    modelContext.deleteCalendarEvent(
+                        event,
+                        ekEventStore: calendarStore.ekEventStore
+                    )
+                },
+            ]
+        )
+
+        if plannerType == .future || event.isCanceled {
+            return ToggleConfig<PlannerEvent>(
+                iconConfig: canceledIconConfig,
+                confirmation: deleteFromCalendarConfig
+            )
+        }
+
+        return nil
+    }
+
     private func openPlannerEventSheet(_ event: PlannerEvent) {
-        if plannerManager.isSelectMode {
+        if plannerManager.isSelectMode || event.isChecked {
             plannerManager.toggleItem(event)
             return
         }

@@ -15,8 +15,7 @@ class Planner {
     // Converts to the start of day (Date) based on the planner's location (TimeZone).
     @Attribute(.unique) var datestamp: String
     
-    var showCompleted: Bool = false
-    var showCanceled: Bool = false
+    var showChecked: Bool = false
     
     @Relationship(deleteRule: .nullify)
     var location: Location?
