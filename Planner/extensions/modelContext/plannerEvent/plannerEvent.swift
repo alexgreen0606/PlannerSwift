@@ -49,6 +49,33 @@ extension ModelContext {
 
         return newEvent.stableId
     }
+    
+    @MainActor
+    func getSortedStorageEvents(for plannerDay: DateInRegion)
+        -> [PlannerEvent]
+    {
+        let startOfNextDay = (plannerDay + 1.days)
+
+        do {
+            return try fetch(
+                FetchDescriptor<PlannerEvent>(
+                    predicate: #Predicate {
+                        $0.date >= plannerDay.date
+                            && $0.date < startOfNextDay.date
+                    },
+                    sortBy: [
+                        SortDescriptor(\PlannerEvent.sortDate)
+                    ]
+                )
+            )
+        } catch {
+            assertionFailure(
+                "ERROR plannerEvent.getSortedStorageEvents: \(error)"
+            )
+        }
+
+        return []
+    }
 
     @MainActor
     func cancelPlannerEvent(_ event: PlannerEvent) {
@@ -352,33 +379,6 @@ extension ModelContext {
     }
 
     // MARK: - Helper Functions
-
-    @MainActor
-    private func getSortedStorageEvents(for plannerDay: DateInRegion)
-        -> [PlannerEvent]
-    {
-        let startOfNextDay = (plannerDay + 1.days)
-
-        do {
-            return try fetch(
-                FetchDescriptor<PlannerEvent>(
-                    predicate: #Predicate {
-                        $0.date >= plannerDay.date
-                            && $0.date < startOfNextDay.date
-                    },
-                    sortBy: [
-                        SortDescriptor(\PlannerEvent.sortDate)
-                    ]
-                )
-            )
-        } catch {
-            assertionFailure(
-                "ERROR plannerEvent.getSortedStorageEvents: \(error)"
-            )
-        }
-
-        return []
-    }
 
     @MainActor
     private func insertEventIfNeeded(_ event: PlannerEvent) {

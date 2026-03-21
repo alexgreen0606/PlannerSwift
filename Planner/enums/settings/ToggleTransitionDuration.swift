@@ -11,10 +11,10 @@ import SwiftUI
 // Clean
 
 enum ToggleTransitionDuration: String, Codable, CaseIterable {
+    case instant
     case twoSeconds
     case threeSeconds
     case sixSeconds
-    case instant
 
     static let title = "Toggle Transition"
 

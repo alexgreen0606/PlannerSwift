@@ -28,9 +28,9 @@ struct TransferEventsFormView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
 
-    @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
-        KeepPastPlansDuration =
-            KeepPastPlansDuration.oneMonth
+    @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
+        KeepPastEventsDuration =
+            KeepPastEventsDuration.oneMonth
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
@@ -77,7 +77,7 @@ struct TransferEventsFormView: View {
                     DatePicker(
                         "Select a Destination",
                         selection: $destinationDate,
-                        in: keepPastPlansDuration
+                        in: keepPastEventsDuration
                             .cutoffDate...todaystampWatcher
                             .maxCalendarDate,
                         displayedComponents: .date

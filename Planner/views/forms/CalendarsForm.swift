@@ -45,11 +45,15 @@ struct CalendarsFormView: View {
 
     var body: some View {
         List {
-            ForEach(
-                calendarStore.sortedCalendars,
-                id: \.calendarIdentifier,
-                content: row
-            )
+            Section {
+                ForEach(
+                    calendarStore.sortedCalendars,
+                    id: \.calendarIdentifier,
+                    content: row
+                )
+            } footer: {
+                Text("Turn off a calendar to hide its events throughout the app.")
+            }
         }
         .navigationTitle("Calendars")
         .navigationBarTitleDisplayMode(.inline)
@@ -64,26 +68,7 @@ struct CalendarsFormView: View {
 
     @ViewBuilder
     private func row(for calendar: EKCalendar) -> some View {
-        let isActive = !settings.hiddenCalendarIds.contains(
-            calendar.calendarIdentifier
-        )
         HStack {
-            Image(
-                systemName: isActive ? "checkmark.circle" : "circle"
-            )
-            .foregroundStyle(isActive ? accentColor.color : Color.secondary)
-            .imageScale(.large)
-            .padding(.trailing, 6)
-            .contentTransition(
-                .symbolEffect(
-                    .replace.magic(fallback: .replace)
-                )
-            )
-
-            Text(calendar.title)
-
-            Spacer()
-
             IconSelectorView(
                 selectedIconConfig: IconConfig(
                     name: calendar.systemImageName(settings: settings),
@@ -107,13 +92,30 @@ struct CalendarsFormView: View {
                     )
                 }
             )
-        }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            modelContext.toggleCalendarVisibility(
-                in: settings,
-                for: calendar
+
+            Text(calendar.title)
+
+            Spacer()
+
+            Toggle(
+                "",
+                isOn: Binding(
+                    get: {
+                        !settings.hiddenCalendarIds.contains(
+                            calendar.calendarIdentifier
+                        )
+                    },
+                    set: { _ in
+                        modelContext.toggleCalendarVisibility(
+                            in: settings,
+                            for: calendar
+                        )
+                    }
+                )
             )
+            .labelsHidden()
+            .tint(accentColor.color)
+
         }
     }
 

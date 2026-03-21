@@ -1,5 +1,5 @@
 //
-//  KeepPastPlansDuration.swift
+//  KeepPastEventsDuration.swift
 //  Planner
 //
 //  Created by Alex Green on 1/20/26.
@@ -10,14 +10,14 @@ import SwiftUI
 
 // Clean
 
-enum KeepPastPlansDuration: String, Codable, CaseIterable {
+enum KeepPastEventsDuration: String, Codable, CaseIterable {
     case oneMonth
     case threeMonths
     case sixMonths
     case forever
 
     static var title: String {
-        "Keep Past Plans"
+        "Keep Past Events"
     }
 
     var label: String {

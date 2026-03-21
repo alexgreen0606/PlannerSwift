@@ -16,9 +16,9 @@ import SwiftUI
 @MainActor
 class CalendarStore: ObservableObject {
 
-    @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
-        KeepPastPlansDuration =
-            KeepPastPlansDuration.oneMonth
+    @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
+        KeepPastEventsDuration =
+            KeepPastEventsDuration.oneMonth
 
     @Published private(set) var allDayEventsByPlannerKey: [String: [EKEvent]] =
         [:]

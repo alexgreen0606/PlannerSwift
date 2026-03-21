@@ -13,7 +13,22 @@ struct IconSelectorView: View {
     let selectedIconConfig: IconConfig
     let options: [IconConfig]
     let numColumns: Int
+    let isLargeIcon: Bool
     let onTap: (IconConfig) -> Void
+
+    init(
+        selectedIconConfig: IconConfig,
+        options: [IconConfig],
+        numColumns: Int,
+        isLargeIcon: Bool = false,
+        onTap: @escaping (IconConfig) -> Void
+    ) {
+        self.selectedIconConfig = selectedIconConfig
+        self.options = options
+        self.numColumns = numColumns
+        self.isLargeIcon = isLargeIcon
+        self.onTap = onTap
+    }
 
     @State private var isPresented = false
 
@@ -30,8 +45,7 @@ struct IconSelectorView: View {
                 selectedIconConfig.primaryColor,
                 selectedIconConfig.secondaryColor
             )
-            .padding(.leading, 8)
-            .imageScale(.medium)
+            .imageScale(isLargeIcon ? .large : .medium)
             .contentShape(Rectangle())
             .onTapGesture {
                 isPresented = true

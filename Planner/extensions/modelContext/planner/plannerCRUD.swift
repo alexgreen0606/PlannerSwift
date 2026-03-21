@@ -75,27 +75,6 @@ extension ModelContext {
         self.safeSave("plannerCRUD.updatePlannerLocation")
     }
 
-    @MainActor
-    func deleteOldPlanners(
-        from planners: [Planner],
-        before cutoffDate: Date
-    ) {
-
-        let cutoffDatestamp = cutoffDate.toFormat("yyyy-MM-dd")
-
-        // TODO: predicate this
-        for planner in planners {
-            if planner.datestamp < cutoffDatestamp {
-                delete(planner)
-            }
-        }
-
-        // TODO: delete planner events as well
-
-        // Note: Don't save the context.
-        // This is part of a larger pipeline.
-    }
-
     // MARK: - Helper Functions
 
     private func createPlanner(for datestamp: String) -> Planner {

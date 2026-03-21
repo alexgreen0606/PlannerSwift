@@ -27,6 +27,7 @@ struct PlannerPreviewView: View {
     private let maxPreviewEvents = 5
 
     @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
+    @EnvironmentObject private var todaystampManager: TodaystampWatcher
 
     // MARK: - Computed Variables
 
@@ -151,7 +152,7 @@ struct PlannerPreviewView: View {
                 .padding(.top)
                 .padding(.horizontal)
                 .padding(.bottom, 12)
-                .frame(width: 240)
+                .frame(width: todaystampManager.todaystamp == planner.datestamp ? 320 : 240)
                 .frame(height: 330, alignment: .top)
                 .background(
                     RoundedRectangle(cornerRadius: 24)

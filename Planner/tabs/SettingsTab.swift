@@ -24,13 +24,13 @@ struct SettingsTabView: View {
     @AppStorage("showListDividers") private var showListDividers: Bool =
         true
 
-    @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
-        KeepPastPlansDuration =
-            KeepPastPlansDuration.oneMonth
+    @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
+        KeepPastEventsDuration =
+            KeepPastEventsDuration.oneMonth
 
-    @AppStorage("keepCanceledPlansDuration") private
-        var keepCanceledPlansDuration: KeepCanceledPlansDuration =
-            KeepCanceledPlansDuration.startOfDay
+    @AppStorage("keepCanceledEventsDuration") private
+        var keepCanceledEventsDuration: KeepCanceledEventsDuration =
+            KeepCanceledEventsDuration.startOfDay
 
     @AppStorage("toggleTransitionDuration") private
         var toggleTransitionDuration: ToggleTransitionDuration =
@@ -71,7 +71,7 @@ struct SettingsTabView: View {
                         Spacer()
                         IconSelectorView(
                             selectedIconConfig: IconConfig(
-                                name: "circle.fill",
+                                name: "square.fill",
                                 primaryColor: accentColor.color
                             ),
                             options: AccentColor.allCases.map {
@@ -82,6 +82,7 @@ struct SettingsTabView: View {
                                 )
                             },
                             numColumns: 3,
+                            isLargeIcon: true,
                             onTap: { config in
                                 if let selected = AccentColor.allCases.first(
                                     where: { $0.color == config.primaryColor })
@@ -97,70 +98,24 @@ struct SettingsTabView: View {
                         .tint(accentColor.color)
 
                     // Toggle Transition Duration
-                    Picker(
-                        ToggleTransitionDuration.title,
-                        selection: $toggleTransitionDuration
-                    ) {
-                        ForEach(ToggleTransitionDuration.allCases, id: \.self) {
-                            duration in
-                            Text(duration.label)
-                                .tag(duration)
+                    NavigationLink {
+                        ToggleTransitionFormView()
+                    } label: {
+                        HStack {
+                            Text(ToggleTransitionDuration.title)
+                            Spacer()
+                            Text(
+                                toggleTransitionDuration.label
+                            )
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
                         }
                     }
-                    .pickerStyle(.menu)
 
                 }
                 .listSectionMargins(.top, 0)
 
                 Section {
-
-                    // Keep Past Plans Duration
-                    Picker(
-                        KeepPastPlansDuration.title,
-                        selection: $keepPastPlansDuration
-                    ) {
-                        ForEach(KeepPastPlansDuration.allCases, id: \.self) {
-                            duration in
-                            Text(duration.label)
-                                .tag(duration)
-                        }
-                    }
-                    .pickerStyle(.menu)
-
-                    // Keep Canceled Plans Duration
-                    Picker(
-                        KeepCanceledPlansDuration.title,
-                        selection: $keepCanceledPlansDuration
-                    ) {
-                        ForEach(
-                            KeepCanceledPlansDuration.allCases,
-                            id: \.self
-                        ) {
-                            duration in
-                            Text(duration.label)
-                                .tag(duration)
-                        }
-                    }
-                    .pickerStyle(.menu)
-
-                    // Calendars
-                    NavigationLink {
-                        CalendarsFormView(settings: settings)
-                    } label: {
-                        HStack {
-
-                            Text("Calendars")
-
-                            Spacer()
-
-                            Text(
-                                activeCalendarCount
-                            )
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-
-                        }
-                    }
 
                     // Home Location
                     NavigationLink {
@@ -177,19 +132,61 @@ struct SettingsTabView: View {
                         }
                     } label: {
                         HStack {
-
                             Text("Home Location")
-
                             Spacer()
-
                             Text(
                                 settings.homeLocationLabel
                             )
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
-
                         }
                     }
+
+                    // Calendars
+                    NavigationLink {
+                        CalendarsFormView(settings: settings)
+                    } label: {
+                        HStack {
+                            Text("Calendars")
+                            Spacer()
+                            Text(
+                                activeCalendarCount
+                            )
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    // Keep Past Events Duration
+                    NavigationLink {
+                        KeepPastEventsFormView()
+                    } label: {
+                        HStack {
+                            Text(KeepPastEventsDuration.title)
+                            Spacer()
+                            Text(
+                                keepPastEventsDuration.label
+                            )
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    // Keep Canceled Events Duration
+                    NavigationLink {
+                        KeepCanceledEventsFormView()
+                    } label: {
+                        HStack {
+                            Text(KeepCanceledEventsDuration.title)
+                            Spacer()
+                            Text(
+                                keepCanceledEventsDuration.label
+                            )
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        }
+                    }
+
                 } header: {
                     Text("Planner")
                 }

@@ -18,9 +18,9 @@ struct PlannerSearchTabView: View {
     let settings: PlannerSettings
     let namespace: Namespace.ID
 
-    @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
-        KeepPastPlansDuration =
-            KeepPastPlansDuration.oneMonth
+    @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
+        KeepPastEventsDuration =
+            KeepPastEventsDuration.oneMonth
 
     @Environment(\.isSearching) private var isSearching
     @Environment(\.modelContext) private var modelContext

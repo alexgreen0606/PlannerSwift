@@ -66,15 +66,15 @@ struct ContentView: View {
         }
     }
 
-    @AppStorage("keepCanceledPlansDuration") private
-        var keepCanceledPlansDuration: KeepCanceledPlansDuration =
-            KeepCanceledPlansDuration.startOfDay
+    @AppStorage("keepCanceledEventsDuration") private
+        var keepCanceledEventsDuration: KeepCanceledEventsDuration =
+            KeepCanceledEventsDuration.startOfDay
 
     @AppStorage("lastCleansedDatestamp") var lastCleansedDatestamp: String = ""
 
-    @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
-        KeepPastPlansDuration =
-            KeepPastPlansDuration.oneMonth
+    @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
+        KeepPastEventsDuration =
+            KeepPastEventsDuration.oneMonth
 
     @Environment(\.scenePhase) private var appPhase
     @Environment(\.modelContext) private var modelContext
@@ -87,7 +87,7 @@ struct ContentView: View {
     @Query private var plannerSettingsList: [PlannerSettings]
     @Query private var checklistItems: [ChecklistItem]
     @Query private var planners: [Planner]
-    
+
     @State private var plannerSearchText: String = ""
 
     @Namespace private var namespace
@@ -99,147 +99,94 @@ struct ContentView: View {
     }
 
     var body: some View {
-            ZStack {
-                if let settings {
-                    TabView {
-                        Tab(
-                            "",
-                            systemImage: todaystampWatcher.todaystamp
-                                .calendarSymbolName
-                        ) {
-                            PlannerTabView(
-                                settings: settings,
-                                namespace: namespace
-                            )
-                        }
-                        
-                        Tab("", systemImage: "checklist") {
-                            ChecklistsTabView()
-                        }
-                        
-                        Tab("", systemImage: "repeat") {
-                            NavigationStack {
-                                VStack {
-                                    
-                                }
-                                .navigationTitle("Routines")
+        ZStack {
+            if let settings {
+                TabView {
+                    Tab(
+                        "",
+                        systemImage: todaystampWatcher.todaystamp
+                            .calendarSymbolName
+                    ) {
+                        PlannerTabView(
+                            settings: settings,
+                            namespace: namespace
+                        )
+                    }
+
+                    Tab("", systemImage: "checklist") {
+                        ChecklistsTabView()
+                    }
+
+                    Tab("", systemImage: "repeat") {
+                        NavigationStack {
+                            VStack {
+
                             }
-                        }
-                        
-                        Tab("", systemImage: "gear") {
-                            SettingsTabView(settings: settings)
-                        }
-                        
-                        Tab(role: .search) {
-                            PlannerSearchTabView(
-                                searchText: $plannerSearchText,
-                                settings: settings,
-                                namespace: namespace
-                            )
-                            .searchable(
-                                text: $plannerSearchText,
-                                prompt: "Search planner...",
-                            )
-                            .searchPresentationToolbarBehavior(.avoidHidingContent)
+                            .navigationTitle("Routines")
                         }
                     }
-                    .tabBarMinimizeBehavior(.onScrollDown)
-                }
-            }
-            .onAppear(perform: initializeAppData)
-            
-            // Expanded Planner Cover
-            .fullScreenCover(item: $plannerCoverManager.context) { context in
-                if let settings {
-                    PlannerBuilderView(
-                        datestamp: context.datestamp,
-                        settings: settings
-                    )
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: context.id,
-                            in: namespace
+
+                    Tab("", systemImage: "gear") {
+                        SettingsTabView(settings: settings)
+                    }
+
+                    Tab(role: .search) {
+                        PlannerSearchTabView(
+                            searchText: $plannerSearchText,
+                            settings: settings,
+                            namespace: namespace
                         )
-                    )
+                        .searchable(
+                            text: $plannerSearchText,
+                            prompt: "Search planner...",
+                        )
+                        .searchPresentationToolbarBehavior(.avoidHidingContent)
+                    }
                 }
+                .tabBarMinimizeBehavior(.onScrollDown)
             }
-            
-            // Reload all calendar records when the app gains focus.
-            .onChange(of: appPhase) { _, phase in
-                if phase == .active, let settings {
-                    calendarStore.attemptFreshLoad(
-                        hiddenCalendarIds: settings.hiddenCalendarIds
-                    )
-                }
-            }
-            
-            // Delete all calendar records when the calendar access is denied.
-            .onChange(of: calendarStore.calendarAccessDenied == true) {
-                _,
-                accessDenied in
-                if accessDenied {
-                    // TODO: delete all calendar planner events from storage
-                }
-            }
-            
-            // Re-load the weather when the device's location changes.
-            .onChange(of: deviceLocationManager.deviceClLocation?.coordinate.key) {
-                _,
-                _ in
-                weatherStore.beginFreshReload()
-            }
-    }
-
-    // Runs once at the start of every day to delete old data.
-    private func cleanseStorage() {
-        guard lastCleansedDatestamp != todaystampWatcher.todaystamp else {
-            return
         }
+        .onAppear(perform: initializeAppData)
 
-        print("Sanitizing app storage...")
-        lastCleansedDatestamp = todaystampWatcher.todaystamp
-
-        if keepPastPlansDuration != .forever {
-
-            // TODO: fix this
-            // Delete sort indices for events that no longer exist in the calendar.
+        // Expanded Planner Cover
+        .fullScreenCover(item: $plannerCoverManager.context) { context in
             if let settings {
-                modelContext.deleteStaleCalendarEvents(
-                    in: settings,
-                    with: []
+                PlannerBuilderView(
+                    datestamp: context.datestamp,
+                    settings: settings
+                )
+                .navigationTransition(
+                    .zoom(
+                        sourceID: context.id,
+                        in: namespace
+                    )
                 )
             }
-
-            // Delete old planners.
-            modelContext.deleteOldPlanners(
-                from: planners,
-                before: keepPastPlansDuration.cutoffDate
-            )
         }
 
-        if keepCanceledPlansDuration != .forever {
-
-            let todaystamp = todaystampWatcher.todaystamp
-            let descriptor = FetchDescriptor<Planner>(
-                predicate: #Predicate { planner in
-                    planner.datestamp == todaystamp
-                }
-            )
-
-            do {
-                if let todayPlanner = try modelContext.fetch(descriptor).first {
-
-                    // TODO: need to load in all the plans for this day
-
-                    // Delete canceled plans from today's planner.
-                    // TODO: fix the below function
-                    modelContext.deleteCheckedPlannerEvents(from: [])
-                }
-            } catch {
-                assertionFailure(
-                    "ERROR ContentView.cleanseStorage: \(error)"
+        // Reload all calendar records when the app gains focus.
+        .onChange(of: appPhase) { _, phase in
+            if phase == .active, let settings {
+                calendarStore.attemptFreshLoad(
+                    hiddenCalendarIds: settings.hiddenCalendarIds
                 )
             }
+        }
+
+        // Delete all calendar records when the calendar access is denied.
+        .onChange(of: calendarStore.calendarAccessDenied == true) {
+            _,
+            accessDenied in
+            if accessDenied {
+                // TODO: delete all calendar planner events from storage
+            }
+        }
+
+        // Re-load the weather when the device's location changes.
+        .onChange(of: deviceLocationManager.deviceClLocation?.coordinate.key) {
+            _,
+            _ in
+            weatherStore.beginFreshReload()
         }
     }
 
@@ -265,6 +212,30 @@ struct ContentView: View {
                 )
             }
         }
+    }
+
+    // Runs once at the start of every day to delete old data.
+    private func cleanseStorage() {
+        guard lastCleansedDatestamp != todaystampWatcher.todaystamp else {
+            return
+        }
+
+        lastCleansedDatestamp = todaystampWatcher.todaystamp
+
+        if keepPastEventsDuration != .forever {
+            modelContext.deleteOldData(
+                before: keepPastEventsDuration.cutoffDate
+            )
+        }
+
+        if keepCanceledEventsDuration != .forever, let settings {
+            modelContext.deleteCanceledPlans(
+                for: todaystampWatcher.todaystamp,
+                settings: settings
+            )
+        }
+        
+        modelContext.safeSave("ContentView.cleanseStorage")
     }
 
 }

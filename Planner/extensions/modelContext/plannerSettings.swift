@@ -73,16 +73,4 @@ extension ModelContext {
         self.safeSave("plannerSettings.toggleCalendarVisibility")
     }
 
-    @MainActor
-    func deleteStaleCalendarEvents(
-        in settings: PlannerSettings,
-        with eventIds: Set<String>
-    ) {
-
-        // TODO: implement
-
-        // Sepcial case: do NOT save the context here. This will be done in the parent
-        // function that called this.
-    }
-
 }

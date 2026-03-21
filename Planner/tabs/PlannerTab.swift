@@ -16,9 +16,9 @@ struct PlannerTabView: View {
     let settings: PlannerSettings
     let namespace: Namespace.ID
 
-    @AppStorage("keepPastPlansDuration") private var keepPastPlansDuration:
-        KeepPastPlansDuration =
-            KeepPastPlansDuration.oneMonth
+    @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
+        KeepPastEventsDuration =
+            KeepPastEventsDuration.oneMonth
 
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
@@ -118,7 +118,7 @@ struct PlannerTabView: View {
                     DatePicker(
                         "Open a planner",
                         selection: $selectedCalendarDate,
-                        in: keepPastPlansDuration
+                        in: keepPastEventsDuration
                             .cutoffDate...todaystampWatcher
                             .maxCalendarDate,
                         displayedComponents: .date

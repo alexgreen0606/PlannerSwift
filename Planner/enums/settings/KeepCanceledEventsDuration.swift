@@ -1,5 +1,5 @@
 //
-//  KeepCanceledPlansDuration.swift
+//  KeepCanceledEventsDuration.swift
 //  Planner
 //
 //  Created by Alex Green on 1/23/26.
@@ -10,12 +10,12 @@ import SwiftUI
 
 // Clean
 
-enum KeepCanceledPlansDuration: String, Codable, CaseIterable {
+enum KeepCanceledEventsDuration: String, Codable, CaseIterable {
     case startOfDay
     case forever
 
     static var title: String {
-        "Keep Canceled Plans"
+        "Keep Canceled Events"
     }
 
     var label: String {
