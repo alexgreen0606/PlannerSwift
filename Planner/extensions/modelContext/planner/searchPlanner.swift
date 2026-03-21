@@ -22,6 +22,7 @@ extension ModelContext {
         do {
             let text = query?.text ?? ""
             let filteredCalendarIds = query?.filteredCalendarIds ?? []
+            let filterPast = query?.filterPast ?? false
             let homeRegion = settings.homeRegion
 
             let onlySearchCalendar =
@@ -84,6 +85,8 @@ extension ModelContext {
                     plannerCache: &plannerCache,
                     settings: settings,
                     homeRegion: homeRegion,
+                    todaystamp: query?.todayStartOfDay.datestamp,
+                    filterPast: filterPast,
                     score: score
                 )
             }
@@ -114,6 +117,8 @@ extension ModelContext {
                     plannerCache: &plannerCache,
                     settings: settings,
                     homeRegion: homeRegion,
+                    todaystamp: query?.todayStartOfDay.datestamp,
+                    filterPast: filterPast,
                     score: score
                 )
             }
@@ -142,6 +147,8 @@ extension ModelContext {
         plannerCache: inout [String: DateInRegion],
         settings: PlannerSettings,
         homeRegion: Region,
+        todaystamp: String?,
+        filterPast: Bool,
         score: Double
     ) throws {
         let possibleDatestamps = getChronologicalPossibleDatestamps(
@@ -150,6 +157,14 @@ extension ModelContext {
         )
 
         for datestamp in possibleDatestamps {
+
+            // Skip this datestamp if it is outside the search frame.
+            if let todaystamp,
+                (filterPast && datestamp >= todaystamp)
+                    || (!filterPast && datestamp < todaystamp)
+            {
+                continue
+            }
 
             // Use the cached start of day for this datestamp to determine if the planner owns this event.
             if let cachedPlannerStartOfDay = plannerCache[
@@ -187,8 +202,7 @@ extension ModelContext {
             }
             plannerCache[datestamp] = plannerDay
 
-            if range(from: startDate, to: endDate, includes: plannerDay)
-            {
+            if range(from: startDate, to: endDate, includes: plannerDay) {
                 datestampScores[datestamp, default: 0] += (1.0 - score)
             }
         }

@@ -23,20 +23,50 @@ extension DateInRegion {
         )
     }
 
-    var dynamicHeader: String {
+    var dynamicTitle: String {
         isThisWeek ? weekday : dateLabel
     }
 
-    var dynamicSubheader: String {
+    var dynamicSubtitle: String {
         isThisWeek ? dateLabel : weekday
+    }
+
+    var previewTitle: String {
+        let todaystamp = DateInRegion(Date(), region: .local).datestamp
+
+        guard let dayDiff = dayDifference(from: datestamp, to: todaystamp)
+        else {
+            return dynamicTitle
+        }
+
+        if abs(dayDiff) < 2 {
+            return countdown
+        }
+
+        return isThisWeek ? self.weekday : self.countdown
+    }
+
+    var previewSubtitle: String {
+        let todaystamp = DateInRegion(Date(), region: .local).datestamp
+
+        guard let dayDiff = dayDifference(from: datestamp, to: todaystamp)
+        else {
+            return dynamicTitle
+        }
+
+        if abs(dayDiff) < 2 {
+            return self.weekday
+        }
+
+        return isThisWeek ? self.countdown : self.weekday
     }
 
     var notificationDayLabel: String {
         let todaystamp = DateInRegion(Date(), region: .local).datestamp
 
-        guard let dayDiff = dayDifference(from: datestamp, to: todaystamp)
+        guard let dayDiff = dayDifference(from: self.datestamp, to: todaystamp)
         else {
-            return dynamicHeader
+            return dynamicTitle
         }
 
         if abs(dayDiff) < 2 {

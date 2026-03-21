@@ -33,7 +33,7 @@ enum PlannerType: String {
 
         case .future:
 
-            var formatted = plannerDay.dynamicHeader
+            var formatted = plannerDay.dynamicTitle
 
             if !formatted.contains(",") {
                 if let dayString = formatted.split(separator: " ").last,

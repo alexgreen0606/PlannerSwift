@@ -217,7 +217,7 @@ extension ModelContext {
                 event.date = event.date + days
             }
 
-            updateSortDate(
+            let _ = updateSortDate(
                 for: event,
                 settings: settings,
                 sourceDay: sourceDay

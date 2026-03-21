@@ -28,7 +28,7 @@ struct KeepCanceledEventsFormView: View {
                 )
             } footer: {
                 Text(
-                    "Controls how long to keep canceled plans. Forever means they remain until they expire (see ‘Keep Past Events’ for expiration details)."
+                    "Keeping canceled events forever means they remain until they expire (see ‘Keep Past Events’ for expiration details)."
                 )
             }
         }

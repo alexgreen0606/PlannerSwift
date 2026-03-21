@@ -66,7 +66,7 @@ struct ExpandedPlannerView: View {
                 "\(count == 0 ? "No" : String(count)) plan\(count == 1 ? "" : "s") selected"
         }
 
-        return plannerDay.dynamicSubheader
+        return plannerDay.dynamicSubtitle
     }
 
     // MARK: Event Lists
@@ -100,7 +100,7 @@ struct ExpandedPlannerView: View {
                     settings: settings,
                     createEvent: createEvent
                 )
-                .navigationTitle(plannerDay.dynamicHeader)
+                .navigationTitle(plannerDay.dynamicTitle)
                 .navigationSubtitle(subtitle)
                 .toolbar {
                     upperLeftToolbar

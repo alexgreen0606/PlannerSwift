@@ -148,7 +148,7 @@ struct TransferEventsFormView: View {
     private var sourceChip: some View {
         TransferSourceIndicatorView(
             title: transferCount,
-            subtitle: sourceDay.dynamicHeader,
+            subtitle: sourceDay.dynamicTitle,
             iconConfig: IconConfig(
                 name: "note"
             )
@@ -157,7 +157,7 @@ struct TransferEventsFormView: View {
 
     private var destinationChip: some View {
         TransferDestinationIndicatorView(
-            title: destinationDay.dynamicHeader,
+            title: destinationDay.dynamicTitle,
             iconConfig: IconConfig(
                 name: destinationDay.datestamp.calendarSymbolName
             )

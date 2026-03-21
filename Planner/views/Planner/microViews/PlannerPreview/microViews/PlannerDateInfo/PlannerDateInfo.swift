@@ -12,15 +12,13 @@ import SwiftUI
 
 struct PlannerDateInfoView: View {
     let plannerDay: DateInRegion
-    let isThisWeek: Bool
 
     private var title: String {
-        return isThisWeek
-            ? plannerDay.weekday : plannerDay.countdown
+        plannerDay.previewTitle
     }
 
     private var subtitle: String {
-        isThisWeek ? plannerDay.countdown : plannerDay.weekday
+        plannerDay.previewSubtitle
     }
 
     var body: some View {

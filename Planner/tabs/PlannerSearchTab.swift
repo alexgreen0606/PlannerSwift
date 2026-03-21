@@ -144,6 +144,13 @@ struct PlannerSearchTabView: View {
                         }
                     )
 
+                    // Re-build the planner map when today's date changes.
+                    .onChange(of: todaystampWatcher.todaystamp) {
+                        _,
+                        _ in
+                        buildPlannerMap(scrollProxy: scrollProxy)
+                    }
+
                     // Schedule a build of the planner map when the search query changes.
                     .onChange(of: searchText) { _, _ in
                         schedulePlannerMapBuild(scrollProxy: scrollProxy)
@@ -159,6 +166,7 @@ struct PlannerSearchTabView: View {
                         schedulePlannerMapBuild(scrollProxy: scrollProxy)
                     }
                 }
+                .animateAsynchronousAction(from: todaystampWatcher.todaystamp)
             }
         }
     }

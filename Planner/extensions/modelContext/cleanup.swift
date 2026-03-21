@@ -19,6 +19,23 @@ extension ModelContext {
     ) {
 
         do {
+
+            // Delete locations that haven't been selected since the cutoff date.
+
+            let oldLocations = try self.fetch(
+                FetchDescriptor<Location>(
+                    predicate: #Predicate<Location> {
+                        $0.selectedOn < date
+                    }
+                )
+            )
+
+            for location in oldLocations {
+                self.delete(location)
+            }
+
+            // Delete events that occurred before the cutoff date.
+
             let oldEvents = try self.fetch(
                 FetchDescriptor<PlannerEvent>(
                     predicate: #Predicate<PlannerEvent> {
@@ -30,6 +47,8 @@ extension ModelContext {
             for event in oldEvents {
                 self.delete(event)
             }
+
+            // Delete planners that occurred before the cutoff date.
 
             let datestamp = DateInRegion(date, region: .local).datestamp
 
@@ -70,7 +89,7 @@ extension ModelContext {
         for event in events where event.isCanceled {
             self.delete(event)
         }
-        
+
         // Sepcial case: do NOT save the context here. This will be done in the parent
         // function that called this.
     }

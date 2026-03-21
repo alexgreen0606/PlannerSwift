@@ -173,15 +173,6 @@ struct ContentView: View {
             }
         }
 
-        // Delete all calendar records when the calendar access is denied.
-        .onChange(of: calendarStore.calendarAccessDenied == true) {
-            _,
-            accessDenied in
-            if accessDenied {
-                // TODO: delete all calendar planner events from storage
-            }
-        }
-
         // Re-load the weather when the device's location changes.
         .onChange(of: deviceLocationManager.deviceClLocation?.coordinate.key) {
             _,

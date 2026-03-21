@@ -111,8 +111,7 @@ struct PlannerPreviewView: View {
 
             HStack(alignment: .top) {
                 PlannerDateInfoView(
-                    plannerDay: plannerDay,
-                    isThisWeek: type.isThisWeek
+                    plannerDay: plannerDay
                 )
 
                 Spacer()
