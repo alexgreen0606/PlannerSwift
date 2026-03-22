@@ -74,7 +74,7 @@ struct WeatherInfoView: View {
     }
 
     var body: some View {
-        if previewType == .planner {
+        if previewType != .search {
             fullWidthView
         } else {
             condensedWidthView

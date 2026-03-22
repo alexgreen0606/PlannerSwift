@@ -12,6 +12,18 @@ import SwiftUI
 
 // Clean
 
+struct TripSheetContext: Identifiable {
+    var trip: Trip?
+
+    var id: String {
+        guard let trip else {
+            return IdConstants.ADD_BUTTON
+        }
+        return String(describing: trip.id)
+    }
+
+}
+
 struct PlannerTabView: View {
     let settings: PlannerSettings
     let namespace: Namespace.ID
@@ -26,19 +38,29 @@ struct PlannerTabView: View {
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
     @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
 
+    @Query(sort: \Trip.startDatestamp)
+    private var trips: [Trip]
+
     @StateObject private var notificationManager = NotificationManager()
+    @State private var tappedDates: Set<DateComponents> = []
     @State private var showNewEventSheet = false
     @State private var showCalendarPicker = false
-    @State private var selectedCalendarDate: Date = Date()
     @State private var thisWeekDatestamps: [String] = []
+    @State private var tripSheetContext: TripSheetContext? = nil
+    @State private var expandedTrips: Set<PersistentIdentifier> = []
+
+    private var upcomingTrips: [Trip] {
+        trips.filter { $0.endDatestamp >= todaystampWatcher.todaystamp }
+    }
+
+    private var dateBounds: Range<Date> {
+        keepPastEventsDuration.cutoffDate..<todaystampWatcher.maxCalendarDate
+    }
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    Text("This week")
-                        .sectionLabel()
-
                     ScrollView(.horizontal) {
                         HStack {
                             ForEach(thisWeekDatestamps, id: \.self) {
@@ -56,16 +78,45 @@ struct PlannerTabView: View {
                     }
                     .scrollIndicators(.hidden)
                     .background(Color.clear)
+                } header: {
+                    Text("This Week")
+                        .padding()
                 }
                 .listRowInsets(EdgeInsets())
                 .discreetListItem()
+
+                Section {
+                    ForEach(upcomingTrips, id: \.id) { trip in
+                        TripView(
+                            expandedTrips: $expandedTrips,
+                            trip: trip,
+                            namespace: namespace,
+                            settings: settings
+                        ) {
+                            tripSheetContext = TripSheetContext(trip: trip)
+                        }
+                    }
+                    if upcomingTrips.isEmpty {
+                        EmptyLabelView(text: "No Upcoming Trips")
+                            .frame(maxWidth: .infinity)
+                    }
+                } header: {
+                    Text("Trips")
+                        .padding()
+                } footer: {
+                    Color.clear.frame(height: 16)
+                        .discreetListItem()
+                }
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets())
+                .animation(.linear, value: expandedTrips)
             }
             .listStyle(.plain)
             .background(Color.appBackground)
             .navigationTitle("Planner")
             .toolbar {
                 datePickerToolbarPopover
-                newEventToolbarButton
+                createMenu
             }
             .refreshable {
                 weatherStore.beginFreshReload()
@@ -89,6 +140,17 @@ struct PlannerTabView: View {
                     )
                 )
                 .environmentObject(notificationManager)
+            }
+
+            // New Trip Form
+            .sheet(item: $tripSheetContext) { context in
+                TripFormView(sourceTrip: context.trip, settings: settings)
+                    .navigationTransition(
+                        .zoom(
+                            sourceID: context.id,
+                            in: namespace
+                        )
+                    )
             }
         }
         .overlay {
@@ -115,21 +177,29 @@ struct PlannerTabView: View {
             }
             .popover(isPresented: $showCalendarPicker) {
                 VStack {
-                    DatePicker(
+                    MultiDatePicker(
                         "Open a planner",
-                        selection: $selectedCalendarDate,
-                        in: keepPastEventsDuration
-                            .cutoffDate...todaystampWatcher
-                            .maxCalendarDate,
-                        displayedComponents: .date
+                        selection: $tappedDates,
+                        in: dateBounds
                     )
-                    .datePickerStyle(.graphical)
+                    .onChange(of: tappedDates) { _, newValue in
+                        guard let selected = newValue.first,
+                            let year = selected.year,
+                            let month = selected.month,
+                            let day = selected.day
+                        else { return }
 
-                    // Open planner when a new date is selected from the picker.
-                    .onChange(of: selectedCalendarDate) { _, _ in
-                        handlePlannerDateSelect()
+                        handlePlannerDateSelect(
+                            datestamp: String(
+                                format: "%04d-%02d-%02d",
+                                year,
+                                month,
+                                day
+                            )
+                        )
+
+                        tappedDates.removeAll()
                     }
-
                 }
                 .frame(width: 340, height: 320)
                 .padding()
@@ -142,10 +212,19 @@ struct PlannerTabView: View {
         }
     }
 
-    private var newEventToolbarButton: some ToolbarContent {
+    private var createMenu: some ToolbarContent {
         ToolbarItemGroup(placement: .topBarTrailing) {
-            Button("New Event", systemImage: "plus") {
-                showNewEventSheet = true
+            Menu("Create Menu", systemImage: "plus") {
+                Button(
+                    "Create Event",
+                    systemImage: "calendar.day.timeline.leading"
+                ) {
+                    showNewEventSheet = true
+                }
+
+                Button("Create Trip", systemImage: "suitcase") {
+                    tripSheetContext = TripSheetContext()
+                }
             }
             .matchedTransitionSource(
                 id: IdConstants.ADD_BUTTON,
@@ -164,17 +243,12 @@ struct PlannerTabView: View {
         }.sorted()
     }
 
-    private func handlePlannerDateSelect() {
+    private func handlePlannerDateSelect(datestamp: String) {
         showCalendarPicker = false
-
-        let localDate = DateInRegion(
-            selectedCalendarDate,
-            region: .local
-        )
 
         DispatchQueue.main.async {
             plannerCoverManager.context = PlannerCoverContext(
-                datestamp: localDate.datestamp,
+                datestamp: datestamp,
                 source: IdConstants.CALENDAR_BUTTON
             )
         }

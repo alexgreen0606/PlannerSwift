@@ -31,7 +31,11 @@ extension DateInRegion {
         isThisWeek ? dateLabel : weekday
     }
 
-    var previewTitle: String {
+    func previewTitle(type: PlannerPreviewType) -> String {
+        if type == .trip {
+            return self.weekday
+        }
+        
         let todaystamp = DateInRegion(Date(), region: .local).datestamp
 
         guard let dayDiff = dayDifference(from: datestamp, to: todaystamp)
@@ -46,7 +50,11 @@ extension DateInRegion {
         return isThisWeek ? self.weekday : self.countdown
     }
 
-    var previewSubtitle: String {
+    func previewSubtitle(type: PlannerPreviewType) -> String {
+        if type == .trip {
+            return self.countdown
+        }
+        
         let todaystamp = DateInRegion(Date(), region: .local).datestamp
 
         guard let dayDiff = dayDifference(from: datestamp, to: todaystamp)
@@ -82,6 +90,21 @@ extension DateInRegion {
         }
 
         return dateLabel
+    }
+    
+    var tripLabel: String {
+        let todaystamp = DateInRegion(Date(), region: .local).datestamp
+
+        guard let dayDiff = dayDifference(from: datestamp, to: todaystamp)
+        else {
+            return self.dynamicTitle
+        }
+
+        if abs(dayDiff) < 2 {
+            return countdown
+        }
+
+        return self.dynamicTitle
     }
 
     var timeWithTimezone: String? {  // EX: 3PM CST, 3:59AM GMT

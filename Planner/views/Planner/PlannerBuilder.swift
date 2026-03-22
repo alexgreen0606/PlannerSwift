@@ -17,19 +17,22 @@ struct PlannerBuilderView: View {
     private let previewType: PlannerPreviewType?
     private let plannerSearchQuery: PlannerSearchQuery?
     private let namespace: Namespace.ID?
+    private let transitionSource: String?
 
     init(
         datestamp: String,
         settings: PlannerSettings,
         previewType: PlannerPreviewType? = nil,
         plannerSearchQuery: PlannerSearchQuery? = nil,
-        namespace: Namespace.ID? = nil
+        namespace: Namespace.ID? = nil,
+        transitionSource: String? = nil
     ) {
         self.datestamp = datestamp
         self.previewType = previewType
         self.plannerSearchQuery = plannerSearchQuery
         self.settings = settings
         self.namespace = namespace
+        self.transitionSource = transitionSource
 
         _planners = Query(
             filter: #Predicate<Planner> {
@@ -56,7 +59,8 @@ struct PlannerBuilderView: View {
                     settings: settings,
                     previewType: previewType,
                     plannerSearchQuery: plannerSearchQuery,
-                    namespace: namespace
+                    namespace: namespace,
+                    transitionSource: transitionSource
                 )
                 .overlay {
                     NotificationsView()

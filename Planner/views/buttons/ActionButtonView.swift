@@ -27,6 +27,7 @@ struct ActionButtonView: View {
             }
             .font(.system(size: 14, weight: .bold, design: .rounded))
             .padding(.bottom, 8)
+            .foregroundStyle(accentColor.color)
         }
         .tint(accentColor.color)
     }

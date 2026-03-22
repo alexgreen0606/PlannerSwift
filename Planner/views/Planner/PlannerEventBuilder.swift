@@ -18,19 +18,22 @@ struct PlannerEventBuilderView: View {
     private let previewType: PlannerPreviewType?
     private let plannerSearchQuery: PlannerSearchQuery?
     private let namespace: Namespace.ID?
+    private let transitionSource: String?
 
     init(
         planner: Planner,
         settings: PlannerSettings,
         previewType: PlannerPreviewType? = nil,
         plannerSearchQuery: PlannerSearchQuery? = nil,
-        namespace: Namespace.ID? = nil
+        namespace: Namespace.ID? = nil,
+        transitionSource: String? = nil
     ) {
         self.planner = planner
         self.previewType = previewType
         self.plannerSearchQuery = plannerSearchQuery
         self.settings = settings
         self.namespace = namespace
+        self.transitionSource = transitionSource
 
         let region = planner.region(settings: settings)
         guard let startOfDay = planner.datestamp.startOfDay(in: region) else {
@@ -60,6 +63,7 @@ struct PlannerEventBuilderView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var weatherStore: WeatherStore
+    @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
     @Query private var sortedPlannerEvents: [PlannerEvent]
@@ -135,9 +139,16 @@ struct PlannerEventBuilderView: View {
                 settings: settings
             )
             .matchedTransitionSource(
-                id: planner.datestamp,
+                id: transitionSource ?? planner.datestamp,
                 in: namespace
             )
+            .contentShape(Rectangle())
+            .onTapGesture {
+                plannerCoverManager.context = PlannerCoverContext(
+                    datestamp: planner.datestamp,
+                    source: transitionSource
+                )
+            }
         }
     }
 

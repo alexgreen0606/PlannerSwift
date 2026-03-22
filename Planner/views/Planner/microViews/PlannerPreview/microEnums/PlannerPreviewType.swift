@@ -10,4 +10,5 @@
 enum PlannerPreviewType {
     case planner
     case search
+    case trip
 }

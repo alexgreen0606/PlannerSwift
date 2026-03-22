@@ -26,7 +26,6 @@ struct PlannerPreviewView: View {
 
     private let maxPreviewEvents = 5
 
-    @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
     @EnvironmentObject private var todaystampManager: TodaystampWatcher
 
     // MARK: - Computed Variables
@@ -111,7 +110,8 @@ struct PlannerPreviewView: View {
 
             HStack(alignment: .top) {
                 PlannerDateInfoView(
-                    plannerDay: plannerDay
+                    plannerDay: plannerDay,
+                    type: type
                 )
 
                 Spacer()
@@ -135,23 +135,17 @@ struct PlannerPreviewView: View {
             remainingPlansIndicator
             emptyPlannerIndicator
 
-            if type == .planner {
+            if type != .search {
                 weatherInfo
             }
         }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            plannerCoverManager.context = PlannerCoverContext(
-                datestamp: planner.datestamp
-            )
-        }
 
-        if type == .planner {
+        if type != .search {
             content
                 .padding(.top)
                 .padding(.horizontal)
                 .padding(.bottom, 12)
-                .frame(width: todaystampManager.todaystamp == planner.datestamp ? 320 : 240)
+                .frame(width: todaystampManager.todaystamp == planner.datestamp && type != .trip ? 330 : 240)
                 .frame(height: 330, alignment: .top)
                 .background(
                     RoundedRectangle(cornerRadius: 24)
@@ -190,7 +184,7 @@ struct PlannerPreviewView: View {
 
     @ViewBuilder
     private var emptyPlannerIndicator: some View {
-        if type == .planner {
+        if type != .search {
             VStack {
                 if !hasEvents {
                     Text(remainingPlansLabel)
