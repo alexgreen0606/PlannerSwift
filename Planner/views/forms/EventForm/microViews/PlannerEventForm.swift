@@ -176,14 +176,8 @@ struct PlannerEventFormView: View {
                     HStack {
                         Spacer()
                         Text(
-                            draftPlannerEvent.location != nil
-                                ? draftPlannerEvent.locationLabel(
-                                    planner: sourcePlanner,
-                                    settings: settings,
-                                    deviceLocation:
-                                        deviceLocationManager
-                                        .deviceLocation
-                                ) : "Set a location"
+                            draftPlannerEvent.location?.name
+                                ?? "Planner Location"
                         )
                         .font(.subheadline)
                         .foregroundStyle(.secondary)

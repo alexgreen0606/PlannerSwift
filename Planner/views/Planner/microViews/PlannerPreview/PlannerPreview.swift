@@ -146,7 +146,7 @@ struct PlannerPreviewView: View {
                 .padding(.horizontal)
                 .padding(.bottom, 12)
                 .frame(width: todaystampManager.todaystamp == planner.datestamp && type != .trip ? 330 : 240)
-                .frame(height: 330, alignment: .top)
+                .frame(height: PlannerLayout.PREVIEW_CARD_HEIGHT, alignment: .top)
                 .background(
                     RoundedRectangle(cornerRadius: 24)
                         .fill(Color.cardBackground)

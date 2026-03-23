@@ -6,13 +6,11 @@
 //
 
 import EventKit
+import SwiftData
 import SwiftDate
 import SwiftUI
-import SwiftData
 
 // TODO: add delete option
-
-// TODO: get zoom animation working
 
 struct TripFormView: View {
     private let sourceTrip: Trip?
@@ -27,21 +25,10 @@ struct TripFormView: View {
 
         var draftTrip = DraftTrip()
         if let sourceTrip {
-
-            if let startDate = DateInRegion(
-                sourceTrip.startDatestamp,
-                region: .local
-            )?.date {
-                draftTrip.startDate = startDate
-            }
-
-            if let endDate = DateInRegion(
-                sourceTrip.endDatestamp,
-                region: .local
-            )?.date {
-                draftTrip.endDate = endDate
-            }
-
+            draftTrip.selectedDates = getDateComponentRange(
+                from: sourceTrip.startDatestamp,
+                to: sourceTrip.endDatestamp
+            )
             draftTrip.title = sourceTrip.title
             draftTrip.hideRoutines = sourceTrip.hideRoutines
             draftTrip.location = sourceTrip.location
@@ -53,13 +40,8 @@ struct TripFormView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
 
-    @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
-        KeepPastEventsDuration =
-            KeepPastEventsDuration.oneMonth
-
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
 
     @State private var draftTrip: DraftTrip
 
@@ -68,7 +50,7 @@ struct TripFormView: View {
     }
 
     private var canSave: Bool {
-        !draftTrip.title.isEmpty
+        !draftTrip.title.isEmpty && !draftTrip.selectedDates.isEmpty
     }
 
     var body: some View {
@@ -76,24 +58,30 @@ struct TripFormView: View {
             Form {
                 titleSection
                 timeSection
-                locationSection
                 routineSection
             }
             .navigationTitle(isCreateForm ? "Create Trip" : "Edit Trip")
             .navigationBarTitleDisplayMode(.inline)
             .scrollDisabled(true)
             .toolbar {
+                cancelButton
                 saveButton
             }
         }
-        .presentationDragIndicator(.hidden)
-        .presentationDetents(
-            [.height(480), .large]
-        )
         .tint(accentColor.color)
     }
 
     // MARK: - Toolbars
+
+    @ToolbarContentBuilder
+    private var cancelButton: some ToolbarContent {
+        ToolbarItem(placement: .cancellationAction) {
+            Button("Cancel", systemImage: "xmark") {
+                dismiss()
+            }
+            .tint(Color.label)
+        }
+    }
 
     @ToolbarContentBuilder
     private var saveButton: some ToolbarContent {
@@ -111,41 +99,12 @@ struct TripFormView: View {
         Section {
             TextField("Title", text: $draftTrip.title)
                 .textInputAutocapitalization(.words)
-        }
-        .listSectionMargins(.top, 0)
-    }
 
-    // TODO: use a multi date picker
-    private var timeSection: some View {
-        Section {
-            DatePicker(
-                "Start",
-                selection: $draftTrip.startDate,
-                in: keepPastEventsDuration
-                    .cutoffDate...todaystampWatcher
-                    .maxCalendarDate,
-                displayedComponents: .date
-            )
-            
-
-            DatePicker(
-                "End",
-                selection: $draftTrip.endDate,
-                in: keepPastEventsDuration
-                    .cutoffDate...todaystampWatcher
-                    .maxCalendarDate,
-                displayedComponents: .date
-            )
-        }
-    }
-
-    private var locationSection: some View {
-        Section {
             LabeledContent {
                 NavigationLink {
                     LocationSearchFormView(
                         title: "Edit Event Location",
-                        mode: .event,
+                        mode: .trip,
                         settings: settings,
                         initialLocation: draftTrip.location
                     ) { location in
@@ -155,9 +114,7 @@ struct TripFormView: View {
                     HStack {
                         Spacer()
                         Text(
-                            draftTrip.location != nil
-                                ? draftTrip.location!.name
-                                : "Set a location"
+                            draftTrip.location?.name ?? "Home Location"
                         )
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
@@ -167,6 +124,14 @@ struct TripFormView: View {
                 Label("Location", systemImage: "mappin.and.ellipse")
                     .foregroundStyle(Color.label)
             }
+        }
+    }
+
+    private var timeSection: some View {
+        Section {
+            DateRangePickerView(
+                selectedDates: $draftTrip.selectedDates
+            )
         }
     }
 
@@ -181,22 +146,26 @@ struct TripFormView: View {
 
     // MARK: - Functions
 
+    // TODO: move to model context
     private func saveTrip() {
-        
+
+        guard let bounds = getDatestampBounds(from: draftTrip.selectedDates)
+        else {
+            return
+        }
+
         let trip = sourceTrip ?? Trip()
         trip.title = draftTrip.title
-        trip.startDatestamp = DateInRegion(draftTrip.startDate, region: .local).datestamp
-        trip.endDatestamp = DateInRegion(draftTrip.endDate, region: .local).datestamp
+        trip.startDatestamp = bounds.startDatestamp
+        trip.endDatestamp = bounds.endDatestamp
         trip.hideRoutines = draftTrip.hideRoutines
         trip.location = draftTrip.location
-        
+
         if trip.modelContext == nil {
             modelContext.insert(trip)
         }
-        
-        modelContext.safeSave("save trip")
 
-        // TODO: save trip to store
+        modelContext.safeSave("save trip")
 
         // update all the matching planners
 

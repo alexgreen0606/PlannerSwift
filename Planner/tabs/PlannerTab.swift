@@ -73,6 +73,9 @@ struct PlannerTabView: View {
                                 )
                             }
                         }
+                        .frame(
+                            height: PlannerLayout.PREVIEW_CARD_HEIGHT
+                        )
                         .padding(.horizontal)
                         .animateAsynchronousAction(from: thisWeekDatestamps)
                     }

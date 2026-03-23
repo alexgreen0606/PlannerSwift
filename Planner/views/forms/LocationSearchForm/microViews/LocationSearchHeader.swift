@@ -31,7 +31,7 @@ struct LocationSearchHeaderView: View {
         switch mode {
         case .home:
             return selectedLocation == nil
-        case .planner:
+        case .planner, .trip:
             return selectedLocation == nil && homeLocation == nil
         case .event:
             return selectedLocation == nil && homeLocation == nil
@@ -45,7 +45,7 @@ struct LocationSearchHeaderView: View {
         }
 
         switch mode {
-        case .planner:
+        case .planner, .trip:
             return selectedLocation == nil
         case .event:
             return selectedLocation == nil && plannerLocation == nil
@@ -60,11 +60,12 @@ struct LocationSearchHeaderView: View {
         }
 
         switch mode {
-        case .planner, .home:
+        case .planner, .home, .trip:
             return false
         case .event:
             return selectedLocation == nil
         }
+        
     }
 
     var body: some View {

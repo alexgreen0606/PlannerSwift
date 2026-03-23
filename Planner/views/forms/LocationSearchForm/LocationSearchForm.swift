@@ -16,6 +16,7 @@ enum LocationSearchMode {
     case home
     case planner
     case event
+    case trip
 }
 
 struct LocationSearchFormView: View {
@@ -65,25 +66,25 @@ struct LocationSearchFormView: View {
         switch mode {
         case .home:
             return selectedLocation != nil
-        case .event, .planner:
+        case .event, .planner, .trip:
             return false
         }
     }
 
     private var showHomeOption: Bool {
         switch mode {
-        case .planner:
+        case .planner, .trip:
             return selectedLocation != nil
         case .home, .event:
             return false
         }
     }
 
-    private var showNoOption: Bool {
+    private var showPlannerOption: Bool {
         switch mode {
         case .event:
             return selectedLocation != nil
-        case .home, .planner:
+        case .home, .planner, .trip:
             return false
         }
     }
@@ -140,7 +141,7 @@ struct LocationSearchFormView: View {
                     Spacer()
                     currentLocationButton
                     homeLocationButton
-                    noLocationButton
+                    plannerLocationButton
                 }
                 .padding(.bottom, lowerOptionPadding)
             }
@@ -212,11 +213,12 @@ struct LocationSearchFormView: View {
     }
 
     @ViewBuilder
-    private var noLocationButton: some View {
-        if showNoOption {
+    private var plannerLocationButton: some View {
+        if showPlannerOption {
             ActionButtonView(
-                label: "No Location",
-                systemImage: "xmark"
+                label: "Use Planner Location",
+                systemImage: sourcePlanner?.datestamp.calendarSymbolName
+                    ?? "note"
             ) {
                 selectedLocation = nil
             }
