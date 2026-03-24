@@ -20,11 +20,11 @@ extension Planner {
 
     // MARK: - Location Variables
 
-    // Nil means the device location is used.
+    // Nil means the device location is used and hasn't loaded yet.
     func location(settings: PlannerSettings, deviceLocation: Location?)
         -> Location?
     {
-        location ?? settings.homeLocation(deviceLocation: deviceLocation)
+        self.location ?? self.trip?.location ?? settings.homeLocation(deviceLocation: deviceLocation)
     }
 
     func region(settings: PlannerSettings) -> Region {
@@ -41,7 +41,7 @@ extension Planner {
     func locationIconConfig(settings: PlannerSettings, accentColor: AccentColor)
         -> IconConfig
     {
-        if location != nil {
+        if location != nil || trip?.location != nil {
             return IconConfig(
                 name: "mappin.and.ellipse",
                 primaryColor: accentColor.color

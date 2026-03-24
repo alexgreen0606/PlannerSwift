@@ -9,6 +9,9 @@ import SwiftData
 
 // Clean
 
+// TODO: allow hideRoutines to be nil. Default. When it is hard-set, use it. Otherwise pull from a trip
+// if one exists. If it doesnt exist, consider it false.
+
 @Model
 class Planner {
     
@@ -17,7 +20,9 @@ class Planner {
     
     var showChecked: Bool = false
     
-    @Relationship(deleteRule: .nullify)
+    var trip: Trip? = nil
+    
+    @Relationship(deleteRule: .nullify, inverse: \Location.planners)
     var location: Location?
     
     init(datestamp: String, location: Location?) {

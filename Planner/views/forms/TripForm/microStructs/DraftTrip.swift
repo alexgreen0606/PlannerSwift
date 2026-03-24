@@ -15,25 +15,8 @@ struct DraftTrip {
     var hideRoutines: Bool = true
     var dateComponents: Set<DateComponents> = []
 
-    var datestampBounds: (startDatestamp: String, endDatestamp: String)? {
-        let calendar = Calendar.current
-
-        let sortedDateComponents = dateComponents.sorted { lhs, rhs in
-            guard let lhsDate = calendar.date(from: lhs),
-                let rhsDate = calendar.date(from: rhs)
-            else {
-                return false
-            }
-            return lhsDate < rhsDate
-        }
-
-        guard let startDatestamp = sortedDateComponents.first?.datestamp,
-            let endDatestamp = sortedDateComponents.last?.datestamp
-        else {
-            return nil
-        }
-
-        return (startDatestamp, endDatestamp)
+    var datestamps: [String] {
+        dateComponents.compactMap { $0.datestamp }
     }
-    
+
 }

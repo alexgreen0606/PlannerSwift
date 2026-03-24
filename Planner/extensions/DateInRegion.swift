@@ -27,15 +27,44 @@ extension DateInRegion {
         isThisWeek ? weekday : dateLabel
     }
 
+    // Same as dynamicTitle, but includes "th", "rd", etc.
+    var dynamicSentenceTitle: String {
+        var formatted = self.dynamicTitle
+
+        if !formatted.contains(",") {
+            if let dayString = formatted.split(separator: " ").last,
+                let day = Int(dayString)
+            {
+
+                let suffix: String
+                switch day % 100 {
+                case 11, 12, 13:
+                    suffix = "th"
+                default:
+                    switch day % 10 {
+                    case 1: suffix = "st"
+                    case 2: suffix = "nd"
+                    case 3: suffix = "rd"
+                    default: suffix = "th"
+                    }
+                }
+
+                formatted += suffix
+            }
+        }
+
+        return formatted
+    }
+
     var dynamicSubtitle: String {
         isThisWeek ? dateLabel : weekday
     }
 
     func previewTitle(type: PlannerPreviewType) -> String {
         if type == .trip {
-            return "" // This will be custom computed inside TripView.
+            return ""  // This will be custom computed inside TripView.
         }
-        
+
         let todaystamp = DateInRegion(Date(), region: .local).datestamp
 
         guard let dayDiff = dayDifference(from: datestamp, to: todaystamp)
@@ -54,7 +83,7 @@ extension DateInRegion {
         if type == .trip {
             return self.weekday
         }
-        
+
         let todaystamp = DateInRegion(Date(), region: .local).datestamp
 
         guard let dayDiff = dayDifference(from: datestamp, to: todaystamp)
@@ -91,7 +120,7 @@ extension DateInRegion {
 
         return dateLabel
     }
-    
+
     var tripLabel: String {
         let todaystamp = DateInRegion(Date(), region: .local).datestamp
 

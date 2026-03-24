@@ -23,7 +23,7 @@ class PlannerEvent: ListItem {
     // May go out of sync with the date.
     var sortDate: Date
     
-    @Relationship(deleteRule: .nullify)
+    @Relationship(deleteRule: .nullify, inverse: \Location.events)
     var location: Location?
 
     @Transient

@@ -26,12 +26,22 @@ struct TripView: View {
         expandedTrips.contains(trip.id)
     }
 
-    private var startDay: DateInRegion? {
-        DateInRegion(trip.startDatestamp, region: .local)
+    private var firstDay: DateInRegion? {
+        guard let firstDayPlanner = trip.sortedPlanners.first else {
+            return nil
+        }
+        return firstDayPlanner.datestamp.startOfDay(
+            in: firstDayPlanner.region(settings: settings)
+        )
     }
 
-    private var endDay: DateInRegion? {
-        DateInRegion(trip.endDatestamp, region: .local)
+    private var lastDay: DateInRegion? {
+        guard let lastDayPlanner = trip.sortedPlanners.last else {
+            return nil
+        }
+        return lastDayPlanner.datestamp.startOfDay(
+            in: lastDayPlanner.region(settings: settings)
+        )
     }
 
     private var locationLabel: String? {
@@ -43,22 +53,27 @@ struct TripView: View {
     }
 
     private var datesLabel: String {
-        guard let startDay, let endDay else {
+        guard let firstDay, let lastDay else {
             return ""
         }
 
-        if trip.startDatestamp == trip.endDatestamp {
-            return startDay.tripLabel
+        if trip.planners.count == 1 {
+            return firstDay.tripLabel
         }
 
-        return "\(startDay.tripLabel) - \(endDay.tripLabel)"
+        return "\(firstDay.tripLabel) - \(lastDay.tripLabel)"
     }
 
     private var countdownLabel: String {
-        if trip.startDatestamp <= todaystamp, trip.endDatestamp >= todaystamp {
+        guard let firstDay, let lastDay else {
             return ""
         }
-        return startDay?.countdown ?? ""
+
+        if firstDay.datestamp <= todaystamp, lastDay.datestamp >= todaystamp {
+            return ""
+        }
+
+        return firstDay.countdown
     }
 
     var body: some View {
@@ -76,10 +91,10 @@ struct TripView: View {
     @ViewBuilder
     private var header: some View {
         HStack(alignment: .top) {
-            VStack(alignment: .leading) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(trip.title)
                     .font(
-                        .system(size: 18, weight: .heavy, design: .rounded)
+                        .system(size: 20, weight: .heavy, design: .rounded)
                     )
 
                 if let locationLabel {
@@ -140,17 +155,17 @@ struct TripView: View {
             ScrollView(.horizontal) {
                 HStack {
                     ForEach(
-                        Array(trip.sortedDatestamps.enumerated()),
+                        Array(trip.sortedPlanners.enumerated()),
                         id: \.element
-                    ) { index, datestamp in
-                        PlannerBuilderView(
-                            datestamp: datestamp,
+                    ) { index, planner in
+                        PlannerEventBuilderView(
+                            planner: planner,
                             settings: settings,
                             previewType: .trip,
                             customTitle: "Day \(index + 1)",
                             namespace: namespace,
                             transitionSource: trip.plannerTransitionId(
-                                for: datestamp
+                                for: planner.datestamp
                             )
                         )
                     }

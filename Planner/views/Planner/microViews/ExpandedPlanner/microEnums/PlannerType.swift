@@ -33,29 +33,7 @@ enum PlannerType: String {
 
         case .future:
 
-            var formatted = plannerDay.dynamicTitle
-
-            if !formatted.contains(",") {
-                if let dayString = formatted.split(separator: " ").last,
-                    let day = Int(dayString)
-                {
-
-                    let suffix: String
-                    switch day % 100 {
-                    case 11, 12, 13:
-                        suffix = "th"
-                    default:
-                        switch day % 10 {
-                        case 1: suffix = "st"
-                        case 2: suffix = "nd"
-                        case 3: suffix = "rd"
-                        default: suffix = "th"
-                        }
-                    }
-
-                    formatted += suffix
-                }
-            }
+            let formatted = plannerDay.dynamicSentenceTitle
 
             // TODO: dont show this if setting is disabled.
 

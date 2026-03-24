@@ -47,6 +47,20 @@ extension String {
             .date
     }
 
+    // Expects YYYY-MM-DD format.
+    var dateComponents: DateComponents? {
+        let parts = self.split(separator: "-")
+        guard parts.count == 3,
+            let year = Int(parts[0]),
+            let month = Int(parts[1]),
+            let day = Int(parts[2])
+        else {
+            return nil
+        }
+
+        return DateComponents(year: year, month: month, day: day)
+    }
+
     // Any user input expected.
     func separateDate(for plannerDay: DateInRegion) -> (
         date: Date, updatedText: String

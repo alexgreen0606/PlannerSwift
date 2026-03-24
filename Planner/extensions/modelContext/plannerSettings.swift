@@ -33,9 +33,7 @@ extension ModelContext {
         in settings: PlannerSettings,
         to location: Location?
     ) {
-
         settings.homeLocation = location
-
         self.safeSave("plannerSettings.updateHomeLocation")
     }
 

@@ -224,7 +224,7 @@ struct ChecklistView: View {
     private var transferSelectedButton: some View {
         Button(
             "Transfer",
-            systemImage: "arrow.forward.folder"
+            systemImage: "arrow.left.arrow.right"
         ) {
             isTransferSheetOpen = true
         }

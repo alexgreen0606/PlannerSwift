@@ -66,6 +66,8 @@ struct PlannerBuilderView: View {
                     namespace: namespace,
                     transitionSource: transitionSource
                 )
+                
+                // TODO: maybe move this to ExpandedPlannerView only?
                 .overlay {
                     NotificationsView()
                 }

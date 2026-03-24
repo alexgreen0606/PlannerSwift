@@ -81,7 +81,7 @@ extension ModelContext {
             }
 
             if event.isAllDay {
-
+                
                 // Event is all-day. Display it as a planner chip.
                 plannerChipEvents.append(event)
 

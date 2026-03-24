@@ -74,9 +74,14 @@ struct PlannerChipSpreadView: View {
     var body: some View {
         WrappingHStack(alignment: .leading) {
             countdownChip
+            tripChip
             locationChip
             weatherChip
-            ForEach(plannerChipEvents, id: \.eventIdentifier, content: eventChip)
+            ForEach(
+                plannerChipEvents,
+                id: \.eventIdentifier,
+                content: eventChip
+            )
         }
         .animateAsynchronousAction(from: weatherData)
         .animateAsynchronousAction(from: locationLabel)
@@ -116,6 +121,20 @@ struct PlannerChipSpreadView: View {
             color: nil,
             onTap: nil
         )
+    }
+
+    @ViewBuilder
+    private var tripChip: some View {
+        if let trip = planner.trip {
+            PlannerChipView(
+                title: trip.title,
+                iconConfig: IconConfig(name: "suitcase"),
+                color: nil,
+                onTap: {
+                    // TODO: open trip form?
+                }
+            )
+        }
     }
 
     @ViewBuilder

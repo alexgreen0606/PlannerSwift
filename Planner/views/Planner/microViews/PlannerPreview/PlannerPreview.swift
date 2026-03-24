@@ -141,14 +141,34 @@ struct PlannerPreviewView: View {
                 weatherInfo
             }
         }
+        .overlay {
+            if type != .trip {
+                VStack {
+                    if type == .search {
+                        Spacer()
+                    }
+                    tripIcon
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    if type == .planner {
+                        Spacer()
+                    }
+                }
+            }
+        }
 
         if type != .search {
             content
                 .padding(.top)
                 .padding(.horizontal)
                 .padding(.bottom, 12)
-                .frame(width: todaystampManager.todaystamp == planner.datestamp && type != .trip ? 330 : 240)
-                .frame(height: PlannerLayout.PREVIEW_CARD_HEIGHT, alignment: .top)
+                .frame(
+                    width: todaystampManager.todaystamp == planner.datestamp
+                        && type != .trip ? 350 : 240
+                )
+                .frame(
+                    height: PlannerLayout.PREVIEW_CARD_HEIGHT,
+                    alignment: .top
+                )
                 .background(
                     RoundedRectangle(cornerRadius: 24)
                         .fill(Color.cardBackground)
@@ -160,6 +180,15 @@ struct PlannerPreviewView: View {
     }
 
     // MARK: - View Builders
+
+    @ViewBuilder
+    private var tripIcon: some View {
+        if planner.trip != nil, !isSearching {
+            Image(systemName: "suitcase")
+                .imageScale(.small)
+                .foregroundStyle(Color.secondary)
+        }
+    }
 
     @ViewBuilder
     private var weatherInfo: some View {

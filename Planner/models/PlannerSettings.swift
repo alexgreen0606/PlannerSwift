@@ -20,6 +20,7 @@ class PlannerSettings {
     var hiddenCalendarIds: Set<String> = []
     
     // Planners default to this location, else the current device location is used (not recommended).
+    @Relationship(deleteRule: .nullify, inverse: \Location.plannerSettings)
     var homeLocation: Location?
 
     init() {}

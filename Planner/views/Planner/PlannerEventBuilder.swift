@@ -25,7 +25,7 @@ struct PlannerEventBuilderView: View {
         planner: Planner,
         settings: PlannerSettings,
         previewType: PlannerPreviewType?,
-        plannerSearchQuery: PlannerSearchQuery?,
+        plannerSearchQuery: PlannerSearchQuery? = nil,
         customTitle: String?,
         namespace: Namespace.ID?,
         transitionSource: String?

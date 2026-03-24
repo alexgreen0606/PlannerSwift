@@ -21,23 +21,26 @@ extension ModelContext {
 
         do {
 
-            // Delete locations that haven't been selected since the cutoff date.
+            // Delete locations that have no parents.
 
-            let oldLocations = try self.fetch(
+            let orphanLocations = try self.fetch(
                 FetchDescriptor<Location>(
                     predicate: #Predicate<Location> {
-                        $0.selectedOn < date
+                        $0.trips.isEmpty
+                            && $0.planners.isEmpty
+                            && $0.events.isEmpty
+                            && $0.plannerSettings == nil
                     }
                 )
             )
 
-            for location in oldLocations {
+            for location in orphanLocations {
                 self.delete(location)
             }
 
             // Delete events that occurred before the cutoff date.
 
-            let oldEvents = try self.fetch(
+            let expiredEvents = try self.fetch(
                 FetchDescriptor<PlannerEvent>(
                     predicate: #Predicate<PlannerEvent> {
                         $0.date < date
@@ -45,13 +48,13 @@ extension ModelContext {
                 )
             )
 
-            for event in oldEvents {
+            for event in expiredEvents {
                 self.delete(event)
             }
 
             // Delete planners that occurred before the cutoff date.
 
-            let oldPlanners = try self.fetch(
+            let expiredPlanners = try self.fetch(
                 FetchDescriptor<Planner>(
                     predicate: #Predicate<Planner> {
                         $0.datestamp < datestamp
@@ -59,21 +62,25 @@ extension ModelContext {
                 )
             )
 
-            for planner in oldPlanners {
+            for planner in expiredPlanners {
                 self.delete(planner)
             }
 
             // Delete trips that ended before the cutoff date.
 
-            let oldTrips = try self.fetch(
+            let expiredTrips = try self.fetch(
                 FetchDescriptor<Trip>(
                     predicate: #Predicate<Trip> {
-                        $0.endDatestamp < datestamp
+                        if let lastDatestamp = $0.planners.last?.datestamp {
+                            return lastDatestamp < datestamp
+                        } else {
+                            return true
+                        }
                     }
                 )
             )
 
-            for trip in oldTrips {
+            for trip in expiredTrips {
                 self.delete(trip)
             }
 

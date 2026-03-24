@@ -16,18 +16,15 @@ class Trip {
 
     var title: String = ""
 
-    @Relationship(deleteRule: .nullify)
-    var location: Location?
+    @Relationship(inverse: \Planner.trip)
+    var planners: [Planner] = []
 
-    var startDatestamp: String
-    var endDatestamp: String
+    @Relationship(deleteRule: .nullify, inverse: \Location.trips)
+    var location: Location?
 
     var hideRoutines: Bool = true
 
     init() {
-        let todaystamp = DateInRegion(Date(), region: .local).datestamp
-        self.startDatestamp = todaystamp
-        self.endDatestamp = todaystamp
     }
-    
+
 }

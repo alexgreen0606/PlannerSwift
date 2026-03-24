@@ -38,8 +38,7 @@ struct PlannerTabView: View {
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
     @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
 
-    @Query(sort: \Trip.startDatestamp)
-    private var trips: [Trip]
+    @Query private var trips: [Trip]
 
     @StateObject private var notificationManager = NotificationManager()
     @State private var tappedDates: Set<DateComponents> = []
@@ -50,7 +49,12 @@ struct PlannerTabView: View {
     @State private var expandedTrips: Set<PersistentIdentifier> = []
 
     private var upcomingTrips: [Trip] {
-        trips.filter { $0.endDatestamp >= todaystampWatcher.todaystamp }
+        trips.filter { trip in
+            guard let lastDatestamp = trip.lastDatestamp else {
+                return false
+            }
+            return lastDatestamp >= todaystampWatcher.todaystamp
+        }.sorted { $0.firstDatestamp! < $1.firstDatestamp! }
     }
 
     private var dateBounds: Range<Date> {
@@ -88,7 +92,7 @@ struct PlannerTabView: View {
                     }
                     .listRowInsets(EdgeInsets())
                     .discreetListItem()
-                    
+
                     Section {
                         ForEach(upcomingTrips, id: \.id) { trip in
                             TripView(
@@ -97,7 +101,10 @@ struct PlannerTabView: View {
                                 namespace: namespace,
                                 settings: settings,
                                 scrollToTrip: {
-                                    scrollToTrip(trip: trip, scrollProxy: scrollProxy)
+                                    scrollToTrip(
+                                        trip: trip,
+                                        scrollProxy: scrollProxy
+                                    )
                                 }
                             ) {
                                 tripSheetContext = TripSheetContext(trip: trip)
@@ -132,7 +139,7 @@ struct PlannerTabView: View {
                     )
                     deviceLocationManager.loadDeviceLocation()
                 }
-                
+
                 // New Event Form
                 .sheet(isPresented: $showNewEventSheet) {
                     EventFormView(
@@ -148,10 +155,11 @@ struct PlannerTabView: View {
                     )
                     .environmentObject(notificationManager)
                 }
-                
+
                 // New Trip Form
                 .sheet(item: $tripSheetContext) { context in
-                    TripFormView(sourceTrip: context.trip, settings: settings) { trip in
+                    TripFormView(sourceTrip: context.trip, settings: settings) {
+                        trip in
                         expandedTrips.insert(trip.id)
                         scrollToTrip(trip: trip, scrollProxy: scrollProxy)
                     }
@@ -168,7 +176,7 @@ struct PlannerTabView: View {
                     .padding(.bottom)
                     .environmentObject(notificationManager)
             }
-            
+
             // Build the week's datestamps at midnight.
             .externalData(
                 key: todaystampWatcher.todaystamp,
@@ -264,7 +272,7 @@ struct PlannerTabView: View {
             )
         }
     }
-    
+
     private func scrollToTrip(trip: Trip, scrollProxy: ScrollViewProxy) {
         DispatchQueue.main.async {
             let isExpanded = expandedTrips.contains(trip.id)
