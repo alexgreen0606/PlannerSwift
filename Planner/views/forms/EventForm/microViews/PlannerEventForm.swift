@@ -37,6 +37,10 @@ struct PlannerEventFormView: View {
     @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
+    @State private var showDeleteConfirmation = false
+
+    @FocusState private var isTitleFocused
+
     private var eventRegion: Region {
         draftPlannerEvent
             .region(
@@ -88,7 +92,15 @@ struct PlannerEventFormView: View {
             .overlay {
                 VStack {
                     Spacer()
-                    addToCalendarButton
+                    HStack {
+                        if !isCreateForm {
+                            deleteButton
+                            Spacer()
+                        }
+                        addToCalendarButton
+                    }
+                    .padding(.bottom, isTitleFocused ? 6 : 0)
+                    .padding(.horizontal, 32)
                 }
             }
         }
@@ -116,7 +128,33 @@ struct PlannerEventFormView: View {
                 systemImage: "calendar.badge.plus",
                 onTap: addEventToCalendar
             )
-            .padding(.bottom, 6)
+        }
+    }
+
+    @ViewBuilder
+    private var deleteButton: some View {
+        ActionButtonView(
+            label: "Delete Event",
+            systemImage: "trash",
+            color: Color.red,
+            onTap: {
+                showDeleteConfirmation = true
+            }
+        )
+        .confirmationDialog(
+            "Delete this event?",
+            isPresented: $showDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(
+                "Confirm",
+                role: .destructive,
+                action: deleteEvent
+            )
+        } message: {
+            Text(
+                "This action is irreversible."
+            )
         }
     }
 
@@ -124,6 +162,7 @@ struct PlannerEventFormView: View {
         Section {
             TextField("Title", text: $draftPlannerEvent.title)
                 .textInputAutocapitalization(.words)
+                .focused($isTitleFocused)
         }
         .listSectionMargins(.top, 0)
     }
@@ -184,8 +223,16 @@ struct PlannerEventFormView: View {
                     }
                 }
             } label: {
-                Label("Location", systemImage: "mappin.and.ellipse")
-                    .foregroundStyle(Color.label)
+                HStack {
+                    Image(systemName: "mappin.and.ellipse")
+                        .foregroundStyle(
+                            draftPlannerEvent.location == nil
+                                ? Color.secondary : accentColor.color,
+                            Color.label
+                        )
+
+                    Text("Location")
+                }
             }
 
             if !showTimeZoneFooter && draftPlannerEvent.hasTime {
@@ -287,6 +334,14 @@ struct PlannerEventFormView: View {
 
         draftPlannerEvent.calendarEvent = event
         sheetDetent = .large
+    }
+
+    private func deleteEvent() {
+        dismiss()
+
+        if let sourcePlannerEvent {
+            modelContext.deletePlannerEvents([sourcePlannerEvent])
+        }
     }
 
 }

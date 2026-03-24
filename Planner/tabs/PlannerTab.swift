@@ -59,115 +59,123 @@ struct PlannerTabView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    ScrollView(.horizontal) {
-                        HStack {
-                            ForEach(thisWeekDatestamps, id: \.self) {
-                                datestamp in
-                                PlannerBuilderView(
-                                    datestamp: datestamp,
-                                    settings: settings,
-                                    previewType: .planner,
-                                    namespace: namespace
-                                )
+            ScrollViewReader { scrollProxy in
+                List {
+                    Section {
+                        ScrollView(.horizontal) {
+                            HStack {
+                                ForEach(thisWeekDatestamps, id: \.self) {
+                                    datestamp in
+                                    PlannerBuilderView(
+                                        datestamp: datestamp,
+                                        settings: settings,
+                                        previewType: .planner,
+                                        namespace: namespace
+                                    )
+                                }
+                            }
+                            .frame(
+                                height: PlannerLayout.PREVIEW_CARD_HEIGHT
+                            )
+                            .padding(.horizontal)
+                            .animateAsynchronousAction(from: thisWeekDatestamps)
+                        }
+                        .scrollIndicators(.hidden)
+                        .background(Color.clear)
+                    } header: {
+                        Text("This Week")
+                            .padding()
+                    }
+                    .listRowInsets(EdgeInsets())
+                    .discreetListItem()
+                    
+                    Section {
+                        ForEach(upcomingTrips, id: \.id) { trip in
+                            TripView(
+                                expandedTrips: $expandedTrips,
+                                trip: trip,
+                                namespace: namespace,
+                                settings: settings,
+                                scrollToTrip: {
+                                    scrollToTrip(trip: trip, scrollProxy: scrollProxy)
+                                }
+                            ) {
+                                tripSheetContext = TripSheetContext(trip: trip)
                             }
                         }
-                        .frame(
-                            height: PlannerLayout.PREVIEW_CARD_HEIGHT
-                        )
-                        .padding(.horizontal)
-                        .animateAsynchronousAction(from: thisWeekDatestamps)
-                    }
-                    .scrollIndicators(.hidden)
-                    .background(Color.clear)
-                } header: {
-                    Text("This Week")
-                        .padding()
-                }
-                .listRowInsets(EdgeInsets())
-                .discreetListItem()
-
-                Section {
-                    ForEach(upcomingTrips, id: \.id) { trip in
-                        TripView(
-                            expandedTrips: $expandedTrips,
-                            trip: trip,
-                            namespace: namespace,
-                            settings: settings
-                        ) {
-                            tripSheetContext = TripSheetContext(trip: trip)
+                        if upcomingTrips.isEmpty {
+                            EmptyLabelView(text: "No Upcoming Trips")
+                                .frame(maxWidth: .infinity)
                         }
+                    } header: {
+                        Text("Trips")
+                            .padding()
+                    } footer: {
+                        Color.clear.frame(height: 16)
+                            .discreetListItem()
                     }
-                    if upcomingTrips.isEmpty {
-                        EmptyLabelView(text: "No Upcoming Trips")
-                            .frame(maxWidth: .infinity)
-                    }
-                } header: {
-                    Text("Trips")
-                        .padding()
-                } footer: {
-                    Color.clear.frame(height: 16)
-                        .discreetListItem()
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())
+                    .animation(.linear, value: expandedTrips)
                 }
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
-                .animation(.linear, value: expandedTrips)
-            }
-            .listStyle(.plain)
-            .background(Color.appBackground)
-            .navigationTitle("Planner")
-            .toolbar {
-                datePickerToolbarPopover
-                createMenu
-            }
-            .refreshable {
-                weatherStore.beginFreshReload()
-                calendarStore.attemptFreshLoad(
-                    hiddenCalendarIds: settings.hiddenCalendarIds
-                )
-                deviceLocationManager.loadDeviceLocation()
-            }
-
-            // New Event Form
-            .sheet(isPresented: $showNewEventSheet) {
-                EventFormView(
-                    plannerEvent: nil,
-                    calendarEvent: nil,
-                    settings: settings
-                )
-                .navigationTransition(
-                    .zoom(
-                        sourceID: IdConstants.ADD_BUTTON,
-                        in: namespace
+                .listStyle(.plain)
+                .background(Color.appBackground)
+                .navigationTitle("Planner")
+                .toolbar {
+                    datePickerToolbarPopover
+                    createMenu
+                }
+                .refreshable {
+                    weatherStore.beginFreshReload()
+                    calendarStore.attemptFreshLoad(
+                        hiddenCalendarIds: settings.hiddenCalendarIds
                     )
-                )
-                .environmentObject(notificationManager)
-            }
-
-            // New Trip Form
-            .sheet(item: $tripSheetContext) { context in
-                TripFormView(sourceTrip: context.trip, settings: settings)
+                    deviceLocationManager.loadDeviceLocation()
+                }
+                
+                // New Event Form
+                .sheet(isPresented: $showNewEventSheet) {
+                    EventFormView(
+                        plannerEvent: nil,
+                        calendarEvent: nil,
+                        settings: settings
+                    )
+                    .navigationTransition(
+                        .zoom(
+                            sourceID: IdConstants.ADD_BUTTON,
+                            in: namespace
+                        )
+                    )
+                    .environmentObject(notificationManager)
+                }
+                
+                // New Trip Form
+                .sheet(item: $tripSheetContext) { context in
+                    TripFormView(sourceTrip: context.trip, settings: settings) { trip in
+                        expandedTrips.insert(trip.id)
+                        scrollToTrip(trip: trip, scrollProxy: scrollProxy)
+                    }
                     .navigationTransition(
                         .zoom(
                             sourceID: context.id,
                             in: namespace
                         )
                     )
+                }
             }
+            .overlay {
+                NotificationsView()
+                    .padding(.bottom)
+                    .environmentObject(notificationManager)
+            }
+            
+            // Build the week's datestamps at midnight.
+            .externalData(
+                key: todaystampWatcher.todaystamp,
+                ready: true,
+                load: buildThisWeekDatestamps
+            )
         }
-        .overlay {
-            NotificationsView()
-                .padding(.bottom)
-                .environmentObject(notificationManager)
-        }
-
-        // Build the week's datestamps at midnight.
-        .externalData(
-            key: todaystampWatcher.todaystamp,
-            ready: true,
-            load: buildThisWeekDatestamps
-        )
     }
 
     // MARK: - Toolbars
@@ -254,6 +262,16 @@ struct PlannerTabView: View {
                 datestamp: datestamp,
                 source: IdConstants.CALENDAR_BUTTON
             )
+        }
+    }
+    
+    private func scrollToTrip(trip: Trip, scrollProxy: ScrollViewProxy) {
+        DispatchQueue.main.async {
+            let isExpanded = expandedTrips.contains(trip.id)
+            let tripId = "\(trip.id)_\(String(isExpanded))"
+            withAnimation {
+                scrollProxy.scrollTo(tripId, anchor: .top)
+            }
         }
     }
 

@@ -14,6 +14,7 @@ struct TripView: View {
     let trip: Trip
     let namespace: Namespace.ID
     let settings: PlannerSettings
+    let scrollToTrip: () -> Void
     let openTripForm: () -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -123,6 +124,7 @@ struct TripView: View {
                     expandedTrips.remove(trip.id)
                 } else {
                     expandedTrips.insert(trip.id)
+                    scrollToTrip()
                 }
             }
         }
@@ -134,20 +136,18 @@ struct TripView: View {
 
     @ViewBuilder
     private var previewSpread: some View {
-        let range = getSortedDatestampRange(
-            from: trip.startDatestamp,
-            to: trip.endDatestamp
-        )
-
         VStack(alignment: .leading) {
             ScrollView(.horizontal) {
                 HStack {
-                    ForEach(range, id: \.self) {
-                        datestamp in
+                    ForEach(
+                        Array(trip.sortedDatestamps.enumerated()),
+                        id: \.element
+                    ) { index, datestamp in
                         PlannerBuilderView(
                             datestamp: datestamp,
                             settings: settings,
                             previewType: .trip,
+                            customTitle: "Day \(index + 1)",
                             namespace: namespace,
                             transitionSource: trip.plannerTransitionId(
                                 for: datestamp

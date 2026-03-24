@@ -10,25 +10,25 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-// TODO: add delete option
+// Clean
 
 struct TripFormView: View {
     private let sourceTrip: Trip?
     private let settings: PlannerSettings
+    private let onSave: (Trip) -> Void
 
     init(
         sourceTrip: Trip? = nil,
-        settings: PlannerSettings
+        settings: PlannerSettings,
+        onSave: @escaping (Trip) -> Void
     ) {
         self.sourceTrip = sourceTrip
         self.settings = settings
+        self.onSave = onSave
 
         var draftTrip = DraftTrip()
         if let sourceTrip {
-            draftTrip.selectedDates = getDateComponentRange(
-                from: sourceTrip.startDatestamp,
-                to: sourceTrip.endDatestamp
-            )
+            draftTrip.dateComponents = sourceTrip.dateComponents
             draftTrip.title = sourceTrip.title
             draftTrip.hideRoutines = sourceTrip.hideRoutines
             draftTrip.location = sourceTrip.location
@@ -44,13 +44,18 @@ struct TripFormView: View {
     @Environment(\.modelContext) private var modelContext
 
     @State private var draftTrip: DraftTrip
+    @State private var showDeleteConfirmation = false
 
-    private var isCreateForm: Bool {
+    private var isNewTrip: Bool {
         sourceTrip == nil
     }
 
     private var canSave: Bool {
-        !draftTrip.title.isEmpty && !draftTrip.selectedDates.isEmpty
+        !draftTrip.title.isEmpty && !draftTrip.dateComponents.isEmpty
+    }
+
+    private var cancelWarning: String {
+        sourceTrip?.cancelWarning ?? ""
     }
 
     var body: some View {
@@ -59,8 +64,9 @@ struct TripFormView: View {
                 titleSection
                 timeSection
                 routineSection
+                cancelSection
             }
-            .navigationTitle(isCreateForm ? "Create Trip" : "Edit Trip")
+            .navigationTitle(isNewTrip ? "Create Trip" : "Edit Trip")
             .navigationBarTitleDisplayMode(.inline)
             .scrollDisabled(true)
             .toolbar {
@@ -121,8 +127,16 @@ struct TripFormView: View {
                     }
                 }
             } label: {
-                Label("Location", systemImage: "mappin.and.ellipse")
-                    .foregroundStyle(Color.label)
+                HStack {
+                    Image(systemName: "mappin.and.ellipse")
+                        .foregroundStyle(
+                            draftTrip.location == nil
+                                ? Color.secondary : accentColor.color,
+                            Color.label
+                        )
+
+                    Text("Location")
+                }
             }
         }
     }
@@ -130,7 +144,7 @@ struct TripFormView: View {
     private var timeSection: some View {
         Section {
             DateRangePickerView(
-                selectedDates: $draftTrip.selectedDates
+                selectedDates: $draftTrip.dateComponents
             )
         }
     }
@@ -144,35 +158,64 @@ struct TripFormView: View {
         }
     }
 
+    @ViewBuilder
+    private var cancelSection: some View {
+        if !isNewTrip {
+            Section {
+                cancelTripButton
+            }
+            .discreetListItem()
+        }
+    }
+
+    @ViewBuilder
+    private var cancelTripButton: some View {
+        ActionButtonView(
+            label: "Cancel \(draftTrip.title) Trip",
+            systemImage: "trash",
+            color: Color.red,
+            onTap: {
+                showDeleteConfirmation = true
+            }
+        )
+        .frame(maxWidth: .infinity)
+        .confirmationDialog(
+            "Cancel this trip?",
+            isPresented: $showDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(
+                "Confirm",
+                role: .destructive,
+                action: cancelTrip
+            )
+        } message: {
+            Text(cancelWarning)
+        }
+    }
+
     // MARK: - Functions
 
-    // TODO: move to model context
     private func saveTrip() {
-
-        guard let bounds = getDatestampBounds(from: draftTrip.selectedDates)
+        guard
+            let savedTrip = modelContext.saveTripChanges(
+                from: draftTrip,
+                to: sourceTrip
+            )
         else {
             return
         }
 
-        let trip = sourceTrip ?? Trip()
-        trip.title = draftTrip.title
-        trip.startDatestamp = bounds.startDatestamp
-        trip.endDatestamp = bounds.endDatestamp
-        trip.hideRoutines = draftTrip.hideRoutines
-        trip.location = draftTrip.location
+        dismiss()
+        onSave(savedTrip)
+    }
 
-        if trip.modelContext == nil {
-            modelContext.insert(trip)
-        }
-
-        modelContext.safeSave("save trip")
-
-        // update all the matching planners
-
+    private func cancelTrip() {
         dismiss()
 
-        // TODO: scroll to trip
-
+        if let trip = sourceTrip {
+            modelContext.cancelTrip(trip)
+        }
     }
 
 }

@@ -33,7 +33,7 @@ extension DateInRegion {
 
     func previewTitle(type: PlannerPreviewType) -> String {
         if type == .trip {
-            return self.weekday
+            return "" // This will be custom computed inside TripView.
         }
         
         let todaystamp = DateInRegion(Date(), region: .local).datestamp
@@ -52,7 +52,7 @@ extension DateInRegion {
 
     func previewSubtitle(type: PlannerPreviewType) -> String {
         if type == .trip {
-            return self.countdown
+            return self.weekday
         }
         
         let todaystamp = DateInRegion(Date(), region: .local).datestamp

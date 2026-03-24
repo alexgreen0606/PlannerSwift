@@ -13,9 +13,10 @@ import SwiftUI
 struct PlannerDateInfoView: View {
     let plannerDay: DateInRegion
     let type: PlannerPreviewType
+    let customTitle: String?
 
     private var title: String {
-        plannerDay.previewTitle(type: type)
+        customTitle ?? plannerDay.previewTitle(type: type)
     }
 
     private var subtitle: String {

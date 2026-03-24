@@ -17,6 +17,7 @@ import WrappingHStack
 struct PlannerPreviewView: View {
     let type: PlannerPreviewType
     let searchQuery: PlannerSearchQuery?
+    let customTitle: String?
     let planner: Planner
     let plannerDay: DateInRegion
     let plannerLocation: Location?
@@ -111,7 +112,8 @@ struct PlannerPreviewView: View {
             HStack(alignment: .top) {
                 PlannerDateInfoView(
                     plannerDay: plannerDay,
-                    type: type
+                    type: type,
+                    customTitle: customTitle
                 )
 
                 Spacer()

@@ -12,7 +12,21 @@ import SwiftUI
 struct ActionButtonView: View {
     let label: String
     let systemImage: String
+    let color: Color?
     let onTap: () -> Void
+
+    init(
+        label: String,
+        systemImage: String,
+        color: Color? = nil,
+        onTap: @escaping () -> Void
+    ) {
+        self.label = label
+        self.systemImage = systemImage
+        self.color = color
+        self.onTap = onTap
+        self.accentColor = accentColor
+    }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -27,8 +41,7 @@ struct ActionButtonView: View {
             }
             .font(.system(size: 14, weight: .bold, design: .rounded))
             .padding(.bottom, 8)
-            .foregroundStyle(accentColor.color)
+            .foregroundStyle(color ?? accentColor.color)
         }
-        .tint(accentColor.color)
     }
 }
