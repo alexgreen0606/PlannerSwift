@@ -108,7 +108,7 @@ struct PlannerTabView: View {
                                 .frame(maxWidth: .infinity)
                         }
                     } header: {
-                        Text("Trips")
+                        Text(upcomingTrips.isEmpty ? "" : "Trips")
                             .padding()
                     } footer: {
                         Color.clear.frame(height: 16)

@@ -18,7 +18,7 @@ class Location {
     var longitude: Double
     var timeZoneIdentifier: String
     
-    // Used for displaying recents in LocationSearchForm
+    // Used for displaying recents in LocationSearchForm.
     var selectedOn: Date
 
     init(
@@ -35,4 +35,5 @@ class Location {
         self.timeZoneIdentifier = timeZoneIdentifier
         self.selectedOn = .now
     }
+    
 }

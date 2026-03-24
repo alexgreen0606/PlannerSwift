@@ -17,6 +17,7 @@ extension ModelContext {
     func deleteOldData(
         before date: Date
     ) {
+        let datestamp = DateInRegion(date, region: .local).datestamp
 
         do {
 
@@ -50,8 +51,6 @@ extension ModelContext {
 
             // Delete planners that occurred before the cutoff date.
 
-            let datestamp = DateInRegion(date, region: .local).datestamp
-
             let oldPlanners = try self.fetch(
                 FetchDescriptor<Planner>(
                     predicate: #Predicate<Planner> {
@@ -62,6 +61,20 @@ extension ModelContext {
 
             for planner in oldPlanners {
                 self.delete(planner)
+            }
+
+            // Delete trips that ended before the cutoff date.
+
+            let oldTrips = try self.fetch(
+                FetchDescriptor<Trip>(
+                    predicate: #Predicate<Trip> {
+                        $0.endDatestamp < datestamp
+                    }
+                )
+            )
+
+            for trip in oldTrips {
+                self.delete(trip)
             }
 
         } catch {
