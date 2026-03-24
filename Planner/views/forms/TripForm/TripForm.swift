@@ -184,7 +184,7 @@ struct TripFormView: View {
         } footer: {
             if let dateErrorMessage {
                 Text(
-                    "\(dateErrorMessage) already belongs to a different trip."
+                    "You already have a trip planned for \(dateErrorMessage)."
                 )
                 .foregroundStyle(Color.red)
             }

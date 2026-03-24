@@ -35,6 +35,8 @@ struct SuggestedLocationsListView: View {
                     Group {
                         if location == homeLocation {
                             Image(systemName: "house")
+                        } else if location == sourcePlanner?.trip?.location {
+                            Image(systemName: "suitcase")
                         } else if location
                             == deviceLocationManager.deviceLocation
                         {

@@ -20,7 +20,7 @@ class CalendarStore: ObservableObject {
         KeepPastEventsDuration =
             KeepPastEventsDuration.oneMonth
 
-    @Published private(set) var allDayEventsByPlannerKey: [String: [EKEvent]] =
+    @Published private(set) var plannerChipCache: [String: [EKEvent]] =
         [:]
     @Published private(set) var calendarAccessDenied: Bool? = nil
 
@@ -43,7 +43,7 @@ class CalendarStore: ObservableObject {
     }
 
     func cachePlannerChips(_ plannerChipEvents: [EKEvent], plannerKey: String) {
-        allDayEventsByPlannerKey[plannerKey] = plannerChipEvents
+        plannerChipCache[plannerKey] = plannerChipEvents
     }
 
     func attemptFreshLoad(hiddenCalendarIds: Set<String>) {
@@ -68,7 +68,7 @@ class CalendarStore: ObservableObject {
 
     private func beginFreshReload(hiddenCalendarIds: Set<String>) {
         loadCalendars()
-        allDayEventsByPlannerKey = [:]
+        plannerChipCache = [:]
         reloadTrigger = UUID()
     }
 

@@ -163,7 +163,7 @@ struct PlannerEventBuilderView: View {
         let plannerKey = planner.key
 
         // Return cached data.
-        if let existingData = calendarStore.allDayEventsByPlannerKey[plannerKey]
+        if let existingData = calendarStore.plannerChipCache[plannerKey]
         {
             plannerChipEvents = existingData
             return

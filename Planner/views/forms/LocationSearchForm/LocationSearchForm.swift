@@ -73,9 +73,20 @@ struct LocationSearchFormView: View {
 
     private var showHomeOption: Bool {
         switch mode {
-        case .planner, .trip:
+        case .trip:
             return selectedLocation != nil
+        case .planner:
+            return selectedLocation != nil && sourcePlanner?.trip == nil
         case .home, .event:
+            return false
+        }
+    }
+
+    private var showTripOption: Bool {
+        switch mode {
+        case .planner:
+            return selectedLocation != nil && sourcePlanner?.trip != nil
+        case .home, .event, .trip:
             return false
         }
     }
@@ -142,6 +153,7 @@ struct LocationSearchFormView: View {
                     currentLocationButton
                     homeLocationButton
                     plannerLocationButton
+                    tripLocationButton
                 }
                 .padding(.bottom, lowerOptionPadding)
             }
@@ -213,6 +225,18 @@ struct LocationSearchFormView: View {
     }
 
     @ViewBuilder
+    private var tripLocationButton: some View {
+        if showTripOption {
+            ActionButtonView(
+                label: "Use Trip Location",
+                systemImage: "suitcase"
+            ) {
+                selectedLocation = nil
+            }
+        }
+    }
+
+    @ViewBuilder
     private var plannerLocationButton: some View {
         if showPlannerOption {
             ActionButtonView(
@@ -245,6 +269,9 @@ struct LocationSearchFormView: View {
         // Add the common locations to the top of the recents list.
         if let plannerLocation {
             combinedLocations.insert(plannerLocation, at: 0)
+        }
+        if let tripLocation = sourcePlanner?.trip?.location {
+            combinedLocations.insert(tripLocation, at: 0)
         }
         if let deviceLocation = deviceLocationManager.deviceLocation {
             combinedLocations.insert(deviceLocation, at: 0)

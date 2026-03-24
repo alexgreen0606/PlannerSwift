@@ -15,7 +15,8 @@ import SwiftUI
 extension Planner {
 
     var key: String {
-        location?.coordinateKey ?? "\(datestamp)-DEFAULT_LOCATION"
+        let locationKey = location?.coordinateKey ?? "HOME_LOCATION"
+        return "\(datestamp)-\(locationKey)"
     }
 
     // MARK: - Location Variables
@@ -24,7 +25,8 @@ extension Planner {
     func location(settings: PlannerSettings, deviceLocation: Location?)
         -> Location?
     {
-        self.location ?? self.trip?.location ?? settings.homeLocation(deviceLocation: deviceLocation)
+        self.location ?? self.trip?.location
+            ?? settings.homeLocation(deviceLocation: deviceLocation)
     }
 
     func region(settings: PlannerSettings) -> Region {
@@ -41,10 +43,16 @@ extension Planner {
     func locationIconConfig(settings: PlannerSettings, accentColor: AccentColor)
         -> IconConfig
     {
-        if location != nil || trip?.location != nil {
+        if self.location != nil {
             return IconConfig(
                 name: "mappin.and.ellipse",
                 primaryColor: accentColor.color
+            )
+        }
+        
+        if self.trip != nil {
+            return IconConfig(
+                name: "suitcase"
             )
         }
 
@@ -75,7 +83,7 @@ extension Planner {
         }
 
         if let location = self.location,
-           let results = query.fuse.search(query.text, in: location.name),
+            let results = query.fuse.search(query.text, in: location.name),
             results.score <= FuseConstants.fuzzyThreshold
         {
             // Include if the location matches the search text.

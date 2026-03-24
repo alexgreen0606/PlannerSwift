@@ -90,10 +90,11 @@ struct PlannerChipSpreadView: View {
         // Location Sheet
         .sheet(isPresented: $isLocationSheetOpen) {
             LocationSearchFormView(
-                title: "\(plannerDay.dynamicTitle) Location",
+                title: "Planner Location",
                 mode: .planner,
                 settings: settings,
                 initialLocation: planner.location,
+                sourcePlanner: planner,
             ) { location in
                 modelContext.updatePlannerLocation(
                     for: planner,

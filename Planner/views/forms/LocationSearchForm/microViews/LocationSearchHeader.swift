@@ -23,6 +23,10 @@ struct LocationSearchHeaderView: View {
 
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
+    private var tripLocation: Location? {
+        sourcePlanner?.trip?.location
+    }
+
     private var plannerLocation: Location? {
         sourcePlanner?.location
     }
@@ -31,10 +35,14 @@ struct LocationSearchHeaderView: View {
         switch mode {
         case .home:
             return selectedLocation == nil
-        case .planner, .trip:
+        case .trip:
             return selectedLocation == nil && homeLocation == nil
+        case .planner:
+            return selectedLocation == nil && homeLocation == nil
+                && tripLocation == nil
         case .event:
             return selectedLocation == nil && homeLocation == nil
+                && tripLocation == nil
                 && plannerLocation == nil
         }
     }
@@ -45,12 +53,30 @@ struct LocationSearchHeaderView: View {
         }
 
         switch mode {
-        case .planner, .trip:
+        case .home:
+            return false
+        case .trip:
+            return selectedLocation == nil
+        case .planner:
+            return selectedLocation == nil && tripLocation == nil
+        case .event:
+            return selectedLocation == nil && plannerLocation == nil
+                && tripLocation == nil
+        }
+    }
+
+    private var showTripIndicator: Bool {
+        guard tripLocation != nil else {
+            return false
+        }
+
+        switch mode {
+        case .home, .trip:
+            return false
+        case .planner:
             return selectedLocation == nil
         case .event:
             return selectedLocation == nil && plannerLocation == nil
-        case .home:
-            return false
         }
     }
 
@@ -65,7 +91,7 @@ struct LocationSearchHeaderView: View {
         case .event:
             return selectedLocation == nil
         }
-        
+
     }
 
     var body: some View {
@@ -86,6 +112,9 @@ struct LocationSearchHeaderView: View {
 
         } else if showHomeIndicator, let homeLocation {
             homeLocationIndicator(homeLocation)
+
+        } else if showTripIndicator, let tripLocation {
+            tripLocationIndicator(tripLocation)
 
         } else if showPlannerIndicator, let plannerLocation {
             plannerLocationIndicator(plannerLocation)
@@ -118,6 +147,14 @@ struct LocationSearchHeaderView: View {
             label: "Home Location",
             value: home.name,
             iconConfig: IconConfig(name: "house")
+        )
+    }
+
+    private func tripLocationIndicator(_ tripLocation: Location) -> some View {
+        LabelValueChipView(
+            label: "Trip Location",
+            value: tripLocation.name,
+            iconConfig: IconConfig(name: "suitcase")
         )
     }
 
