@@ -12,7 +12,6 @@ import SwiftUI
 struct ChecklistActionMenu: View {
     @Binding var isEditSheetOpen: Bool
     let checklist: ChecklistItem
-    let namespace: Namespace.ID
     let hasCheckedItem: Bool
     let completedItems: [ChecklistItem]
     let visibleItems: [ChecklistItem]
@@ -31,10 +30,6 @@ struct ChecklistActionMenu: View {
             selectItemsButton
             deleteActionMenu
         }
-        .matchedTransitionSource(
-            id: IdConstants.ELLIPSIS_BUTTON,
-            in: namespace
-        )
         .confirmationDialog(
             checklist.deleteConfirmation,
             isPresented: $showDeleteChecklistConfirm,

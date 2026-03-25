@@ -98,12 +98,6 @@ struct ChecklistView: View {
         .sheet(isPresented: $isEditSheetOpen) {
             if let parent = checklist.parent {
                 ChecklistItemFormView(item: checklist, parent: parent)
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: IdConstants.ELLIPSIS_BUTTON,
-                            in: namespace
-                        )
-                    )
             }
         }
 
@@ -191,7 +185,6 @@ struct ChecklistView: View {
         ChecklistActionMenu(
             isEditSheetOpen: $isEditSheetOpen,
             checklist: checklist,
-            namespace: namespace,
             hasCheckedItem: hasCheckedItem,
             completedItems: sortedCheckedItems,
             visibleItems: visibleItems

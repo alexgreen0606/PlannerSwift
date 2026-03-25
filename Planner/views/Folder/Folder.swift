@@ -71,20 +71,11 @@ struct FolderView: View {
                 ChecklistItemFormView(parent: folder) { newItemId in
                     scrollTo(id: newItemId, scrollProxy: scrollProxy)
                 }
-                .navigationTransition(
-                    .zoom(sourceID: IdConstants.ADD_BUTTON, in: namespace)
-                )
             }
 
             // Edit Form
             .sheet(isPresented: $showEditSheet) {
                 ChecklistItemFormView(item: folder, parent: folder.parent)
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: IdConstants.ELLIPSIS_BUTTON,
-                            in: namespace
-                        )
-                    )
             }
 
             // Transfer Items Form
@@ -170,10 +161,6 @@ struct FolderView: View {
             selectItemsButton
             deleteFolderButton
         }
-        .matchedTransitionSource(
-            id: IdConstants.ELLIPSIS_BUTTON,
-            in: namespace
-        )
         .confirmationDialog(
             folder.deleteConfirmation,
             isPresented: $showDeleteFolderConfirm,
@@ -220,10 +207,6 @@ struct FolderView: View {
         Button("Add", systemImage: "plus") {
             showCreateSheet = true
         }
-        .matchedTransitionSource(
-            id: IdConstants.ADD_BUTTON,
-            in: namespace
-        )
     }
 
     // MARK: Select Mode Actions

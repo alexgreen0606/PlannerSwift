@@ -7,6 +7,7 @@
 
 import SwiftData
 import SwiftUI
+import SwiftUIIntrospect
 
 // Clean
 
@@ -48,12 +49,12 @@ struct ChecklistItemFormView: View {
     @State private var draftChecklistItem: ChecklistItem
 
     @FocusState private var isFocused: Bool
+    @State private var hasAutoFocused = false
+
+    private var isEditForm: Bool { sourceItem != nil }
 
     private var canSave: Bool {
         !draftChecklistItem.title.isEmpty
-            && (draftChecklistItem.title != sourceItem?.title
-                || draftChecklistItem.color != sourceItem?.color
-                || draftChecklistItem.type != sourceItem?.type)
     }
 
     var body: some View {
@@ -61,10 +62,19 @@ struct ChecklistItemFormView: View {
             Form {
                 Section {
                     TextField("Title", text: $draftChecklistItem.title)
+                        .introspect(.textField, on: .iOS(.v26)) { textfield in
+                            if !hasAutoFocused {
+                                textfield.becomeFirstResponder()
+                                hasAutoFocused = true
+                            }
+                        }
                         .textInputAutocapitalization(.words)
+                        .tint(
+                            draftChecklistItem.color.swiftUIColor
+                        )
+                        .focused($isFocused)
 
                         // Increase the focusable area of the field.
-                        .focused($isFocused)
                         .contentShape(Rectangle())
                         .onTapGesture {
                             isFocused = true
@@ -121,7 +131,8 @@ struct ChecklistItemFormView: View {
                 submitButton
             }
         }
-        .presentationDetents([.height(600)])
+        .presentationDetents([.height(isEditForm ? 180 : 260)])
+        .presentationBackground(.clear)
     }
 
     // MARK: - Toolbars
