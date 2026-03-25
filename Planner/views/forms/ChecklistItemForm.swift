@@ -121,7 +121,7 @@ struct ChecklistItemFormView: View {
                 submitButton
             }
         }
-        .presentationDetents([.height(250)])
+        .presentationDetents([.height(600)])
     }
 
     // MARK: - Toolbars

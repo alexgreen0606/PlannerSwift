@@ -68,17 +68,15 @@ extension ModelContext {
 
             // Delete trips that ended before the cutoff date.
 
-            let expiredTrips = try self.fetch(
-                FetchDescriptor<Trip>(
-                    predicate: #Predicate<Trip> {
-                        if let lastDatestamp = $0.planners.last?.datestamp {
-                            return lastDatestamp < datestamp
-                        } else {
-                            return true
-                        }
-                    }
-                )
-            )
+            let trips = try self.fetch(FetchDescriptor<Trip>())
+            let expiredTrips = trips.filter { trip in
+                guard
+                    let last = trip.sortedPlanners.last
+                else {
+                    return true
+                }
+                return last.datestamp < datestamp
+            }
 
             for trip in expiredTrips {
                 self.delete(trip)

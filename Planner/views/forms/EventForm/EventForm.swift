@@ -199,6 +199,7 @@ struct EventFormView: View {
             [.height(480), .large],
             selection: $sheetDetent
         )
+        .presentationBackground(.clear)
         .tint(accentColor.color)
 
         // Ensure event location exists when hasTime is set to true.

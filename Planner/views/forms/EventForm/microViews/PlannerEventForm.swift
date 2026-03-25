@@ -186,6 +186,7 @@ struct PlannerEventFormView: View {
             } label: {
                 Label("Date", systemImage: "calendar")
                     .foregroundStyle(Color.label)
+                    .imageScale(.medium)
             }
             .animation(nil, value: draftPlannerEvent.hasTime)
 
@@ -194,6 +195,7 @@ struct PlannerEventFormView: View {
             } label: {
                 Label("Time", systemImage: "clock")
                     .foregroundStyle(Color.label)
+                    .imageScale(.medium)
             }
         }
     }
@@ -225,6 +227,7 @@ struct PlannerEventFormView: View {
             } label: {
                 HStack {
                     Image(systemName: "mappin.and.ellipse")
+                        .imageScale(.medium)
                         .foregroundStyle(
                             draftPlannerEvent.location == nil
                                 ? Color.secondary : accentColor.color,
@@ -241,6 +244,7 @@ struct PlannerEventFormView: View {
                 } label: {
                     Label("Time Zone", systemImage: "globe")
                         .foregroundStyle(Color.label)
+                        .imageScale(.medium)
                 }
             }
         } footer: {

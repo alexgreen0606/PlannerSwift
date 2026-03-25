@@ -59,6 +59,14 @@ struct TripFormView: View {
             && dateErrorMessage == nil
     }
 
+    private var dayCount: Int {
+        draftTrip.dateComponents.count
+    }
+
+    private var dayCountLabel: String {
+        "\(dayCount) day\(dayCount == 1 ? "" : "s")"
+    }
+
     private var cancelMessage: String {
         guard let sourceTrip else {
             return ""
@@ -90,17 +98,39 @@ struct TripFormView: View {
         return invalidDay.dynamicSentenceTitle
     }
 
+    private var datesLabel: String {
+        let datestamps = draftTrip.dateComponents.compactMap { $0.datestamp }
+            .sorted()
+
+        guard let firstDatestamp = datestamps.first,
+            let firstDay = DateInRegion(firstDatestamp, region: .local)
+        else {
+            return ""
+        }
+
+        guard let lastDatestamp = datestamps.last,
+            let lastDay = DateInRegion(lastDatestamp, region: .local)
+        else {
+            return ""
+        }
+
+        if firstDatestamp == lastDatestamp {
+            return firstDay.tripLabel
+        }
+
+        return "\(firstDay.tripLabel) - \(lastDay.tripLabel)"
+    }
+
     var body: some View {
         NavigationStack {
             Form {
                 titleSection
-                timeSection
+                dateSection
                 routineSection
                 cancelSection
             }
             .navigationTitle(isNewTrip ? "Create Trip" : "Edit Trip")
             .navigationBarTitleDisplayMode(.inline)
-            .scrollDisabled(true)
             .toolbar {
                 cancelButton
                 saveButton
@@ -176,18 +206,45 @@ struct TripFormView: View {
         }
     }
 
-    private var timeSection: some View {
+    private var dateSection: some View {
         Section {
-            DateRangePickerView(
-                selectedDates: $draftTrip.dateComponents
-            )
-        } footer: {
-            if let dateErrorMessage {
-                Text(
-                    "You already have a trip planned for \(dateErrorMessage)."
-                )
-                .foregroundStyle(Color.red)
+            HStack {
+                LabeledContent {
+                    Text(datesLabel)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                } label: {
+                    Label("Dates", systemImage: "calendar")
+                        .foregroundStyle(Color.label)
+                        .imageScale(.medium)
+                }
             }
+            .alignmentGuide(.listRowSeparatorLeading) { $0[.leading] }
+            VStack {
+                DateRangePickerView(
+                    selectedDates: $draftTrip.dateComponents
+                )
+            }
+        } footer: {
+            ZStack {
+                if let dateErrorMessage {
+                    Text(
+                        "You already have a trip planned for \(dateErrorMessage)."
+                    )
+                    .foregroundStyle(Color.red)
+                } else {
+                    HStack {
+                        Spacer()
+                        Text(dayCountLabel)
+                            .font(
+                                .system(size: 12, weight: .bold, design: .rounded)
+                            )
+                            .foregroundStyle(Color.secondary)
+                            .opacity(dayCount == 0 ? 0 : 1)
+                    }
+                }
+            }
+            .animateSynchronousAction(from: dateErrorMessage)
         }
     }
 
@@ -196,6 +253,7 @@ struct TripFormView: View {
             Toggle(isOn: $draftTrip.hideRoutines) {
                 Label("Exclude Routines", systemImage: "repeat.badge.xmark")
                     .foregroundStyle(Color.label)
+                    .imageScale(.medium)
             }
         }
     }
