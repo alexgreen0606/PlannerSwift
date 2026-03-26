@@ -122,8 +122,10 @@ struct PlannerEventFormView: View {
     @ToolbarContentBuilder
     private var bottomToolbar: some ToolbarContent {
         ToolbarItem(placement: .bottomBar) {
-            deleteButton
-            addToCalendarButton
+            HStack {
+                deleteButton
+                addToCalendarButton
+            }
         }
         .sharedBackgroundVisibility(.hidden)
     }
@@ -183,18 +185,35 @@ struct PlannerEventFormView: View {
                 displayedComponents: .date
             )
             .datePickerStyle(.graphical)
+            .listRowInsets(.top, 0)
         }
     }
 
     @ViewBuilder
     private var timeField: some View {
-        FormLabelView(
-            systemImageName: "clock",
-            value: draftPlannerEvent.hasTime
-                ? timeAndDay.dateLabel : "Add Time"
-        ) {
-            draftPlannerEvent.hasTime = true
-            togglePicker(type: .time)
+        Group {
+            if draftPlannerEvent.hasTime {
+                HStack {
+                    Image(systemName: "clock")
+                    Text("")
+                    Spacer()
+                    TimeView(timeInRegion: timeAndDay)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    togglePicker(type: .time)
+                }
+            } else {
+                FormLabelView(
+                    systemImageName: "clock",
+                    value: draftPlannerEvent.hasTime
+                        ? timeAndDay.dateLabel : "Add Time"
+                ) {
+                    ensureTextfieldBlurred()
+                    draftPlannerEvent.hasTime = true
+                    visiblePicker = .time
+                }
+            }
         }
         .listRowSeparator(visiblePicker == .time ? .hidden : .visible)
     }
@@ -241,40 +260,39 @@ struct PlannerEventFormView: View {
                     }
                 }
             }
+            .listRowInsets(.top, 0)
         }
     }
 
     private var locationField: some View {
-        LabeledContent {
-            NavigationLink {
-                LocationSearchFormView(
-                    title: "Edit Event Location",
-                    mode: .event,
-                    settings: settings,
-                    initialLocation: draftPlannerEvent.location,
-                    sourcePlanner: sourcePlanner
-                ) { location in
-                    draftPlannerEvent.location = location
-                }
-            } label: {
-                HStack {
-                    Spacer()
-                    Text(
-                        draftPlannerEvent.location?.name
-                            ?? "Planner Location"
-                    )
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                }
+        NavigationLink {
+            LocationSearchFormView(
+                title: "Edit Event Location",
+                mode: .event,
+                settings: settings,
+                initialLocation: draftPlannerEvent.location,
+                sourcePlanner: sourcePlanner
+            ) { location in
+                draftPlannerEvent.location = location
             }
         } label: {
-            Image(systemName: "mappin.and.ellipse")
-                .imageScale(.medium)
-                .foregroundStyle(
-                    draftPlannerEvent.location == nil
-                        ? Color.secondary : accentColor.color,
-                    Color.label
+            HStack {
+                Image(systemName: "mappin.and.ellipse")
+                    .imageScale(.medium)
+                    .foregroundStyle(
+                        draftPlannerEvent.location == nil
+                            ? Color.secondary : accentColor.color,
+                        Color.label
+                    )
+                Text("")
+                Spacer()
+                Text(
+                    draftPlannerEvent.location?.name
+                        ?? "Planner Location"
                 )
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            }
         }
     }
 

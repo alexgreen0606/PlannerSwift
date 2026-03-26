@@ -65,43 +65,44 @@ struct EventFormView: View {
             draftPlannerEvent.hasTime = plannerEvent.hasTime
             draftPlannerEvent.location = plannerEvent.location
 
-            if !plannerEvent.hasTime {
-
-                // Event has no time.
-                // Initialize a user-friendly time.
-
-                let now = DateInRegion(Date(), region: .local)
-
-                let startDayInRegion = {
-                    if let sourcePlanner {
-                        let startDayInRegion =
-                            sourcePlanner.datestamp.startOfDay(
-                                in: sourcePlanner.region(settings: settings)
-                            ) ?? now
-
-                        // This is a planner-specific form.
-                        // Use the current hour on the day of the selected planner.
-                        return startDayInRegion.dateBySet(
-                            hour: now.hour,
-                            min: 0,
-                            secs: 0
-                        ) ?? now
-                    }
-                    // Use the current hour (Create Event form only).
-                    return now
-                }()
-
-                // Round the time down to the start of the hour.
-                draftPlannerEvent.date =
-                    startDayInRegion
-                    .dateAtStartOf(.hour)
-                    .date
-
-            } else {
+            if plannerEvent.hasTime {
                 // Use the existing time for the event.
-                draftPlannerEvent.date = plannerEvent.date
+                draftPlannerEvent.date =
+                    plannerEvent.date.roundedDownNearest5Minutes
             }
+        }
 
+        if !draftPlannerEvent.hasTime {
+
+            // Event has no time.
+            // Initialize a user-friendly time.
+
+            let now = DateInRegion(Date(), region: .local)
+
+            let startDayInRegion = {
+                if let sourcePlanner {
+                    let startDayInRegion =
+                        sourcePlanner.datestamp.startOfDay(
+                            in: sourcePlanner.region(settings: settings)
+                        ) ?? now
+
+                    // This is a planner-specific form.
+                    // Use the current hour on the day of the selected planner.
+                    return startDayInRegion.dateBySet(
+                        hour: now.hour,
+                        min: 0,
+                        secs: 0
+                    ) ?? now
+                }
+                // Use the current hour (Create Event form only).
+                return now
+            }()
+
+            // Round the time down to the start of the hour.
+            draftPlannerEvent.date =
+                startDayInRegion
+                .dateAtStartOf(.hour)
+                .date
         }
 
         // ------------------------------------------------------------------
@@ -336,6 +337,8 @@ struct EventFormView: View {
     private func removeEventFromCalendar() {
         // Note: EventKit does not give access to the updated EKEvent.
         withAnimation {
+            draftPlannerEvent.date =
+                draftPlannerEvent.date.roundedDownNearest5Minutes
             draftPlannerEvent.calendarEvent = nil
         }
     }

@@ -47,6 +47,7 @@ struct TripFormView: View {
 
     @State private var draftTrip: DraftTrip
     @State private var showDeleteConfirmation = false
+    @State private var showDateSelector: Bool = false
     @State private var existingTripDateComponents: Set<DateComponents> = []
 
     private var isNewTrip: Bool {
@@ -105,7 +106,7 @@ struct TripFormView: View {
         guard let firstDatestamp = datestamps.first,
             let firstDay = DateInRegion(firstDatestamp, region: .local)
         else {
-            return ""
+            return "Select Dates"
         }
 
         guard let lastDatestamp = datestamps.last,
@@ -136,9 +137,15 @@ struct TripFormView: View {
                 saveButton
             }
         }
+        .animation(.linear, value: showDateSelector)
+        .animateSynchronousAction(from: dateErrorMessage)
         .tint(accentColor.color)
         .onAppear {
             buildExistingTripDates()
+
+            if isNewTrip {
+                showDateSelector = true
+            }
         }
     }
 
@@ -170,26 +177,52 @@ struct TripFormView: View {
         Section {
             TextField("Title", text: $draftTrip.title)
                 .textInputAutocapitalization(.words)
+        }
+    }
 
-            LabeledContent {
-                NavigationLink {
-                    LocationSearchFormView(
-                        title: "Edit Trip Location",
-                        mode: .trip,
-                        settings: settings,
-                        initialLocation: draftTrip.location
-                    ) { location in
-                        draftTrip.location = location
-                    }
-                } label: {
+    private var dateSection: some View {
+        Section {
+
+            FormLabelView(systemImageName: "calendar", value: datesLabel) {
+                showDateSelector.toggle()
+            }
+            .listRowSeparator(showDateSelector ? .hidden : .visible)
+
+            if showDateSelector {
+                VStack {
+                    DateRangePickerView(
+                        selectedDates: $draftTrip.dateComponents
+                    )
                     HStack {
+                        HStack(spacing: 4) {
+                            Text("Duration:")
+                                .font(.footnote)
+                                .foregroundStyle(Color.secondary)
+
+                            Text(dayCountLabel)
+                                .font(
+                                    .system(
+                                        size: 14,
+                                        weight: .black,
+                                        design: .rounded
+                                    )
+                                )
+                        }
                         Spacer()
-                        Text(
-                            draftTrip.location?.name ?? "Home Location"
-                        )
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
                     }
+                    .opacity(dayCount == 0 ? 0 : 1)
+                }
+                .listRowInsets(.top, 0)
+            }
+            
+            NavigationLink {
+                LocationSearchFormView(
+                    title: "Edit Trip Location",
+                    mode: .trip,
+                    settings: settings,
+                    initialLocation: draftTrip.location
+                ) { location in
+                    draftTrip.location = location
                 }
             } label: {
                 HStack {
@@ -199,53 +232,24 @@ struct TripFormView: View {
                                 ? Color.secondary : accentColor.color,
                             Color.label
                         )
-
-                    Text("Location")
+                    Text("")
+                    Spacer()
+                    Text(
+                        draftTrip.location?.name ?? "Home Location"
+                    )
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
                 }
-            }
-        }
-    }
-
-    private var dateSection: some View {
-        Section {
-            HStack {
-                LabeledContent {
-                    Text(datesLabel)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                } label: {
-                    Label("Dates", systemImage: "calendar")
-                        .foregroundStyle(Color.label)
-                        .imageScale(.medium)
-                }
-            }
-            .alignmentGuide(.listRowSeparatorLeading) { $0[.leading] }
-            VStack {
-                DateRangePickerView(
-                    selectedDates: $draftTrip.dateComponents
-                )
             }
         } footer: {
-            ZStack {
-                if let dateErrorMessage {
-                    Text(
-                        "You already have a trip planned for \(dateErrorMessage)."
-                    )
-                    .foregroundStyle(Color.red)
-                } else {
-                    HStack {
-                        Spacer()
-                        Text(dayCountLabel)
-                            .font(
-                                .system(size: 12, weight: .bold, design: .rounded)
-                            )
-                            .foregroundStyle(Color.secondary)
-                            .opacity(dayCount == 0 ? 0 : 1)
-                    }
-                }
+            if let dateErrorMessage {
+                Text(
+                    "You already have a trip planned for \(dateErrorMessage)."
+                )
+                .foregroundStyle(Color.red)
             }
-            .animateSynchronousAction(from: dateErrorMessage)
         }
+        .listSectionSeparator(.hidden)
     }
 
     private var routineSection: some View {

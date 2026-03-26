@@ -11,13 +11,13 @@ import SwiftUI
 
 struct ActionButtonView: View {
     let label: String
-    let systemImage: String?
+    let systemImage: String
     let color: Color?
     let onTap: () -> Void
 
     init(
         label: String,
-        systemImage: String? = nil,
+        systemImage: String,
         color: Color? = nil,
         onTap: @escaping () -> Void
     ) {
@@ -36,10 +36,9 @@ struct ActionButtonView: View {
             onTap()
         } label: {
             HStack {
-                if let systemImage {
-                    Image(systemName: systemImage)
-                }
-                ActionTextView(label)
+                Image(systemName: systemImage)
+                    .imageScale(.medium)
+                ActionTextView(label, color: color)
             }
             .foregroundStyle(color ?? accentColor.color)
         }
