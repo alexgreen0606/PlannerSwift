@@ -174,7 +174,7 @@ struct TripFormView: View {
             LabeledContent {
                 NavigationLink {
                     LocationSearchFormView(
-                        title: "Edit Event Location",
+                        title: "Edit Trip Location",
                         mode: .trip,
                         settings: settings,
                         initialLocation: draftTrip.location

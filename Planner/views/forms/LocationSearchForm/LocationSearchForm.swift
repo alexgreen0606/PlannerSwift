@@ -171,20 +171,24 @@ struct LocationSearchFormView: View {
     @ToolbarContentBuilder
     private var backButton: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
-            if mode == .planner {
-                Button(
-                    "Close",
-                    systemImage: "xmark"
-                ) {
-                    dismiss()
+            Group {
+                if mode == .planner {
+                    Button(
+                        "Close",
+                        systemImage: "xmark"
+                    ) {
+                        dismiss()
+                    }
+                } else {
+                    Button(
+                        "Back",
+                        systemImage: "chevron.left",
+                        action: handleSave
+                    )
                 }
-            } else {
-                Button(
-                    "Back",
-                    systemImage: "chevron.left",
-                    action: handleSave
-                )
             }
+            .tint(Color.label)
+            .foregroundStyle(Color.label)
         }
     }
 

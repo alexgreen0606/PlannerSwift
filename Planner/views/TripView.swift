@@ -20,6 +20,7 @@ struct TripView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
 
+    @Environment(\.displayScale) private var displayScale
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
 
     private var isExpanded: Bool {
@@ -84,6 +85,7 @@ struct TripView: View {
             }
         }
         .id("\(trip.id)_\(String(isExpanded))")
+        .discreetListItem()
     }
 
     // MARK: - View Builders
@@ -143,45 +145,65 @@ struct TripView: View {
                 }
             }
         }
-        .matchedTransitionSource(
-            id: String(describing: trip.id),
-            in: namespace
-        )
     }
 
     @ViewBuilder
     private var previewSpread: some View {
-        VStack(alignment: .leading) {
-            ScrollView(.horizontal) {
-                HStack {
-                    ForEach(
-                        Array(trip.sortedPlanners.enumerated()),
-                        id: \.element
-                    ) { index, planner in
-                        PlannerEventBuilderView(
-                            planner: planner,
-                            settings: settings,
-                            previewType: .trip,
-                            customTitle: "Day \(index + 1)",
-                            namespace: namespace,
-                            transitionSource: trip.plannerTransitionId(
-                                for: planner.datestamp
-                            )
+        ScrollView(.horizontal) {
+            HStack {
+                ForEach(
+                    Array(trip.sortedPlanners.enumerated()),
+                    id: \.element
+                ) { index, planner in
+                    PlannerEventBuilderView(
+                        planner: planner,
+                        settings: settings,
+                        previewType: .trip,
+                        customTitle: "Day \(index + 1)",
+                        namespace: namespace,
+                        transitionSource: trip.plannerTransitionId(
+                            for: planner.datestamp
                         )
-                    }
+                    )
                 }
-                .padding(.horizontal)
-            }
-            .scrollIndicators(.hidden)
-            .background(Color.clear)
 
-            ActionButtonView(
-                label: "Edit \(trip.title) Trip",
-                systemImage: "pencil",
-                onTap: openTripForm
-            )
-            .tint(accentColor.color)
-            .padding()
+                editTripCard
+            }
+            .padding(.horizontal)
+            .padding(.bottom)
         }
+        .scrollIndicators(.hidden)
+        .background(Color.clear)
     }
+    
+    private var editTripCard: some View {
+        HStack {
+            Image(systemName: "pencil")
+            Text("Edit Trip")
+        }
+        .foregroundStyle(accentColor.color)
+        .font(.system(size: 14, weight: .bold, design: .rounded))
+        .frame(
+            width: 240,
+            height: PlannerLayout.PREVIEW_CARD_HEIGHT,
+            alignment: .center
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 24)
+                .stroke(
+                    accentColor.color,
+                    style: StrokeStyle(
+                        lineWidth: 1,
+                        dash: [6]
+                    )
+                )
+        )
+        .contentShape(Rectangle())
+        .onTapGesture(perform: openTripForm)
+        .matchedTransitionSource(
+            id: trip.id,
+            in: namespace
+        )
+    }
+    
 }

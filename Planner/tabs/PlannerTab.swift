@@ -16,10 +16,11 @@ struct TripSheetContext: Identifiable {
     var trip: Trip?
 
     var id: String {
-        guard let trip else {
-            return IdConstants.ADD_BUTTON
-        }
-        return String(describing: trip.id)
+        String(describing: trip?.id)
+    }
+    
+    var transitionId: PersistentIdentifier? {
+        trip?.id
     }
 
 }
@@ -147,28 +148,31 @@ struct PlannerTabView: View {
                         calendarEvent: nil,
                         settings: settings
                     )
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: IdConstants.ADD_BUTTON,
-                            in: namespace
-                        )
-                    )
                     .environmentObject(notificationManager)
                 }
 
                 // New Trip Form
                 .sheet(item: $tripSheetContext) { context in
-                    TripFormView(sourceTrip: context.trip, settings: settings) {
+                    let form = TripFormView(
+                        sourceTrip: context.trip,
+                        settings: settings
+                    ) {
                         trip in
                         expandedTrips.insert(trip.id)
                         scrollToTrip(trip: trip, scrollProxy: scrollProxy)
                     }
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: context.id,
-                            in: namespace
-                        )
-                    )
+
+                    if let transitionId = context.transitionId {
+                        form
+                            .navigationTransition(
+                                .zoom(
+                                    sourceID: transitionId,
+                                    in: namespace
+                                )
+                            )
+                    } else {
+                        form
+                    }
                 }
             }
             .overlay {
@@ -245,10 +249,6 @@ struct PlannerTabView: View {
                     tripSheetContext = TripSheetContext()
                 }
             }
-            .matchedTransitionSource(
-                id: IdConstants.ADD_BUTTON,
-                in: namespace
-            )
         }
     }
 

@@ -8,12 +8,19 @@
 import EventKit
 import SwiftDate
 import SwiftUI
+import SwiftUIIntrospect
 
 // Clean
 
+enum VisiblePicker {
+    case date
+    case time
+    case none
+}
+
 struct PlannerEventFormView: View {
     @Binding var draftPlannerEvent: DraftPlannerEvent
-    @Binding var sheetDetent: PresentationDetent
+    @Binding var hasAutoFocused: Bool
     let settings: PlannerSettings
     let defaultLocation: Location?
     let sourceCalendarEvent: EKEvent?
@@ -38,6 +45,7 @@ struct PlannerEventFormView: View {
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
     @State private var showDeleteConfirmation = false
+    @State private var visiblePicker: VisiblePicker = .none
 
     @FocusState private var isTitleFocused
 
@@ -50,6 +58,14 @@ struct PlannerEventFormView: View {
             )
     }
 
+    private var timeAndDay: DateInRegion {
+        DateInRegion(draftPlannerEvent.date, region: eventRegion)
+    }
+
+    private var timeZoneAbbreviation: String {
+        eventRegion.timeZone.abbreviation() ?? "Unknown Time Zone"
+    }
+
     private var isCreateForm: Bool {
         sourcePlannerEvent == nil && sourceCalendarEvent == nil
     }
@@ -58,55 +74,40 @@ struct PlannerEventFormView: View {
         !draftPlannerEvent.title.isEmpty
     }
 
-    private var showTimeZoneFooter: Bool {
-        sourcePlannerEvent?.hasTime == true
-    }
-
-    private var timeZoneAbbreviation: String {
-        return
-            draftPlannerEvent
-            .region(
-                planner: sourcePlanner,
-                settings: settings,
-                deviceLocation: deviceLocationManager
-                    .deviceLocation
-            )
-            .timeZone
-            .abbreviation() ?? "Unknown Time Zone"
+    private var showCalendarButton: Bool {
+        calendarStore.calendarAccessDenied == false
     }
 
     var body: some View {
         NavigationStack {
             Form {
                 titleSection
-                timeSection
-                locationSection
+                detailsSection
             }
-            .animateSynchronousAction(from: draftPlannerEvent.hasTime)
+            .animation(.linear, value: visiblePicker)
             .navigationTitle(isCreateForm ? "Create Event" : "Edit Event")
             .navigationBarTitleDisplayMode(.inline)
-            .scrollDisabled(true)
             .toolbar {
+                cancelButton
                 saveButton
-            }
-            .overlay {
-                VStack {
-                    Spacer()
-                    HStack {
-                        if !isCreateForm {
-                            deleteButton
-                            Spacer()
-                        }
-                        addToCalendarButton
-                    }
-                    .padding(.bottom, isTitleFocused ? 6 : 0)
-                    .padding(.horizontal, 32)
-                }
+                bottomToolbar
             }
         }
+        .transition(.opacity)
     }
 
     // MARK: - Toolbars
+
+    @ToolbarContentBuilder
+    private var cancelButton: some ToolbarContent {
+        ToolbarItem(placement: .cancellationAction) {
+            Button("Cancel", systemImage: "xmark") {
+                dismiss()
+            }
+            .foregroundStyle(Color.label)
+            .tint(Color.label)
+        }
+    }
 
     @ToolbarContentBuilder
     private var saveButton: some ToolbarContent {
@@ -118,11 +119,168 @@ struct PlannerEventFormView: View {
         }
     }
 
+    @ToolbarContentBuilder
+    private var bottomToolbar: some ToolbarContent {
+        ToolbarItem(placement: .bottomBar) {
+            deleteButton
+            addToCalendarButton
+        }
+        .sharedBackgroundVisibility(.hidden)
+    }
+
     // MARK: - View Builders
+
+    private var titleSection: some View {
+        Section {
+            TextField("Title", text: $draftPlannerEvent.title)
+                .introspect(.textField, on: .iOS(.v26)) { textfield in
+                    if !hasAutoFocused, draftPlannerEvent.title.isEmpty {
+                        hasAutoFocused = true
+                        textfield.becomeFirstResponder()
+                    }
+                }
+                .textInputAutocapitalization(.words)
+                .focused($isTitleFocused)
+
+                // Increase the focusable area of the field.
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    isTitleFocused = true
+                }
+        }
+    }
+
+    private var detailsSection: some View {
+        Section {
+            dateField
+            datePicker
+            timeField
+            timePicker
+            locationField
+        }
+        .listSectionSeparator(.hidden)
+        .environment(\.timeZone, eventRegion.timeZone)
+    }
+
+    @ViewBuilder
+    private var dateField: some View {
+        FormLabelView(systemImageName: "calendar", value: timeAndDay.dateLabel)
+        {
+            togglePicker(type: .date)
+        }
+        .listRowSeparator(visiblePicker == .date ? .hidden : .visible)
+    }
+
+    @ViewBuilder
+    private var datePicker: some View {
+        if visiblePicker == .date {
+            DatePicker(
+                "",
+                selection: $draftPlannerEvent.date,
+                in: keepPastEventsDuration
+                    .cutoffDate...todaystampWatcher
+                    .maxCalendarDate,
+                displayedComponents: .date
+            )
+            .datePickerStyle(.graphical)
+        }
+    }
+
+    @ViewBuilder
+    private var timeField: some View {
+        FormLabelView(
+            systemImageName: "clock",
+            value: draftPlannerEvent.hasTime
+                ? timeAndDay.dateLabel : "Add Time"
+        ) {
+            draftPlannerEvent.hasTime = true
+            togglePicker(type: .time)
+        }
+        .listRowSeparator(visiblePicker == .time ? .hidden : .visible)
+    }
+
+    @ViewBuilder
+    private var timePicker: some View {
+        if visiblePicker == .time {
+            VStack {
+                DatePicker(
+                    "",
+                    selection: $draftPlannerEvent.date,
+                    in: keepPastEventsDuration
+                        .cutoffDate...todaystampWatcher
+                        .maxCalendarDate,
+                    displayedComponents: .hourAndMinute
+                )
+                .labelsHidden()
+                .datePickerStyle(.wheel)
+
+                HStack {
+                    HStack(spacing: 4) {
+                        Text("Time Zone:")
+                            .font(.footnote)
+                            .foregroundStyle(Color.secondary)
+
+                        Text(timeZoneAbbreviation)
+                            .font(
+                                .system(
+                                    size: 14,
+                                    weight: .black,
+                                    design: .rounded
+                                )
+                            )
+                    }
+
+                    Spacer()
+
+                    ActionButtonView(
+                        label: "Remove Time",
+                        systemImage: "xmark"
+                    ) {
+                        draftPlannerEvent.hasTime = false
+                        visiblePicker = .none
+                    }
+                }
+            }
+        }
+    }
+
+    private var locationField: some View {
+        LabeledContent {
+            NavigationLink {
+                LocationSearchFormView(
+                    title: "Edit Event Location",
+                    mode: .event,
+                    settings: settings,
+                    initialLocation: draftPlannerEvent.location,
+                    sourcePlanner: sourcePlanner
+                ) { location in
+                    draftPlannerEvent.location = location
+                }
+            } label: {
+                HStack {
+                    Spacer()
+                    Text(
+                        draftPlannerEvent.location?.name
+                            ?? "Planner Location"
+                    )
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                }
+            }
+        } label: {
+            Image(systemName: "mappin.and.ellipse")
+                .imageScale(.medium)
+                .foregroundStyle(
+                    draftPlannerEvent.location == nil
+                        ? Color.secondary : accentColor.color,
+                    Color.label
+                )
+        }
+    }
 
     @ViewBuilder
     private var addToCalendarButton: some View {
-        if calendarStore.calendarAccessDenied == false {
+        if showCalendarButton {
             ActionButtonView(
                 label: "Add To Calendar",
                 systemImage: "calendar.badge.plus",
@@ -133,133 +291,33 @@ struct PlannerEventFormView: View {
 
     @ViewBuilder
     private var deleteButton: some View {
-        ActionButtonView(
-            label: "Delete Event",
-            systemImage: "trash",
-            color: Color.red,
-            onTap: {
-                showDeleteConfirmation = true
-            }
-        )
-        .confirmationDialog(
-            "Delete this event?",
-            isPresented: $showDeleteConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button(
-                "Confirm",
-                role: .destructive,
-                action: deleteEvent
+        if !isCreateForm {
+            ActionButtonView(
+                label: "Delete Event",
+                systemImage: "trash",
+                color: Color.red,
+                onTap: {
+                    showDeleteConfirmation = true
+                }
             )
-        } message: {
-            Text(
-                "This action is irreversible."
-            )
-        }
-    }
-
-    private var titleSection: some View {
-        Section {
-            TextField("Title", text: $draftPlannerEvent.title)
-                .textInputAutocapitalization(.words)
-                .focused($isTitleFocused)
-        }
-        .listSectionMargins(.top, 0)
-    }
-
-    private var timeSection: some View {
-        Section {
-            LabeledContent {
-                DatePicker(
-                    "",
-                    selection: $draftPlannerEvent.date,
-                    in: keepPastEventsDuration
-                        .cutoffDate...todaystampWatcher
-                        .maxCalendarDate,
-                    displayedComponents: draftPlannerEvent.hasTime
-                        ? [.date, .hourAndMinute] : .date
+            .confirmationDialog(
+                "Delete this event?",
+                isPresented: $showDeleteConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button(
+                    "Confirm",
+                    role: .destructive,
+                    action: deleteEvent
                 )
-                .environment(
-                    \.timeZone,
-                    eventRegion.timeZone
+            } message: {
+                Text(
+                    "This action is irreversible."
                 )
-            } label: {
-                Label("Date", systemImage: "calendar")
-                    .foregroundStyle(Color.label)
-                    .imageScale(.medium)
-            }
-            .animation(nil, value: draftPlannerEvent.hasTime)
-
-            LabeledContent {
-                Toggle("", isOn: $draftPlannerEvent.hasTime)
-            } label: {
-                Label("Time", systemImage: "clock")
-                    .foregroundStyle(Color.label)
-                    .imageScale(.medium)
-            }
-        }
-    }
-
-    private var locationSection: some View {
-        Section {
-            LabeledContent {
-                NavigationLink {
-                    LocationSearchFormView(
-                        title: "Edit Event Location",
-                        mode: .event,
-                        settings: settings,
-                        initialLocation: draftPlannerEvent.location,
-                        sourcePlanner: sourcePlanner
-                    ) { location in
-                        draftPlannerEvent.location = location
-                    }
-                } label: {
-                    HStack {
-                        Spacer()
-                        Text(
-                            draftPlannerEvent.location?.name
-                                ?? "Planner Location"
-                        )
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    }
-                }
-            } label: {
-                HStack {
-                    Image(systemName: "mappin.and.ellipse")
-                        .imageScale(.medium)
-                        .foregroundStyle(
-                            draftPlannerEvent.location == nil
-                                ? Color.secondary : accentColor.color,
-                            Color.label
-                        )
-
-                    Text("Location")
-                }
             }
 
-            if !showTimeZoneFooter && draftPlannerEvent.hasTime {
-                LabeledContent {
-                    Text(timeZoneAbbreviation)
-                } label: {
-                    Label("Time Zone", systemImage: "globe")
-                        .foregroundStyle(Color.label)
-                        .imageScale(.medium)
-                }
-            }
-        } footer: {
-            if showTimeZoneFooter && draftPlannerEvent.hasTime {
-                HStack(alignment: .bottom, spacing: 4) {
-                    Text("Time Zone:")
-                    Text(timeZoneAbbreviation)
-                        .font(
-                            .system(
-                                size: 14,
-                                weight: .black,
-                                design: .rounded
-                            )
-                        )
-                }
+            if showCalendarButton {
+                Spacer()
             }
         }
     }
@@ -336,8 +394,10 @@ struct PlannerEventFormView: View {
             to: draftPlannerEvent.date
         )
 
-        draftPlannerEvent.calendarEvent = event
-        sheetDetent = .large
+        withAnimation {
+            visiblePicker = .none
+            draftPlannerEvent.calendarEvent = event
+        }
     }
 
     private func deleteEvent() {
@@ -345,6 +405,22 @@ struct PlannerEventFormView: View {
 
         if let sourcePlannerEvent {
             modelContext.deletePlannerEvents([sourcePlannerEvent])
+        }
+    }
+
+    private func ensureTextfieldBlurred() {
+        if isTitleFocused {
+            isTitleFocused = false
+        }
+    }
+
+    private func togglePicker(type: VisiblePicker) {
+        ensureTextfieldBlurred()
+
+        if visiblePicker == type {
+            visiblePicker = .none
+        } else {
+            visiblePicker = type
         }
     }
 

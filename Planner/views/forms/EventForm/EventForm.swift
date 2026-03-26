@@ -55,11 +55,6 @@ struct EventFormView: View {
             )
             draftPlannerEvent.calendarEvent = calEvent
 
-            if calEvent.calendar.allowsContentModifications {
-                // Use max height for calendar edit forms.
-                _sheetDetent = State(initialValue: .large)
-            }
-
         } else if let plannerEvent {
 
             // ----------------------------------------------------------
@@ -128,8 +123,6 @@ struct EventFormView: View {
                         CNContactViewController.descriptorForRequiredKeys()
                     ] as [CNKeyDescriptor]
                 )
-
-                _sheetDetent = State(initialValue: .large)
             } catch {
                 assertionFailure("ERROR EventForm.init: \(error)")
             }
@@ -160,8 +153,8 @@ struct EventFormView: View {
     @EnvironmentObject private var notificationManager: NotificationManager
     @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
 
-    @State private var sheetDetent: PresentationDetent = .height(480)
     @State private var draftPlannerEvent: DraftPlannerEvent
+    @State private var hasAutoFocused = false
 
     private var defaultLocation: Location? {
         sourcePlanner?.location(
@@ -183,7 +176,7 @@ struct EventFormView: View {
             } else {
                 PlannerEventFormView(
                     draftPlannerEvent: $draftPlannerEvent,
-                    sheetDetent: $sheetDetent,
+                    hasAutoFocused: $hasAutoFocused,
                     settings: settings,
                     defaultLocation: defaultLocation,
                     sourceCalendarEvent: sourceCalendarEvent,
@@ -194,13 +187,15 @@ struct EventFormView: View {
                 )
             }
         }
-        .presentationDragIndicator(.hidden)
-        .presentationDetents(
-            [.height(480), .large],
-            selection: $sheetDetent
-        )
-        .presentationBackground(.clear)
         .tint(accentColor.color)
+        .presentationBackground(.clear)
+        .background(Color.clear)
+        .presentationDetents(
+            draftPlannerEvent.calendarEvent != nil
+                && draftPlannerEvent.calendarEvent?.calendar
+                    .allowsContentModifications == false
+                ? [.height(300)] : [.large]
+        )
 
         // Ensure event location exists when hasTime is set to true.
         .onChange(of: draftPlannerEvent.hasTime) { _, _ in
@@ -237,6 +232,7 @@ struct EventFormView: View {
                     )
                 }
             }
+            .transition(.opacity)
         } else {
             ViewCalendarEventFormView(event: event)
                 .ignoresSafeArea()
@@ -264,7 +260,11 @@ struct EventFormView: View {
 
         dismiss()
 
-        showNotification(sourceDay: sourceDay, destinationDay: destinationDay, finalEkEvent: event)
+        showNotification(
+            sourceDay: sourceDay,
+            destinationDay: destinationDay,
+            finalEkEvent: event
+        )
     }
 
     private func showNotification(
@@ -309,7 +309,7 @@ struct EventFormView: View {
                 )
             }
         }
-        
+
         // Show the deletion message if no higher priority message is set.
         if finalEkEvent == nil,
             sourceCalendarEvent != nil,
@@ -335,8 +335,9 @@ struct EventFormView: View {
 
     private func removeEventFromCalendar() {
         // Note: EventKit does not give access to the updated EKEvent.
-        draftPlannerEvent.calendarEvent = nil
-        sheetDetent = .height(480)
+        withAnimation {
+            draftPlannerEvent.calendarEvent = nil
+        }
     }
 
     private func ensureLocationWhenTimed() {

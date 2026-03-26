@@ -11,6 +11,7 @@
 		07BB27E92EDDFF6900593DD0 /* SwiftFormat in Frameworks */ = {isa = PBXBuildFile; productRef = 07BB27E82EDDFF6900593DD0 /* SwiftFormat */; };
 		07CA6BAB2F6B0F91001095BB /* Fuse in Frameworks */ = {isa = PBXBuildFile; productRef = 07CA6BAA2F6B0F91001095BB /* Fuse */; };
 		07DA27532EE28AC900265B25 /* SwiftDate in Frameworks */ = {isa = PBXBuildFile; productRef = 07DA27522EE28AC900265B25 /* SwiftDate */; };
+		07EA142D2F746B4C00748DCE /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = 07EA142C2F746B4C00748DCE /* SwiftUIIntrospect */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,6 +47,7 @@
 				07DA27532EE28AC900265B25 /* SwiftDate in Frameworks */,
 				071E4F9E2EF220A300418F1A /* WrappingHStack in Frameworks */,
 				07BB27E92EDDFF6900593DD0 /* SwiftFormat in Frameworks */,
+				07EA142D2F746B4C00748DCE /* SwiftUIIntrospect in Frameworks */,
 				07CA6BAB2F6B0F91001095BB /* Fuse in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -93,6 +95,7 @@
 				07DA27522EE28AC900265B25 /* SwiftDate */,
 				071E4F9D2EF220A300418F1A /* WrappingHStack */,
 				07CA6BAA2F6B0F91001095BB /* Fuse */,
+				07EA142C2F746B4C00748DCE /* SwiftUIIntrospect */,
 			);
 			productName = Planner;
 			productReference = 07BB27D52EDDFB9400593DD0 /* Planner.app */;
@@ -127,6 +130,7 @@
 				07DA27512EE28AC900265B25 /* XCRemoteSwiftPackageReference "SwiftDate" */,
 				071E4F9C2EF220A300418F1A /* XCRemoteSwiftPackageReference "WrappingHStack" */,
 				07CA6BA92F6B0F91001095BB /* XCRemoteSwiftPackageReference "fuse-swift" */,
+				07EA142B2F746B4C00748DCE /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 07BB27D62EDDFB9400593DD0 /* Products */;
@@ -412,6 +416,14 @@
 				minimumVersion = 7.0.0;
 			};
 		};
+		07EA142B2F746B4C00748DCE /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/siteline/SwiftUI-Introspect";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 26.0.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -434,6 +446,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 07DA27512EE28AC900265B25 /* XCRemoteSwiftPackageReference "SwiftDate" */;
 			productName = SwiftDate;
+		};
+		07EA142C2F746B4C00748DCE /* SwiftUIIntrospect */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 07EA142B2F746B4C00748DCE /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */;
+			productName = SwiftUIIntrospect;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

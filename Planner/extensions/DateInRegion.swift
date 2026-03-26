@@ -170,6 +170,12 @@ extension DateInRegion {
             return "\(dayDiff) days ago"
         }
     }
+    
+    var dateLabel: String {
+        let startOfToday = DateInRegion(region: region).dateAt(.startOfDay)
+        let currentYear = startOfToday.year
+        return startOfDay.year == currentYear ? dateWithoutYear : dateWithYear
+    }
 
     var timeValue: (timeValue: String, indicator: String) {  // Ex: (12:37, PM)
         // Convert to 12-hour format.
@@ -189,12 +195,6 @@ extension DateInRegion {
 
     private var startOfDay: DateInRegion {
         self.dateAt(.startOfDay)
-    }
-
-    private var dateLabel: String {
-        let startOfToday = DateInRegion(region: region).dateAt(.startOfDay)
-        let currentYear = startOfToday.year
-        return startOfDay.year == currentYear ? dateWithoutYear : dateWithYear
     }
 
     private var isThisWeek: Bool {
