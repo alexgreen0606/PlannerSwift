@@ -9,6 +9,7 @@ import EventKit
 import SwiftData
 import SwiftDate
 import SwiftUI
+import SwiftUIIntrospect
 
 // Clean
 
@@ -42,13 +43,18 @@ struct TripFormView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
 
     @Query private var trips: [Trip]
 
     @State private var draftTrip: DraftTrip
     @State private var showDeleteConfirmation = false
-    @State private var showDateSelector: Bool = false
+    @State private var showDatesPicker: Bool = false
+    @State private var hasAutoFocused: Bool = false
     @State private var existingTripDateComponents: Set<DateComponents> = []
+    @State private var hasTitleAutoFocused = false
+
+    @FocusState private var isTitleFocused
 
     private var isNewTrip: Bool {
         sourceTrip == nil
@@ -57,7 +63,7 @@ struct TripFormView: View {
     private var canSave: Bool {
         !draftTrip.title.isEmpty
             && !draftTrip.dateComponents.isEmpty
-            && dateErrorMessage == nil
+            && invalidDayMessage == nil
     }
 
     private var dayCount: Int {
@@ -78,14 +84,14 @@ struct TripFormView: View {
 
         if sourceTrip.location != nil {
             message =
-                "Planner locations will default to your home location. "
+                "Planner locations will reset to your home location. "
                 + message
         }
 
         return message
     }
 
-    private var dateErrorMessage: String? {
+    private var invalidDayMessage: String? {
         let existing = Set(existingTripDateComponents.compactMap(\.datestamp))
         let draft = Set(draftTrip.dateComponents.compactMap(\.datestamp))
 
@@ -96,55 +102,64 @@ struct TripFormView: View {
             return nil
         }
 
-        return invalidDay.dynamicSentenceTitle
+        let formatted = invalidDay.proximityFormat(
+            using: [
+                ProximityRule(proximity: .withinADay, format: .countdown),
+                ProximityRule(
+                    proximity: .next7Days,
+                    format: .weekday
+                ),
+                ProximityRule(
+                    proximity: .fallback,
+                    format: .dateLabel,
+                    ordinal: true
+                )
+            ]
+        )
+
+        return
+            "\(formatted) is linked to a different trip."
     }
 
     private var datesLabel: String {
-        let datestamps = draftTrip.dateComponents.compactMap { $0.datestamp }
-            .sorted()
-
-        guard let firstDatestamp = datestamps.first,
-            let firstDay = DateInRegion(firstDatestamp, region: .local)
-        else {
-            return "Select Dates"
-        }
-
-        guard let lastDatestamp = datestamps.last,
-            let lastDay = DateInRegion(lastDatestamp, region: .local)
-        else {
-            return ""
-        }
-
-        if firstDatestamp == lastDatestamp {
-            return firstDay.tripLabel
-        }
-
-        return "\(firstDay.tripLabel) - \(lastDay.tripLabel)"
+        draftTrip.dateRangeLabel ?? "Select Dates"
     }
 
     var body: some View {
         NavigationStack {
             Form {
                 titleSection
-                dateSection
+                detailsSection
                 routineSection
-                cancelSection
             }
             .navigationTitle(isNewTrip ? "Create Trip" : "Edit Trip")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 cancelButton
                 saveButton
+                cancelTripButton
             }
         }
-        .animation(.linear, value: showDateSelector)
-        .animateSynchronousAction(from: dateErrorMessage)
+        .animation(.linear, value: showDatesPicker)
+        .animation(.linear, value: invalidDayMessage)
         .tint(accentColor.color)
         .onAppear {
             buildExistingTripDates()
 
             if isNewTrip {
-                showDateSelector = true
+                showDatesPicker = true
+            }
+        }
+        
+        // Blur the title field when another field is modified.
+        .onChange(of: draftTrip.dateComponents) { _, _ in
+            if isTitleFocused {
+                isTitleFocused = false
+            }
+        }
+        .onChange(of: draftTrip.hideRoutines) { _, _ in
+            if isTitleFocused {
+                isTitleFocused = false
             }
         }
     }
@@ -171,86 +186,126 @@ struct TripFormView: View {
         }
     }
 
-    // MARK: - View Builders
-
-    private var titleSection: some View {
-        Section {
-            TextField("Title", text: $draftTrip.title)
-                .textInputAutocapitalization(.words)
+    @ToolbarContentBuilder
+    private var cancelTripButton: some ToolbarContent {
+        if !isNewTrip {
+            ToolbarItem(placement: .bottomBar) {
+                ActionButtonView(
+                    label: "Cancel Trip",
+                    systemImage: "trash",
+                    color: Color.red,
+                    onTap: {
+                        showDeleteConfirmation = true
+                    }
+                )
+                .frame(maxWidth: .infinity)
+                .confirmationDialog(
+                    "Cancel this trip?",
+                    isPresented: $showDeleteConfirmation,
+                    titleVisibility: .visible
+                ) {
+                    Button(
+                        "Confirm",
+                        role: .destructive,
+                        action: cancelTrip
+                    )
+                } message: {
+                    Text(cancelMessage)
+                }
+            }
+            .sharedBackgroundVisibility(.hidden)
         }
     }
 
-    private var dateSection: some View {
+    // MARK: - View Builders
+
+    // MARK: Title
+
+    private var titleSection: some View {
+        FormTitleFieldView(
+            text: $draftTrip.title,
+            hasAutoFocused: $hasTitleAutoFocused,
+            isFocused: $isTitleFocused
+        )
+        .textInputAutocapitalization(.words)
+    }
+
+    // MARK: Dates and Location
+
+    private var detailsSection: some View {
         Section {
-
-            FormLabelView(systemImageName: "calendar", value: datesLabel) {
-                showDateSelector.toggle()
-            }
-            .listRowSeparator(showDateSelector ? .hidden : .visible)
-
-            if showDateSelector {
-                VStack {
-                    DateRangePickerView(
-                        selectedDates: $draftTrip.dateComponents
-                    )
-                    HStack {
-                        HStack(spacing: 4) {
-                            Text("Duration:")
-                                .font(.footnote)
-                                .foregroundStyle(Color.secondary)
-
-                            Text(dayCountLabel)
-                                .font(
-                                    .system(
-                                        size: 14,
-                                        weight: .black,
-                                        design: .rounded
-                                    )
-                                )
-                        }
-                        Spacer()
-                    }
-                    .opacity(dayCount == 0 ? 0 : 1)
-                }
-                .listRowInsets(.top, 0)
-            }
-            
-            NavigationLink {
-                LocationSearchFormView(
-                    title: "Edit Trip Location",
-                    mode: .trip,
-                    settings: settings,
-                    initialLocation: draftTrip.location
-                ) { location in
-                    draftTrip.location = location
-                }
-            } label: {
-                HStack {
-                    Image(systemName: "mappin.and.ellipse")
-                        .foregroundStyle(
-                            draftTrip.location == nil
-                                ? Color.secondary : accentColor.color,
-                            Color.label
-                        )
-                    Text("")
-                    Spacer()
-                    Text(
-                        draftTrip.location?.name ?? "Home Location"
-                    )
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                }
-            }
-        } footer: {
-            if let dateErrorMessage {
-                Text(
-                    "You already have a trip planned for \(dateErrorMessage)."
-                )
-                .foregroundStyle(Color.red)
-            }
+            datesField
+            datesPicker
+            locationField
         }
         .listSectionSeparator(.hidden)
     }
+
+    private var datesField: some View {
+        FormLabelView(
+            systemImageName: "calendar",
+            value: datesLabel,
+            detail: dayCountLabel,
+            color: invalidDayMessage != nil ? Color.red : nil
+        ) {
+            if !showDatesPicker {
+                isTitleFocused = false
+            }
+            showDatesPicker.toggle()
+        }
+        .id("DATES_FIELD_\(invalidDayMessage != nil)")
+        .listRowSeparator(showDatesPicker ? .hidden : .visible)
+    }
+
+    @ViewBuilder
+    private var datesPicker: some View {
+        if showDatesPicker {
+            VStack {
+                DateRangePickerView(
+                    selectedDates: $draftTrip.dateComponents
+                )
+
+                if let invalidDayMessage {
+                    Text(invalidDayMessage)
+                        .font(.footnote)
+                        .foregroundStyle(Color.red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            .listRowInsets(.top, 0)
+        }
+    }
+
+    private var locationField: some View {
+        NavigationLink {
+            LocationSearchFormView(
+                title: "Edit Trip Location",
+                mode: .trip,
+                settings: settings,
+                initialLocation: draftTrip.location
+            ) { location in
+                draftTrip.location = location
+            }
+        } label: {
+            HStack {
+                Image(systemName: "mappin.and.ellipse")
+                    .foregroundStyle(
+                        draftTrip.location == nil
+                            ? Color.secondary : accentColor.color,
+                        Color.label
+                    )
+                Text("")
+                Spacer()
+                Text(
+                    draftTrip.location?.name ?? "Home Location"
+                )
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    // MARK: Routines
 
     private var routineSection: some View {
         Section {
@@ -259,42 +314,6 @@ struct TripFormView: View {
                     .foregroundStyle(Color.label)
                     .imageScale(.medium)
             }
-        }
-    }
-
-    @ViewBuilder
-    private var cancelSection: some View {
-        if !isNewTrip {
-            Section {
-                cancelTripButton
-            }
-            .discreetListItem()
-        }
-    }
-
-    @ViewBuilder
-    private var cancelTripButton: some View {
-        ActionButtonView(
-            label: "Cancel \(draftTrip.title) Trip",
-            systemImage: "trash",
-            color: Color.red,
-            onTap: {
-                showDeleteConfirmation = true
-            }
-        )
-        .frame(maxWidth: .infinity)
-        .confirmationDialog(
-            "Cancel this trip?",
-            isPresented: $showDeleteConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button(
-                "Confirm",
-                role: .destructive,
-                action: cancelTrip
-            )
-        } message: {
-            Text(cancelMessage)
         }
     }
 

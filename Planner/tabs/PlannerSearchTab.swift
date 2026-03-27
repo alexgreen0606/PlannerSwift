@@ -83,13 +83,31 @@ struct PlannerSearchTabView: View {
                                         settings: settings,
                                         previewType: .search,
                                         plannerSearchQuery: plannerSearchQuery,
+                                        title: { day in
+                                            day.proximityFormat(
+                                                using: [
+                                                    ProximityRule(proximity: .withinADay, format: .countdown),
+                                                    ProximityRule(proximity: .next7Days, format: .weekday),
+                                                    ProximityRule(proximity: .fallback, format: .dateLabel)
+                                                ]
+                                            )
+                                        },
+                                        subtitle: { day in
+                                            day.proximityFormat(
+                                                using: [
+                                                    ProximityRule(proximity: .withinADay, format: .weekday),
+                                                    ProximityRule(proximity: .next7Days, format: .countdown),
+                                                    ProximityRule(proximity: .fallback, format: .weekday)
+                                                ]
+                                            )
+                                        },
                                         namespace: namespace
                                     )
                                     .listRowBackground(Color.clear)
                                     .id(datestamp)
                                 }
                             } header: {
-                                upcomingYearHeader(year)
+                                YearSectionHeaderView(year)
                             }
                             .listSectionMargins(.top, 0)
                         }
@@ -262,16 +280,6 @@ struct PlannerSearchTabView: View {
         Color.clear.frame(
             height: isSearching ? toolbarHeight : 0
         )
-    }
-
-    private func upcomingYearHeader(_ year: String) -> some View {
-        Text(year)
-            .font(.system(size: 22, weight: .heavy, design: .rounded))
-            .foregroundColor(.secondary)
-            .frame(
-                maxWidth: .infinity,
-                alignment: .trailing
-            )
     }
 
     // MARK: - Datestamp Builders

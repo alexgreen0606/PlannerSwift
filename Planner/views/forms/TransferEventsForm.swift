@@ -148,7 +148,15 @@ struct TransferEventsFormView: View {
     private var sourceChip: some View {
         TransferSourceIndicatorView(
             title: transferCount,
-            subtitle: sourceDay.dynamicTitle,
+            subtitle: sourceDay.proximityFormat(
+                using: [
+                    ProximityRule(proximity: .next7Days, format: .weekday),
+                    ProximityRule(
+                        proximity: .fallback,
+                        format: .dateLabel
+                    ),
+                ]
+            ),
             iconConfig: IconConfig(
                 name: "note"
             )
@@ -157,7 +165,12 @@ struct TransferEventsFormView: View {
 
     private var destinationChip: some View {
         TransferDestinationIndicatorView(
-            title: destinationDay.dynamicTitle,
+            title: destinationDay.proximityFormat(
+                using: [
+                    ProximityRule(proximity: .next7Days, format: .weekday),
+                    ProximityRule(proximity: .fallback, format: .dateLabel),
+                ]
+            ),
             iconConfig: IconConfig(
                 name: destinationDay.datestamp.calendarSymbolName
             )

@@ -30,6 +30,18 @@ extension Trip {
         )
     }
 
+    var dateRangeLabel: String? {
+        guard let firstDatestamp,
+            let lastDatestamp,
+            let firstDay = DateInRegion(firstDatestamp, region: .local),
+            let lastDay = DateInRegion(lastDatestamp, region: .local)
+        else {
+            return nil
+        }
+
+        return buildDateRangeLabel(firstDay: firstDay, lastDay: lastDay)
+    }
+
     func plannerTransitionId(for datestamp: String) -> String {
         "\(datestamp)_\(String(describing: id))"
     }

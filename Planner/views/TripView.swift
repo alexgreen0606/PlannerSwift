@@ -54,15 +54,7 @@ struct TripView: View {
     }
 
     private var datesLabel: String {
-        guard let firstDay, let lastDay else {
-            return ""
-        }
-
-        if trip.planners.count == 1 {
-            return firstDay.tripLabel
-        }
-
-        return "\(firstDay.tripLabel) - \(lastDay.tripLabel)"
+        trip.dateRangeLabel ?? ""
     }
 
     private var countdownLabel: String {
@@ -124,14 +116,6 @@ struct TripView: View {
                     .font(.footnote)
                     .foregroundStyle(Color.secondary)
             }
-
-            Image(systemName: "chevron.right")
-                .frame(width: 24)
-                .frame(maxHeight: .infinity)
-                .rotationEffect(.degrees(isExpanded ? 90 : 0))
-                .animation(.linear, value: isExpanded)
-                .foregroundStyle(Color.secondary)
-
         }
         .padding()
         .contentShape(Rectangle())
@@ -159,7 +143,8 @@ struct TripView: View {
                         planner: planner,
                         settings: settings,
                         previewType: .trip,
-                        customTitle: "Day \(index + 1)",
+                        title: { _ in "Day \(index + 1)" },
+                        subtitle: { $0.weekday },
                         namespace: namespace,
                         transitionSource: trip.plannerTransitionId(
                             for: planner.datestamp
@@ -175,7 +160,7 @@ struct TripView: View {
         .scrollIndicators(.hidden)
         .background(Color.clear)
     }
-    
+
     private var editTripCard: some View {
         HStack {
             Image(systemName: "pencil")
@@ -205,5 +190,5 @@ struct TripView: View {
             in: namespace
         )
     }
-    
+
 }

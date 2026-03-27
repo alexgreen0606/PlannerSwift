@@ -20,7 +20,6 @@ enum VisiblePicker {
 
 struct PlannerEventFormView: View {
     @Binding var draftPlannerEvent: DraftPlannerEvent
-    @Binding var hasAutoFocused: Bool
     let settings: PlannerSettings
     let defaultLocation: Location?
     let sourceCalendarEvent: EKEvent?
@@ -46,6 +45,7 @@ struct PlannerEventFormView: View {
 
     @State private var showDeleteConfirmation = false
     @State private var visiblePicker: VisiblePicker = .none
+    @State private var hasTitleAutoFocused = false
 
     @FocusState private var isTitleFocused
 
@@ -102,6 +102,7 @@ struct PlannerEventFormView: View {
     private var cancelButton: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
             Button("Cancel", systemImage: "xmark") {
+                isTitleFocused = false
                 dismiss()
             }
             .foregroundStyle(Color.label)
@@ -133,23 +134,11 @@ struct PlannerEventFormView: View {
     // MARK: - View Builders
 
     private var titleSection: some View {
-        Section {
-            TextField("Title", text: $draftPlannerEvent.title)
-                .introspect(.textField, on: .iOS(.v26)) { textfield in
-                    if !hasAutoFocused, draftPlannerEvent.title.isEmpty {
-                        hasAutoFocused = true
-                        textfield.becomeFirstResponder()
-                    }
-                }
-                .textInputAutocapitalization(.words)
-                .focused($isTitleFocused)
-
-                // Increase the focusable area of the field.
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    isTitleFocused = true
-                }
-        }
+        FormTitleFieldView(
+            text: $draftPlannerEvent.title,
+            hasAutoFocused: $hasTitleAutoFocused,
+            isFocused: $isTitleFocused
+        )
     }
 
     private var detailsSection: some View {
@@ -197,7 +186,18 @@ struct PlannerEventFormView: View {
                     Image(systemName: "clock")
                     Text("")
                     Spacer()
-                    TimeView(timeInRegion: timeAndDay)
+                    VStack(alignment: .trailing) {
+                        TimeView(timeInRegion: timeAndDay)
+                        Text(timeZoneAbbreviation)
+                            .font(
+                                .system(
+                                    size: 11,
+                                    weight: .bold,
+                                    design: .rounded
+                                )
+                            )
+                            .foregroundStyle(Color.secondary)
+                    }
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -233,33 +233,15 @@ struct PlannerEventFormView: View {
                 .labelsHidden()
                 .datePickerStyle(.wheel)
 
-                HStack {
-                    HStack(spacing: 4) {
-                        Text("Time Zone:")
-                            .font(.footnote)
-                            .foregroundStyle(Color.secondary)
-
-                        Text(timeZoneAbbreviation)
-                            .font(
-                                .system(
-                                    size: 14,
-                                    weight: .black,
-                                    design: .rounded
-                                )
-                            )
-                    }
-
-                    Spacer()
-
-                    ActionButtonView(
-                        label: "Remove Time",
-                        systemImage: "xmark"
-                    ) {
-                        draftPlannerEvent.hasTime = false
-                        visiblePicker = .none
-                    }
+                ActionButtonView(
+                    label: "Remove Time",
+                    systemImage: "xmark"
+                ) {
+                    draftPlannerEvent.hasTime = false
+                    visiblePicker = .none
                 }
             }
+            .alignmentGuide(.listRowSeparatorLeading) { _ in 32 }
             .listRowInsets(.top, 0)
         }
     }

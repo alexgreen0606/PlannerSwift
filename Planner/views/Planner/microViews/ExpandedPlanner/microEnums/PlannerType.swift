@@ -33,7 +33,21 @@ enum PlannerType: String {
 
         case .future:
 
-            let formatted = plannerDay.dynamicSentenceTitle
+            let formatted = plannerDay.proximityFormat(
+                using: [
+                    ProximityRule(
+                        proximity: .withinADay,
+                        format: .countdown,
+                        ordinal: true
+                    ),
+                    ProximityRule(proximity: .next7Days, format: .weekday),
+                    ProximityRule(
+                        proximity: .fallback,
+                        format: .dateLabel,
+                        ordinal: true
+                    )
+                ]
+            )
 
             // TODO: dont show this if setting is disabled.
 

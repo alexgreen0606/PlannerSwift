@@ -17,7 +17,8 @@ struct PlannerEventBuilderView: View {
     private let settings: PlannerSettings
     private let previewType: PlannerPreviewType?
     private let plannerSearchQuery: PlannerSearchQuery?
-    private let customTitle: String?
+    private let title: ((DateInRegion) -> String)?
+    private let subtitle: ((DateInRegion) -> String)?
     private let namespace: Namespace.ID?
     private let transitionSource: String?
 
@@ -26,14 +27,16 @@ struct PlannerEventBuilderView: View {
         settings: PlannerSettings,
         previewType: PlannerPreviewType?,
         plannerSearchQuery: PlannerSearchQuery? = nil,
-        customTitle: String?,
+        title: ((DateInRegion) -> String)?,
+        subtitle: ((DateInRegion) -> String)?,
         namespace: Namespace.ID?,
         transitionSource: String?
     ) {
         self.planner = planner
         self.previewType = previewType
         self.plannerSearchQuery = plannerSearchQuery
-        self.customTitle = customTitle
+        self.title = title
+        self.subtitle = subtitle
         self.settings = settings
         self.namespace = namespace
         self.transitionSource = transitionSource
@@ -130,11 +133,12 @@ struct PlannerEventBuilderView: View {
 
     @ViewBuilder
     private var previewView: some View {
-        if let previewType, let namespace {
+        if let previewType, let namespace, let title, let subtitle {
             PlannerPreviewView(
                 type: previewType,
                 searchQuery: plannerSearchQuery,
-                customTitle: customTitle,
+                title: title,
+                subtitle: subtitle,
                 planner: planner,
                 plannerDay: plannerDay,
                 plannerLocation: plannerLocation,

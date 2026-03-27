@@ -59,6 +59,15 @@ struct ExpandedPlannerView: View {
             && plannerManager.selectedItemIds.count == visibleEvents.count
     }
 
+    private var title: String {
+        plannerDay.proximityFormat(
+            using: [
+                ProximityRule(proximity: .next7Days, format: .weekday),
+                ProximityRule(proximity: .fallback, format: .dateLabel)
+            ]
+        )
+    }
+
     private var subtitle: String {
         if plannerManager.isSelectMode {
             let count = plannerManager.selectedItems.count
@@ -66,7 +75,12 @@ struct ExpandedPlannerView: View {
                 "\(count == 0 ? "No" : String(count)) plan\(count == 1 ? "" : "s") selected"
         }
 
-        return plannerDay.dynamicSubtitle
+        return plannerDay.proximityFormat(
+            using: [
+                ProximityRule(proximity: .next7Days, format: .dateLabel),
+                ProximityRule(proximity: .fallback, format: .weekday)
+            ]
+        )
     }
 
     // MARK: Event Lists
@@ -100,7 +114,7 @@ struct ExpandedPlannerView: View {
                     settings: settings,
                     createEvent: createEvent
                 )
-                .navigationTitle(plannerDay.dynamicTitle)
+                .navigationTitle(title)
                 .navigationSubtitle(subtitle)
                 .toolbar {
                     upperLeftToolbar

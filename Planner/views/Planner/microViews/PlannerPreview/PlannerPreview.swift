@@ -17,7 +17,8 @@ import WrappingHStack
 struct PlannerPreviewView: View {
     let type: PlannerPreviewType
     let searchQuery: PlannerSearchQuery?
-    let customTitle: String?
+    let title: (DateInRegion) -> String
+    let subtitle: (DateInRegion) -> String
     let planner: Planner
     let plannerDay: DateInRegion
     let plannerLocation: Location?
@@ -113,7 +114,8 @@ struct PlannerPreviewView: View {
                 PlannerDateInfoView(
                     plannerDay: plannerDay,
                     type: type,
-                    customTitle: customTitle
+                    title: title,
+                    subtitle: subtitle
                 )
 
                 Spacer()

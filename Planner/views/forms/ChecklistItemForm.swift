@@ -47,8 +47,9 @@ struct ChecklistItemFormView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var draftChecklistItem: ChecklistItem
+    @State private var hasTitleAutoFocused = false
 
-    @FocusState private var isFocused: Bool
+    @FocusState private var isTitleFocused: Bool
     @State private var hasAutoFocused = false
 
     private var isEditForm: Bool { sourceItem != nil }
@@ -60,27 +61,12 @@ struct ChecklistItemFormView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section {
-                    TextField("Title", text: $draftChecklistItem.title)
-                        .introspect(.textField, on: .iOS(.v26)) { textfield in
-                            if !hasAutoFocused {
-                                textfield.becomeFirstResponder()
-                                hasAutoFocused = true
-                            }
-                        }
-                        .textInputAutocapitalization(.words)
-                        .tint(
-                            draftChecklistItem.color.swiftUIColor
-                        )
-                        .focused($isFocused)
-
-                        // Increase the focusable area of the field.
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            isFocused = true
-                        }
-                }
-                .listSectionMargins(.top, 0)
+                FormTitleFieldView(
+                    text: $draftChecklistItem.title,
+                    hasAutoFocused: $hasTitleAutoFocused,
+                    isFocused: $isTitleFocused
+                )
+                .textInputAutocapitalization(.words)
 
                 if sourceItem == nil {
                     Section {
@@ -131,7 +117,7 @@ struct ChecklistItemFormView: View {
                 submitButton
             }
         }
-        .presentationDetents([.height(isEditForm ? 180 : 260)])
+        .presentationDetents([.height(isEditForm ? 220 : 275)])
         .presentationBackground(.clear)
     }
 

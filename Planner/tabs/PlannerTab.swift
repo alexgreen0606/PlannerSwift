@@ -18,7 +18,7 @@ struct TripSheetContext: Identifiable {
     var id: String {
         String(describing: trip?.id)
     }
-    
+
     var transitionId: PersistentIdentifier? {
         trip?.id
     }
@@ -49,13 +49,28 @@ struct PlannerTabView: View {
     @State private var tripSheetContext: TripSheetContext? = nil
     @State private var expandedTrips: Set<PersistentIdentifier> = []
 
-    private var upcomingTrips: [Trip] {
+    private var sortedUpcomingTrips: [Trip] {
         trips.filter { trip in
-            guard let lastDatestamp = trip.lastDatestamp else {
+            guard trip.firstDatestamp != nil,
+                let lastDatestamp = trip.lastDatestamp
+            else {
                 return false
             }
             return lastDatestamp >= todaystampWatcher.todaystamp
         }.sorted { $0.firstDatestamp! < $1.firstDatestamp! }
+    }
+
+    private var tripsByYear: [String: [Trip]] {
+        Dictionary(grouping: sortedUpcomingTrips) { trip in
+            guard let firstDatestamp = trip.firstDatestamp else {
+                return "Unknown"
+            }
+            return String(firstDatestamp.prefix(4))
+        }
+    }
+
+    private var sortedTripYears: [String] {
+        tripsByYear.keys.sorted(by: <)
     }
 
     private var dateBounds: Range<Date> {
@@ -75,6 +90,34 @@ struct PlannerTabView: View {
                                         datestamp: datestamp,
                                         settings: settings,
                                         previewType: .planner,
+                                        title: { day in
+                                            day.proximityFormat(
+                                                using: [
+                                                    ProximityRule(
+                                                        proximity: .withinADay,
+                                                        format: .countdown
+                                                    ),
+                                                    ProximityRule(
+                                                        proximity: .fallback,
+                                                        format: .weekday
+                                                    ),
+                                                ]
+                                            )
+                                        },
+                                        subtitle: { day in
+                                            day.proximityFormat(
+                                                using: [
+                                                    ProximityRule(
+                                                        proximity: .withinADay,
+                                                        format: .weekday
+                                                    ),
+                                                    ProximityRule(
+                                                        proximity: .fallback,
+                                                        format: .countdown
+                                                    ),
+                                                ]
+                                            )
+                                        },
                                         namespace: namespace
                                     )
                                 }
@@ -90,42 +133,67 @@ struct PlannerTabView: View {
                     } header: {
                         Text("This Week")
                             .padding()
+                    } footer: {
+                        if !tripsByYear.isEmpty {
+                            Color.clear.frame(height: 0)
+                                .overlay {
+                                    Text("Trips")
+                                        .sectionLabel()
+                                        .frame(
+                                            maxWidth: .infinity,
+                                            alignment: .leading
+                                        )
+                                        .padding(.top, 100)
+                                }
+                        }
                     }
+                    .listSectionMargins(.bottom, 0)
                     .listRowInsets(EdgeInsets())
                     .discreetListItem()
 
-                    Section {
-                        ForEach(upcomingTrips, id: \.id) { trip in
-                            TripView(
-                                expandedTrips: $expandedTrips,
-                                trip: trip,
-                                namespace: namespace,
-                                settings: settings,
-                                scrollToTrip: {
-                                    scrollToTrip(
-                                        trip: trip,
-                                        scrollProxy: scrollProxy
+                    if tripsByYear.isEmpty {
+                        EmptyLabelView(text: "No Upcoming Trips")
+                    }
+
+                    ForEach(Array(sortedTripYears.enumerated()), id: \.element)
+                    {
+                        index,
+                        year in
+                        Section {
+                            ForEach(tripsByYear[year]!, id: \.id) {
+                                trip in
+                                TripView(
+                                    expandedTrips: $expandedTrips,
+                                    trip: trip,
+                                    namespace: namespace,
+                                    settings: settings,
+                                    scrollToTrip: {
+                                        scrollToTrip(
+                                            trip: trip,
+                                            scrollProxy: scrollProxy
+                                        )
+                                    }
+                                ) {
+                                    tripSheetContext = TripSheetContext(
+                                        trip: trip
                                     )
                                 }
-                            ) {
-                                tripSheetContext = TripSheetContext(trip: trip)
+                            }
+                        } header: {
+                            YearSectionHeaderView(year)
+                                .padding()
+                        } footer: {
+                            if index == sortedTripYears.count - 1 {
+                                Color.clear.frame(height: 16)
+                                    .discreetListItem()
                             }
                         }
-                        if upcomingTrips.isEmpty {
-                            EmptyLabelView(text: "No Upcoming Trips")
-                                .frame(maxWidth: .infinity)
-                        }
-                    } header: {
-                        Text(upcomingTrips.isEmpty ? "" : "Trips")
-                            .padding()
-                    } footer: {
-                        Color.clear.frame(height: 16)
-                            .discreetListItem()
+                        .listSectionMargins(.top, 0)
                     }
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
-                    .animation(.linear, value: expandedTrips)
                 }
+                .animation(.linear, value: expandedTrips)
                 .listStyle(.plain)
                 .background(Color.appBackground)
                 .navigationTitle("Planner")

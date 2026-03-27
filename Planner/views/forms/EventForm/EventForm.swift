@@ -155,7 +155,6 @@ struct EventFormView: View {
     @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
 
     @State private var draftPlannerEvent: DraftPlannerEvent
-    @State private var hasAutoFocused = false
 
     private var defaultLocation: Location? {
         sourcePlanner?.location(
@@ -177,7 +176,6 @@ struct EventFormView: View {
             } else {
                 PlannerEventFormView(
                     draftPlannerEvent: $draftPlannerEvent,
-                    hasAutoFocused: $hasAutoFocused,
                     settings: settings,
                     defaultLocation: defaultLocation,
                     sourceCalendarEvent: sourceCalendarEvent,
@@ -277,10 +275,27 @@ struct EventFormView: View {
 
         if sourcePlanner == nil {
             if let destinationDay {
+                let ordinalDestinationDay = destinationDay.proximityFormat(
+                    using: [
+                        ProximityRule(
+                            proximity: .withinADay,
+                            format: .countdown,
+                            ordinal: true
+                        ),
+                        ProximityRule(proximity: .next7Days, format: .weekday),
+                        ProximityRule(
+                            proximity: .fallback,
+                            format: .dateLabel,
+                            ordinal: true
+                        )
+                    ]
+                )
+
                 config = NotificationConfig(
                     id: UUID(),
                     title: "Event scheduled",
-                    subtitle: "for \(destinationDay.notificationDayLabel)",
+                    subtitle:
+                        "for \(ordinalDestinationDay)",
                     iconConfig: IconConfig(
                         name: "checkmark",
                         primaryColor: Color.green
@@ -294,10 +309,26 @@ struct EventFormView: View {
             }
         } else if let destinationDay {
             if destinationDay.datestamp != sourceDay?.datestamp {
+                let ordinalDestinationDay = destinationDay.proximityFormat(
+                    using: [
+                        ProximityRule(
+                            proximity: .withinADay,
+                            format: .countdown,
+                            ordinal: true
+                        ),
+                        ProximityRule(proximity: .next7Days, format: .weekday),
+                        ProximityRule(
+                            proximity: .fallback,
+                            format: .dateLabel,
+                            ordinal: true
+                        )
+                    ]
+                )
+
                 config = NotificationConfig(
                     id: UUID(),
-                    title: "Event rescheduled",
-                    subtitle: "to \(destinationDay.notificationDayLabel)",
+                    title: "Event moved",
+                    subtitle: "to \(ordinalDestinationDay)",
                     iconConfig: IconConfig(
                         name: "checkmark",
                         primaryColor: Color.green

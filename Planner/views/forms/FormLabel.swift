@@ -13,19 +13,24 @@ struct FormLabelView: View {
     private let systemImageName: String
     private let label: String
     private let value: String
+    private let detail: String?
+    private let color: Color?
     private let onTap: (() -> Void)?
 
     init(
         systemImageName: String,
         label: String = "",
         value: String,
+        detail: String? = nil,
+        color: Color? = nil,
         onTap: (() -> Void)? = nil
     ) {
         self.systemImageName = systemImageName
         self.label = label
         self.value = value
+        self.color = color
+        self.detail = detail
         self.onTap = onTap
-        self.accentColor = accentColor
     }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -36,7 +41,16 @@ struct FormLabelView: View {
             Image(systemName: systemImageName)
             Text(label)
             Spacer()
-            ActionTextView(value)
+            VStack(alignment: .trailing) {
+                ActionTextView(value, color: color)
+                if let detail {
+                    Text(detail)
+                        .font(
+                            .system(size: 11, weight: .bold, design: .rounded)
+                        )
+                        .foregroundStyle(Color.secondary)
+                }
+            }
         }
 
         if let onTap {
