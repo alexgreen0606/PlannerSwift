@@ -38,7 +38,7 @@ struct DraftPlannerEvent {
         settings: PlannerSettings,
         deviceLocation: Location?
     ) -> Region {
-        location(
+        self.location(
             planner: planner,
             settings: settings,
             deviceLocation: deviceLocation

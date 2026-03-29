@@ -20,6 +20,7 @@ struct SortableListView<
 >: View {
     private let uncheckedItems: [Item]
     private let checkedItems: [Item]
+    private let rowId: (_ item: Item) -> String
     private let showChecked: Bool
     private let floatingInfo: FloatingInfo?
     private let checkedHeader: String
@@ -42,6 +43,7 @@ struct SortableListView<
     init(
         uncheckedItems: [Item],
         checkedItems: [Item],
+        rowId: @escaping (_ item: Item) -> String = { "\($0.stableId)" },
         showChecked: Bool,
         checkedHeader: String,
         emptyUncheckedLabel: String,
@@ -69,6 +71,7 @@ struct SortableListView<
     ) {
         self.uncheckedItems = uncheckedItems
         self.checkedItems = checkedItems
+        self.rowId = rowId
         self.showChecked = showChecked
         self.floatingInfo = floatingInfo
         self.checkedHeader = checkedHeader
@@ -158,7 +161,7 @@ struct SortableListView<
                     onToolbarTap: onToolbarTap,
                     onTitleChange: handleTitleChange
                 )
-                .id(item.stableId)
+                .id(rowId(item))
             }
             .onMove(perform: handleRowMove)
 

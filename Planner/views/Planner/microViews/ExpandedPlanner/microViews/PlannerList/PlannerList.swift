@@ -39,6 +39,7 @@ struct PlannerListView: View {
         SortableListView(
             uncheckedItems: sortedOpenPlannerEvents,
             checkedItems: sortedCheckedPlannerEvents,
+            rowId: eventId,
             showChecked: showChecked,
             checkedHeader: plannerType.checkedHeader,
             emptyUncheckedLabel: "No plans",
@@ -230,6 +231,10 @@ struct PlannerListView: View {
 
     private func eventTint(event: PlannerEvent) -> Color {
         event.tint(accentColor: accentColor)
+    }
+
+    private func eventId(event: PlannerEvent) -> String {
+        "\(event.stableId)_\(event.location?.name ?? "NO_LOCATION")"
     }
 
 }

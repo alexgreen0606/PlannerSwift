@@ -73,12 +73,14 @@ struct LocationSearchFormView: View {
 
     private var showHomeOption: Bool {
         switch mode {
+        case .home:
+            return false
         case .trip:
             return selectedLocation != nil
         case .planner:
             return selectedLocation != nil && sourcePlanner?.trip == nil
-        case .home, .event:
-            return false
+        case .event:
+            return selectedLocation != nil && sourcePlanner == nil
         }
     }
 
@@ -94,7 +96,7 @@ struct LocationSearchFormView: View {
     private var showPlannerOption: Bool {
         switch mode {
         case .event:
-            return selectedLocation != nil
+            return selectedLocation != nil && sourcePlanner != nil
         case .home, .planner, .trip:
             return false
         }
@@ -104,7 +106,6 @@ struct LocationSearchFormView: View {
         if isSearchFocused {
             return 8
         }
-
         return mode == .home ? 20 : 0
     }
 
