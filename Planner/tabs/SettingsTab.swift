@@ -52,18 +52,16 @@ struct SettingsTabView: View {
         NavigationStack {
             Form {
 
-                // App Theme
-                Picker("App Theme", selection: $appColorScheme) {
-                    ForEach(AppColorScheme.allCases, id: \.rawValue) {
-                        colorScheme in
-                        Text(colorScheme.rawValue.capitalized)
-                            .tag(colorScheme)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .listRowBackground(Color.clear)
-
                 Section {
+
+                    // App Theme
+                    Picker("Theme", selection: $appColorScheme) {
+                        ForEach(AppColorScheme.allCases, id: \.rawValue) {
+                            colorScheme in
+                            Text(colorScheme.rawValue.capitalized)
+                                .tag(colorScheme)
+                        }
+                    }
 
                     // Accent Color
                     HStack {
@@ -113,9 +111,8 @@ struct SettingsTabView: View {
                     }
 
                 }
-                .listSectionMargins(.top, 0)
 
-                Section {
+                Section("Planner") {
 
                     // Home Location
                     NavigationLink {
@@ -187,10 +184,7 @@ struct SettingsTabView: View {
                         }
                     }
 
-                } header: {
-                    Text("Planner")
                 }
-                .listSectionMargins(.top, 0)
 
             }
             .navigationTitle("Settings")
