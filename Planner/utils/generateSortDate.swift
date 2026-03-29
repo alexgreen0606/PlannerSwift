@@ -13,9 +13,9 @@ import SwiftUI
 
 @MainActor
 func generateSortDate(
-    plannerDay: DateInRegion,
-    index: Int,
-    sortedEvents: [PlannerEvent] // May or may not contain the event being placed.
+    at index: Int,
+    in sortedEvents: [PlannerEvent], // May or may not contain the event being placed.
+    plannerDay: DateInRegion
 ) -> Date {
 
     let dayStart = plannerDay.date

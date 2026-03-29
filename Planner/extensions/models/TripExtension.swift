@@ -39,7 +39,11 @@ extension Trip {
             return nil
         }
 
-        return buildDateRangeLabel(firstDay: firstDay, lastDay: lastDay)
+        return buildDateRangeLabel(
+            firstDay: firstDay,
+            lastDay: lastDay,
+            referenceYear: firstDay.year
+        )
     }
 
     func plannerTransitionId(for datestamp: String) -> String {

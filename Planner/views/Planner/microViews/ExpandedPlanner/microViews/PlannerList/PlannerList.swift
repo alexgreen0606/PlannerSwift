@@ -25,7 +25,7 @@ struct PlannerListView: View {
     let namespace: Namespace.ID
     let scrollProxy: ScrollViewProxy
     let settings: PlannerSettings
-    let createEvent: (UUID?, Int) -> Void
+    let createEvent: (Int) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue

@@ -36,23 +36,13 @@ extension ModelContext {
 
     @MainActor
     func createChecklistItem(
+        at index: Int,
         in sortedItems: [ChecklistItem],
-        near baseId: UUID?,
-        offset: Int,
         parent: ChecklistItem
     ) -> UUID? {
-        guard
-            let targetIndex = generateTargetIndex(
-                in: sortedItems,
-                near: baseId,
-                offset: offset
-            )
-        else {
-            return nil
-        }
 
         let sortIndex = generateSortIndex(
-            index: targetIndex,
+            index: index,
             sortedItems: sortedItems
         )
 
@@ -97,7 +87,7 @@ extension ModelContext {
         draftChecklistItem: ChecklistItem
     ) -> UUID? {
         var newItemId: UUID? = nil
-        
+
         if let sourceItem {
             // Edit the existing item.
             sourceItem.title = draftChecklistItem.title

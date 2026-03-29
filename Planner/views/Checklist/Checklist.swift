@@ -241,14 +241,10 @@ struct ChecklistView: View {
 
     // MARK: - Functions
 
-    private func createItem(
-        near baseId: UUID?,
-        offset: Int
-    ) {
+    private func createItem(at index: Int) {
         listManager.pendingFocusId = modelContext.createChecklistItem(
+            at: index,
             in: sortedUncheckedItems,
-            near: baseId,
-            offset: offset,
             parent: checklist
         )
     }
@@ -262,10 +258,7 @@ struct ChecklistView: View {
     }
 
     private func createLowerItem(scrollProxy: ScrollViewProxy) {
-        createItem(
-            near: sortedUncheckedItems.last?.stableId,
-            offset: 1
-        )
+        createItem(at: sortedUncheckedItems.count)
         scrollToBottom(scrollProxy: scrollProxy)
     }
 

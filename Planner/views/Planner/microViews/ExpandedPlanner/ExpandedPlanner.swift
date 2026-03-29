@@ -63,7 +63,7 @@ struct ExpandedPlannerView: View {
         plannerDay.proximityFormat(
             using: [
                 ProximityRule(proximity: .next7Days, format: .weekday),
-                ProximityRule(proximity: .fallback, format: .dateLabel)
+                ProximityRule(proximity: .fallback, format: .dateLabel),
             ]
         )
     }
@@ -78,7 +78,7 @@ struct ExpandedPlannerView: View {
         return plannerDay.proximityFormat(
             using: [
                 ProximityRule(proximity: .next7Days, format: .dateLabel),
-                ProximityRule(proximity: .fallback, format: .weekday)
+                ProximityRule(proximity: .fallback, format: .weekday),
             ]
         )
     }
@@ -254,24 +254,16 @@ struct ExpandedPlannerView: View {
 
     // MARK: - Functions
 
-    private func createEvent(
-        near baseId: UUID?,
-        offset: Int = 0
-    ) {
+    private func createEvent(at index: Int) {
         plannerManager.pendingFocusId = modelContext.createStorageEvent(
+            at: index,
             in: sortedOpenPlannerEvents,
-            near: baseId,
-            offset: offset,
-            startOfDay: plannerDay,
-            settings: settings
+            startOfDay: plannerDay
         )
     }
 
     private func createLowerEvent(scrollProxy: ScrollViewProxy) {
-        createEvent(
-            near: sortedOpenPlannerEvents.last?.stableId,
-            offset: 1
-        )
+        createEvent(at: sortedOpenPlannerEvents.count)
         scrollToBottom(scrollProxy: scrollProxy)
     }
 

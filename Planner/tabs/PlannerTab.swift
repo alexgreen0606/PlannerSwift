@@ -153,6 +153,8 @@ struct PlannerTabView: View {
 
                     if tripsByYear.isEmpty {
                         EmptyLabelView(text: "No Upcoming Trips")
+                            .frame(maxWidth: .infinity)
+                            .padding().discreetListItem()
                     }
 
                     ForEach(Array(sortedTripYears.enumerated()), id: \.element)

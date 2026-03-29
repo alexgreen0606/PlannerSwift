@@ -112,10 +112,9 @@ struct PlannerPreviewView: View {
 
             HStack(alignment: .top) {
                 PlannerDateInfoView(
-                    plannerDay: plannerDay,
-                    type: type,
-                    title: title,
-                    subtitle: subtitle
+                    datestamp: plannerDay.datestamp,
+                    title: title(plannerDay),
+                    subtitle: subtitle(plannerDay)
                 )
 
                 Spacer()

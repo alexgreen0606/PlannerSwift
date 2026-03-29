@@ -9,7 +9,7 @@ import SwiftDate
 
 // Clean
 
-func buildDateRangeLabel(firstDay: DateInRegion, lastDay: DateInRegion)
+func buildDateRangeLabel(firstDay: DateInRegion, lastDay: DateInRegion, referenceYear: Int? = nil)
     -> String?
 {
 
@@ -27,7 +27,7 @@ func buildDateRangeLabel(firstDay: DateInRegion, lastDay: DateInRegion)
         )
     }
 
-    let currentYear = DateInRegion(region: .local).year
+    let currentYear = referenceYear ?? DateInRegion(region: .local).year
     let sameYear = firstDay.year == lastDay.year
     let sameMonth = sameYear && firstDay.month == lastDay.month
 

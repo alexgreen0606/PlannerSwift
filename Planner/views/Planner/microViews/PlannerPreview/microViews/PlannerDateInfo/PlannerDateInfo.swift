@@ -11,21 +11,23 @@ import SwiftUI
 // Clean
 
 struct PlannerDateInfoView: View {
-    let plannerDay: DateInRegion
-    let type: PlannerPreviewType
-    let title: (DateInRegion) -> String
-    let subtitle: (DateInRegion) -> String
+    let datestamp: String
+    let title: String
+    let subtitle: String
 
     var body: some View {
-        PlannerIconView(datestamp: plannerDay.datestamp, scale: 1.4)
+        
+        PlannerIconView(datestamp: datestamp, scale: 1.4)
+        
         VStack(alignment: .leading) {
-            Text(title(plannerDay))
+            Text(title)
                 .fontWeight(.bold)
                 .fontDesign(.rounded)
 
-            Text(subtitle(plannerDay))
+            Text(subtitle)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }
+        
     }
 }

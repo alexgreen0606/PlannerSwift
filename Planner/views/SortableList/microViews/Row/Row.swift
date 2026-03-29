@@ -17,6 +17,7 @@ struct RowView<
     BottomAdornment: View
 >: View {
     @Bindable private var item: Item
+    private let index: Int
     private let showChecked: Bool
     private let isUpperItem: Bool
     private let tint: Color
@@ -27,12 +28,13 @@ struct RowView<
     private let toolbarSystemImageNames: [String]
     private let customToggleConfig: ToggleConfig<Item>?
     private let namespace: Namespace.ID?
-    private let createItem: ((_ baseId: UUID?, _ offset: Int) -> Void)?
+    private let createItem: ((_ at: Int) -> Void)?
     private let onToolbarTap: ((String, Item) -> Void)?
     private let onTitleChange: ((_ item: Item) -> Void)?
 
     init(
         item: Item,
+        index: Int,
         showChecked: Bool,
         isUpperItem: Bool,
         tint: Color,
@@ -43,11 +45,12 @@ struct RowView<
         toolbarSystemImageNames: [String]? = [],
         customToggleConfig: ToggleConfig<Item>? = nil,
         namespace: Namespace.ID? = nil,
-        createItem: ((_: UUID?, _: Int) -> Void)? = nil,
+        createItem: ((_: Int) -> Void)? = nil,
         onToolbarTap: ((String, Item) -> Void)? = nil,
         onTitleChange: ((_: Item) -> Void)? = nil
     ) {
         self.item = item
+        self.index = index
         self.showChecked = showChecked
         self.isUpperItem = isUpperItem
         self.tint = tint
@@ -69,7 +72,6 @@ struct RowView<
     // Will be updated dynamically within the TextfieldView.
     @State private var height: CGFloat = 0
 
-    @State private var textfieldId = UUID()
     @State private var titleChangeHandlerTask: Task<Void, Never>? = nil
 
     private var isFocused: Bool {
@@ -97,7 +99,7 @@ struct RowView<
             .listRowInsets(EdgeInsets())
             .discreetListItem()
             .padding(.horizontal)
-        
+
             // Trigger focus for new items.
             .onAppear {
                 if listManager.pendingFocusId == item.stableId {
@@ -147,7 +149,7 @@ struct RowView<
                         return
                     }
 
-                    createItem?(item.stableId, 0)
+                    createItem?(index)
                 }
             )
 
@@ -189,7 +191,7 @@ struct RowView<
                         return
                     }
 
-                    createItem?(item.stableId, 1)
+                    createItem?(index + 1)
                 }
             )
         }
@@ -228,7 +230,7 @@ struct RowView<
             },
             onEnter: {
                 if !item.title.isEmpty {
-                    createItem?(item.stableId, 1)
+                    createItem?(index + 1)
                 } else {
                     // Triggers a deletion of the item in the below handler.
                     listManager.focusedId = nil
@@ -240,9 +242,6 @@ struct RowView<
         .opacity(isFocused ? 1 : 0)
         .frame(maxWidth: .infinity, alignment: .leading)
         .fixedSize(horizontal: false, vertical: true)
-
-        // Note: This ensures that focused textfields have up-to-date snapshots of onCreateItem
-        .id(textfieldId)
 
         // Debounce the external save each time the text changes.
         .onChange(of: item.title) { _, newTitle in
@@ -278,9 +277,6 @@ struct RowView<
                     onTitleChange?(item)
                 }
 
-            } else if isFocused, !wasFocused {
-                // Re-render focused textfields so they get a fresh snapshot of onCreateItem.
-                textfieldId = UUID()
             }
         }
     }

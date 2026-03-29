@@ -16,27 +16,15 @@ extension ModelContext {
 
     @MainActor
     func createStorageEvent(
+        at index: Int,
         in events: [PlannerEvent],
-        near baseId: UUID?,
-        offset: Int,
-        startOfDay: DateInRegion,
-        settings: PlannerSettings
+        startOfDay: DateInRegion
     ) -> UUID? {
 
-        guard
-            let targetIndex = generateTargetIndex(
-                in: events,
-                near: baseId,
-                offset: offset
-            )
-        else {
-            return nil
-        }
-
         let sortDate = generateSortDate(
-            plannerDay: startOfDay,
-            index: targetIndex,
-            sortedEvents: events
+            at: index,
+            in: events,
+            plannerDay: startOfDay
         )
 
         let newEvent = PlannerEvent(
@@ -49,7 +37,7 @@ extension ModelContext {
 
         return newEvent.stableId
     }
-    
+
     @MainActor
     func getSortedStorageEvents(for plannerDay: DateInRegion)
         -> [PlannerEvent]
@@ -125,9 +113,9 @@ extension ModelContext {
 
         let movedEvent = sortedEvents[from]
         movedEvent.sortDate = generateSortDate(
-            plannerDay: plannerDay,
-            index: to,
-            sortedEvents: sortedEvents
+            at: to,
+            in: sortedEvents,
+            plannerDay: plannerDay
         )
 
         self.safeSave("plannerEvent.movePlannerEvent")
@@ -323,9 +311,9 @@ extension ModelContext {
 
         // Place the event at the start of its new planner.
         event.sortDate = generateSortDate(
-            plannerDay: plannerDay,
-            index: 0,
-            sortedEvents: sortedStorageEvents
+            at: 0,
+            in: sortedStorageEvents,
+            plannerDay: plannerDay
         )
 
         return plannerDay
@@ -335,9 +323,9 @@ extension ModelContext {
     func getUpperSortDate(for plannerDay: DateInRegion) -> Date {
         let storageEvents = getSortedStorageEvents(for: plannerDay)
         return generateSortDate(
-            plannerDay: plannerDay,
-            index: 0,
-            sortedEvents: storageEvents
+            at: 0,
+            in: storageEvents,
+            plannerDay: plannerDay
         )
     }
 

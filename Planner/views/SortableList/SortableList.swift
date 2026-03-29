@@ -35,7 +35,7 @@ struct SortableListView<
     private let rightAdornment: (_ item: Item) -> RightAdornment
     private let bottomAdornment: (_ item: Item) -> BottomAdornment
     private let scrollProxy: ScrollViewProxy
-    private let createItem: (_ baseId: UUID?, _ offset: Int) -> Void
+    private let createItem: (_ at: Int) -> Void
     private let handleTitleChange: ((_ item: Item) -> Void)?
     private let moveItem: (_ from: Int, _ to: Int) -> Void
 
@@ -48,7 +48,7 @@ struct SortableListView<
         emptyCheckedLabel: String,
         tint: @escaping (_: Item) -> Color,
         scrollProxy: ScrollViewProxy,
-        createItem: @escaping (_: UUID?, _: Int) -> Void,
+        createItem: @escaping (_: Int) -> Void,
         moveItem: @escaping (_: Int, _: Int) -> Void,
         floatingInfo: FloatingInfo? = EmptyView(),
         namespace: Namespace.ID? = nil,
@@ -134,17 +134,16 @@ struct SortableListView<
     private var uncheckedList: some View {
         Section {
             SeparatorView {
-                createItem(
-                    uncheckedItems.first?.stableId,
-                    0
-                )
+                attemptCreateItem(at: 0)
             }
             .discreetListItem()
             .listRowInsets(EdgeInsets())
 
-            ForEach(uncheckedItems, id: \.stableId) { item in
+            ForEach(Array(uncheckedItems.enumerated()), id: \.element.stableId)
+            { index, item in
                 RowView(
                     item: item,
+                    index: index,
                     showChecked: showChecked,
                     isUpperItem: item.stableId
                         == uncheckedItems.first?.stableId,
@@ -155,7 +154,7 @@ struct SortableListView<
                     toolbarSystemImageNames: toolbarSystemImageNames,
                     customToggleConfig: toggleConfig(item),
                     namespace: namespace,
-                    createItem: createItem,
+                    createItem: attemptCreateItem,
                     onToolbarTap: onToolbarTap,
                     onTitleChange: handleTitleChange
                 )
@@ -164,7 +163,7 @@ struct SortableListView<
             .onMove(perform: handleRowMove)
 
             SeparatorView {
-                createItem(uncheckedItems.last?.stableId, 1)
+                attemptCreateItem(at: uncheckedItems.count)
             }
             .discreetListItem()
             .listRowInsets(EdgeInsets())
@@ -187,9 +186,13 @@ struct SortableListView<
     private var checkedList: some View {
         if showChecked {
             Section {
-                ForEach(checkedItems, id: \.stableId) { item in
+                ForEach(
+                    Array(checkedItems.enumerated()),
+                    id: \.element.stableId
+                ) { index, item in
                     RowView(
                         item: item,
+                        index: index,
                         showChecked: showChecked,
                         isUpperItem: item.stableId
                             == checkedItems.first?.stableId,
@@ -226,6 +229,13 @@ struct SortableListView<
         for source in sources {
             moveItem(source, destination)
         }
+    }
+
+    private func attemptCreateItem(at index: Int) {
+        guard canCreateItem(at: index, in: uncheckedItems) else {
+            return
+        }
+        createItem(index)
     }
 
 }

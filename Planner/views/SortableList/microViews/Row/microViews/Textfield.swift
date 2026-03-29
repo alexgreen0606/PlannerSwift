@@ -62,6 +62,8 @@ struct TextfieldView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: UITextView, context: Context) {
+        context.coordinator.parent = self
+
         if uiView.text != text {
             uiView.text = text
         }
@@ -82,12 +84,14 @@ struct TextfieldView: UIViewRepresentable {
     }
 
     final class Coordinator: NSObject, UITextViewDelegate {
-        let parent: TextfieldView
+        var parent: TextfieldView
         weak var textView: UITextView?
 
         init(_ parent: TextfieldView) {
             self.parent = parent
         }
+
+        private var toolbarKey: UInt8 = 0
 
         func textViewDidChange(_ textView: UITextView) {
             parent.text = textView.text ?? ""
@@ -145,7 +149,7 @@ struct TextfieldView: UIViewRepresentable {
 
                     objc_setAssociatedObject(
                         button,
-                        AssociatedKeys.keyPointer,
+                        &toolbarKey,
                         systemImageName,
                         .OBJC_ASSOCIATION_RETAIN_NONATOMIC
                     )
@@ -177,17 +181,10 @@ struct TextfieldView: UIViewRepresentable {
             textView.inputAccessoryView = container
         }
 
-        private struct AssociatedKeys {
-            static var iconNameKey = "iconNameKey"
-            static var keyPointer: UnsafeRawPointer = {
-                return UnsafeRawPointer(bitPattern: "iconNameKey".hashValue)!
-            }()
-        }
-
         @objc private func toolbarButtonTapped(sender: UIButton) {
             if let systemImageName = objc_getAssociatedObject(
                 sender,
-                AssociatedKeys.keyPointer
+                &toolbarKey
             ) as? String {
                 parent.onTapToolbar(systemImageName)
             }
