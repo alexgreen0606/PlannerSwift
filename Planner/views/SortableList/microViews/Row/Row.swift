@@ -268,9 +268,7 @@ struct RowView<
 
                 if trimmed.isEmpty {
                     if listManager.protectedId != item.stableId {
-                        Task { @MainActor in
-                            modelContext.delete(item)
-                        }
+                        modelContext.safeDelete(item)
                     }
                 } else {
                     item.title = trimmed

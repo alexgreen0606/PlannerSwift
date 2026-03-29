@@ -60,10 +60,4 @@ extension ModelContext {
             return trip
     }
 
-    @MainActor
-    func cancelTrip(_ trip: Trip) {
-        self.delete(trip)
-        self.safeSave("trip.cancelTrip")
-    }
-
 }

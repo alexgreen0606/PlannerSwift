@@ -136,7 +136,7 @@ struct ChecklistActionMenu: View {
 
     private func deleteEntireChecklist() {
         dismiss()
-        modelContext.deleteChecklistItem(checklist)
+        modelContext.safeDelete(checklist)
     }
 
 }

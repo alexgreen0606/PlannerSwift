@@ -341,7 +341,7 @@ struct TripFormView: View {
     private func cancelTrip() {
         dismiss()
         if let trip = sourceTrip {
-            modelContext.cancelTrip(trip)
+            modelContext.safeDelete(trip)
         }
     }
 

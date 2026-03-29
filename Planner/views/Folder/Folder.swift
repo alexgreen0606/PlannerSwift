@@ -248,7 +248,7 @@ struct FolderView: View {
 
     private func deleteEntireFolder() {
         dismiss()
-        modelContext.deleteChecklistItem(folder)
+        modelContext.safeDelete(folder)
     }
 
     private func deleteSelectedItems() {

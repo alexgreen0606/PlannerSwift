@@ -69,12 +69,6 @@ extension ModelContext {
     }
 
     @MainActor
-    func deleteChecklistItem(_ item: ChecklistItem) {
-        self.delete(item)
-        self.safeSave("checklistItem.deleteChecklistItem")
-    }
-
-    @MainActor
     func deleteChecklistItems(_ items: [ChecklistItem]) {
         items.forEach { self.delete($0) }
         self.safeSave("checklistItem.deleteChecklistItems")
