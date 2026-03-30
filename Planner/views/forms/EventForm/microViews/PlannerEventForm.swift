@@ -270,7 +270,8 @@ struct PlannerEventFormView: View {
                 Spacer()
                 Text(
                     draftPlannerEvent.location?.name
-                    ?? (sourcePlanner != nil ? "Planner Location" : "Home Location")
+                        ?? (sourcePlanner != nil
+                            ? "Planner Location" : "Home Location")
                 )
                 .font(.subheadline)
                 .foregroundStyle(.secondary)

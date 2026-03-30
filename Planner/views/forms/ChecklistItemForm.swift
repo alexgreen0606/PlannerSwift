@@ -117,7 +117,7 @@ struct ChecklistItemFormView: View {
                 submitButton
             }
         }
-        .presentationDetents([.height(isEditForm ? 220 : 275)])
+        .presentationDetents([.height(isEditForm ? 204 : 260)])
         .presentationBackground(.clear)
     }
 

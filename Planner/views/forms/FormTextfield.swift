@@ -12,23 +12,26 @@ import SwiftUIIntrospect
 
 struct FormTitleFieldView: View {
     @Binding var text: String
-    @Binding var hasAutoFocused: Bool // Unstable if stored in this view. Must be stored in the parent.
+    @Binding var hasAutoFocused: Bool  // Unstable if stored in this view. Must be stored in the parent.
     var isFocused: FocusState<Bool>.Binding
 
     var body: some View {
-        TextField("Title", text: $text)
-            .introspect(.textField, on: .iOS(.v26)) { textfield in
-                if !hasAutoFocused, text.isEmpty {
-                    textfield.becomeFirstResponder()
+        Section {
+            TextField("Title", text: $text)
+                .introspect(.textField, on: .iOS(.v26)) { textfield in
+                    if !hasAutoFocused, text.isEmpty {
+                        textfield.becomeFirstResponder()
+                    }
+                    hasAutoFocused = true
                 }
-                hasAutoFocused = true
-            }
-            .focused(isFocused)
+                .focused(isFocused)
 
-            // Increase the focusable area of the field.
-            .contentShape(Rectangle())
-            .onTapGesture {
-                isFocused.wrappedValue = true
-            }
+                // Increase the focusable area of the field.
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    isFocused.wrappedValue = true
+                }
+        }
+        .listSectionMargins(.top, 16)
     }
 }
