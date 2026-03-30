@@ -10,8 +10,22 @@ import SwiftUI
 // Clean
 
 struct PlannerIconView: View {
-    let datestamp: String
-    let scale: CGFloat
+    private let datestamp: String
+    private let size: CGFloat
+    private let monthOffset: CGFloat
+    private let monthSize: CGFloat
+
+    init(
+        datestamp: String,
+        size: CGFloat? = 28,
+        monthOffset: CGFloat? = 1.5,
+        monthSize: CGFloat? = 6
+    ) {
+        self.datestamp = datestamp
+        self.size = size ?? 28
+        self.monthOffset = monthOffset ?? 1.5
+        self.monthSize = monthSize ?? 6
+    }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -28,13 +42,13 @@ struct PlannerIconView: View {
             Image(systemName: datestamp.calendarSymbolName)
                 .fixedSize()
                 .foregroundStyle(Color.label, iconColor)
-                .font(.system(size: 28 * scale))
+                .font(.system(size: size))
 
             Text(datestamp.shortMonth)
-                .font(.system(size: 6 * scale))
-                .fontWeight(.heavy)
+                .font(.system(size: monthSize))
+                .fontWeight(.black)
                 .foregroundStyle(Color.calendarIconMonth)
-                .offset(y: 1.5 * scale)
+                .offset(y: monthOffset)
         }
     }
 }

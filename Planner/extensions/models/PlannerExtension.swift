@@ -58,6 +58,8 @@ extension Planner {
 
         return settings.homeLocationIconConfig
     }
+    
+    // MARK: - Search Helper
 
     func searchQueryScore(_ query: PlannerSearchQuery?) -> Double? {
         guard let query else {

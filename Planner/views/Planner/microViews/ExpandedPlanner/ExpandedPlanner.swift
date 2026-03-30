@@ -60,10 +60,20 @@ struct ExpandedPlannerView: View {
     }
 
     private var title: String {
-        plannerDay.proximityFormat(
+        return plannerDay.proximityFormat(
             using: [
-                ProximityRule(proximity: .next7Days, format: .weekday),
-                ProximityRule(proximity: .fallback, format: .dateLabel),
+                ProximityRule(
+                    proximity: .withinADay,
+                    format: .countdown
+                ),
+                ProximityRule(
+                    proximity: .next7Days,
+                    format: .weekday
+                ),
+                ProximityRule(
+                    proximity: .fallback,
+                    format: .dateLabel
+                ),
             ]
         )
     }
@@ -74,11 +84,20 @@ struct ExpandedPlannerView: View {
             return
                 "\(count == 0 ? "No" : String(count)) plan\(count == 1 ? "" : "s") selected"
         }
-
         return plannerDay.proximityFormat(
             using: [
-                ProximityRule(proximity: .next7Days, format: .dateLabel),
-                ProximityRule(proximity: .fallback, format: .weekday),
+                ProximityRule(
+                    proximity: .withinADay,
+                    format: .weekday
+                ),
+                ProximityRule(
+                    proximity: .next7Days,
+                    format: .countdown
+                ),
+                ProximityRule(
+                    proximity: .fallback,
+                    format: .weekday
+                ),
             ]
         )
     }
@@ -114,11 +133,11 @@ struct ExpandedPlannerView: View {
                     settings: settings,
                     createEvent: createEvent
                 )
-                .navigationTitle(title)
-                .navigationSubtitle(subtitle)
+                .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     upperLeftToolbar
                     upperRightToolbar
+                    headerToolbar
                     lowerToolbar(scrollProxy: scrollProxy)
                 }
                 .animateSynchronousAction(from: plannerManager.isSelectMode)
@@ -192,6 +211,22 @@ struct ExpandedPlannerView: View {
         // Note: This fixes a bug where opening select mode while a keyboard is open causes this button to
         // appear tinted as the accent color.
         .tint(Color.label)
+    }
+
+    // MARK: Header
+    
+    @ToolbarContentBuilder
+    private var headerToolbar: some ToolbarContent {
+        ToolbarItem(placement: .principal) {
+            PlannerDateInfoView(
+                datestamp: planner.datestamp,
+                title: title,
+                subtitle: subtitle,
+                iconSize: 30,
+                iconMonthOffset: 2.5,
+                iconMonthSize: 9
+            )
+        }
     }
 
     // MARK: Upper Right Toolbar

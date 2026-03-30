@@ -183,6 +183,7 @@ struct SortableListView<
                 .listRowInsets(.top, 0)
         }
         .listSectionSeparator(.hidden)
+        .listSectionMargins(.top, 0)
     }
 
     @ViewBuilder

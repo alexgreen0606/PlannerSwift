@@ -116,12 +116,14 @@ struct PlannerChipSpreadView: View {
 
     @ViewBuilder
     private var countdownChip: some View {
-        PlannerChipView(
-            title: plannerDay.countdown,
-            iconConfig: nil,
-            color: nil,
-            onTap: nil
-        )
+        if !plannerDay.isNext7Days, !plannerDay.isWithinADay {
+            PlannerChipView(
+                title: plannerDay.countdown,
+                iconConfig: nil,
+                color: nil,
+                onTap: nil
+            )
+        }
     }
 
     @ViewBuilder

@@ -147,7 +147,7 @@ struct PlannerTabView: View {
                                 }
                         }
                     }
-                    .listSectionMargins(.bottom, 0)
+                    .listSectionMargins(.vertical, 0)
                     .listRowInsets(EdgeInsets())
                     .discreetListItem()
 
@@ -199,6 +199,7 @@ struct PlannerTabView: View {
                 .listStyle(.plain)
                 .background(Color.appBackground)
                 .navigationTitle("Planner")
+                .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     datePickerToolbarPopover
                     createMenu

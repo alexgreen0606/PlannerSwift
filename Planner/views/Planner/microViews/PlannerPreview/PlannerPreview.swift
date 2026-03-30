@@ -71,7 +71,7 @@ struct PlannerPreviewView: View {
     }
 
     private var sortedPreviewPlannerEvents: [PlannerEvent] {
-        var tripSlot = tripLabel == nil ? 0 : 1
+        let tripSlot = tripLabel == nil ? 0 : 1
         let slots = max(
             0,
             maxPreviewEvents - previewChipEvents.count - tripSlot
@@ -125,7 +125,10 @@ struct PlannerPreviewView: View {
                 PlannerDateInfoView(
                     datestamp: plannerDay.datestamp,
                     title: title(plannerDay),
-                    subtitle: subtitle(plannerDay)
+                    subtitle: subtitle(plannerDay),
+                    iconSize: 40,
+                    iconMonthOffset: 1.5,
+                    iconMonthSize: 9
                 )
 
                 Spacer()

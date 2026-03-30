@@ -11,23 +11,49 @@ import SwiftUI
 // Clean
 
 struct PlannerDateInfoView: View {
-    let datestamp: String
-    let title: String
-    let subtitle: String
+    private let datestamp: String
+    private let title: String
+    private let subtitle: String
+    private let iconSize: CGFloat?
+    private let iconMonthOffset: CGFloat?
+    private let iconMonthSize: CGFloat?
+
+    init(
+        datestamp: String,
+        title: String,
+        subtitle: String,
+        iconSize: CGFloat? = nil,
+        iconMonthOffset: CGFloat? = nil,
+        iconMonthSize: CGFloat? = nil
+    ) {
+        self.datestamp = datestamp
+        self.title = title
+        self.subtitle = subtitle
+        self.iconSize = iconSize
+        self.iconMonthOffset = iconMonthOffset
+        self.iconMonthSize = iconMonthSize
+    }
 
     var body: some View {
-        
-        PlannerIconView(datestamp: datestamp, scale: 1.4)
-        
-        VStack(alignment: .leading) {
-            Text(title)
-                .fontWeight(.bold)
-                .fontDesign(.rounded)
+        HStack {
 
-            Text(subtitle)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+            PlannerIconView(
+                datestamp: datestamp,
+                size: iconSize,
+                monthOffset: iconMonthOffset,
+                monthSize: iconMonthSize
+            )
+
+            VStack(alignment: .leading, spacing: 0) {
+                Text(title)
+                    .fontWeight(.bold)
+                    .fontDesign(.rounded)
+
+                Text(subtitle)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+
         }
-        
     }
 }
