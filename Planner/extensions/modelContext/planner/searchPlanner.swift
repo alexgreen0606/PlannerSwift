@@ -273,7 +273,12 @@ extension ModelContext {
         let topDatestamps =
             datestampScores
             .sorted {
-                $0.value > $1.value
+                if $0.value == $1.value {
+                    // Scores are equal. Sort by datestamp ascending.
+                    return $0.key < $1.key
+                }
+                // Sort by scores descending.
+                return $0.value > $1.value
             }
             .prefix(10)
             .map { $0.key }

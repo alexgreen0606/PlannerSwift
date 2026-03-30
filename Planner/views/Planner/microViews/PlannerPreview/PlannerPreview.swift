@@ -59,7 +59,7 @@ struct PlannerPreviewView: View {
     // MARK: Preview Events
 
     private var tripLabel: String? {
-        guard let trip = planner.trip, trip.searchQueryScore(searchQuery) != nil
+        guard type != .trip, let trip = planner.trip, trip.searchQueryScore(searchQuery) != nil
         else {
             return nil
         }
