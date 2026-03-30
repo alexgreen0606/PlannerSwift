@@ -59,11 +59,11 @@ struct PlannerSearchTabView: View {
         }
 
         if plannerSearchQuery.isSearching {
-            return "No matching events"
+            return "No matching results"
         }
 
         return plannerSearchQuery.filterPast
-            ? "No past events" : "No upcoming events"
+            ? "No past events or trips" : "No upcoming events or trips"
     }
 
     var body: some View {
@@ -86,18 +86,36 @@ struct PlannerSearchTabView: View {
                                         title: { day in
                                             day.proximityFormat(
                                                 using: [
-                                                    ProximityRule(proximity: .withinADay, format: .countdown),
-                                                    ProximityRule(proximity: .next7Days, format: .weekday),
-                                                    ProximityRule(proximity: .fallback, format: .dateLabel)
+                                                    ProximityRule(
+                                                        proximity: .withinADay,
+                                                        format: .countdown
+                                                    ),
+                                                    ProximityRule(
+                                                        proximity: .next7Days,
+                                                        format: .weekday
+                                                    ),
+                                                    ProximityRule(
+                                                        proximity: .fallback,
+                                                        format: .dateLabel
+                                                    ),
                                                 ]
                                             )
                                         },
                                         subtitle: { day in
                                             day.proximityFormat(
                                                 using: [
-                                                    ProximityRule(proximity: .withinADay, format: .weekday),
-                                                    ProximityRule(proximity: .next7Days, format: .countdown),
-                                                    ProximityRule(proximity: .fallback, format: .weekday)
+                                                    ProximityRule(
+                                                        proximity: .withinADay,
+                                                        format: .weekday
+                                                    ),
+                                                    ProximityRule(
+                                                        proximity: .next7Days,
+                                                        format: .countdown
+                                                    ),
+                                                    ProximityRule(
+                                                        proximity: .fallback,
+                                                        format: .weekday
+                                                    ),
                                                 ]
                                             )
                                         },

@@ -77,7 +77,7 @@ extension EKEvent {
     func searchQueryScore(_ query: PlannerSearchQuery?) -> Double? {
         guard let query else {
             // Include when no query is set.
-            return 0.0
+            return 1.0
         }
 
         if query.filterPast && self.startDate >= query.todayStartOfDay.date {
@@ -99,14 +99,16 @@ extension EKEvent {
 
         if query.text.isEmpty {
             // Include if there is no search text.
-            return 0.0
+            return 1.0
         }
+        
+        var score = 0.0
 
         if let results = query.fuse.search(query.text, in: self.title),
            results.score <= FuseConstants.fuzzyThreshold
         {
             // Include if the title matches the search text.
-            return results.score
+            score = 1 - results.score
         }
 
         if let location = self.location,
@@ -115,7 +117,11 @@ extension EKEvent {
             results.score <= FuseConstants.fuzzyThreshold
         {
             // Include if the location matches the search text.
-            return results.score
+            score += (1 - results.score)
+        }
+        
+        if score != 0.0 {
+            return score
         }
 
         return nil

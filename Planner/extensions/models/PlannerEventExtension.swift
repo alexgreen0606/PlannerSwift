@@ -56,7 +56,7 @@ extension PlannerEvent {
     }
 
     // MARK: - Style Variables
-    
+
     var isChecked: Bool {
         self.isCompleted || self.isCanceled
     }
@@ -216,7 +216,7 @@ extension PlannerEvent {
                 return nil
             } else {
                 // Include if unchecked and no query is set.
-                return 0.0
+                return 1.0
             }
         }
 
@@ -244,23 +244,29 @@ extension PlannerEvent {
                 return nil
             } else {
                 // Include if unchecked and no search text exists.
-                return 0.0
+                return 1.0
             }
         }
+
+        var score = 0.0
 
         if let results = query.fuse.search(query.text, in: self.title),
             results.score <= FuseConstants.fuzzyThreshold
         {
             // Include if the title matches the search text.
-            return results.score
+            score = 1 - results.score
         }
 
         if let location = self.location,
-           let results = query.fuse.search(query.text, in: location.name),
+            let results = query.fuse.search(query.text, in: location.name),
             results.score <= FuseConstants.fuzzyThreshold
         {
             // Include if the location matches the search text.
-            return results.score
+            score += (1 - results.score)
+        }
+
+        if score != 0.0 {
+            return score
         }
 
         return nil

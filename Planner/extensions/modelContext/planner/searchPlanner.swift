@@ -28,13 +28,59 @@ extension ModelContext {
             let onlySearchCalendar =
                 filteredCalendarIds.count > 0 && text.isEmpty
 
-            // Store loaded planners for efficiency.
+            // Store loaded planner days for efficiency.
             var plannerCache: [String: DateInRegion] = [:]
+
+            // Stores calendarEventExternalIds that actually exist within a given planner day.
+            var calendarDayCache: [String: Set<String>] = [:]
 
             var datestampScores: [String: Double] = [:]
 
             // ------------------------------------------------------------------
-            // Phase 1: Find planners with matching locations.
+            // Phase 1: Find trips with matching locations or titles.
+            // ------------------------------------------------------------------
+
+            let trips = try fetch(FetchDescriptor<Trip>())
+
+            for trip in trips {
+                guard let score = trip.searchQueryScore(query) else {
+                    continue
+                }
+
+                guard let query else {
+                    if let firstDatestamp = trip.firstDatestamp {
+                        datestampScores[firstDatestamp, default: 0] += score
+                    }
+                    continue
+                }
+
+                // Find the first day in the trip that matches the timeframe.
+                let firstValidPlanner = trip.sortedPlanners.first(where: {
+                    planner in
+
+                    plannerCache[planner.datestamp] = planner.datestamp
+                        .startOfDay(in: planner.region(settings: settings))
+
+                    if query.filterPast,
+                        planner.datestamp < query.todayStartOfDay.datestamp
+                    {
+                        return true
+                    } else if planner.datestamp
+                        >= query.todayStartOfDay.datestamp
+                    {
+                        return true
+                    }
+                    return false
+                })
+
+                if let firstValidPlanner {
+                    datestampScores[firstValidPlanner.datestamp, default: 0] +=
+                        score
+                }
+            }
+
+            // ------------------------------------------------------------------
+            // Phase 2: Find planners with matching locations.
             // ------------------------------------------------------------------
 
             var filteredPlanners: [Planner] = []
@@ -53,12 +99,11 @@ extension ModelContext {
                 guard let score = planner.searchQueryScore(query) else {
                     continue
                 }
-
-                datestampScores[planner.datestamp, default: 0] += (1.0 - score)
+                datestampScores[planner.datestamp, default: 0] += score
             }
 
             // ------------------------------------------------------------------
-            // Phase 2: Find planner events with matching locations or titles.
+            // Phase 3: Find planner events with matching locations or titles.
             // ------------------------------------------------------------------
 
             var filteredPlannerEvents: [PlannerEvent] = []
@@ -83,16 +128,18 @@ extension ModelContext {
                     with: plannerEvent.date,
                     datestampScores: &datestampScores,
                     plannerCache: &plannerCache,
+                    calendarDayCache: &calendarDayCache,
                     settings: settings,
                     homeRegion: homeRegion,
                     todaystamp: query?.todayStartOfDay.datestamp,
                     filterPast: filterPast,
-                    score: score
+                    score: score,
+                    ekEventStore: ekEventStore
                 )
             }
 
             // ------------------------------------------------------------------
-            // Phase 3: Find calendar events with matching locations or titles.
+            // Phase 4: Find calendar events with matching locations or titles.
             // ------------------------------------------------------------------
 
             // Range: 1 year ago to 3 years from now.
@@ -112,19 +159,21 @@ extension ModelContext {
                 // Add the datestamps that own this event.
                 try updateDatestamps(
                     with: calendarEvent.startDate,
-                    ending: calendarEvent.endDate,
+                    calendarEvent: calendarEvent,
                     datestampScores: &datestampScores,
                     plannerCache: &plannerCache,
+                    calendarDayCache: &calendarDayCache,
                     settings: settings,
                     homeRegion: homeRegion,
                     todaystamp: query?.todayStartOfDay.datestamp,
                     filterPast: filterPast,
-                    score: score
+                    score: score,
+                    ekEventStore: ekEventStore
                 )
             }
 
             // ------------------------------------------------------------------
-            // Phase 4: Assemble the data and display the top 10 results.
+            // Phase 5: Assemble the data and display the top 10 results.
             // ------------------------------------------------------------------
 
             if query?.isSearching == true {
@@ -142,18 +191,20 @@ extension ModelContext {
 
     private func updateDatestamps(
         with startDate: Date,
-        ending endDate: Date? = nil,
+        calendarEvent: EKEvent? = nil,
         datestampScores: inout [String: Double],
         plannerCache: inout [String: DateInRegion],
+        calendarDayCache: inout [String: Set<String>],
         settings: PlannerSettings,
         homeRegion: Region,
         todaystamp: String?,
         filterPast: Bool,
-        score: Double
+        score: Double,
+        ekEventStore: EKEventStore
     ) throws {
         let possibleDatestamps = getChronologicalPossibleDatestamps(
             for: startDate,
-            ending: endDate
+            ending: calendarEvent?.endDate
         )
 
         for datestamp in possibleDatestamps {
@@ -171,11 +222,13 @@ extension ModelContext {
                 datestamp
             ] {
                 if range(
-                    from: startDate,
-                    to: endDate,
-                    includes: cachedPlannerStartOfDay
+                    for: startDate,
+                    includes: cachedPlannerStartOfDay,
+                    calendarEvent: calendarEvent,
+                    calendarDayCache: &calendarDayCache,
+                    ekEventStore: ekEventStore
                 ) {
-                    datestampScores[datestamp, default: 0] += (1.0 - score)
+                    datestampScores[datestamp, default: 0] += score
                 }
                 continue
             }
@@ -202,8 +255,14 @@ extension ModelContext {
             }
             plannerCache[datestamp] = plannerDay
 
-            if range(from: startDate, to: endDate, includes: plannerDay) {
-                datestampScores[datestamp, default: 0] += (1.0 - score)
+            if range(
+                for: startDate,
+                includes: plannerDay,
+                calendarEvent: calendarEvent,
+                calendarDayCache: &calendarDayCache,
+                ekEventStore: ekEventStore
+            ) {
+                datestampScores[datestamp, default: 0] += score
             }
         }
     }
@@ -244,14 +303,48 @@ extension ModelContext {
     }
 
     private func range(
-        from start: Date,
-        to end: Date?,
-        includes plannerDay: DateInRegion
+        for start: Date,
+        includes plannerDay: DateInRegion,
+        calendarEvent: EKEvent?,
+        calendarDayCache: inout [String: Set<String>],
+        ekEventStore: EKEventStore
     ) -> Bool {
-        let end = end ?? start
-
         let dayStart = plannerDay.date
         let nextDayStart = (plannerDay + 1.days).date
+
+        // Safe guard.
+        // Checks that calendar all-day events truly land within the planner's time frame.
+        // All-day event start and end dates vary based on the predicate that is used to call it.
+        // This predicate is planner-specific and guaranteed to be accurate.
+        if let calendarEvent, calendarEvent.isAllDay {
+
+            let eventSet = {
+                if let existing = calendarDayCache[plannerDay.datestamp] {
+                    return existing
+                }
+
+                let calendarDayEvents = ekEventStore.events(
+                    matching: ekEventStore.predicateForEvents(
+                        withStart: dayStart,
+                        end: nextDayStart,
+                        calendars: nil
+                    )
+                )
+                let eventSet = Set(
+                    calendarDayEvents.compactMap(
+                        \.calendarItemExternalIdentifier
+                    )
+                )
+                calendarDayCache[plannerDay.datestamp] = eventSet
+                return eventSet
+            }()
+
+            return eventSet.contains(
+                calendarEvent.calendarItemExternalIdentifier
+            )
+        }
+
+        let end = calendarEvent?.endDate ?? start
 
         return start < nextDayStart && end >= dayStart
     }

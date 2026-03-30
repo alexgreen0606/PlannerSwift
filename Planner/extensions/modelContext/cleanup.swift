@@ -90,6 +90,7 @@ extension ModelContext {
         // function that called this.
     }
 
+    @MainActor
     func deleteCanceledPlans(for todaystamp: String, settings: PlannerSettings)
     {
         let planner = loadPlanner(for: todaystamp)

@@ -58,12 +58,24 @@ struct PlannerPreviewView: View {
 
     // MARK: Preview Events
 
+    private var tripLabel: String? {
+        guard let trip = planner.trip, trip.searchQueryScore(searchQuery) != nil
+        else {
+            return nil
+        }
+        return trip.title
+    }
+
     private var previewChipEvents: [EKEvent] {
         Array(filteredChipEvents.prefix(maxPreviewEvents))
     }
 
     private var sortedPreviewPlannerEvents: [PlannerEvent] {
-        let slots = max(0, maxPreviewEvents - previewChipEvents.count)
+        var tripSlot = tripLabel == nil ? 0 : 1
+        let slots = max(
+            0,
+            maxPreviewEvents - previewChipEvents.count - tripSlot
+        )
 
         let timed = Array(timedPlannerEvents.prefix(slots))
         let remaining = slots - timed.count
@@ -101,7 +113,6 @@ struct PlannerPreviewView: View {
         guard let searchQuery else {
             return false
         }
-
         return searchQuery.isSearching
     }
 
@@ -124,6 +135,8 @@ struct PlannerPreviewView: View {
                 }
             }
 
+            tripInfo
+
             PlannerChipListView(
                 events: previewChipEvents,
                 settings: settings
@@ -140,20 +153,6 @@ struct PlannerPreviewView: View {
 
             if type != .search {
                 weatherInfo
-            }
-        }
-        .overlay {
-            if type != .trip {
-                VStack {
-                    if type == .search {
-                        Spacer()
-                    }
-                    tripIcon
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                    if type == .planner {
-                        Spacer()
-                    }
-                }
             }
         }
 
@@ -183,11 +182,21 @@ struct PlannerPreviewView: View {
     // MARK: - View Builders
 
     @ViewBuilder
-    private var tripIcon: some View {
-        if planner.trip != nil, !isSearching {
-            Image(systemName: "suitcase")
-                .imageScale(.small)
+    private var tripInfo: some View {
+        if let tripLabel {
+            HStack(spacing: 4) {
+                Image(
+                    systemName: "suitcase"
+                )
+                .resizable()
+                .scaledToFit()
+                .frame(width: 14, height: 14)
                 .foregroundStyle(Color.secondary)
+
+                Text(tripLabel)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(Color.label)
+            }
         }
     }
 

@@ -62,7 +62,7 @@ extension Planner {
     func searchQueryScore(_ query: PlannerSearchQuery?) -> Double? {
         guard let query else {
             // Include when no query is set.
-            return 0.0
+            return 1.0
         }
 
         if query.filterPast && self.datestamp >= query.todayStartOfDay.datestamp
@@ -79,7 +79,7 @@ extension Planner {
 
         if query.text.isEmpty {
             // Include if there is no search text.
-            return 0.0
+            return 1.0
         }
 
         if let location = self.location,
@@ -87,7 +87,7 @@ extension Planner {
             results.score <= FuseConstants.fuzzyThreshold
         {
             // Include if the location matches the search text.
-            return results.score
+            return 1 - results.score
         }
 
         return nil
