@@ -90,34 +90,8 @@ struct PlannerTabView: View {
                                         datestamp: datestamp,
                                         settings: settings,
                                         previewType: .planner,
-                                        title: { day in
-                                            day.proximityFormat(
-                                                using: [
-                                                    ProximityRule(
-                                                        proximity: .withinADay,
-                                                        format: .countdown
-                                                    ),
-                                                    ProximityRule(
-                                                        proximity: .fallback,
-                                                        format: .weekday
-                                                    ),
-                                                ]
-                                            )
-                                        },
-                                        subtitle: { day in
-                                            day.proximityFormat(
-                                                using: [
-                                                    ProximityRule(
-                                                        proximity: .withinADay,
-                                                        format: .weekday
-                                                    ),
-                                                    ProximityRule(
-                                                        proximity: .fallback,
-                                                        format: .countdown
-                                                    ),
-                                                ]
-                                            )
-                                        },
+                                        title: plannerTitle,
+                                        subtitle: plannerSubtitle,
                                         namespace: namespace
                                     )
                                 }
@@ -137,7 +111,7 @@ struct PlannerTabView: View {
                         if !tripsByYear.isEmpty {
                             Color.clear.frame(height: 0)
                                 .overlay {
-                                    Text("Trips")
+                                    Text("Upcoming Trips")
                                         .sectionLabel()
                                         .frame(
                                             maxWidth: .infinity,

@@ -19,6 +19,30 @@ extension Planner {
         return "\(datestamp)-\(locationKey)"
     }
 
+    func title(settings: PlannerSettings) -> String {
+        guard
+            let plannerDay = self.datestamp.startOfDay(
+                in: self.region(settings: settings)
+            )
+        else {
+            return ""
+        }
+
+        return plannerTitle(day: plannerDay)
+    }
+
+    func subtitle(settings: PlannerSettings) -> String {
+        guard
+            let plannerDay = self.datestamp.startOfDay(
+                in: self.region(settings: settings)
+            )
+        else {
+            return ""
+        }
+
+        return plannerSubtitle(day: plannerDay)
+    }
+
     // MARK: - Location Variables
 
     // Nil means the device location is used and hasn't loaded yet.
@@ -49,7 +73,7 @@ extension Planner {
                 primaryColor: accentColor.color
             )
         }
-        
+
         if self.trip != nil {
             return IconConfig(
                 name: "suitcase"
@@ -58,7 +82,7 @@ extension Planner {
 
         return settings.homeLocationIconConfig
     }
-    
+
     // MARK: - Search Helper
 
     func searchQueryScore(_ query: PlannerSearchQuery?) -> Double? {

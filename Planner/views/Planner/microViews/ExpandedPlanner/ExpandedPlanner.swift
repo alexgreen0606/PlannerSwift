@@ -60,22 +60,7 @@ struct ExpandedPlannerView: View {
     }
 
     private var title: String {
-        return plannerDay.proximityFormat(
-            using: [
-                ProximityRule(
-                    proximity: .withinADay,
-                    format: .countdown
-                ),
-                ProximityRule(
-                    proximity: .next7Days,
-                    format: .weekday
-                ),
-                ProximityRule(
-                    proximity: .fallback,
-                    format: .dateLabel
-                ),
-            ]
-        )
+        planner.title(settings: settings)
     }
 
     private var subtitle: String {
@@ -84,22 +69,7 @@ struct ExpandedPlannerView: View {
             return
                 "\(count == 0 ? "No" : String(count)) plan\(count == 1 ? "" : "s") selected"
         }
-        return plannerDay.proximityFormat(
-            using: [
-                ProximityRule(
-                    proximity: .withinADay,
-                    format: .weekday
-                ),
-                ProximityRule(
-                    proximity: .next7Days,
-                    format: .countdown
-                ),
-                ProximityRule(
-                    proximity: .fallback,
-                    format: .weekday
-                ),
-            ]
-        )
+        return planner.subtitle(settings: settings)
     }
 
     // MARK: Event Lists
