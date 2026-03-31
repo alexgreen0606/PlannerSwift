@@ -83,27 +83,34 @@ struct PlannerSearchTabView: View {
                                         settings: settings,
                                         previewType: .search,
                                         plannerSearchQuery: plannerSearchQuery,
-                                        title: { day in
-                                            day.proximityFormat(
-                                                using: [
-                                                    ProximityRule(
-                                                        proximity: .withinADay,
-                                                        format: .countdown
-                                                    ),
-                                                    ProximityRule(
-                                                        proximity: .next7Days,
-                                                        format: .weekday
-                                                    ),
-                                                    ProximityRule(
-                                                        proximity: .fallback,
-                                                        // Custom Here: Never show the year.
-                                                        format: .dateWithoutYear
-                                                    ),
-                                                ]
+                                        header: {
+                                            PlannerHeaderView(
+                                                day: $0,
+                                                title:
+                                                    $0.proximityFormat(
+                                                        using: [
+                                                            ProximityRule(
+                                                                proximity:
+                                                                    .withinADay,
+                                                                format:
+                                                                    .countdown
+                                                            ),
+                                                            ProximityRule(
+                                                                proximity:
+                                                                    .next7Days,
+                                                                format: .weekday
+                                                            ),
+                                                            ProximityRule(
+                                                                proximity:
+                                                                    .fallback,
+                                                                // Custom Here: Never show the year.
+                                                                format:
+                                                                    .dateWithoutYear
+                                                            ),
+                                                        ]
+                                                    )
                                             )
                                         },
-                                        subtitle: plannerSubtitle,
-                                        calendarIconDetail: plannerIconDetail,
                                         namespace: namespace
                                     )
                                     .listRowBackground(Color.clear)

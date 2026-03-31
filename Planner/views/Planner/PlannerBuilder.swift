@@ -11,14 +11,12 @@ import SwiftUI
 
 // Clean
 
-struct PlannerBuilderView: View {
+struct PlannerBuilderView<Header: View>: View {
     private let datestamp: String
     private let settings: PlannerSettings
     private let previewType: PlannerPreviewType?
     private let plannerSearchQuery: PlannerSearchQuery?
-    private let title: (DateInRegion) -> String
-    private let subtitle: (DateInRegion) -> String
-    private let calendarIconDetail: (DateInRegion) -> String
+    private let header: (DateInRegion) -> Header
     private let namespace: Namespace.ID?
     private let transitionSource: String?
 
@@ -27,18 +25,14 @@ struct PlannerBuilderView: View {
         settings: PlannerSettings,
         previewType: PlannerPreviewType? = nil,
         plannerSearchQuery: PlannerSearchQuery? = nil,
-        title: @escaping (DateInRegion) -> String,
-        subtitle: @escaping (DateInRegion) -> String,
-        calendarIconDetail: @escaping (DateInRegion) -> String,
+        header: @escaping (DateInRegion) -> Header,
         namespace: Namespace.ID? = nil,
         transitionSource: String? = nil
     ) {
         self.datestamp = datestamp
         self.previewType = previewType
         self.plannerSearchQuery = plannerSearchQuery
-        self.title = title
-        self.subtitle = subtitle
-        self.calendarIconDetail = calendarIconDetail
+        self.header = header
         self.settings = settings
         self.namespace = namespace
         self.transitionSource = transitionSource
@@ -68,13 +62,11 @@ struct PlannerBuilderView: View {
                     settings: settings,
                     previewType: previewType,
                     plannerSearchQuery: plannerSearchQuery,
-                    title: title,
-                    subtitle: subtitle,
-                    calendarIconDetail: calendarIconDetail,
+                    header: header,
                     namespace: namespace,
                     transitionSource: transitionSource
                 )
-                
+
                 // TODO: maybe move this to ExpandedPlannerView only?
                 .overlay {
                     NotificationsView()

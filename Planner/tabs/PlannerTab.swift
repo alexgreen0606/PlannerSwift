@@ -84,19 +84,7 @@ struct PlannerTabView: View {
                     Section {
                         ScrollView(.horizontal) {
                             HStack {
-                                ForEach(thisWeekDatestamps, id: \.self) {
-                                    datestamp in
-                                    PlannerBuilderView(
-                                        datestamp: datestamp,
-                                        settings: settings,
-                                        previewType: .planner,
-                                        title: plannerTitle,
-                                        subtitle: plannerSubtitle,
-                                        calendarIconDetail: plannerIconDetail,
-                                        namespace: namespace
-                                    )
-                                }
-                            }
+                                ForEach(thisWeekDatestamps, id: \.self, content: plannerPreview)}
                             .frame(
                                 height: PlannerLayout.PREVIEW_CARD_HEIGHT
                             )
@@ -297,6 +285,18 @@ struct PlannerTabView: View {
                 }
             }
         }
+    }
+    
+    // MARK: - View Builders
+    
+    private func plannerPreview(_ datestamp: String) -> some View {
+        PlannerBuilderView(
+            datestamp: datestamp,
+            settings: settings,
+            previewType: .planner,
+            header: { PlannerHeaderView(day: $0) },
+            namespace: namespace
+        )
     }
 
     // MARK: - Helper Functions

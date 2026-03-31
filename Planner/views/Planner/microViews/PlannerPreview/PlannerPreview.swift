@@ -14,12 +14,10 @@ import WrappingHStack
 
 // Clean
 
-struct PlannerPreviewView: View {
+struct PlannerPreviewView<Header: View>: View {
     let type: PlannerPreviewType
     let searchQuery: PlannerSearchQuery?
-    let title: String
-    let subtitle: String
-    let calendarIconDetail: String
+    let header: Header
     let planner: Planner
     let plannerDay: DateInRegion
     let plannerLocation: Location?
@@ -123,15 +121,7 @@ struct PlannerPreviewView: View {
         let content = VStack(alignment: .leading, spacing: 12) {
 
             HStack(alignment: .top) {
-                PlannerDateInfoView(
-                    datestamp: plannerDay.datestamp,
-                    title: title,
-                    subtitle: subtitle,
-                    iconDetail: calendarIconDetail,
-                    iconSize: 40,
-                    iconMonthOffset: 1.5,
-                    iconMonthSize: 9
-                )
+                header
 
                 Spacer()
 

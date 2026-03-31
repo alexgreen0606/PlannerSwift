@@ -149,9 +149,14 @@ struct ContentView: View {
                 PlannerBuilderView(
                     datestamp: context.datestamp,
                     settings: settings,
-                    title: plannerTitle,
-                    subtitle: plannerSubtitle,
-                    calendarIconDetail: plannerIconDetail
+                    header: { day in
+                        PlannerHeaderView(
+                            day: day,
+                            iconSize: 30,
+                            iconDetailSize: 9,
+                            iconDetailOffset: 2.5
+                        )
+                    },
                 )
                 .navigationTransition(
                     .zoom(

@@ -1,5 +1,5 @@
 //
-//  PlannerDateInfo.swift
+//  PlannerHeader.swift
 //  Planner
 //
 //  Created by Alex Green on 1/1/26.
@@ -10,43 +10,62 @@ import SwiftUI
 
 // Clean
 
-struct PlannerDateInfoView: View {
-    private let datestamp: String
-    private let title: String
-    private let subtitle: String
-    private let iconDetail: String
-    private let iconSize: CGFloat?
-    private let iconMonthOffset: CGFloat?
-    private let iconMonthSize: CGFloat?
+struct PlannerHeaderView: View {
+    private let day: DateInRegion
+
+    private let customTitle: String?
+    private let customSubtitle: String?
+    private let customIconFormat: DateFormat?
+    private let customIconSize: CGFloat?
+    private let customIconDetailOffset: CGFloat?
+    private let customIconDetailSize: CGFloat?
 
     init(
-        datestamp: String,
-        title: String,
-        subtitle: String,
-        iconDetail: String,
+        day: DateInRegion,
+        title: String? = nil,
+        subtitle: String? = nil,
+        iconFormat: DateFormat? = nil,
         iconSize: CGFloat? = nil,
-        iconMonthOffset: CGFloat? = nil,
-        iconMonthSize: CGFloat? = nil
+        iconDetailSize: CGFloat? = nil,
+        iconDetailOffset: CGFloat? = nil
     ) {
-        self.datestamp = datestamp
-        self.title = title
-        self.subtitle = subtitle
-        self.iconDetail = iconDetail
-        self.iconSize = iconSize
-        self.iconMonthOffset = iconMonthOffset
-        self.iconMonthSize = iconMonthSize
+        self.day = day
+        self.customTitle = title
+        self.customSubtitle = subtitle
+        self.customIconFormat = iconFormat
+        self.customIconSize = iconSize
+        self.customIconDetailSize = iconDetailSize
+        self.customIconDetailOffset = iconDetailOffset
+    }
+
+    var title: String {
+        customTitle ?? plannerTitle(day: day)
+    }
+
+    var subtitle: String {
+        customSubtitle ?? plannerSubtitle(day: day)
+    }
+
+    var iconFormat: DateFormat {
+        customIconFormat ?? plannerIconFormat(day: day)
     }
 
     var body: some View {
         HStack {
 
-            PlannerIconView(
-                datestamp: datestamp,
-                detail: iconDetail,
-                size: iconSize,
-                monthOffset: iconMonthOffset,
-                monthSize: iconMonthSize
-            )
+            if iconFormat == .shortMonth {
+                DateIconView(
+                    day: day,
+                    size: customIconSize,
+                    monthSize: customIconDetailSize,
+                    monthOffset: customIconDetailOffset
+                )
+            } else {
+                WeekdayIconView(
+                    day: day,
+                    size: customIconSize,
+                )
+            }
 
             VStack(alignment: .leading, spacing: 0) {
                 Text(title)

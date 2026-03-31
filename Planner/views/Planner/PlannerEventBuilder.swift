@@ -12,14 +12,12 @@ import SwiftUI
 
 // Clean
 
-struct PlannerEventBuilderView: View {
+struct PlannerEventBuilderView<Header: View>: View {
     private let planner: Planner
     private let settings: PlannerSettings
     private let previewType: PlannerPreviewType?
     private let plannerSearchQuery: PlannerSearchQuery?
-    private let title: (DateInRegion) -> String
-    private let subtitle: (DateInRegion) -> String
-    private let calendarIconDetail: (DateInRegion) -> String
+    private let header: (DateInRegion) -> Header
     private let namespace: Namespace.ID?
     private let transitionSource: String?
 
@@ -28,18 +26,14 @@ struct PlannerEventBuilderView: View {
         settings: PlannerSettings,
         previewType: PlannerPreviewType?,
         plannerSearchQuery: PlannerSearchQuery? = nil,
-        title: @escaping (DateInRegion) -> String,
-        subtitle: @escaping (DateInRegion) -> String,
-        calendarIconDetail: @escaping (DateInRegion) -> String,
+        header: @escaping (DateInRegion) -> Header,
         namespace: Namespace.ID?,
         transitionSource: String?
     ) {
         self.planner = planner
         self.previewType = previewType
         self.plannerSearchQuery = plannerSearchQuery
-        self.title = title
-        self.subtitle = subtitle
-        self.calendarIconDetail = calendarIconDetail
+        self.header = header
         self.settings = settings
         self.namespace = namespace
         self.transitionSource = transitionSource
@@ -126,9 +120,7 @@ struct PlannerEventBuilderView: View {
     private var expandedView: some View {
         ExpandedPlannerView(
             planner: planner,
-            title: title(plannerDay),
-            subtitle: subtitle(plannerDay),
-            calendarIconDetail: calendarIconDetail(plannerDay),
+            header: header(plannerDay),
             plannerDay: plannerDay,
             plannerLocation: plannerLocation,
             sortedPlannerEvents: sortedPlannerEvents,
@@ -143,9 +135,7 @@ struct PlannerEventBuilderView: View {
             PlannerPreviewView(
                 type: previewType,
                 searchQuery: plannerSearchQuery,
-                title: title(plannerDay),
-                subtitle: subtitle(plannerDay),
-                calendarIconDetail: calendarIconDetail(plannerDay),
+                header: header(plannerDay),
                 planner: planner,
                 plannerDay: plannerDay,
                 plannerLocation: plannerLocation,
@@ -174,8 +164,7 @@ struct PlannerEventBuilderView: View {
         let plannerKey = planner.key
 
         // Return cached data.
-        if let existingData = calendarStore.plannerChipCache[plannerKey]
-        {
+        if let existingData = calendarStore.plannerChipCache[plannerKey] {
             plannerChipEvents = existingData
             return
         }
