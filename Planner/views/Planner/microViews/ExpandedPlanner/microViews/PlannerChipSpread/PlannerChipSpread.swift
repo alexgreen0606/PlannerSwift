@@ -5,6 +5,8 @@
 //  Created by Alex Green on 12/17/25.
 //
 
+import Contacts
+import ContactsUI
 import EventKit
 import SwiftData
 import SwiftDate
@@ -23,6 +25,73 @@ struct PlannerChipSpreadView: View {
     let settings: PlannerSettings
     let plannerLocation: Location?
     let openCalendarEventSheet: (EKEvent) -> Void
+
+    init(
+        planner: Planner,
+        plannerDay: DateInRegion,
+        sortedPlannerEvents: [PlannerEvent],
+        plannerChipEvents: [EKEvent],
+        namespace: Namespace.ID,
+        settings: PlannerSettings,
+        plannerLocation: Location?,
+        openCalendarEventSheet: @escaping (EKEvent) -> Void
+    ) {
+        self.planner = planner
+        self.plannerDay = plannerDay
+        self.sortedPlannerEvents = sortedPlannerEvents
+        self.plannerChipEvents = plannerChipEvents
+        self.namespace = namespace
+        self.settings = settings
+        self.plannerLocation = plannerLocation
+        self.openCalendarEventSheet = openCalendarEventSheet
+
+        let contactIds: [String] = plannerChipEvents.compactMap {
+            guard $0.calendar.type == .birthday else { return nil }
+            return $0.birthdayContactIdentifier
+        }
+
+        guard !contactIds.isEmpty else {
+            self.contactsMap = [:]
+            return
+        }
+
+        // Fetch all contacts at once.
+        var contactsMap: [String: CNContact] = [:]
+        let store = CNContactStore()
+        do {
+            let contacts = try store.unifiedContacts(
+                matching: CNContact.predicateForContacts(
+                    withIdentifiers: contactIds
+                ),
+                keysToFetch: [
+                    CNContactViewController.descriptorForRequiredKeys()
+                ] as [CNKeyDescriptor]
+            )
+
+            let contactLookup = Dictionary(
+                uniqueKeysWithValues: contacts.map {
+                    ($0.identifier, $0)
+                }
+            )
+
+            for event in plannerChipEvents {
+                guard
+                    event.calendar.type == .birthday,
+                    let id = event.birthdayContactIdentifier,
+                    let contact = contactLookup[id]
+                else { continue }
+
+                contactsMap[event.calendarItemExternalIdentifier] = contact
+            }
+
+        } catch {
+            assertionFailure("ERROR PlannerChipSpreadView.init: \(error)")
+        }
+
+        self.contactsMap = contactsMap
+    }
+
+    private let contactsMap: [String: CNContact]
 
     let weatherUnit: UnitTemperature =
         Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
@@ -113,14 +182,13 @@ struct PlannerChipSpreadView: View {
     }
 
     // MARK: - View Builders
-    
+
     @ViewBuilder
     private var tripChip: some View {
         if let trip = planner.trip {
             TripChipView(trip: trip, datestamp: planner.datestamp)
         }
     }
-    
 
     @ViewBuilder
     private var countdownChip: some View {
@@ -129,6 +197,7 @@ struct PlannerChipSpreadView: View {
                 title: plannerDay.countdown,
                 iconConfig: nil,
                 color: nil,
+                contact: nil,
                 onTap: nil
             )
         }
@@ -141,6 +210,7 @@ struct PlannerChipSpreadView: View {
                 title: locationLabel,
                 iconConfig: locationIconConfig,
                 color: nil,
+                contact: nil,
                 onTap: {
                     isLocationSheetOpen = true
                 }
@@ -209,7 +279,8 @@ struct PlannerChipSpreadView: View {
                 name: event.calendar.systemImageName(settings: settings),
                 primaryColor: event.calendar.color
             ),
-            color: event.calendar.color
+            color: event.calendar.color,
+            contact: contactsMap[event.calendarItemExternalIdentifier]
         ) {
             openCalendarEventSheet(event)
         }

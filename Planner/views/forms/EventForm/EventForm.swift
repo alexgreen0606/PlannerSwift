@@ -192,7 +192,7 @@ struct EventFormView: View {
         .presentationDetents(
             draftPlannerEvent.calendarEvent != nil
                 && draftPlannerEvent.calendarEvent?.calendar
-                    .allowsContentModifications == false
+                .allowsContentModifications == false && contact == nil
                 ? [.height(300)] : [.large]
         )
 
