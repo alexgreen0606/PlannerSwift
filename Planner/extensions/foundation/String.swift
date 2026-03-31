@@ -16,15 +16,6 @@ extension String {
     }
 
     // Expects YYYY-MM-DD format.
-    var shortMonth: String {  // Ex: DEC
-        self
-            .toDate("yyyy-MM-dd", region: .local)?
-            .toFormat("MMM")
-            .uppercased()
-            ?? "???"
-    }
-
-    // Expects YYYY-MM-DD format.
     var calendarSymbolName: String {
         let dd = self.suffix(2)
 

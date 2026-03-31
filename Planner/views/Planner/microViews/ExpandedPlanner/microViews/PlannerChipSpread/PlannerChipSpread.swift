@@ -143,7 +143,6 @@ struct PlannerChipSpreadView: View {
     var body: some View {
         WrappingHStack(alignment: .leading) {
             tripChip
-            countdownChip
             locationChip
             weatherChip
             ForEach(
@@ -187,19 +186,6 @@ struct PlannerChipSpreadView: View {
     private var tripChip: some View {
         if let trip = planner.trip {
             TripChipView(trip: trip, datestamp: planner.datestamp)
-        }
-    }
-
-    @ViewBuilder
-    private var countdownChip: some View {
-        if !plannerDay.isNext7Days, !plannerDay.isWithinADay {
-            PlannerChipView(
-                title: plannerDay.countdown,
-                iconConfig: nil,
-                color: nil,
-                contact: nil,
-                onTap: nil
-            )
         }
     }
 

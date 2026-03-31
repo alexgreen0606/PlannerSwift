@@ -14,6 +14,7 @@ struct PlannerDateInfoView: View {
     private let datestamp: String
     private let title: String
     private let subtitle: String
+    private let iconDetail: String
     private let iconSize: CGFloat?
     private let iconMonthOffset: CGFloat?
     private let iconMonthSize: CGFloat?
@@ -22,6 +23,7 @@ struct PlannerDateInfoView: View {
         datestamp: String,
         title: String,
         subtitle: String,
+        iconDetail: String,
         iconSize: CGFloat? = nil,
         iconMonthOffset: CGFloat? = nil,
         iconMonthSize: CGFloat? = nil
@@ -29,6 +31,7 @@ struct PlannerDateInfoView: View {
         self.datestamp = datestamp
         self.title = title
         self.subtitle = subtitle
+        self.iconDetail = iconDetail
         self.iconSize = iconSize
         self.iconMonthOffset = iconMonthOffset
         self.iconMonthSize = iconMonthSize
@@ -39,6 +42,7 @@ struct PlannerDateInfoView: View {
 
             PlannerIconView(
                 datestamp: datestamp,
+                detail: iconDetail,
                 size: iconSize,
                 monthOffset: iconMonthOffset,
                 monthSize: iconMonthSize

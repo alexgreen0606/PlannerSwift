@@ -17,8 +17,9 @@ struct PlannerEventBuilderView: View {
     private let settings: PlannerSettings
     private let previewType: PlannerPreviewType?
     private let plannerSearchQuery: PlannerSearchQuery?
-    private let title: ((DateInRegion) -> String)?
-    private let subtitle: ((DateInRegion) -> String)?
+    private let title: (DateInRegion) -> String
+    private let subtitle: (DateInRegion) -> String
+    private let calendarIconDetail: (DateInRegion) -> String
     private let namespace: Namespace.ID?
     private let transitionSource: String?
 
@@ -27,8 +28,9 @@ struct PlannerEventBuilderView: View {
         settings: PlannerSettings,
         previewType: PlannerPreviewType?,
         plannerSearchQuery: PlannerSearchQuery? = nil,
-        title: ((DateInRegion) -> String)?,
-        subtitle: ((DateInRegion) -> String)?,
+        title: @escaping (DateInRegion) -> String,
+        subtitle: @escaping (DateInRegion) -> String,
+        calendarIconDetail: @escaping (DateInRegion) -> String,
         namespace: Namespace.ID?,
         transitionSource: String?
     ) {
@@ -37,6 +39,7 @@ struct PlannerEventBuilderView: View {
         self.plannerSearchQuery = plannerSearchQuery
         self.title = title
         self.subtitle = subtitle
+        self.calendarIconDetail = calendarIconDetail
         self.settings = settings
         self.namespace = namespace
         self.transitionSource = transitionSource
@@ -123,6 +126,9 @@ struct PlannerEventBuilderView: View {
     private var expandedView: some View {
         ExpandedPlannerView(
             planner: planner,
+            title: title(plannerDay),
+            subtitle: subtitle(plannerDay),
+            calendarIconDetail: calendarIconDetail(plannerDay),
             plannerDay: plannerDay,
             plannerLocation: plannerLocation,
             sortedPlannerEvents: sortedPlannerEvents,
@@ -133,12 +139,13 @@ struct PlannerEventBuilderView: View {
 
     @ViewBuilder
     private var previewView: some View {
-        if let previewType, let namespace, let title, let subtitle {
+        if let previewType, let namespace {
             PlannerPreviewView(
                 type: previewType,
                 searchQuery: plannerSearchQuery,
-                title: title,
-                subtitle: subtitle,
+                title: title(plannerDay),
+                subtitle: subtitle(plannerDay),
+                calendarIconDetail: calendarIconDetail(plannerDay),
                 planner: planner,
                 plannerDay: plannerDay,
                 plannerLocation: plannerLocation,

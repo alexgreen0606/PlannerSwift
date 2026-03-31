@@ -1,29 +1,29 @@
 //
-//  plannerSubtitle.swift
+//  plannerIconDetail.swift
 //  Planner
 //
-//  Created by Alex Green on 3/30/26.
+//  Created by Alex Green on 3/31/26.
 //
 
 import SwiftDate
 
 // Clean
 
-func plannerSubtitle(day: DateInRegion) -> String {
+func plannerIconDetail(day: DateInRegion) -> String {
     day.proximityFormat(
         using: [
             ProximityRule(
                 proximity: .withinADay,
-                format: .weekday
+                format: .shortMonth
             ),
             ProximityRule(
                 proximity: .next7Days,
-                format: .countdown
+                format: .shortMonth
             ),
             ProximityRule(
                 proximity: .fallback,
-                format: .countdown
-            )
+                format: .shortWeekday
+            ),
         ]
     )
 }

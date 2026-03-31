@@ -23,6 +23,20 @@ extension DateInRegion {
         )
     }
 
+    var shortMonth: String {  // Ex: APR, JUN
+        self.toFormat(
+            "MMM",
+            locale: Locale.current
+        ).uppercased()
+    }
+
+    var shortWeekday: String {  // Ex: MON, WED
+        self.toFormat(
+            "EEE",
+            locale: Locale.current
+        ).uppercased()
+    }
+
     var timeWithTimezone: String? {  // EX: 3PM CST, 3:59AM GMT
         guard let timeZoneAbbreviation = region.timeZone.abbreviation() else {
             return nil
@@ -66,16 +80,16 @@ extension DateInRegion {
         return startOfDay.year == currentYear ? dateWithoutYear : dateWithYear
     }
 
-    private var dateWithYear: String {  // Ex: May 12, 2025
+    var dateWithoutYear: String {  // Ex: May 12
         self.toFormat(
-            "MMMM d, yyyy",
+            "MMMM d",
             locale: Locale.current
         )
     }
 
-    private var dateWithoutYear: String {  // Ex: May 12
+    private var dateWithYear: String {  // Ex: May 12, 2025
         self.toFormat(
-            "MMMM d",
+            "MMMM d, yyyy",
             locale: Locale.current
         )
     }

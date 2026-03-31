@@ -96,29 +96,14 @@ struct PlannerSearchTabView: View {
                                                     ),
                                                     ProximityRule(
                                                         proximity: .fallback,
-                                                        format: .dateLabel
+                                                        // Custom Here: Never show the year.
+                                                        format: .dateWithoutYear
                                                     ),
                                                 ]
                                             )
                                         },
-                                        subtitle: { day in
-                                            day.proximityFormat(
-                                                using: [
-                                                    ProximityRule(
-                                                        proximity: .withinADay,
-                                                        format: .weekday
-                                                    ),
-                                                    ProximityRule(
-                                                        proximity: .next7Days,
-                                                        format: .countdown
-                                                    ),
-                                                    ProximityRule(
-                                                        proximity: .fallback,
-                                                        format: .weekday
-                                                    ),
-                                                ]
-                                            )
-                                        },
+                                        subtitle: plannerSubtitle,
+                                        calendarIconDetail: plannerIconDetail,
                                         namespace: namespace
                                     )
                                     .listRowBackground(Color.clear)

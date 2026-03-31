@@ -14,6 +14,9 @@ import SwiftUI
 
 struct ExpandedPlannerView: View {
     let planner: Planner
+    let title: String
+    let subtitle: String
+    let calendarIconDetail: String
     let plannerDay: DateInRegion
     let plannerLocation: Location?
     let sortedPlannerEvents: [PlannerEvent]
@@ -59,17 +62,13 @@ struct ExpandedPlannerView: View {
             && plannerManager.selectedItemIds.count == visibleEvents.count
     }
 
-    private var title: String {
-        planner.title(settings: settings)
-    }
-
-    private var subtitle: String {
+    private var modeSubtitle: String {
         if plannerManager.isSelectMode {
             let count = plannerManager.selectedItems.count
             return
                 "\(count == 0 ? "No" : String(count)) plan\(count == 1 ? "" : "s") selected"
         }
-        return planner.subtitle(settings: settings)
+        return subtitle
     }
 
     // MARK: Event Lists
@@ -191,7 +190,8 @@ struct ExpandedPlannerView: View {
             PlannerDateInfoView(
                 datestamp: planner.datestamp,
                 title: title,
-                subtitle: subtitle,
+                subtitle: modeSubtitle,
+                iconDetail: planner.calendarIconDetail(settings: settings),
                 iconSize: 30,
                 iconMonthOffset: 2.5,
                 iconMonthSize: 9

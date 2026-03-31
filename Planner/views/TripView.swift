@@ -145,6 +145,7 @@ struct TripView: View {
                         previewType: .trip,
                         title: { _ in "Day \(index + 1)" },
                         subtitle: { $0.weekday },
+                        calendarIconDetail: { $0.shortMonth },
                         namespace: namespace,
                         transitionSource: trip.plannerTransitionId(
                             for: planner.datestamp

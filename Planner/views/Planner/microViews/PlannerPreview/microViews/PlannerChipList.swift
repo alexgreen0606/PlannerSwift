@@ -18,7 +18,7 @@ struct PlannerChipListView: View {
         if !events.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(events, id: \.eventIdentifier) { event in
-                    HStack(spacing: 4) {
+                    HStack(spacing: 6) {
                         Image(
                             systemName: event.calendar.systemImageName(
                                 settings: settings

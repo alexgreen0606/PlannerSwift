@@ -43,16 +43,26 @@ enum DateFormat {
     case countdown
     case weekday
     case dateLabel
+    case dateWithoutYear
+    case shortWeekday
+    case shortMonth
 
     func string(from date: DateInRegion, ordinal: Bool?) -> String {
         switch self {
         case .weekday:
             return date.weekday
+        case .shortWeekday:
+            return date.shortWeekday
+        case .shortMonth:
+            return date.shortMonth
         case .countdown:
             return ordinal == true
                 ? date.countdown.lowercased() : date.countdown
+        case .dateWithoutYear:
+            return date.dateWithoutYear
         case .dateLabel:
-            return ordinal == true ? formatOrdinalDateString(date.dateLabel) : date.dateLabel
+            return ordinal == true
+                ? formatOrdinalDateString(date.dateLabel) : date.dateLabel
         }
     }
 }

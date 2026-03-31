@@ -148,7 +148,10 @@ struct ContentView: View {
             if let settings {
                 PlannerBuilderView(
                     datestamp: context.datestamp,
-                    settings: settings
+                    settings: settings,
+                    title: plannerTitle,
+                    subtitle: plannerSubtitle,
+                    calendarIconDetail: plannerIconDetail
                 )
                 .navigationTransition(
                     .zoom(
@@ -220,7 +223,7 @@ struct ContentView: View {
                 settings: settings
             )
         }
-        
+
         modelContext.safeSave("ContentView.cleanseStorage")
     }
 

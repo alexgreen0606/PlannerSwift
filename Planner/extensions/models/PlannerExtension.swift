@@ -43,6 +43,33 @@ extension Planner {
         return plannerSubtitle(day: plannerDay)
     }
 
+    func calendarIconDetail(settings: PlannerSettings) -> String {
+        guard
+            let plannerDay = self.datestamp.startOfDay(
+                in: self.region(settings: settings)
+            )
+        else {
+            return ""
+        }
+
+        return plannerDay.proximityFormat(
+            using: [
+                ProximityRule(
+                    proximity: .withinADay,
+                    format: .shortMonth
+                ),
+                ProximityRule(
+                    proximity: .next7Days,
+                    format: .shortMonth
+                ),
+                ProximityRule(
+                    proximity: .fallback,
+                    format: .shortWeekday
+                ),
+            ]
+        )
+    }
+
     // MARK: - Location Variables
 
     // Nil means the device location is used and hasn't loaded yet.

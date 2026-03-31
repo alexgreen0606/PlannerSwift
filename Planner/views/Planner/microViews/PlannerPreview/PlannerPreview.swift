@@ -17,8 +17,9 @@ import WrappingHStack
 struct PlannerPreviewView: View {
     let type: PlannerPreviewType
     let searchQuery: PlannerSearchQuery?
-    let title: (DateInRegion) -> String
-    let subtitle: (DateInRegion) -> String
+    let title: String
+    let subtitle: String
+    let calendarIconDetail: String
     let planner: Planner
     let plannerDay: DateInRegion
     let plannerLocation: Location?
@@ -124,8 +125,9 @@ struct PlannerPreviewView: View {
             HStack(alignment: .top) {
                 PlannerDateInfoView(
                     datestamp: plannerDay.datestamp,
-                    title: title(plannerDay),
-                    subtitle: subtitle(plannerDay),
+                    title: title,
+                    subtitle: subtitle,
+                    iconDetail: calendarIconDetail,
                     iconSize: 40,
                     iconMonthOffset: 1.5,
                     iconMonthSize: 9
@@ -187,7 +189,7 @@ struct PlannerPreviewView: View {
     @ViewBuilder
     private var tripInfo: some View {
         if let tripLabel {
-            HStack(spacing: 4) {
+            HStack(spacing: 6) {
                 Image(
                     systemName: "suitcase"
                 )

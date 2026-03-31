@@ -16,8 +16,9 @@ struct PlannerBuilderView: View {
     private let settings: PlannerSettings
     private let previewType: PlannerPreviewType?
     private let plannerSearchQuery: PlannerSearchQuery?
-    private let title: ((DateInRegion) -> String)?
-    private let subtitle: ((DateInRegion) -> String)?
+    private let title: (DateInRegion) -> String
+    private let subtitle: (DateInRegion) -> String
+    private let calendarIconDetail: (DateInRegion) -> String
     private let namespace: Namespace.ID?
     private let transitionSource: String?
 
@@ -26,8 +27,9 @@ struct PlannerBuilderView: View {
         settings: PlannerSettings,
         previewType: PlannerPreviewType? = nil,
         plannerSearchQuery: PlannerSearchQuery? = nil,
-        title: ((DateInRegion) -> String)? = nil,
-        subtitle: ((DateInRegion) -> String)? = nil,
+        title: @escaping (DateInRegion) -> String,
+        subtitle: @escaping (DateInRegion) -> String,
+        calendarIconDetail: @escaping (DateInRegion) -> String,
         namespace: Namespace.ID? = nil,
         transitionSource: String? = nil
     ) {
@@ -36,6 +38,7 @@ struct PlannerBuilderView: View {
         self.plannerSearchQuery = plannerSearchQuery
         self.title = title
         self.subtitle = subtitle
+        self.calendarIconDetail = calendarIconDetail
         self.settings = settings
         self.namespace = namespace
         self.transitionSource = transitionSource
@@ -67,6 +70,7 @@ struct PlannerBuilderView: View {
                     plannerSearchQuery: plannerSearchQuery,
                     title: title,
                     subtitle: subtitle,
+                    calendarIconDetail: calendarIconDetail,
                     namespace: namespace,
                     transitionSource: transitionSource
                 )

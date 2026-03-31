@@ -92,6 +92,7 @@ struct PlannerTabView: View {
                                         previewType: .planner,
                                         title: plannerTitle,
                                         subtitle: plannerSubtitle,
+                                        calendarIconDetail: plannerIconDetail,
                                         namespace: namespace
                                     )
                                 }
@@ -117,7 +118,7 @@ struct PlannerTabView: View {
                                             maxWidth: .infinity,
                                             alignment: .leading
                                         )
-                                        .padding(.top, 100)
+                                        .padding(.top, 80)
                                 }
                         }
                     }
@@ -157,7 +158,8 @@ struct PlannerTabView: View {
                             }
                         } header: {
                             YearSectionHeaderView(year)
-                                .padding()
+                                .padding(.bottom)
+                                .padding(.trailing)
                         } footer: {
                             if index == sortedTripYears.count - 1 {
                                 Color.clear.frame(height: 16)

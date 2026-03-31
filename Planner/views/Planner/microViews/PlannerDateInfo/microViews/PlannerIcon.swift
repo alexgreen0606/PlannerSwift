@@ -11,17 +11,20 @@ import SwiftUI
 
 struct PlannerIconView: View {
     private let datestamp: String
+    private let detail: String
     private let size: CGFloat
     private let monthOffset: CGFloat
     private let monthSize: CGFloat
 
     init(
         datestamp: String,
+        detail: String,
         size: CGFloat? = 28,
         monthOffset: CGFloat? = 1.5,
         monthSize: CGFloat? = 6
     ) {
         self.datestamp = datestamp
+        self.detail = detail
         self.size = size ?? 28
         self.monthOffset = monthOffset ?? 1.5
         self.monthSize = monthSize ?? 6
@@ -44,7 +47,7 @@ struct PlannerIconView: View {
                 .foregroundStyle(Color.label, iconColor)
                 .font(.system(size: size))
 
-            Text(datestamp.shortMonth)
+            Text(detail)
                 .font(.system(size: monthSize))
                 .fontWeight(.black)
                 .foregroundStyle(Color.calendarIconMonth)
