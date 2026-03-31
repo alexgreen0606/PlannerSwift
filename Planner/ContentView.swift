@@ -118,12 +118,7 @@ struct ContentView: View {
                     }
 
                     Tab("", systemImage: "repeat") {
-                        NavigationStack {
-                            VStack {
-
-                            }
-                            .navigationTitle("Routines")
-                        }
+                        RoutinesTabView()
                     }
 
                     Tab("", systemImage: "gear") {

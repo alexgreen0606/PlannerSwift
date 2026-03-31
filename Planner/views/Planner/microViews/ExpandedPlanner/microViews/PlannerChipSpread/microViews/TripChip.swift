@@ -1,0 +1,116 @@
+//
+//  TripChip.swift
+//  Planner
+//
+//  Created by Alex Green on 3/30/26.
+//
+
+import SwiftUI
+
+// Clean
+
+struct TripChipView: View {
+    let trip: Trip
+    let datestamp: String
+
+    private let chipHeight: CGFloat = 48
+    private let progressBarWidth: CGFloat = 100
+
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        AccentColor.blue
+
+    private var day: CGFloat {
+        guard
+            let index = trip.sortedPlanners.firstIndex(where: {
+                $0.datestamp == datestamp
+            })
+        else {
+            return 0.0
+        }
+        return Double(index) + 1.0
+    }
+
+    private var tripProgress: Double {
+        guard trip.sortedPlanners.count > 0 else { return 0 }
+        return day / Double(trip.sortedPlanners.count)
+    }
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(trip.title)
+                    .font(
+                        .system(size: 16, weight: .bold, design: .rounded)
+                    )
+                    .foregroundStyle(
+                        Color.label
+                    )
+
+                if let location = trip.location {
+                    HStack(spacing: 6) {
+                        Image(systemName: "mappin.and.ellipse")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 11, height: 11)
+                            .foregroundStyle(
+                                accentColor.color,
+                                Color.secondary
+                            )
+
+                        Text(location.name)
+                            .foregroundStyle(
+                                Color.secondary
+                            )
+                            .font(.system(size: 10))
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+
+            Spacer()
+
+            VStack(alignment: .trailing) {
+                progressBar
+
+                Text("Day \(Int(day)) of \(trip.sortedPlanners.count)")
+                    .font(.system(size: 9, weight: .heavy, design: .rounded))
+            }
+            .padding(.horizontal, 16)
+
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: chipHeight)
+        .glassEffect(
+            .regular.interactive(true),
+            in: .rect(
+                cornerRadius: chipHeight / 2
+            )
+        )
+    }
+
+    // MARK: - View Builders
+
+    private var progressBar: some View {
+        ZStack(alignment: .leading) {
+            Capsule()
+                .fill(Color.secondary.opacity(0.15))
+                .frame(width: progressBarWidth)
+
+            Capsule()
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            accentColor.color,
+                            accentColor.color.opacity(0.7),
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .frame(width: progressBarWidth * tripProgress)
+                .animation(.easeInOut(duration: 0.3), value: tripProgress)
+        }
+        .frame(height: 8)
+    }
+
+}

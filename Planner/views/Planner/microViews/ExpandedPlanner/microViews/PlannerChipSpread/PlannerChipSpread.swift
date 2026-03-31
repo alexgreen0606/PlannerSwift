@@ -73,8 +73,8 @@ struct PlannerChipSpreadView: View {
 
     var body: some View {
         WrappingHStack(alignment: .leading) {
-            countdownChip
             tripChip
+            countdownChip
             locationChip
             weatherChip
             ForEach(
@@ -113,6 +113,14 @@ struct PlannerChipSpreadView: View {
     }
 
     // MARK: - View Builders
+    
+    @ViewBuilder
+    private var tripChip: some View {
+        if let trip = planner.trip {
+            TripChipView(trip: trip, datestamp: planner.datestamp)
+        }
+    }
+    
 
     @ViewBuilder
     private var countdownChip: some View {
@@ -127,33 +135,21 @@ struct PlannerChipSpreadView: View {
     }
 
     @ViewBuilder
-    private var tripChip: some View {
-        if let trip = planner.trip {
+    private var locationChip: some View {
+        if planner.trip == nil {
             PlannerChipView(
-                title: trip.title,
-                iconConfig: IconConfig(name: "suitcase"),
+                title: locationLabel,
+                iconConfig: locationIconConfig,
                 color: nil,
                 onTap: {
-                    // TODO: open trip form?
+                    isLocationSheetOpen = true
                 }
             )
+            .matchedTransitionSource(
+                id: IdConstants.LOCATION_CHIP,
+                in: namespace
+            )
         }
-    }
-
-    @ViewBuilder
-    private var locationChip: some View {
-        PlannerChipView(
-            title: locationLabel,
-            iconConfig: locationIconConfig,
-            color: nil,
-            onTap: {
-                isLocationSheetOpen = true
-            }
-        )
-        .matchedTransitionSource(
-            id: IdConstants.LOCATION_CHIP,
-            in: namespace
-        )
     }
 
     @ViewBuilder
