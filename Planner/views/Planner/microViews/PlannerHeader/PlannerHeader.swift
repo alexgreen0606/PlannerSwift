@@ -12,7 +12,6 @@ import SwiftUI
 
 struct PlannerHeaderView: View {
     private let day: DateInRegion
-
     private let customTitle: String?
     private let customSubtitle: String?
     private let customIconFormat: DateFormat?
@@ -63,6 +62,7 @@ struct PlannerHeaderView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 Text(title)
+                    .font(.headline)
                     .fontWeight(.bold)
                     .fontDesign(.rounded)
 

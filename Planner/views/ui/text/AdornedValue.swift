@@ -42,7 +42,7 @@ struct AdornedValueView: View {
                     iconConfig.secondaryColor
                 )
 
-            ValueView(title, color: color)
+            ValueView(title, color: color, scale: scale)
         }
     }
 }

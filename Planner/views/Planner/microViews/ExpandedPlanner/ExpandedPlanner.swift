@@ -29,7 +29,8 @@ struct ExpandedPlannerView<Header: View>: View {
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var todaystampManager: TodaystampWatcher
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
-
+    
+    @StateObject private var notificationManager = NotificationManager()
     @StateObject private var plannerManager = ListManager<PlannerEvent>(
         isItemChecked: { event in
             event.isChecked
@@ -101,6 +102,9 @@ struct ExpandedPlannerView<Header: View>: View {
                 .animateSynchronousAction(from: plannerManager.isSelectMode)
             }
         }
+        .overlay {
+            NotificationsView()
+        }
 
         // Event Sheet
         .sheet(item: $eventSheetContext) { context in
@@ -135,8 +139,9 @@ struct ExpandedPlannerView<Header: View>: View {
             )
         }
 
-        // Inject the manager last so it can be accessed in the sheets.
+        // Inject the environment objects last so they can be accessed in the sheets.
         .environmentObject(plannerManager)
+        .environmentObject(notificationManager)
     }
 
     // MARK: - Toolbars
@@ -172,7 +177,7 @@ struct ExpandedPlannerView<Header: View>: View {
     }
 
     // MARK: Header
-    
+
     @ToolbarContentBuilder
     private var headerToolbar: some ToolbarContent {
         ToolbarItem(placement: .principal) {

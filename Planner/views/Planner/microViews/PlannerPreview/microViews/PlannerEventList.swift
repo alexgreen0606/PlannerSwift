@@ -30,8 +30,7 @@ struct PlannerEventListView: View {
                             Image(systemName: "checkmark").imageScale(.small)
                         }
 
-                        Text(event.title)
-                            .font(.system(size: ListLayout.FONT_SIZE * 0.8))
+                        ValueView(event.title)
 
                         Spacer()
 
@@ -42,15 +41,17 @@ struct PlannerEventListView: View {
                             openSheet: nil
                         )
                     }
-                    
-                    if !isBottomOfCard || event.stableId != events.last!.stableId {
+
+                    if !isBottomOfCard
+                        || event.stableId != events.last!.stableId
+                    {
                         dashedDivider
                     }
                 }
             }
         }
     }
-    
+
     // MARK: - View Builders
 
     private var dashedDivider: some View {

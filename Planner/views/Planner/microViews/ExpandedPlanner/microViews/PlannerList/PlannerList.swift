@@ -77,11 +77,11 @@ struct PlannerListView: View {
         PlannerChipSpreadView(
             planner: planner,
             plannerDay: plannerDay,
-            sortedPlannerEvents: sortedPlannerEvents,
+            plannerLocation: plannerLocation,
             calendarDayData: calendarDayData,
+            sortedPlannerEvents: sortedPlannerEvents,
             namespace: namespace,
             settings: settings,
-            plannerLocation: plannerLocation,
             openCalendarEventSheet: { calEvent in
                 eventSheetContext =
                     EventSheetContext(

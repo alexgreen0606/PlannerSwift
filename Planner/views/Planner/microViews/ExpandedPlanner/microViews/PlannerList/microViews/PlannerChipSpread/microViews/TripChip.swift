@@ -53,7 +53,7 @@ struct TripChipView: View {
                             name: "mappin.and.ellipse",
                             primaryColor: accentColor.color
                         ),
-                        scale: 0.8
+                        scale: 0.7
                     )
                 }
             }

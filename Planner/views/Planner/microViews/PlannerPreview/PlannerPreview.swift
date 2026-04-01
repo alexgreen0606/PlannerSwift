@@ -241,7 +241,7 @@ struct PlannerPreviewView<Header: View>: View {
     @ViewBuilder
     private var remainingPlansIndicator: some View {
         if hasEvents && !isSearching {
-            EmptyLabelView(remainingPlansLabel, scale: 0.88)
+            EmptyLabelView(remainingPlansLabel, scale: 0.8)
         }
     }
 
@@ -250,7 +250,7 @@ struct PlannerPreviewView<Header: View>: View {
         if type != .search {
             ZStack {
                 if !hasEvents {
-                    EmptyLabelView(remainingPlansLabel, scale: 0.88)
+                    EmptyLabelView(remainingPlansLabel, scale: 0.8)
                 }
             }
             .frame(

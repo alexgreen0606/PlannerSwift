@@ -48,8 +48,6 @@ struct PlannerBuilderView<Header: View>: View {
 
     @Query private var planners: [Planner]
 
-    @StateObject private var notificationManager = NotificationManager()
-
     private var planner: Planner? {
         planners.first
     }
@@ -66,12 +64,6 @@ struct PlannerBuilderView<Header: View>: View {
                     namespace: namespace,
                     transitionSource: transitionSource
                 )
-
-                // TODO: maybe move this to ExpandedPlannerView only?
-                .overlay {
-                    NotificationsView()
-                }
-                .environmentObject(notificationManager)
             }
         }
         .task {

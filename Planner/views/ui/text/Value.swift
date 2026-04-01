@@ -24,7 +24,7 @@ struct ValueView: View {
 
     var body: some View {
         Text(title)
-            .font(.system(size: fontSize, weight: .medium))
+            .font(.system(size: fontSize, weight: .regular))
             .foregroundColor(color ?? Color.label)
     }
 }

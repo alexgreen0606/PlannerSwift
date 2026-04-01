@@ -27,32 +27,27 @@ struct BirthdayView: View {
     }
 
     var body: some View {
-        HStack(spacing: 6) {
-            if let contactPhoto {
+        if let contactPhoto {
+            HStack(spacing: 6) {
                 Image(uiImage: contactPhoto)
                     .resizable()
                     .scaledToFill()
                     .frame(width: 20, height: 20)
                     .clipShape(Circle())
-            } else {
-                Image(
-                    systemName: birthday.event.calendar.systemImageName(
-                        settings: settings
-                    )
-                )
-                .resizable()
-                .scaledToFit()
-                .frame(width: 14, height: 14)
-                .foregroundStyle(
-                    birthday.event.calendar.color
-                )
-            }
 
-            Text(birthday.event.title)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(
-                    contactPhoto != nil ? Color.label : calendarColor
+                ValueView(birthday.event.title)
+            }
+        } else {
+            AdornedValueView(
+                birthday.event.title,
+                color: calendarColor,
+                iconConfig: IconConfig(
+                    name: birthday.event.calendar.systemImageName(
+                        settings: settings
+                    ),
+                    primaryColor: calendarColor
                 )
+            )
         }
     }
 }

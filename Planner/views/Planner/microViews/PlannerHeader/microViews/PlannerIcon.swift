@@ -43,6 +43,8 @@ struct PlannerIconView: View {
 
     @EnvironmentObject private var todaystampManager: TodaystampWatcher
 
+    // MARK: Icon
+
     private var primaryIconColor: Color {
         format == .shortMonth ? .label : .tertiary
     }
@@ -59,6 +61,8 @@ struct PlannerIconView: View {
     private var size: CGFloat {
         customSize ?? defaultSize
     }
+
+    // MARK: Detail Text
 
     private var detail: String {
         format == .shortMonth ? day.shortMonth : day.shortWeekday
@@ -79,6 +83,8 @@ struct PlannerIconView: View {
         format == .shortMonth
             ? Color.calendarIconMonth : Color.label
     }
+
+    // MARK: - Body
 
     var body: some View {
         ZStack(alignment: .top) {

@@ -19,11 +19,11 @@ import WrappingHStack
 struct PlannerChipSpreadView: View {
     let planner: Planner
     let plannerDay: DateInRegion
-    let sortedPlannerEvents: [PlannerEvent]
+    let plannerLocation: Location?
     let calendarDayData: CalendarDayData
+    let sortedPlannerEvents: [PlannerEvent]
     var namespace: Namespace.ID
     let settings: PlannerSettings
-    let plannerLocation: Location?
     let openCalendarEventSheet: (EKEvent) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
