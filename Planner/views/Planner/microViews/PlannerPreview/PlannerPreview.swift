@@ -22,7 +22,7 @@ struct PlannerPreviewView<Header: View>: View {
     let plannerDay: DateInRegion
     let plannerLocation: Location?
     let plannerEvents: [PlannerEvent]
-    let plannerChipEvents: [EKEvent]
+    let calendarDayData: CalendarDayData
     let settings: PlannerSettings
 
     private let maxPreviewEvents = 5
@@ -40,7 +40,7 @@ struct PlannerPreviewView<Header: View>: View {
     }
 
     private var filteredChipEvents: [EKEvent] {
-        plannerChipEvents.filter {
+        calendarDayData.plannerChipEvents.filter {
             $0.searchQueryScore(searchQuery) != nil
         }
     }
@@ -131,6 +131,12 @@ struct PlannerPreviewView<Header: View>: View {
             }
 
             tripInfo
+            
+            ForEach(
+                calendarDayData.birthdays,
+                id: \.event.eventIdentifier,
+                content: birthdayChip
+            )
 
             PlannerChipListView(
                 events: previewChipEvents,
@@ -203,6 +209,14 @@ struct PlannerPreviewView<Header: View>: View {
             planner: planner,
             plannerDay: plannerDay,
             plannerLocation: plannerLocation,
+            settings: settings
+        )
+    }
+    
+    @ViewBuilder
+    private func birthdayChip(_ birthday: Birthday) -> some View {
+        BirthdayView(
+            birthday: birthday,
             settings: settings
         )
     }

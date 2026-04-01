@@ -5,8 +5,6 @@
 //  Created by Alex Green on 1/29/26.
 //
 
-import Contacts
-import ContactsUI
 import EventKit
 import EventKitUI
 import SwiftData
@@ -20,8 +18,6 @@ struct EventFormView: View {
     private let sourcePlannerEvent: PlannerEvent?
     private let sourceCalendarEvent: EKEvent?
     private let settings: PlannerSettings
-
-    private let sourceDay: DateInRegion?
 
     init(
         sourcePlanner: Planner? = nil,
@@ -105,31 +101,6 @@ struct EventFormView: View {
                 .date
         }
 
-        // ------------------------------------------------------------------
-        // Load in the contact for birthday events.
-        // ------------------------------------------------------------------
-
-        var contact: CNContact? = nil
-
-        if calendarEvent?.calendar.type == .birthday,
-            let contactId = calendarEvent?.birthdayContactIdentifier
-        {
-
-            let store = CNContactStore()
-
-            do {
-                contact = try store.unifiedContact(
-                    withIdentifier: contactId,
-                    keysToFetch: [
-                        CNContactViewController.descriptorForRequiredKeys()
-                    ] as [CNKeyDescriptor]
-                )
-            } catch {
-                assertionFailure("ERROR EventForm.init: \(error)")
-            }
-        }
-
-        self.contact = contact
         self.draftPlannerEvent = draftPlannerEvent
         self.sourceDay = {
             guard let sourcePlanner else {
@@ -140,9 +111,8 @@ struct EventFormView: View {
             )
         }()
     }
-
-    // Displays the iOS Contact Form (birthday events only).
-    private let contact: CNContact?
+    
+    private let sourceDay: DateInRegion?
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -168,10 +138,7 @@ struct EventFormView: View {
 
     var body: some View {
         ZStack {
-            if let contact {
-                ContactFormView(contact: contact)
-                    .ignoresSafeArea()
-            } else if let draftCalendarEvent = draftPlannerEvent.calendarEvent {
+            if let draftCalendarEvent = draftPlannerEvent.calendarEvent {
                 calendarEventForm(for: draftCalendarEvent)
             } else {
                 PlannerEventFormView(
@@ -192,7 +159,7 @@ struct EventFormView: View {
         .presentationDetents(
             draftPlannerEvent.calendarEvent != nil
                 && draftPlannerEvent.calendarEvent?.calendar
-                .allowsContentModifications == false && contact == nil
+                    .allowsContentModifications == false
                 ? [.height(300)] : [.large]
         )
 
@@ -287,7 +254,7 @@ struct EventFormView: View {
                             proximity: .fallback,
                             format: .dateLabel,
                             ordinal: true
-                        )
+                        ),
                     ]
                 )
 
@@ -321,7 +288,7 @@ struct EventFormView: View {
                             proximity: .fallback,
                             format: .dateLabel,
                             ordinal: true
-                        )
+                        ),
                     ]
                 )
 

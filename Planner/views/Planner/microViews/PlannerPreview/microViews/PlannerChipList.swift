@@ -17,25 +17,24 @@ struct PlannerChipListView: View {
     var body: some View {
         if !events.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                ForEach(events, id: \.eventIdentifier) { event in
-                    HStack(spacing: 6) {
-                        Image(
-                            systemName: event.calendar.systemImageName(
-                                settings: settings
-                            )
-                        )
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 14, height: 14)
-
-                        Text(event.title)
-                            .font(.system(size: 14, weight: .medium))
-                    }
-                    .foregroundStyle(
-                        event.calendar.color
-                    )
-                }
+                ForEach(events, id: \.eventIdentifier, content: event)
             }
         }
     }
+
+    // MARK: - View Builders
+
+    private func event(_ event: EKEvent) -> some View {
+        EventView(
+            title: event.title,
+            iconConfig: IconConfig(
+                name: event.calendar.systemImageName(
+                    settings: settings
+                ),
+                primaryColor: event.calendar.color
+            ),
+            color: event.calendar.color
+        )
+    }
+
 }

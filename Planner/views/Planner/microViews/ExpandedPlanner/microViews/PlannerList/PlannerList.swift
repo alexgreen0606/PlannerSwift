@@ -8,6 +8,7 @@
 import EventKit
 import SwiftDate
 import SwiftUI
+import SwiftData
 
 // Clean
 
@@ -20,7 +21,7 @@ struct PlannerListView: View {
     let sortedOpenPlannerEvents: [PlannerEvent]
     let sortedCheckedPlannerEvents: [PlannerEvent]
     let sortedPlannerEvents: [PlannerEvent]
-    let plannerChipEvents: [EKEvent]
+    let calendarDayData: CalendarDayData
     let showChecked: Bool
     let namespace: Namespace.ID
     let scrollProxy: ScrollViewProxy
@@ -77,7 +78,7 @@ struct PlannerListView: View {
             planner: planner,
             plannerDay: plannerDay,
             sortedPlannerEvents: sortedPlannerEvents,
-            plannerChipEvents: plannerChipEvents,
+            calendarDayData: calendarDayData,
             namespace: namespace,
             settings: settings,
             plannerLocation: plannerLocation,

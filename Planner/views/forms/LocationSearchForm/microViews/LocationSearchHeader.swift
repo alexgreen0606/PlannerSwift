@@ -128,7 +128,6 @@ struct LocationSearchHeaderView: View {
                     secondaryColor: Color.secondary
                 ),
                 color: nil,
-                contact: nil,
                 onTap: nil
             )
 

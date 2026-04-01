@@ -203,7 +203,7 @@ struct PlannerSearchTabView: View {
 
     @ToolbarContentBuilder
     private var calendarFilterToolbarMenu: some ToolbarContent {
-        if calendarStore.calendarAccessDenied == false {
+        if calendarStore.accessDenied == false {
             ToolbarItemGroup(placement: .topBarLeading) {
                 Menu {
                     Section("Timeframe") {

@@ -20,95 +20,22 @@ struct PlannerChipSpreadView: View {
     let planner: Planner
     let plannerDay: DateInRegion
     let sortedPlannerEvents: [PlannerEvent]
-    let plannerChipEvents: [EKEvent]
+    let calendarDayData: CalendarDayData
     var namespace: Namespace.ID
     let settings: PlannerSettings
     let plannerLocation: Location?
     let openCalendarEventSheet: (EKEvent) -> Void
 
-    init(
-        planner: Planner,
-        plannerDay: DateInRegion,
-        sortedPlannerEvents: [PlannerEvent],
-        plannerChipEvents: [EKEvent],
-        namespace: Namespace.ID,
-        settings: PlannerSettings,
-        plannerLocation: Location?,
-        openCalendarEventSheet: @escaping (EKEvent) -> Void
-    ) {
-        self.planner = planner
-        self.plannerDay = plannerDay
-        self.sortedPlannerEvents = sortedPlannerEvents
-        self.plannerChipEvents = plannerChipEvents
-        self.namespace = namespace
-        self.settings = settings
-        self.plannerLocation = plannerLocation
-        self.openCalendarEventSheet = openCalendarEventSheet
-
-        let contactIds: [String] = plannerChipEvents.compactMap {
-            guard $0.calendar.type == .birthday else { return nil }
-            return $0.birthdayContactIdentifier
-        }
-
-        guard !contactIds.isEmpty else {
-            self.contactsMap = [:]
-            return
-        }
-
-        // Fetch all contacts at once.
-        var contactsMap: [String: CNContact] = [:]
-        let store = CNContactStore()
-        do {
-            let contacts = try store.unifiedContacts(
-                matching: CNContact.predicateForContacts(
-                    withIdentifiers: contactIds
-                ),
-                keysToFetch: [
-                    CNContactViewController.descriptorForRequiredKeys()
-                ] as [CNKeyDescriptor]
-            )
-
-            let contactLookup = Dictionary(
-                uniqueKeysWithValues: contacts.map {
-                    ($0.identifier, $0)
-                }
-            )
-
-            for event in plannerChipEvents {
-                guard
-                    event.calendar.type == .birthday,
-                    let id = event.birthdayContactIdentifier,
-                    let contact = contactLookup[id]
-                else { continue }
-
-                contactsMap[event.calendarItemExternalIdentifier] = contact
-            }
-
-        } catch {
-            assertionFailure("ERROR PlannerChipSpreadView.init: \(error)")
-        }
-
-        self.contactsMap = contactsMap
-    }
-
-    private let contactsMap: [String: CNContact]
-
-    let weatherUnit: UnitTemperature =
-        Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
-
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
 
-    @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
-        .system
-
-    @Environment(\.colorScheme) private var systemColorScheme
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var weatherStore: WeatherStore
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
     @State private var isLocationSheetOpen = false
+    @State private var contactSheetContext: Birthday? = nil
 
     // MARK: - Computed Variables
 
@@ -130,14 +57,6 @@ struct PlannerChipSpreadView: View {
         weatherStore.getWeather(for: plannerDay, at: plannerLocation)
     }
 
-    private var isDarkMode: Bool {
-        switch appColorScheme {
-        case .dark: return true
-        case .light: return false
-        case .system: return systemColorScheme == .dark
-        }
-    }
-
     // MARK: - Body
 
     var body: some View {
@@ -146,14 +65,21 @@ struct PlannerChipSpreadView: View {
             locationChip
             weatherChip
             ForEach(
-                plannerChipEvents,
+                calendarDayData.birthdays,
+                id: \.event.eventIdentifier,
+                content: birthdayChip
+            )
+            ForEach(
+                calendarDayData.plannerChipEvents,
                 id: \.eventIdentifier,
                 content: eventChip
             )
         }
         .animateAsynchronousAction(from: weatherData)
         .animateAsynchronousAction(from: locationLabel)
-        .animateAsynchronousAction(from: plannerChipEvents.map(\.title))
+        .animateAsynchronousAction(
+            from: calendarDayData.plannerChipEvents.map(\.title)
+        )
 
         // Location Sheet
         .sheet(isPresented: $isLocationSheetOpen) {
@@ -178,6 +104,19 @@ struct PlannerChipSpreadView: View {
                 )
             )
         }
+
+        // Contact Sheet
+        .sheet(item: $contactSheetContext) { context in
+            ContactFormView(contact: context.contact)
+                .ignoresSafeArea()
+                .navigationTransition(
+                    .zoom(
+                        sourceID: context.event.transitionId,
+                        in: namespace
+                    )
+                )
+        }
+
     }
 
     // MARK: - View Builders
@@ -196,7 +135,6 @@ struct PlannerChipSpreadView: View {
                 title: locationLabel,
                 iconConfig: locationIconConfig,
                 color: nil,
-                contact: nil,
                 onTap: {
                     isLocationSheetOpen = true
                 }
@@ -211,49 +149,7 @@ struct PlannerChipSpreadView: View {
     @ViewBuilder
     private var weatherChip: some View {
         if let weatherData {
-            HStack(alignment: .center, spacing: 8) {
-                HStack(alignment: .center, spacing: 4) {
-                    Image(systemName: weatherData.symbolName)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 14, height: 14)
-                        .symbolVariant(isDarkMode ? .fill : .none)
-                        .symbolRenderingMode(
-                            isDarkMode ? .multicolor : .monochrome
-                        )
-
-                    Text(weatherData.condition.description)
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(Color.label)
-                }
-
-                HStack(alignment: .center, spacing: 4) {
-                    Text(weatherData.highTemp(in: weatherUnit))
-                        .font(
-                            .system(
-                                size: 11,
-                                weight: .bold,
-                                design: .rounded
-                            )
-                        )
-                        .foregroundStyle(Color.label)
-
-                    Divider().frame(height: 16)
-
-                    Text(weatherData.lowTemp(in: weatherUnit))
-                        .font(
-                            .system(
-                                size: 10,
-                                weight: .bold,
-                                design: .rounded
-                            )
-                        )
-                        .foregroundStyle(Color.label)
-                }
-            }
-            .glassChip(color: nil, onTap: openWeatherApp)
-            .contentShape(Rectangle())
-            .onTapGesture(perform: openWeatherApp)
+            WeatherChipView(weatherData: weatherData)
         }
     }
 
@@ -265,8 +161,7 @@ struct PlannerChipSpreadView: View {
                 name: event.calendar.systemImageName(settings: settings),
                 primaryColor: event.calendar.color
             ),
-            color: event.calendar.color,
-            contact: contactsMap[event.calendarItemExternalIdentifier]
+            color: event.calendar.color
         ) {
             openCalendarEventSheet(event)
         }
@@ -276,11 +171,23 @@ struct PlannerChipSpreadView: View {
         )
     }
 
+    @ViewBuilder
+    private func birthdayChip(_ birthday: Birthday) -> some View {
+        BirthdayChipView(
+            birthday: birthday,
+            settings: settings,
+            openContactSheet: openContactSheet
+        )
+        .matchedTransitionSource(
+            id: birthday.event.transitionId,
+            in: namespace
+        )
+    }
+
     // MARK: - Functions
 
-    private func openWeatherApp() {
-        guard let url = URL(string: "weather://") else { return }
-        UIApplication.shared.open(url)
+    private func openContactSheet(for birthday: Birthday) {
+        contactSheetContext = birthday
     }
 
 }

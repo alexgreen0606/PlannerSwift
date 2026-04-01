@@ -5,6 +5,8 @@
 //  Created by Alex Green on 3/8/26.
 //
 
+import Contacts
+import ContactsUI
 import EventKit
 import SwiftData
 import SwiftDate
@@ -34,7 +36,7 @@ extension ModelContext {
         plannerDay: DateInRegion,
         hiddenCalendarIds: Set<String>,
         ekEventStore: EKEventStore
-    ) -> CalendarSearchResults {
+    ) -> CalendarDayData {
         let startOfNextPlannerDay = plannerDay + 1.days
 
         // Existing events in storage for this planner range.
@@ -64,6 +66,7 @@ extension ModelContext {
         // ------------------------------------------------------------------
 
         var plannerChipEvents: [EKEvent] = []
+        var birthdayEvents: [String: EKEvent] = [:]
         var occurrenceEvents: [String: EKEvent] = [:]
         var regularEvents: [String: EKEvent] = [:]
 
@@ -74,6 +77,14 @@ extension ModelContext {
                 continue
             }
 
+            // Collect birthday events.
+            if event.calendar.type == .birthday,
+                let contactId = event.birthdayContactIdentifier
+            {
+                birthdayEvents[contactId] = event
+                continue
+            }
+
             if let occurrenceId = event.occurrenceId {
                 occurrenceEvents[occurrenceId] = event
             } else {
@@ -81,7 +92,7 @@ extension ModelContext {
             }
 
             if event.isAllDay {
-                                
+
                 // Event is all-day. Display it as a planner chip.
                 plannerChipEvents.append(event)
 
@@ -115,10 +126,39 @@ extension ModelContext {
             ekEventStore: ekEventStore
         )
 
-        self.safeSave("plannerEvent.syncCalendarEvents")
+        // ------------------------------------------------------------------
+        // Load in the contacts for any birthday events.
+        // ------------------------------------------------------------------
 
-        return CalendarSearchResults(
+        var birthdays: [Birthday] = []
+
+        let store = CNContactStore()
+        do {
+            let contacts = try store.unifiedContacts(
+                matching: CNContact.predicateForContacts(
+                    withIdentifiers: Array(birthdayEvents.keys)
+                ),
+                keysToFetch: [
+                    CNContactViewController.descriptorForRequiredKeys()
+                ] as [CNKeyDescriptor]
+            )
+
+            for contact in contacts {
+                guard let event = birthdayEvents[contact.identifier]
+                else { continue }
+
+                birthdays.append(Birthday(contact: contact, event: event))
+            }
+
+        } catch {
+            assertionFailure("ERROR calendarEvent.syncCalendarEvents: \(error)")
+        }
+
+        self.safeSave("calendarEvent.syncCalendarEvents")
+
+        return CalendarDayData(
             plannerChipEvents: plannerChipEvents,
+            birthdays: birthdays,
             occurrenceEvents: occurrenceEvents,
             regularEvents: regularEvents
         )

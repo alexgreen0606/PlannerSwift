@@ -75,7 +75,7 @@ struct PlannerEventFormView: View {
     }
 
     private var showCalendarButton: Bool {
-        calendarStore.calendarAccessDenied == false
+        calendarStore.accessDenied == false
     }
 
     var body: some View {

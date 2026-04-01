@@ -20,9 +20,9 @@ class CalendarStore: ObservableObject {
         KeepPastEventsDuration =
             KeepPastEventsDuration.oneMonth
 
-    @Published private(set) var plannerChipCache: [String: [EKEvent]] =
+    @Published private(set) var cache: [String: CalendarDayData] =
         [:]
-    @Published private(set) var calendarAccessDenied: Bool? = nil
+    @Published private(set) var accessDenied: Bool? = nil
 
     // Tells views to re-load their calendar data.
     @Published private(set) var reloadTrigger: UUID? = nil
@@ -42,14 +42,14 @@ class CalendarStore: ObservableObject {
             }
     }
 
-    func cachePlannerChips(_ plannerChipEvents: [EKEvent], plannerKey: String) {
-        plannerChipCache[plannerKey] = plannerChipEvents
+    func cacheData(_ data: CalendarDayData, plannerKey: String) {
+        cache[plannerKey] = data
     }
 
     func attemptFreshLoad(hiddenCalendarIds: Set<String>) {
         switch EKEventStore.authorizationStatus(for: .event) {
         case .authorized:
-            calendarAccessDenied = false
+            accessDenied = false
             beginFreshReload(
                 hiddenCalendarIds: hiddenCalendarIds
             )
@@ -58,7 +58,7 @@ class CalendarStore: ObservableObject {
                 hiddenCalendarIds: hiddenCalendarIds
             )
         case .denied:
-            calendarAccessDenied = true
+            accessDenied = true
         default:
             break
         }
@@ -68,7 +68,7 @@ class CalendarStore: ObservableObject {
 
     private func beginFreshReload(hiddenCalendarIds: Set<String>) {
         loadCalendars()
-        plannerChipCache = [:]
+        cache = [:]
         reloadTrigger = UUID()
     }
 
@@ -76,10 +76,10 @@ class CalendarStore: ObservableObject {
         eventStore.requestFullAccessToEvents { granted, error in
             Task { @MainActor in
                 if granted {
-                    self.calendarAccessDenied = false
+                    self.accessDenied = false
                     self.beginFreshReload(hiddenCalendarIds: hiddenCalendarIds)
                 } else {
-                    self.calendarAccessDenied = true
+                    self.accessDenied = true
                 }
             }
         }

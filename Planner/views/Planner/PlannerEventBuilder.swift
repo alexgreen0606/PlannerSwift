@@ -5,6 +5,8 @@
 //  Created by Alex Green on 2/28/26.
 //
 
+import Contacts
+import ContactsUI
 import EventKit
 import SwiftData
 import SwiftDate
@@ -71,7 +73,12 @@ struct PlannerEventBuilderView<Header: View>: View {
 
     @Query private var sortedPlannerEvents: [PlannerEvent]
 
-    @State private var plannerChipEvents: [EKEvent] = []
+    @State private var calendarDayData: CalendarDayData = CalendarDayData(
+        plannerChipEvents: [],
+        birthdays: [],
+        occurrenceEvents: [:],
+        regularEvents: [:]
+    )
 
     private var plannerLocation: Location? {
         planner.location(
@@ -124,7 +131,7 @@ struct PlannerEventBuilderView<Header: View>: View {
             plannerDay: plannerDay,
             plannerLocation: plannerLocation,
             sortedPlannerEvents: sortedPlannerEvents,
-            plannerChipEvents: plannerChipEvents,
+            calendarDayData: calendarDayData,
             settings: settings
         )
     }
@@ -140,7 +147,7 @@ struct PlannerEventBuilderView<Header: View>: View {
                 plannerDay: plannerDay,
                 plannerLocation: plannerLocation,
                 plannerEvents: sortedPlannerEvents,
-                plannerChipEvents: plannerChipEvents,
+                calendarDayData: calendarDayData,
                 settings: settings
             )
             .matchedTransitionSource(
@@ -164,12 +171,12 @@ struct PlannerEventBuilderView<Header: View>: View {
         let plannerKey = planner.key
 
         // Return cached data.
-        if let existingData = calendarStore.plannerChipCache[plannerKey] {
-            plannerChipEvents = existingData
+        if let existingData = calendarStore.cache[plannerKey] {
+            calendarDayData = existingData
             return
         }
 
-        let calendarSearchResults = modelContext.syncCalendarEvents(
+        calendarDayData = modelContext.syncCalendarEvents(
             for: planner,
             storageEvents: sortedPlannerEvents,
             plannerDay: plannerDay,
@@ -177,15 +184,13 @@ struct PlannerEventBuilderView<Header: View>: View {
             ekEventStore: calendarStore.ekEventStore
         )
 
-        plannerChipEvents = calendarSearchResults.plannerChipEvents
-
-        calendarStore.cachePlannerChips(
-            plannerChipEvents,
+        calendarStore.cacheData(
+            calendarDayData,
             plannerKey: plannerKey
         )
 
         DispatchQueue.main.async {
-            hydrateCalendarEvents(calendarSearchResults: calendarSearchResults)
+            hydrateCalendarEvents()
         }
     }
 
@@ -198,19 +203,17 @@ struct PlannerEventBuilderView<Header: View>: View {
         }
     }
 
-    private func hydrateCalendarEvents(
-        calendarSearchResults: CalendarSearchResults
-    ) {
+    private func hydrateCalendarEvents() {
         for event in sortedPlannerEvents {
             if let calendarItemExternalIdentifier = event
                 .calendarItemExternalIdentifier
             {
                 if let occurrenceId = event.occurrenceId {
                     event.calendarEvent =
-                        calendarSearchResults.occurrenceEvents[occurrenceId]
+                        calendarDayData.occurrenceEvents[occurrenceId]
                 } else {
                     event.calendarEvent =
-                        calendarSearchResults.regularEvents[
+                        calendarDayData.regularEvents[
                             calendarItemExternalIdentifier
                         ]
                 }

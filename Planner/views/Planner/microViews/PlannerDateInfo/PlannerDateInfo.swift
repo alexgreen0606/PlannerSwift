@@ -53,19 +53,13 @@ struct PlannerHeaderView: View {
     var body: some View {
         HStack {
 
-            if iconFormat == .shortMonth {
-                DateIconView(
-                    day: day,
-                    size: customIconSize,
-                    monthSize: customIconDetailSize,
-                    monthOffset: customIconDetailOffset
-                )
-            } else {
-                WeekdayIconView(
-                    day: day,
-                    size: customIconSize,
-                )
-            }
+            PlannerIconView(
+                day: day,
+                format: iconFormat,
+                size: customIconSize,
+                detailSize: customIconDetailSize,
+                detailOffset: customIconDetailOffset
+            )
 
             VStack(alignment: .leading, spacing: 0) {
                 Text(title)

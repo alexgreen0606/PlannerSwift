@@ -50,6 +50,8 @@ struct PlannerEventListView: View {
             }
         }
     }
+    
+    // MARK: - View Builders
 
     private var dashedDivider: some View {
         let lineWidth = 1 / displayScale
