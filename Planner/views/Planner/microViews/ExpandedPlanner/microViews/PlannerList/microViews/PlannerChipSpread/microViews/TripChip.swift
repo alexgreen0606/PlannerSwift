@@ -12,12 +12,17 @@ import SwiftUI
 struct TripChipView: View {
     let trip: Trip
     let datestamp: String
+    let settings: PlannerSettings
 
     private let chipHeight: CGFloat = 48
     private let progressBarWidth: CGFloat = 100
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
+    
+    @State private var showTripSheet = false
+    
+    @Namespace private var namespace
 
     private var day: CGFloat {
         guard
@@ -72,12 +77,34 @@ struct TripChipView: View {
         }
         .frame(maxWidth: .infinity)
         .frame(height: chipHeight)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            showTripSheet = true
+        }
         .glassEffect(
             .regular.interactive(true),
             in: .rect(
                 cornerRadius: chipHeight / 2
             )
         )
+        .matchedTransitionSource(
+            id: IdConstants.TRIP_CHIP,
+            in: namespace
+        )
+
+        // Trip Sheet
+        .sheet(isPresented: $showTripSheet) {
+            TripFormView(
+                sourceTrip: trip,
+                settings: settings
+            )
+            .navigationTransition(
+                .zoom(
+                    sourceID: IdConstants.TRIP_CHIP,
+                    in: namespace
+                )
+            )
+        }
     }
 
     // MARK: - View Builders
@@ -104,5 +131,5 @@ struct TripChipView: View {
         }
         .frame(height: 8)
     }
-
+    
 }

@@ -17,4 +17,5 @@ enum IdConstants {
     static let ELLIPSIS_BUTTON: String = "ELLIPSIS_BUTTON"
     static let CALENDAR_BUTTON: String = "CALENDAR_BUTTON"
     static let LOCATION_CHIP: String = "LOCATION_CHIP"
+    static let TRIP_CHIP: String = "TRIP_CHIP"
 }

@@ -16,12 +16,12 @@ import SwiftUIIntrospect
 struct TripFormView: View {
     private let sourceTrip: Trip?
     private let settings: PlannerSettings
-    private let onSave: (Trip) -> Void
+    private let onSave: ((Trip) -> Void)?
 
     init(
         sourceTrip: Trip? = nil,
         settings: PlannerSettings,
-        onSave: @escaping (Trip) -> Void
+        onSave: ((Trip) -> Void)? = nil
     ) {
         self.sourceTrip = sourceTrip
         self.settings = settings
@@ -333,7 +333,7 @@ struct TripFormView: View {
                 }
 
                 dismiss()
-                onSave(savedTrip)
+                onSave?(savedTrip)
             }
         } catch {}
     }

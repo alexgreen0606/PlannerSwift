@@ -34,7 +34,7 @@ struct PlannerChipSpreadView: View {
     @EnvironmentObject private var weatherStore: WeatherStore
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
-    @State private var isLocationSheetOpen = false
+    @State private var showLocationSheet = false
     @State private var contactSheetContext: Birthday? = nil
 
     // MARK: - Computed Variables
@@ -82,7 +82,7 @@ struct PlannerChipSpreadView: View {
         )
 
         // Location Sheet
-        .sheet(isPresented: $isLocationSheetOpen) {
+        .sheet(isPresented: $showLocationSheet) {
             LocationSearchFormView(
                 title: "Planner Location",
                 mode: .planner,
@@ -124,7 +124,11 @@ struct PlannerChipSpreadView: View {
     @ViewBuilder
     private var tripChip: some View {
         if let trip = planner.trip {
-            TripChipView(trip: trip, datestamp: planner.datestamp)
+            TripChipView(
+                trip: trip,
+                datestamp: planner.datestamp,
+                settings: settings
+            )
         }
     }
 
@@ -190,7 +194,7 @@ struct PlannerChipSpreadView: View {
     }
 
     private func openLocationSheet() {
-        isLocationSheetOpen = true
+        showLocationSheet = true
     }
 
 }
