@@ -115,7 +115,8 @@ struct PlannerTabView: View {
                     .discreetListItem()
 
                     if tripsByYear.isEmpty {
-                        EmptyLabelView(text: "No Upcoming Trips")
+                        EmptyLabelView("No Upcoming Trips")
+                            .frame(height: ListLayout.EMPTY_LABEL_HEIGHT)
                             .frame(maxWidth: .infinity)
                             .padding().discreetListItem()
                     }

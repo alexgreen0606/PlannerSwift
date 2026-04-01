@@ -86,7 +86,7 @@ struct RoutinesTabView: View {
                 .fill(Color.cardBackground)
         )
         .overlay {
-            EmptyLabelView(text: "No routines")
+            EmptyLabelView("No routines")
         }
         .padding(.bottom)
     }
@@ -120,7 +120,8 @@ struct RoutinesTabView: View {
                 .fill(Color.cardBackground)
         )
         .overlay {
-            EmptyLabelView(text: "No routines")
+            EmptyLabelView("No routines")
+                .frame(height: ListLayout.EMPTY_LABEL_HEIGHT)
         }
     }
 

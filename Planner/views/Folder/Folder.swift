@@ -95,7 +95,7 @@ struct FolderView: View {
         }
         .overlay {
             if folder.items.isEmpty {
-                EmptyLabelView(text: "No contents")
+                EmptyLabelView("No contents")
             }
         }
         .overlay {

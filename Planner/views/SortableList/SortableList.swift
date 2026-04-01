@@ -106,7 +106,7 @@ struct SortableListView<
         .background(Color.appBackground.edgesIgnoringSafeArea(.all))
         .overlay {
             if uncheckedItems.isEmpty && !showChecked {
-                EmptyLabelView(text: emptyUncheckedLabel)
+                EmptyLabelView(emptyUncheckedLabel)
             }
         }
         .animateSynchronousAction(from: uncheckedItems)
@@ -173,9 +173,10 @@ struct SortableListView<
             .id(IdConstants.UNCHECKED_ITEMS)
 
             if uncheckedItems.isEmpty && showChecked {
-                EmptyLabelView(text: emptyUncheckedLabel)
+                EmptyLabelView(emptyUncheckedLabel)
                     .discreetListItem()
                     .frame(maxWidth: .infinity)
+                    .frame(height: ListLayout.EMPTY_LABEL_HEIGHT)
             }
 
         } header: {

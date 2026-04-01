@@ -120,16 +120,14 @@ struct LocationSearchHeaderView: View {
             plannerLocationIndicator(plannerLocation)
 
         } else if let selectedLocation {
-            PlannerChipView(
-                title: selectedLocation.name,
+            AdornedValueView(
+                selectedLocation.name,
                 iconConfig: IconConfig(
                     name: "mappin.and.ellipse",
-                    primaryColor: accentColor.color,
-                    secondaryColor: Color.secondary
-                ),
-                color: nil,
-                onTap: nil
+                    primaryColor: accentColor.color
+                )
             )
+            .glassChip()
 
         }
     }

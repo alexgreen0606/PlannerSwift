@@ -58,7 +58,8 @@ struct PlannerPreviewView<Header: View>: View {
     // MARK: Preview Events
 
     private var tripLabel: String? {
-        guard type != .trip, let trip = planner.trip, trip.searchQueryScore(searchQuery) != nil
+        guard type != .trip, let trip = planner.trip,
+            trip.searchQueryScore(searchQuery) != nil
         else {
             return nil
         }
@@ -131,16 +132,17 @@ struct PlannerPreviewView<Header: View>: View {
             }
 
             tripInfo
-            
+
             ForEach(
                 calendarDayData.birthdays,
                 id: \.event.eventIdentifier,
                 content: birthdayChip
             )
 
-            PlannerChipListView(
-                events: previewChipEvents,
-                settings: settings
+            ForEach(
+                previewChipEvents,
+                id: \.eventIdentifier,
+                content: eventChip
             )
 
             PlannerEventListView(
@@ -212,7 +214,7 @@ struct PlannerPreviewView<Header: View>: View {
             settings: settings
         )
     }
-    
+
     @ViewBuilder
     private func birthdayChip(_ birthday: Birthday) -> some View {
         BirthdayView(
@@ -222,26 +224,33 @@ struct PlannerPreviewView<Header: View>: View {
     }
 
     @ViewBuilder
+    private func eventChip(_ event: EKEvent) -> some View {
+        let calendarColor = event.calendar.color
+        AdornedValueView(
+            event.title,
+            color: calendarColor,
+            iconConfig: IconConfig(
+                name: event.calendar.systemImageName(
+                    settings: settings
+                ),
+                primaryColor: calendarColor
+            )
+        )
+    }
+
+    @ViewBuilder
     private var remainingPlansIndicator: some View {
         if hasEvents && !isSearching {
-            Text(remainingPlansLabel)
-                .font(
-                    .system(size: 12, weight: .heavy, design: .rounded)
-                )
-                .foregroundStyle(Color.secondary)
+            EmptyLabelView(remainingPlansLabel, scale: 0.88)
         }
     }
 
     @ViewBuilder
     private var emptyPlannerIndicator: some View {
         if type != .search {
-            VStack {
+            ZStack {
                 if !hasEvents {
-                    Text(remainingPlansLabel)
-                        .font(
-                            .system(size: 12, weight: .heavy, design: .rounded)
-                        )
-                        .foregroundStyle(Color(uiColor: .tertiaryLabel))
+                    EmptyLabelView(remainingPlansLabel, scale: 0.88)
                 }
             }
             .frame(

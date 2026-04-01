@@ -260,7 +260,7 @@ struct LocationSearchFormView: View {
             && locationFinder.locationSearchText.count > 2
         {
             EmptyLabelView(
-                text: locationFinder.hasNetworkError
+                locationFinder.hasNetworkError
                     ? "No Internet Connection" : "No Matching Locations"
             )
         }

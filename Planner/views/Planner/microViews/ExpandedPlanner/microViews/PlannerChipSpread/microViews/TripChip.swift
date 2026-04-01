@@ -47,25 +47,17 @@ struct TripChipView: View {
                     )
 
                 if let location = trip.location {
-                    HStack(spacing: 6) {
-                        Image(systemName: "mappin.and.ellipse")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 11, height: 11)
-                            .foregroundStyle(
-                                accentColor.color,
-                                Color.secondary
-                            )
-
-                        Text(location.name)
-                            .foregroundStyle(
-                                Color.secondary
-                            )
-                            .font(.system(size: 10))
-                    }
+                    AdornedValueView(
+                        location.name,
+                        iconConfig: IconConfig(
+                            name: "mappin.and.ellipse",
+                            primaryColor: accentColor.color
+                        ),
+                        scale: 0.8
+                    )
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal)
 
             Spacer()
 
@@ -75,7 +67,7 @@ struct TripChipView: View {
                 Text("Day \(Int(day)) of \(trip.sortedPlanners.count)")
                     .font(.system(size: 9, weight: .heavy, design: .rounded))
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal)
 
         }
         .frame(maxWidth: .infinity)

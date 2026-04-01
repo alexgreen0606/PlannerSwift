@@ -131,14 +131,11 @@ struct PlannerChipSpreadView: View {
     @ViewBuilder
     private var locationChip: some View {
         if planner.trip == nil {
-            PlannerChipView(
-                title: locationLabel,
-                iconConfig: locationIconConfig,
-                color: nil,
-                onTap: {
-                    isLocationSheetOpen = true
-                }
+            AdornedValueView(
+                locationLabel,
+                iconConfig: locationIconConfig
             )
+            .glassChip(onTap: openLocationSheet)
             .matchedTransitionSource(
                 id: IdConstants.LOCATION_CHIP,
                 in: namespace
@@ -154,24 +151,6 @@ struct PlannerChipSpreadView: View {
     }
 
     @ViewBuilder
-    private func eventChip(_ event: EKEvent) -> some View {
-        PlannerChipView(
-            title: event.title,
-            iconConfig: IconConfig(
-                name: event.calendar.systemImageName(settings: settings),
-                primaryColor: event.calendar.color
-            ),
-            color: event.calendar.color
-        ) {
-            openCalendarEventSheet(event)
-        }
-        .matchedTransitionSource(
-            id: event.transitionId,
-            in: namespace
-        )
-    }
-
-    @ViewBuilder
     private func birthdayChip(_ birthday: Birthday) -> some View {
         BirthdayChipView(
             birthday: birthday,
@@ -184,10 +163,34 @@ struct PlannerChipSpreadView: View {
         )
     }
 
+    @ViewBuilder
+    private func eventChip(_ event: EKEvent) -> some View {
+        let calendarColor = event.calendar.color
+        AdornedValueView(
+            event.title,
+            color: calendarColor,
+            iconConfig: IconConfig(
+                name: event.calendar.systemImageName(settings: settings),
+                primaryColor: calendarColor
+            )
+        )
+        .glassChip(color: calendarColor) {
+            openCalendarEventSheet(event)
+        }
+        .matchedTransitionSource(
+            id: event.transitionId,
+            in: namespace
+        )
+    }
+
     // MARK: - Functions
 
     private func openContactSheet(for birthday: Birthday) {
         contactSheetContext = birthday
+    }
+
+    private func openLocationSheet() {
+        isLocationSheetOpen = true
     }
 
 }

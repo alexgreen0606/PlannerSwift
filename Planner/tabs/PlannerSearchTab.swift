@@ -273,9 +273,8 @@ struct PlannerSearchTabView: View {
     @ViewBuilder
     private var emptyPlannersLabel: some View {
         if sortedUpcomingYears.isEmpty {
-            EmptyLabelView(
-                text: emptyResultsLabel
-            )
+            EmptyLabelView(emptyResultsLabel)
+            .frame(height: ListLayout.EMPTY_LABEL_HEIGHT)
         }
     }
 

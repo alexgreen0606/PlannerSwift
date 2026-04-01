@@ -50,8 +50,7 @@ struct CurrentFolderListView: View {
         .overlay {
             if selectableItems.isEmpty {
                 EmptyLabelView(
-                    text:
-                        "No Available \(destinationType.rawValue.capitalizedFirst)s"
+                    "No Available \(destinationType.rawValue.capitalizedFirst)s"
                 )
             }
         }

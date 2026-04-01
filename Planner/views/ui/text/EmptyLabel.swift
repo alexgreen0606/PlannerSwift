@@ -10,12 +10,17 @@ import SwiftUI
 // Clean
 
 struct EmptyLabelView: View {
-    let text: String
+    private let text: String
+    private let scale: Double
+
+    init(_ text: String, scale: Double = 1) {
+        self.text = text
+        self.scale = scale
+    }
 
     var body: some View {
         Text(text)
-            .font(.system(size: 16, weight: .heavy, design: .rounded))
+            .font(.system(size: 16 * scale, weight: .heavy, design: .rounded))
             .foregroundStyle(Color(uiColor: .tertiaryLabel))
-            .frame(height: ListLayout.EMPTY_LABEL_HEIGHT)
     }
 }
