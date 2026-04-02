@@ -93,7 +93,7 @@ extension ModelContext {
     @MainActor
     func deleteCanceledPlans(for todaystamp: String, settings: PlannerSettings)
     {
-        let planner = loadPlanner(for: todaystamp)
+        let planner = getPlanner(for: todaystamp)
 
         guard
             let plannerDay = todaystamp.startOfDay(

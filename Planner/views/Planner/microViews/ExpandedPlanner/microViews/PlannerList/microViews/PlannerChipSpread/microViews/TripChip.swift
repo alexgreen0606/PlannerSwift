@@ -42,35 +42,36 @@ struct TripChipView: View {
 
     var body: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(trip.title)
-                    .font(
-                        .system(size: 16, weight: .bold, design: .rounded)
-                    )
-                    .foregroundStyle(
-                        Color.label
-                    )
-
-                if let location = trip.location {
-                    AdornedValueView(
-                        location.name,
-                        iconConfig: IconConfig(
-                            name: "mappin.and.ellipse",
-                            primaryColor: accentColor.color
-                        ),
-                        scale: 0.7
-                    )
+            Group {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(trip.title)
+                        .font(
+                            .system(size: 16, weight: .bold, design: .rounded)
+                        )
+                        .foregroundStyle(
+                            Color.label
+                        )
+                    
+                    if let location = trip.location {
+                        AdornedValueView(
+                            location.name,
+                            color: .secondary,
+                            iconConfig: IconConfig(
+                                name: "mappin.and.ellipse",
+                                primaryColor: accentColor.color
+                            ),
+                            scale: 0.7
+                        )
+                    }
                 }
-            }
-            .padding(.horizontal)
-
-            Spacer()
-
-            VStack(alignment: .trailing) {
-                progressBar
-
-                Text("Day \(Int(day)) of \(trip.sortedPlanners.count)")
-                    .font(.system(size: 9, weight: .heavy, design: .rounded))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                
+                VStack(alignment: .trailing) {
+                    progressBar
+                    
+                    Text("Day \(Int(day)) of \(trip.sortedPlanners.count)")
+                        .font(.system(size: 9, weight: .heavy, design: .rounded))
+                }
             }
             .padding(.horizontal)
 

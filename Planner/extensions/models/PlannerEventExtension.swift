@@ -21,7 +21,7 @@ extension PlannerEvent {
         settings: PlannerSettings,
         deviceLocation: Location?
     )
-        -> Location?  // nil means the current device location is used and hasn't loaded yet
+        -> Location?  // nil means the current device location is used and hasn't loaded yet.
     {
         eventLocation(
             location: location,
@@ -65,59 +65,19 @@ extension PlannerEvent {
         if let calendar = self.calendarEvent?.calendar {
             return calendar.color
         }
-
         return accentColor.color
-    }
-
-    // MARK: - Title Change Handlers
-
-    func handleTitleChange(
-        startOfDay: DateInRegion,
-        eventKitStore: EKEventStore,
-        defaultLocation: Location?
-    ) {
-
-        if let calendarEvent {
-            // Event is a calendar event. Update its title in the calendar.
-            calendarEvent.title = self.title
-
-            do {
-                try eventKitStore.save(
-                    calendarEvent,
-                    span: .thisEvent
-                )
-            } catch {
-                assertionFailure(
-                    "ERROR PlannerEventExtension.handleTitleChange: \(error)"
-                )
-            }
-
-            return
-        }
-
-        // Scan the title for a date.
-        guard let defaultLocation,
-            let (date, updatedText) = self.title.separateDate(for: startOfDay)
-        else {
-            return
-        }
-
-        self.title = updatedText
-        self.location = defaultLocation
-        self.hasTime = true
-        self.date = date
-
     }
 
     // MARK: - Data Modifiers
 
+    @MainActor
     func syncWithCalendarEvent(_ calendarEvent: EKEvent) {
         self.title = calendarEvent.title
         self.date = calendarEvent.startDate
-        self.hasTime = true
         self.location = calendarEvent.location(
             storageEvent: self
         )
+        self.hasTime = true
         self.calendarEvent = calendarEvent
         self.calendarItemExternalIdentifier =
             calendarEvent.calendarItemExternalIdentifier
@@ -127,24 +87,24 @@ extension PlannerEvent {
     // MARK: - View Builders
 
     @ViewBuilder
-    func timeValueView(
+    func timeAdornment(
         in plannerRegion: Region,
         accentColor: AccentColor,
         scale: Double = 1,
-        openSheet: (() -> Void)?
+        openEventSheet: (() -> Void)?
     ) -> some View {
         if self.hasTime {
             TimeView(
                 timeInRegion: DateInRegion(self.date, region: plannerRegion),
                 color: self.tint(accentColor: accentColor),
                 scale: scale,
-                openEventSheet: openSheet
+                openEventSheet: openEventSheet
             )
         }
     }
 
     @ViewBuilder
-    func locationValueView(
+    func locationAdornment(
         in planner: Planner,
         settings: PlannerSettings,
         deviceLocation: Location?,
@@ -180,14 +140,10 @@ extension PlannerEvent {
 
         // Assemble the event labels if they differ from the planner.
 
-        let locationText: String? = {
-            if isLocationLabelDifferent {
-                return eventLocationLabel
-            }
-            return nil
-        }()
+        let locationAdornment: String? =
+            isLocationLabelDifferent ? eventLocationLabel : nil
 
-        let timeText: String? = {
+        let timeAdornment: String? = {
             if isTimeZoneDifferent, hasTime {
                 return DateInRegion(
                     date,
@@ -197,37 +153,28 @@ extension PlannerEvent {
             return nil
         }()
 
-        EventBottomAdornmentView(
+        EventLocationAdornmentView(
             iconConfig: IconConfig(
                 name: "mappin.and.ellipse",
                 primaryColor: accentColor.color
             ),
-            locationLabel: locationText,
-            timeLabel: timeText,
+            locationLabel: locationAdornment,
+            timeLabel: timeAdornment,
             openEventSheet: openEventSheet
         )
     }
 
-    // MARK: - Miscellaneous
+    // MARK: - Search Helper
 
-    func searchQueryScore(_ query: PlannerSearchQuery?) -> Double? {
+    func searchQueryScore(_ query: PlannerSearchQuery?) -> Double?  // nil means the event doesn't match the query
+    {
         guard let query else {
+            // Query not set. Include if unchecked.
             if self.isChecked {
                 return nil
             } else {
-                // Include if unchecked and no query is set.
                 return 1.0
             }
-        }
-
-        if query.filterPast && self.date >= query.todayStartOfDay.date {
-            // Exclude if it doesnt match the time range.
-            return nil
-        }
-
-        if !query.filterPast && self.date < query.todayStartOfDay.date {
-            // Exclude if it doesnt match the time range.
-            return nil
         }
 
         if let calendarEvent = self.calendarEvent,
@@ -235,34 +182,36 @@ extension PlannerEvent {
                 filteredCalendarIds: query.filteredCalendarIds
             )
         {
-            // Exclude if the calendar is hidden.
+            // Exclude. Calendar is hidden.
+            return nil
+        }
+
+        if !query.containsDate(self.date) {
+            // Exclude. Doesn't match the time range.
             return nil
         }
 
         if query.text.isEmpty {
+            // Search text not set. Inclide if unchecked.
             if self.isChecked {
                 return nil
             } else {
-                // Include if unchecked and no search text exists.
                 return 1.0
             }
         }
 
         var score = 0.0
 
-        if let results = query.fuse.search(query.text, in: self.title),
-            results.score <= FuseConstants.fuzzyThreshold
-        {
-            // Include if the title matches the search text.
-            score = 1 - results.score
+        if let titleScore = query.score(for: self.title) {
+            // Include. Title matches the search text.
+            score += titleScore
         }
 
         if let location = self.location,
-            let results = query.fuse.search(query.text, in: location.name),
-            results.score <= FuseConstants.fuzzyThreshold
+            let locationScore = query.score(for: location.name)
         {
-            // Include if the location matches the search text.
-            score += (1 - results.score)
+            // Include. Location matches the search text.
+            score += locationScore
         }
 
         if score != 0.0 {

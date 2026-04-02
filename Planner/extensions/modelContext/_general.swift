@@ -1,5 +1,5 @@
 //
-//  general.swift
+//  _general.swift
 //  Planner
 //
 //  Created by Alex Green on 3/8/26.
@@ -24,6 +24,12 @@ extension ModelContext {
     func safeDelete<Item: PersistentModel>(_ item: Item) {
         self.delete(item)
         self.safeSave("general.safeDelete")
+    }
+
+    @MainActor
+    func insertIfNeeded<Item: PersistentModel>(_ item: Item) {
+        guard item.modelContext == nil else { return }
+        insert(item)
     }
 
 }

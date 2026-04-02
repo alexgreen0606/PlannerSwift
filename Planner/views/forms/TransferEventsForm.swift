@@ -195,7 +195,7 @@ struct TransferEventsFormView: View {
 
         let eventCount = plannerManager.selectedItems.count
 
-        modelContext.transferPlannerEvents(
+        modelContext.shiftPlannerEvents(
             plannerManager.selectedItems,
             days: dayOffset.days,
             sourceDay: sourceDay,

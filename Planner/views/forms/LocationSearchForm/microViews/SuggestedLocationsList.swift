@@ -71,6 +71,11 @@ struct SuggestedLocationsListView: View {
         .discreetListItem()
         .contentShape(Rectangle())
         .onTapGesture {
+            if selectedLocation === location {
+                selectedLocation = nil
+                return
+            }
+            
             selectedLocation = location
         }
     }

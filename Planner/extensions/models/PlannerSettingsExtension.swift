@@ -13,6 +13,11 @@ import SwiftUI
 
 extension PlannerSettings {
 
+    func homeLocation(deviceLocation: Location?) -> Location?  // nil means the current device location is used and hasn't loaded yet
+    {
+        homeLocation ?? deviceLocation
+    }
+
     var homeRegion: Region {
         self.homeLocation?.region ?? .local
     }
@@ -21,13 +26,9 @@ extension PlannerSettings {
         homeLocation?.name ?? "Current Location"
     }
 
-    func homeLocation(deviceLocation: Location?) -> Location? {
-        homeLocation ?? deviceLocation  // nil means the current device location is used and hasn't loaded yet
-    }
-
     var homeLocationIconConfig: IconConfig {
         IconConfig(
-            name: homeLocation != nil ? "house" : "location"
+            name: self.homeLocation != nil ? "house" : "location"
         )
     }
 

@@ -13,7 +13,6 @@ import SwiftDate
 
 extension ModelContext {
 
-    @MainActor
     func searchPlanner(
         with query: PlannerSearchQuery?,
         ekEventStore: EKEventStore,
@@ -177,9 +176,15 @@ extension ModelContext {
             // ------------------------------------------------------------------
 
             if query?.isSearching == true {
-                return buildSearchResults(from: datestampScores)
+                return buildSearchResults(
+                    from: datestampScores,
+                    filterPast: filterPast
+                )
             } else {
-                return buildDefaultResults(from: datestampScores)
+                return buildDefaultResults(
+                    from: datestampScores,
+                    filterPast: filterPast
+                )
             }
         } catch {
             assertionFailure("ERROR searchPlanner.searchPlanner: \(error)")
@@ -202,7 +207,7 @@ extension ModelContext {
         score: Double,
         ekEventStore: EKEventStore
     ) throws {
-        let possibleDatestamps = getChronologicalPossibleDatestamps(
+        let possibleDatestamps = getSortedPossibleDatestamps(
             for: startDate,
             ending: calendarEvent?.endDate
         )
@@ -267,15 +272,20 @@ extension ModelContext {
         }
     }
 
-    private func buildSearchResults(from datestampScores: [String: Double])
+    private func buildSearchResults(
+        from datestampScores: [String: Double],
+        filterPast: Bool
+    )
         -> [String: [String]]
     {
         let topDatestamps =
             datestampScores
             .sorted {
                 if $0.value == $1.value {
-                    // Scores are equal. Sort by datestamp ascending.
-                    return $0.key < $1.key
+                    // Scores are equal. Sort by datestamp filterPast.
+                    return filterPast
+                        ? $0.key > $1.key  // descending
+                        : $0.key < $1.key  // ascending
                 }
                 // Sort by scores descending.
                 return $0.value > $1.value
@@ -286,23 +296,42 @@ extension ModelContext {
         let groupedByYear = Dictionary(grouping: topDatestamps) {
             datestamp in
             String(datestamp.prefix(4))
-        }.mapValues { Array($0).sorted() }
+        }.mapValues { datestamps in
+            datestamps.sorted {
+                filterPast
+                    ? $0 > $1  // descending
+                    : $0 < $1  // ascending
+            }
+        }
 
         return groupedByYear
     }
 
-    private func buildDefaultResults(from datestampScores: [String: Double])
+    private func buildDefaultResults(
+        from datestampScores: [String: Double],
+        filterPast: Bool
+    )
         -> [String: [String]]
     {
         let limitedDatestamps =
             datestampScores.keys
-            .sorted()
+            .sorted {
+                filterPast
+                    ? $0 > $1  // descending
+                    : $0 < $1  // ascending
+            }
             .prefix(10)
 
         let groupedByYear = Dictionary(grouping: limitedDatestamps) {
             datestamp in
             String(datestamp.prefix(4))
-        }.mapValues { Array($0).sorted() }
+        }.mapValues { datestamps in
+            datestamps.sorted {
+                filterPast
+                    ? $0 > $1  // descending
+                    : $0 < $1  // ascending
+            }
+        }
 
         return groupedByYear
     }

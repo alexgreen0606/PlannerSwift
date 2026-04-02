@@ -29,7 +29,7 @@ struct ExpandedPlannerView<Header: View>: View {
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var todaystampManager: TodaystampWatcher
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
-    
+
     @StateObject private var notificationManager = NotificationManager()
     @StateObject private var plannerManager = ListManager<PlannerEvent>(
         isItemChecked: { event in
@@ -150,7 +150,7 @@ struct ExpandedPlannerView<Header: View>: View {
 
     @ToolbarContentBuilder
     private var upperLeftToolbar: some ToolbarContent {
-        ToolbarItem(placement: .cancellationAction) {
+        ToolbarItem(placement: .topBarLeading) {
             if !plannerManager.isSelectMode {
                 backButton
             } else {
@@ -180,9 +180,11 @@ struct ExpandedPlannerView<Header: View>: View {
 
     @ToolbarContentBuilder
     private var headerToolbar: some ToolbarContent {
-        ToolbarItem(placement: .principal) {
+        ToolbarItem(placement: .topBarLeading) {
             header
+                .frame(width: 250, alignment: .leading)
         }
+        .sharedBackgroundVisibility(.hidden)
     }
 
     // MARK: Upper Right Toolbar
@@ -246,7 +248,7 @@ struct ExpandedPlannerView<Header: View>: View {
     // MARK: - Functions
 
     private func createEvent(at index: Int) {
-        plannerManager.pendingFocusId = modelContext.createStorageEvent(
+        plannerManager.pendingFocusId = modelContext.createPlannerEvent(
             at: index,
             in: sortedOpenPlannerEvents,
             startOfDay: plannerDay

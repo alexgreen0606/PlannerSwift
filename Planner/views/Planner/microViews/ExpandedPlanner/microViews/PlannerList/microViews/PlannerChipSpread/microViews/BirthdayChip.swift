@@ -20,11 +20,12 @@ struct BirthdayChipView: View {
         birthday.contact.thumbnailImageData != nil
     }
 
+    // Shifts the icon to align with the chip border.
     private var leadingPadding: CGFloat {
         guard contactPhotoExists else {
             return 0
         }
-        return 4 - (PlannerLayout.CHIP_HEIGHT / 3)
+        return 2 - (PlannerLayout.CHIP_HEIGHT / 3)
     }
 
     var body: some View {

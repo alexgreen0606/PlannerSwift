@@ -32,7 +32,7 @@ struct BirthdayView: View {
                 Image(uiImage: contactPhoto)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 20, height: 20)
+                    .frame(width: 24, height: 24)
                     .clipShape(Circle())
 
                 ValueView(birthday.event.title)

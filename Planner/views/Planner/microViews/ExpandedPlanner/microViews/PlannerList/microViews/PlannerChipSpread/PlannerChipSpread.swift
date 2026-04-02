@@ -178,7 +178,7 @@ struct PlannerChipSpreadView: View {
                 primaryColor: calendarColor
             )
         )
-        .glassChip(color: calendarColor) {
+        .glassChip {
             openCalendarEventSheet(event)
         }
         .matchedTransitionSource(

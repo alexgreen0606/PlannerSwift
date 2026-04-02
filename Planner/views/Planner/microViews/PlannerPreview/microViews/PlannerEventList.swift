@@ -23,30 +23,28 @@ struct PlannerEventListView: View {
 
     var body: some View {
         if !events.isEmpty {
-            VStack(alignment: .leading, spacing: 8) {
-                ForEach(events, id: \.stableId) { event in
-                    HStack(alignment: .top) {
-                        if event.isCompleted {
-                            Image(systemName: "checkmark").imageScale(.small)
-                        }
-
-                        ValueView(event.title)
-
-                        Spacer()
-
-                        event.timeValueView(
-                            in: plannerRegion,
-                            accentColor: accentColor,
-                            scale: 0.8,
-                            openSheet: nil
-                        )
+            ForEach(events, id: \.stableId) { event in
+                HStack(alignment: .top) {
+                    if event.isCompleted {
+                        Image(systemName: "checkmark").imageScale(.small)
                     }
 
-                    if !isBottomOfCard
-                        || event.stableId != events.last!.stableId
-                    {
-                        dashedDivider
-                    }
+                    ValueView(event.title)
+
+                    Spacer()
+
+                    event.timeAdornment(
+                        in: plannerRegion,
+                        accentColor: accentColor,
+                        scale: 0.8,
+                        openEventSheet: nil
+                    )
+                }
+
+                if !isBottomOfCard
+                    || event.stableId != events.last!.stableId
+                {
+                    dashedDivider
                 }
             }
         }

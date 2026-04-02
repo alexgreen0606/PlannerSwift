@@ -36,8 +36,8 @@ extension ChecklistItem {
         _ type: ChecklistItemType,
         excluding excludedIds: Set<UUID>
     ) -> Bool {
-        for item in items {
-            guard !excludedIds.contains(item.stableId) else { continue }
+
+        for item in self.items where !excludedIds.contains(item.stableId) {
 
             if item.type == type {
                 return true
@@ -51,31 +51,6 @@ extension ChecklistItem {
         }
 
         return false
-    }
-
-    // MARK: - Data Modifiers
-
-    @MainActor
-    func inheritItems(_ itemsToMove: [ChecklistItem]) {
-
-        var sortedExistingItems = items.sorted { $0.sortIndex < $1.sortIndex }
-        let sortedItemsToMove = itemsToMove.sorted {
-            $0.sortIndex < $1.sortIndex
-        }
-
-        for item in sortedItemsToMove {
-
-            // Add item to the bottom of the new list.
-            let newSortIndex = generateSortIndex(
-                index: sortedExistingItems.count,
-                sortedItems: sortedExistingItems
-            )
-            item.sortIndex = newSortIndex
-            sortedExistingItems.append(item)
-
-            items.append(item)
-            item.parent = self
-        }
     }
 
 }

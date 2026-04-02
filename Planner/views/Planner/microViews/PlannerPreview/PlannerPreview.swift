@@ -45,6 +45,12 @@ struct PlannerPreviewView<Header: View>: View {
         }
     }
 
+    private var filteredBirthdays: [Birthday] {
+        calendarDayData.birthdays.filter {
+            $0.event.searchQueryScore(searchQuery) != nil
+        }
+    }
+
     // MARK: Separated Time Events
 
     private var timedPlannerEvents: [PlannerEvent] {
@@ -119,7 +125,7 @@ struct PlannerPreviewView<Header: View>: View {
     // MARK: - Body
 
     var body: some View {
-        let content = VStack(alignment: .leading, spacing: 12) {
+        let content = VStack(alignment: .leading, spacing: 8) {
 
             HStack(alignment: .top) {
                 header
@@ -132,19 +138,9 @@ struct PlannerPreviewView<Header: View>: View {
             }
 
             tripInfo
-
-            ForEach(
-                calendarDayData.birthdays,
-                id: \.event.eventIdentifier,
-                content: birthdayChip
-            )
-
-            ForEach(
-                previewChipEvents,
-                id: \.eventIdentifier,
-                content: eventChip
-            )
-
+            birthdayChipList
+            eventChipList
+            
             PlannerEventListView(
                 plannerRegion: plannerDay.region,
                 events: sortedPreviewPlannerEvents,
@@ -187,19 +183,10 @@ struct PlannerPreviewView<Header: View>: View {
     @ViewBuilder
     private var tripInfo: some View {
         if let tripLabel {
-            HStack(spacing: 6) {
-                Image(
-                    systemName: "suitcase"
-                )
-                .resizable()
-                .scaledToFit()
-                .frame(width: 14, height: 14)
-                .foregroundStyle(Color.secondary)
-
-                Text(tripLabel)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(Color.label)
-            }
+            AdornedValueView(
+                tripLabel,
+                iconConfig: IconConfig(name: "suitcase")
+            )
         }
     }
 
@@ -216,26 +203,36 @@ struct PlannerPreviewView<Header: View>: View {
     }
 
     @ViewBuilder
-    private func birthdayChip(_ birthday: Birthday) -> some View {
-        BirthdayView(
-            birthday: birthday,
-            settings: settings
-        )
+    private var birthdayChipList: some View {
+        ForEach(
+            filteredBirthdays,
+            id: \.event.eventIdentifier
+        ) {
+            BirthdayView(
+                birthday: $0,
+                settings: settings
+            )
+        }
     }
 
     @ViewBuilder
-    private func eventChip(_ event: EKEvent) -> some View {
-        let calendarColor = event.calendar.color
-        AdornedValueView(
-            event.title,
-            color: calendarColor,
-            iconConfig: IconConfig(
-                name: event.calendar.systemImageName(
-                    settings: settings
-                ),
-                primaryColor: calendarColor
+    private var eventChipList: some View {
+        ForEach(
+            previewChipEvents,
+            id: \.eventIdentifier
+        ) { event in
+            let calendarColor = event.calendar.color
+            AdornedValueView(
+                event.title,
+                color: calendarColor,
+                iconConfig: IconConfig(
+                    name: event.calendar.systemImageName(
+                        settings: settings
+                    ),
+                    primaryColor: calendarColor
+                )
             )
-        )
+        }
     }
 
     @ViewBuilder

@@ -9,6 +9,7 @@
 
 import Fuse
 import SwiftDate
+import SwiftUI
 
 struct PlannerSearchQuery {
     let text: String

@@ -6,6 +6,7 @@
 //
 
 import EventKit
+import SwiftData
 import SwiftDate
 import SwiftUI
 import SwiftUIIntrospect
@@ -122,13 +123,60 @@ struct PlannerEventFormView: View {
 
     @ToolbarContentBuilder
     private var bottomToolbar: some ToolbarContent {
-        ToolbarItem(placement: .bottomBar) {
-            HStack {
-                deleteButton
-                addToCalendarButton
-            }
+        deleteButton
+
+        // When both buttons visible, space them apart.
+        if showCalendarButton, !isCreateForm {
+            ToolbarSpacer(placement: .bottomBar)
         }
-        .sharedBackgroundVisibility(.hidden)
+
+        addToCalendarButton
+    }
+
+    @ToolbarContentBuilder
+    private var addToCalendarButton: some ToolbarContent {
+        if showCalendarButton {
+            ToolbarItem(placement: .bottomBar) {
+                ActionButtonView(
+                    label: "Add To Calendar",
+                    systemImage: "calendar.badge.plus",
+                    onTap: addEventToCalendar
+                )
+            }
+            .sharedBackgroundVisibility(.hidden)
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var deleteButton: some ToolbarContent {
+        if !isCreateForm {
+            ToolbarItem(placement: .bottomBar) {
+                ActionButtonView(
+                    label: "Delete Event",
+                    systemImage: "trash",
+                    color: Color.red,
+                    onTap: {
+                        showDeleteConfirmation = true
+                    }
+                )
+                .confirmationDialog(
+                    "Delete this event?",
+                    isPresented: $showDeleteConfirmation,
+                    titleVisibility: .visible
+                ) {
+                    Button(
+                        "Confirm",
+                        role: .destructive,
+                        action: deleteEvent
+                    )
+                } message: {
+                    Text(
+                        "This action is irreversible."
+                    )
+                }
+            }
+            .sharedBackgroundVisibility(.hidden)
+        }
     }
 
     // MARK: - View Builders
@@ -279,55 +327,11 @@ struct PlannerEventFormView: View {
         }
     }
 
-    @ViewBuilder
-    private var addToCalendarButton: some View {
-        if showCalendarButton {
-            ActionButtonView(
-                label: "Add To Calendar",
-                systemImage: "calendar.badge.plus",
-                onTap: addEventToCalendar
-            )
-        }
-    }
-
-    @ViewBuilder
-    private var deleteButton: some View {
-        if !isCreateForm {
-            ActionButtonView(
-                label: "Delete Event",
-                systemImage: "trash",
-                color: Color.red,
-                onTap: {
-                    showDeleteConfirmation = true
-                }
-            )
-            .confirmationDialog(
-                "Delete this event?",
-                isPresented: $showDeleteConfirmation,
-                titleVisibility: .visible
-            ) {
-                Button(
-                    "Confirm",
-                    role: .destructive,
-                    action: deleteEvent
-                )
-            } message: {
-                Text(
-                    "This action is irreversible."
-                )
-            }
-
-            if showCalendarButton {
-                Spacer()
-            }
-        }
-    }
-
     // MARK: - Functions
 
     private func savePlannerEvent() {
 
-        let destinationDay = modelContext.handlePlannerEventChange(
+        let destinationDay = modelContext.updatePlannerEvent(
             draftPlannerEvent,
             sourceDay: sourceDay,
             targetDatestamp: DateInRegion(

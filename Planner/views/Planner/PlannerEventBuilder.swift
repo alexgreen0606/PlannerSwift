@@ -176,7 +176,7 @@ struct PlannerEventBuilderView<Header: View>: View {
             return
         }
 
-        calendarDayData = modelContext.syncCalendarEvents(
+        calendarDayData = modelContext.syncCalendar(
             for: planner,
             storageEvents: sortedPlannerEvents,
             plannerDay: plannerDay,

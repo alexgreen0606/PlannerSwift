@@ -113,7 +113,7 @@ struct TripFormView: View {
                     proximity: .fallback,
                     format: .dateLabel,
                     ordinal: true
-                )
+                ),
             ]
         )
 
@@ -150,7 +150,7 @@ struct TripFormView: View {
                 showDatesPicker = true
             }
         }
-        
+
         // Blur the title field when another field is modified.
         .onChange(of: draftTrip.dateComponents) { _, _ in
             if isTitleFocused {
@@ -198,7 +198,6 @@ struct TripFormView: View {
                         showDeleteConfirmation = true
                     }
                 )
-                .frame(maxWidth: .infinity)
                 .confirmationDialog(
                     "Cancel this trip?",
                     isPresented: $showDeleteConfirmation,
@@ -324,7 +323,7 @@ struct TripFormView: View {
             try modelContext.transaction {
 
                 guard
-                    let savedTrip = modelContext.saveTripChanges(
+                    let savedTrip = modelContext.updateTrip(
                         from: draftTrip,
                         to: sourceTrip
                     )

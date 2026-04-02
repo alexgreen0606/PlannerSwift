@@ -14,6 +14,8 @@ import SwiftUI
 
 extension ModelContext {
 
+    // MARK: - ENSURE
+
     @MainActor
     func ensurePlannerSettings(
         settings: [PlannerSettings]
@@ -27,6 +29,8 @@ extension ModelContext {
 
         self.safeSave("plannerSettings.ensurePlannerSettings")
     }
+
+    // MARK: - UPDATE
 
     @MainActor
     func updateHomeLocation(

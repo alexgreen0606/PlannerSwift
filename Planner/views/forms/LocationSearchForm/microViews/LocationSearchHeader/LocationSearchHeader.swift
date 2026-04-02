@@ -100,7 +100,6 @@ struct LocationSearchHeaderView: View {
             inputField
         }
         .padding(.horizontal)
-        .animateSynchronousAction(from: selectedLocation)
     }
 
     // MARK: - View Builders

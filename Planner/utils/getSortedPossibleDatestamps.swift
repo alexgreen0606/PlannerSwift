@@ -1,5 +1,5 @@
 //
-//  getChronologicalPossibleDatestamps.swift
+//  getSortedPossibleDatestamps.swift
 //  Planner
 //
 //  Created by Alex Green on 3/1/26.
@@ -24,7 +24,7 @@ private let latestRegion = Region(
 
 // Gets all possible datestamps an event can land in.
 // Example: An event could be nighttime in Los Angeles and morning the next day in Rome.
-func getChronologicalPossibleDatestamps(for date: Date, ending: Date? = nil)
+func getSortedPossibleDatestamps(for date: Date, ending: Date? = nil)
     -> [String]
 {
     var current = date.in(region: earliestRegion).dateAtStartOf(.day)

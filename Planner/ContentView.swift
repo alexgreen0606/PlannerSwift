@@ -8,6 +8,7 @@
 import Contacts
 import ContactsUI
 import EventKit
+import Fuse
 import SwiftData
 import SwiftDate
 import SwiftUI
@@ -89,6 +90,7 @@ struct ContentView: View {
     @Query private var planners: [Planner]
 
     @State private var plannerSearchText: String = ""
+    @State private var initialPlannerMap: [String: [String]] = [:]
 
     @Namespace private var namespace
 
@@ -128,6 +130,7 @@ struct ContentView: View {
                     Tab(role: .search) {
                         PlannerSearchTabView(
                             searchText: $plannerSearchText,
+                            initialPlannerMap: initialPlannerMap,
                             settings: settings,
                             namespace: namespace
                         )
@@ -141,7 +144,10 @@ struct ContentView: View {
                 .tabBarMinimizeBehavior(.onScrollDown)
             }
         }
-        .onAppear(perform: initializeAppData)
+        .onAppear {
+            initializeAppData()
+            buildInitialPlannerMap()
+        }
 
         // Expanded Planner Cover
         .fullScreenCover(item: $plannerCoverManager.context) { context in
@@ -149,14 +155,7 @@ struct ContentView: View {
                 PlannerBuilderView(
                     datestamp: context.datestamp,
                     settings: settings,
-                    header: { day in
-                        PlannerHeaderView(
-                            day: day,
-                            iconSize: 30,
-                            iconDetailSize: 9,
-                            iconDetailOffset: 2.5
-                        )
-                    },
+                    header: plannerCoverHeader
                 )
                 .navigationTransition(
                     .zoom(
@@ -181,6 +180,48 @@ struct ContentView: View {
             _,
             _ in
             weatherStore.beginFreshReload()
+        }
+    }
+
+    @ViewBuilder
+    private func plannerCoverHeader(_ day: DateInRegion) -> some View {
+        let isDateIcon = day.isNext7Days || day.isWithinADay
+        PlannerHeaderView(
+            day: day,
+            // These must be passed to override the default toolbar styles applied to the icon.
+            iconSize: 30,
+            iconDetailSize: isDateIcon ? 9 : 11,
+            iconDetailOffset: isDateIcon ? 2.5 : 17.4
+        )
+    }
+
+    private func buildInitialPlannerMap() {
+        if let settings = plannerSettingsList.first {
+            let todayPlanner = modelContext.getPlanner(
+                for: todaystampWatcher.todaystamp
+            )
+            guard
+                let todayStartOfDay = todayPlanner.datestamp.startOfDay(
+                    in: todayPlanner.region(settings: settings)
+                )
+            else {
+                assertionFailure(
+                    "ERROR ContentView.buildInitialPlannerMap: Could not build startOfDay for \(todayPlanner.datestamp)"
+                )
+                return
+            }
+
+            initialPlannerMap = modelContext.searchPlanner(
+                with: PlannerSearchQuery(
+                    text: "",
+                    filteredCalendarIds: [],
+                    filterPast: false,
+                    todayStartOfDay: todayStartOfDay,
+                    fuse: Fuse()
+                ),
+                ekEventStore: calendarStore.ekEventStore,
+                settings: settings
+            )
         }
     }
 

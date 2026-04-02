@@ -1,5 +1,5 @@
 //
-//  EventBottomAdornment.swift
+//  EventLocationAdornment.swift
 //  Planner
 //
 //  Created by Alex Green on 2/27/26.
@@ -9,7 +9,7 @@ import SwiftUI
 
 // Clean
 
-struct EventBottomAdornmentView: View {
+struct EventLocationAdornmentView: View {
     let iconConfig: IconConfig
     let locationLabel: String?
     let timeLabel: String?

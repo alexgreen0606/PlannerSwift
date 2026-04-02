@@ -15,8 +15,22 @@ import SwiftUI
 
 struct PlannerSearchTabView: View {
     @Binding var searchText: String
-    let settings: PlannerSettings
-    let namespace: Namespace.ID
+    private let settings: PlannerSettings
+    private let namespace: Namespace.ID
+
+    init(
+        searchText: Binding<String>,
+        initialPlannerMap: [String: [String]],
+        settings: PlannerSettings,
+        namespace: Namespace.ID
+    ) {
+        self._searchText = searchText
+        self.settings = settings
+        self.namespace = namespace
+
+        self.plannerMap = initialPlannerMap
+        self.sortedUpcomingYears = initialPlannerMap.keys.sorted()
+    }
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
@@ -40,10 +54,10 @@ struct PlannerSearchTabView: View {
     @State private var plannerSearchQuery: PlannerSearchQuery? = nil
 
     // Year (YYYY) -> Datestamps (YYYY-MM-DD)
-    @State private var plannerMap: [String: [String]] = [:]
+    @State private var plannerMap: [String: [String]]
 
     // Sorted keys from plannerMap.
-    @State private var sortedUpcomingYears: [String] = []
+    @State private var sortedUpcomingYears: [String]
 
     private var sortedCalendars: [EKCalendar] {
         calendarStore.sortedCalendars.filter {
@@ -163,14 +177,10 @@ struct PlannerSearchTabView: View {
                         }
                     }
 
-                    // Build the planner map whenever the calendar store refreshes.
-                    .externalData(
-                        key: calendarStore.reloadTrigger,
-                        ready: true,
-                        load: {
-                            buildPlannerMap(scrollProxy: scrollProxy)
-                        }
-                    )
+                    // Re-buiuld the planner map when the calendar data changes.
+                    .onChange(of: calendarStore.reloadTrigger) { _, _ in
+                        buildPlannerMap(scrollProxy: scrollProxy)
+                    }
 
                     // Re-build the planner map when today's date changes.
                     .onChange(of: todaystampWatcher.todaystamp) {
@@ -274,7 +284,7 @@ struct PlannerSearchTabView: View {
     private var emptyPlannersLabel: some View {
         if sortedUpcomingYears.isEmpty {
             EmptyLabelView(emptyResultsLabel)
-            .frame(height: ListLayout.EMPTY_LABEL_HEIGHT)
+                .frame(height: ListLayout.EMPTY_LABEL_HEIGHT)
         }
     }
 
@@ -306,7 +316,7 @@ struct PlannerSearchTabView: View {
             return trimmed.lowercased()
         }()
 
-        let todayPlanner = modelContext.loadPlanner(
+        let todayPlanner = modelContext.getPlanner(
             for: todaystampWatcher.todaystamp
         )
         guard
@@ -345,7 +355,7 @@ struct PlannerSearchTabView: View {
 
         plannerMapTask = Task {
             do {
-                try await Task.sleep(for: .milliseconds(600))
+                try await Task.sleep(for: .milliseconds(850))
                 guard !Task.isCancelled else { return }
 
                 buildPlannerMap(scrollProxy: scrollProxy)

@@ -152,7 +152,7 @@ struct TripView: View {
                             )
                         },
                         namespace: namespace,
-                        transitionSource: trip.plannerTransitionId(
+                        transitionSource: trip.transitionId(
                             for: planner.datestamp
                         )
                     )

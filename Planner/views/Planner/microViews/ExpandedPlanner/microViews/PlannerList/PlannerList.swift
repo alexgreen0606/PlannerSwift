@@ -112,7 +112,7 @@ struct PlannerListView: View {
 
     @ViewBuilder
     private func rightAdornment(event: PlannerEvent) -> some View {
-        event.timeValueView(
+        event.timeAdornment(
             in: plannerDay.region,
             accentColor: accentColor,
         ) {
@@ -122,7 +122,7 @@ struct PlannerListView: View {
 
     @ViewBuilder
     private func bottomAdornment(event: PlannerEvent) -> some View {
-        event.locationValueView(
+        event.locationAdornment(
             in: planner,
             settings: settings,
             deviceLocation: deviceLocationManager.deviceLocation,

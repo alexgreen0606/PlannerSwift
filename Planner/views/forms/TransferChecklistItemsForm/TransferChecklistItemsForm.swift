@@ -182,8 +182,8 @@ struct TransferChecklistItemsFormView: View {
         let itemCount = listManager.selectedItemIds.count
 
         modelContext.transferChecklistItems(
-            into: selectedItem,
-            items: listManager.selectedItems
+            listManager.selectedItems,
+            into: selectedItem
         )
 
         listManager.toggleSelectMode()

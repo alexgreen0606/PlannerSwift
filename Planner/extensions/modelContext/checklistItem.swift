@@ -14,6 +14,8 @@ import SwiftUI
 
 extension ModelContext {
 
+    // MARK: - ENSURE
+
     @MainActor
     func ensureRootFolder(
         folders: [ChecklistItem]
@@ -30,9 +32,10 @@ extension ModelContext {
                 sortIndex: 0
             )
         )
-
         self.safeSave("checklistItem.ensureRootFolder")
     }
+
+    // MARK: - CREATE
 
     @MainActor
     func createChecklistItem(
@@ -47,12 +50,14 @@ extension ModelContext {
         )
 
         let newItem = ChecklistItem(sortIndex: sortIndex, parent: parent)
-        insert(newItem)
 
+        insert(newItem)
         self.safeSave("checklistItem.createChecklistItem")
 
         return newItem.stableId
     }
+
+    // MARK: - UPDATE
 
     @MainActor
     func moveChecklistItem(in sortedItems: [ChecklistItem], from: Int, to: Int)
@@ -69,12 +74,6 @@ extension ModelContext {
     }
 
     @MainActor
-    func deleteChecklistItems(_ items: [ChecklistItem]) {
-        items.forEach { self.delete($0) }
-        self.safeSave("checklistItem.deleteChecklistItems")
-    }
-
-    @MainActor
     func handleChecklistItemChange(
         sourceItem: ChecklistItem?,
         parent: ChecklistItem?,
@@ -83,17 +82,20 @@ extension ModelContext {
         var newItemId: UUID? = nil
 
         if let sourceItem {
+
             // Edit the existing item.
             sourceItem.title = draftChecklistItem.title
             sourceItem.color = draftChecklistItem.color
             sourceItem.type = draftChecklistItem.type
 
         } else {
-            // Create the new item.
+
             let sorted = parent?.items.sorted {
                 $0.sortIndex < $1.sortIndex
             }
             let sortIndex = (sorted?.last?.sortIndex ?? 0) + 8
+
+            // Create a new item.
             let newItem = ChecklistItem(
                 type: draftChecklistItem.type,
                 title: draftChecklistItem.title,
@@ -101,23 +103,47 @@ extension ModelContext {
                 sortIndex: sortIndex,
                 parent: parent
             )
+            self.insert(newItem)
 
             newItemId = newItem.stableId
-            self.insert(newItem)
         }
 
         self.safeSave("checklistItem.handleChecklistItemChange")
+
         return newItemId
     }
 
     @MainActor
     func transferChecklistItems(
-        into destination: ChecklistItem,
-        items: [ChecklistItem]
+        _ items: [ChecklistItem],
+        into destination: ChecklistItem
     ) {
         do {
-            try transaction {
-                destination.inheritItems(items)
+            try self.transaction {
+
+                var sortedDestinationItems = destination.items.sorted {
+                    $0.sortIndex < $1.sortIndex
+                }
+                let sortedItemsToMove = items.sorted {
+                    $0.sortIndex < $1.sortIndex
+                }
+
+                for item in sortedItemsToMove {
+
+                    // Add item to the bottom of the new list.
+                    item.sortIndex = generateSortIndex(
+                        index: sortedDestinationItems.count,
+                        sortedItems: sortedDestinationItems
+                    )
+
+                    sortedDestinationItems.append(item)
+
+                    // Assign both references of the relationship.
+                    // Both MUST be applied or else the item may be lost.
+                    destination.items.append(item)
+                    item.parent = destination
+                }
+
             }
         } catch {
             assertionFailure(
@@ -127,6 +153,24 @@ extension ModelContext {
         }
 
         self.safeSave("checklistItem.transferChecklistItems")
+    }
+
+    // MARK: - DELETE
+
+    @MainActor
+    func deleteChecklistItems(_ items: [ChecklistItem]) {
+        do {
+            try self.transaction {
+                items.forEach { self.delete($0) }
+            }
+        } catch {
+            assertionFailure(
+                "ERROR checklistItem.deleteChecklistItems: \(error)"
+            )
+            return
+        }
+
+        self.safeSave("checklistItem.deleteChecklistItems")
     }
 
 }

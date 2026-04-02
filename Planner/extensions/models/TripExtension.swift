@@ -47,50 +47,48 @@ extension Trip {
         )
     }
 
-    func plannerTransitionId(for datestamp: String) -> String {
+    func transitionId(for datestamp: String) -> String {
         "\(datestamp)_\(String(describing: id))"
     }
 
-    func searchQueryScore(_ query: PlannerSearchQuery?) -> Double? {
+    // MARK: - Search Helper
+
+    func searchQueryScore(_ query: PlannerSearchQuery?) -> Double?  // nil means the event doesn't match the query
+    {
         guard let query else {
-            // Include when no query is set.
+            // Include. No query set.
             return 1.0
         }
 
-        if query.filterPast, let firstDatestamp = self.firstDatestamp,
-            firstDatestamp >= query.todayStartOfDay.datestamp
-        {
-            // Exclude if it doesnt match the time range.
+        guard let firstDatestamp, let lastDatestamp else {
             return nil
         }
 
-        if !query.filterPast, let lastDatestamp = self.lastDatestamp,
-            lastDatestamp < query.todayStartOfDay.datestamp
-        {
-            // Exclude if it doesnt match the time range.
+        if !query.containsDatestampRange(
+            startDatestamp: firstDatestamp,
+            endDatestamp: lastDatestamp
+        ) {
+            // Exclude. Doesn't match the time range.
             return nil
         }
 
         if query.text.isEmpty {
-            // Include if there is no search text.
+            // Include. No search text.
             return 1.0
         }
 
-        var score: Double = 0.0
+        var score = 0.0
 
-        if let location = self.location,
-            let results = query.fuse.search(query.text, in: location.name),
-            results.score <= FuseConstants.fuzzyThreshold
-        {
-            // Include if the location matches the search text.
-            score = 1.0 - results.score
+        if let titleScore = query.score(for: self.title) {
+            // Include. Title matches the search text.
+            score += titleScore
         }
 
-        if let results = query.fuse.search(query.text, in: self.title),
-            results.score <= FuseConstants.fuzzyThreshold
+        if let location = self.location,
+            let locationScore = query.score(for: location.name)
         {
-            // Include if the title matches the search text.
-            score += (1.0 - results.score)
+            // Include. Location matches the search text.
+            score += locationScore
         }
 
         if score != 0.0 {

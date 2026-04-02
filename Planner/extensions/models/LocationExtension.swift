@@ -21,12 +21,14 @@ extension Location {
     }
 
     var region: Region {
-        guard let timeZone = TimeZone(identifier: timeZoneIdentifier)
-        else {
-            fatalError(
-                "ERROR LocationExtension.region: Could not create a TimeZone from \(timeZoneIdentifier)"
-            )
-        }
+        let timeZone =
+            TimeZone(identifier: timeZoneIdentifier)
+            ?? {
+                assertionFailure(
+                    "ERROR LocationExtension.region: Could not create a TimeZone from \(timeZoneIdentifier)"
+                )
+                return TimeZone.current
+            }()
 
         return Region(
             calendar: Calendar.current,
@@ -34,5 +36,5 @@ extension Location {
             locale: Locale.current
         )
     }
-    
+
 }

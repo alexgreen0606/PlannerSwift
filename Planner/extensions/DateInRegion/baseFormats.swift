@@ -77,7 +77,7 @@ extension DateInRegion {
     var dateLabel: String {
         let startOfToday = DateInRegion(region: region).dateAt(.startOfDay)
         let currentYear = startOfToday.year
-        return startOfDay.year == currentYear ? dateWithoutYear : dateWithYear
+        return self.year == currentYear ? dateWithoutYear : dateWithYear
     }
 
     var dateWithoutYear: String {  // Ex: May 12

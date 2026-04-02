@@ -11,10 +11,28 @@ import EventKit
 
 extension EKEventStore {
 
+    func updateEvent(_ event: EKEvent) -> Bool {
+        guard event.calendar.allowsContentModifications else {
+            return false
+        }
+
+        do {
+            try self.save(
+                event,
+                span: .thisEvent
+            )
+        } catch {
+            assertionFailure(
+                "ERROR EKEventStore.updateEvent: \(error)"
+            )
+            return false
+        }
+
+        return true
+    }
+
     func deleteEvent(_ event: EKEvent) -> Bool {
         guard event.calendar.allowsContentModifications else {
-            print("Cannot delete event. Calendar is read-only.")
-            
             return false
         }
 
@@ -24,12 +42,12 @@ extension EKEventStore {
                 span: .thisEvent,
                 commit: true
             )
-            
+
             return true
         } catch {
             assertionFailure("ERROR EKEventStore.deleteEvent: \(error)")
         }
-        
+
         return false
     }
 

@@ -77,6 +77,11 @@ struct ResultLocationsListView: View {
         .discreetListItem()
         .contentShape(Rectangle())
         .onTapGesture {
+            if isSelected {
+                selectedLocation = nil
+                return
+            }
+            
             Task {
                 guard !noTimeZoneKeys.contains(result.id),
                     let locationInfo =

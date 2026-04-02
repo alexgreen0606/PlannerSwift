@@ -12,10 +12,6 @@ import SwiftUI
 
 extension DateInRegion {
 
-    var startOfDay: DateInRegion {
-        self.dateAt(.startOfDay)
-    }
-
     // True if between Today and the next 6 days.
     var isNext7Days: Bool {
         let startOfDay = self.dateAt(.startOfDay)

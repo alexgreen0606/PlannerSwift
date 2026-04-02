@@ -28,7 +28,11 @@ extension String {
 
     // Expects YYYY-MM-DD format.
     func startOfDay(in region: Region) -> DateInRegion? {
-        self.toDate("yyyy-MM-dd", region: region)?.dateAtStartOf(.day)
+        guard let result = self.toDate("yyyy-MM-dd", region: region)?.dateAtStartOf(.day) else {
+            assertionFailure("ERROR String: Could not create DateInRegion from \(self)")
+            return nil
+        }
+        return result
     }
 
     // Expect 24-hour HH:MM format.

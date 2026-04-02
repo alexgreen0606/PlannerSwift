@@ -19,62 +19,10 @@ extension Planner {
         return "\(datestamp)-\(locationKey)"
     }
 
-    func title(settings: PlannerSettings) -> String {
-        guard
-            let plannerDay = self.datestamp.startOfDay(
-                in: self.region(settings: settings)
-            )
-        else {
-            return ""
-        }
-
-        return plannerTitle(day: plannerDay)
-    }
-
-    func subtitle(settings: PlannerSettings) -> String {
-        guard
-            let plannerDay = self.datestamp.startOfDay(
-                in: self.region(settings: settings)
-            )
-        else {
-            return ""
-        }
-
-        return plannerSubtitle(day: plannerDay)
-    }
-
-    func calendarIconDetail(settings: PlannerSettings) -> String {
-        guard
-            let plannerDay = self.datestamp.startOfDay(
-                in: self.region(settings: settings)
-            )
-        else {
-            return ""
-        }
-
-        return plannerDay.proximityFormat(
-            using: [
-                ProximityRule(
-                    proximity: .withinADay,
-                    format: .shortMonth
-                ),
-                ProximityRule(
-                    proximity: .next7Days,
-                    format: .shortMonth
-                ),
-                ProximityRule(
-                    proximity: .fallback,
-                    format: .shortWeekday
-                ),
-            ]
-        )
-    }
-
     // MARK: - Location Variables
 
-    // Nil means the device location is used and hasn't loaded yet.
     func location(settings: PlannerSettings, deviceLocation: Location?)
-        -> Location?
+        -> Location?  // nil means the device location is used and hasn't loaded yet
     {
         self.location ?? self.trip?.location
             ?? settings.homeLocation(deviceLocation: deviceLocation)
@@ -112,35 +60,28 @@ extension Planner {
 
     // MARK: - Search Helper
 
-    func searchQueryScore(_ query: PlannerSearchQuery?) -> Double? {
+    func searchQueryScore(_ query: PlannerSearchQuery?) -> Double? // nil means the event doesn't match the query
+    {
         guard let query else {
-            // Include when no query is set.
+            // Include. No query set.
             return 1.0
         }
 
-        if query.filterPast && self.datestamp >= query.todayStartOfDay.datestamp
-        {
-            // Exclude if it doesnt match the time range.
-            return nil
-        }
-
-        if !query.filterPast && self.datestamp < query.todayStartOfDay.datestamp
-        {
-            // Exclude if it doesnt match the time range.
+        if !query.containsDatestamp(self.datestamp) {
+            // Exclude. Doesn't match the time range.
             return nil
         }
 
         if query.text.isEmpty {
-            // Include if there is no search text.
+            // Include. No search text.
             return 1.0
         }
 
         if let location = self.location,
-            let results = query.fuse.search(query.text, in: location.name),
-            results.score <= FuseConstants.fuzzyThreshold
+            let locationScore = query.score(for: location.name)
         {
-            // Include if the location matches the search text.
-            return 1 - results.score
+            // Include. Location matches the search text.
+            return locationScore
         }
 
         return nil

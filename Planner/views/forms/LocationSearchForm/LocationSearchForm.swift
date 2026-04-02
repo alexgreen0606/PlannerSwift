@@ -134,6 +134,7 @@ struct LocationSearchFormView: View {
             .toolbar {
                 backButton
                 saveButton
+                bottomButton
             }
             .safeAreaInset(edge: .top) {
                 LocationSearchHeaderView(
@@ -148,16 +149,7 @@ struct LocationSearchFormView: View {
             .overlay {
                 emptyOptionsLabel
             }
-            .overlay {
-                VStack {
-                    Spacer()
-                    currentLocationButton
-                    homeLocationButton
-                    plannerLocationButton
-                    tripLocationButton
-                }
-                .padding(.bottom, lowerOptionPadding)
-            }
+            .animateSynchronousAction(from: selectedLocation)
             .onAppear(perform: buildSuggestedLocations)
 
             // Re-build the suggestions once the device location loads.
@@ -201,6 +193,17 @@ struct LocationSearchFormView: View {
                     .tint(accentColor.color)
             }
         }
+    }
+
+    @ToolbarContentBuilder
+    private var bottomButton: some ToolbarContent {
+        ToolbarItem(placement: .bottomBar) {
+            currentLocationButton
+            homeLocationButton
+            plannerLocationButton
+            tripLocationButton
+        }
+        .sharedBackgroundVisibility(.hidden)
     }
 
     // MARK: - View Builders

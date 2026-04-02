@@ -1,8 +1,8 @@
 //
-//  calendarEvent.swift
+//  syncCalendar.swift
 //  Planner
 //
-//  Created by Alex Green on 3/8/26.
+//  Created by Alex Green on 4/2/26.
 //
 
 import Contacts
@@ -16,30 +16,14 @@ import SwiftDate
 extension ModelContext {
 
     @MainActor
-    func deleteCalendarEvent(_ event: PlannerEvent, ekEventStore: EKEventStore)
-    {
-        guard let calEvent = event.calendarEvent else {
-            return
-        }
-
-        if ekEventStore.deleteEvent(calEvent) {
-            self.delete(event)
-        }
-
-        self.safeSave("calendarEvent.deleteCalendarEvent")
-    }
-
-    @MainActor
-    func syncCalendarEvents(
+    func syncCalendar(
         for planner: Planner,
         storageEvents: [PlannerEvent],
         plannerDay: DateInRegion,
         hiddenCalendarIds: Set<String>,
         ekEventStore: EKEventStore
     ) -> CalendarDayData {
-        let startOfNextPlannerDay = plannerDay + 1.days
 
-        // Existing events in storage for this planner range.
         var existingCalendarStorageEvents = Dictionary(
             uniqueKeysWithValues: storageEvents.compactMap { event in
                 event.calendarItemExternalIdentifier.map { ($0, event) }
@@ -50,10 +34,11 @@ extension ModelContext {
         // Load in the day's events, sorted reverse-chronological.
         // ------------------------------------------------------------------
 
-        let events = ekEventStore.events(
+        let nextDay = plannerDay + 1.days
+        let calendarEvents = ekEventStore.events(
             matching: ekEventStore.predicateForEvents(
                 withStart: plannerDay.date,
-                end: startOfNextPlannerDay.date,
+                end: nextDay.date,
                 calendars: nil
             )
         ).sorted {
@@ -70,45 +55,50 @@ extension ModelContext {
         var occurrenceEvents: [String: EKEvent] = [:]
         var regularEvents: [String: EKEvent] = [:]
 
-        for event in events {
+        for calendarEvent in calendarEvents {
 
             // Skip events from calendars that are excluded in the app settings.
-            if hiddenCalendarIds.contains(event.calendar.calendarIdentifier) {
+            if hiddenCalendarIds.contains(
+                calendarEvent.calendar.calendarIdentifier
+            ) {
                 continue
             }
 
-            // Collect birthday events.
-            if event.calendar.type == .birthday,
-                let contactId = event.birthdayContactIdentifier
+            if calendarEvent.calendar.type == .birthday,
+                let contactId = calendarEvent.birthdayContactIdentifier
             {
-                birthdayEvents[contactId] = event
+                // Collect birthday events.
+                birthdayEvents[contactId] = calendarEvent
                 continue
             }
 
-            if let occurrenceId = event.occurrenceId {
-                occurrenceEvents[occurrenceId] = event
+            if let occurrenceId = calendarEvent.occurrenceId {
+                // Collect recurring events.
+                occurrenceEvents[occurrenceId] = calendarEvent
             } else {
-                regularEvents[event.calendarItemExternalIdentifier] = event
+                // Collect regular timed events.
+                regularEvents[calendarEvent.calendarItemExternalIdentifier] =
+                    calendarEvent
             }
 
-            if event.isAllDay {
+            if calendarEvent.isAllDay {
 
-                // Event is all-day. Display it as a planner chip.
-                plannerChipEvents.append(event)
+                // Collect all-day events as planner chips.
+                plannerChipEvents.append(calendarEvent)
 
             } else {
 
-                // Display the event as a chip if it spans more than just this planner day.
-                if event.spansOutsidePlannerDay(
+                if calendarEvent.spansOutsidePlannerDay(
                     plannerDay: plannerDay
                 ) {
-                    plannerChipEvents.append(event)
+                    // Collect events that span outside this day as planner chips.
+                    plannerChipEvents.append(calendarEvent)
                 }
 
-                // Display the event as a planner event if it starts during this planner day.
-                if event.startDate.belongsTo(plannerDay) {
+                // Display events as planner events if they start during this day.
+                if calendarEvent.startDate.belongsTo(plannerDay) {
                     self.upsertCalendarEventToPlanner(
-                        event,
+                        calendarEvent,
                         existingCalendarEvents: &existingCalendarStorageEvents,
                         plannerDay: plannerDay
                     )
@@ -118,16 +108,18 @@ extension ModelContext {
         }
 
         // ------------------------------------------------------------------
-        // Remove any extra calendar storage events that no longer exist.
+        // Clean up any remaining storage events.
+        // Remove calendar records that no longer exist,
+        // otherwise move them to their new planners.
         // ------------------------------------------------------------------
 
-        self.updateStorageEvents(
+        self.updateStaleStorageEvents(
             Array(existingCalendarStorageEvents.values),
             ekEventStore: ekEventStore
         )
 
         // ------------------------------------------------------------------
-        // Load in the contacts for any birthday events.
+        // Load in the contacts for all birthday events.
         // ------------------------------------------------------------------
 
         var birthdays: [Birthday] = []
@@ -151,10 +143,10 @@ extension ModelContext {
             }
 
         } catch {
-            assertionFailure("ERROR calendarEvent.syncCalendarEvents: \(error)")
+            assertionFailure("ERROR syncCalendar: \(error)")
         }
 
-        self.safeSave("calendarEvent.syncCalendarEvents")
+        self.safeSave("syncCalendar")
 
         return CalendarDayData(
             plannerChipEvents: plannerChipEvents,
@@ -162,56 +154,6 @@ extension ModelContext {
             occurrenceEvents: occurrenceEvents,
             regularEvents: regularEvents
         )
-    }
-
-    @MainActor
-    func handleCalendarEventChange(
-        _ calendarEvent: EKEvent?,
-        sourceDay: DateInRegion?,
-        sourcePlannerEvent: PlannerEvent?,
-        settings: PlannerSettings,
-        ekEventStore: EKEventStore
-    ) -> DateInRegion? {
-
-        var targetDay: DateInRegion?
-
-        if let sourcePlannerEvent {
-
-            // A storage record exists for this calendar event.
-
-            guard let calendarEvent, !calendarEvent.isAllDay else {
-
-                // The calendar event is deleted or all-day. Remove the storage record.
-                self.delete(sourcePlannerEvent)
-                return nil
-            }
-
-            // The calendar event is timed. Sync the storage record with the calendar event.
-            sourcePlannerEvent.syncWithCalendarEvent(calendarEvent)
-            targetDay = self.updateSortDate(
-                for: sourcePlannerEvent,
-                settings: settings,
-                sourceDay: sourceDay
-            )
-
-        } else if let calendarEvent {
-
-            targetDay = getEarliestPlannerDay(
-                for: calendarEvent.startDate,
-                settings: settings
-            )
-
-            self.createCalendarStorageEvent(
-                for: calendarEvent,
-                in: targetDay
-            )
-
-        }
-
-        // Note: Saving the context here will delete the location.
-        // Allow the context to auto-save when ready.
-
-        return targetDay
     }
 
     // MARK: - Helper Functions
@@ -227,7 +169,7 @@ extension ModelContext {
                 calendarEvent.calendarItemExternalIdentifier
             ]
         else {
-            // Event doesn't exist in this planner.
+            // Event doesn't exist in this planner. Add it.
             self.addCalendarEventToPlanner(
                 calendarEvent,
                 plannerDay: plannerDay
@@ -237,6 +179,7 @@ extension ModelContext {
 
         // Event is already in this planner. Sync it with the calendar event.
         storageEvent.syncWithCalendarEvent(calendarEvent)
+        
         existingCalendarEvents.removeValue(
             forKey: calendarEvent.calendarItemExternalIdentifier
         )
@@ -247,13 +190,14 @@ extension ModelContext {
 
     @MainActor
     private func addCalendarEventToPlanner(
-        _ calendarEvent: EKEvent,  // Guaranteed to not have a storage event in the planner.
+        // Guaranteed to not have a storage event in the planner.
+        _ calendarEvent: EKEvent,
         plannerDay: DateInRegion
     ) {
 
         if calendarEvent.occurrenceId != nil {
             // Special case: Automatically create a new record if this is a recurring event occurrence.
-            self.createCalendarStorageEvent(
+            self.createPlannerEvent(
                 for: calendarEvent,
                 in: plannerDay
             )
@@ -264,9 +208,6 @@ extension ModelContext {
             let calendarItemExternalIdentifier = calendarEvent
                 .calendarItemExternalIdentifier
         else {
-            assertionFailure(
-                "ERROR plannerEvent.addCalendarEventToPlanner: Calendar event does not have an external identifier."
-            )
             return
         }
 
@@ -286,9 +227,8 @@ extension ModelContext {
             )
 
             guard let storageEvent = storageEvents.first else {
-
                 // No matching storage event exists. Create a new one.
-                self.createCalendarStorageEvent(
+                self.createPlannerEvent(
                     for: calendarEvent,
                     in: plannerDay
                 )
@@ -303,9 +243,8 @@ extension ModelContext {
             )
 
         } catch {
-
             // Failed to fetch a matching storage event. Create a new one.
-            self.createCalendarStorageEvent(
+            self.createPlannerEvent(
                 for: calendarEvent,
                 in: plannerDay
             )
@@ -316,35 +255,9 @@ extension ModelContext {
     }
 
     @MainActor
-    private func createCalendarStorageEvent(
-        for calendarEvent: EKEvent,
-        in plannerDay: DateInRegion?
-    ) {
-        if calendarEvent.isAllDay { return }
-
-        let sortDate = {
-            if let plannerDay {
-                // Event has a target planner. Add it to the top of the list.
-                return self.getUpperSortDate(for: plannerDay)
-            }
-            return calendarEvent.startDate
-        }()
-
-        insert(
-            PlannerEvent(
-                date: calendarEvent.startDate,
-                sortDate: sortDate,
-                calendarEvent: calendarEvent
-            )
-        )
-
-        // Note: Don't save the context.
-        // This is part of a larger pipeline.
-    }
-
-    @MainActor
-    private func updateStorageEvents(
-        _ staleStorageEvents: [PlannerEvent],  // Calendar storage events that no longer exist in their calendar day.
+    private func updateStaleStorageEvents(
+        // Storage events that no longer exist in their calendar day
+        _ staleStorageEvents: [PlannerEvent],
         ekEventStore: EKEventStore
     ) {
         for staleEvent in staleStorageEvents {
