@@ -73,12 +73,7 @@ struct PlannerEventBuilderView<Header: View>: View {
 
     @Query private var sortedPlannerEvents: [PlannerEvent]
 
-    @State private var calendarDayData: CalendarDayData = CalendarDayData(
-        plannerChipEvents: [],
-        birthdays: [],
-        occurrenceEvents: [:],
-        regularEvents: [:]
-    )
+    @State private var calendarDayData: CalendarDayData?
 
     private var plannerLocation: Location? {
         planner.location(
@@ -125,20 +120,22 @@ struct PlannerEventBuilderView<Header: View>: View {
 
     @ViewBuilder
     private var expandedView: some View {
-        ExpandedPlannerView(
-            planner: planner,
-            header: header(plannerDay),
-            plannerDay: plannerDay,
-            plannerLocation: plannerLocation,
-            sortedPlannerEvents: sortedPlannerEvents,
-            calendarDayData: calendarDayData,
-            settings: settings
-        )
+        if let calendarDayData {
+            ExpandedPlannerView(
+                planner: planner,
+                header: header(plannerDay),
+                plannerDay: plannerDay,
+                plannerLocation: plannerLocation,
+                sortedPlannerEvents: sortedPlannerEvents,
+                calendarDayData: calendarDayData,
+                settings: settings
+            )
+        }
     }
 
     @ViewBuilder
     private var previewView: some View {
-        if let previewType, let namespace {
+        if let previewType, let namespace, let calendarDayData {
             PlannerPreviewView(
                 type: previewType,
                 searchQuery: plannerSearchQuery,
@@ -184,10 +181,12 @@ struct PlannerEventBuilderView<Header: View>: View {
             ekEventStore: calendarStore.ekEventStore
         )
 
-        calendarStore.cacheData(
-            calendarDayData,
-            plannerKey: plannerKey
-        )
+        if let calendarDayData {
+            calendarStore.cacheData(
+                calendarDayData,
+                plannerKey: plannerKey
+            )
+        }
 
         DispatchQueue.main.async {
             hydrateCalendarEvents()
@@ -204,18 +203,20 @@ struct PlannerEventBuilderView<Header: View>: View {
     }
 
     private func hydrateCalendarEvents() {
-        for event in sortedPlannerEvents {
-            if let calendarItemExternalIdentifier = event
-                .calendarItemExternalIdentifier
-            {
-                if let occurrenceId = event.occurrenceId {
-                    event.calendarEvent =
-                        calendarDayData.occurrenceEvents[occurrenceId]
-                } else {
-                    event.calendarEvent =
-                        calendarDayData.regularEvents[
-                            calendarItemExternalIdentifier
-                        ]
+        if let calendarDayData {
+            for event in sortedPlannerEvents {
+                if let calendarItemExternalIdentifier = event
+                    .calendarItemExternalIdentifier
+                {
+                    if let occurrenceId = event.occurrenceId {
+                        event.calendarEvent =
+                            calendarDayData.occurrenceEvents[occurrenceId]
+                    } else {
+                        event.calendarEvent =
+                            calendarDayData.regularEvents[
+                                calendarItemExternalIdentifier
+                            ]
+                    }
                 }
             }
         }

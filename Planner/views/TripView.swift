@@ -156,6 +156,20 @@ struct TripView: View {
                             for: planner.datestamp
                         )
                     )
+                    
+                    // TODO: combine with other logic. Shared modifier
+                    .padding(.top)
+                    .padding(.horizontal)
+                    .padding(.bottom, 12)
+                    .frame(
+                        width: 240,
+                        height: PlannerLayout.PREVIEW_CARD_HEIGHT,
+                        alignment: .top
+                    )
+                    .background(
+                        RoundedRectangle(cornerRadius: 24)
+                            .fill(Color.cardBackground)
+                    )
                 }
 
                 editTripCard

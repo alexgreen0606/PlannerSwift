@@ -27,8 +27,6 @@ struct PlannerPreviewView<Header: View>: View {
 
     private let maxPreviewEvents = 5
 
-    @EnvironmentObject private var todaystampManager: TodaystampWatcher
-
     // MARK: - Computed Variables
 
     // MARK: Filtered Search Results
@@ -125,7 +123,7 @@ struct PlannerPreviewView<Header: View>: View {
     // MARK: - Body
 
     var body: some View {
-        let content = VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 8) {
 
             HStack(alignment: .top) {
                 header
@@ -140,7 +138,7 @@ struct PlannerPreviewView<Header: View>: View {
             tripInfo
             birthdayChipList
             eventChipList
-            
+
             PlannerEventListView(
                 plannerRegion: plannerDay.region,
                 events: sortedPreviewPlannerEvents,
@@ -153,28 +151,6 @@ struct PlannerPreviewView<Header: View>: View {
             if type != .search {
                 weatherInfo
             }
-        }
-
-        if type != .search {
-            content
-                .padding(.top)
-                .padding(.horizontal)
-                .padding(.bottom, 12)
-                .frame(
-                    width: todaystampManager.todaystamp == planner.datestamp
-                        && type != .trip ? 350 : 240
-                )
-                .frame(
-                    height: PlannerLayout.PREVIEW_CARD_HEIGHT,
-                    alignment: .top
-                )
-                .background(
-                    RoundedRectangle(cornerRadius: 24)
-                        .fill(Color.cardBackground)
-                )
-        } else {
-            content
-                .frame(maxWidth: .infinity)
         }
     }
 

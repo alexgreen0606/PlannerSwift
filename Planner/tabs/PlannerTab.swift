@@ -29,6 +29,13 @@ struct PlannerTabView: View {
     let settings: PlannerSettings
     let namespace: Namespace.ID
 
+    init(settings: PlannerSettings, namespace: Namespace.ID) {
+        self.settings = settings
+        self.namespace = namespace
+
+        self.thisWeekDatestamps = getThisWeekDatestamps()
+    }
+
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
             KeepPastEventsDuration.oneMonth
@@ -45,7 +52,7 @@ struct PlannerTabView: View {
     @State private var tappedDates: Set<DateComponents> = []
     @State private var showNewEventSheet = false
     @State private var showCalendarPicker = false
-    @State private var thisWeekDatestamps: [String] = []
+    @State private var thisWeekDatestamps: [String]
     @State private var tripSheetContext: TripSheetContext? = nil
     @State private var expandedTrips: Set<PersistentIdentifier> = []
 
@@ -84,7 +91,12 @@ struct PlannerTabView: View {
                     Section {
                         ScrollView(.horizontal) {
                             HStack {
-                                ForEach(thisWeekDatestamps, id: \.self, content: plannerPreview)}
+                                ForEach(
+                                    thisWeekDatestamps,
+                                    id: \.self,
+                                    content: plannerPreview
+                                )
+                            }
                             .frame(
                                 height: PlannerLayout.PREVIEW_CARD_HEIGHT
                             )
@@ -287,9 +299,9 @@ struct PlannerTabView: View {
             }
         }
     }
-    
+
     // MARK: - View Builders
-    
+
     private func plannerPreview(_ datestamp: String) -> some View {
         PlannerBuilderView(
             datestamp: datestamp,
@@ -303,11 +315,7 @@ struct PlannerTabView: View {
     // MARK: - Helper Functions
 
     private func buildThisWeekDatestamps() {
-        thisWeekDatestamps = (0..<7).map {
-            DateInRegion(Date(), region: .local)
-                .dateByAdding($0, .day)
-                .toFormat("yyyy-MM-dd")
-        }.sorted()
+        thisWeekDatestamps = getThisWeekDatestamps()
     }
 
     private func handlePlannerDateSelect(datestamp: String) {

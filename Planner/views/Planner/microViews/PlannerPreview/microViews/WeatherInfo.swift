@@ -56,6 +56,62 @@ struct WeatherInfoView: View {
         )
     }
 
+    private var showLocationLabel: Bool {
+        guard let locationLabel else {
+            return false
+        }
+
+        switch previewType {
+        case .planner:
+            // TODO: implement
+            return false
+        case .search:
+            if weatherData != nil {
+                // Show location whenever weather exists.
+                return true
+            }
+
+            if locationLabel != settings.homeLocationLabel {
+                // Show the location when the planner's location
+                // differs from the home location.
+                return true
+            }
+
+            return false
+        case .trip:
+            // TODO: implement
+            return false
+        }
+    }
+
+    private var showLocationIcon: Bool {
+        guard let locationLabel else {
+            return false
+        }
+
+        switch previewType {
+        case .planner:
+            // TODO: implement
+            return false
+        case .search:
+            if weatherData != nil {
+                // Never show location icon when weather exists.
+                return false
+            }
+
+            if locationLabel != settings.homeLocationLabel, weatherData == nil {
+                // Show the location icon when the planner's location
+                // differs from the home location and the weather is loading.
+                return true
+            }
+
+            return false
+        case .trip:
+            // TODO: implement
+            return false
+        }
+    }
+
     private var locationLabel: String? {
         if planner.searchQueryScore(plannerSearchQuery) != nil {
             return planner.locationLabel(
@@ -174,7 +230,7 @@ struct WeatherInfoView: View {
 
                     if let locationLabel {
                         HStack(spacing: 6) {
-                            if weatherData == nil, planner.location != nil {
+                            if showLocationIcon {
                                 Image(systemName: locationIconConfig.name)
                                     .resizable()
                                     .scaledToFit()
@@ -185,7 +241,7 @@ struct WeatherInfoView: View {
                                     )
                             }
 
-                            if weatherData != nil || planner.location != nil {
+                            if showLocationLabel {
                                 Text(locationLabel)
                                     .foregroundStyle(
                                         Color.secondary

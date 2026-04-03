@@ -45,6 +45,7 @@ struct PlannerBuilderView<Header: View>: View {
     }
 
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
 
     @Query private var planners: [Planner]
 
@@ -53,7 +54,7 @@ struct PlannerBuilderView<Header: View>: View {
     }
 
     var body: some View {
-        ZStack {
+        let content = ZStack {
             if let planner {
                 PlannerEventBuilderView(
                     planner: planner,
@@ -68,6 +69,34 @@ struct PlannerBuilderView<Header: View>: View {
         }
         .task {
             modelContext.ensurePlanner(planners: planners, datestamp: datestamp)
+        }
+
+        if let previewType {
+            if previewType != .search {
+                content
+                    .padding(.top)
+                    .padding(.horizontal)
+                    .padding(.bottom, 12)
+                    .frame(
+                        width: todaystampWatcher.todaystamp == datestamp
+                            && previewType != .trip ? 350 : 240
+                    )
+                    .frame(
+                        height: PlannerLayout.PREVIEW_CARD_HEIGHT,
+                        alignment: .top
+                    )
+                    .background(
+                        RoundedRectangle(cornerRadius: 24)
+                            .fill(Color.cardBackground)
+                    )
+                
+            } else {
+                content.frame(maxWidth: .infinity)
+                
+            }
+        } else {
+            content
+            
         }
     }
 }
