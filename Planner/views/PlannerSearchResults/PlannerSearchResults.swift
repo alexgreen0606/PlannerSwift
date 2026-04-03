@@ -35,14 +35,6 @@ struct PlannerSearchResultsView: View {
 
     @State private var plannerMapTask: Task<Void, Never>?
 
-    private var sortedCalendars: [EKCalendar] {
-        calendarStore.sortedCalendars.filter {
-            !settings.hiddenCalendarIds.contains(
-                $0.calendarIdentifier
-            )
-        }
-    }
-
     private var emptyResultsLabel: String {
         guard let activeQuery = plannerSearchManager.activeQuery else {
             return ""
@@ -129,7 +121,11 @@ struct PlannerSearchResultsView: View {
                         bottomSpacer
                     }
                     .toolbar {
-                        calendarFilterToolbarMenu
+                        PlannerSearchToolbar(
+                            filterPast: $filterPast,
+                            filteredCalendarIds: $filteredCalendarIds,
+                            settings: settings
+                        )
                     }
                     .refreshable {
                         weatherStore.beginFreshReload()
@@ -194,75 +190,6 @@ struct PlannerSearchResultsView: View {
         }
     }
 
-    // MARK: - Toolbar
-
-    @ToolbarContentBuilder
-    private var calendarFilterToolbarMenu: some ToolbarContent {
-        if calendarStore.accessDenied == false {
-            ToolbarItemGroup(placement: .topBarLeading) {
-                Menu {
-                    Section("Timeframe") {
-                        Toggle(
-                            "Upcoming",
-                            isOn: Binding(
-                                get: {
-                                    !filterPast
-                                },
-                                set: { isOn in
-                                    filterPast.toggle()
-                                }
-                            )
-                        )
-                        Toggle(
-                            "Past",
-                            isOn: $filterPast
-                        )
-                    }
-
-                    Section("Calendars") {
-                        ForEach(sortedCalendars, id: \.calendarIdentifier) {
-                            calendar in
-                            Toggle(
-                                isOn: Binding(
-                                    get: {
-                                        filteredCalendarIds.contains(
-                                            calendar.calendarIdentifier
-                                        )
-                                    },
-                                    set: { isOn in
-                                        if isOn {
-                                            filteredCalendarIds.insert(
-                                                calendar.calendarIdentifier
-                                            )
-                                        } else {
-                                            filteredCalendarIds.remove(
-                                                calendar.calendarIdentifier
-                                            )
-                                        }
-                                    }
-                                )
-                            ) {
-                                HStack {
-                                    Image(
-                                        systemName: calendar.systemImageName(
-                                            settings: settings
-                                        )
-                                    )
-                                    .tint(calendar.color)
-
-                                    Text(calendar.title)
-                                }
-                            }
-                        }
-                    }
-                } label: {
-                    Image(systemName: "line.3.horizontal.decrease")
-                }
-                .menuActionDismissBehavior(.disabled)
-            }
-        }
-    }
-
     // MARK: - View Helpers
 
     @ViewBuilder
@@ -289,21 +216,9 @@ struct PlannerSearchResultsView: View {
     // MARK: - Functions
 
     private func searchPlanner() {
-        let queryText = {
-            let trimmed =
-                searchText
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-
-            if trimmed.count == 1 {
-                return ""
-            }
-
-            return trimmed.lowercased()
-        }()
-
         plannerSearchManager.search(
             with: PlannerSearchQuery(
-                text: queryText,
+                text: searchText.querySanitized,
                 filteredCalendarIds: filteredCalendarIds,
                 filterPast: filterPast,
                 todayStartOfDay: todayDay,

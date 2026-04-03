@@ -10,6 +10,19 @@ import SwiftDate
 
 extension String {
 
+    // Removes whitespace padding and enforces 2 chars.
+    var querySanitized: String {
+        let trimmed =
+            self
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if trimmed.count == 1 {
+            return ""
+        }
+
+        return trimmed.lowercased()
+    }
+
     var capitalizedFirst: String {
         guard let first = self.first else { return self }
         return first.uppercased() + self.dropFirst()
@@ -28,8 +41,13 @@ extension String {
 
     // Expects YYYY-MM-DD format.
     func startOfDay(in region: Region) -> DateInRegion? {
-        guard let result = self.toDate("yyyy-MM-dd", region: region)?.dateAtStartOf(.day) else {
-            assertionFailure("ERROR String: Could not create DateInRegion from \(self)")
+        guard
+            let result = self.toDate("yyyy-MM-dd", region: region)?
+                .dateAtStartOf(.day)
+        else {
+            assertionFailure(
+                "ERROR String: Could not create DateInRegion from \(self)"
+            )
             return nil
         }
         return result
