@@ -13,6 +13,7 @@ import SwiftData
 // Clean
 
 struct PlannerListView: View {
+    @Binding var showLocationSheet: Bool
     @Binding var eventSheetContext: EventSheetContext?
     let plannerType: PlannerType
     let planner: Planner
@@ -75,6 +76,7 @@ struct PlannerListView: View {
     @ViewBuilder
     private var chipSpread: some View {
         PlannerChipSpreadView(
+            showLocationSheet: $showLocationSheet,
             planner: planner,
             plannerDay: plannerDay,
             plannerLocation: plannerLocation,

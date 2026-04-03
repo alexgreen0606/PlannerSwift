@@ -25,9 +25,14 @@ struct PlannerEventListView: View {
         if !events.isEmpty {
             ForEach(events, id: \.stableId) { event in
                 HStack(alignment: .top) {
-                    if event.isCompleted {
-                        Image(systemName: "checkmark").imageScale(.small)
+                    ZStack {
+                        if event.isCompleted {
+                            Image(systemName: "checkmark").imageScale(.small)
+                        } else if event.isCanceled {
+                            Image(systemName: "xmark").imageScale(.small)
+                        }
                     }
+                    .frame(height: 17)
 
                     ValueView(event.title)
 

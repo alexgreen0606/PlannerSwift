@@ -5,11 +5,13 @@
 //  Created by Alex Green on 3/11/26.
 //
 
+import SwiftData
 import SwiftUI
 
 // Clean
 
 struct PlannerActionMenuView: View {
+    @Binding var showLocationSheet: Bool
     let plannerType: PlannerType
     let planner: Planner
     let showChecked: Bool
@@ -32,6 +34,7 @@ struct PlannerActionMenuView: View {
 
     var body: some View {
         Menu("Planner Action Menu", systemImage: "ellipsis") {
+            editLocationButton
             showCheckedToggle
             selectEventsButton
             deleteActionsMenu
@@ -71,6 +74,20 @@ struct PlannerActionMenuView: View {
     }
 
     // MARK: - View Builders
+    
+    private var editLocationButton: some View {
+        Button(
+            action: {
+                showLocationSheet = true
+            },
+            label: {
+                Label(
+                    "Edit Location",
+                    systemImage: "mappin.and.ellipse"
+                )
+            }
+        )
+    }
 
     private var showCheckedToggle: some View {
         Button(

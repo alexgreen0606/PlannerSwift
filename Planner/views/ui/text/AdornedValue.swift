@@ -30,9 +30,13 @@ struct AdornedValueView: View {
     private var iconSize: CGFloat {
         14 * scale
     }
+    
+    private var spacing: CGFloat {
+        6 * scale
+    }
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: spacing) {
             Image(systemName: iconConfig.name)
                 .resizable()
                 .scaledToFit()

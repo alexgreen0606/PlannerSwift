@@ -15,9 +15,7 @@ import SwiftUI
 
 @MainActor
 final class PlannerSearchManager: ObservableObject {
-    private var plannerSearchActor: PlannerSearchActor? = nil
-    private var settings: PlannerSettings? = nil
-    private var ekEventStore: EKEventStore? = nil
+    private var plannerSearchActor: PlannerSearchActor?
 
     @Published var results: [String: [String]] = [:]
     @Published var activeQuery: PlannerSearchQuery? = nil
@@ -25,25 +23,21 @@ final class PlannerSearchManager: ObservableObject {
     @Published var topDatestamp: String? = nil
     @Published var sortedUpcomingYears: [String] = []
 
-    func initializeManager(
+    func search(
+        with query: PlannerSearchQuery,
         modelContainer: ModelContainer,
         settings: PlannerSettings,
         ekEventStore: EKEventStore
     ) {
-        self.plannerSearchActor = PlannerSearchActor(
-            modelContainer: modelContainer
-        )
-        self.settings = settings
-        self.ekEventStore = ekEventStore
-    }
 
-    func search(with query: PlannerSearchQuery) {
-        guard let plannerSearchActor, let settings, let ekEventStore else {
-            return
-        }
+        plannerSearchActor =
+            plannerSearchActor
+            ?? PlannerSearchActor(
+                modelContainer: modelContainer
+            )
 
         Task {
-            let results = await plannerSearchActor.search(
+            let results = await plannerSearchActor!.search(
                 query: query,
                 ekEventStore: ekEventStore,
                 settings: settings

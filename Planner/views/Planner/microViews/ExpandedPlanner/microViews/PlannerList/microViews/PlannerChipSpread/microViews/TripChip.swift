@@ -11,23 +11,24 @@ import SwiftUI
 
 struct TripChipView: View {
     let trip: Trip
-    let datestamp: String
+    let planner: Planner
     let settings: PlannerSettings
+    let namespace: Namespace.ID
 
     private let chipHeight: CGFloat = 48
     private let progressBarWidth: CGFloat = 100
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
-    
+
+    @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
+
     @State private var showTripSheet = false
-    
-    @Namespace private var namespace
 
     private var day: CGFloat {
         guard
             let index = trip.sortedPlanners.firstIndex(where: {
-                $0.datestamp == datestamp
+                $0 === planner
             })
         else {
             return 0.0
@@ -38,6 +39,17 @@ struct TripChipView: View {
     private var tripProgress: Double {
         guard trip.sortedPlanners.count > 0 else { return 0 }
         return day / Double(trip.sortedPlanners.count)
+    }
+
+    private var locationLabel: String {
+        planner.locationLabel(
+            settings: settings,
+            deviceLocation: deviceLocationManager.deviceLocation
+        )
+    }
+
+    private var locationIconConfig: IconConfig {
+        planner.locationIconConfig(settings: settings, accentColor: accentColor)
     }
 
     var body: some View {
@@ -51,26 +63,23 @@ struct TripChipView: View {
                         .foregroundStyle(
                             Color.label
                         )
-                    
-                    if let location = trip.location {
-                        AdornedValueView(
-                            location.name,
-                            color: .secondary,
-                            iconConfig: IconConfig(
-                                name: "mappin.and.ellipse",
-                                primaryColor: accentColor.color
-                            ),
-                            scale: 0.7
-                        )
-                    }
+
+                    AdornedValueView(
+                        locationLabel,
+                        color: .secondary,
+                        iconConfig: locationIconConfig,
+                        scale: 0.7
+                    )
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                
+
                 VStack(alignment: .trailing) {
                     progressBar
-                    
+
                     Text("Day \(Int(day)) of \(trip.sortedPlanners.count)")
-                        .font(.system(size: 9, weight: .heavy, design: .rounded))
+                        .font(
+                            .system(size: 9, weight: .heavy, design: .rounded)
+                        )
                 }
             }
             .padding(.horizontal)
@@ -132,5 +141,5 @@ struct TripChipView: View {
         }
         .frame(height: 8)
     }
-    
+
 }

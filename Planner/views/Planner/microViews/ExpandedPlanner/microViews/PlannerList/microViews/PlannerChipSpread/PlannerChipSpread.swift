@@ -17,6 +17,7 @@ import WrappingHStack
 // Clean
 
 struct PlannerChipSpreadView: View {
+    @Binding var showLocationSheet: Bool
     let planner: Planner
     let plannerDay: DateInRegion
     let plannerLocation: Location?
@@ -34,7 +35,6 @@ struct PlannerChipSpreadView: View {
     @EnvironmentObject private var weatherStore: WeatherStore
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
-    @State private var showLocationSheet = false
     @State private var contactSheetContext: Birthday? = nil
 
     // MARK: - Computed Variables
@@ -83,7 +83,7 @@ struct PlannerChipSpreadView: View {
 
         // Location Sheet
         .sheet(isPresented: $showLocationSheet) {
-            LocationSearchFormView(
+            let form = LocationSearchFormView(
                 title: "Edit Planner Location",
                 mode: .planner,
                 settings: settings,
@@ -97,12 +97,18 @@ struct PlannerChipSpreadView: View {
                     storageEvents: sortedPlannerEvents
                 )
             }
-            .navigationTransition(
-                .zoom(
-                    sourceID: IdConstants.LOCATION_CHIP,
-                    in: namespace
-                )
-            )
+            
+            if planner.trip == nil {
+                form
+                    .navigationTransition(
+                        .zoom(
+                            sourceID: IdConstants.LOCATION_CHIP,
+                            in: namespace
+                        )
+                    )
+            } else {
+                form
+            }
         }
 
         // Contact Sheet
@@ -126,8 +132,9 @@ struct PlannerChipSpreadView: View {
         if let trip = planner.trip {
             TripChipView(
                 trip: trip,
-                datestamp: planner.datestamp,
-                settings: settings
+                planner: planner,
+                settings: settings,
+                namespace: namespace
             )
         }
     }

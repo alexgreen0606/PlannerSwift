@@ -192,12 +192,6 @@ struct ContentView: View {
     private func initializePlannerSearch() {
         if let settings = plannerSettingsList.first {
 
-            plannerSearchManager.initializeManager(
-                modelContainer: modelContext.container,
-                settings: settings,
-                ekEventStore: calendarStore.ekEventStore
-            )
-
             let todayPlanner = modelContext.getPlanner(
                 for: todaystampWatcher.todaystamp
             )
@@ -216,7 +210,10 @@ struct ContentView: View {
                     filterPast: false,
                     todayStartOfDay: todayStartOfDay,
                     fuse: Fuse()
-                )
+                ),
+                modelContainer: modelContext.container,
+                settings: settings,
+                ekEventStore: calendarStore.ekEventStore
             )
         }
     }

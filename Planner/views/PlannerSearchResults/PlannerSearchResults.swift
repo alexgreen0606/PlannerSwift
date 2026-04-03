@@ -216,6 +216,7 @@ struct PlannerSearchResultsView: View {
     // MARK: - Functions
 
     private func searchPlanner() {
+        modelContext.safeSave("PlannerSearchResults.searchPlanner")
         plannerSearchManager.search(
             with: PlannerSearchQuery(
                 text: searchText.querySanitized,
@@ -223,7 +224,10 @@ struct PlannerSearchResultsView: View {
                 filterPast: filterPast,
                 todayStartOfDay: todayDay,
                 fuse: Fuse()
-            )
+            ),
+            modelContainer: modelContext.container,
+            settings: settings,
+            ekEventStore: calendarStore.ekEventStore
         )
     }
 

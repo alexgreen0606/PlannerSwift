@@ -38,6 +38,7 @@ struct ExpandedPlannerView<Header: View>: View {
     )
     @State private var eventSheetContext: EventSheetContext?
     @State private var showTransferSheet = false
+    @State private var showLocationSheet = false
 
     @Namespace private var namespace
 
@@ -77,6 +78,7 @@ struct ExpandedPlannerView<Header: View>: View {
         NavigationStack {
             ScrollViewReader { scrollProxy in
                 PlannerListView(
+                    showLocationSheet: $showLocationSheet,
                     eventSheetContext: $eventSheetContext,
                     plannerType: plannerType,
                     planner: planner,
@@ -180,11 +182,13 @@ struct ExpandedPlannerView<Header: View>: View {
 
     @ToolbarContentBuilder
     private var headerToolbar: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading) {
-            header
-                .frame(width: 250, alignment: .leading)
+        if !plannerManager.isSelectMode {
+            ToolbarItem(placement: .topBarLeading) {
+                header
+                    .frame(width: 250, alignment: .leading)
+            }
+            .sharedBackgroundVisibility(.hidden)
         }
-        .sharedBackgroundVisibility(.hidden)
     }
 
     // MARK: Upper Right Toolbar
@@ -194,6 +198,7 @@ struct ExpandedPlannerView<Header: View>: View {
         ToolbarItem(placement: .topBarTrailing) {
             if !plannerManager.isSelectMode {
                 PlannerActionMenuView(
+                    showLocationSheet: $showLocationSheet,
                     plannerType: plannerType,
                     planner: planner,
                     showChecked: planner.showChecked,
