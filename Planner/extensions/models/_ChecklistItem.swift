@@ -1,5 +1,5 @@
 //
-//  ChecklistItemExtension.swift
+//  _ChecklistItem.swift
 //  Planner
 //
 //  Created by Alex Green on 1/24/26.

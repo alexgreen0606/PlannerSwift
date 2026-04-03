@@ -89,8 +89,7 @@ struct ContentView: View {
     @Query private var checklistItems: [ChecklistItem]
     @Query private var planners: [Planner]
 
-    @State private var plannerSearchText: String = ""
-    @State private var initialPlannerMap: [String: [String]] = [:]
+    @StateObject private var plannerSearchManager = PlannerSearchManager()
 
     @Namespace private var namespace
 
@@ -129,16 +128,11 @@ struct ContentView: View {
 
                     Tab(role: .search) {
                         PlannerSearchTabView(
-                            searchText: $plannerSearchText,
-                            initialPlannerMap: initialPlannerMap,
+                            todaystamp: todaystampWatcher.todaystamp,
                             settings: settings,
                             namespace: namespace
                         )
-                        .searchable(
-                            text: $plannerSearchText,
-                            prompt: "Search planner...",
-                        )
-                        .searchPresentationToolbarBehavior(.avoidHidingContent)
+                        .environmentObject(plannerSearchManager)
                     }
                 }
                 .tabBarMinimizeBehavior(.onScrollDown)
@@ -146,7 +140,7 @@ struct ContentView: View {
         }
         .onAppear {
             initializeAppData()
-            buildInitialPlannerMap()
+            initializePlannerSearch()
         }
 
         // Expanded Planner Cover
@@ -195,8 +189,15 @@ struct ContentView: View {
         )
     }
 
-    private func buildInitialPlannerMap() {
+    private func initializePlannerSearch() {
         if let settings = plannerSettingsList.first {
+
+            plannerSearchManager.initializeManager(
+                modelContainer: modelContext.container,
+                settings: settings,
+                ekEventStore: calendarStore.ekEventStore
+            )
+
             let todayPlanner = modelContext.getPlanner(
                 for: todaystampWatcher.todaystamp
             )
@@ -205,22 +206,17 @@ struct ContentView: View {
                     in: todayPlanner.region(settings: settings)
                 )
             else {
-                assertionFailure(
-                    "ERROR ContentView.buildInitialPlannerMap: Could not build startOfDay for \(todayPlanner.datestamp)"
-                )
                 return
             }
 
-            initialPlannerMap = modelContext.searchPlanner(
+            plannerSearchManager.search(
                 with: PlannerSearchQuery(
                     text: "",
                     filteredCalendarIds: [],
                     filterPast: false,
                     todayStartOfDay: todayStartOfDay,
                     fuse: Fuse()
-                ),
-                ekEventStore: calendarStore.ekEventStore,
-                settings: settings
+                )
             )
         }
     }

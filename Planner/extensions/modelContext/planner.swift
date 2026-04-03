@@ -1,5 +1,5 @@
 //
-//  _plannerCRUD.swift
+//  planner.swift
 //  Planner
 //
 //  Created by Alex Green on 2/12/26.
@@ -34,7 +34,7 @@ extension ModelContext {
         let planner = Planner(datestamp: datestamp, location: nil)
         
         insert(planner)
-        self.safeSave("_plannerCRUD.createPlanner")
+        self.safeSave("planner.createPlanner")
 
         return planner
     }
@@ -127,7 +127,7 @@ extension ModelContext {
             event.date = newStartOfDay.date
         }
 
-        self.safeSave("_plannerCRUD.updatePlannerLocation")
+        self.safeSave("planner.updatePlannerLocation")
     }
 
 }

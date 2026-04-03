@@ -1,20 +1,19 @@
 //
-//  searchPlanner.swift
+//  PlannerSearchActor.swift
 //  Planner
 //
-//  Created by Alex Green on 3/17/26.
+//  Created by Alex Green on 4/2/26.
 //
 
 import EventKit
 import SwiftData
 import SwiftDate
 
-// Clean
+@ModelActor
+actor PlannerSearchActor {
 
-extension ModelContext {
-
-    func searchPlanner(
-        with query: PlannerSearchQuery?,
+    func search(
+        query: PlannerSearchQuery?,
         ekEventStore: EKEventStore,
         settings: PlannerSettings
     ) -> [String: [String]] {
@@ -22,7 +21,6 @@ extension ModelContext {
             let text = query?.text ?? ""
             let filteredCalendarIds = query?.filteredCalendarIds ?? []
             let filterPast = query?.filterPast ?? false
-            let homeRegion = settings.homeRegion
 
             let onlySearchCalendar =
                 filteredCalendarIds.count > 0 && text.isEmpty
@@ -36,10 +34,12 @@ extension ModelContext {
             var datestampScores: [String: Double] = [:]
 
             // ------------------------------------------------------------------
-            // Phase 1: Find trips with matching locations or titles.
+            // Phase 1: Search for matching trips.
             // ------------------------------------------------------------------
 
-            let trips = try fetch(FetchDescriptor<Trip>())
+            let trips =
+                !onlySearchCalendar
+                ? try modelContext.fetch(FetchDescriptor<Trip>()) : []
 
             for trip in trips {
                 guard let score = trip.searchQueryScore(query) else {
@@ -84,8 +84,8 @@ extension ModelContext {
 
             var filteredPlanners: [Planner] = []
 
-            if !text.isEmpty {
-                filteredPlanners = try fetch(
+            if !onlySearchCalendar {
+                filteredPlanners = try modelContext.fetch(
                     FetchDescriptor<Planner>(
                         predicate: #Predicate<Planner> { planner in
                             planner.location != nil
@@ -108,7 +108,7 @@ extension ModelContext {
             var filteredPlannerEvents: [PlannerEvent] = []
 
             if !onlySearchCalendar {
-                filteredPlannerEvents = try fetch(
+                filteredPlannerEvents = try modelContext.fetch(
                     FetchDescriptor<PlannerEvent>(
                         predicate: #Predicate<PlannerEvent> { event in
                             event.calendarItemExternalIdentifier == nil
@@ -129,7 +129,7 @@ extension ModelContext {
                     plannerCache: &plannerCache,
                     calendarDayCache: &calendarDayCache,
                     settings: settings,
-                    homeRegion: homeRegion,
+                    homeRegion: settings.homeRegion,
                     todaystamp: query?.todayStartOfDay.datestamp,
                     filterPast: filterPast,
                     score: score,
@@ -141,11 +141,18 @@ extension ModelContext {
             // Phase 4: Find calendar events with matching locations or titles.
             // ------------------------------------------------------------------
 
+            let startDate =
+                filterPast
+                ? (DateInRegion() - 2.years).date : DateInRegion().date
+            let endDate =
+                filterPast
+                ? DateInRegion().date : (DateInRegion() + 2.years).date
+
             // Range: 1 year ago to 3 years from now.
             let calendarEvents = ekEventStore.events(
                 matching: ekEventStore.predicateForEvents(
-                    withStart: (DateInRegion() - 1.years).date,
-                    end: (DateInRegion() + 3.years).date,
+                    withStart: startDate,
+                    end: endDate,
                     calendars: nil
                 )
             )
@@ -163,7 +170,7 @@ extension ModelContext {
                     plannerCache: &plannerCache,
                     calendarDayCache: &calendarDayCache,
                     settings: settings,
-                    homeRegion: homeRegion,
+                    homeRegion: settings.homeRegion,
                     todaystamp: query?.todayStartOfDay.datestamp,
                     filterPast: filterPast,
                     score: score,
@@ -187,7 +194,7 @@ extension ModelContext {
                 )
             }
         } catch {
-            assertionFailure("ERROR searchPlanner.searchPlanner: \(error)")
+            assertionFailure("ERROR searchPlanner: \(error)")
             return [:]
         }
     }
@@ -231,7 +238,8 @@ extension ModelContext {
                     includes: cachedPlannerStartOfDay,
                     calendarEvent: calendarEvent,
                     calendarDayCache: &calendarDayCache,
-                    ekEventStore: ekEventStore
+                    ekEventStore: ekEventStore,
+                    settings: settings
                 ) {
                     datestampScores[datestamp, default: 0] += score
                 }
@@ -240,7 +248,7 @@ extension ModelContext {
 
             // Load the planner from storage to determine if it owns the event.
 
-            let planners = try fetch(
+            let planners = try modelContext.fetch(
                 FetchDescriptor<Planner>(
                     predicate: #Predicate<Planner> { planner in
                         planner.datestamp == datestamp
@@ -265,7 +273,8 @@ extension ModelContext {
                 includes: plannerDay,
                 calendarEvent: calendarEvent,
                 calendarDayCache: &calendarDayCache,
-                ekEventStore: ekEventStore
+                ekEventStore: ekEventStore,
+                settings: settings
             ) {
                 datestampScores[datestamp, default: 0] += score
             }
@@ -341,7 +350,8 @@ extension ModelContext {
         includes plannerDay: DateInRegion,
         calendarEvent: EKEvent?,
         calendarDayCache: inout [String: Set<String>],
-        ekEventStore: EKEventStore
+        ekEventStore: EKEventStore,
+        settings: PlannerSettings
     ) -> Bool {
         let dayStart = plannerDay.date
         let nextDayStart = (plannerDay + 1.days).date
@@ -363,7 +373,12 @@ extension ModelContext {
                         end: nextDayStart,
                         calendars: nil
                     )
-                )
+                ).filter {
+                    !settings.hiddenCalendarIds.contains(
+                        $0.calendar.calendarIdentifier
+                    )
+                }
+
                 let eventSet = Set(
                     calendarDayEvents.compactMap(
                         \.calendarItemExternalIdentifier

@@ -1,5 +1,5 @@
 //
-//  TripExtension.swift
+//  _Trip.swift
 //  Planner
 //
 //  Created by Alex Green on 3/22/26.
