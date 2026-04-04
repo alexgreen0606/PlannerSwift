@@ -9,13 +9,14 @@ import SwiftDate
 
 // Clean
 
-func buildDateRangeLabel(firstDay: DateInRegion, lastDay: DateInRegion, referenceYear: Int? = nil)
+func buildDateRangeLabel(firstDay: DateInRegion, lastDay: DateInRegion, todaystamp: String, referenceYear: Int? = nil)
     -> String?
 {
 
     // Single-day range.
     if firstDay.datestamp == lastDay.datestamp {
-        return firstDay.proximityFormat(
+        // TODO: remove DateInRegion here entirely.
+        return firstDay.datestamp.proximityFormat(
             using: [
                 ProximityRule(
                     proximity: .withinADay,
@@ -23,7 +24,8 @@ func buildDateRangeLabel(firstDay: DateInRegion, lastDay: DateInRegion, referenc
                 ),
                 ProximityRule(proximity: .next7Days, format: .weekday),
                 ProximityRule(proximity: .fallback, format: .dateLabel),
-            ]
+            ],
+            todaystamp: todaystamp
         )
     }
 

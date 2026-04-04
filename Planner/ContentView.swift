@@ -149,7 +149,7 @@ struct ContentView: View {
                 PlannerBuilderView(
                     datestamp: context.datestamp,
                     settings: settings,
-                    header: plannerCoverHeader
+                    header: plannerCoverHeader(context.datestamp)
                 )
                 .navigationTransition(
                     .zoom(
@@ -178,10 +178,12 @@ struct ContentView: View {
     }
 
     @ViewBuilder
-    private func plannerCoverHeader(_ day: DateInRegion) -> some View {
-        let isDateIcon = day.isNext7Days || day.isWithinADay
+    private func plannerCoverHeader(_ datestamp: String) -> some View {
+        let isDateIcon =
+            datestamp.isNext7Days(todaystamp: todaystampWatcher.todaystamp)
+            || datestamp.isWithinADay(todaystamp: todaystampWatcher.todaystamp)
         PlannerHeaderView(
-            day: day,
+            datestamp: datestamp,
             // These must be passed to override the default toolbar styles applied to the icon.
             iconSize: 30,
             iconDetailSize: isDateIcon ? 9 : 11,

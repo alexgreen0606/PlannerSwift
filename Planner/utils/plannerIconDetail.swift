@@ -9,8 +9,10 @@ import SwiftDate
 
 // Clean
 
-func plannerIconFormat(day: DateInRegion) -> DateFormat {
-    if day.isNext7Days || day.isWithinADay {
+func plannerIconFormat(datestamp: String, todaystamp: String) -> DateFormat {
+    if datestamp.isNext7Days(todaystamp: todaystamp)
+        || datestamp.isWithinADay(todaystamp: todaystamp)
+    {
         return .shortMonth
     }
     return .shortWeekday

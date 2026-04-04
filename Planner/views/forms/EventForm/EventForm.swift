@@ -102,17 +102,7 @@ struct EventFormView: View {
         }
 
         self.draftPlannerEvent = draftPlannerEvent
-        self.sourceDay = {
-            guard let sourcePlanner else {
-                return nil
-            }
-            return sourcePlanner.datestamp.startOfDay(
-                in: sourcePlanner.region(settings: settings)
-            )
-        }()
     }
-    
-    private let sourceDay: DateInRegion?
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -123,6 +113,7 @@ struct EventFormView: View {
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
     @EnvironmentObject private var notificationManager: NotificationManager
     @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
+    @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
 
     @State private var draftPlannerEvent: DraftPlannerEvent
 
@@ -148,7 +139,7 @@ struct EventFormView: View {
                     sourceCalendarEvent: sourceCalendarEvent,
                     sourcePlannerEvent: sourcePlannerEvent,
                     sourcePlanner: sourcePlanner,
-                    sourceDay: sourceDay,
+                    sourceDatestamp: sourcePlanner?.datestamp,
                     showNotification: showNotification
                 )
             }
@@ -209,9 +200,10 @@ struct EventFormView: View {
 
     private func saveCalendarEvent(_ event: EKEvent?) {
 
-        let destinationDay = modelContext.handleCalendarEventChange(
+        // TODO: maybe just need datestamp here? YES: can also just pass source datestamp as well
+        let destinationDatestamp = modelContext.handleCalendarEventChange(
             event,
-            sourceDay: sourceDay,
+            sourceDatestamp: sourcePlanner?.datestamp,
             sourcePlannerEvent: sourcePlannerEvent,
             settings: settings,
             ekEventStore: calendarStore.ekEventStore
@@ -227,36 +219,41 @@ struct EventFormView: View {
         dismiss()
 
         showNotification(
-            sourceDay: sourceDay,
-            destinationDay: destinationDay,
+            sourceDatestamp: sourcePlanner?.datestamp,
+            destinationDatestamp: destinationDatestamp,
             finalEkEvent: event
         )
     }
 
     private func showNotification(
-        sourceDay: DateInRegion?,
-        destinationDay: DateInRegion?,
+        sourceDatestamp: String?,
+        destinationDatestamp: String?,
         finalEkEvent: EKEvent? = nil
     ) {
         var config: NotificationConfig?
 
         if sourcePlanner == nil {
-            if let destinationDay {
-                let ordinalDestinationDay = destinationDay.proximityFormat(
-                    using: [
-                        ProximityRule(
-                            proximity: .withinADay,
-                            format: .countdown,
-                            ordinal: true
-                        ),
-                        ProximityRule(proximity: .next7Days, format: .weekday),
-                        ProximityRule(
-                            proximity: .fallback,
-                            format: .dateLabel,
-                            ordinal: true
-                        ),
-                    ]
-                )
+            if let destinationDatestamp {
+                let ordinalDestinationDay =
+                    destinationDatestamp.proximityFormat(
+                        using: [
+                            ProximityRule(
+                                proximity: .withinADay,
+                                format: .countdown,
+                                ordinal: true
+                            ),
+                            ProximityRule(
+                                proximity: .next7Days,
+                                format: .weekday
+                            ),
+                            ProximityRule(
+                                proximity: .fallback,
+                                format: .dateLabel,
+                                ordinal: true
+                            ),
+                        ],
+                        todaystamp: todaystampWatcher.todaystamp
+                    )
 
                 config = NotificationConfig(
                     id: UUID(),
@@ -269,28 +266,33 @@ struct EventFormView: View {
                     ),
                     onClick: {
                         plannerCoverManager.context = PlannerCoverContext(
-                            datestamp: destinationDay.datestamp
+                            datestamp: destinationDatestamp
                         )
                     }
                 )
             }
-        } else if let destinationDay {
-            if destinationDay.datestamp != sourceDay?.datestamp {
-                let ordinalDestinationDay = destinationDay.proximityFormat(
-                    using: [
-                        ProximityRule(
-                            proximity: .withinADay,
-                            format: .countdown,
-                            ordinal: true
-                        ),
-                        ProximityRule(proximity: .next7Days, format: .weekday),
-                        ProximityRule(
-                            proximity: .fallback,
-                            format: .dateLabel,
-                            ordinal: true
-                        ),
-                    ]
-                )
+        } else if let destinationDatestamp {
+            if destinationDatestamp != sourceDatestamp {
+                let ordinalDestinationDay =
+                    destinationDatestamp.proximityFormat(
+                        using: [
+                            ProximityRule(
+                                proximity: .withinADay,
+                                format: .countdown,
+                                ordinal: true
+                            ),
+                            ProximityRule(
+                                proximity: .next7Days,
+                                format: .weekday
+                            ),
+                            ProximityRule(
+                                proximity: .fallback,
+                                format: .dateLabel,
+                                ordinal: true
+                            ),
+                        ],
+                        todaystamp: todaystampWatcher.todaystamp
+                    )
 
                 config = NotificationConfig(
                     id: UUID(),
@@ -302,7 +304,7 @@ struct EventFormView: View {
                     ),
                     onClick: {
                         plannerCoverManager.context = PlannerCoverContext(
-                            datestamp: destinationDay.datestamp
+                            datestamp: destinationDatestamp
                         )
                     }
                 )

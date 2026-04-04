@@ -16,14 +16,14 @@ extension ModelContext {
     @MainActor
     func handleCalendarEventChange(
         _ calendarEvent: EKEvent?,
-        sourceDay: DateInRegion?,
+        sourceDatestamp: String?,
         sourcePlannerEvent: PlannerEvent?,
         settings: PlannerSettings,
         ekEventStore: EKEventStore
-    ) -> DateInRegion?  // The planner day the event is now in.
+    ) -> String?  // The datestamp the event is now in.
     {
 
-        var destinationDay: DateInRegion?
+        var destinationDatestamp: String?
 
         if let sourcePlannerEvent {
 
@@ -36,15 +36,15 @@ extension ModelContext {
 
             // The calendar event is timed. Sync the storage record with the calendar event.
             sourcePlannerEvent.syncWithCalendarEvent(calendarEvent)
-            destinationDay = self.ensureValidSortDate(
+            destinationDatestamp = self.ensureValidSortDate(
                 for: sourcePlannerEvent,
                 settings: settings,
-                sourceDay: sourceDay
+                sourceDatestamp: sourceDatestamp
             )
 
         } else if let calendarEvent {
 
-            destinationDay = self.getEarliestPlannerDay(
+            let destinationDay = self.getEarliestPlannerDay(
                 for: calendarEvent.startDate,
                 settings: settings
             )
@@ -53,13 +53,15 @@ extension ModelContext {
                 for: calendarEvent,
                 in: destinationDay
             )
+            
+            destinationDatestamp = destinationDay?.datestamp
 
         }
 
         // Note: Saving the context here will delete the location.
         // Allow the context to auto-save when ready.
 
-        return destinationDay
+        return destinationDatestamp
     }
 
 }

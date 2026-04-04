@@ -12,6 +12,17 @@ import SwiftUI
 
 extension Date {
 
+    private static let datestampFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter
+    }()
+
+    var datestamp: String {  // Ex: 2025-12-31
+        Self.datestampFormatter.string(from: self)
+    }
+
     var roundedDownNearest5Minutes: Date {
         let interval: TimeInterval = 5 * 60
         let time = self.timeIntervalSince1970

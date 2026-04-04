@@ -130,7 +130,7 @@ struct ExpandedPlannerView<Header: View>: View {
         // Transfer Event Sheet
         .sheet(isPresented: $showTransferSheet) {
             TransferEventsFormView(
-                startOfDay: plannerDay,
+                sourceStartOfDay: plannerDay,
                 settings: settings
             )
             .navigationTransition(

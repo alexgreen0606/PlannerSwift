@@ -16,7 +16,7 @@ struct PlannerBuilderView<Header: View>: View {
     private let settings: PlannerSettings
     private let previewType: PlannerPreviewType?
     private let plannerSearchQuery: PlannerSearchQuery?
-    private let header: (DateInRegion) -> Header
+    private let header: Header
     private let namespace: Namespace.ID?
     private let transitionSource: String?
 
@@ -25,7 +25,7 @@ struct PlannerBuilderView<Header: View>: View {
         settings: PlannerSettings,
         previewType: PlannerPreviewType? = nil,
         plannerSearchQuery: PlannerSearchQuery? = nil,
-        header: @escaping (DateInRegion) -> Header,
+        header: Header,
         namespace: Namespace.ID? = nil,
         transitionSource: String? = nil
     ) {

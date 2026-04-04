@@ -307,7 +307,7 @@ struct PlannerTabView: View {
             datestamp: datestamp,
             settings: settings,
             previewType: .planner,
-            header: { PlannerHeaderView(day: $0) },
+            header: PlannerHeaderView(datestamp: datestamp),
             namespace: namespace
         )
     }

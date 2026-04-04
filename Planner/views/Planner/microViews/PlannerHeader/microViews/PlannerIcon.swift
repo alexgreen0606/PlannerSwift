@@ -11,20 +11,20 @@ import SwiftUI
 // Clean
 
 struct PlannerIconView: View {
-    private let day: DateInRegion
+    private let datestamp: String
     private let format: DateFormat
     private let customSize: CGFloat?
     private let customDetailSize: CGFloat?
     private let customDetailOffset: CGFloat?
 
     init(
-        day: DateInRegion,
+        datestamp: String,
         format: DateFormat,
         size: CGFloat? = nil,
         detailSize: CGFloat? = nil,
         detailOffset: CGFloat? = nil
     ) {
-        self.day = day
+        self.datestamp = datestamp
         self.format = format
         self.customSize = size
         self.customDetailSize = detailSize
@@ -50,12 +50,12 @@ struct PlannerIconView: View {
     }
 
     private var secondaryIconColor: Color {
-        day.datestamp == todaystampManager.todaystamp
+        datestamp == todaystampManager.todaystamp
             ? accentColor.color : .secondary
     }
 
     private var imageSystemName: String {
-        format == .shortMonth ? day.datestamp.calendarSymbolName : "note"
+        format == .shortMonth ? datestamp.calendarSymbolName : "note"
     }
 
     private var size: CGFloat {
@@ -65,7 +65,7 @@ struct PlannerIconView: View {
     // MARK: Detail Text
 
     private var detail: String {
-        format == .shortMonth ? day.shortMonth : day.shortWeekday
+        format == .shortMonth ? datestamp.shortMonth : datestamp.shortWeekday
     }
 
     private var detailSize: CGFloat {

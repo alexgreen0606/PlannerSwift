@@ -31,7 +31,7 @@ extension Trip {
         )
     }
 
-    var dateRangeLabel: String? {
+    func dateRangeLabel(todaystamp: String) -> String? {
         guard let firstDatestamp,
             let lastDatestamp,
             let firstDay = DateInRegion(firstDatestamp, region: .local),
@@ -43,6 +43,7 @@ extension Trip {
         return buildDateRangeLabel(
             firstDay: firstDay,
             lastDay: lastDay,
+            todaystamp: todaystamp,
             referenceYear: firstDay.year
         )
     }

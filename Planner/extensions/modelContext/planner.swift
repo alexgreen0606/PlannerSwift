@@ -32,7 +32,7 @@ extension ModelContext {
 
     private func createPlanner(for datestamp: String) -> Planner {
         let planner = Planner(datestamp: datestamp, location: nil)
-        
+
         insert(planner)
         self.safeSave("planner.createPlanner")
 
@@ -93,7 +93,7 @@ extension ModelContext {
         // Date does not belong to any planner.
         return nil
     }
-    
+
     @MainActor
     func getUpperSortDate(for plannerDay: DateInRegion) -> Date {
         let storageEvents = self.getSortedStorageEvents(for: plannerDay)
@@ -122,8 +122,8 @@ extension ModelContext {
 
         planner.location = newLocation
 
-        // Set all untimed events' dates to the start of day in the planner's new location.
         for event in storageEvents where !event.hasTime {
+            // Untimed events MUST have their date set to the planner's startOfDay.
             event.date = newStartOfDay.date
         }
 

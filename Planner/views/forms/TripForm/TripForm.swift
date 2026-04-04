@@ -96,13 +96,12 @@ struct TripFormView: View {
         let draft = Set(draftTrip.dateComponents.compactMap(\.datestamp))
 
         guard
-            let conflict = existing.intersection(draft).first,
-            let invalidDay = DateInRegion(conflict, region: .local)
+            let conflict = existing.intersection(draft).first
         else {
             return nil
         }
 
-        let formatted = invalidDay.proximityFormat(
+        let formatted = conflict.proximityFormat(
             using: [
                 ProximityRule(proximity: .withinADay, format: .countdown),
                 ProximityRule(
@@ -114,7 +113,8 @@ struct TripFormView: View {
                     format: .dateLabel,
                     ordinal: true
                 ),
-            ]
+            ],
+            todaystamp: todaystampWatcher.todaystamp
         )
 
         return
@@ -122,7 +122,8 @@ struct TripFormView: View {
     }
 
     private var datesLabel: String {
-        draftTrip.dateRangeLabel ?? "Select Dates"
+        draftTrip.dateRangeLabel(todaystamp: todaystampWatcher.todaystamp)
+            ?? "Select Dates"
     }
 
     var body: some View {

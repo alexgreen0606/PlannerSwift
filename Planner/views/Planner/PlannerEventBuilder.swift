@@ -19,7 +19,7 @@ struct PlannerEventBuilderView<Header: View>: View {
     private let settings: PlannerSettings
     private let previewType: PlannerPreviewType?
     private let plannerSearchQuery: PlannerSearchQuery?
-    private let header: (DateInRegion) -> Header
+    private let header: Header
     private let namespace: Namespace.ID?
     private let transitionSource: String?
 
@@ -28,7 +28,7 @@ struct PlannerEventBuilderView<Header: View>: View {
         settings: PlannerSettings,
         previewType: PlannerPreviewType?,
         plannerSearchQuery: PlannerSearchQuery? = nil,
-        header: @escaping (DateInRegion) -> Header,
+        header: Header,
         namespace: Namespace.ID?,
         transitionSource: String?
     ) {
@@ -123,7 +123,7 @@ struct PlannerEventBuilderView<Header: View>: View {
         if let calendarDayData {
             ExpandedPlannerView(
                 planner: planner,
-                header: header(plannerDay),
+                header: header,
                 plannerDay: plannerDay,
                 plannerLocation: plannerLocation,
                 sortedPlannerEvents: sortedPlannerEvents,
@@ -139,7 +139,7 @@ struct PlannerEventBuilderView<Header: View>: View {
             PlannerPreviewView(
                 type: previewType,
                 searchQuery: plannerSearchQuery,
-                header: header(plannerDay),
+                header: header,
                 planner: planner,
                 plannerDay: plannerDay,
                 plannerLocation: plannerLocation,

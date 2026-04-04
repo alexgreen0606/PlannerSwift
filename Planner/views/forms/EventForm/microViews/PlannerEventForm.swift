@@ -26,8 +26,8 @@ struct PlannerEventFormView: View {
     let sourceCalendarEvent: EKEvent?
     let sourcePlannerEvent: PlannerEvent?
     let sourcePlanner: Planner?
-    let sourceDay: DateInRegion?
-    let showNotification: (DateInRegion?, DateInRegion?, EKEvent?) -> Void
+    let sourceDatestamp: String?
+    let showNotification: (String?, String?, EKEvent?) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -203,8 +203,10 @@ struct PlannerEventFormView: View {
 
     @ViewBuilder
     private var dateField: some View {
-        FormLabelView(systemImageName: "calendar", value: timeAndDay.dateLabel)
-        {
+        FormLabelView(
+            systemImageName: "calendar",
+            value: timeAndDay.datestamp.dateLabel
+        ) {
             togglePicker(type: .date)
         }
         .listRowSeparator(visiblePicker == .date ? .hidden : .visible)
@@ -255,7 +257,7 @@ struct PlannerEventFormView: View {
                 FormLabelView(
                     systemImageName: "clock",
                     value: draftPlannerEvent.hasTime
-                        ? timeAndDay.dateLabel : "Add Time"
+                        ? timeAndDay.datestamp.dateLabel : "Add Time"
                 ) {
                     ensureTextfieldBlurred()
                     draftPlannerEvent.hasTime = true
@@ -331,9 +333,9 @@ struct PlannerEventFormView: View {
 
     private func savePlannerEvent() {
 
-        let destinationDay = modelContext.updatePlannerEvent(
+        let destinationDatestamp = modelContext.updatePlannerEvent(
             draftPlannerEvent,
-            sourceDay: sourceDay,
+            sourceDatestamp: sourceDatestamp,
             targetDatestamp: DateInRegion(
                 draftPlannerEvent.date,
                 region: eventRegion
@@ -353,7 +355,7 @@ struct PlannerEventFormView: View {
 
         dismiss()
 
-        showNotification(sourceDay, destinationDay, nil)
+        showNotification(sourceDatestamp, destinationDatestamp, nil)
     }
 
     private func addEventToCalendar() {

@@ -9,8 +9,8 @@ import SwiftDate
 
 // Clean
 
-func plannerTitle(day: DateInRegion) -> String {
-    day.proximityFormat(
+func plannerTitle(datestamp: String, todaystamp: String) -> String {
+    datestamp.proximityFormat(
         using: [
             ProximityRule(
                 proximity: .withinADay,
@@ -24,6 +24,7 @@ func plannerTitle(day: DateInRegion) -> String {
                 proximity: .fallback,
                 format: .dateLabel
             ),
-        ]
+        ],
+        todaystamp: todaystamp
     )
 }

@@ -36,6 +36,7 @@ struct PlannerListView: View {
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var plannerManager: ListManager<PlannerEvent>
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
+    @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
 
     var body: some View {
         SortableListView(
@@ -60,7 +61,8 @@ struct PlannerListView: View {
             bottomAdornment: bottomAdornment,
             handleTitleChange: handleEventTitleChange,
             checkedFooter: plannerType.checkedFooter(
-                for: plannerDay
+                for: planner.datestamp,
+                todaystamp: todaystampWatcher.todaystamp
             )
         )
         .animateSynchronousAction(

@@ -13,17 +13,18 @@ import SwiftUI
 // Clean
 
 struct TransferEventsFormView: View {
-    private let sourceDate: Date
-    private let sourceDay: DateInRegion
     private let settings: PlannerSettings
 
-    init(startOfDay: DateInRegion, settings: PlannerSettings) {
-        self.sourceDate = startOfDay.date
-        self.sourceDay = startOfDay
+    init(sourceStartOfDay: DateInRegion, settings: PlannerSettings) {
         self.settings = settings
 
-        _destinationDate = State(initialValue: startOfDay.date)
+        self.sourceDate = sourceStartOfDay.date
+        self.sourceDatestamp = sourceStartOfDay.datestamp
+        _destinationDate = State(initialValue: sourceStartOfDay.date)
     }
+
+    private let sourceDate: Date
+    private let sourceDatestamp: String
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -41,8 +42,8 @@ struct TransferEventsFormView: View {
 
     @State private var destinationDate: Date
 
-    private var destinationDay: DateInRegion {
-        DateInRegion(destinationDate, region: sourceDay.region)
+    private var destinationDatestamp: String {
+        destinationDate.datestamp
     }
 
     private var transferCount: String {
@@ -54,8 +55,8 @@ struct TransferEventsFormView: View {
     private var dayOffset: Int {
         Int(
             dayDifference(
-                from: sourceDay.datestamp,
-                to: destinationDay.datestamp
+                from: sourceDatestamp,
+                to: destinationDatestamp
             ) ?? 0
         )
     }
@@ -67,7 +68,7 @@ struct TransferEventsFormView: View {
     }
 
     private var canSave: Bool {
-        destinationDay != sourceDay
+        destinationDatestamp != sourceDatestamp
     }
 
     var body: some View {
@@ -81,10 +82,6 @@ struct TransferEventsFormView: View {
                             .cutoffDate...todaystampWatcher
                             .maxCalendarDate,
                         displayedComponents: .date
-                    )
-                    .environment(
-                        \.timeZone,
-                        sourceDay.region.timeZone
                     )
                     .datePickerStyle(.graphical)
                     .discreetListItem()
@@ -148,14 +145,15 @@ struct TransferEventsFormView: View {
     private var sourceChip: some View {
         TransferSourceIndicatorView(
             title: transferCount,
-            subtitle: sourceDay.proximityFormat(
+            subtitle: sourceDatestamp.proximityFormat(
                 using: [
                     ProximityRule(proximity: .next7Days, format: .weekday),
                     ProximityRule(
                         proximity: .fallback,
                         format: .dateLabel
                     ),
-                ]
+                ],
+                todaystamp: todaystampWatcher.todaystamp
             ),
             iconConfig: IconConfig(
                 name: "note"
@@ -165,14 +163,15 @@ struct TransferEventsFormView: View {
 
     private var destinationChip: some View {
         TransferDestinationIndicatorView(
-            title: destinationDay.proximityFormat(
+            title: destinationDatestamp.proximityFormat(
                 using: [
                     ProximityRule(proximity: .next7Days, format: .weekday),
                     ProximityRule(proximity: .fallback, format: .dateLabel),
-                ]
+                ],
+                todaystamp: todaystampWatcher.todaystamp
             ),
             iconConfig: IconConfig(
-                name: destinationDay.datestamp.calendarSymbolName
+                name: destinationDatestamp.calendarSymbolName
             )
         )
     }
@@ -198,8 +197,8 @@ struct TransferEventsFormView: View {
         modelContext.shiftPlannerEvents(
             plannerManager.selectedItems,
             days: dayOffset.days,
-            sourceDay: sourceDay,
-            targetDatestamp: destinationDay.datestamp,
+            sourceDatestamp: sourceDatestamp,
+            targetDatestamp: destinationDatestamp,
             settings: settings,
             eventStore: calendarStore.ekEventStore
         )

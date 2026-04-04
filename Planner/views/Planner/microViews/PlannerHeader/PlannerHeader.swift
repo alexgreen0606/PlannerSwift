@@ -11,7 +11,7 @@ import SwiftUI
 // Clean
 
 struct PlannerHeaderView: View {
-    private let day: DateInRegion
+    private let datestamp: String
     private let customTitle: String?
     private let customSubtitle: String?
     private let customIconFormat: DateFormat?
@@ -20,7 +20,7 @@ struct PlannerHeaderView: View {
     private let customIconDetailSize: CGFloat?
 
     init(
-        day: DateInRegion,
+        datestamp: String,
         title: String? = nil,
         subtitle: String? = nil,
         iconFormat: DateFormat? = nil,
@@ -28,7 +28,7 @@ struct PlannerHeaderView: View {
         iconDetailSize: CGFloat? = nil,
         iconDetailOffset: CGFloat? = nil
     ) {
-        self.day = day
+        self.datestamp = datestamp
         self.customTitle = title
         self.customSubtitle = subtitle
         self.customIconFormat = iconFormat
@@ -37,23 +37,38 @@ struct PlannerHeaderView: View {
         self.customIconDetailOffset = iconDetailOffset
     }
 
+    @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
+
+    private var todaystamp: String {
+        todaystampWatcher.todaystamp
+    }
+
     var title: String {
-        customTitle ?? plannerTitle(day: day)
+        customTitle
+            ?? plannerTitle(
+                datestamp: datestamp,
+                todaystamp: todaystamp
+            )
     }
 
     var subtitle: String {
-        customSubtitle ?? plannerSubtitle(day: day)
+        customSubtitle
+            ?? plannerSubtitle(
+                datestamp: datestamp,
+                todaystamp: todaystamp
+            )
     }
 
     var iconFormat: DateFormat {
-        customIconFormat ?? plannerIconFormat(day: day)
+        customIconFormat
+            ?? plannerIconFormat(datestamp: datestamp, todaystamp: todaystamp)
     }
 
     var body: some View {
         HStack {
 
             PlannerIconView(
-                day: day,
+                datestamp: datestamp,
                 format: iconFormat,
                 size: customIconSize,
                 detailSize: customIconDetailSize,

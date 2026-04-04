@@ -102,13 +102,13 @@ extension ModelContext {
     @MainActor
     func updatePlannerEvent(
         _ draftPlannerEvent: DraftPlannerEvent,
-        sourceDay: DateInRegion?,
+        sourceDatestamp: String?,
         targetDatestamp: String,
         settings: PlannerSettings,
         ekEventStore: EKEventStore,
         sourcePlannerEvent: PlannerEvent?,
         sourceCalendarEvent: EKEvent?
-    ) -> DateInRegion?  // The planner day the event is now in.
+    ) -> String?  // The datestamp the event is now in.
     {
 
         let event =
@@ -133,7 +133,7 @@ extension ModelContext {
                 let destinationDay = targetPlanner.datestamp
                     .startOfDay(in: targetPlanner.region(settings: settings))
             else {
-                return sourceDay
+                return sourceDatestamp
             }
 
             // Untimed events MUST have their date set to the planner's startOfDay.
@@ -143,10 +143,10 @@ extension ModelContext {
             event.date = draftPlannerEvent.date
         }
 
-        let destinationDay = self.ensureValidSortDate(
+        let destinationDatestamp = self.ensureValidSortDate(
             for: event,
             settings: settings,
-            sourceDay: sourceDay
+            sourceDatestamp: sourceDatestamp
         )
 
         self.insertIfNeeded(event)
@@ -159,15 +159,15 @@ extension ModelContext {
         // Note: Saving the context here will delete the location.
         // Allow the context to auto-save when ready.
 
-        return destinationDay
+        return destinationDatestamp
     }
 
     @MainActor
     func ensureValidSortDate(
         for event: PlannerEvent,
         settings: PlannerSettings,
-        sourceDay: DateInRegion? = nil
-    ) -> DateInRegion?  // The planner day the event is now in.
+        sourceDatestamp: String? = nil
+    ) -> String?  // The destination datestamp the event is now in.
     {
 
         guard
@@ -182,11 +182,11 @@ extension ModelContext {
             return nil
         }
 
-        if let sourceDay,
-            plannerDay.datestamp == sourceDay.datestamp
+        if let sourceDatestamp,
+            plannerDay.datestamp == sourceDatestamp
         {
             // The event has not moved planners. Reuse the event's existing position.
-            return sourceDay
+            return sourceDatestamp
         }
 
         let sortedStorageEvents = self.getSortedStorageEvents(
@@ -200,7 +200,7 @@ extension ModelContext {
             plannerDay: plannerDay
         )
 
-        return plannerDay
+        return plannerDay.datestamp
     }
 
     @MainActor

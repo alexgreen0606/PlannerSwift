@@ -69,34 +69,35 @@ struct PlannerSearchResultsView: View {
                                         previewType: .search,
                                         plannerSearchQuery: plannerSearchManager
                                             .activeQuery,
-                                        header: {
-                                            PlannerHeaderView(
-                                                day: $0,
-                                                title:
-                                                    $0.proximityFormat(
-                                                        using: [
-                                                            ProximityRule(
-                                                                proximity:
-                                                                    .withinADay,
-                                                                format:
-                                                                    .countdown
-                                                            ),
-                                                            ProximityRule(
-                                                                proximity:
-                                                                    .next7Days,
-                                                                format: .weekday
-                                                            ),
-                                                            ProximityRule(
-                                                                proximity:
-                                                                    .fallback,
-                                                                // Custom Here: Never show the year.
-                                                                format:
-                                                                    .dateWithoutYear
-                                                            ),
-                                                        ]
-                                                    )
-                                            )
-                                        },
+                                        header: PlannerHeaderView(
+                                            datestamp: datestamp,
+                                            title:
+                                                datestamp.proximityFormat(
+                                                    using: [
+                                                        ProximityRule(
+                                                            proximity:
+                                                                .withinADay,
+                                                            format:
+                                                                .countdown
+                                                        ),
+                                                        ProximityRule(
+                                                            proximity:
+                                                                .next7Days,
+                                                            format: .weekday
+                                                        ),
+                                                        ProximityRule(
+                                                            proximity:
+                                                                .fallback,
+                                                            // Custom Here: Never show the year.
+                                                            format:
+                                                                .dateWithoutYear
+                                                        ),
+                                                    ],
+                                                    todaystamp:
+                                                        todaystampWatcher
+                                                        .todaystamp
+                                                )
+                                        ),
                                         namespace: namespace
                                     )
                                     .listRowBackground(Color.clear)

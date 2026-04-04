@@ -18,7 +18,7 @@ extension ModelContext {
     func shiftPlannerEvents(
         _ events: [PlannerEvent],
         days: DateComponents,
-        sourceDay: DateInRegion,
+        sourceDatestamp: String,
         targetDatestamp: String,
         settings: PlannerSettings,
         eventStore: EKEventStore
@@ -68,7 +68,7 @@ extension ModelContext {
             let _ = self.ensureValidSortDate(
                 for: event,
                 settings: settings,
-                sourceDay: sourceDay
+                sourceDatestamp: sourceDatestamp
             )
         }
 

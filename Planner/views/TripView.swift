@@ -27,22 +27,12 @@ struct TripView: View {
         expandedTrips.contains(trip.id)
     }
 
-    private var firstDay: DateInRegion? {
-        guard let firstDayPlanner = trip.sortedPlanners.first else {
-            return nil
-        }
-        return firstDayPlanner.datestamp.startOfDay(
-            in: firstDayPlanner.region(settings: settings)
-        )
+    private var firstDatestamp: String? {
+        trip.firstDatestamp
     }
 
-    private var lastDay: DateInRegion? {
-        guard let lastDayPlanner = trip.sortedPlanners.last else {
-            return nil
-        }
-        return lastDayPlanner.datestamp.startOfDay(
-            in: lastDayPlanner.region(settings: settings)
-        )
+    private var lastDatestamp: String? {
+        trip.lastDatestamp
     }
 
     private var locationLabel: String? {
@@ -54,19 +44,21 @@ struct TripView: View {
     }
 
     private var datesLabel: String {
-        trip.dateRangeLabel ?? ""
+        trip.dateRangeLabel(todaystamp: todaystampWatcher.todaystamp) ?? ""
     }
 
     private var countdownLabel: String {
-        guard let firstDay, let lastDay else {
+        guard let firstDatestamp, let lastDatestamp else {
             return ""
         }
 
-        if firstDay.datestamp <= todaystamp, lastDay.datestamp >= todaystamp {
+        if firstDatestamp <= todaystamp, lastDatestamp >= todaystamp {
             return ""
         }
 
-        return firstDay.countdown
+        return firstDatestamp.countdown(
+            todaystamp: todaystampWatcher.todaystamp
+        )
     }
 
     var body: some View {
@@ -143,20 +135,18 @@ struct TripView: View {
                         planner: planner,
                         settings: settings,
                         previewType: .trip,
-                        header: {
-                            PlannerHeaderView(
-                                day: $0,
-                                title: "Day \(index + 1)",
-                                subtitle: $0.weekday,
-                                iconFormat: .shortMonth
-                            )
-                        },
+                        header: PlannerHeaderView(
+                            datestamp: planner.datestamp,
+                            title: "Day \(index + 1)",
+                            subtitle: planner.datestamp.weekday,
+                            iconFormat: .shortMonth
+                        ),
                         namespace: namespace,
                         transitionSource: trip.transitionId(
                             for: planner.datestamp
                         )
                     )
-                    
+
                     // TODO: combine with other logic. Shared modifier
                     .padding(.top)
                     .padding(.horizontal)

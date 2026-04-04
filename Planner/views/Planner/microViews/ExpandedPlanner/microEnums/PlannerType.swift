@@ -26,14 +26,14 @@ enum PlannerType: String {
         showChecked ? "Hide \(checkedLabel)" : "Show \(checkedLabel)"
     }
 
-    func checkedFooter(for plannerDay: DateInRegion) -> String? {
+    func checkedFooter(for datestamp: String, todaystamp: String) -> String? {
         switch self {
         case .pastOrPresent:
             return nil
 
         case .future:
 
-            let formatted = plannerDay.proximityFormat(
+            let formatted = datestamp.proximityFormat(
                 using: [
                     ProximityRule(
                         proximity: .withinADay,
@@ -45,8 +45,9 @@ enum PlannerType: String {
                         proximity: .fallback,
                         format: .dateLabel,
                         ordinal: true
-                    )
-                ]
+                    ),
+                ],
+                todaystamp: todaystamp
             )
 
             // TODO: dont show this if setting is disabled.

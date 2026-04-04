@@ -20,7 +20,7 @@ struct DraftTrip {
         self.dateComponents.compactMap { $0.datestamp }
     }
 
-    var dateRangeLabel: String? {
+    func dateRangeLabel(todaystamp: String) -> String? {
         let sortedDatestamps = datestamps.sorted()
 
         guard let firstDatestamp = sortedDatestamps.first,
@@ -31,7 +31,7 @@ struct DraftTrip {
             return nil
         }
 
-        return buildDateRangeLabel(firstDay: firstDay, lastDay: lastDay)
+        return buildDateRangeLabel(firstDay: firstDay, lastDay: lastDay, todaystamp: todaystamp)
     }
 
 }
