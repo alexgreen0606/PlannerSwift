@@ -12,13 +12,13 @@ import SwiftUI
 struct AdornedValueView: View {
     private let title: String
     private let color: Color?
-    private let iconConfig: IconConfig
+    private let iconConfig: IconConfig?
     private let scale: Double
 
     init(
         _ title: String,
         color: Color? = nil,
-        iconConfig: IconConfig,
+        iconConfig: IconConfig? = nil,
         scale: Double? = nil
     ) {
         self.title = title
@@ -37,14 +37,16 @@ struct AdornedValueView: View {
 
     var body: some View {
         HStack(spacing: spacing) {
-            Image(systemName: iconConfig.name)
-                .resizable()
-                .scaledToFit()
-                .frame(width: iconSize, height: iconSize)
-                .foregroundStyle(
-                    iconConfig.primaryColor,
-                    iconConfig.secondaryColor
-                )
+            if let iconConfig {
+                Image(systemName: iconConfig.name)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: iconSize, height: iconSize)
+                    .foregroundStyle(
+                        iconConfig.primaryColor,
+                        iconConfig.secondaryColor
+                    )
+            }
 
             ValueView(title, color: color, scale: scale)
         }

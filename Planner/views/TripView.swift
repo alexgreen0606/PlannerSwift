@@ -22,6 +22,7 @@ struct TripView: View {
 
     @Environment(\.displayScale) private var displayScale
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
+    @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
 
     private var isExpanded: Bool {
         expandedTrips.contains(trip.id)
@@ -131,8 +132,8 @@ struct TripView: View {
                     Array(trip.sortedPlanners.enumerated()),
                     id: \.element
                 ) { index, planner in
-                    PlannerEventBuilderView(
-                        planner: planner,
+                    PlannerBuilderView(
+                        datestamp: planner.datestamp,
                         settings: settings,
                         previewType: .trip,
                         header: PlannerHeaderView(
@@ -145,20 +146,6 @@ struct TripView: View {
                         transitionSource: trip.transitionId(
                             for: planner.datestamp
                         )
-                    )
-
-                    // TODO: combine with other logic. Shared modifier
-                    .padding(.top)
-                    .padding(.horizontal)
-                    .padding(.bottom, 12)
-                    .frame(
-                        width: 240,
-                        height: PlannerLayout.PREVIEW_CARD_HEIGHT,
-                        alignment: .top
-                    )
-                    .background(
-                        RoundedRectangle(cornerRadius: 24)
-                            .fill(Color.cardBackground)
                     )
                 }
 

@@ -124,33 +124,16 @@ struct PlannerPreviewView<Header: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-
-            HStack(alignment: .top) {
-                header
-
-                Spacer()
-
-                if type == .search {
-                    weatherInfo
-                }
-            }
-
             tripInfo
             birthdayChipList
             eventChipList
-
             PlannerEventListView(
                 plannerRegion: plannerDay.region,
                 events: sortedPreviewPlannerEvents,
                 isBottomOfCard: isSearching
             )
-
             remainingPlansIndicator
             emptyPlannerIndicator
-
-            if type != .search {
-                weatherInfo
-            }
         }
     }
 
@@ -164,18 +147,6 @@ struct PlannerPreviewView<Header: View>: View {
                 iconConfig: IconConfig(name: "suitcase")
             )
         }
-    }
-
-    @ViewBuilder
-    private var weatherInfo: some View {
-        WeatherInfoView(
-            previewType: type,
-            plannerSearchQuery: searchQuery,
-            planner: planner,
-            plannerDay: plannerDay,
-            plannerLocation: plannerLocation,
-            settings: settings
-        )
     }
 
     @ViewBuilder

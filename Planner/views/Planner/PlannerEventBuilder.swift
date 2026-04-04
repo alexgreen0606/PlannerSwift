@@ -16,75 +16,52 @@ import SwiftUI
 
 struct PlannerEventBuilderView<Header: View>: View {
     private let planner: Planner
+    private let plannerDay: DateInRegion
+    private let plannerLocation: Location?
     private let settings: PlannerSettings
     private let previewType: PlannerPreviewType?
     private let plannerSearchQuery: PlannerSearchQuery?
     private let header: Header
-    private let namespace: Namespace.ID?
-    private let transitionSource: String?
 
     init(
         planner: Planner,
+        plannerDay: DateInRegion,
+        plannerLocation: Location?,
         settings: PlannerSettings,
         previewType: PlannerPreviewType?,
         plannerSearchQuery: PlannerSearchQuery? = nil,
-        header: Header,
-        namespace: Namespace.ID?,
-        transitionSource: String?
+        header: Header
     ) {
         self.planner = planner
+        self.plannerDay = plannerDay
+        self.plannerLocation = plannerLocation
         self.previewType = previewType
         self.plannerSearchQuery = plannerSearchQuery
         self.header = header
         self.settings = settings
-        self.namespace = namespace
-        self.transitionSource = transitionSource
 
-        let region = planner.region(settings: settings)
-        guard let startOfDay = planner.datestamp.startOfDay(in: region) else {
-            fatalError(
-                "ERROR PlannerDataBuilder.init: Could not get DateInRegion from: \(planner.datestamp)"
-            )
-        }
-        let startOfNextDay = (startOfDay + 1.days)
+        let startOfNextDay = (plannerDay + 1.days)
 
         _sortedPlannerEvents = Query(
             filter: #Predicate<PlannerEvent> { event in
                 if !event.hasTime {
-                    return event.date == startOfDay.date
+                    return event.date == plannerDay.date
                 } else {
-                    return event.date >= startOfDay.date
+                    return event.date >= plannerDay.date
                         && event.date < startOfNextDay.date
                 }
             },
             sort: \.sortDate
         )
-
-        self.plannerDay = startOfDay
     }
-
-    private let plannerDay: DateInRegion
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var weatherStore: WeatherStore
-    @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
-    @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
     @Query private var sortedPlannerEvents: [PlannerEvent]
 
     @State private var calendarDayData: CalendarDayData?
-
-    private var plannerLocation: Location? {
-        planner.location(
-            settings: settings,
-            deviceLocation: deviceLocationManager.deviceLocation
-        )
-    }
-
-    private var plannerRegion: Region {
-        planner.region(settings: settings)
-    }
 
     var body: some View {
         ZStack {
@@ -135,7 +112,7 @@ struct PlannerEventBuilderView<Header: View>: View {
 
     @ViewBuilder
     private var previewView: some View {
-        if let previewType, let namespace, let calendarDayData {
+        if let previewType, let calendarDayData {
             PlannerPreviewView(
                 type: previewType,
                 searchQuery: plannerSearchQuery,
@@ -147,17 +124,7 @@ struct PlannerEventBuilderView<Header: View>: View {
                 calendarDayData: calendarDayData,
                 settings: settings
             )
-            .matchedTransitionSource(
-                id: transitionSource ?? planner.datestamp,
-                in: namespace
-            )
-            .contentShape(Rectangle())
-            .onTapGesture {
-                plannerCoverManager.context = PlannerCoverContext(
-                    datestamp: planner.datestamp,
-                    source: transitionSource
-                )
-            }
+            .transition(.opacity)
         }
     }
 
@@ -173,13 +140,15 @@ struct PlannerEventBuilderView<Header: View>: View {
             return
         }
 
-        calendarDayData = modelContext.syncCalendar(
-            for: planner,
-            storageEvents: sortedPlannerEvents,
-            plannerDay: plannerDay,
-            hiddenCalendarIds: settings.hiddenCalendarIds,
-            ekEventStore: calendarStore.ekEventStore
-        )
+        withAnimation {
+            calendarDayData = modelContext.syncCalendar(
+                for: planner,
+                storageEvents: sortedPlannerEvents,
+                plannerDay: plannerDay,
+                hiddenCalendarIds: settings.hiddenCalendarIds,
+                ekEventStore: calendarStore.ekEventStore
+            )
+        }
 
         if let calendarDayData {
             calendarStore.cacheData(
