@@ -211,7 +211,7 @@ struct SettingsTabView: View {
 
         UIApplication.shared.setAlternateIconName(newIcon) { error in
             if let error = error {
-                print("Error setting icon: \(error.localizedDescription)")
+                print("Error setting icon \(newIcon): \(error.localizedDescription)")
             }
         }
     }
