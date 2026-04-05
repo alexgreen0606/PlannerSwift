@@ -18,7 +18,7 @@ struct PreviewCardWeatherView: View {
     let settings: PlannerSettings
 
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
-        .system
+        .dark
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue

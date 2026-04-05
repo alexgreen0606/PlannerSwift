@@ -16,7 +16,7 @@ struct SettingsTabView: View {
     let settings: PlannerSettings
 
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
-        .system
+        .dark
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -37,6 +37,7 @@ struct SettingsTabView: View {
             ToggleTransitionDuration.threeSeconds
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var systemColorScheme
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
@@ -46,6 +47,13 @@ struct SettingsTabView: View {
                 !settings.hiddenCalendarIds.contains($0.calendarIdentifier)
             }.count
         )
+    }
+
+    var themeString: String {
+        if appColorScheme == .system {
+            return systemColorScheme == .dark ? "dark" : "light"
+        }
+        return appColorScheme.rawValue
     }
 
     var body: some View {
@@ -188,6 +196,23 @@ struct SettingsTabView: View {
 
             }
             .navigationTitle("Settings")
+        }
+        .onChange(of: accentColor) { _, _ in
+            setAppIcon()
+        }
+    }
+
+    func setAppIcon() {
+        guard UIApplication.shared.supportsAlternateIcons else {
+            return
+        }
+
+        let newIcon: String = "\(accentColor.rawValue)\(themeString)"
+
+        UIApplication.shared.setAlternateIconName(newIcon) { error in
+            if let error = error {
+                print("Error setting icon: \(error.localizedDescription)")
+            }
         }
     }
 

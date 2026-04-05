@@ -14,7 +14,7 @@ struct WeatherChipView: View {
     let weatherData: DayWeather
 
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
-        .system
+        .dark
 
     @Environment(\.colorScheme) private var systemColorScheme
 

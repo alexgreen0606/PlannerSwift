@@ -1,0 +1,239 @@
+{
+  "fill-specializations" : [
+    {
+      "value" : {
+        "linear-gradient" : [
+          "display-p3:0.15400,0.15400,0.15400,1.00000",
+          "display-p3:0.00000,0.00000,0.00000,1.00000"
+        ],
+        "orientation" : {
+          "start" : {
+            "x" : 0.5,
+            "y" : 1
+          },
+          "stop" : {
+            "x" : 0.5,
+            "y" : 0.3
+          }
+        }
+      }
+    },
+    {
+      "appearance" : "dark",
+      "value" : {
+        "linear-gradient" : [
+          "display-p3:0.15121,0.15121,0.15121,1.00000",
+          "display-p3:0.00000,0.00000,0.00000,1.00000"
+        ],
+        "orientation" : {
+          "start" : {
+            "x" : 0.5,
+            "y" : 1
+          },
+          "stop" : {
+            "x" : 0.5,
+            "y" : 0.3
+          }
+        }
+      }
+    }
+  ],
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "extended-srgb:0.00000,0.53333,1.00000,1.00000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "extended-srgb:0.00000,0.53333,1.00000,1.00000"
+              }
+            }
+          ],
+          "image-name" : "Rectangle 10 2.png",
+          "name" : "Rectangle 10 2",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              96.39218193520628,
+              -240.4043031847897
+            ]
+          }
+        },
+        {
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "extended-srgb:0.00000,0.53333,1.00000,1.00000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "extended-srgb:0.00000,0.53333,1.00000,1.00000"
+              }
+            }
+          ],
+          "image-name" : "Rectangle 11 2.png",
+          "name" : "Rectangle 11 2",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              26.39218193520628,
+              -142.29581900627363
+            ]
+          }
+        },
+        {
+          "hidden" : true,
+          "image-name" : "Rectangle 10.png",
+          "name" : "Rectangle 10",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              59.185099427990735,
+              -240.4043031847897
+            ]
+          }
+        },
+        {
+          "hidden" : true,
+          "image-name" : "Rectangle 11.png",
+          "name" : "Rectangle 11",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -0.8149005720092646,
+              -142.29581900627363
+            ]
+          }
+        },
+        {
+          "fill" : {
+            "linear-gradient" : [
+              "display-p3:0.23849,0.24615,0.23666,1.00000",
+              "display-p3:0.00000,0.00000,0.00000,1.00000"
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.5,
+                "y" : 0
+              },
+              "stop" : {
+                "x" : 0.5,
+                "y" : 0.7
+              }
+            }
+          },
+          "image-name" : "Rectangle 16.png",
+          "name" : "Rectangle 16",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -417,
+              0
+            ]
+          }
+        },
+        {
+          "fill" : {
+            "linear-gradient" : [
+              "display-p3:0.23849,0.24615,0.23666,1.00000",
+              "display-p3:0.00000,0.00000,0.00000,1.00000"
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.5,
+                "y" : 0
+              },
+              "stop" : {
+                "x" : 0.5,
+                "y" : 0.7
+              }
+            }
+          },
+          "image-name" : "Rectangle 16.png",
+          "name" : "Rectangle 16",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -417,
+              241.51352737994125
+            ]
+          }
+        },
+        {
+          "fill" : {
+            "linear-gradient" : [
+              "display-p3:0.23849,0.24615,0.23666,1.00000",
+              "display-p3:0.00000,0.00000,0.00000,1.00000"
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.5,
+                "y" : 0
+              },
+              "stop" : {
+                "x" : 0.5,
+                "y" : 0.7
+              }
+            }
+          },
+          "image-name" : "Rectangle 16.png",
+          "name" : "Rectangle 16",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -417,
+              -240.40430318478968
+            ]
+          }
+        },
+        {
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "extended-srgb:0.00000,0.53333,1.00000,1.00000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "extended-srgb:0.00000,0.53333,1.00000,1.00000"
+              }
+            }
+          ],
+          "glass" : true,
+          "image-name" : "Subtract.png",
+          "name" : "Subtract",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -374.5,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

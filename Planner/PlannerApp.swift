@@ -31,7 +31,7 @@ struct PlannerApp: App {
         AccentColor.blue
 
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
-        .system
+        .dark
 
     @StateObject private var calendarStore = CalendarStore()
     @StateObject private var todaystampWatcher = TodaystampWatcher()
