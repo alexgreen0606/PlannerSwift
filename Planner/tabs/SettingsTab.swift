@@ -49,13 +49,6 @@ struct SettingsTabView: View {
         )
     }
 
-    var themeString: String {
-        if appColorScheme == .system {
-            return systemColorScheme == .dark ? "dark" : "light"
-        }
-        return appColorScheme.rawValue
-    }
-
     var body: some View {
         NavigationStack {
             Form {
@@ -198,21 +191,16 @@ struct SettingsTabView: View {
             .navigationTitle("Settings")
         }
         .onChange(of: accentColor) { _, _ in
-            setAppIcon()
+            syncAppIconWithSettings(
+                accentColor: accentColor,
+                systemColorScheme: systemColorScheme
+            )
         }
-    }
-
-    func setAppIcon() {
-        guard UIApplication.shared.supportsAlternateIcons else {
-            return
-        }
-
-        let newIcon: String = "\(accentColor.rawValue)\(themeString)"
-
-        UIApplication.shared.setAlternateIconName(newIcon) { error in
-            if let error = error {
-                print("Error setting icon \(newIcon): \(error.localizedDescription)")
-            }
+        .onChange(of: systemColorScheme) { _, _ in
+            syncAppIconWithSettings(
+                accentColor: accentColor,
+                systemColorScheme: systemColorScheme
+            )
         }
     }
 

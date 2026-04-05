@@ -67,6 +67,12 @@ struct ContentView: View {
         }
     }
 
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        AccentColor.blue
+
+    @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
+        .dark
+
     @AppStorage("keepCanceledEventsDuration") private
         var keepCanceledEventsDuration: KeepCanceledEventsDuration =
             KeepCanceledEventsDuration.startOfDay
@@ -79,6 +85,7 @@ struct ContentView: View {
 
     @Environment(\.scenePhase) private var appPhase
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var systemColorScheme
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
@@ -166,6 +173,10 @@ struct ContentView: View {
                 calendarStore.attemptFreshLoad(
                     hiddenCalendarIds: settings.hiddenCalendarIds
                 )
+                syncAppIconWithSettings(
+                    accentColor: accentColor,
+                    systemColorScheme: systemColorScheme
+                )
             }
         }
 
@@ -221,6 +232,11 @@ struct ContentView: View {
     }
 
     private func initializeAppData() {
+        syncAppIconWithSettings(
+            accentColor: accentColor,
+            systemColorScheme: systemColorScheme
+        )
+
         modelContext.ensurePlannerSettings(
             settings: plannerSettingsList
         )
