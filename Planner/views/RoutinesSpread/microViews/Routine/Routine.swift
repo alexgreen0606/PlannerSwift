@@ -10,6 +10,7 @@ import SwiftUI
 
 struct RoutineEventSheetContext: Identifiable {
     var routineEvent: RoutineEvent
+    var neighborIds: NeighborIds
 
     var id: String {
         routineEvent.stableId.uuidString
@@ -80,7 +81,8 @@ struct RoutineView: View {
         .sheet(item: $routineEventSheetContext) { context in
             RoutineEventFormView(
                 sourceRoutineEvent: context.routineEvent,
-                sourceDayOfWeek: dayOfWeek
+                sourceDayOfWeek: dayOfWeek,
+                sourceNeighborIds: context.neighborIds
             )
             .navigationTransition(
                 .zoom(
@@ -200,6 +202,7 @@ struct RoutineView: View {
     @ViewBuilder
     private func timeAdornment(event: RoutineEvent) -> some View {
         event.timeAdornment(
+            dayOfWeek: dayOfWeek,
             accentColor: accentColor
         ) {
             openRoutineEventSheet(for: event)
@@ -238,9 +241,14 @@ struct RoutineView: View {
             return
         }
 
+        let neighborIds = event.getNeighborIds(in: sortedRoutineEvents)
+
         routineManager.protectedId = event.stableId
         routineManager.focusedId = nil
-        routineEventSheetContext = RoutineEventSheetContext(routineEvent: event)
+        routineEventSheetContext = RoutineEventSheetContext(
+            routineEvent: event,
+            neighborIds: neighborIds
+        )
     }
 
     private func createLowerEvent(scrollProxy: ScrollViewProxy) {

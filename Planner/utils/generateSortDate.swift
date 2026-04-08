@@ -15,7 +15,11 @@ import SwiftUI
 func generateSortDate<Event: EventListItem>(
     at index: Int,
     in sortedEvents: [Event],  // May or may not contain the event being placed.
-    plannerDay: DateInRegion
+    plannerDay: DateInRegion,
+    getSortDate: (Event) -> Date = { $0.sortDate },
+    setSortDate: (Event, Date) -> Void = { event, sortDate in
+        event.sortDate = sortDate
+    }
 ) -> Date {
 
     let dayStart = plannerDay.date
@@ -26,9 +30,9 @@ func generateSortDate<Event: EventListItem>(
         return dayStart + 12.hours
     }
 
-    var prevDate = index == 0 ? dayStart : sortedEvents[index - 1].sortDate
+    var prevDate = index == 0 ? dayStart : getSortDate(sortedEvents[index - 1])
     var nextDate =
-        index >= sortedEvents.count ? dayEnd : sortedEvents[index].sortDate
+        index >= sortedEvents.count ? dayEnd : getSortDate(sortedEvents[index])
     let interval = nextDate.timeIntervalSince(prevDate)
 
     if interval < 1.0 {
@@ -36,12 +40,14 @@ func generateSortDate<Event: EventListItem>(
         // Interval too small. Normalize all events.
         normalizeSortDates(
             events: sortedEvents,
-            startOfDay: plannerDay
+            startOfDay: plannerDay,
+            setSortDate: setSortDate
         )
 
-        prevDate = index == 0 ? dayStart : sortedEvents[index - 1].sortDate
+        prevDate = index == 0 ? dayStart : getSortDate(sortedEvents[index - 1])
         nextDate =
-            index >= sortedEvents.count ? dayEnd : sortedEvents[index].sortDate
+            index >= sortedEvents.count
+            ? dayEnd : getSortDate(sortedEvents[index])
     }
 
     return midpoint(between: prevDate, and: nextDate)
@@ -57,7 +63,10 @@ private func midpoint(between a: Date, and b: Date) -> Date {
 @MainActor
 private func normalizeSortDates<Event: EventListItem>(
     events: [Event],
-    startOfDay: DateInRegion
+    startOfDay: DateInRegion,
+    setSortDate: (Event, Date) -> Void = { event, sortDate in
+        event.sortDate = sortDate
+    }
 ) {
     guard !events.isEmpty else { return }
 
@@ -67,6 +76,9 @@ private func normalizeSortDates<Event: EventListItem>(
         dayEnd.timeIntervalSince(dayStart) / Double(events.count + 1)
 
     for (i, event) in events.enumerated() {
-        event.sortDate = dayStart.addingTimeInterval(increment * Double(i + 1))
+        setSortDate(
+            event,
+            dayStart.addingTimeInterval(increment * Double(i + 1))
+        )
     }
 }
