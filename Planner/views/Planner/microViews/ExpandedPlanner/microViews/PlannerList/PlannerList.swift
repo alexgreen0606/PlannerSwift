@@ -53,7 +53,7 @@ struct PlannerListView: View {
             moveItem: moveUncheckedEvent,
             floatingInfo: chipSpread,
             namespace: namespace,
-            toolbarSystemImageNames: ["clock"],
+            toolbarSystemImageNames: ["rectangle.and.pencil.and.ellipsis"],
             onToolbarTap: handleToolbarTap,
             toggleConfig: eventToggleConfig,
             leftAdornment: leftAdornment,
@@ -64,10 +64,6 @@ struct PlannerListView: View {
                 for: planner.datestamp,
                 todaystamp: todaystampWatcher.todaystamp
             )
-        )
-        // TODO: is this necessary?
-        .animateSynchronousAction(
-            from: sortedOpenPlannerEvents.map(\.location?.name)
         )
         .task(id: planner.datestamp) {
             plannerManager.setToggleItem(toggleEvent)

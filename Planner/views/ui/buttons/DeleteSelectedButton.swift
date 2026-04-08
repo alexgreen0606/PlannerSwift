@@ -30,13 +30,13 @@ struct DeleteSelectedButtonView: View {
     @State private var showConfirmation = false
 
     private var fullMessage: String {
-        let baseMessage = "This action is irreversible."
+        let baseMessage = "This action cannot be undone."
 
         guard let message else {
             return baseMessage
         }
 
-        return "\(message) This action is irreversible."
+        return "\(message) \(baseMessage)"
     }
 
     var body: some View {

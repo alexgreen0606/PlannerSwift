@@ -13,6 +13,8 @@ extension ModelContext {
 
     static let baseRoutineDay = DateInRegion("2000-06-06", region: .UTC)
 
+    // MARK: - CREATE
+
     @MainActor
     func createRoutineEvent(
         at index: Int,
@@ -30,10 +32,8 @@ extension ModelContext {
             plannerDay: baseDay
         )
 
-        let newEvent = RoutineEvent(
-            dayOfWeek: dayOfWeek,
-            sortDate: sortDate
-        )
+        let newEvent = RoutineEvent()
+        newEvent.sortDateMap[dayOfWeek] = sortDate
 
         self.insert(newEvent)
         self.safeSave("routineEvent.createRoutineEvent")
@@ -41,16 +41,19 @@ extension ModelContext {
         return newEvent.stableId
     }
 
+    // MARK: - UPDATE
+
     @MainActor
     func moveRoutineEvent(
         from: Int,
         to: Int,
+        on dayOfWeek: DayOfWeek,
         sortedEvents: [RoutineEvent]
     ) {
         guard let baseDay = Self.baseRoutineDay, from != to else { return }
 
         let movedEvent = sortedEvents[from]
-        movedEvent.sortDate = generateSortDate(
+        movedEvent.sortDateMap[dayOfWeek] = generateSortDate(
             at: to,
             in: sortedEvents,
             plannerDay: baseDay
@@ -60,101 +63,79 @@ extension ModelContext {
     }
 
     @MainActor
+    func transferRoutineEvents(
+        _ events: [RoutineEvent],
+        to daysOfWeek: Set<DayOfWeek>
+    ) {
+        guard !daysOfWeek.isEmpty else { return }
+
+        for event in events {
+            self.updateRoutineEvent(
+                with: DraftRoutineEvent(
+                    date: event.time ?? Date(),
+                    hasTime: event.time != nil,
+                    title: event.title,
+                    daysOfWeek: daysOfWeek
+                ),
+                sourceRoutineEvent: event,
+                skipSave: true
+            )
+        }
+
+        self.safeSave("routineEvent.transferRoutineEvent")
+    }
+
+    @MainActor
     func updateRoutineEvent(
         with draftRoutineEvent: DraftRoutineEvent,
-        sourceRoutineEvent: RoutineEvent?
+        sourceRoutineEvent: RoutineEvent?,
+        skipSave: Bool = false
     ) {
         guard !draftRoutineEvent.daysOfWeek.isEmpty else { return }
 
         let event =
             sourceRoutineEvent
-            ?? RoutineEvent(
-                dayOfWeek: DayOfWeek.monday,
-                sortDate: draftRoutineEvent.date
-            )
+            ?? RoutineEvent()
 
-        event.title = draftRoutineEvent.title
-        event.time = draftRoutineEvent.hasTime ? draftRoutineEvent.date : nil
+        event.syncWithDraftRoutineEvent(draftRoutineEvent)
 
-        if draftRoutineEvent.daysOfWeek.count > 1 {
+        let daysToSync = Set(draftRoutineEvent.daysOfWeek)
+        let existingDays = Set(event.sortDateMap.keys)
 
-            // MARK: Recurring Routine Event
+        let daysToRemove = existingDays.subtracting(daysToSync)
+        for day in daysToRemove {
+            // Remove days that no longer exist.
+            event.sortDateMap.removeValue(forKey: day)
+        }
 
-            let recurringRoutineEvent = {
-                if let existing = sourceRoutineEvent?.recurringParent {
-                    existing.title = draftRoutineEvent.title
-                    existing.time = event.time
-                    return existing
-                }
-
-                // TODO: why am I storing title and time at all?
-                let newRecurringEvent = RecurringRoutineEvent(
-                    title: draftRoutineEvent.title,
-                    time: event.time
-                )
-
-                if let sourceRoutineEvent {
-                    // Include the source event so it can be handled below.
-                    newRecurringEvent.events.append(sourceRoutineEvent)
-                }
-
-                return newRecurringEvent
-            }()
-
-            var daysToSync = draftRoutineEvent.daysOfWeek
-
-            for existingEvent in recurringRoutineEvent.events {
-                guard daysToSync.contains(existingEvent.dayOfWeek) else {
-                    // Delete the stale event.
-                    self.delete(existingEvent)
-                    continue
-                }
-
-                daysToSync.remove(existingEvent.dayOfWeek)
-
-                // Sync the existing event with the parent.
-                existingEvent.syncWithRecurringRoutineEvent(
-                    recurringRoutineEvent
-                )
-            }
-
-            // Place at the top of each planner it does not exist in.
-            for day in daysToSync {
-                let newEvent = RoutineEvent(
-                    dayOfWeek: day,
-                    // TODO: maybe track the event above and below it, and try to place between those
-                    sortDate: getUpperSortDate(for: day)
-                )
-                newEvent.syncWithRecurringRoutineEvent(recurringRoutineEvent)
-                recurringRoutineEvent.events.append(newEvent)
-            }
-
-            self.insertIfNeeded(recurringRoutineEvent)
-
-        } else if let destinationDay = draftRoutineEvent.daysOfWeek.first {
-
-            // MARK: Single Routine Event
-
-            event.dayOfWeek = destinationDay
-
-            if let staleRecurringRoutineEvent = sourceRoutineEvent?
-                .recurringParent
-            {
-                // Delete stale recurring routine event record.
-                self.deleteRecurringRoutineEvent(
-                    staleRecurringRoutineEvent,
-                    safeDays: [destinationDay]
-                )
-                event.recurringParent = nil
-            }
+        let daysToAdd = daysToSync.subtracting(existingDays)
+        for day in daysToAdd {
+            // Add new days and place the event at the top.
+            event.sortDateMap[day] = getSortDate(in: day)
         }
 
         // TODO: always place transfered list items at the top for checklists too.
 
         self.insertIfNeeded(event)
 
-        self.safeSave("routineEvent.updateRoutineEvent")
+        if !skipSave {
+            self.safeSave("routineEvent.updateRoutineEvent")
+        }
     }
+
+    // MARK: - DELETE
+
+    func deleteRoutineEvents(
+        _ events: [RoutineEvent]
+    ) {
+        for event in events {
+            self.delete(event)
+        }
+
+        self.safeSave("routineEvent.deleteRoutineEvents")
+    }
+
+    // MARK: - Change Handlers
 
     @MainActor
     func handleRoutineEventTitleChange(
@@ -163,8 +144,6 @@ extension ModelContext {
         guard routineEvent.time == nil, let baseDay = Self.baseRoutineDay else {
             return
         }
-
-        // TODO: update every event
 
         // Scan the title for a date.
         guard
@@ -181,39 +160,13 @@ extension ModelContext {
         self.safeSave("routineEvent.handleRoutineEventTitleChange")
     }
 
-    func deleteRecurringRoutineEvent(
-        _ recurringRoutineEvent: RecurringRoutineEvent,
-        safeDays: Set<DayOfWeek> = []
-    ) {
-        for staleEvent in recurringRoutineEvent.events
-        where !safeDays.contains(staleEvent.dayOfWeek) {
-            self.delete(staleEvent)
-        }
-
-        self.delete(recurringRoutineEvent)
-
-        // Note: Don't save context here.
-        // Typically part of a larger pipeline.
-    }
-
-    func deleteRoutineEvents(
-        _ events: [RoutineEvent]
-    ) {
-        for event in events {
-            if let recurringRoutineEvent = event.recurringParent {
-                self.deleteRecurringRoutineEvent(recurringRoutineEvent)
-                continue
-            }
-
-            self.delete(event)
-        }
-
-        self.safeSave("routineEvent.deleteRoutineEvents")
-    }
-
     // MARK: - Helper Functions
 
-    private func getUpperSortDate(for dayOfWeek: DayOfWeek)
+    // Generates a sortDate for an event below a given neighbor's stableId.
+    private func getSortDate(
+        below upperId: UUID? = nil,
+        in dayOfWeek: DayOfWeek
+    )
         -> Date
     {
         guard let baseDay = Self.baseRoutineDay else {
@@ -222,24 +175,25 @@ extension ModelContext {
 
         do {
             let routineEvents = try self.fetch(
-                FetchDescriptor<RoutineEvent>(
-                    sortBy: [
-                        SortDescriptor(\RoutineEvent.sortDate)
-                    ]
-                )
+                FetchDescriptor<RoutineEvent>()
             ).filter {
-                $0.dayOfWeek == dayOfWeek
+                $0.sortDateMap[dayOfWeek] != nil
+            }.sorted {
+                $0.sortDateMap[dayOfWeek]! < $1.sortDateMap[dayOfWeek]!
             }
 
+            let targetIndex =
+                (routineEvents.firstIndex { $0.stableId == upperId } ?? -1) + 1
+
             return generateSortDate(
-                at: 0,
+                at: targetIndex,
                 in: routineEvents,
                 plannerDay: baseDay
             )
 
         } catch {
             assertionFailure(
-                "ERROR routineEvent.getUpperSortDate: \(error)"
+                "ERROR routineEvent.getSortDate: \(error)"
             )
         }
 

@@ -29,15 +29,7 @@ struct RoutineEventFormView: View {
         self.sourceRoutineEvent = sourceRoutineEvent
         self.sourceDayOfWeek = sourceDayOfWeek
 
-        let daysOfWeek: Set<DayOfWeek> = {
-            if let recurringParent = sourceRoutineEvent?.recurringParent {
-                .init(recurringParent.events.map(\.dayOfWeek))
-            } else if let dayOfWeek = sourceDayOfWeek {
-                .init([dayOfWeek])
-            } else {
-                .init([])
-            }
-        }()
+        let daysOfWeek: Set<DayOfWeek> = sourceRoutineEvent?.daysOfWeek ?? []
 
         let time = {
             if let existingTime = sourceRoutineEvent?.time {
@@ -161,7 +153,7 @@ struct RoutineEventFormView: View {
                     }
                 )
                 .confirmationDialog(
-                    "Delete this recurring event?",
+                    "Delete recurring event?",
                     isPresented: $showDeleteConfirmation,
                     titleVisibility: .visible
                 ) {
@@ -172,7 +164,7 @@ struct RoutineEventFormView: View {
                     )
                 } message: {
                     Text(
-                        "Every occurrence will be deleted. This action is irreversible."
+                        "This will delete all occurrences of the event from your routines and planner. This action cannot be undone."
                     )
                 }
             }
@@ -316,12 +308,6 @@ struct RoutineEventFormView: View {
         dismiss()
 
         if let sourceRoutineEvent {
-            if let recurringParent = sourceRoutineEvent.recurringParent {
-                modelContext.deleteRecurringRoutineEvent(recurringParent)
-                modelContext.safeSave("RoutineEventForm.deleteEvent")
-                return
-            }
-
             modelContext.safeDelete(sourceRoutineEvent)
         }
     }

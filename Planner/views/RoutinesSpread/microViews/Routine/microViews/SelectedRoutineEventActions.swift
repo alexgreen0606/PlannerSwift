@@ -22,7 +22,7 @@ struct SelectedRoutineEventActionsView: View {
             itemsLabel: "recurring events",
             disabled: routineManager.selectedItemIds.isEmpty,
             message:
-                "",  // TODO: add same message as delete all message
+                "This will delete all occurrences of the events from your routines and planner.",
             delete: deleteSelectedEvents
         )
         Spacer()

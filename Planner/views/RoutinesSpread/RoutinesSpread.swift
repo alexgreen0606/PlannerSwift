@@ -92,8 +92,8 @@ struct RoutinesSpreadView: View {
     // MARK: - Functions
 
     private func getRoutineEvents(for dayOfWeek: DayOfWeek) -> [RoutineEvent] {
-        routineEvents.filter { $0.dayOfWeek == dayOfWeek }.sorted {
-            $0.sortDate < $1.sortDate
+        routineEvents.filter { $0.sortDateMap[dayOfWeek] != nil }.sorted {
+            $0.sortDateMap[dayOfWeek]! < $1.sortDateMap[dayOfWeek]!
         }
     }
 }

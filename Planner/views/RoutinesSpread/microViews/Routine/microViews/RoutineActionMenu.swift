@@ -42,14 +42,15 @@ struct RoutineActionMenuView: View {
                 action: deleteAllEvents
             )
         } message: {
-            // TODO: add a warning about deleting from other weekdays too.
             Text(
-                "These recurring events will be deleted from \(isToday ? "today and" : "") every upcoming \(dayOfWeek.rawValue.capitalizedFirst). This action is irreversible."
+                "This will delete all occurrences of the events from your routines and planner. This action cannot be undone."
             )
         }
     }
 
     // MARK: - View Builders
+    
+    // TODO: add button to remove every event from this day.
 
     private var selectEventsButton: some View {
         Button {

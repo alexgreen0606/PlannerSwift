@@ -12,13 +12,16 @@ import SwiftUI
 
 struct ToggleConfig<Item: ListItem> {
     let iconConfig: IconConfig
+    let uncheckedToggleConfig: IconConfig
     let confirmation: ConfirmationConfig<Item>?
 
     init(
         iconConfig: IconConfig,
+        uncheckedIconConfig: IconConfig = IconConfig(name: "circle"),
         confirmation: ConfirmationConfig<Item>? = nil
     ) {
         self.iconConfig = iconConfig
+        self.uncheckedToggleConfig = uncheckedIconConfig
         self.confirmation = confirmation
     }
 }
@@ -79,15 +82,21 @@ struct ListItemToggleView<Item: ListItem>: View {
     }
 
     private var systemImageName: String {
-        isChecked ? toggleConfig.iconConfig.name : "circle"
+        isChecked
+            ? toggleConfig.iconConfig.name
+            : toggleConfig.uncheckedToggleConfig.name
     }
 
     private var primaryColor: Color {
-        isChecked ? toggleConfig.iconConfig.primaryColor : .secondary
+        isChecked
+            ? toggleConfig.iconConfig.primaryColor
+            : toggleConfig.uncheckedToggleConfig.primaryColor
     }
 
     private var secondaryColor: Color {
-        isChecked ? toggleConfig.iconConfig.secondaryColor : .secondary
+        isChecked
+            ? toggleConfig.iconConfig.secondaryColor
+            : toggleConfig.uncheckedToggleConfig.secondaryColor
     }
 
     private var needsConfirmation: Bool {

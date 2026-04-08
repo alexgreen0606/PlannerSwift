@@ -48,11 +48,13 @@ struct RoutineView: View {
                     createItem: createEvent,
                     moveItem: moveEvent,
                     namespace: namespace,
-                    toolbarSystemImageNames: ["clock"],
+                    toolbarSystemImageNames: [
+                        "rectangle.and.pencil.and.ellipsis"
+                    ],
                     onToolbarTap: { _, event in
                         openRoutineEventSheet(for: event)
                     },
-                    // toggleConfig: nil,
+                    toggleConfig: eventToggleConfig,
                     leftAdornment: { _ in EmptyView() },
                     rightAdornment: timeAdornment,
                     bottomAdornment: recurringAdornment,
@@ -93,16 +95,15 @@ struct RoutineView: View {
 
         // MARK: Transfer Event Sheet
         .sheet(isPresented: $showTransferSheet) {
-            //            TransferEventsFormView(
-            //                sourceStartOfDay: plannerDay,
-            //                settings: settings
-            //            )
-            //            .navigationTransition(
-            //                .zoom(
-            //                    sourceID: IdConstants.TRANSFER_BUTTON,
-            //                    in: namespace
-            //                )
-            //            )
+            TransferRoutineEventsFormView(
+                sourceDayOfWeek: dayOfWeek
+            )
+            .navigationTransition(
+                .zoom(
+                    sourceID: IdConstants.TRANSFER_BUTTON,
+                    in: namespace
+                )
+            )
         }
 
         // Inject the environment objects last so they can be accessed in the sheets.
@@ -226,6 +227,7 @@ struct RoutineView: View {
         modelContext.moveRoutineEvent(
             from: from,
             to: to,
+            on: dayOfWeek,
             sortedEvents: sortedRoutineEvents
         )
     }
@@ -244,6 +246,33 @@ struct RoutineView: View {
     private func createLowerEvent(scrollProxy: ScrollViewProxy) {
         createEvent(at: sortedRoutineEvents.count)
         scrollToBottom(scrollProxy: scrollProxy)
+    }
+
+    private func eventToggleConfig(_ event: RoutineEvent) -> ToggleConfig<
+        RoutineEvent
+    >? {
+        ToggleConfig<RoutineEvent>(
+            iconConfig: IconConfig(name: ""),
+            uncheckedIconConfig: IconConfig(
+                name: "minus.circle",
+                primaryColor: Color.red,
+                secondaryColor: Color.tertiary
+            ),
+            confirmation: ConfirmationConfig<RoutineEvent>(
+                title: "Delete recurring event?",
+                message:
+                    "This will delete all occurrences of the event from your routines and planner. This action cannot be undone.",
+                needsConfirmation: { _ in true },
+                actions: [
+                    ConfirmationAction(
+                        title: "Confirm",
+                        role: .destructive
+                    ) { event in
+                        modelContext.deleteRoutineEvents([event])
+                    }
+                ]
+            )
+        )
     }
 
     private func scrollToBottom(scrollProxy: ScrollViewProxy) {

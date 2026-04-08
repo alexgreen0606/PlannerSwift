@@ -11,15 +11,16 @@ import SwiftUI
 // Clean
 
 extension RoutineEvent {
+    
+    var daysOfWeek: Set<DayOfWeek> {
+        Set(self.sortDateMap.keys)
+    }
 
-    func syncWithRecurringRoutineEvent(
-        _ recurringRoutineEvent: RecurringRoutineEvent
+    func syncWithDraftRoutineEvent(
+        _ draft: DraftRoutineEvent
     ) {
-        guard !self.isException else { return }
-
-        self.title = recurringRoutineEvent.title
-        self.time = recurringRoutineEvent.time
-        self.recurringParent = recurringRoutineEvent
+        self.title = draft.title
+        self.time = draft.hasTime ? draft.date : nil
     }
 
     @ViewBuilder
@@ -42,9 +43,9 @@ extension RoutineEvent {
     func recurringAdornment(
         openEventSheet: (() -> Void)?
     ) -> some View {
-        if let recurringParent {
+        if sortDateMap.keys.count > 1 {
             DayOfWeekSpreadView(
-                selected: Set(recurringParent.events.map { $0.dayOfWeek }),
+                selected: self.daysOfWeek,
                 scale: 0.66,
                 spacing: 1
             )
