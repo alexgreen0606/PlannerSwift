@@ -56,7 +56,7 @@ extension Color {
         )
     }
 
-    static var calendarIconMonth: Color {
+    static var inverseLabel: Color {
         let light = UIColor.white
         let dark = UIColor.black
 

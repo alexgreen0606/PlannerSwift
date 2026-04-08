@@ -125,10 +125,6 @@ struct ContentView: View {
                         ChecklistsTabView()
                     }
 
-                    Tab("", systemImage: "repeat") {
-                        RoutinesTabView()
-                    }
-
                     Tab("", systemImage: "gear") {
                         SettingsTabView(settings: settings)
                     }
@@ -237,14 +233,14 @@ struct ContentView: View {
             systemColorScheme: systemColorScheme
         )
 
-        modelContext.ensurePlannerSettings(
+        let settings = modelContext.ensurePlannerSettings(
             settings: plannerSettingsList
         )
 
         modelContext.ensureRootFolder(folders: checklistItems)
 
         calendarStore.attemptFreshLoad(
-            hiddenCalendarIds: settings!.hiddenCalendarIds
+            hiddenCalendarIds: settings.hiddenCalendarIds
         )
 
         cleanseStorage()

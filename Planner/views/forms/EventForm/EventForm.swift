@@ -200,7 +200,6 @@ struct EventFormView: View {
 
     private func saveCalendarEvent(_ event: EKEvent?) {
 
-        // TODO: maybe just need datestamp here? YES: can also just pass source datestamp as well
         let destinationDatestamp = modelContext.handleCalendarEventChange(
             event,
             sourceDatestamp: sourcePlanner?.datestamp,

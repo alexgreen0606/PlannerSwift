@@ -12,9 +12,9 @@ import SwiftUI
 // Clean
 
 @MainActor
-func generateSortDate(
+func generateSortDate<Event: EventListItem>(
     at index: Int,
-    in sortedEvents: [PlannerEvent], // May or may not contain the event being placed.
+    in sortedEvents: [Event],  // May or may not contain the event being placed.
     plannerDay: DateInRegion
 ) -> Date {
 
@@ -27,7 +27,8 @@ func generateSortDate(
     }
 
     var prevDate = index == 0 ? dayStart : sortedEvents[index - 1].sortDate
-    var nextDate = index >= sortedEvents.count ? dayEnd : sortedEvents[index].sortDate
+    var nextDate =
+        index >= sortedEvents.count ? dayEnd : sortedEvents[index].sortDate
     let interval = nextDate.timeIntervalSince(prevDate)
 
     if interval < 1.0 {
@@ -39,7 +40,8 @@ func generateSortDate(
         )
 
         prevDate = index == 0 ? dayStart : sortedEvents[index - 1].sortDate
-        nextDate = index >= sortedEvents.count ? dayEnd : sortedEvents[index].sortDate
+        nextDate =
+            index >= sortedEvents.count ? dayEnd : sortedEvents[index].sortDate
     }
 
     return midpoint(between: prevDate, and: nextDate)
@@ -53,8 +55,8 @@ private func midpoint(between a: Date, and b: Date) -> Date {
 }
 
 @MainActor
-private func normalizeSortDates(
-    events: [PlannerEvent],
+private func normalizeSortDates<Event: EventListItem>(
+    events: [Event],
     startOfDay: DateInRegion
 ) {
     guard !events.isEmpty else { return }

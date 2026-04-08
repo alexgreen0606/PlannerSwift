@@ -101,7 +101,7 @@ extension ModelContext {
 
     @MainActor
     func updatePlannerEvent(
-        _ draftPlannerEvent: DraftPlannerEvent,
+        with draftPlannerEvent: DraftPlannerEvent,
         sourceDatestamp: String?,
         targetDatestamp: String,
         settings: PlannerSettings,

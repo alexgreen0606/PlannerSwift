@@ -52,8 +52,16 @@ struct CalendarsFormView: View {
                     content: row
                 )
             } footer: {
-                Text("Turn off a calendar to hide its events throughout the app.")
+                Text(
+                    "Turn off a calendar to hide its events throughout the app."
+                )
             }
+
+            // MARK: BOTTOM PADDING
+            Section {
+                Color.clear.frame(height: 16)
+            }
+            .discreetListItem()
         }
         .navigationTitle("Calendars")
         .navigationBarTitleDisplayMode(.inline)

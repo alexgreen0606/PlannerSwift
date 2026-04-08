@@ -56,7 +56,9 @@ struct PlannerApp: App {
             Planner.self,
             PlannerEvent.self,
             ChecklistItem.self,
-            Trip.self
+            Trip.self,
+            RoutineEvent.self,
+            RecurringRoutineEvent.self
         ])
     }
 }

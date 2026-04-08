@@ -33,12 +33,15 @@ struct PlannerTabView: View {
         self.settings = settings
         self.namespace = namespace
 
-        self.thisWeekDatestamps = getThisWeekDatestamps()
+        self._thisWeekDatestamps = State(initialValue: getThisWeekDatestamps())
     }
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
             KeepPastEventsDuration.oneMonth
+    
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        AccentColor.blue
 
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
@@ -88,6 +91,8 @@ struct PlannerTabView: View {
         NavigationStack {
             ScrollViewReader { scrollProxy in
                 List {
+
+                    // MARK: THIS WEEK
                     Section {
                         ScrollView(.horizontal) {
                             HStack {
@@ -108,31 +113,18 @@ struct PlannerTabView: View {
                     } header: {
                         Text("This Week")
                             .padding()
-                    } footer: {
-                        if !tripsByYear.isEmpty {
-                            Color.clear.frame(height: 0)
-                                .overlay {
-                                    Text("Upcoming Trips")
-                                        .sectionLabel()
-                                        .frame(
-                                            maxWidth: .infinity,
-                                            alignment: .leading
-                                        )
-                                        .padding(.top, 80)
-                                }
-                        }
                     }
-                    .listSectionMargins(.vertical, 0)
+                    .listSectionMargins(.top, 0)
                     .listRowInsets(EdgeInsets())
                     .discreetListItem()
 
-                    if tripsByYear.isEmpty {
-                        EmptyLabelView("No Upcoming Trips")
-                            .frame(height: ListLayout.EMPTY_LABEL_HEIGHT)
-                            .frame(maxWidth: .infinity)
-                            .padding().discreetListItem()
+                    // MARK: ROUTINES
+                    Section("Routines") {
+                        RoutinesSpreadView()
                     }
+                    .discreetListItem()
 
+                    // MARK: TRIPS
                     ForEach(Array(sortedTripYears.enumerated()), id: \.element)
                     {
                         index,
@@ -158,19 +150,25 @@ struct PlannerTabView: View {
                                 }
                             }
                         } header: {
-                            YearSectionHeaderView(year)
-                                .padding(.bottom)
-                                .padding(.trailing)
-                        } footer: {
-                            if index == sortedTripYears.count - 1 {
-                                Color.clear.frame(height: 16)
-                                    .discreetListItem()
+                            ZStack {
+                                if index == 0 {
+                                    Text("Upcoming Trips")
+                                } else {
+                                    YearSectionHeaderView(year)
+                                }
                             }
+                            .padding(.horizontal)
+                            .padding(.bottom)
                         }
-                        .listSectionMargins(.top, 0)
+                        .listRowInsets(EdgeInsets())
+                        .discreetListItem()
                     }
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets())
+
+                    // MARK: BOTTOM PADDING
+                    Section {
+                        Color.clear.frame(height: 16)
+                    }
+                    .discreetListItem()
                 }
                 .animation(.linear, value: expandedTrips)
                 .listStyle(.plain)
@@ -253,6 +251,7 @@ struct PlannerTabView: View {
                         selection: $tappedDates,
                         in: dateBounds
                     )
+                    .tint(accentColor.color)
                     .onChange(of: tappedDates) { _, newValue in
                         guard let selected = newValue.first,
                             let year = selected.year,

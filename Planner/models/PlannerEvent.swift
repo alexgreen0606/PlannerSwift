@@ -13,15 +13,11 @@ import SwiftData
 
 @available(iOS 26.0, *)
 @Model
-class PlannerEvent: ListItem {
+class PlannerEvent: EventListItem {
 
     var date: Date
     var hasTime: Bool = false
     var isCanceled: Bool = false
-
-    // Controlled by drag-and-drop.
-    // May go out of sync with the date.
-    var sortDate: Date
     
     @Relationship(deleteRule: .nullify, inverse: \Location.events)
     var location: Location?
@@ -40,9 +36,8 @@ class PlannerEvent: ListItem {
         calendarEvent: EKEvent? = nil,
     ) {
         self.date = date
-        self.sortDate = sortDate
 
-        super.init(sortIndex: 0)
+        super.init(sortDate: sortDate)
         
         // Calendar event synchronization.
         if let calendarEvent {

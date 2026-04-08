@@ -35,21 +35,21 @@ struct SortableListView<
     private let leftAdornment: (_ item: Item) -> LeftAdornment
     private let rightAdornment: (_ item: Item) -> RightAdornment
     private let bottomAdornment: (_ item: Item) -> BottomAdornment
-    private let scrollProxy: ScrollViewProxy
+    private let scrollProxy: ScrollViewProxy?
     private let createItem: (_ at: Int) -> Void
     private let handleTitleChange: ((_ item: Item) -> Void)?
     private let moveItem: (_ from: Int, _ to: Int) -> Void
 
     init(
         uncheckedItems: [Item],
-        checkedItems: [Item],
+        checkedItems: [Item] = [],
         rowId: @escaping (_ item: Item) -> String = { "\($0.stableId)" },
-        showChecked: Bool,
-        checkedHeader: String,
+        showChecked: Bool = false,
+        checkedHeader: String = "",
         emptyUncheckedLabel: String,
-        emptyCheckedLabel: String,
+        emptyCheckedLabel: String = "",
         tint: @escaping (_: Item) -> Color,
-        scrollProxy: ScrollViewProxy,
+        scrollProxy: ScrollViewProxy? = nil,
         createItem: @escaping (_: Int) -> Void,
         moveItem: @escaping (_: Int, _: Int) -> Void,
         floatingInfo: FloatingInfo? = EmptyView(),
@@ -96,7 +96,7 @@ struct SortableListView<
     @EnvironmentObject private var listManager: ListManager<Item>
 
     var body: some View {
-        List {
+        let list = List {
             uncheckedList
             checkedList
         }
@@ -123,13 +123,18 @@ struct SortableListView<
             }
         }
 
-        // Slide to checked items when the user marks them visible.
-        .withScrollTrigger(
-            scrollProxy: scrollProxy,
-            trigger: showChecked,
-            id: IdConstants.CHECKED_ITEMS,
-            disabled: !showChecked
-        )
+        if let scrollProxy {
+            list
+                // Slide to checked items when the user marks them visible.
+                .withScrollTrigger(
+                    scrollProxy: scrollProxy,
+                    trigger: showChecked,
+                    id: IdConstants.CHECKED_ITEMS,
+                    disabled: !showChecked
+                )
+        } else {
+            list
+        }
     }
 
     // MARK: - View Builders

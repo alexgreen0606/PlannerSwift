@@ -183,7 +183,7 @@ extension String {
         formatted("MMMM d")
     }
 
-    private var dateWithYear: String {  // Ex: May 12, 2025
+    var dateWithYear: String {  // Ex: May 12, 2025
         formatted("MMMM d, yyyy")
     }
 

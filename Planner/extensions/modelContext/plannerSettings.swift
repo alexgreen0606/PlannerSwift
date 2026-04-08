@@ -19,15 +19,17 @@ extension ModelContext {
     @MainActor
     func ensurePlannerSettings(
         settings: [PlannerSettings]
-    ) {
-        if settings.first != nil {
-            return
+    ) -> PlannerSettings {
+        if let existing = settings.first {
+            return existing
         }
 
         let newSettings = PlannerSettings()
-        insert(newSettings)
 
+        insert(newSettings)
         self.safeSave("plannerSettings.ensurePlannerSettings")
+
+        return newSettings
     }
 
     // MARK: - UPDATE

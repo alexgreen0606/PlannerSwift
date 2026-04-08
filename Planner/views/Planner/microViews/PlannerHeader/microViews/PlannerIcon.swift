@@ -81,7 +81,7 @@ struct PlannerIconView: View {
 
     private var detailColor: Color {
         format == .shortMonth
-            ? Color.calendarIconMonth : Color.label
+            ? Color.inverseLabel : Color.label
     }
 
     // MARK: - Body

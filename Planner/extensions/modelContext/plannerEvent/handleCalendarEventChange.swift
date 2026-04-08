@@ -31,6 +31,15 @@ extension ModelContext {
 
                 // The calendar event is deleted or all-day. Remove the storage record.
                 self.delete(sourcePlannerEvent)
+
+                if let startDate = calendarEvent?.startDate {
+                    // Return the new destination of all-day events.
+                    return getEarliestPlannerDay(
+                        for: startDate,
+                        settings: settings
+                    )?.datestamp
+                }
+
                 return nil
             }
 
@@ -53,7 +62,7 @@ extension ModelContext {
                 for: calendarEvent,
                 in: destinationDay
             )
-            
+
             destinationDatestamp = destinationDay?.datestamp
 
         }

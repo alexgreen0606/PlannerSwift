@@ -85,6 +85,7 @@ struct PlannerChipSpreadView: View {
         .sheet(isPresented: $showLocationSheet) {
             let form = LocationSearchFormView(
                 title: "Edit Planner Location",
+                subtitle: planner.datestamp.dateWithYear,
                 mode: .planner,
                 settings: settings,
                 initialLocation: planner.location,

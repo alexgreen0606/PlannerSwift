@@ -25,7 +25,7 @@ extension ModelContext {
         if let calendarEvent = event.calendarEvent {
             // Event is a calendar event. Update its title in the calendar.
             calendarEvent.title = event.title
-            eventKitStore.updateEvent(calendarEvent)
+            let _ = eventKitStore.updateEvent(calendarEvent)
             return
         }
 

@@ -9,7 +9,6 @@ import EventKit
 import SwiftData
 import SwiftDate
 import SwiftUI
-import SwiftUIIntrospect
 
 // Clean
 
@@ -40,7 +39,6 @@ struct PlannerEventFormView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
-    @EnvironmentObject private var notificationManager: NotificationManager
     @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
@@ -256,8 +254,7 @@ struct PlannerEventFormView: View {
             } else {
                 FormLabelView(
                     systemImageName: "clock",
-                    value: draftPlannerEvent.hasTime
-                        ? timeAndDay.datestamp.dateLabel : "Add Time"
+                    value: "Add Time"
                 ) {
                     ensureTextfieldBlurred()
                     draftPlannerEvent.hasTime = true
@@ -334,7 +331,7 @@ struct PlannerEventFormView: View {
     private func savePlannerEvent() {
 
         let destinationDatestamp = modelContext.updatePlannerEvent(
-            draftPlannerEvent,
+            with: draftPlannerEvent,
             sourceDatestamp: sourceDatestamp,
             targetDatestamp: DateInRegion(
                 draftPlannerEvent.date,
@@ -411,7 +408,7 @@ struct PlannerEventFormView: View {
         dismiss()
 
         if let sourcePlannerEvent {
-            modelContext.deletePlannerEvents([sourcePlannerEvent])
+            modelContext.safeDelete(sourcePlannerEvent)
         }
     }
 

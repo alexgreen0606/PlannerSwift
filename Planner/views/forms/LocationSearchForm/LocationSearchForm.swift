@@ -21,6 +21,7 @@ enum LocationSearchMode {
 
 struct LocationSearchFormView: View {
     private let title: String
+    private let subtitle: String?
     private let mode: LocationSearchMode
     private let settings: PlannerSettings
     private let initialLocation: Location?
@@ -30,6 +31,7 @@ struct LocationSearchFormView: View {
 
     init(
         title: String,
+        subtitle: String? = nil,
         mode: LocationSearchMode,
         settings: PlannerSettings,
         initialLocation: Location?,
@@ -37,6 +39,7 @@ struct LocationSearchFormView: View {
         saveSelection: @escaping (Location?) -> Void
     ) {
         self.title = title
+        self.subtitle = subtitle
         self.mode = mode
         self.settings = settings
         self.initialLocation = initialLocation
@@ -129,6 +132,7 @@ struct LocationSearchFormView: View {
                 }
             }
             .navigationTitle(title)
+            .navigationSubtitle(subtitle ?? "")
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
             .toolbar {

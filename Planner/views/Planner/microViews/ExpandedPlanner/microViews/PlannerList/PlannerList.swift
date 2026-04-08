@@ -65,6 +65,7 @@ struct PlannerListView: View {
                 todaystamp: todaystampWatcher.todaystamp
             )
         )
+        // TODO: is this necessary?
         .animateSynchronousAction(
             from: sortedOpenPlannerEvents.map(\.location?.name)
         )
