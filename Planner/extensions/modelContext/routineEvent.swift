@@ -78,11 +78,17 @@ extension ModelContext {
     @MainActor
     func transferRoutineEvents(
         _ events: [RoutineEvent],
-        to daysOfWeek: Set<DayOfWeek>
+        to daysOfWeek: Set<DayOfWeek>,
+        sortedSourceRoutineEvents: [RoutineEvent],
+        sourceDayOfWeek: DayOfWeek
     ) {
         guard !daysOfWeek.isEmpty else { return }
 
-        for event in events {
+        let sortedEvents = events.sorted {
+            $0.sortDateMap[sourceDayOfWeek]! < $1.sortDateMap[sourceDayOfWeek]!
+        }
+
+        for event in sortedEvents {
             self.updateRoutineEvent(
                 with: DraftRoutineEvent(
                     date: event.time ?? Date(),
@@ -91,7 +97,7 @@ extension ModelContext {
                     daysOfWeek: daysOfWeek
                 ),
                 sourceRoutineEvent: event,
-                sourceNeighborIds: NeighborIds(upperId: nil, lowerId: nil),  // TODO: use this
+                sortedSourceEvents: sortedSourceRoutineEvents,
                 skipSave: true
             )
         }
@@ -103,7 +109,7 @@ extension ModelContext {
     func updateRoutineEvent(
         with draftRoutineEvent: DraftRoutineEvent,
         sourceRoutineEvent: RoutineEvent?,
-        sourceNeighborIds: NeighborIds?,
+        sortedSourceEvents: [RoutineEvent]?,
         skipSave: Bool = false
     ) {
         guard !draftRoutineEvent.daysOfWeek.isEmpty else { return }
@@ -126,9 +132,10 @@ extension ModelContext {
         let daysToAdd = daysToSync.subtracting(existingDays)
         for day in daysToAdd {
             // Add new days and place the event near any corresponding neighbors from the source.
-            event.sortDateMap[day] = getSortDate(
-                between: sourceNeighborIds,
-                in: day
+            event.sortDateMap[day] = getValidSortDate(
+                for: event,
+                in: day,
+                from: sortedSourceEvents ?? []
             )
         }
 
@@ -181,9 +188,10 @@ extension ModelContext {
     // MARK: - Helper Functions
 
     // Generates a sortDate for an event below a given neighbor's stableId.
-    private func getSortDate(
-        between neighborIds: NeighborIds? = nil,
-        in dayOfWeek: DayOfWeek
+    private func getValidSortDate(
+        for event: RoutineEvent,
+        in dayOfWeek: DayOfWeek,
+        from sortedSourceEvents: [RoutineEvent] = []
     )
         -> Date
     {
@@ -192,7 +200,7 @@ extension ModelContext {
         }
 
         do {
-            let routineEvents = try self.fetch(
+            let sortedDestinationEvents = try self.fetch(
                 FetchDescriptor<RoutineEvent>()
             ).filter {
                 $0.sortDateMap[dayOfWeek] != nil
@@ -200,27 +208,65 @@ extension ModelContext {
                 $0.sortDateMap[dayOfWeek]! < $1.sortDateMap[dayOfWeek]!
             }
 
-            var targetIndex: Int?
+            // MARK: Find current index in source.
+            guard
+                let sourceIndex = sortedSourceEvents.firstIndex(where: {
+                    $0.stableId == event.stableId
+                })
+            else {
+                // Fallback to top of list if source not found.
+                return generateSortDate(
+                    at: 0,
+                    in: sortedDestinationEvents,
+                    plannerDay: baseDay,
+                    getSortDate: { $0.sortDateMap[dayOfWeek]! },
+                    setSortDate: { event, sortDate in
+                        event.sortDateMap[dayOfWeek] = sortDate
+                    }
+                )
+            }
 
-            if let upperId = neighborIds?.upperId,
-                let index = routineEvents.firstIndex(where: {
-                    $0.stableId == upperId
-                })
-            {
-                // Place below the upper neighbor.
-                targetIndex = index + 1
-            } else if let lowerId = neighborIds?.lowerId,
-                let index = routineEvents.firstIndex(where: {
-                    $0.stableId == lowerId
-                })
-            {
-                // Place above the lower neighbor.
-                targetIndex = index
+            var targetIndex: Int?
+            let maxDistance = sortedSourceEvents.count
+
+            // MARK: Expand outward to find a neighbor that exists in the new destination.
+            for distance in 1..<maxDistance {
+                // Check if upper neighbor exists in the destination.
+                let upperIndex = sourceIndex - distance
+                if upperIndex >= 0 {
+                    let upperId = sortedSourceEvents[upperIndex].stableId
+
+                    if let destIndex = sortedDestinationEvents.firstIndex(
+                        where: {
+                            $0.stableId == upperId
+                        })
+                    {
+                        // MARK: Place below the upper neighbor.
+                        targetIndex = destIndex + 1
+                        break
+                    }
+                }
+
+                // Check if lower neighbor exists in the destination.
+                let lowerIndex = sourceIndex + distance
+                if lowerIndex < sortedSourceEvents.count {
+                    let lowerId = sortedSourceEvents[lowerIndex].stableId
+
+                    if let destIndex = sortedDestinationEvents.firstIndex(
+                        where: {
+                            $0.stableId == lowerId
+                        })
+                    {
+                        // MARK: Place above the lower neighbor.
+                        targetIndex = destIndex
+                        break
+                    }
+                }
             }
 
             return generateSortDate(
                 at: targetIndex ?? 0,
-                in: routineEvents,
+                in: sortedDestinationEvents,
                 plannerDay: baseDay,
                 getSortDate: {
                     $0.sortDateMap[dayOfWeek]!

@@ -53,15 +53,37 @@ struct PlannerHeaderView: View {
 
     var subtitle: String {
         customSubtitle
-            ?? plannerSubtitle(
-                datestamp: datestamp,
+            ?? datestamp.proximityFormat(
+                using: [
+                    ProximityRule(
+                        proximity: .withinADay,
+                        format: .weekday
+                    ),
+                    ProximityRule(
+                        proximity: .next7Days,
+                        format: .countdown
+                    ),
+                    ProximityRule(
+                        proximity: .fallback,
+                        format: .countdown
+                    ),
+                ],
                 todaystamp: todaystamp
             )
     }
 
     var iconFormat: DateFormat {
-        customIconFormat
-            ?? plannerIconFormat(datestamp: datestamp, todaystamp: todaystamp)
+        if let customIconFormat {
+            return customIconFormat
+        }
+
+        if datestamp.isNext7Days(todaystamp: todaystamp)
+            || datestamp.isWithinADay(todaystamp: todaystamp)
+        {
+            return .shortMonth
+        }
+
+        return .shortWeekday
     }
 
     var body: some View {

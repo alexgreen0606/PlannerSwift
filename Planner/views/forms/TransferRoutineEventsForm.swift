@@ -14,6 +14,7 @@ import SwiftUI
 
 struct TransferRoutineEventsFormView: View {
     let sourceDayOfWeek: DayOfWeek
+    let sortedSourceRoutineEvents: [RoutineEvent]
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -82,7 +83,9 @@ struct TransferRoutineEventsFormView: View {
 
         modelContext.transferRoutineEvents(
             routineManager.selectedItems,
-            to: selectedDaysOfWeek
+            to: selectedDaysOfWeek,
+            sortedSourceRoutineEvents: sortedSourceRoutineEvents,
+            sourceDayOfWeek: sourceDayOfWeek
         )
 
         routineManager.toggleSelectMode()

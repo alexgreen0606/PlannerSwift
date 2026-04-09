@@ -28,31 +28,6 @@ extension RoutineEvent {
         self.time = draft.hasTime ? draft.date : nil
     }
 
-    func getNeighborIds(
-        in sortedRoutineEvents: [RoutineEvent]
-    ) -> NeighborIds {
-
-        guard
-            let index = sortedRoutineEvents.firstIndex(where: {
-                $0.stableId == self.stableId
-            })
-        else {
-            return NeighborIds(upperId: nil, lowerId: nil)
-        }
-
-        let upperId =
-            index > 0
-            ? sortedRoutineEvents[index - 1].stableId
-            : nil
-
-        let lowerId =
-            index < sortedRoutineEvents.count - 1
-            ? sortedRoutineEvents[index + 1].stableId
-            : nil
-
-        return NeighborIds(upperId: upperId, lowerId: lowerId)
-    }
-
     @ViewBuilder
     func timeAdornment(
         dayOfWeek: DayOfWeek,
@@ -60,14 +35,14 @@ extension RoutineEvent {
         scale: Double = 1,
         openEventSheet: (() -> Void)?
     ) -> some View {
-        // if let time = self.time {
+        if let time = self.time {
             TimeView(
-                timeInRegion: DateInRegion(self.sortDateMap[dayOfWeek]!, region: .UTC),
+                timeInRegion: DateInRegion(time, region: .UTC),
                 color: accentColor.color,
                 scale: scale,
                 openEventSheet: openEventSheet
             )
-        // }
+        }
     }
 
     @ViewBuilder

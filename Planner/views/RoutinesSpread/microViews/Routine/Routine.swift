@@ -10,7 +10,6 @@ import SwiftUI
 
 struct RoutineEventSheetContext: Identifiable {
     var routineEvent: RoutineEvent
-    var neighborIds: NeighborIds
 
     var id: String {
         routineEvent.stableId.uuidString
@@ -82,7 +81,7 @@ struct RoutineView: View {
             RoutineEventFormView(
                 sourceRoutineEvent: context.routineEvent,
                 sourceDayOfWeek: dayOfWeek,
-                sourceNeighborIds: context.neighborIds
+                sortedSourceEvents: sortedRoutineEvents
             )
             .navigationTransition(
                 .zoom(
@@ -98,7 +97,8 @@ struct RoutineView: View {
         // MARK: Transfer Event Sheet
         .sheet(isPresented: $showTransferSheet) {
             TransferRoutineEventsFormView(
-                sourceDayOfWeek: dayOfWeek
+                sourceDayOfWeek: dayOfWeek,
+                sortedSourceRoutineEvents: sortedRoutineEvents
             )
             .navigationTransition(
                 .zoom(
@@ -241,13 +241,10 @@ struct RoutineView: View {
             return
         }
 
-        let neighborIds = event.getNeighborIds(in: sortedRoutineEvents)
-
         routineManager.protectedId = event.stableId
         routineManager.focusedId = nil
         routineEventSheetContext = RoutineEventSheetContext(
-            routineEvent: event,
-            neighborIds: neighborIds
+            routineEvent: event
         )
     }
 

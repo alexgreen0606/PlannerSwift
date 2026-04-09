@@ -21,16 +21,15 @@ struct DraftRoutineEvent {
 struct RoutineEventFormView: View {
     private let sourceRoutineEvent: RoutineEvent?
     private let sourceDayOfWeek: DayOfWeek?
-    private let sourceNeighborIds: NeighborIds?
-
+    private let sortedSourceEvents: [RoutineEvent]?
     init(
         sourceRoutineEvent: RoutineEvent? = nil,
         sourceDayOfWeek: DayOfWeek? = nil,
-        sourceNeighborIds: NeighborIds? = nil
+        sortedSourceEvents: [RoutineEvent]? = nil
     ) {
         self.sourceRoutineEvent = sourceRoutineEvent
         self.sourceDayOfWeek = sourceDayOfWeek
-        self.sourceNeighborIds = sourceNeighborIds
+        self.sortedSourceEvents = sortedSourceEvents
 
         let daysOfWeek: Set<DayOfWeek> = sourceRoutineEvent?.daysOfWeek ?? []
 
@@ -260,7 +259,7 @@ struct RoutineEventFormView: View {
         modelContext.updateRoutineEvent(
             with: draftRoutineEvent,
             sourceRoutineEvent: sourceRoutineEvent,
-            sourceNeighborIds: sourceNeighborIds
+            sortedSourceEvents: sortedSourceEvents
         )
 
         dismiss()
