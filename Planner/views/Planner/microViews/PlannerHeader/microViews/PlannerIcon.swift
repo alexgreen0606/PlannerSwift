@@ -96,6 +96,7 @@ struct PlannerIconView: View {
             Text(detail)
                 .font(.system(size: detailSize))
                 .fontWeight(.black)
+                .fontDesign(.rounded)
                 .foregroundStyle(detailColor)
                 .offset(y: detailOffset)
         }

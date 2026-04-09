@@ -99,7 +99,15 @@ struct FolderView: View {
             }
         }
         .overlay {
-            NotificationsView()
+            if !notificationManager.notifications.isEmpty {
+                // Note: Must be rendered conditionally within this file.
+                // Changes to notifications are sometimes not recognized within the NotificationsView
+                // due to overlay restrictions.
+                NotificationsView()
+                    .transition(
+                        .move(edge: .leading).combined(with: .opacity)
+                    )
+            }
         }
         .environmentObject(selectManager)
         .environmentObject(notificationManager)

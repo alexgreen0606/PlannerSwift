@@ -191,10 +191,10 @@ struct ContentView: View {
             || datestamp.isWithinADay(todaystamp: todaystampWatcher.todaystamp)
         PlannerHeaderView(
             datestamp: datestamp,
-            // These must be passed to override the default toolbar styles applied to the icon.
-            iconSize: 30,
-            iconDetailSize: isDateIcon ? 9 : 11,
-            iconDetailOffset: isDateIcon ? 2.5 : 17.4
+            customTextScale: 1.1,
+            iconSize: 36,
+            iconDetailSize: isDateIcon ? 10 : 13,
+            iconDetailOffset: isDateIcon ? 3 : 20
         )
     }
 

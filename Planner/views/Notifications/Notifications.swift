@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+// Clean
+
 struct NotificationsView: View {
 
     @EnvironmentObject private var notificationManager: NotificationManager

@@ -12,17 +12,20 @@ import SwiftUI
 
 struct ToggleConfig<Item: ListItem> {
     let iconConfig: IconConfig
-    let uncheckedToggleConfig: IconConfig
+    let uncheckedIconConfig: IconConfig
     let confirmation: ConfirmationConfig<Item>?
+    let onClick: (() -> Void)?
 
     init(
         iconConfig: IconConfig,
         uncheckedIconConfig: IconConfig = IconConfig(name: "circle"),
-        confirmation: ConfirmationConfig<Item>? = nil
+        confirmation: ConfirmationConfig<Item>? = nil,
+        onClick: (() -> Void)? = nil
     ) {
         self.iconConfig = iconConfig
-        self.uncheckedToggleConfig = uncheckedIconConfig
+        self.uncheckedIconConfig = uncheckedIconConfig
         self.confirmation = confirmation
+        self.onClick = onClick
     }
 }
 
@@ -84,19 +87,19 @@ struct ListItemToggleView<Item: ListItem>: View {
     private var systemImageName: String {
         isChecked
             ? toggleConfig.iconConfig.name
-            : toggleConfig.uncheckedToggleConfig.name
+            : toggleConfig.uncheckedIconConfig.name
     }
 
     private var primaryColor: Color {
         isChecked
             ? toggleConfig.iconConfig.primaryColor
-            : toggleConfig.uncheckedToggleConfig.primaryColor
+            : toggleConfig.uncheckedIconConfig.primaryColor
     }
 
     private var secondaryColor: Color {
         isChecked
             ? toggleConfig.iconConfig.secondaryColor
-            : toggleConfig.uncheckedToggleConfig.secondaryColor
+            : toggleConfig.uncheckedIconConfig.secondaryColor
     }
 
     private var needsConfirmation: Bool {
@@ -118,6 +121,8 @@ struct ListItemToggleView<Item: ListItem>: View {
             )
             .contentShape(Rectangle())
             .onTapGesture {
+                customToggleConfig?.onClick?()
+                
                 if needsConfirmation {
                     isConfirmationOpen = true
                 } else {

@@ -77,6 +77,7 @@ struct RoutinesSpreadView: View {
         // MARK: Routine Cover
         .fullScreenCover(item: $routineCoverContext) { context in
             RoutineView(
+                routineCoverContext: $routineCoverContext,
                 weekday: context.weekday,
                 sortedRoutineEvents: context.weekday.sortedEvents(
                     in: routineEvents

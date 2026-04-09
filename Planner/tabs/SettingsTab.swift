@@ -133,7 +133,7 @@ struct SettingsTabView: View {
                             Text("Home Location")
                             Spacer()
                             Text(
-                                settings.homeLocationLabel
+                                settings.homeLocation?.name ?? "Current Location"
                             )
                             .font(.subheadline)
                             .foregroundStyle(.secondary)

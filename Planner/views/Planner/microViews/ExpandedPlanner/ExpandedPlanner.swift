@@ -105,16 +105,23 @@ struct ExpandedPlannerView<Header: View>: View {
             }
         }
         .overlay {
-            NotificationsView()
+            if !notificationManager.notifications.isEmpty {
+                // Note: Must be rendered conditionally within this file.
+                // Changes to notifications are sometimes not recognized within the NotificationsView
+                // due to overlay restrictions.
+                NotificationsView()
+                    .transition(.move(edge: .leading).combined(with: .opacity))
+                    .padding(.bottom, plannerManager.focusedId == nil ? 0 : 8)
+            }
         }
 
-        // Event Sheet
+        // MARK: Event Sheet
         .sheet(item: $eventSheetContext) { context in
             EventFormView(
                 sourcePlanner: planner,
                 plannerEvent: context.plannerEvent,
                 calendarEvent: context.calendarEvent,
-                settings: settings,
+                settings: settings
             )
             .navigationTransition(
                 .zoom(
@@ -127,7 +134,7 @@ struct ExpandedPlannerView<Header: View>: View {
             }
         }
 
-        // Transfer Event Sheet
+        // MARK: Transfer Event Sheet
         .sheet(isPresented: $showTransferSheet) {
             TransferEventsFormView(
                 sourceStartOfDay: plannerDay,
@@ -179,7 +186,6 @@ struct ExpandedPlannerView<Header: View>: View {
     }
 
     // MARK: Header
-
     @ToolbarContentBuilder
     private var headerToolbar: some ToolbarContent {
         if !plannerManager.isSelectMode {

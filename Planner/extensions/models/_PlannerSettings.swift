@@ -22,8 +22,8 @@ extension PlannerSettings {
         self.homeLocation?.region ?? .local
     }
 
-    var homeLocationLabel: String {
-        homeLocation?.name ?? "Current Location"
+    func homeLocationLabel(deviceLocation: Location?) -> String {
+        homeLocation(deviceLocation: deviceLocation)?.name ?? "Current Location"
     }
 
     var homeLocationIconConfig: IconConfig {

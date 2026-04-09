@@ -193,7 +193,6 @@ struct TransferChecklistItemsFormView: View {
         DispatchQueue.main.async {
             notificationManager.addNotification(
                 NotificationConfig(
-                    id: UUID(),
                     title:
                         "Transferred \(itemCount) item\(itemCount == 1 ? "" : "s")",
                     subtitle: "to \(selectedItem.title)",

@@ -255,7 +255,6 @@ struct EventFormView: View {
                     )
 
                 config = NotificationConfig(
-                    id: UUID(),
                     title: "Event scheduled",
                     subtitle:
                         "for \(ordinalDestinationDay)",
@@ -294,7 +293,6 @@ struct EventFormView: View {
                     )
 
                 config = NotificationConfig(
-                    id: UUID(),
                     title: "Event moved",
                     subtitle: "to \(ordinalDestinationDay)",
                     iconConfig: IconConfig(
@@ -316,7 +314,6 @@ struct EventFormView: View {
             config == nil
         {
             config = NotificationConfig(
-                id: UUID(),
                 title: "Event deleted",
                 subtitle: "from calendar",
                 iconConfig: IconConfig(

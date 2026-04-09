@@ -10,20 +10,18 @@ import SwiftUI
 // Clean
 
 struct NotificationConfig: Equatable {
-    let id: UUID
+    let id = UUID()
     let title: String
     let subtitle: String?
     let iconConfig: IconConfig
     let onClick: (() -> Void)?
 
     init(
-        id: UUID,
         title: String,
         subtitle: String? = nil,
         iconConfig: IconConfig,
         onClick: (() -> Void)? = nil
     ) {
-        self.id = id
         self.title = title
         self.subtitle = subtitle
         self.iconConfig = iconConfig

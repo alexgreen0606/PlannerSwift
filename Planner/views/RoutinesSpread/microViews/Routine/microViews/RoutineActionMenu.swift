@@ -43,7 +43,7 @@ struct RoutineActionMenuView: View {
             )
         } message: {
             Text(
-                "This will delete all occurrences of the events from your planner. Other routine days will not be affected. This action cannot be undone."
+                "Future occurrences will be deleted from \(weekday.label)s. Other days will not be affected. This action cannot be undone."
             )
         }
     }
@@ -78,7 +78,7 @@ struct RoutineActionMenuView: View {
     }
 
     private var deleteAllEventsButton: some View {
-        Button("Delete all events", role: .destructive) {
+        Button("Delete \(weekday.label) routine", role: .destructive) {
             showDeleteConfirmation = true
         }
         .disabled(sortedRoutineEvents.isEmpty)

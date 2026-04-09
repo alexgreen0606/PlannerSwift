@@ -12,6 +12,7 @@ import SwiftUI
 
 struct PlannerHeaderView: View {
     private let datestamp: String
+    private let customTextScale: Double?
     private let customTitle: String?
     private let customSubtitle: String?
     private let customIconFormat: DateFormat?
@@ -21,6 +22,7 @@ struct PlannerHeaderView: View {
 
     init(
         datestamp: String,
+        customTextScale: Double? = nil,
         title: String? = nil,
         subtitle: String? = nil,
         iconFormat: DateFormat? = nil,
@@ -29,6 +31,7 @@ struct PlannerHeaderView: View {
         iconDetailOffset: CGFloat? = nil
     ) {
         self.datestamp = datestamp
+        self.customTextScale = customTextScale
         self.customTitle = title
         self.customSubtitle = subtitle
         self.customIconFormat = iconFormat
@@ -86,6 +89,10 @@ struct PlannerHeaderView: View {
         return .shortWeekday
     }
 
+    var textScale: Double {
+        customTextScale ?? 1
+    }
+
     var body: some View {
         HStack {
 
@@ -99,13 +106,18 @@ struct PlannerHeaderView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 Text(title)
-                    .font(.headline)
-                    .fontWeight(.bold)
-                    .fontDesign(.rounded)
+                    .font(
+                        .system(
+                            size: 18 * textScale,
+                            weight: .bold,
+                            design: .rounded
+                        )
+                    )
+                    .foregroundStyle(Color.label)
 
                 Text(subtitle)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 11 * textScale, weight: .regular))
+                    .foregroundStyle(Color.secondary)
             }
 
         }

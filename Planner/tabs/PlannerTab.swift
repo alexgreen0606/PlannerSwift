@@ -39,7 +39,7 @@ struct PlannerTabView: View {
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
             KeepPastEventsDuration.oneMonth
-    
+
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
 
@@ -187,7 +187,7 @@ struct PlannerTabView: View {
                     deviceLocationManager.loadDeviceLocation()
                 }
 
-                // New Event Form
+                // MARK: New Event Sheet
                 .sheet(isPresented: $showNewEventSheet) {
                     EventFormView(
                         plannerEvent: nil,
@@ -197,7 +197,7 @@ struct PlannerTabView: View {
                     .environmentObject(notificationManager)
                 }
 
-                // New Trip Form
+                // MARK: New Trip Sheet
                 .sheet(item: $tripSheetContext) { context in
                     let form = TripFormView(
                         sourceTrip: context.trip,
@@ -222,9 +222,17 @@ struct PlannerTabView: View {
                 }
             }
             .overlay {
-                NotificationsView()
-                    .padding(.bottom)
-                    .environmentObject(notificationManager)
+                if !notificationManager.notifications.isEmpty {
+                    // Note: Must be rendered conditionally within this file.
+                    // Changes to notifications are sometimes not recognized within the NotificationsView
+                    // due to overlay restrictions.
+                    NotificationsView()
+                        .transition(
+                            .move(edge: .leading).combined(with: .opacity)
+                        )
+                        .padding(.bottom)
+                        .environmentObject(notificationManager)
+                }
             }
 
             // Build the week's datestamps at midnight.

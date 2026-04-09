@@ -19,6 +19,7 @@ struct RoutineEventSheetContext: Identifiable {
 }
 
 struct RoutineView: View {
+    @Binding var routineCoverContext: RoutineCoverContext?
     let weekday: Weekday
     let sortedRoutineEvents: [RoutineEvent]
 
@@ -75,7 +76,15 @@ struct RoutineView: View {
             }
         }
         .overlay {
-            NotificationsView()
+            if !notificationManager.notifications.isEmpty {
+                // Note: Must be rendered conditionally within this file.
+                // Changes to notifications are sometimes not recognized within the NotificationsView
+                // due to overlay restrictions.
+                NotificationsView()
+                    .transition(
+                        .move(edge: .leading).combined(with: .opacity)
+                    )
+            }
         }
 
         // MARK: Routine Event Sheet
@@ -83,7 +92,8 @@ struct RoutineView: View {
             RoutineEventFormView(
                 sourceRoutineEvent: context.routineEvent,
                 sourceDayOfWeek: weekday,
-                sortedSourceEvents: sortedRoutineEvents
+                sortedSourceEvents: sortedRoutineEvents,
+                openRoutine: openRoutine
             )
             .navigationTransition(
                 .zoom(
@@ -100,7 +110,8 @@ struct RoutineView: View {
         .sheet(isPresented: $showTransferSheet) {
             TransferRoutineEventsFormView(
                 sourceDayOfWeek: weekday,
-                sortedSourceRoutineEvents: sortedRoutineEvents
+                sortedSourceRoutineEvents: sortedRoutineEvents,
+                openRoutine: openRoutine
             )
             .navigationTransition(
                 .zoom(
@@ -186,6 +197,7 @@ struct RoutineView: View {
             } else {
                 SelectedRoutineEventActionsView(
                     showTransferSheet: $showTransferSheet,
+                    weekday: weekday,
                     namespace: namespace
                 )
             }
@@ -200,7 +212,7 @@ struct RoutineView: View {
         }
         .tint(accentColor.color)
     }
-    
+
     // MARK: - View Builders
 
     @ViewBuilder
@@ -256,6 +268,12 @@ struct RoutineView: View {
         scrollToBottom(scrollProxy: scrollProxy)
     }
 
+    private func openRoutine(for weekday: Weekday) {
+        routineCoverContext = RoutineCoverContext(weekday: weekday)
+    }
+
+    // TODO: event form notifications not working
+    // TODO: notifications must be unique to one cover at a time.
     private func eventToggleConfig(_ event: RoutineEvent) -> ToggleConfig<
         RoutineEvent
     >? {
@@ -269,16 +287,28 @@ struct RoutineView: View {
             confirmation: ConfirmationConfig<RoutineEvent>(
                 title: "Delete recurring event?",
                 message:
-                    "This will delete all occurrences of the event from your routines and planner. This action cannot be undone.",
+                    "Future occurrences will be deleted from \(weekday.label)s. Other days will not be affected. This action cannot be undone.",
                 needsConfirmation: { _ in true },
                 actions: [
                     ConfirmationAction(
                         title: "Confirm",
                         role: .destructive,
-                        handler: modelContext.safeDelete
+                        handler: deleteEventFromWeekday
                     )
                 ]
-            )
+            ),
+            onClick: {
+                if routineManager.focusedId == event.stableId {
+                    routineManager.focusedId = nil
+                }
+            }
+        )
+    }
+
+    private func deleteEventFromWeekday(_ event: RoutineEvent) {
+        modelContext.deleteRoutineEvents(
+            from: [event],
+            for: weekday
         )
     }
 

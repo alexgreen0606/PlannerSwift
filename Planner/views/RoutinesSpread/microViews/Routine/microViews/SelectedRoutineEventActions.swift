@@ -12,6 +12,7 @@ import SwiftUI
 
 struct SelectedRoutineEventActionsView: View {
     @Binding var showTransferSheet: Bool
+    let weekday: Weekday
     let namespace: Namespace.ID
 
     @Environment(\.modelContext) private var modelContext
@@ -22,7 +23,7 @@ struct SelectedRoutineEventActionsView: View {
             itemsLabel: "recurring events",
             disabled: routineManager.selectedItemIds.isEmpty,
             message:
-                "This will delete all occurrences of the events from your routines and planner.",
+                "Future occurrences will be deleted from \(weekday.label)s. Other days will not be affected.",
             delete: deleteSelectedEvents
         )
         Spacer()
@@ -48,7 +49,10 @@ struct SelectedRoutineEventActionsView: View {
     // MARK: - Functions
 
     private func deleteSelectedEvents() {
-        modelContext.safeBulkDelete(routineManager.selectedItems)
+        modelContext.deleteRoutineEvents(
+            from: routineManager.selectedItems,
+            for: weekday
+        )
 
         DispatchQueue.main.async {
             routineManager.toggleSelectMode()

@@ -22,14 +22,18 @@ struct RoutineEventFormView: View {
     private let sourceRoutineEvent: RoutineEvent?
     private let sourceDayOfWeek: Weekday?
     private let sortedSourceEvents: [RoutineEvent]?
+    private let openRoutine: (Weekday) -> Void
+
     init(
         sourceRoutineEvent: RoutineEvent? = nil,
         sourceDayOfWeek: Weekday? = nil,
-        sortedSourceEvents: [RoutineEvent]? = nil
+        sortedSourceEvents: [RoutineEvent]? = nil,
+        openRoutine: @escaping (Weekday) -> Void
     ) {
         self.sourceRoutineEvent = sourceRoutineEvent
         self.sourceDayOfWeek = sourceDayOfWeek
         self.sortedSourceEvents = sortedSourceEvents
+        self.openRoutine = openRoutine
 
         let daysOfWeek: Set<Weekday> = sourceRoutineEvent?.weekdays ?? []
 
@@ -268,10 +272,9 @@ struct RoutineEventFormView: View {
             || !draftRoutineEvent.daysOfWeek.contains(sourceDayOfWeek!)
         {
             DispatchQueue.main.async {
+                let selectedDays = draftRoutineEvent.daysOfWeek
 
                 let destinations = {
-                    let selectedDays = draftRoutineEvent.daysOfWeek
-
                     if selectedDays.count > 1 {
                         return Weekday.allCases
                             .filter { selectedDays.contains($0) }
@@ -288,19 +291,27 @@ struct RoutineEventFormView: View {
                     return ""
                 }()
 
+                let canOpenDestinationRoutine = {
+                    guard selectedDays.count == 1 else { return false }
+
+                    return selectedDays.first! != sourceDayOfWeek
+                }()
+
+                let onClick =
+                    canOpenDestinationRoutine
+                    ? {
+                        openRoutine(selectedDays.first!)
+                    } : nil
+
                 notificationManager.addNotification(
                     NotificationConfig(
-                        id: UUID(),
                         title: "Recurring event moved",
                         subtitle: "to \(destinations)",
                         iconConfig: IconConfig(
                             name: "checkmark",
                             primaryColor: Color.green
                         ),
-                        onClick: {
-                            // TODO: only use onClick if One destination exists.
-
-                        }
+                        onClick: onClick
                     )
                 )
             }

@@ -23,14 +23,16 @@ class NotificationManager: ObservableObject {
             notifications.append(notification)
         }
 
-        Task {
+        Task { @MainActor in
             do {
                 try await Task.sleep(for: .seconds(6))
 
                 if let index = notifications.firstIndex(where: {
                     $0.id == notification.id
                 }) {
-                    notifications.remove(at: index)
+                    withAnimation {
+                        notifications.remove(at: index)
+                    }
                 }
             } catch {}
         }

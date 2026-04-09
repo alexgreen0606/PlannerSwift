@@ -15,6 +15,7 @@ import SwiftUI
 struct TransferRoutineEventsFormView: View {
     let sourceDayOfWeek: Weekday
     let sortedSourceRoutineEvents: [RoutineEvent]
+    let openRoutine: (Weekday) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -90,11 +91,9 @@ struct TransferRoutineEventsFormView: View {
 
         routineManager.toggleSelectMode()
 
-        dismiss()
+        let selectedDays = selectedDaysOfWeek
 
         let destinations = {
-            let selectedDays = selectedDaysOfWeek
-
             if selectedDays.count > 1 {
                 return Weekday.allCases
                     .filter { selectedDays.contains($0) }
@@ -111,20 +110,34 @@ struct TransferRoutineEventsFormView: View {
             return ""
         }()
 
+        let canOpenDestinationRoutine = {
+            guard selectedDays.count == 1 else { return false }
+
+            return selectedDays.first! != sourceDayOfWeek
+        }()
+
+        let onClick =
+            canOpenDestinationRoutine
+            ? {
+                openRoutine(selectedDays.first!)
+            } : nil
+
         DispatchQueue.main.async {
             notificationManager.addNotification(
                 NotificationConfig(
-                    id: UUID(),
                     title:
                         "Rescheduled \(eventCount) recurring event\(eventCount == 1 ? "" : "s")",
                     subtitle: "for \(destinations)",
                     iconConfig: IconConfig(
                         name: "checkmark",
                         primaryColor: Color.green
-                    )
+                    ),
+                    onClick: onClick
                 )
             )
         }
+        
+        dismiss()
     }
 
 }

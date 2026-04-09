@@ -40,6 +40,12 @@ struct SearchResultsWeatherView: View {
         plannerSearchQuery.isSearching
     }
 
+    private var homeLocationLabel: String? {
+        settings.homeLocationLabel(
+            deviceLocation: deviceLocationManager.deviceLocation
+        )
+    }
+
     private var weatherData: DayWeather? {
         guard !isSearching else {
             // Hide the weather when searching.
@@ -53,7 +59,7 @@ struct SearchResultsWeatherView: View {
     }
 
     private var showLocationLabel: Bool {
-        guard let locationLabel else {
+        guard planner.searchQueryScore(plannerSearchQuery) != nil else {
             return false
         }
 
@@ -62,8 +68,7 @@ struct SearchResultsWeatherView: View {
             return true
         }
 
-        // TODO: not working when home location is nil
-        if locationLabel != settings.homeLocationLabel {
+        if locationLabel != homeLocationLabel {
             // Show the location when the planner's location
             // differs from the home location.
             return true
@@ -82,7 +87,7 @@ struct SearchResultsWeatherView: View {
             return false
         }
 
-        if locationLabel != settings.homeLocationLabel, weatherData == nil {
+        if locationLabel != homeLocationLabel, weatherData == nil {
             // Show the location icon when the planner's location
             // differs from the home location and the weather is loading.
             return true
@@ -92,13 +97,10 @@ struct SearchResultsWeatherView: View {
     }
 
     private var locationLabel: String? {
-        if planner.searchQueryScore(plannerSearchQuery) != nil {
-            return planner.locationLabel(
-                settings: settings,
-                deviceLocation: deviceLocationManager.deviceLocation
-            )
-        }
-        return nil
+        planner.locationLabel(
+            settings: settings,
+            deviceLocation: deviceLocationManager.deviceLocation
+        )
     }
 
     private var locationIconConfig: IconConfig {

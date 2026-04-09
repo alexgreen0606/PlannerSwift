@@ -210,7 +210,6 @@ struct TransferEventsFormView: View {
         DispatchQueue.main.async {
             notificationManager.addNotification(
                 NotificationConfig(
-                    id: UUID(),
                     title:
                         "Rescheduled \(eventCount) event\(eventCount == 1 ? "" : "s")",
                     subtitle: offsetLabel,
