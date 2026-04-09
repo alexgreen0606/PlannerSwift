@@ -27,6 +27,14 @@ extension ModelContext {
     }
 
     @MainActor
+    func safeBulkDelete<Item: PersistentModel>(_ items: [Item]) {
+        for item in items {
+            self.delete(item)
+        }
+        self.safeSave("general.safeBulkDelete")
+    }
+
+    @MainActor
     func insertIfNeeded<Item: PersistentModel>(_ item: Item) {
         guard item.modelContext == nil else { return }
         insert(item)

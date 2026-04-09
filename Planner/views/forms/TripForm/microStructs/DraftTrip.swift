@@ -5,7 +5,6 @@
 //  Created by Alex Green on 3/21/26.
 //
 
-import SwiftDate
 import SwiftUI
 
 // Clean
@@ -24,14 +23,16 @@ struct DraftTrip {
         let sortedDatestamps = datestamps.sorted()
 
         guard let firstDatestamp = sortedDatestamps.first,
-            let lastDatestamp = sortedDatestamps.last,
-            let firstDay = DateInRegion(firstDatestamp, region: .local),
-            let lastDay = DateInRegion(lastDatestamp, region: .local)
+            let lastDatestamp = sortedDatestamps.last
         else {
             return nil
         }
 
-        return buildDateRangeLabel(firstDay: firstDay, lastDay: lastDay, todaystamp: todaystamp)
+        return buildDateRangeLabel(
+            firstDatestamp: firstDatestamp,
+            lastDatestamp: lastDatestamp,
+            todaystamp: todaystamp
+        )
     }
 
 }

@@ -13,7 +13,7 @@ import SwiftUI
 // Clean
 
 struct TransferRoutineEventsFormView: View {
-    let sourceDayOfWeek: DayOfWeek
+    let sourceDayOfWeek: Weekday
     let sortedSourceRoutineEvents: [RoutineEvent]
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -24,7 +24,7 @@ struct TransferRoutineEventsFormView: View {
     @EnvironmentObject private var notificationManager: NotificationManager
     @EnvironmentObject private var routineManager: ListManager<RoutineEvent>
 
-    @State private var selectedDaysOfWeek: Set<DayOfWeek> = []
+    @State private var selectedDaysOfWeek: Set<Weekday> = []
 
     private var transferCount: String {
         let count = routineManager.selectedItems.count
@@ -84,7 +84,7 @@ struct TransferRoutineEventsFormView: View {
         modelContext.transferRoutineEvents(
             routineManager.selectedItems,
             to: selectedDaysOfWeek,
-            sortedSourceRoutineEvents: sortedSourceRoutineEvents,
+            sortedSourceEvents: sortedSourceRoutineEvents,
             sourceDayOfWeek: sourceDayOfWeek
         )
 
@@ -96,7 +96,7 @@ struct TransferRoutineEventsFormView: View {
             let selectedDays = selectedDaysOfWeek
 
             if selectedDays.count > 1 {
-                return DayOfWeek.allCases
+                return Weekday.allCases
                     .filter { selectedDays.contains($0) }
                     .map { $0.initial }
                     .joined()

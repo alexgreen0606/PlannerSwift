@@ -7,7 +7,6 @@
 
 import Foundation
 import Fuse
-import SwiftDate
 
 // Clean
 
@@ -31,20 +30,18 @@ extension Trip {
         )
     }
 
-    func dateRangeLabel(todaystamp: String) -> String? {
+    func dateRangeLabel(todaystamp: String) -> String {
         guard let firstDatestamp,
-            let lastDatestamp,
-            let firstDay = DateInRegion(firstDatestamp, region: .local),
-            let lastDay = DateInRegion(lastDatestamp, region: .local)
+            let lastDatestamp
         else {
-            return nil
+            return ""
         }
 
         return buildDateRangeLabel(
-            firstDay: firstDay,
-            lastDay: lastDay,
+            firstDatestamp: firstDatestamp,
+            lastDatestamp: lastDatestamp,
             todaystamp: todaystamp,
-            referenceYear: firstDay.year
+            referenceYear: firstDatestamp.year
         )
     }
 

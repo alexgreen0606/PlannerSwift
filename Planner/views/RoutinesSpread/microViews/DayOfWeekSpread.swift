@@ -1,5 +1,5 @@
 //
-//  DayOfWeekSpread.swift
+//  WeekdaySpread.swift
 //  Planner
 //
 //  Created by Alex Green on 4/7/26.
@@ -11,8 +11,8 @@ import SwiftUI
 
 // Clean
 
-struct DayOfWeekSpreadView: View {
-    let selected: Set<DayOfWeek>
+struct WeekdaySpreadView: View {
+    let selected: Set<Weekday>
     let scale: Double
     let spacing: CGFloat?
 
@@ -22,12 +22,12 @@ struct DayOfWeekSpreadView: View {
     var body: some View {
         HStack(spacing: spacing) {
             ForEach(
-                DayOfWeek.allCases,
+                Weekday.allCases,
                 id: \.self
-            ) { dayOfWeek in
-                Text(dayOfWeek.initial)
+            ) { weekday in
+                Text(weekday.initial)
                     .foregroundStyle(
-                        selected.contains(dayOfWeek)
+                        selected.contains(weekday)
                             ? accentColor.color : .tertiary
                     )
                     .font(

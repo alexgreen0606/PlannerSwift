@@ -9,6 +9,8 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
+// Clean
+
 extension ModelContext {
 
     static let baseRoutineDay = DateInRegion("2000-06-06", region: .UTC)?
@@ -20,27 +22,17 @@ extension ModelContext {
     func createRoutineEvent(
         at index: Int,
         in events: [RoutineEvent],
-        dayOfWeek: DayOfWeek
+        weekday: Weekday
     ) -> UUID?  // The ID of the new event.
     {
-        guard let baseDay = Self.baseRoutineDay else {
-            return nil
-        }
-
-        let sortDate = generateSortDate(
+        let sortDate = self.generateRoutineEventSortDate(
             at: index,
             in: events,
-            plannerDay: baseDay,
-            getSortDate: {
-                $0.sortDateMap[dayOfWeek]!
-            },
-            setSortDate: { event, sortDate in
-                event.sortDateMap[dayOfWeek] = sortDate
-            }
+            weekday: weekday
         )
 
         let newEvent = RoutineEvent()
-        newEvent.sortDateMap[dayOfWeek] = sortDate
+        newEvent.sortDateMap[weekday] = sortDate
 
         self.insert(newEvent)
         self.safeSave("routineEvent.createRoutineEvent")
@@ -54,22 +46,14 @@ extension ModelContext {
     func moveRoutineEvent(
         from: Int,
         to: Int,
-        on dayOfWeek: DayOfWeek,
+        on weekday: Weekday,
         sortedEvents: [RoutineEvent]
     ) {
-        guard let baseDay = Self.baseRoutineDay, from != to else { return }
-
         let movedEvent = sortedEvents[from]
-        movedEvent.sortDateMap[dayOfWeek] = generateSortDate(
+        movedEvent.sortDateMap[weekday] = self.generateRoutineEventSortDate(
             at: to,
             in: sortedEvents,
-            plannerDay: baseDay,
-            getSortDate: {
-                $0.sortDateMap[dayOfWeek]!
-            },
-            setSortDate: { event, sortDate in
-                event.sortDateMap[dayOfWeek] = sortDate
-            }
+            weekday: weekday
         )
 
         self.safeSave("routineEvent.moveRoutineEvent")
@@ -78,39 +62,28 @@ extension ModelContext {
     @MainActor
     func transferRoutineEvents(
         _ events: [RoutineEvent],
-        to daysOfWeek: Set<DayOfWeek>,
-        sortedSourceRoutineEvents: [RoutineEvent],
-        sourceDayOfWeek: DayOfWeek
+        to destinationWeekdays: Set<Weekday>,
+        sortedSourceEvents: [RoutineEvent],
+        sourceDayOfWeek: Weekday
     ) {
-        guard !daysOfWeek.isEmpty else { return }
+        guard !destinationWeekdays.isEmpty else { return }
 
-        let sortedEvents = events.sorted {
-            $0.sortDateMap[sourceDayOfWeek]! < $1.sortDateMap[sourceDayOfWeek]!
-        }
-
-        for event in sortedEvents {
-            self.updateRoutineEvent(
-                with: DraftRoutineEvent(
-                    date: event.time ?? Date(),
-                    hasTime: event.time != nil,
-                    title: event.title,
-                    daysOfWeek: daysOfWeek
-                ),
-                sourceRoutineEvent: event,
-                sortedSourceEvents: sortedSourceRoutineEvents,
-                skipSave: true
+        for event in events {
+            self.updateEventWeekdays(
+                event,
+                with: destinationWeekdays,
+                sortedSourceEvents: sortedSourceEvents
             )
         }
 
-        self.safeSave("routineEvent.transferRoutineEvent")
+        self.safeSave("routineEvent.transferRoutineEvents")
     }
 
     @MainActor
     func updateRoutineEvent(
         with draftRoutineEvent: DraftRoutineEvent,
         sourceRoutineEvent: RoutineEvent?,
-        sortedSourceEvents: [RoutineEvent]?,
-        skipSave: Bool = false
+        sortedSourceEvents: [RoutineEvent]?
     ) {
         guard !draftRoutineEvent.daysOfWeek.isEmpty else { return }
 
@@ -120,41 +93,34 @@ extension ModelContext {
 
         event.syncWithDraftRoutineEvent(draftRoutineEvent)
 
-        let daysToSync = Set(draftRoutineEvent.daysOfWeek)
-        let existingDays = Set(event.sortDateMap.keys)
-
-        let daysToRemove = existingDays.subtracting(daysToSync)
-        for day in daysToRemove {
-            // Remove days that no longer exist.
-            event.sortDateMap.removeValue(forKey: day)
-        }
-
-        let daysToAdd = daysToSync.subtracting(existingDays)
-        for day in daysToAdd {
-            // Add new days and place the event near any corresponding neighbors from the source.
-            event.sortDateMap[day] = getValidSortDate(
-                for: event,
-                in: day,
-                from: sortedSourceEvents ?? []
-            )
-        }
-
-        // TODO: always place transfered list items at the top for checklists.
+        self.updateEventWeekdays(
+            event,
+            with: Set(draftRoutineEvent.daysOfWeek),
+            sortedSourceEvents: sortedSourceEvents
+        )
 
         self.insertIfNeeded(event)
-
-        if !skipSave {
-            self.safeSave("routineEvent.updateRoutineEvent")
-        }
+        self.safeSave("routineEvent.updateRoutineEvent")
     }
 
     // MARK: - DELETE
 
+    @MainActor
     func deleteRoutineEvents(
-        _ events: [RoutineEvent]
+        from events: [RoutineEvent],
+        for weekday: Weekday
     ) {
         for event in events {
-            self.delete(event)
+            guard event.sortDateMap[weekday] != nil else {
+                continue
+            }
+
+            if event.sortDateMap.keys.count == 1 {
+                self.delete(event)
+                continue
+            }
+
+            event.sortDateMap.removeValue(forKey: weekday)
         }
 
         self.safeSave("routineEvent.deleteRoutineEvents")
@@ -187,112 +153,90 @@ extension ModelContext {
 
     // MARK: - Helper Functions
 
-    // Generates a sortDate for an event below a given neighbor's stableId.
-    private func getValidSortDate(
+    private func generateNewSortDateNearSiblings(
         for event: RoutineEvent,
-        in dayOfWeek: DayOfWeek,
+        in weekday: Weekday,
         from sortedSourceEvents: [RoutineEvent] = []
-    )
-        -> Date
-    {
-        guard let baseDay = Self.baseRoutineDay else {
-            return Date()
-        }
-
+    ) -> Date {
         do {
-            let sortedDestinationEvents = try self.fetch(
+            let allRoutineEvents = try self.fetch(
                 FetchDescriptor<RoutineEvent>()
-            ).filter {
-                $0.sortDateMap[dayOfWeek] != nil
-            }.sorted {
-                $0.sortDateMap[dayOfWeek]! < $1.sortDateMap[dayOfWeek]!
-            }
+            )
 
-            // MARK: Find current index in source.
-            guard
-                let sourceIndex = sortedSourceEvents.firstIndex(where: {
-                    $0.stableId == event.stableId
-                })
-            else {
-                // Fallback to top of list if source not found.
-                return generateSortDate(
-                    at: 0,
-                    in: sortedDestinationEvents,
-                    plannerDay: baseDay,
-                    getSortDate: { $0.sortDateMap[dayOfWeek]! },
-                    setSortDate: { event, sortDate in
-                        event.sortDateMap[dayOfWeek] = sortDate
-                    }
-                )
-            }
+            let sortedDestinationEvents = weekday.sortedEvents(
+                in: allRoutineEvents
+            )
 
-            var targetIndex: Int?
-            let maxDistance = sortedSourceEvents.count
+            let targetIndex = generateTargetIndex(
+                near: event.stableId,
+                from: sortedSourceEvents,
+                to: sortedDestinationEvents
+            )
 
-            // MARK: Expand outward to find a neighbor that exists in the new destination.
-            for distance in 1..<maxDistance {
-                // Check if upper neighbor exists in the destination.
-                let upperIndex = sourceIndex - distance
-                if upperIndex >= 0 {
-                    let upperId = sortedSourceEvents[upperIndex].stableId
-
-                    if let destIndex = sortedDestinationEvents.firstIndex(
-                        where: {
-                            $0.stableId == upperId
-                        })
-                    {
-                        // MARK: Place below the upper neighbor.
-                        targetIndex = destIndex + 1
-                        break
-                    }
-                }
-
-                // Check if lower neighbor exists in the destination.
-                let lowerIndex = sourceIndex + distance
-                if lowerIndex < sortedSourceEvents.count {
-                    let lowerId = sortedSourceEvents[lowerIndex].stableId
-
-                    if let destIndex = sortedDestinationEvents.firstIndex(
-                        where: {
-                            $0.stableId == lowerId
-                        })
-                    {
-                        // MARK: Place above the lower neighbor.
-                        targetIndex = destIndex
-                        break
-                    }
-                }
-            }
-
-            return generateSortDate(
-                at: targetIndex ?? 0,
+            return self.generateRoutineEventSortDate(
+                at: targetIndex,
                 in: sortedDestinationEvents,
-                plannerDay: baseDay,
-                getSortDate: {
-                    $0.sortDateMap[dayOfWeek]!
-                },
-                setSortDate: { event, sortDate in
-                    event.sortDateMap[dayOfWeek] = sortDate
-                }
+                weekday: weekday
             )
 
         } catch {
             assertionFailure(
-                "ERROR routineEvent.getSortDate: \(error)"
+                "ERROR routineEvent.generateNewSortDateNearSiblings: \(error)"
             )
         }
 
-        return generateSortDate(
+        return self.generateRoutineEventSortDate(
             at: 0,
-            in: [] as [RoutineEvent],
+            in: [],
+            weekday: weekday
+        )
+    }
+
+    private func generateRoutineEventSortDate(
+        at index: Int,
+        in sortedEvents: [RoutineEvent],  // May or may not contain the event being placed.
+        weekday: Weekday
+    ) -> Date {
+        guard let baseDay = Self.baseRoutineDay else {
+            return Date()
+        }
+
+        return generateSortDate(
+            at: index,
+            in: sortedEvents,
             plannerDay: baseDay,
             getSortDate: {
-                $0.sortDateMap[dayOfWeek]!
+                $0.sortDateMap[weekday]!
             },
             setSortDate: { event, sortDate in
-                event.sortDateMap[dayOfWeek] = sortDate
+                event.sortDateMap[weekday] = sortDate
             }
         )
+    }
+
+    @MainActor
+    private func updateEventWeekdays(
+        _ event: RoutineEvent,
+        with newWeekdays: Set<Weekday>,
+        sortedSourceEvents: [RoutineEvent]? = []
+    ) {
+        let existingWeekdays = Set(event.sortDateMap.keys)
+
+        let daysToRemove = existingWeekdays.subtracting(newWeekdays)
+        for day in daysToRemove {
+            // Remove days that no longer exist.
+            event.sortDateMap.removeValue(forKey: day)
+        }
+
+        let daysToAdd = newWeekdays.subtracting(existingWeekdays)
+        for day in daysToAdd {
+            // Place new events near their old siblings.
+            event.sortDateMap[day] = generateNewSortDateNearSiblings(
+                for: event,
+                in: day,
+                from: sortedSourceEvents ?? []
+            )
+        }
     }
 
 }

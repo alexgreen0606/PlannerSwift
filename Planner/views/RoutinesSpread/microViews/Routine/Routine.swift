@@ -8,6 +8,8 @@
 import SwiftData
 import SwiftUI
 
+// Clean
+
 struct RoutineEventSheetContext: Identifiable {
     var routineEvent: RoutineEvent
 
@@ -17,7 +19,7 @@ struct RoutineEventSheetContext: Identifiable {
 }
 
 struct RoutineView: View {
-    let dayOfWeek: DayOfWeek
+    let weekday: Weekday
     let sortedRoutineEvents: [RoutineEvent]
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -57,17 +59,17 @@ struct RoutineView: View {
                     toggleConfig: eventToggleConfig,
                     leftAdornment: { _ in EmptyView() },
                     rightAdornment: timeAdornment,
-                    bottomAdornment: recurringAdornment,
+                    bottomAdornment: weekdaysAdornment,
                     handleTitleChange: modelContext
                         .handleRoutineEventTitleChange
                 )
-                .navigationTitle(dayOfWeek.rawValue.capitalizedFirst)
+                .navigationTitle(weekday.label)
                 .navigationSubtitle("Recurring Events")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    upperLeftToolbar
-                    upperRightToolbar
-                    lowerToolbar(scrollProxy: scrollProxy)
+                    topLeadingToolbar
+                    topTrailingToolbar
+                    bottomToolbar(scrollProxy: scrollProxy)
                 }
                 .animateSynchronousAction(from: routineManager.isSelectMode)
             }
@@ -80,7 +82,7 @@ struct RoutineView: View {
         .sheet(item: $routineEventSheetContext) { context in
             RoutineEventFormView(
                 sourceRoutineEvent: context.routineEvent,
-                sourceDayOfWeek: dayOfWeek,
+                sourceDayOfWeek: weekday,
                 sortedSourceEvents: sortedRoutineEvents
             )
             .navigationTransition(
@@ -97,7 +99,7 @@ struct RoutineView: View {
         // MARK: Transfer Event Sheet
         .sheet(isPresented: $showTransferSheet) {
             TransferRoutineEventsFormView(
-                sourceDayOfWeek: dayOfWeek,
+                sourceDayOfWeek: weekday,
                 sortedSourceRoutineEvents: sortedRoutineEvents
             )
             .navigationTransition(
@@ -115,10 +117,10 @@ struct RoutineView: View {
 
     // MARK: - Toolbars
 
-    // MARK: Upper Left Toolbar
+    // MARK: Top Left Toolbar
 
     @ToolbarContentBuilder
-    private var upperLeftToolbar: some ToolbarContent {
+    private var topLeadingToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             if !routineManager.isSelectMode {
                 backButton
@@ -145,14 +147,14 @@ struct RoutineView: View {
         .tint(Color.label)
     }
 
-    // MARK: Upper Right Toolbar
+    // MARK: Top Trailing Toolbar
 
     @ToolbarContentBuilder
-    private var upperRightToolbar: some ToolbarContent {
+    private var topTrailingToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             if !routineManager.isSelectMode {
                 RoutineActionMenuView(
-                    dayOfWeek: dayOfWeek,
+                    weekday: weekday,
                     sortedRoutineEvents: sortedRoutineEvents
                 )
             } else {
@@ -171,10 +173,10 @@ struct RoutineView: View {
         .disabled(sortedRoutineEvents.isEmpty)
     }
 
-    // MARK: Lower Toolbar
+    // MARK: Bottom Toolbar
 
     @ToolbarContentBuilder
-    private func lowerToolbar(scrollProxy: ScrollViewProxy)
+    private func bottomToolbar(scrollProxy: ScrollViewProxy)
         -> some ToolbarContent
     {
         ToolbarItemGroup(placement: .bottomBar) {
@@ -198,11 +200,12 @@ struct RoutineView: View {
         }
         .tint(accentColor.color)
     }
+    
+    // MARK: - View Builders
 
     @ViewBuilder
     private func timeAdornment(event: RoutineEvent) -> some View {
         event.timeAdornment(
-            dayOfWeek: dayOfWeek,
             accentColor: accentColor
         ) {
             openRoutineEventSheet(for: event)
@@ -210,8 +213,8 @@ struct RoutineView: View {
     }
 
     @ViewBuilder
-    private func recurringAdornment(event: RoutineEvent) -> some View {
-        event.recurringAdornment {
+    private func weekdaysAdornment(event: RoutineEvent) -> some View {
+        event.weekdaysAdornment {
             openRoutineEventSheet(for: event)
         }
     }
@@ -222,7 +225,7 @@ struct RoutineView: View {
         routineManager.pendingFocusId = modelContext.createRoutineEvent(
             at: index,
             in: sortedRoutineEvents,
-            dayOfWeek: dayOfWeek
+            weekday: weekday
         )
     }
 
@@ -230,7 +233,7 @@ struct RoutineView: View {
         modelContext.moveRoutineEvent(
             from: from,
             to: to,
-            on: dayOfWeek,
+            on: weekday,
             sortedEvents: sortedRoutineEvents
         )
     }
@@ -271,10 +274,9 @@ struct RoutineView: View {
                 actions: [
                     ConfirmationAction(
                         title: "Confirm",
-                        role: .destructive
-                    ) { event in
-                        modelContext.deleteRoutineEvents([event])
-                    }
+                        role: .destructive,
+                        handler: modelContext.safeDelete
+                    )
                 ]
             )
         )

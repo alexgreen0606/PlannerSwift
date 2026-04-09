@@ -26,40 +26,39 @@ enum PlannerType: String {
         showChecked ? "Hide \(checkedLabel)" : "Show \(checkedLabel)"
     }
 
-    func checkedFooter(for datestamp: String, todaystamp: String) -> String? {
-        switch self {
-        case .pastOrPresent:
+    func checkedFooter(
+        for datestamp: String,
+        todaystamp: String,
+        keepCanceledEvents: KeepCanceledEventsDuration
+    ) -> String? {
+        guard keepCanceledEvents != .forever, self != .pastOrPresent else {
             return nil
-
-        case .future:
-
-            let formatted = datestamp.proximityFormat(
-                using: [
-                    ProximityRule(
-                        proximity: .withinADay,
-                        format: .countdown,
-                        ordinal: true
-                    ),
-                    ProximityRule(proximity: .next7Days, format: .weekday),
-                    ProximityRule(
-                        proximity: .fallback,
-                        format: .dateLabel,
-                        ordinal: true
-                    ),
-                ],
-                todaystamp: todaystamp
-            )
-
-            // TODO: dont show this if setting is disabled.
-
-            let displayDate: String =
-                formatted.rangeOfCharacter(from: .decimalDigits) == nil
-                ? "\(formatted) morning"
-                : "the morning of \(formatted)"
-
-            return
-                "These canceled events will be deleted \(displayDate). Calendar events will not be deleted."
         }
+
+        let formatted = datestamp.proximityFormat(
+            using: [
+                ProximityRule(
+                    proximity: .withinADay,
+                    format: .countdown,
+                    ordinal: true
+                ),
+                ProximityRule(proximity: .next7Days, format: .weekday),
+                ProximityRule(
+                    proximity: .fallback,
+                    format: .dateLabel,
+                    ordinal: true
+                ),
+            ],
+            todaystamp: todaystamp
+        )
+
+        let displayDate: String =
+            formatted.rangeOfCharacter(from: .decimalDigits) == nil
+            ? "\(formatted) morning"
+            : "the morning of \(formatted)"
+
+        return
+            "These canceled events will be deleted \(displayDate). Calendar events will not be deleted."
     }
 
     // MARK: - Helper Variables

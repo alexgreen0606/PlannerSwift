@@ -124,19 +124,21 @@ extension ModelContext {
                 var sortedDestinationItems = destination.items.sorted {
                     $0.sortIndex < $1.sortIndex
                 }
+
+                // Reverse-sort so they are inserted correctly.
                 let sortedItemsToMove = items.sorted {
-                    $0.sortIndex < $1.sortIndex
+                    $0.sortIndex > $1.sortIndex
                 }
 
                 for item in sortedItemsToMove {
 
-                    // Add item to the bottom of the new list.
+                    // Add item to the top of the new list.
                     item.sortIndex = generateSortIndex(
-                        index: sortedDestinationItems.count,
+                        index: 0,
                         sortedItems: sortedDestinationItems
                     )
 
-                    sortedDestinationItems.append(item)
+                    sortedDestinationItems.insert(item, at: 0)
 
                     // Assign both references of the relationship.
                     // Both MUST be applied or else the item may be lost.

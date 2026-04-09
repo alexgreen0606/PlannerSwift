@@ -16,7 +16,7 @@ import SwiftData
 class RoutineEvent: EventListItem {
 
     // Event will appear in each day that exists as a key within this map.
-    var sortDateMap: [DayOfWeek: Date] = [:]
+    var sortDateMap: [Weekday: Date] = [:]
 
     var time: Date?
 

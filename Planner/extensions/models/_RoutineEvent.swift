@@ -10,14 +10,9 @@ import SwiftUI
 
 // Clean
 
-struct NeighborIds {
-    var upperId: UUID?
-    var lowerId: UUID?
-}
-
 extension RoutineEvent {
 
-    var daysOfWeek: Set<DayOfWeek> {
+    var weekdays: Set<Weekday> {
         Set(self.sortDateMap.keys)
     }
 
@@ -28,30 +23,29 @@ extension RoutineEvent {
         self.time = draft.hasTime ? draft.date : nil
     }
 
+    // MARK: - View Builders
+
     @ViewBuilder
     func timeAdornment(
-        dayOfWeek: DayOfWeek,
         accentColor: AccentColor,
-        scale: Double = 1,
         openEventSheet: (() -> Void)?
     ) -> some View {
         if let time = self.time {
             TimeView(
                 timeInRegion: DateInRegion(time, region: .UTC),
                 color: accentColor.color,
-                scale: scale,
                 openEventSheet: openEventSheet
             )
         }
     }
 
     @ViewBuilder
-    func recurringAdornment(
+    func weekdaysAdornment(
         openEventSheet: (() -> Void)?
     ) -> some View {
         if sortDateMap.keys.count > 1 {
-            DayOfWeekSpreadView(
-                selected: self.daysOfWeek,
+            WeekdaySpreadView(
+                selected: self.weekdays,
                 scale: 0.66,
                 spacing: 1
             )

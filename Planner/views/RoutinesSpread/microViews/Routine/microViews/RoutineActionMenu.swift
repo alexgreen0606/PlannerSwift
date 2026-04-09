@@ -11,7 +11,7 @@ import SwiftUI
 // Clean
 
 struct RoutineActionMenuView: View {
-    let dayOfWeek: DayOfWeek
+    let weekday: Weekday
     let sortedRoutineEvents: [RoutineEvent]
 
     @Environment(\.modelContext) private var modelContext
@@ -21,8 +21,7 @@ struct RoutineActionMenuView: View {
     @State private var showDeleteConfirmation = false
 
     private var isToday: Bool {
-        todaystampWatcher.todaystamp.weekday
-            == dayOfWeek.rawValue.capitalizedFirst
+        todaystampWatcher.todaystamp.weekday == weekday.label
     }
 
     var body: some View {
@@ -31,6 +30,7 @@ struct RoutineActionMenuView: View {
             deleteActionsMenu
         }
 
+        // MARK: Delete Events Confirmation
         .confirmationDialog(
             "Delete every recurring event?",
             isPresented: $showDeleteConfirmation,
@@ -43,14 +43,14 @@ struct RoutineActionMenuView: View {
             )
         } message: {
             Text(
-                "This will delete all occurrences of the events from your routines and planner. This action cannot be undone."
+                "This will delete all occurrences of the events from your planner. Other routine days will not be affected. This action cannot be undone."
             )
         }
     }
 
     // MARK: - View Builders
-    
-    // TODO: add button to remove every event from this day.
+
+    // MARK: Select Events Button
 
     private var selectEventsButton: some View {
         Button {
@@ -63,6 +63,8 @@ struct RoutineActionMenuView: View {
         }
         .disabled(sortedRoutineEvents.isEmpty)
     }
+
+    // MARK: Delete Menu
 
     private var deleteActionsMenu: some View {
         Menu {
@@ -85,7 +87,10 @@ struct RoutineActionMenuView: View {
     // MARK: - Functions
 
     private func deleteAllEvents() {
-        modelContext.deleteRoutineEvents(sortedRoutineEvents)
+        modelContext.deleteRoutineEvents(
+            from: sortedRoutineEvents,
+            for: weekday
+        )
     }
 
 }

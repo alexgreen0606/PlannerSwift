@@ -5,18 +5,20 @@
 //  Created by Alex Green on 3/26/26.
 //
 
-import SwiftDate
-
 // Clean
 
-func buildDateRangeLabel(firstDay: DateInRegion, lastDay: DateInRegion, todaystamp: String, referenceYear: Int? = nil)
-    -> String?
+func buildDateRangeLabel(
+    firstDatestamp: String,
+    lastDatestamp: String,
+    todaystamp: String,
+    referenceYear: String? = nil
+)
+    -> String
 {
 
     // Single-day range.
-    if firstDay.datestamp == lastDay.datestamp {
-        // TODO: remove DateInRegion here entirely.
-        return firstDay.datestamp.proximityFormat(
+    if firstDatestamp == lastDatestamp {
+        return firstDatestamp.proximityFormat(
             using: [
                 ProximityRule(
                     proximity: .withinADay,
@@ -29,23 +31,23 @@ func buildDateRangeLabel(firstDay: DateInRegion, lastDay: DateInRegion, todaysta
         )
     }
 
-    let currentYear = referenceYear ?? DateInRegion(region: .local).year
-    let sameYear = firstDay.year == lastDay.year
-    let sameMonth = sameYear && firstDay.month == lastDay.month
+    let currentYear = referenceYear ?? todaystamp.year
+    let sameYear = firstDatestamp.year == lastDatestamp.year
+    let sameMonth = sameYear && firstDatestamp.month == lastDatestamp.month
 
     let startIncludeMonth = true
-    let startIncludeYear = firstDay.year != currentYear && !sameYear
+    let startIncludeYear = firstDatestamp.year != currentYear && !sameYear
 
     let endIncludeMonth = !sameMonth
-    let endIncludeYear = lastDay.year != currentYear
+    let endIncludeYear = lastDatestamp.year != currentYear
 
     let start = format(
-        firstDay,
+        firstDatestamp,
         includeMonth: startIncludeMonth,
         includeYear: startIncludeYear
     )
     let end = format(
-        lastDay,
+        lastDatestamp,
         includeMonth: endIncludeMonth,
         includeYear: endIncludeYear
     )
@@ -53,20 +55,35 @@ func buildDateRangeLabel(firstDay: DateInRegion, lastDay: DateInRegion, todaysta
     return "\(start) - \(end)"
 }
 
-private func format(_ date: DateInRegion, includeMonth: Bool, includeYear: Bool)
-    -> String
-{
-    var format = ""
+private func format(
+    _ date: String,
+    includeMonth: Bool,
+    includeYear: Bool
+) -> String {
 
-    if includeMonth {
-        format += "MMMM "
+    let parts = date.split(separator: "-")
+    guard parts.count == 3 else { return date }
+
+    let year = String(parts[0])
+    let month = Int(parts[1]) ?? 0
+    let day = String(parts[2])
+
+    let monthNames = [
+        "", "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December",
+    ]
+
+    var result = ""
+
+    if includeMonth, month > 0, month < monthNames.count {
+        result += "\(monthNames[month]) "
     }
 
-    format += "d"
+    result += day
 
     if includeYear {
-        format += ", yyyy"
+        result += ", \(year)"
     }
 
-    return date.toFormat(format)
+    return result
 }

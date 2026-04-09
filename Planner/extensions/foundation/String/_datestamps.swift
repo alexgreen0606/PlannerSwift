@@ -135,6 +135,18 @@ extension String {
 
     // MARK: - Public API
 
+    var year: String {  // Ex: 2026
+        let components = self.split(separator: "-")
+        guard components.count >= 1 else { return "" }
+        return String(components[0])
+    }
+
+    var month: String {  // Ex: 12
+        let components = self.split(separator: "-")
+        guard components.count >= 2 else { return "" }
+        return String(components[1])
+    }
+
     var weekday: String {  // Ex: Wednesday
         formatted("EEEE")
     }
@@ -254,7 +266,7 @@ extension String {
         }
         return result
     }
-    
+
     // Expects YYYY-MM-DD format.
     var dateComponents: DateComponents? {
         let parts = self.split(separator: "-")

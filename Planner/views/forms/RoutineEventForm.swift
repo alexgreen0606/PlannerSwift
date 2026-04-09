@@ -15,23 +15,23 @@ struct DraftRoutineEvent {
     var date: Date
     var hasTime: Bool
     var title: String
-    var daysOfWeek: Set<DayOfWeek>
+    var daysOfWeek: Set<Weekday>
 }
 
 struct RoutineEventFormView: View {
     private let sourceRoutineEvent: RoutineEvent?
-    private let sourceDayOfWeek: DayOfWeek?
+    private let sourceDayOfWeek: Weekday?
     private let sortedSourceEvents: [RoutineEvent]?
     init(
         sourceRoutineEvent: RoutineEvent? = nil,
-        sourceDayOfWeek: DayOfWeek? = nil,
+        sourceDayOfWeek: Weekday? = nil,
         sortedSourceEvents: [RoutineEvent]? = nil
     ) {
         self.sourceRoutineEvent = sourceRoutineEvent
         self.sourceDayOfWeek = sourceDayOfWeek
         self.sortedSourceEvents = sortedSourceEvents
 
-        let daysOfWeek: Set<DayOfWeek> = sourceRoutineEvent?.daysOfWeek ?? []
+        let daysOfWeek: Set<Weekday> = sourceRoutineEvent?.weekdays ?? []
 
         let time = {
             if let existingTime = sourceRoutineEvent?.time {
@@ -273,7 +273,7 @@ struct RoutineEventFormView: View {
                     let selectedDays = draftRoutineEvent.daysOfWeek
 
                     if selectedDays.count > 1 {
-                        return DayOfWeek.allCases
+                        return Weekday.allCases
                             .filter { selectedDays.contains($0) }
                             .map { $0.initial }
                             .joined()

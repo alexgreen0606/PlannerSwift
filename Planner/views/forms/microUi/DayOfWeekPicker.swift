@@ -10,7 +10,7 @@ import SwiftUI
 // Clean
 
 struct DayOfWeekPickerView: View {
-    @Binding var daysOfWeek: Set<DayOfWeek>
+    @Binding var daysOfWeek: Set<Weekday>
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -18,16 +18,16 @@ struct DayOfWeekPickerView: View {
     var body: some View {
         HStack {
             ForEach(
-                Array(DayOfWeek.allCases.enumerated()),
+                Array(Weekday.allCases.enumerated()),
                 id: \.element
-            ) { index, dayOfWeek in
+            ) { index, weekday in
                 if index != 0 {
                     Spacer()
                 }
 
-                Text(dayOfWeek.initial)
+                Text(weekday.initial)
                     .foregroundStyle(
-                        daysOfWeek.contains(dayOfWeek)
+                        daysOfWeek.contains(weekday)
                             ? Color.inverseLabel : Color.label
                     )
                     .font(
@@ -38,7 +38,7 @@ struct DayOfWeekPickerView: View {
                         )
                     )
                     .background(
-                        daysOfWeek.contains(dayOfWeek)
+                        daysOfWeek.contains(weekday)
                             ? Circle()
                                 .fill(accentColor.color)
                                 .frame(width: 36, height: 36)
@@ -46,7 +46,7 @@ struct DayOfWeekPickerView: View {
                     )
                     .contentShape(Circle())
                     .onTapGesture {
-                        toggleDay(dayOfWeek)
+                        toggleDay(weekday)
                     }
 
             }
@@ -56,7 +56,7 @@ struct DayOfWeekPickerView: View {
 
     // MARK: - Functions
 
-    private func toggleDay(_ day: DayOfWeek) {
+    private func toggleDay(_ day: Weekday) {
         if daysOfWeek.contains(day) {
             daysOfWeek.remove(day)
         } else {

@@ -48,7 +48,7 @@ struct SelectedRoutineEventActionsView: View {
     // MARK: - Functions
 
     private func deleteSelectedEvents() {
-        modelContext.deleteRoutineEvents(routineManager.selectedItems)
+        modelContext.safeBulkDelete(routineManager.selectedItems)
 
         DispatchQueue.main.async {
             routineManager.toggleSelectMode()

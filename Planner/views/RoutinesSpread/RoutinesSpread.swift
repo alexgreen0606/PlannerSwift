@@ -13,12 +13,11 @@ import SwiftUI
 // Clean
 
 struct RoutineCoverContext: Identifiable {
-    var dayOfWeek: DayOfWeek
+    var weekday: Weekday
 
     var id: String {
-        dayOfWeek.rawValue
+        weekday.rawValue
     }
-
 }
 
 struct RoutinesSpreadView: View {
@@ -37,15 +36,15 @@ struct RoutinesSpreadView: View {
     var body: some View {
         HStack {
             ForEach(
-                Array(DayOfWeek.allCases.enumerated()),
+                Array(Weekday.allCases.enumerated()),
                 id: \.element
-            ) { index, dayOfWeek in
+            ) { index, weekday in
                 if index != 0 {
                     Spacer()
                 }
 
                 VStack {
-                    Text(dayOfWeek.initial)
+                    Text(weekday.initial)
                         .foregroundStyle(
                             Color.label
                         )
@@ -57,16 +56,17 @@ struct RoutinesSpreadView: View {
                             )
                         )
 
-                    let eventCount = getRoutineEvents(for: dayOfWeek).count
+                    let eventCount = weekday.sortedEvents(in: routineEvents)
+                        .count
                     Text(eventCount > 0 ? "\(eventCount)" : "")
                         .font(.footnote)
                         .foregroundStyle(Color.secondary)
                 }
-                .matchedTransitionSource(id: dayOfWeek, in: namespace)
+                .matchedTransitionSource(id: weekday, in: namespace)
                 .contentShape(Rectangle())
                 .onTapGesture {
                     routineCoverContext = RoutineCoverContext(
-                        dayOfWeek: dayOfWeek
+                        weekday: weekday
                     )
                 }
 
@@ -74,26 +74,21 @@ struct RoutinesSpreadView: View {
         }
         .frame(maxWidth: .infinity)
 
-        // Day Routines Sheet
+        // MARK: Routine Cover
         .fullScreenCover(item: $routineCoverContext) { context in
             RoutineView(
-                dayOfWeek: context.dayOfWeek,
-                sortedRoutineEvents: getRoutineEvents(for: context.dayOfWeek)
+                weekday: context.weekday,
+                sortedRoutineEvents: context.weekday.sortedEvents(
+                    in: routineEvents
+                )
             )
             .navigationTransition(
                 .zoom(
-                    sourceID: context.dayOfWeek,
+                    sourceID: context.weekday,
                     in: namespace
                 )
             )
         }
     }
 
-    // MARK: - Functions
-
-    private func getRoutineEvents(for dayOfWeek: DayOfWeek) -> [RoutineEvent] {
-        routineEvents.filter { $0.sortDateMap[dayOfWeek] != nil }.sorted {
-            $0.sortDateMap[dayOfWeek]! < $1.sortDateMap[dayOfWeek]!
-        }
-    }
 }

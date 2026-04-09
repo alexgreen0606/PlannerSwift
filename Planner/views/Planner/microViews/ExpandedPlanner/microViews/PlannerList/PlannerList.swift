@@ -31,6 +31,10 @@ struct PlannerListView: View {
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
+    
+    @AppStorage("keepCanceledEventsDuration") private
+        var keepCanceledEventsDuration: KeepCanceledEventsDuration =
+            KeepCanceledEventsDuration.startOfDay
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
@@ -62,7 +66,8 @@ struct PlannerListView: View {
             handleTitleChange: handleEventTitleChange,
             checkedFooter: plannerType.checkedFooter(
                 for: planner.datestamp,
-                todaystamp: todaystampWatcher.todaystamp
+                todaystamp: todaystampWatcher.todaystamp,
+                keepCanceledEvents: keepCanceledEventsDuration
             )
         )
         .task(id: planner.datestamp) {
