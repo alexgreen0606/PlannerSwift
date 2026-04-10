@@ -97,6 +97,7 @@ struct ContentView: View {
     @Query private var planners: [Planner]
 
     @StateObject private var plannerSearchManager = PlannerSearchManager()
+    @State private var enableMatchedAnimation = false
 
     @Namespace private var namespace
 
@@ -109,60 +110,50 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             if let settings {
-                if plannerCoverManager.isPresentingDefault {
 
-                    // MARK: Default App Landing. Today Planner.
-                    PlannerBuilderView(
-                        datestamp: plannerCoverManager.todaystampAtInit,
-                        settings: settings,
-                        header: plannerCoverHeader(
-                            plannerCoverManager.todaystampAtInit
+                // MARK: Standard App Navigation
+                TabView {
+                    Tab(
+                        "",
+                        systemImage: todaystampWatcher.todaystamp
+                            .calendarSymbolName
+                    ) {
+                        PlannerTabView(
+                            settings: settings,
+                            namespace: namespace
                         )
-                    )
-                    .transition(
-                        .asymmetric(
-                            insertion: .identity,
-                            removal: .move(edge: .trailing).combined(
-                                with: .identity
-                            )
-                        )
-                    )
-
-                } else {
-
-                    // MARK: Standard App Navigation
-                    TabView {
-                        Tab(
-                            "",
-                            systemImage: todaystampWatcher.todaystamp
-                                .calendarSymbolName
-                        ) {
-                            PlannerTabView(
-                                settings: settings,
-                                namespace: namespace
-                            )
-                        }
-
-                        Tab("", systemImage: "checklist") {
-                            ChecklistsTabView()
-                        }
-
-                        Tab("", systemImage: "gear") {
-                            SettingsTabView(settings: settings)
-                        }
-
-                        Tab(role: .search) {
-                            PlannerSearchTabView(
-                                todaystamp: todaystampWatcher.todaystamp,
-                                settings: settings,
-                                namespace: namespace
-                            )
-                            .environmentObject(plannerSearchManager)
-                        }
                     }
-                    .tabBarMinimizeBehavior(.onScrollDown)
 
+                    Tab("", systemImage: "checklist") {
+                        ChecklistsTabView()
+                    }
+
+                    Tab("", systemImage: "gear") {
+                        SettingsTabView(settings: settings)
+                    }
+
+                    Tab(role: .search) {
+                        PlannerSearchTabView(
+                            todaystamp: todaystampWatcher.todaystamp,
+                            settings: settings,
+                            namespace: namespace
+                        )
+                        .environmentObject(plannerSearchManager)
+                    }
                 }
+                .tabBarMinimizeBehavior(.onScrollDown)
+                .opacity(plannerCoverManager.isPresentingDefault ? 0 : 1)
+
+                // MARK: Default App Landing. Today Planner.
+                PlannerBuilderView(
+                    datestamp: plannerCoverManager.todaystampAtInit,
+                    settings: settings,
+                    header: plannerCoverHeader(
+                        plannerCoverManager.todaystampAtInit
+                    )
+                )
+                .opacity(plannerCoverManager.isPresentingDefault ? 1 : 0)
+
             }
         }
         .onAppear {

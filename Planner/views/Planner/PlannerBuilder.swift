@@ -125,6 +125,7 @@ struct PlannerBuilderView<Header: View>: View {
         }
     }
 
+    @ViewBuilder
     private var previewCard: some View {
         VStack(alignment: .leading) {
             previewHeader
