@@ -272,8 +272,6 @@ struct RoutineView: View {
         routineCoverContext = RoutineCoverContext(weekday: weekday)
     }
 
-    // TODO: event form notifications not working
-    // TODO: notifications must be unique to one cover at a time.
     private func eventToggleConfig(_ event: RoutineEvent) -> ToggleConfig<
         RoutineEvent
     >? {

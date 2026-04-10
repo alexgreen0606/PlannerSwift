@@ -83,6 +83,7 @@ struct RoutinesSpreadView: View {
                     in: routineEvents
                 )
             )
+            .id(context.weekday)
             .navigationTransition(
                 .zoom(
                     sourceID: context.weekday,

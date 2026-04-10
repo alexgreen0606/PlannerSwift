@@ -146,7 +146,7 @@ struct ContentView: View {
             initializePlannerSearch()
         }
 
-        // Expanded Planner Cover
+        // MARK: Expanded Planner Cover
         .fullScreenCover(item: $plannerCoverManager.context) { context in
             if let settings {
                 PlannerBuilderView(
@@ -154,6 +154,7 @@ struct ContentView: View {
                     settings: settings,
                     header: plannerCoverHeader(context.datestamp)
                 )
+                .id(context.datestamp)
                 .navigationTransition(
                     .zoom(
                         sourceID: context.id,

@@ -98,7 +98,7 @@ extension String {
             return false
         }
 
-        guard let diff = dayDifference(from: todaystamp, to: self)
+        guard let diff = todaystamp.daysUntil(self)
         else { return false }
 
         return diff < 7
@@ -106,7 +106,7 @@ extension String {
 
     // True if Yesterday, Today, or Tomorrow.
     func isWithinADay(todaystamp: String) -> Bool {
-        guard let diff = dayDifference(from: self, to: todaystamp)
+        guard let diff = self.daysUntil(todaystamp)
         else { return false }
 
         return abs(diff) < 2

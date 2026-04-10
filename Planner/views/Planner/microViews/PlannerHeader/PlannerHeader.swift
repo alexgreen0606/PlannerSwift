@@ -48,8 +48,21 @@ struct PlannerHeaderView: View {
 
     var title: String {
         customTitle
-            ?? plannerTitle(
-                datestamp: datestamp,
+            ?? datestamp.proximityFormat(
+                using: [
+                    ProximityRule(
+                        proximity: .withinADay,
+                        format: .countdown
+                    ),
+                    ProximityRule(
+                        proximity: .next7Days,
+                        format: .weekday
+                    ),
+                    ProximityRule(
+                        proximity: .fallback,
+                        format: .dateLabel
+                    ),
+                ],
                 todaystamp: todaystamp
             )
     }

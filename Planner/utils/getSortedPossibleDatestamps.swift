@@ -10,18 +10,6 @@ import SwiftDate
 
 // Clean
 
-private let earliestRegion = Region(
-    calendar: Calendars.gregorian,
-    zone: TimeZone(secondsFromGMT: -12 * 3600)!,
-    locale: Locales.english
-)
-
-private let latestRegion = Region(
-    calendar: Calendars.gregorian,
-    zone: TimeZone(secondsFromGMT: 14 * 3600)!,
-    locale: Locales.english
-)
-
 // Gets all possible datestamps an event can land in.
 // Example: An event could be nighttime in Los Angeles and morning the next day in Rome.
 func getSortedPossibleDatestamps(for date: Date, ending: Date? = nil)
@@ -39,3 +27,17 @@ func getSortedPossibleDatestamps(for date: Date, ending: Date? = nil)
 
     return datestamps.sorted()
 }
+
+// MARK: - Helpers
+
+private let earliestRegion = Region(
+    calendar: Calendars.gregorian,
+    zone: TimeZone(secondsFromGMT: -12 * 3600)!,
+    locale: Locales.english
+)
+
+private let latestRegion = Region(
+    calendar: Calendars.gregorian,
+    zone: TimeZone(secondsFromGMT: 14 * 3600)!,
+    locale: Locales.english
+)

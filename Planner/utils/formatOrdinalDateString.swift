@@ -5,6 +5,8 @@
 //  Created by Alex Green on 3/26/26.
 //
 
+// Clean
+
 // Note: Any strings with a comma MUST be of format MMM DD, YYYY
 func formatOrdinalDateString(_ text: String) -> String {
     var formatted = text

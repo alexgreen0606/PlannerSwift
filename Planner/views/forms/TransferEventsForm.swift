@@ -54,10 +54,7 @@ struct TransferEventsFormView: View {
 
     private var dayOffset: Int {
         Int(
-            dayDifference(
-                from: sourceDatestamp,
-                to: destinationDatestamp
-            ) ?? 0
+            sourceDatestamp.daysUntil(destinationDatestamp) ?? 0
         )
     }
 

@@ -40,6 +40,16 @@ extension String {
     var shortWeekday: String {
         formatted("EEE").uppercased()
     }
+    
+    // MARK: Difference Calculator
+    func daysUntil(_ other: String) -> Int? {
+        guard
+            let start = self.toDate(),
+            let end = other.toDate()
+        else { return nil }
+
+        return Calendar.current.dateComponents([.day], from: start, to: end).day
+    }
 
     // MARK: Countdown
 
@@ -49,7 +59,7 @@ extension String {
 
         if current == todaystamp { return "Today" }
 
-        guard let diff = dayDifference(from: current, to: todaystamp)
+        guard let diff = current.daysUntil(todaystamp)
         else { return "" }
 
         if current > todaystamp {

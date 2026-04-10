@@ -9,7 +9,8 @@
 
 func generateSortIndex<Item: ListItem>(
     index: Int,
-    sortedItems: [Item]  // May or may not contain the item being placed.
+    // May or may not contain the item being placed.
+    sortedItems: [Item]
 ) -> Double {
     if sortedItems.isEmpty {
         return 8.0

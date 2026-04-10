@@ -15,20 +15,9 @@ func buildDateRangeLabel(
 )
     -> String
 {
-
-    // Single-day range.
     if firstDatestamp == lastDatestamp {
-        return firstDatestamp.proximityFormat(
-            using: [
-                ProximityRule(
-                    proximity: .withinADay,
-                    format: .countdown
-                ),
-                ProximityRule(proximity: .next7Days, format: .weekday),
-                ProximityRule(proximity: .fallback, format: .dateLabel),
-            ],
-            todaystamp: todaystamp
-        )
+        // Single-day range.
+        return firstDatestamp.dateLabel
     }
 
     let currentYear = referenceYear ?? todaystamp.year
@@ -36,7 +25,7 @@ func buildDateRangeLabel(
     let sameMonth = sameYear && firstDatestamp.month == lastDatestamp.month
 
     let startIncludeMonth = true
-    let startIncludeYear = firstDatestamp.year != currentYear && !sameYear
+    let startIncludeYear = !sameYear
 
     let endIncludeMonth = !sameMonth
     let endIncludeYear = lastDatestamp.year != currentYear
@@ -55,22 +44,26 @@ func buildDateRangeLabel(
     return "\(start) - \(end)"
 }
 
+// MARK: - Helper Functions
+
 private func format(
-    _ date: String,
+    _ datestamp: String,
     includeMonth: Bool,
     includeYear: Bool
 ) -> String {
 
-    let parts = date.split(separator: "-")
-    guard parts.count == 3 else { return date }
+    let parts = datestamp.split(separator: "-")
+    guard parts.count == 3 else { return datestamp.dateLabel }
 
     let year = String(parts[0])
     let month = Int(parts[1]) ?? 0
     let day = String(parts[2])
 
     let monthNames = [
-        "", "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December",
+        "", "January", "February", "March",
+        "April", "May", "June",
+        "July", "August", "September",
+        "October", "November", "December",
     ]
 
     var result = ""
