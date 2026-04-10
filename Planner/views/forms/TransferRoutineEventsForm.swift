@@ -126,8 +126,8 @@ struct TransferRoutineEventsFormView: View {
             notificationManager.addNotification(
                 NotificationConfig(
                     title:
-                        "Rescheduled \(eventCount) recurring event\(eventCount == 1 ? "" : "s")",
-                    subtitle: "for \(destinations)",
+                        "Moved \(eventCount) recurring event\(eventCount == 1 ? "" : "s")",
+                    subtitle: "to \(destinations)",
                     iconConfig: IconConfig(
                         name: "checkmark",
                         primaryColor: Color.green

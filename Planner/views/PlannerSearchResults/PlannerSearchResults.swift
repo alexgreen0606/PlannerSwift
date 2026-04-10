@@ -36,7 +36,7 @@ struct PlannerSearchResultsView: View {
     @State private var plannerMapTask: Task<Void, Never>?
 
     private var emptyResultsLabel: String {
-        guard let activeQuery = plannerSearchManager.activeQuery else {
+        guard let activeQuery = plannerSearchManager.results.activeQuery else {
             return ""
         }
 
@@ -54,12 +54,12 @@ struct PlannerSearchResultsView: View {
                 ScrollViewReader { scrollProxy in
                     List {
                         ForEach(
-                            plannerSearchManager.sortedUpcomingYears,
+                            plannerSearchManager.results.sortedYears,
                             id: \.self
                         ) { year in
                             Section {
                                 ForEach(
-                                    plannerSearchManager.results[year] ?? [],
+                                    plannerSearchManager.results.datestampMap[year] ?? [],
                                     id: \.self
                                 ) {
                                     datestamp in
@@ -67,7 +67,7 @@ struct PlannerSearchResultsView: View {
                                         datestamp: datestamp,
                                         settings: settings,
                                         previewType: .search,
-                                        plannerSearchQuery: plannerSearchManager
+                                        plannerSearchQuery: plannerSearchManager.results
                                             .activeQuery,
                                         header: PlannerHeaderView(
                                             datestamp: datestamp,
@@ -140,9 +140,9 @@ struct PlannerSearchResultsView: View {
                     // Scroll to top whenever the planner list changes.
                     .withScrollTrigger(
                         scrollProxy: scrollProxy,
-                        trigger: plannerSearchManager.results,
-                        id: plannerSearchManager.topDatestamp,
-                        disabled: plannerSearchManager.topDatestamp == nil
+                        trigger: plannerSearchManager.results.datestampMap,
+                        id: plannerSearchManager.results.topDatestamp,
+                        disabled: plannerSearchManager.results.topDatestamp == nil
                     )
 
                     // Calculate the layout for the manual safe areas once the UI settles.
@@ -195,7 +195,7 @@ struct PlannerSearchResultsView: View {
 
     @ViewBuilder
     private var emptyPlannersLabel: some View {
-        if plannerSearchManager.sortedUpcomingYears.isEmpty {
+        if plannerSearchManager.results.sortedYears.isEmpty {
             EmptyLabelView(emptyResultsLabel)
                 .frame(height: ListLayout.EMPTY_LABEL_HEIGHT)
         }

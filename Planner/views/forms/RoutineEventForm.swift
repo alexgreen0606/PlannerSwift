@@ -303,17 +303,32 @@ struct RoutineEventFormView: View {
                         openRoutine(selectedDays.first!)
                     } : nil
 
-                notificationManager.addNotification(
-                    NotificationConfig(
-                        title: "Recurring event moved",
-                        subtitle: "to \(destinations)",
-                        iconConfig: IconConfig(
-                            name: "checkmark",
-                            primaryColor: Color.green
-                        ),
-                        onClick: onClick
+                if sourceRoutineEvent != nil {
+                    notificationManager.addNotification(
+                        NotificationConfig(
+                            title: "Moved recurring event",
+                            subtitle: "to \(destinations)",
+                            iconConfig: IconConfig(
+                                name: "checkmark",
+                                primaryColor: Color.green
+                            ),
+                            onClick: onClick
+                        )
                     )
-                )
+                } else {
+                    notificationManager.addNotification(
+                        NotificationConfig(
+                            title: "Recurring event scheduled",
+                            subtitle:
+                                "for \(destinations)",
+                            iconConfig: IconConfig(
+                                name: "checkmark",
+                                primaryColor: Color.green
+                            ),
+                            onClick: onClick
+                        )
+                    )
+                }
             }
         }
     }

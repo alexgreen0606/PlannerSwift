@@ -21,6 +21,7 @@ struct RoutineCoverContext: Identifiable {
 }
 
 struct RoutinesSpreadView: View {
+    @Binding var routineCoverContext: RoutineCoverContext?
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -28,8 +29,6 @@ struct RoutinesSpreadView: View {
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
 
     @Query private var routineEvents: [RoutineEvent]
-
-    @State private var routineCoverContext: RoutineCoverContext? = nil
 
     @Namespace private var namespace
 

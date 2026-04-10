@@ -208,7 +208,7 @@ struct TransferEventsFormView: View {
             notificationManager.addNotification(
                 NotificationConfig(
                     title:
-                        "Rescheduled \(eventCount) event\(eventCount == 1 ? "" : "s")",
+                        "Moved \(eventCount) event\(eventCount == 1 ? "" : "s")",
                     subtitle: offsetLabel,
                     iconConfig: IconConfig(
                         name: "checkmark",

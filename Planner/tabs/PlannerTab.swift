@@ -54,10 +54,12 @@ struct PlannerTabView: View {
     @StateObject private var notificationManager = NotificationManager()
     @State private var tappedDates: Set<DateComponents> = []
     @State private var showNewEventSheet = false
+    @State private var showNewRoutineEventSheet = false
     @State private var showCalendarPicker = false
     @State private var thisWeekDatestamps: [String]
     @State private var tripSheetContext: TripSheetContext? = nil
     @State private var expandedTrips: Set<PersistentIdentifier> = []
+    @State private var routineCoverContext: RoutineCoverContext? = nil
 
     private var sortedUpcomingTrips: [Trip] {
         trips.filter { trip in
@@ -120,7 +122,7 @@ struct PlannerTabView: View {
 
                     // MARK: ROUTINES
                     Section("Routines") {
-                        RoutinesSpreadView()
+                        RoutinesSpreadView(routineCoverContext: $routineCoverContext)
                     }
                     .discreetListItem()
 
@@ -194,7 +196,13 @@ struct PlannerTabView: View {
                         calendarEvent: nil,
                         settings: settings
                     )
-                    .environmentObject(notificationManager)
+                }
+                
+                // MARK: New Routine Event Sheet
+                .sheet(isPresented: $showNewRoutineEventSheet) {
+                    RoutineEventFormView() { weekday in
+                        routineCoverContext = RoutineCoverContext(weekday: weekday)
+                    }
                 }
 
                 // MARK: New Trip Sheet
@@ -231,7 +239,6 @@ struct PlannerTabView: View {
                             .move(edge: .leading).combined(with: .opacity)
                         )
                         .padding(.bottom)
-                        .environmentObject(notificationManager)
                 }
             }
 
@@ -241,6 +248,8 @@ struct PlannerTabView: View {
                 ready: true,
                 load: buildThisWeekDatestamps
             )
+            
+            .environmentObject(notificationManager)
         }
     }
 
@@ -298,6 +307,10 @@ struct PlannerTabView: View {
                     systemImage: "calendar.day.timeline.leading"
                 ) {
                     showNewEventSheet = true
+                }
+                
+                Button("Create Routine", systemImage: "repeat") {
+                    showNewRoutineEventSheet = true
                 }
 
                 Button("Create Trip", systemImage: "suitcase") {
