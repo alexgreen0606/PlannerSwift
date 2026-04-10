@@ -70,15 +70,27 @@ struct PlannerPreviewView<Header: View>: View {
         return trip.title
     }
 
+    private var tripSlotSize: Int {
+        tripLabel == nil ? 0 : 1
+    }
+
+    private var previewBirthdays: [Birthday] {
+        Array(filteredBirthdays.prefix(maxPreviewEvents - tripSlotSize))
+    }
+
     private var previewChipEvents: [EKEvent] {
-        Array(filteredChipEvents.prefix(maxPreviewEvents))
+        Array(
+            filteredChipEvents.prefix(
+                maxPreviewEvents - tripSlotSize - previewBirthdays.count
+            )
+        )
     }
 
     private var sortedPreviewPlannerEvents: [PlannerEvent] {
-        let tripSlot = tripLabel == nil ? 0 : 1
         let slots = max(
             0,
-            maxPreviewEvents - previewChipEvents.count - tripSlot
+            maxPreviewEvents - tripSlotSize - previewBirthdays.count
+                - previewChipEvents.count
         )
 
         let timed = Array(timedPlannerEvents.prefix(slots))
@@ -110,7 +122,10 @@ struct PlannerPreviewView<Header: View>: View {
     }
 
     private var hasEvents: Bool {
-        (previewChipEvents.count + sortedPreviewPlannerEvents.count) > 0
+        (previewChipEvents.count
+            + sortedPreviewPlannerEvents.count
+            + tripSlotSize
+            + previewBirthdays.count) > 0
     }
 
     private var isSearching: Bool {

@@ -43,6 +43,7 @@ struct DeleteSelectedButtonView: View {
         Button("Delete", systemImage: "trash") {
             showConfirmation = true
         }
+        .tint(Color.label)
         .disabled(disabled)
         .confirmationDialog(
             "Delete selected \(itemsLabel)?",

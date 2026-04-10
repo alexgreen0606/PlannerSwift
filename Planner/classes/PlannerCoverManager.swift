@@ -6,6 +6,7 @@
 //
 
 import Combine
+import SwiftDate
 import SwiftUI
 
 // Clean
@@ -25,4 +26,13 @@ struct PlannerCoverContext: Identifiable, Equatable {
 @MainActor
 final class PlannerCoverManager: ObservableObject {
     @Published var context: PlannerCoverContext?
+    @Published var isPresentingDefault: Bool = true
+    @Published var todaystampAtInit: String
+
+    init() {
+        todaystampAtInit = DateInRegion(region: .local).toFormat(
+            "yyyy-MM-dd",
+            locale: Locale.current
+        )
+    }
 }

@@ -39,6 +39,7 @@ struct SelectedRoutineEventActionsView: View {
         ) {
             showTransferSheet = true
         }
+        .tint(Color.label)
         .disabled(routineManager.selectedItemIds.isEmpty)
         .matchedTransitionSource(
             id: IdConstants.TRANSFER_BUTTON,

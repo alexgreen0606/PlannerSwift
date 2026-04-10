@@ -28,6 +28,7 @@ struct ExpandedPlannerView<Header: View>: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var todaystampManager: TodaystampWatcher
+    @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
     @StateObject private var notificationManager = NotificationManager()
@@ -170,7 +171,13 @@ struct ExpandedPlannerView<Header: View>: View {
 
     private var backButton: some View {
         Button("Back", systemImage: "chevron.left") {
-            dismiss()
+            if plannerCoverManager.isPresentingDefault {
+                withAnimation(.linear) {
+                    plannerCoverManager.isPresentingDefault = false
+                }
+            } else {
+                dismiss()
+            }
         }
     }
 

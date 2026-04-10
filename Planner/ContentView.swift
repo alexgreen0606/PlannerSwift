@@ -109,36 +109,60 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             if let settings {
-                TabView {
-                    Tab(
-                        "",
-                        systemImage: todaystampWatcher.todaystamp
-                            .calendarSymbolName
-                    ) {
-                        PlannerTabView(
-                            settings: settings,
-                            namespace: namespace
+                if plannerCoverManager.isPresentingDefault {
+
+                    // MARK: Default App Landing. Today Planner.
+                    PlannerBuilderView(
+                        datestamp: plannerCoverManager.todaystampAtInit,
+                        settings: settings,
+                        header: plannerCoverHeader(
+                            plannerCoverManager.todaystampAtInit
                         )
-                    }
-
-                    Tab("", systemImage: "checklist") {
-                        ChecklistsTabView()
-                    }
-
-                    Tab("", systemImage: "gear") {
-                        SettingsTabView(settings: settings)
-                    }
-
-                    Tab(role: .search) {
-                        PlannerSearchTabView(
-                            todaystamp: todaystampWatcher.todaystamp,
-                            settings: settings,
-                            namespace: namespace
+                    )
+                    .transition(
+                        .asymmetric(
+                            insertion: .identity,
+                            removal: .move(edge: .trailing).combined(
+                                with: .identity
+                            )
                         )
-                        .environmentObject(plannerSearchManager)
+                    )
+
+                } else {
+
+                    // MARK: Standard App Navigation
+                    TabView {
+                        Tab(
+                            "",
+                            systemImage: todaystampWatcher.todaystamp
+                                .calendarSymbolName
+                        ) {
+                            PlannerTabView(
+                                settings: settings,
+                                namespace: namespace
+                            )
+                        }
+
+                        Tab("", systemImage: "checklist") {
+                            ChecklistsTabView()
+                        }
+
+                        Tab("", systemImage: "gear") {
+                            SettingsTabView(settings: settings)
+                        }
+
+                        Tab(role: .search) {
+                            PlannerSearchTabView(
+                                todaystamp: todaystampWatcher.todaystamp,
+                                settings: settings,
+                                namespace: namespace
+                            )
+                            .environmentObject(plannerSearchManager)
+                        }
                     }
+                    .tabBarMinimizeBehavior(.onScrollDown)
+
                 }
-                .tabBarMinimizeBehavior(.onScrollDown)
             }
         }
         .onAppear {

@@ -33,6 +33,7 @@ struct CalendarsFormView: View {
         "camera",
         "figure.2",
         "figure.strengthtraining.traditional",
+        "leaf"
     ]
 
     @AppStorage("accentColor") var accentColor: AccentColor =

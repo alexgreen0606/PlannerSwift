@@ -32,7 +32,7 @@ struct RoutineActionMenuView: View {
 
         // MARK: Delete Events Confirmation
         .confirmationDialog(
-            "Delete every recurring event?",
+            "Delete these recurring events?",
             isPresented: $showDeleteConfirmation,
             titleVisibility: .visible
         ) {
