@@ -193,9 +193,9 @@ struct ContentView: View {
         PlannerHeaderView(
             datestamp: datestamp,
             customTextScale: 1.1,
-            iconSize: 36,
-            iconDetailSize: isDateIcon ? 10 : 13,
-            iconDetailOffset: isDateIcon ? 3 : 20
+            iconSize: 32,
+            iconDetailSize: isDateIcon ? 9 : 11,
+            iconDetailOffset: isDateIcon ? 3 : 18
         )
     }
 
