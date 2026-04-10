@@ -28,7 +28,7 @@ struct PlannerEventBuilderView<Header: View>: View {
         plannerDay: DateInRegion,
         plannerLocation: Location?,
         settings: PlannerSettings,
-        previewType: PlannerPreviewType?,
+        previewType: PlannerPreviewType? = nil,
         plannerSearchQuery: PlannerSearchQuery? = nil,
         header: Header
     ) {

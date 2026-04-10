@@ -10,6 +10,7 @@ import Fuse
 import SwiftData
 import SwiftDate
 import SwiftUI
+import SwiftUIIntrospect
 
 // Clean
 
@@ -155,6 +156,7 @@ struct PlannerSearchResultsView: View {
                     }
                 }
                 .animateAsynchronousAction(from: todaystampWatcher.todaystamp)
+                
             }
         }
         .searchable(

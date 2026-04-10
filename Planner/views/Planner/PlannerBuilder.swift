@@ -73,31 +73,32 @@ struct PlannerBuilderView<Header: View>: View {
     }
 
     var body: some View {
-        if let previewType {
-            preview(type: previewType)
-        } else {
-            eventList
+        ZStack {
+            if let previewType {
+                preview(type: previewType)
+            } else {
+                eventList
+            }
+        }
+        .task {
+            modelContext.ensurePlanner(planners: planners, datestamp: datestamp)
         }
     }
 
     // MARK: - View Builders
 
+    @ViewBuilder
     private var eventList: some View {
-        ZStack {
-            if let planner, let plannerDay {
-                PlannerEventBuilderView(
-                    planner: planner,
-                    plannerDay: plannerDay,
-                    plannerLocation: plannerLocation,
-                    settings: settings,
-                    previewType: previewType,
-                    plannerSearchQuery: plannerSearchQuery,
-                    header: header
-                )
-            }
-        }
-        .task {
-            modelContext.ensurePlanner(planners: planners, datestamp: datestamp)
+        if let planner, let plannerDay {
+            PlannerEventBuilderView(
+                planner: planner,
+                plannerDay: plannerDay,
+                plannerLocation: plannerLocation,
+                settings: settings,
+                previewType: previewType,
+                plannerSearchQuery: plannerSearchQuery,
+                header: header
+            )
         }
     }
 
@@ -176,6 +177,7 @@ struct PlannerBuilderView<Header: View>: View {
             }
             eventList
         }
+        .frame(maxWidth: .infinity)
     }
 
     private var previewHeader: some View {
