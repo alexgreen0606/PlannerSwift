@@ -9,6 +9,7 @@ import EventKit
 import SwiftDate
 import SwiftUI
 import SwiftData
+import WeatherKit
 
 // Clean
 
@@ -41,6 +42,18 @@ struct PlannerListView: View {
     @EnvironmentObject private var plannerManager: ListManager<PlannerEvent>
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
+    @EnvironmentObject private var weatherStore: WeatherStore
+    
+    private var weatherData: DayWeather? {
+        weatherStore.getWeather(for: plannerDay, at: plannerLocation)
+    }
+    
+    private var locationLabel: String {
+        planner.locationLabel(
+            settings: settings,
+            deviceLocation: deviceLocationManager.deviceLocation
+        )
+    }
 
     var body: some View {
         SortableListView(
@@ -73,6 +86,11 @@ struct PlannerListView: View {
         .task(id: planner.datestamp) {
             plannerManager.setToggleItem(toggleEvent)
         }
+        .animateAsynchronousAction(from: weatherData)
+        .animateAsynchronousAction(from: locationLabel)
+        .animateAsynchronousAction(
+            from: calendarDayData.plannerChipEvents.map(\.title)
+        )
     }
 
     // MARK: - View Builders
@@ -83,7 +101,8 @@ struct PlannerListView: View {
             showLocationSheet: $showLocationSheet,
             planner: planner,
             plannerDay: plannerDay,
-            plannerLocation: plannerLocation,
+            weatherData: weatherData,
+            locationLabel: locationLabel,
             calendarDayData: calendarDayData,
             sortedPlannerEvents: sortedPlannerEvents,
             namespace: namespace,

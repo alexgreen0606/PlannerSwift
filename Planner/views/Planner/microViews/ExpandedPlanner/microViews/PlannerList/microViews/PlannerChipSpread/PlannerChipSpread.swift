@@ -20,7 +20,8 @@ struct PlannerChipSpreadView: View {
     @Binding var showLocationSheet: Bool
     let planner: Planner
     let plannerDay: DateInRegion
-    let plannerLocation: Location?
+    let weatherData: DayWeather?
+    let locationLabel: String
     let calendarDayData: CalendarDayData
     let sortedPlannerEvents: [PlannerEvent]
     var namespace: Namespace.ID
@@ -39,22 +40,11 @@ struct PlannerChipSpreadView: View {
 
     // MARK: - Computed Variables
 
-    private var locationLabel: String {
-        planner.locationLabel(
-            settings: settings,
-            deviceLocation: deviceLocationManager.deviceLocation
-        )
-    }
-
     private var locationIconConfig: IconConfig {
         planner.locationIconConfig(
             settings: settings,
             accentColor: accentColor
         )
-    }
-
-    private var weatherData: DayWeather? {
-        weatherStore.getWeather(for: plannerDay, at: plannerLocation)
     }
 
     // MARK: - Body
@@ -75,11 +65,6 @@ struct PlannerChipSpreadView: View {
                 content: eventChip
             )
         }
-        .animateAsynchronousAction(from: weatherData)
-        .animateAsynchronousAction(from: locationLabel)
-        .animateAsynchronousAction(
-            from: calendarDayData.plannerChipEvents.map(\.title)
-        )
 
         // Location Sheet
         .sheet(isPresented: $showLocationSheet) {
