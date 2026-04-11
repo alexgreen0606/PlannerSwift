@@ -188,8 +188,9 @@ extension ModelContext {
         // This is part of a larger pipeline.
     }
 
+    // TODO: why not private?
     @MainActor
-    private func addCalendarEventToPlanner(
+    func addCalendarEventToPlanner(
         // Guaranteed to not have a storage event in the planner.
         _ calendarEvent: EKEvent,
         plannerDay: DateInRegion

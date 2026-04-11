@@ -26,11 +26,21 @@ enum Weekday: String, Codable, CaseIterable {
         self.rawValue.capitalizedFirst
     }
 
-    func sortedEvents(in routineEvents: [RoutineEvent]) -> [RoutineEvent] {
+    static func from(_ string: String) -> Weekday? {
+        Weekday(rawValue: string.lowercased())
+    }
+
+    func sortedEvents(in routineEvents: [RoutineEvent], reversed: Bool = false)
+        -> [RoutineEvent]
+    {
         routineEvents
             .filter { $0.sortDateMap[self] != nil }
             .sorted {
-                $0.sortDateMap[self]! < $1.sortDateMap[self]!
+                if reversed {
+                    $0.sortDateMap[self]! > $1.sortDateMap[self]!
+                } else {
+                    $0.sortDateMap[self]! < $1.sortDateMap[self]!
+                }
             }
     }
 

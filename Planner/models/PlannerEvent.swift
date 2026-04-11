@@ -8,6 +8,7 @@
 import EventKit
 import Foundation
 import SwiftData
+import SwiftDate
 
 // Clean
 
@@ -18,15 +19,17 @@ class PlannerEvent: EventListItem {
     var date: Date
     var hasTime: Bool = false
     var isCanceled: Bool = false
-    
+
     @Relationship(deleteRule: .nullify, inverse: \Location.events)
     var location: Location?
 
     @Transient
     var calendarEvent: EKEvent?
-    
+
     var calendarItemExternalIdentifier: String?
-    
+
+    var routineEventId: UUID?
+
     // Uniquely identifies recurring event occurrences (calendar events only).
     @Attribute(.unique) var occurrenceId: String?
 
@@ -34,21 +37,39 @@ class PlannerEvent: EventListItem {
         date: Date,
         sortDate: Date,
         calendarEvent: EKEvent? = nil,
+        routineEvent: RoutineEvent? = nil,
+        plannerDay: DateInRegion? = nil
     ) {
         self.date = date
 
         super.init(sortDate: sortDate)
-        
+
         // Calendar event synchronization.
         if let calendarEvent {
+            self.title = calendarEvent.title
             self.date = calendarEvent.startDate
             self.calendarEvent = calendarEvent
-            self.title = calendarEvent.title
-            self.calendarItemExternalIdentifier = calendarEvent.calendarItemExternalIdentifier
+            self.calendarItemExternalIdentifier =
+                calendarEvent.calendarItemExternalIdentifier
             self.occurrenceId = calendarEvent.occurrenceId
             self.location = calendarEvent.location(storageEvent: nil)
             self.hasTime = true
+            return
         }
 
+        if let routineEvent {
+            self.title = routineEvent.title
+
+            if let plannerDay,
+                let time = routineEvent.date(in: plannerDay)
+            {
+                self.date = time
+                self.hasTime = true
+            } else {
+                self.hasTime = false
+            }
+            
+            self.routineEventId = routineEvent.stableId
+        }
     }
 }

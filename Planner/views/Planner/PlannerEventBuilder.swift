@@ -141,7 +141,7 @@ struct PlannerEventBuilderView<Header: View>: View {
         }
 
         withAnimation {
-            calendarDayData = modelContext.syncCalendar(
+            calendarDayData = modelContext.buildPlanner(
                 for: planner,
                 storageEvents: sortedPlannerEvents,
                 plannerDay: plannerDay,

@@ -40,6 +40,30 @@ extension ModelContext {
         return newEvent.stableId
     }
 
+    // MARK: - READ
+
+    @MainActor
+    func loadSortedRoutineEvents(
+        for weekday: Weekday,
+        reversed: Bool = false
+    ) -> [RoutineEvent] {
+        do {
+            let allRoutineEvents = try self.fetch(
+                FetchDescriptor<RoutineEvent>()
+            )
+
+            return weekday.sortedEvents(
+                in: allRoutineEvents,
+                reversed: reversed
+            )
+
+        } catch {
+            assertionFailure("ERROR loadSortedRoutineEvents: \(error)")
+        }
+
+        return []
+    }
+
     // MARK: - UPDATE
 
     @MainActor
@@ -158,36 +182,17 @@ extension ModelContext {
         in weekday: Weekday,
         from sortedSourceEvents: [RoutineEvent] = []
     ) -> Date {
-        do {
-            let allRoutineEvents = try self.fetch(
-                FetchDescriptor<RoutineEvent>()
-            )
+        let sortedDestinationEvents = self.loadSortedRoutineEvents(for: weekday)
 
-            let sortedDestinationEvents = weekday.sortedEvents(
-                in: allRoutineEvents
-            )
-
-            let targetIndex = generateTargetIndex(
-                near: event.stableId,
-                from: sortedSourceEvents,
-                to: sortedDestinationEvents
-            )
-
-            return self.generateRoutineEventSortDate(
-                at: targetIndex,
-                in: sortedDestinationEvents,
-                weekday: weekday
-            )
-
-        } catch {
-            assertionFailure(
-                "ERROR routineEvent.generateNewSortDateNearSiblings: \(error)"
-            )
-        }
+        let targetIndex = generateTargetIndex(
+            near: event.stableId,
+            from: sortedSourceEvents,
+            to: sortedDestinationEvents
+        )
 
         return self.generateRoutineEventSortDate(
-            at: 0,
-            in: [],
+            at: targetIndex,
+            in: sortedDestinationEvents,
             weekday: weekday
         )
     }

@@ -68,7 +68,7 @@ extension PlannerEvent {
         return accentColor.color
     }
 
-    // MARK: - Data Modifiers
+    // MARK: - Synchronization
 
     @MainActor
     func syncWithCalendarEvent(_ calendarEvent: EKEvent) {
@@ -82,6 +82,23 @@ extension PlannerEvent {
         self.calendarItemExternalIdentifier =
             calendarEvent.calendarItemExternalIdentifier
         self.occurrenceId = calendarEvent.occurrenceId
+    }
+
+    @MainActor
+    func syncWithRoutineEvent(
+        _ routineEvent: RoutineEvent,
+        on plannerDay: DateInRegion
+    ) {
+        self.title = routineEvent.title
+
+        if let time = routineEvent.date(in: plannerDay) {
+            self.date = time
+            self.hasTime = true
+        } else {
+            self.hasTime = false
+        }
+
+        self.routineEventId = routineEvent.stableId
     }
 
     // MARK: - View Builders

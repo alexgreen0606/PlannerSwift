@@ -23,6 +23,26 @@ extension RoutineEvent {
         self.time = draft.hasTime ? draft.date : nil
     }
 
+    func date(in plannerDay: DateInRegion) -> Date? {
+        guard let time = self.time else {
+            return nil
+        }
+
+        let utcTime = DateInRegion(time, region: .UTC)
+
+        let combined = DateInRegion(
+            year: plannerDay.year,
+            month: plannerDay.month,
+            day: plannerDay.day,
+            hour: utcTime.hour,
+            minute: utcTime.minute,
+            second: 0,
+            region: plannerDay.region
+        )
+
+        return combined.date
+    }
+
     // MARK: - View Builders
 
     @ViewBuilder
