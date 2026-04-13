@@ -339,6 +339,7 @@ struct PlannerEventFormView: View {
             ).datestamp,
             settings: settings,
             ekEventStore: calendarStore.ekEventStore,
+            timeZone: eventRegion.timeZone,
             sourcePlannerEvent: sourcePlannerEvent,
             sourceCalendarEvent: sourceCalendarEvent
         )

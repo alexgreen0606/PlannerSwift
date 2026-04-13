@@ -29,12 +29,11 @@ extension ModelContext {
             return
         }
 
-        event.validateRoutineEventException()
-
         // Scan the title for a date.
         guard let defaultLocation,
             let (date, updatedText) = event.title.separateDate(for: plannerDay)
         else {
+            event.validateRoutineEventException(in: plannerDay.region.timeZone)
             return
         }
 
@@ -42,8 +41,7 @@ extension ModelContext {
         event.location = defaultLocation
         event.date = date
         event.hasTime = true
-
-        event.validateRoutineEventException()
+        event.validateRoutineEventException(in: plannerDay.region.timeZone)
 
         self.safeSave("handlePlannerEventTitleChange")
     }

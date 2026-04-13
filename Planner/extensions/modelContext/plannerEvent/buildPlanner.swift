@@ -89,7 +89,7 @@ extension ModelContext {
                 }
 
                 existingCalendarEvents.removeValue(forKey: calendarEventId)
-                
+
                 if let routineEventId = plannerEvent.routineEvent?.stableId {
                     // Mark this recurring event as already existing so it is not re-created.
                     existingRoutineEvents.removeValue(forKey: routineEventId)
@@ -112,22 +112,10 @@ extension ModelContext {
 
                 plannerEvent.syncWithCalendarEvent(calendarEvent)
 
-            } else if let routineEvent = plannerEvent.routineEvent,
-                !plannerEvent.isRoutineEventException
-            {
+            } else if let routineEvent = plannerEvent.routineEvent {
                 // MARK: Routine Event
 
-                //                guard
-                //                    let routineEvent = existingRoutineEvents[routineEventId],
-                //                    !planner.finalExcludeRoutine
-                //                else {
-                //                    // Routine event is excluded or deleted. Remove this record and continue.
-                //                    self.delete(plannerEvent)
-                //                    continue
-                //                }
-
                 existingRoutineEvents.removeValue(forKey: routineEvent.stableId)
-
                 plannerEvent.syncWithRoutineEvent(routineEvent, on: plannerDay)
 
             }

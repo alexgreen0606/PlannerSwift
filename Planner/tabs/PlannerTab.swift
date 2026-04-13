@@ -122,7 +122,9 @@ struct PlannerTabView: View {
 
                     // MARK: ROUTINES
                     Section("Routines") {
-                        RoutinesSpreadView(routineCoverContext: $routineCoverContext)
+                        RoutinesSpreadView(
+                            routineCoverContext: $routineCoverContext
+                        )
                     }
                     .discreetListItem()
 
@@ -197,11 +199,13 @@ struct PlannerTabView: View {
                         settings: settings
                     )
                 }
-                
+
                 // MARK: New Routine Event Sheet
                 .sheet(isPresented: $showNewRoutineEventSheet) {
-                    RoutineEventFormView() { weekday in
-                        routineCoverContext = RoutineCoverContext(weekday: weekday)
+                    RoutineEventFormView { weekday in
+                        routineCoverContext = RoutineCoverContext(
+                            weekday: weekday
+                        )
                     }
                 }
 
@@ -242,13 +246,11 @@ struct PlannerTabView: View {
                 }
             }
 
-            // Build the week's datestamps at midnight.
-            .externalData(
-                key: todaystampWatcher.todaystamp,
-                ready: true,
-                load: buildThisWeekDatestamps
-            )
-            
+            // Build the week's datestamps now and at midnight.
+            .task(id: todaystampWatcher.todaystamp) {
+                buildThisWeekDatestamps()
+            }
+
             .environmentObject(notificationManager)
         }
     }
@@ -308,7 +310,7 @@ struct PlannerTabView: View {
                 ) {
                     showNewEventSheet = true
                 }
-                
+
                 Button("Create Routine", systemImage: "repeat") {
                     showNewRoutineEventSheet = true
                 }

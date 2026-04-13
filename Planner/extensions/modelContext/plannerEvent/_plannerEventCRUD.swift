@@ -106,6 +106,7 @@ extension ModelContext {
         targetDatestamp: String,
         settings: PlannerSettings,
         ekEventStore: EKEventStore,
+        timeZone: TimeZone,
         sourcePlannerEvent: PlannerEvent?,
         sourceCalendarEvent: EKEvent?
     ) -> String?  // The datestamp the event is now in.
@@ -149,7 +150,7 @@ extension ModelContext {
             sourceDatestamp: sourceDatestamp
         )
 
-        event.validateRoutineEventException()
+        event.validateRoutineEventException(in: timeZone)
 
         self.insertIfNeeded(event)
 

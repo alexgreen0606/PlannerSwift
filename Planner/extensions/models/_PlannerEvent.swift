@@ -92,6 +92,8 @@ extension PlannerEvent {
         _ routineEvent: RoutineEvent,
         on plannerDay: DateInRegion
     ) {
+        guard !self.isRoutineEventException else { return }
+
         self.title = routineEvent.title
 
         if let time = routineEvent.date(in: plannerDay) {
@@ -105,11 +107,12 @@ extension PlannerEvent {
     }
 
     @MainActor
-    func validateRoutineEventException() {
+    func validateRoutineEventException(in timeZone: TimeZone) {
         if let routineEvent = self.routineEvent {
             // Mark the routine exception flag based on its match with the parent.
             self.isRoutineEventException = !self.matches(
-                routineEvent
+                routineEvent,
+                in: timeZone
             )
         }
     }
@@ -253,8 +256,15 @@ extension PlannerEvent {
 
     // MARK: - Helpers
 
-    private func matches(_ routineEvent: RoutineEvent) -> Bool {
+    private func matches(
+        _ routineEvent: RoutineEvent,
+        in timeZone: TimeZone
+    ) -> Bool {
         let calendar = Calendar(identifier: .gregorian)
+
+        var plannerCalendar = calendar
+        plannerCalendar.timeZone = timeZone
+
         var utcCalendar = calendar
         utcCalendar.timeZone = TimeZone(secondsFromGMT: 0)!
 
@@ -262,7 +272,7 @@ extension PlannerEvent {
             guard self.hasTime else {
                 return nil
             }
-            return utcCalendar.dateComponents(
+            return plannerCalendar.dateComponents(
                 [.hour, .minute],
                 from: self.date
             )

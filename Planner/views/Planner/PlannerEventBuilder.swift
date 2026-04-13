@@ -71,20 +71,16 @@ struct PlannerEventBuilderView<Header: View>: View {
                 expandedView
             }
         }
-
-        // Calendar data tracking.
-        .externalData(
-            key: calendarStore.reloadTrigger,
-            ready: true,
-            load: loadCalendarData
-        )
-
-        // Weather data tracking.
-        .externalData(
-            key: weatherStore.reloadTrigger,
-            ready: true,
-            load: loadWeatherData
-        )
+        
+        // Track up-to-date calendar data.
+        .task(id: calendarStore.reloadTrigger) {
+            loadCalendarData()
+        }
+        
+        // Track up-to-date weather data.
+        .task(id: weatherStore.reloadTrigger) {
+            loadWeatherData()
+        }
 
         // Reload the weather and events when the location changes.
         .onChange(of: plannerLocation) { _, _ in
