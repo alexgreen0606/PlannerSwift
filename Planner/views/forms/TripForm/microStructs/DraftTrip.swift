@@ -12,7 +12,7 @@ import SwiftUI
 struct DraftTrip {
     var title: String = ""
     var location: Location? = nil
-    var hideRoutines: Bool = true
+    var excludeRoutines: Bool = true
     var dateComponents: Set<DateComponents> = []
 
     var datestamps: [String] {

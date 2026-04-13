@@ -28,7 +28,9 @@ class PlannerEvent: EventListItem {
 
     var calendarItemExternalIdentifier: String?
 
-    var routineEventId: UUID?
+    var routineEvent: RoutineEvent?
+    
+    var isRoutineEventException: Bool = false
 
     // Uniquely identifies recurring event occurrences (calendar events only).
     @Attribute(.unique) var occurrenceId: String?
@@ -69,7 +71,7 @@ class PlannerEvent: EventListItem {
                 self.hasTime = false
             }
             
-            self.routineEventId = routineEvent.stableId
+            self.routineEvent = routineEvent
         }
     }
 }

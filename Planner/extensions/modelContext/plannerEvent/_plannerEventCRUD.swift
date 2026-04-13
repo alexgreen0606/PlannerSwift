@@ -149,6 +149,8 @@ extension ModelContext {
             sourceDatestamp: sourceDatestamp
         )
 
+        event.validateRoutineEventException()
+
         self.insertIfNeeded(event)
 
         // Delete the old calendar event.
@@ -264,5 +266,5 @@ extension ModelContext {
 
         self.safeSave("_plannerEventCRUD.deletePlannerEvents")
     }
-    
+
 }

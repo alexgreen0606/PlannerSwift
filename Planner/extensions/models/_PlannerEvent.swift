@@ -82,6 +82,9 @@ extension PlannerEvent {
         self.calendarItemExternalIdentifier =
             calendarEvent.calendarItemExternalIdentifier
         self.occurrenceId = calendarEvent.occurrenceId
+
+        // Ensure events never link to routines when they are on the calendar.
+        self.isRoutineEventException = true
     }
 
     @MainActor
@@ -98,7 +101,17 @@ extension PlannerEvent {
             self.hasTime = false
         }
 
-        self.routineEventId = routineEvent.stableId
+        self.routineEvent = routineEvent
+    }
+
+    @MainActor
+    func validateRoutineEventException() {
+        if let routineEvent = self.routineEvent {
+            // Mark the routine exception flag based on its match with the parent.
+            self.isRoutineEventException = !self.matches(
+                routineEvent
+            )
+        }
     }
 
     // MARK: - View Builders
@@ -236,6 +249,36 @@ extension PlannerEvent {
         }
 
         return nil
+    }
+
+    // MARK: - Helpers
+
+    private func matches(_ routineEvent: RoutineEvent) -> Bool {
+        let calendar = Calendar(identifier: .gregorian)
+        var utcCalendar = calendar
+        utcCalendar.timeZone = TimeZone(secondsFromGMT: 0)!
+
+        let eventComponents: DateComponents? = {
+            guard self.hasTime else {
+                return nil
+            }
+            return utcCalendar.dateComponents(
+                [.hour, .minute],
+                from: self.date
+            )
+        }()
+        let routineComponents: DateComponents? = {
+            guard let time = routineEvent.time else {
+                return nil
+            }
+            return utcCalendar.dateComponents([.hour, .minute], from: time)
+        }()
+
+        return self.title == routineEvent.title
+            && eventComponents?.hour == routineComponents?.hour
+            && eventComponents?.minute == routineComponents?.minute
+            && self.location == nil
+            && self.calendarItemExternalIdentifier == nil
     }
 
 }

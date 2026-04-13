@@ -34,9 +34,10 @@ struct PlannerActionMenuView: View {
 
     var body: some View {
         Menu("Planner Action Menu", systemImage: "ellipsis") {
-            editLocationButton
-            showCheckedToggle
             selectEventsButton
+            showCheckedToggle
+            editLocationButton
+            toggleRoutineExclusionButton
             deleteActionsMenu
         }
 
@@ -74,7 +75,23 @@ struct PlannerActionMenuView: View {
     }
 
     // MARK: - View Builders
-    
+
+    private var toggleRoutineExclusionButton: some View {
+        Button(
+            action: {
+                modelContext.togglePlannerRoutineExclusion(for: planner)
+            },
+            label: {
+                Label(
+                    planner.finalExcludeRoutine
+                        ? "Include Routine" : "Exclude Routine",
+                    systemImage: planner.finalExcludeRoutine
+                        ? "repeat" : "repeat.badge.xmark",
+                )
+            }
+        )
+    }
+
     private var editLocationButton: some View {
         Button(
             action: {

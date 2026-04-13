@@ -22,7 +22,7 @@ class Trip {
     @Relationship(deleteRule: .nullify, inverse: \Location.trips)
     var location: Location?
 
-    var hideRoutines: Bool = true
+    var excludeRoutines: Bool = true
 
     init() {
     }

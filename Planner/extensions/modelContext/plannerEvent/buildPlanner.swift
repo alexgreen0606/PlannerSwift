@@ -72,6 +72,8 @@ extension ModelContext {
         var occurrenceEvents: [String: EKEvent] = [:]
         var regularEvents: [String: EKEvent] = [:]
 
+        var validEvents: [PlannerEvent] = []
+
         for plannerEvent in storageEvents {
 
             if let calendarEventId = plannerEvent.calendarItemExternalIdentifier
@@ -87,6 +89,11 @@ extension ModelContext {
                 }
 
                 existingCalendarEvents.removeValue(forKey: calendarEventId)
+                
+                if let routineEventId = plannerEvent.routineEvent?.stableId {
+                    // Mark this recurring event as already existing so it is not re-created.
+                    existingRoutineEvents.removeValue(forKey: routineEventId)
+                }
 
                 guard
                     self.validateCalendarEventSynchronization(
@@ -105,62 +112,81 @@ extension ModelContext {
 
                 plannerEvent.syncWithCalendarEvent(calendarEvent)
 
-            } else if let routineEventId = plannerEvent.routineEventId {
+            } else if let routineEvent = plannerEvent.routineEvent,
+                !plannerEvent.isRoutineEventException
+            {
                 // MARK: Routine Event
 
-                // TODO: skip if exception
+                //                guard
+                //                    let routineEvent = existingRoutineEvents[routineEventId],
+                //                    !planner.finalExcludeRoutine
+                //                else {
+                //                    // Routine event is excluded or deleted. Remove this record and continue.
+                //                    self.delete(plannerEvent)
+                //                    continue
+                //                }
 
-                // TODO: remove if routine events hidden
-
-                guard
-                    let routineEvent = existingRoutineEvents[routineEventId]
-                else {
-                    // Routine event is deleted. Remove this record and continue.
-                    self.delete(plannerEvent)
-                    continue
-                }
-
-                existingRoutineEvents.removeValue(forKey: routineEventId)
+                existingRoutineEvents.removeValue(forKey: routineEvent.stableId)
 
                 plannerEvent.syncWithRoutineEvent(routineEvent, on: plannerDay)
 
             }
+
+            // Track the events that still exist in the planner.
+            validEvents.append(plannerEvent)
         }
 
         // ------------------------------------------------------------------
         // Loop over remaining routine events and add them to the planner.
         // ------------------------------------------------------------------
 
-        // TODO: skip this step if routines are excluded.
+        if !planner.finalExcludeRoutine {
 
-        let reverseSortedNewRoutineEvents: [RoutineEvent] = {
-            guard let weekday else {
-                return []
-            }
-            return existingRoutineEvents.values
-                .sorted {
-                    $0.sortDateMap[weekday]! > $1.sortDateMap[weekday]!
+            let reverseSortedNewRoutineEvents: [RoutineEvent] = {
+                guard let weekday else {
+                    return []
                 }
-        }()
+                return existingRoutineEvents.values
+                    .sorted {
+                        $0.sortDateMap[weekday]! > $1.sortDateMap[weekday]!
+                    }
+            }()
 
-        for routineEvent in reverseSortedNewRoutineEvents {
-            // TODO: grab the index that closest matches other routines from this day.
+            for routineEvent in reverseSortedNewRoutineEvents {
 
-            // TODO: insert the event there
-
-            let newEvent =
-                PlannerEvent(
-                    date: plannerDay.date,
-                    sortDate: plannerDay.date,
-                    routineEvent: routineEvent
+                // Find a position for the event closest to its routine siblings.
+                // Defaults to top of list otherwise.
+                let targetIndex = generateTargetIndex(
+                    near: routineEvent.stableId,
+                    from: routineEvents,
+                    to: validEvents,
+                    destinationComparatorId: { $0.routineEvent?.stableId }
                 )
 
-            self.insert(newEvent)
+                let sortDate = generateSortDate(
+                    at: targetIndex,
+                    in: validEvents,
+                    plannerDay: plannerDay
+                )
+
+                let newEvent =
+                    PlannerEvent(
+                        date: plannerDay.date,
+                        sortDate: sortDate,
+                        routineEvent: routineEvent,
+                        plannerDay: plannerDay
+                    )
+
+                self.insert(newEvent)
+
+                // Track the event at its position in the planner.
+                validEvents.insert(newEvent, at: targetIndex)
+            }
 
         }
 
         // ------------------------------------------------------------------
-        // TODO: Loop over remaining calendar events and add them to the planner.
+        // Loop over remaining calendar events and add them to the planner.
         // ------------------------------------------------------------------
 
         let reverseSortedNewCalendarEvents = existingCalendarEvents.values
@@ -184,53 +210,20 @@ extension ModelContext {
                 continue
             }
 
-            self.addCalendarEventToPlanner(
-                calendarEvent,
-                plannerDay: plannerDay
+            self.createPlannerEvent(
+                for: calendarEvent,
+                in: plannerDay
             )
         }
-
-        // ------------------------------------------------------------------
-        // Clean up any remaining storage events.
-        // Remove calendar records that no longer exist,
-        // otherwise move them to their new planners.
-        // ------------------------------------------------------------------
-
-        // TODO: not needed right?
-        //        self.updateStaleStorageEvents(
-        //            Array(existingCalendarStorageEvents.values),
-        //            ekEventStore: ekEventStore
-        //        )
 
         // ------------------------------------------------------------------
         // Load in the contacts for all birthday events.
         // ------------------------------------------------------------------
 
-        var birthdays: [Birthday] = []
+        let contactStore = CNContactStore()
+        let birthdays = contactStore.loadBirthdays(for: birthdayEvents)
 
-        let store = CNContactStore()
-        do {
-            let contacts = try store.unifiedContacts(
-                matching: CNContact.predicateForContacts(
-                    withIdentifiers: Array(birthdayEvents.keys)
-                ),
-                keysToFetch: [
-                    CNContactViewController.descriptorForRequiredKeys()
-                ] as [CNKeyDescriptor]
-            )
-
-            for contact in contacts {
-                guard let event = birthdayEvents[contact.identifier]
-                else { continue }
-
-                birthdays.append(Birthday(contact: contact, event: event))
-            }
-
-        } catch {
-            assertionFailure("ERROR syncCalendar: \(error)")
-        }
-
-        self.safeSave("syncCalendar")
+        self.safeSave("buildCalendar")
 
         return CalendarDayData(
             plannerChipEvents: plannerChipEvents,
@@ -242,6 +235,7 @@ extension ModelContext {
 
     // MARK: - Helper Functions
 
+    @MainActor
     private func validateCalendarEventSynchronization(
         _ calendarEvent: EKEvent,
         plannerEvent: PlannerEvent? = nil,
@@ -303,142 +297,11 @@ extension ModelContext {
         return true
     }
 
+    @MainActor
     private func deleteIfExists(_ event: PlannerEvent?) {
         if let event {
             self.delete(event)
         }
     }
-
-    // TODO: what is lost by removing this?
-    //    @MainActor
-    //    private func upsertCalendarEventToPlanner(
-    //        _ calendarEvent: EKEvent,
-    //        existingCalendarEvents: inout [String: PlannerEvent],
-    //        plannerDay: DateInRegion
-    //    ) {
-    //        guard
-    //            let storageEvent = existingCalendarEvents[
-    //                calendarEvent.calendarItemExternalIdentifier
-    //            ]
-    //        else {
-    //            // Event doesn't exist in this planner. Add it.
-    //            self.addCalendarEventToPlanner(
-    //                calendarEvent,
-    //                plannerDay: plannerDay
-    //            )
-    //            return
-    //        }
-    //
-    //        // Event is already in this planner. Sync it with the calendar event.
-    //        storageEvent.syncWithCalendarEvent(calendarEvent)
-    //
-    //        existingCalendarEvents.removeValue(
-    //            forKey: calendarEvent.calendarItemExternalIdentifier
-    //        )
-    //
-    //        // Note: Don't save the context.
-    //        // This is part of a larger pipeline.
-    //    }
-
-    // TODO: what is lost by removing this?
-    //    @MainActor
-    //    private func addCalendarEventToPlanner(
-    //        // Guaranteed to not have a storage event in the planner.
-    //        _ calendarEvent: EKEvent,
-    //        plannerDay: DateInRegion
-    //    ) {
-    //
-    //        if calendarEvent.occurrenceId != nil {
-    //            // Special case: Automatically create a new record if this is a recurring event occurrence.
-    //            self.createPlannerEvent(
-    //                for: calendarEvent,
-    //                in: plannerDay
-    //            )
-    //            return
-    //        }
-    //
-    //        guard
-    //            let calendarItemExternalIdentifier = calendarEvent
-    //                .calendarItemExternalIdentifier
-    //        else {
-    //            return
-    //        }
-    //
-    //        do {
-    //
-    //            // Search for a matching event somewhere in storage.
-    //            let storageEvents = try fetch(
-    //                FetchDescriptor<PlannerEvent>(
-    //                    predicate: #Predicate<PlannerEvent> {
-    //                        if let calId = $0.calendarItemExternalIdentifier {
-    //                            return calId == calendarItemExternalIdentifier
-    //                        } else {
-    //                            return false
-    //                        }
-    //                    }
-    //                )
-    //            )
-    //
-    //            guard let storageEvent = storageEvents.first else {
-    //                // No matching storage event exists. Create a new one.
-    //                self.createPlannerEvent(
-    //                    for: calendarEvent,
-    //                    in: plannerDay
-    //                )
-    //                return
-    //            }
-    //
-    //            // A matching storage event exists. Sync it with the calendar event and move
-    //            // it to the planner day.
-    //            storageEvent.syncWithCalendarEvent(calendarEvent)
-    //            storageEvent.sortDate = self.getUpperSortDate(
-    //                for: plannerDay
-    //            )
-    //
-    //        } catch {
-    //            // Failed to fetch a matching storage event. Create a new one.
-    //            self.createPlannerEvent(
-    //                for: calendarEvent,
-    //                in: plannerDay
-    //            )
-    //        }
-    //
-    //        // Note: Don't save the context.
-    //        // This is part of a larger pipeline.
-    //    }
-
-    // TODO: what is lost by removing this?
-    //    @MainActor
-    //    private func updateStaleStorageEvents(
-    //        // Storage events that no longer exist in their calendar day
-    //        _ staleStorageEvents: [PlannerEvent],
-    //        ekEventStore: EKEventStore
-    //    ) {
-    //        for staleEvent in staleStorageEvents {
-    //
-    //            guard
-    //                let externalIdentifier = staleEvent
-    //                    .calendarItemExternalIdentifier
-    //            else {
-    //                continue
-    //            }
-    //
-    //            guard
-    //                let calendarEvent = ekEventStore.calendarItems(
-    //                    withExternalIdentifier: externalIdentifier
-    //                ).first as? EKEvent,
-    //                calendarEvent.isAllDay == false,
-    //                calendarEvent.occurrenceId == nil
-    //            else {
-    //                // The calendar event is deleted, recurring, or an all-day event.
-    //                // Delete the storage event.
-    //                self.delete(staleEvent)
-    //                continue
-    //            }
-    //
-    //            // The event has moved to a different day. Update its storage event.
-    //            staleEvent.syncWithCalendarEvent(calendarEvent)
-    //        }
-    //    }
 
 }

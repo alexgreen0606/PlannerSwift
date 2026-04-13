@@ -17,8 +17,10 @@ struct RoutineActionMenuView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var routineManager: ListManager<RoutineEvent>
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
+    @EnvironmentObject private var calendarStore: CalendarStore
 
-    @State private var showDeleteConfirmation = false
+    @State private var showDeleteWeekdayEventsConfirmation = false
+    @State private var showDeleteAllRoutinesConfirmation = false
 
     private var isToday: Bool {
         todaystampWatcher.todaystamp.weekday == weekday.label
@@ -30,20 +32,37 @@ struct RoutineActionMenuView: View {
             deleteActionsMenu
         }
 
-        // MARK: Delete Events Confirmation
+        // MARK: Delete Weekday Events Confirmation
         .confirmationDialog(
-            "Delete these recurring events?",
-            isPresented: $showDeleteConfirmation,
+            "Delete \(weekday.label) routine?",
+            isPresented: $showDeleteWeekdayEventsConfirmation,
             titleVisibility: .visible
         ) {
             Button(
                 "Confirm",
                 role: .destructive,
-                action: deleteAllEvents
+                action: deleteWeekdayEvents
             )
         } message: {
             Text(
-                "Future occurrences will be deleted from \(weekday.label)s. Other days will not be affected. This action cannot be undone."
+                "Future occurrences will be deleted from your planner on \(weekday.label)s. Other days will not be affected. This action cannot be undone."
+            )
+        }
+
+        // MARK: Delete All Routines Confirmation
+        .confirmationDialog(
+            "Delete all routines?",
+            isPresented: $showDeleteAllRoutinesConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(
+                "Confirm",
+                role: .destructive,
+                action: deleteRotuines
+            )
+        } message: {
+            Text(
+                "Future occurrences will be deleted from your planner. All days will be affected. This action cannot be undone."
             )
         }
     }
@@ -68,7 +87,8 @@ struct RoutineActionMenuView: View {
 
     private var deleteActionsMenu: some View {
         Menu {
-            deleteAllEventsButton
+            deleteWeekdayEventsButton
+            deleteAllRoutinesButton
         } label: {
             Label(
                 "Delete options",
@@ -77,19 +97,33 @@ struct RoutineActionMenuView: View {
         }
     }
 
-    private var deleteAllEventsButton: some View {
+    private var deleteWeekdayEventsButton: some View {
         Button("Delete \(weekday.label) routine", role: .destructive) {
-            showDeleteConfirmation = true
+            showDeleteWeekdayEventsConfirmation = true
+        }
+        .disabled(sortedRoutineEvents.isEmpty)
+    }
+
+    private var deleteAllRoutinesButton: some View {
+        Button("Delete all routines", role: .destructive) {
+            showDeleteAllRoutinesConfirmation = true
         }
         .disabled(sortedRoutineEvents.isEmpty)
     }
 
     // MARK: - Functions
 
-    private func deleteAllEvents() {
+    private func deleteWeekdayEvents() {
         modelContext.deleteRoutineEvents(
-            from: sortedRoutineEvents,
-            for: weekday
+            sortedRoutineEvents,
+            from: weekday,
+            ekEventStore: calendarStore.ekEventStore
+        )
+    }
+
+    private func deleteRotuines() {
+        modelContext.deleteAllRoutines(
+            ekEventStore: calendarStore.ekEventStore
         )
     }
 

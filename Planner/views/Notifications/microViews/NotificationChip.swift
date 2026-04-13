@@ -41,7 +41,7 @@ struct NotificationChipView: View {
             height: config.subtitle != nil ? 50 : 40
         )
         .transition(.move(edge: .leading).combined(with: .opacity))
-        .onAppear {
+        .task {
             DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(500)) {
                 withAnimation {
                     showImage = true

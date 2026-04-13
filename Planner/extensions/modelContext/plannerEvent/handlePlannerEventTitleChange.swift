@@ -21,13 +21,15 @@ extension ModelContext {
         eventKitStore: EKEventStore,
         defaultLocation: Location?
     ) {
-        
+
         if let calendarEvent = event.calendarEvent {
             // Event is a calendar event. Update its title in the calendar.
             calendarEvent.title = event.title
             let _ = eventKitStore.updateEvent(calendarEvent)
             return
         }
+
+        event.validateRoutineEventException()
 
         // Scan the title for a date.
         guard let defaultLocation,
@@ -40,6 +42,8 @@ extension ModelContext {
         event.location = defaultLocation
         event.date = date
         event.hasTime = true
+
+        event.validateRoutineEventException()
 
         self.safeSave("handlePlannerEventTitleChange")
     }

@@ -19,6 +19,13 @@ extension Planner {
         return "\(datestamp)-\(locationKey)"
     }
 
+    var finalExcludeRoutine: Bool {
+        if self.excludeRoutine != nil {
+            return self.excludeRoutine!
+        }
+        return self.trip?.excludeRoutines ?? false
+    }
+
     // MARK: - Location Variables
 
     func location(settings: PlannerSettings, deviceLocation: Location?)
@@ -60,7 +67,7 @@ extension Planner {
 
     // MARK: - Search Helper
 
-    func searchQueryScore(_ query: PlannerSearchQuery?) -> Double? // nil means the event doesn't match the query
+    func searchQueryScore(_ query: PlannerSearchQuery?) -> Double?  // nil means the event doesn't match the query
     {
         guard let query else {
             // Include. No query set.

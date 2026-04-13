@@ -28,6 +28,7 @@ struct RoutineView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var calendarStore: CalendarStore
 
     @StateObject private var notificationManager = NotificationManager()
     @StateObject private var routineManager = ListManager<RoutineEvent>()
@@ -275,38 +276,80 @@ struct RoutineView: View {
     private func eventToggleConfig(_ event: RoutineEvent) -> ToggleConfig<
         RoutineEvent
     >? {
-        ToggleConfig<RoutineEvent>(
-            iconConfig: IconConfig(name: ""),
-            uncheckedIconConfig: IconConfig(
-                name: "minus.circle",
-                primaryColor: Color.red,
-                secondaryColor: Color.tertiary
-            ),
-            confirmation: ConfirmationConfig<RoutineEvent>(
-                title: "Delete recurring event?",
-                message:
-                    "Future occurrences will be deleted from \(weekday.label)s. Other days will not be affected. This action cannot be undone.",
-                needsConfirmation: { _ in true },
-                actions: [
-                    ConfirmationAction(
-                        title: "Confirm",
-                        role: .destructive,
-                        handler: deleteEventFromWeekday
-                    )
-                ]
-            ),
-            onClick: {
-                if routineManager.focusedId == event.stableId {
-                    routineManager.focusedId = nil
+        if event.sortDateMap.keys.count > 1 {
+            ToggleConfig<RoutineEvent>(
+                iconConfig: IconConfig(name: ""),
+                uncheckedIconConfig: IconConfig(
+                    name: "minus.circle",
+                    primaryColor: Color.red,
+                    secondaryColor: Color.tertiary
+                ),
+                confirmation: ConfirmationConfig<RoutineEvent>(
+                    title: "Delete recurring event?",
+                    message:
+                        "Future occurrences will be deleted from your planner. Removing from \(weekday.label) will not affect other days. This action cannot be undone.",
+                    needsConfirmation: { _ in true },
+                    actions: [
+                        ConfirmationAction(
+                            title: "Remove from \(weekday.label)s",
+                            role: .confirm,
+                            handler: deleteEventFromWeekday
+                        ),
+                        ConfirmationAction(
+                            title: "Delete everywhere",
+                            role: .destructive,
+                            handler: deleteEventEverywhere
+                        ),
+                    ]
+                ),
+                onClick: {
+                    if routineManager.focusedId == event.stableId {
+                        routineManager.focusedId = nil
+                    }
                 }
-            }
-        )
+            )
+        } else {
+            ToggleConfig<RoutineEvent>(
+                iconConfig: IconConfig(name: ""),
+                uncheckedIconConfig: IconConfig(
+                    name: "minus.circle",
+                    primaryColor: Color.red,
+                    secondaryColor: Color.tertiary
+                ),
+                confirmation: ConfirmationConfig<RoutineEvent>(
+                    title: "Delete recurring event?",
+                    message:
+                        "Future occurrences will be deleted from your planner. This action cannot be undone.",
+                    needsConfirmation: { _ in true },
+                    actions: [
+                        ConfirmationAction(
+                            title: "Delete",
+                            role: .destructive,
+                            handler: deleteEventEverywhere
+                        )
+                    ]
+                ),
+                onClick: {
+                    if routineManager.focusedId == event.stableId {
+                        routineManager.focusedId = nil
+                    }
+                }
+            )
+        }
     }
 
     private func deleteEventFromWeekday(_ event: RoutineEvent) {
         modelContext.deleteRoutineEvents(
-            from: [event],
-            for: weekday
+            [event],
+            from: weekday,
+            ekEventStore: calendarStore.ekEventStore
+        )
+    }
+
+    private func deleteEventEverywhere(_ event: RoutineEvent) {
+        modelContext.deleteRoutineEvent(
+            event,
+            ekEventStore: calendarStore.ekEventStore
         )
     }
 

@@ -17,15 +17,36 @@ struct SelectedRoutineEventActionsView: View {
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var routineManager: ListManager<RoutineEvent>
+    @EnvironmentObject private var calendarStore: CalendarStore
+
+    @State private var showDeleteConfirmation = false
 
     var body: some View {
-        DeleteSelectedButtonView(
-            itemsLabel: "recurring events",
-            disabled: routineManager.selectedItemIds.isEmpty,
-            message:
-                "Future occurrences will be deleted from \(weekday.label)s. Other days will not be affected.",
-            delete: deleteSelectedEvents
-        )
+        Button("Delete", systemImage: "trash") {
+            showDeleteConfirmation = true
+        }
+        .tint(Color.label)
+        .disabled(routineManager.selectedItemIds.isEmpty)
+        .confirmationDialog(
+            "Delete selected recurring events?",
+            isPresented: $showDeleteConfirmation,
+            titleVisibility: .visible,
+        ) {
+            Button(
+                "Remove from \(weekday.label)s",
+                role: .confirm,
+                action: deleteSelectedEventsFromWeekday
+            )
+            Button(
+                "Delete everywhere",
+                role: .destructive,
+                action: deleteSelectedEventsEverywhere
+            )
+        } message: {
+            Text(
+                "Future occurrences will be deleted from your planner. Removing from \(weekday.label) will not affect other days. This action cannot be undone."
+            )
+        }
         Spacer()
         transferSelectedButton
     }
@@ -49,10 +70,22 @@ struct SelectedRoutineEventActionsView: View {
 
     // MARK: - Functions
 
-    private func deleteSelectedEvents() {
+    private func deleteSelectedEventsFromWeekday() {
         modelContext.deleteRoutineEvents(
-            from: routineManager.selectedItems,
-            for: weekday
+            routineManager.selectedItems,
+            from: weekday,
+            ekEventStore: calendarStore.ekEventStore
+        )
+
+        DispatchQueue.main.async {
+            routineManager.toggleSelectMode()
+        }
+    }
+
+    private func deleteSelectedEventsEverywhere() {
+        modelContext.deleteRoutineEvents(
+            routineManager.selectedItems,
+            ekEventStore: calendarStore.ekEventStore
         )
 
         DispatchQueue.main.async {

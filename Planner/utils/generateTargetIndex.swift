@@ -10,10 +10,11 @@ import SwiftUI
 // Clean
 
 // Finds a new position for an item that places it close as possible to its previous siblings.
-func generateTargetIndex<Source: EventListItem, Destination: EventListItem>(
+func generateTargetIndex<Destination: EventListItem>(
     near sourceId: UUID,
-    from sortedSourceEvents: [Source],
-    to sortedDestinationEvents: [Destination]
+    from sortedSourceEvents: [RoutineEvent],
+    to sortedDestinationEvents: [Destination],
+    destinationComparatorId: (Destination) -> UUID? = { $0.stableId }
 ) -> Int {
 
     // MARK: Find current index in source.
@@ -37,7 +38,7 @@ func generateTargetIndex<Source: EventListItem, Destination: EventListItem>(
 
             if let destIndex = sortedDestinationEvents.firstIndex(
                 where: {
-                    $0.stableId == upperId
+                    destinationComparatorId($0) == upperId
                 })
             {
                 // MARK: Place below the upper neighbor.
@@ -52,7 +53,7 @@ func generateTargetIndex<Source: EventListItem, Destination: EventListItem>(
 
             if let destIndex = sortedDestinationEvents.firstIndex(
                 where: {
-                    $0.stableId == lowerId
+                    destinationComparatorId($0) == lowerId
                 })
             {
                 // MARK: Place above the lower neighbor.

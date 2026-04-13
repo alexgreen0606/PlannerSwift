@@ -31,7 +31,7 @@ struct TripFormView: View {
         if let sourceTrip {
             draftTrip.dateComponents = sourceTrip.dateComponents
             draftTrip.title = sourceTrip.title
-            draftTrip.hideRoutines = sourceTrip.hideRoutines
+            draftTrip.excludeRoutines = sourceTrip.excludeRoutines
             draftTrip.location = sourceTrip.location
         }
 
@@ -144,7 +144,7 @@ struct TripFormView: View {
         .animation(.linear, value: showDatesPicker)
         .animation(.linear, value: invalidDayMessage)
         .tint(accentColor.color)
-        .onAppear {
+        .task {
             buildExistingTripDates()
 
             if isNewTrip {
@@ -158,7 +158,7 @@ struct TripFormView: View {
                 isTitleFocused = false
             }
         }
-        .onChange(of: draftTrip.hideRoutines) { _, _ in
+        .onChange(of: draftTrip.excludeRoutines) { _, _ in
             if isTitleFocused {
                 isTitleFocused = false
             }
@@ -309,7 +309,7 @@ struct TripFormView: View {
 
     private var routineSection: some View {
         Section {
-            Toggle(isOn: $draftTrip.hideRoutines) {
+            Toggle(isOn: $draftTrip.excludeRoutines) {
                 Label("Exclude Routines", systemImage: "repeat.badge.xmark")
                     .foregroundStyle(Color.label)
                     .imageScale(.medium)

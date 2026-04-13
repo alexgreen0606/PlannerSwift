@@ -44,7 +44,6 @@ struct CurrentFolderListView: View {
             }
             .listSectionMargins(.top, 0)
         }
-        .onAppear(perform: buildSelectableItems)
         .id(currentFolder.stableId)
         .transition(folderSlideTransition)
         .overlay {
@@ -54,6 +53,7 @@ struct CurrentFolderListView: View {
                 )
             }
         }
+        .task(buildSelectableItems)
     }
 
     // MARK: - View Builders

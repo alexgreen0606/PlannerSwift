@@ -154,10 +154,9 @@ struct LocationSearchFormView: View {
                 emptyOptionsLabel
             }
             .animateSynchronousAction(from: selectedLocation)
-            .onAppear(perform: buildSuggestedLocations)
 
-            // Re-build the suggestions once the device location loads.
-            .onChange(of: deviceLocationManager.deviceLocation) { _, _ in
+            // Build the suggestions once the device location loads.
+            .task(id: deviceLocationManager.deviceLocation) {
                 buildSuggestedLocations()
             }
         }

@@ -156,7 +156,7 @@ struct ContentView: View {
 
             }
         }
-        .onAppear {
+        .task {
             initializeAppData()
             initializePlannerSearch()
         }

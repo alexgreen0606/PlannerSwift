@@ -31,7 +31,7 @@ extension ModelContext {
 
                 let trip = sourceTrip ?? Trip()
                 trip.title = draftTrip.title
-                trip.hideRoutines = draftTrip.hideRoutines
+                trip.excludeRoutines = draftTrip.excludeRoutines
                 trip.location = draftTrip.location
 
                 // Add any new planners to this trip.

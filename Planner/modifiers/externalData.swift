@@ -17,17 +17,16 @@ struct ExternalDataModifier<Key: Equatable>: ViewModifier {
     func body(content: Content) -> some View {
         content
             .task(id: key) {
-                guard ready else { return }
-                await load()
+                await loadIfReady()
             }
-            .onChange(of: key) { _, _ in
-                guard ready else { return }
-                Task { await load() }
+            .task(id: ready) {
+                await loadIfReady()
             }
-            .onChange(of: ready) { _, ready in
-                guard ready else { return }
-                Task { await load() }
-            }
+    }
+
+    private func loadIfReady() async {
+        guard ready else { return }
+        await load()
     }
 }
 

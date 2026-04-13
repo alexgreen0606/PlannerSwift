@@ -19,6 +19,9 @@ class RoutineEvent: EventListItem {
     var sortDateMap: [Weekday: Date] = [:]
 
     var time: Date?
+    
+    @Relationship(deleteRule: .nullify, inverse: \PlannerEvent.routineEvent)
+    var plannerEvents: [PlannerEvent] = []
 
     init() {
         super.init(sortDate: Date())

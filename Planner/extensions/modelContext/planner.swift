@@ -130,4 +130,25 @@ extension ModelContext {
         self.safeSave("planner.updatePlannerLocation")
     }
 
+    @MainActor
+    func togglePlannerRoutineExclusion(
+        for planner: Planner
+    ) {
+
+        if planner.finalExcludeRoutine {
+            planner.excludeRoutine = false
+        } else {
+            planner.excludeRoutine = true
+        }
+
+        if let trip = planner.trip,
+            trip.excludeRoutines == planner.excludeRoutine
+        {
+            // Revert flag back to nil so it inherits from the trip.
+            planner.excludeRoutine = nil
+        }
+
+        self.safeSave("planner.togglePlannerRoutineExclusion")
+    }
+
 }

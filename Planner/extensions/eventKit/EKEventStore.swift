@@ -51,4 +51,16 @@ extension EKEventStore {
         return false
     }
 
+    func deleteEvent(for identifier: String) {
+        let items = self.calendarItems(withExternalIdentifier: identifier)
+
+        for case let event as EKEvent in items {
+            do {
+                try self.remove(event, span: .thisEvent, commit: true)
+            } catch {
+                assertionFailure("ERROR EKEventStore.deleteEvent: \(error)")
+            }
+        }
+    }
+
 }

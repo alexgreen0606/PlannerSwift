@@ -5,6 +5,7 @@
 //  Created by Alex Green on 4/5/26.
 //
 
+import EventKit
 import SwiftData
 import SwiftDate
 import SwiftUI
@@ -130,9 +131,45 @@ extension ModelContext {
     // MARK: - DELETE
 
     @MainActor
+    func deleteAllRoutines(
+        ekEventStore: EKEventStore
+    ) {
+        do {
+            let allRoutineEvents = try self.fetch(
+                FetchDescriptor<RoutineEvent>()
+            )
+
+            self.deleteRoutineEvents(
+                allRoutineEvents,
+                ekEventStore: ekEventStore
+            )
+
+        } catch {
+            assertionFailure("ERROR routineEvent.deleteAllRoutines: \(error)")
+        }
+    }
+
+    @MainActor
     func deleteRoutineEvents(
-        from events: [RoutineEvent],
-        for weekday: Weekday
+        _ events: [RoutineEvent],
+        ekEventStore: EKEventStore
+    ) {
+        for event in events {
+            self.deleteRoutineEvent(
+                event,
+                ekEventStore: ekEventStore,
+                skipSave: true
+            )
+        }
+
+        self.safeSave("routineEvent.deleteRoutineEvents")
+    }
+
+    @MainActor
+    func deleteRoutineEvents(
+        _ events: [RoutineEvent],
+        from weekday: Weekday,
+        ekEventStore: EKEventStore
     ) {
         for event in events {
             guard event.sortDateMap[weekday] != nil else {
@@ -140,7 +177,11 @@ extension ModelContext {
             }
 
             if event.sortDateMap.keys.count == 1 {
-                self.delete(event)
+                self.deleteRoutineEvent(
+                    event,
+                    ekEventStore: ekEventStore,
+                    skipSave: true
+                )
                 continue
             }
 
@@ -148,6 +189,33 @@ extension ModelContext {
         }
 
         self.safeSave("routineEvent.deleteRoutineEvents")
+    }
+
+    @MainActor
+    func deleteRoutineEvent(
+        _ routineEvent: RoutineEvent,
+        ekEventStore: EKEventStore,
+        skipSave: Bool = false
+    ) {
+        for plannerEvent in routineEvent.plannerEvents {
+            if plannerEvent.isCompleted {
+                continue
+            }
+
+            if let calendarItemExternalIdentifier = plannerEvent
+                .calendarItemExternalIdentifier
+            {
+                ekEventStore.deleteEvent(for: calendarItemExternalIdentifier)
+            }
+
+            self.delete(plannerEvent)
+        }
+
+        self.delete(routineEvent)
+
+        if !skipSave {
+            self.safeSave("routineEvent.deleteRoutineEvent")
+        }
     }
 
     // MARK: - Change Handlers
