@@ -265,6 +265,7 @@ struct RoutineView: View {
             on: weekday,
             sortedEvents: sortedRoutineEvents
         )
+        plannerBuildManager.invalidateRoutineDays([weekday])
     }
 
     private func openRoutineEventSheet(for event: RoutineEvent) {
