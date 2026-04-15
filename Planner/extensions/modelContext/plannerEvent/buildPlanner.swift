@@ -18,24 +18,36 @@ extension ModelContext {
     @MainActor
     func buildPlanner(
         for planner: Planner,
+        buildConfig: PlannerBuildConfig,
         storageEvents: [PlannerEvent],
         plannerDay: DateInRegion,
         hiddenCalendarIds: Set<String>,
         ekEventStore: EKEventStore
     ) -> CalendarDayData {
+        let syncCalendar = buildConfig.cachedCalendarData == nil
+        let syncRoutine = buildConfig.syncRoutine
+
+        var calendarDayData =
+            buildConfig.cachedCalendarData ?? CalendarDayData()
 
         // ------------------------------------------------------------------
         // Load in the day's existing calendar events.
         // ------------------------------------------------------------------
 
-        let nextDay = plannerDay + 1.days
-        let calendarEvents = ekEventStore.events(
-            matching: ekEventStore.predicateForEvents(
-                withStart: plannerDay.date,
-                end: nextDay.date,
-                calendars: nil
+        let calendarEvents: [EKEvent] = {
+            guard syncCalendar else {
+                return []
+            }
+
+            let nextDay = plannerDay + 1.days
+            return ekEventStore.events(
+                matching: ekEventStore.predicateForEvents(
+                    withStart: plannerDay.date,
+                    end: nextDay.date,
+                    calendars: nil
+                )
             )
-        )
+        }()
 
         var existingCalendarEvents = Dictionary(
             uniqueKeysWithValues: calendarEvents.compactMap { event in
@@ -50,7 +62,7 @@ extension ModelContext {
         let weekday = Weekday.from(planner.datestamp.weekday)
 
         let routineEvents: [RoutineEvent] = {
-            guard let weekday else {
+            guard syncRoutine, let weekday else {
                 return []
             }
             return self.loadSortedRoutineEvents(for: weekday)
@@ -63,20 +75,18 @@ extension ModelContext {
         )
 
         // ------------------------------------------------------------------
-        // Loop over the existing planner events, syncing valid calendar and
-        // routine events. Delete stale events.
+        // MARK: Sync/Delete Existing Planner Events.
         // ------------------------------------------------------------------
 
-        var plannerChipEvents: [EKEvent] = []
         var birthdayEvents: [String: EKEvent] = [:]
-        var occurrenceEvents: [String: EKEvent] = [:]
-        var regularEvents: [String: EKEvent] = [:]
-
         var validEvents: [PlannerEvent] = []
+        var eventsToMove: [PlannerEvent] = []
 
         for plannerEvent in storageEvents {
 
-            if let calendarEventId = plannerEvent.calendarItemExternalIdentifier
+            if syncCalendar,
+                let calendarEventId = plannerEvent
+                    .calendarItemExternalIdentifier
             {
                 // MARK: Calendar Event
 
@@ -100,9 +110,7 @@ extension ModelContext {
                         calendarEvent,
                         plannerEvent: plannerEvent,
                         birthdayEvents: &birthdayEvents,
-                        plannerChipEvents: &plannerChipEvents,
-                        regularEvents: &regularEvents,
-                        occurrenceEvents: &occurrenceEvents,
+                        calendarDayData: &calendarDayData,
                         hiddenCalendarIds: hiddenCalendarIds,
                         plannerDay: plannerDay
                     )
@@ -112,11 +120,32 @@ extension ModelContext {
 
                 plannerEvent.syncWithCalendarEvent(calendarEvent)
 
-            } else if let routineEvent = plannerEvent.routineEvent {
+            } else if syncRoutine, let routineEvent = plannerEvent.routineEvent, let weekday = Weekday.from(planner.datestamp.weekday)
+            {
                 // MARK: Routine Event
+                
+                if !routineEvent.weekdays.contains(weekday) {
+                    // This weekday was removed. Remove this record and continue.
+                    self.delete(plannerEvent)
+                    continue
+                }
+
+                if planner.finalExcludeRoutine {
+                    // Routines are hidden. Remove this record and continue.
+                    self.delete(plannerEvent)
+                    continue
+                }
 
                 existingRoutineEvents.removeValue(forKey: routineEvent.stableId)
                 plannerEvent.syncWithRoutineEvent(routineEvent, on: plannerDay)
+
+                if !routineEvent.syncedSortDatePlannerEventIds.contains(
+                    plannerEvent.stableId
+                ) {
+                    // Skip events that need to be re-positioned in the list.
+                    eventsToMove.append(plannerEvent)
+                    continue
+                }
 
             }
 
@@ -125,10 +154,42 @@ extension ModelContext {
         }
 
         // ------------------------------------------------------------------
-        // Loop over remaining routine events and add them to the planner.
+        // MARK: Re-position Moved Routine Events.
         // ------------------------------------------------------------------
 
-        if !planner.finalExcludeRoutine {
+        if syncRoutine {
+            for plannerEvent in eventsToMove {
+                guard let routineEvent = plannerEvent.routineEvent else {
+                    continue
+                }
+
+                // Find a position for the event closest to its routine siblings.
+                let targetIndex = generateTargetIndex(
+                    near: routineEvent.stableId,
+                    from: routineEvents,
+                    to: validEvents,
+                    destinationComparatorId: { $0.routineEvent?.stableId }
+                )
+
+                plannerEvent.sortDate = generateSortDate(
+                    at: targetIndex,
+                    in: validEvents,
+                    plannerDay: plannerDay
+                )
+
+                validEvents.insert(plannerEvent, at: targetIndex)
+
+                routineEvent.syncedSortDatePlannerEventIds.insert(
+                    plannerEvent.stableId
+                )
+            }
+        }
+
+        // ------------------------------------------------------------------
+        // MARK: Create New Routine Events.
+        // ------------------------------------------------------------------
+
+        if syncRoutine, !planner.finalExcludeRoutine {
 
             let reverseSortedNewRoutineEvents: [RoutineEvent] = {
                 guard let weekday else {
@@ -174,51 +235,49 @@ extension ModelContext {
         }
 
         // ------------------------------------------------------------------
-        // Loop over remaining calendar events and add them to the planner.
+        // MARK: Create New Calendar Events.
         // ------------------------------------------------------------------
 
-        let reverseSortedNewCalendarEvents = existingCalendarEvents.values
-            .sorted {
-                $0.startDate > $1.startDate
-            }
+        if syncCalendar {
 
-        for calendarEvent in reverseSortedNewCalendarEvents {
+            let reverseSortedNewCalendarEvents = existingCalendarEvents.values
+                .sorted {
+                    $0.startDate > $1.startDate
+                }
 
-            guard
-                self.validateCalendarEventSynchronization(
-                    calendarEvent,
-                    birthdayEvents: &birthdayEvents,
-                    plannerChipEvents: &plannerChipEvents,
-                    regularEvents: &regularEvents,
-                    occurrenceEvents: &occurrenceEvents,
-                    hiddenCalendarIds: hiddenCalendarIds,
-                    plannerDay: plannerDay
+            for calendarEvent in reverseSortedNewCalendarEvents {
+
+                guard
+                    self.validateCalendarEventSynchronization(
+                        calendarEvent,
+                        birthdayEvents: &birthdayEvents,
+                        calendarDayData: &calendarDayData,
+                        hiddenCalendarIds: hiddenCalendarIds,
+                        plannerDay: plannerDay
+                    )
+                else {
+                    continue
+                }
+
+                self.createPlannerEvent(
+                    for: calendarEvent,
+                    in: plannerDay
                 )
-            else {
-                continue
             }
 
-            self.createPlannerEvent(
-                for: calendarEvent,
-                in: plannerDay
+        }
+
+        if syncCalendar {
+            // MARK: Load in the contacts for all birthday events.
+            let contactStore = CNContactStore()
+            calendarDayData.birthdays = contactStore.loadBirthdays(
+                for: birthdayEvents
             )
         }
 
-        // ------------------------------------------------------------------
-        // Load in the contacts for all birthday events.
-        // ------------------------------------------------------------------
+        self.safeSave("buildPlanner")
 
-        let contactStore = CNContactStore()
-        let birthdays = contactStore.loadBirthdays(for: birthdayEvents)
-
-        self.safeSave("buildCalendar")
-
-        return CalendarDayData(
-            plannerChipEvents: plannerChipEvents,
-            birthdays: birthdays,
-            occurrenceEvents: occurrenceEvents,
-            regularEvents: regularEvents
-        )
+        return calendarDayData
     }
 
     // MARK: - Helper Functions
@@ -228,9 +287,7 @@ extension ModelContext {
         _ calendarEvent: EKEvent,
         plannerEvent: PlannerEvent? = nil,
         birthdayEvents: inout [String: EKEvent],
-        plannerChipEvents: inout [EKEvent],
-        regularEvents: inout [String: EKEvent],
-        occurrenceEvents: inout [String: EKEvent],
+        calendarDayData: inout CalendarDayData,
         hiddenCalendarIds: Set<String>,
         plannerDay: DateInRegion
     ) -> Bool {
@@ -253,7 +310,7 @@ extension ModelContext {
 
         if calendarEvent.isAllDay {
             // Collect all-day events as planner chips.
-            plannerChipEvents.append(calendarEvent)
+            calendarDayData.plannerChipEvents.append(calendarEvent)
             self.deleteIfExists(plannerEvent)
             return false
         }
@@ -262,7 +319,7 @@ extension ModelContext {
             plannerDay: plannerDay
         ) {
             // Collect events that span outside this day as planner chips.
-            plannerChipEvents.append(calendarEvent)
+            calendarDayData.plannerChipEvents.append(calendarEvent)
 
             if !calendarEvent.startDate.belongsTo(plannerDay) {
                 // Only display the event if it starts during this day.
@@ -273,10 +330,10 @@ extension ModelContext {
 
         if let occurrenceId = calendarEvent.occurrenceId {
             // Collect recurring events.
-            occurrenceEvents[occurrenceId] = calendarEvent
+            calendarDayData.occurrenceEvents[occurrenceId] = calendarEvent
         } else {
             // Collect regular timed events.
-            regularEvents[
+            calendarDayData.regularEvents[
                 calendarEvent.calendarItemExternalIdentifier
             ] =
                 calendarEvent

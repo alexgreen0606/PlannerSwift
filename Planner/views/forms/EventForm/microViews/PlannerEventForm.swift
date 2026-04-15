@@ -40,6 +40,7 @@ struct PlannerEventFormView: View {
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
+    @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
     @State private var showDeleteConfirmation = false
@@ -346,9 +347,8 @@ struct PlannerEventFormView: View {
 
         // Refresh calendar in case of recurring events.
         DispatchQueue.main.async {
-            calendarStore.attemptFreshLoad(
-                hiddenCalendarIds: settings.hiddenCalendarIds
-            )
+            // TODO: make this smarter
+            plannerBuildManager.rebuildCalendarData()
         }
 
         dismiss()

@@ -41,6 +41,7 @@ struct CalendarsFormView: View {
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
 
     @State private var calendarStoreRefreshTask: Task<Void, Never>?
 
@@ -135,12 +136,12 @@ struct CalendarsFormView: View {
 
         calendarStoreRefreshTask = Task {
             do {
-                try await Task.sleep(for: .milliseconds(1000))
+                try await Task.sleep(for: .milliseconds(2000))
                 guard !Task.isCancelled else { return }
 
-                calendarStore.attemptFreshLoad(
-                    hiddenCalendarIds: settings.hiddenCalendarIds
-                )
+                calendarStore.refreshCalendarsAndAccess()
+                plannerBuildManager.rebuildCalendarData()
+                
             } catch {
             }
         }

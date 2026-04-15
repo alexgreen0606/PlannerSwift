@@ -36,6 +36,7 @@ struct PlannerApp: App {
     @StateObject private var calendarStore = CalendarStore()
     @StateObject private var todaystampWatcher = TodaystampWatcher()
     @StateObject private var plannerCoverManager = PlannerCoverManager()
+    @StateObject private var plannerBuildManager = PlannerBuildManager()
 
     @StateObject private var weatherStore: WeatherStore
     @StateObject private var deviceLocationManager: DeviceLocationManager
@@ -50,6 +51,7 @@ struct PlannerApp: App {
                 .environmentObject(calendarStore)
                 .environmentObject(deviceLocationManager)
                 .environmentObject(plannerCoverManager)
+                .environmentObject(plannerBuildManager)
         }
         .modelContainer(for: [
             PlannerSettings.self,

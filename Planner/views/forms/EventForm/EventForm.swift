@@ -110,6 +110,7 @@ struct EventFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
     @EnvironmentObject private var notificationManager: NotificationManager
     @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
@@ -210,9 +211,8 @@ struct EventFormView: View {
 
         // Refresh calendar in case of recurring events.
         DispatchQueue.main.async {
-            calendarStore.attemptFreshLoad(
-                hiddenCalendarIds: settings.hiddenCalendarIds
-            )
+            // TODO: smartly determine affected days.
+            plannerBuildManager.rebuildCalendarData()
         }
 
         dismiss()

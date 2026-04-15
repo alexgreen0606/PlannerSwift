@@ -20,6 +20,7 @@ struct PlannerActionMenuView: View {
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var plannerManager: ListManager<PlannerEvent>
+    @EnvironmentObject private var calendarStore: CalendarStore
 
     @State private var showDeleteCompletedConfirmation = false
     @State private var showDeleteCanceledConfirmation = false
@@ -79,7 +80,10 @@ struct PlannerActionMenuView: View {
     private var toggleRoutineExclusionButton: some View {
         Button(
             action: {
-                modelContext.togglePlannerRoutineExclusion(for: planner)
+                modelContext.togglePlannerRoutineExclusion(
+                    for: planner,
+                    plannerEvents: plannerEvents
+                )
             },
             label: {
                 Label(

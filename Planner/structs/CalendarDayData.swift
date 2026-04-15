@@ -10,8 +10,8 @@ import EventKit
 // Clean
 
 struct CalendarDayData {
-    let plannerChipEvents: [EKEvent]
-    let birthdays: [Birthday]
-    let occurrenceEvents: [String: EKEvent]
-    let regularEvents: [String: EKEvent]
+    var plannerChipEvents: [EKEvent] = []
+    var birthdays: [Birthday] = []
+    var occurrenceEvents: [String: EKEvent] = [:]
+    var regularEvents: [String: EKEvent] = [:]
 }

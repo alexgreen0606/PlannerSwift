@@ -5,14 +5,13 @@
 //  Created by Alex Green on 3/11/26.
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 // Clean
 
 struct SelectedEventActionsView: View {
     @Binding var showTransferSheet: Bool
-    let settings: PlannerSettings
     let namespace: Namespace.ID
 
     @Environment(\.modelContext) private var modelContext
@@ -55,14 +54,7 @@ struct SelectedEventActionsView: View {
             ekEventStore: calendarStore.ekEventStore
         )
 
-        // Refresh the calendar to get fresh all-day events.
-        calendarStore.attemptFreshLoad(
-            hiddenCalendarIds: settings.hiddenCalendarIds
-        )
-
-        DispatchQueue.main.async {
-            plannerManager.toggleSelectMode()
-        }
+        DispatchQueue.main.async(execute: plannerManager.toggleSelectMode)
     }
 
 }

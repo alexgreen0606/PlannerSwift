@@ -132,13 +132,21 @@ extension ModelContext {
 
     @MainActor
     func togglePlannerRoutineExclusion(
-        for planner: Planner
+        for planner: Planner,
+        plannerEvents: [PlannerEvent]
     ) {
 
         if planner.finalExcludeRoutine {
             planner.excludeRoutine = false
         } else {
             planner.excludeRoutine = true
+            
+            // Delete all routine event records.
+            for plannerEvent in plannerEvents {
+                if plannerEvent.routineEvent != nil {
+                    self.delete(plannerEvent)
+                }
+            }
         }
 
         if let trip = planner.trip,

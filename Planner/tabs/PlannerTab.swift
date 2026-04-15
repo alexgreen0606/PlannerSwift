@@ -48,6 +48,7 @@ struct PlannerTabView: View {
     @EnvironmentObject private var weatherStore: WeatherStore
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
     @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
+    @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
 
     @Query private var trips: [Trip]
 
@@ -185,10 +186,9 @@ struct PlannerTabView: View {
                 }
                 .refreshable {
                     weatherStore.beginFreshReload()
-                    calendarStore.attemptFreshLoad(
-                        hiddenCalendarIds: settings.hiddenCalendarIds
-                    )
+                    calendarStore.refreshCalendarsAndAccess()
                     deviceLocationManager.loadDeviceLocation()
+                    plannerBuildManager.rebuildAllData()
                 }
 
                 // MARK: New Event Sheet

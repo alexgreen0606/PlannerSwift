@@ -91,6 +91,7 @@ struct ContentView: View {
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
     @EnvironmentObject private var weatherStore: WeatherStore
     @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
+    @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
 
     @Query private var plannerSettingsList: [PlannerSettings]
     @Query private var checklistItems: [ChecklistItem]
@@ -181,14 +182,13 @@ struct ContentView: View {
 
         // Reload all calendar records when the app gains focus.
         .onChange(of: appPhase) { _, phase in
-            if phase == .active, let settings {
-                calendarStore.attemptFreshLoad(
-                    hiddenCalendarIds: settings.hiddenCalendarIds
-                )
+            if phase == .active {
+                calendarStore.refreshCalendarsAndAccess()
                 syncAppIconWithSettings(
                     accentColor: accentColor,
                     systemColorScheme: systemColorScheme
                 )
+                plannerBuildManager.rebuildCalendarData()
             }
         }
 
@@ -249,15 +249,13 @@ struct ContentView: View {
             systemColorScheme: systemColorScheme
         )
 
-        let settings = modelContext.ensurePlannerSettings(
+        modelContext.ensurePlannerSettings(
             settings: plannerSettingsList
         )
 
         modelContext.ensureRootFolder(folders: checklistItems)
 
-        calendarStore.attemptFreshLoad(
-            hiddenCalendarIds: settings.hiddenCalendarIds
-        )
+        calendarStore.refreshCalendarsAndAccess()
 
         cleanseStorage()
 

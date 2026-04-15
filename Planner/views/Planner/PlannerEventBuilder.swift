@@ -58,6 +58,7 @@ struct PlannerEventBuilderView<Header: View>: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var weatherStore: WeatherStore
+    @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
 
     @Query private var sortedPlannerEvents: [PlannerEvent]
 
@@ -71,21 +72,17 @@ struct PlannerEventBuilderView<Header: View>: View {
                 expandedView
             }
         }
-        
-        // Track up-to-date calendar data.
-        .task(id: calendarStore.reloadTrigger) {
-            loadCalendarData()
+        .task(id: plannerBuildManager.rebuildTrigger) {
+            buildPlanner()
         }
-        
-        // Track up-to-date weather data.
         .task(id: weatherStore.reloadTrigger) {
-            loadWeatherData()
+            loadWeather()
         }
 
         // Reload the weather and events when the location changes.
         .onChange(of: plannerLocation) { _, _ in
-            loadCalendarData()
-            loadWeatherData()
+            buildPlanner()
+            loadWeather()
         }
     }
 
@@ -93,17 +90,15 @@ struct PlannerEventBuilderView<Header: View>: View {
 
     @ViewBuilder
     private var expandedView: some View {
-        if let calendarDayData {
-            ExpandedPlannerView(
-                planner: planner,
-                header: header,
-                plannerDay: plannerDay,
-                plannerLocation: plannerLocation,
-                sortedPlannerEvents: sortedPlannerEvents,
-                calendarDayData: calendarDayData,
-                settings: settings
-            )
-        }
+        ExpandedPlannerView(
+            planner: planner,
+            header: header,
+            plannerDay: plannerDay,
+            plannerLocation: plannerLocation,
+            sortedPlannerEvents: sortedPlannerEvents,
+            calendarDayData: calendarDayData,
+            settings: settings
+        )
     }
 
     @ViewBuilder
@@ -126,19 +121,13 @@ struct PlannerEventBuilderView<Header: View>: View {
 
     // MARK: - Functions
 
-    private func loadCalendarData() {
-
-        let plannerKey = planner.key
-
-        // Return cached data.
-        if let existingData = calendarStore.cache[plannerKey] {
-            calendarDayData = existingData
-            return
-        }
+    private func buildPlanner() {
+        let buildConfig = plannerBuildManager.buildConfig(for: planner)
 
         withAnimation {
             calendarDayData = modelContext.buildPlanner(
                 for: planner,
+                buildConfig: buildConfig,
                 storageEvents: sortedPlannerEvents,
                 plannerDay: plannerDay,
                 hiddenCalendarIds: settings.hiddenCalendarIds,
@@ -146,19 +135,19 @@ struct PlannerEventBuilderView<Header: View>: View {
             )
         }
 
-        if let calendarDayData {
-            calendarStore.cacheData(
+        if buildConfig.cachedCalendarData == nil, let calendarDayData {
+            plannerBuildManager.cacheCalendarData(
                 calendarDayData,
-                plannerKey: plannerKey
+                plannerKey: planner.key
             )
-        }
 
-        DispatchQueue.main.async {
-            hydrateCalendarEvents()
+            DispatchQueue.main.async {
+                hydrateCalendarEvents(calendarDayData: calendarDayData)
+            }
         }
     }
 
-    private func loadWeatherData() {
+    private func loadWeather() {
         Task {
             await weatherStore.loadWeatherIfNeeded(
                 location: plannerLocation,
@@ -167,21 +156,19 @@ struct PlannerEventBuilderView<Header: View>: View {
         }
     }
 
-    private func hydrateCalendarEvents() {
-        if let calendarDayData {
-            for event in sortedPlannerEvents {
-                if let calendarItemExternalIdentifier = event
-                    .calendarItemExternalIdentifier
-                {
-                    if let occurrenceId = event.occurrenceId {
-                        event.calendarEvent =
-                            calendarDayData.occurrenceEvents[occurrenceId]
-                    } else {
-                        event.calendarEvent =
-                            calendarDayData.regularEvents[
-                                calendarItemExternalIdentifier
-                            ]
-                    }
+    private func hydrateCalendarEvents(calendarDayData: CalendarDayData) {
+        for event in sortedPlannerEvents {
+            if let calendarItemExternalIdentifier = event
+                .calendarItemExternalIdentifier
+            {
+                if let occurrenceId = event.occurrenceId {
+                    event.calendarEvent =
+                        calendarDayData.occurrenceEvents[occurrenceId]
+                } else {
+                    event.calendarEvent =
+                        calendarDayData.regularEvents[
+                            calendarItemExternalIdentifier
+                        ]
                 }
             }
         }

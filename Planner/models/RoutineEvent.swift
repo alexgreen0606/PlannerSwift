@@ -19,9 +19,13 @@ class RoutineEvent: EventListItem {
     var sortDateMap: [Weekday: Date] = [:]
 
     var time: Date?
-    
+
     @Relationship(deleteRule: .nullify, inverse: \PlannerEvent.routineEvent)
     var plannerEvents: [PlannerEvent] = []
+
+    // When an event's ID does not exist here, it will re-sync its sortDate with this event
+    // and add itself to this set.
+    var syncedSortDatePlannerEventIds: Set<UUID> = []
 
     init() {
         super.init(sortDate: Date())

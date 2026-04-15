@@ -74,6 +74,7 @@ struct RoutineEventFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var notificationManager: NotificationManager
+    @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
 
     @State private var draftRoutineEvent: DraftRoutineEvent
 
@@ -265,6 +266,9 @@ struct RoutineEventFormView: View {
             sourceRoutineEvent: sourceRoutineEvent,
             sortedSourceEvents: sortedSourceEvents
         )
+        
+        let affectedWeekdays = (sourceRoutineEvent?.weekdays ?? []).union(draftRoutineEvent.daysOfWeek)
+        plannerBuildManager.invalidateRoutineDays(affectedWeekdays)
 
         dismiss()
 

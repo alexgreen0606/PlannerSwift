@@ -80,6 +80,7 @@ extension ModelContext {
             in: sortedEvents,
             weekday: weekday
         )
+        movedEvent.syncedSortDatePlannerEventIds.removeAll()
 
         self.safeSave("routineEvent.moveRoutineEvent")
     }

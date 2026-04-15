@@ -29,7 +29,7 @@ class PlannerEvent: EventListItem {
     var calendarItemExternalIdentifier: String?
 
     var routineEvent: RoutineEvent?
-    
+
     var isRoutineEventException: Bool = false
 
     // Uniquely identifies recurring event occurrences (calendar events only).
@@ -70,8 +70,9 @@ class PlannerEvent: EventListItem {
             } else {
                 self.hasTime = false
             }
-            
+
             self.routineEvent = routineEvent
+            routineEvent.syncedSortDatePlannerEventIds.insert(self.stableId)
         }
     }
 }

@@ -27,6 +27,8 @@ struct RoutinesSpreadView: View {
         AccentColor.blue
 
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
+    @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
 
     @Query private var routineEvents: [RoutineEvent]
 
@@ -74,7 +76,12 @@ struct RoutinesSpreadView: View {
         .frame(maxWidth: .infinity)
 
         // MARK: Routine Cover
-        .fullScreenCover(item: $routineCoverContext) { context in
+        .fullScreenCover(
+            item: $routineCoverContext,
+            onDismiss: {
+                plannerBuildManager.beginRebuild()
+            }
+        ) { context in
             RoutineView(
                 routineCoverContext: $routineCoverContext,
                 weekday: context.weekday,

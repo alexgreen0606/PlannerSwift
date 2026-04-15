@@ -16,16 +16,7 @@ import SwiftUI
 @MainActor
 class CalendarStore: ObservableObject {
 
-    @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
-        KeepPastEventsDuration =
-            KeepPastEventsDuration.oneMonth
-
-    @Published private(set) var cache: [String: CalendarDayData] =
-        [:]
     @Published private(set) var accessDenied: Bool? = nil
-
-    // Tells views to re-load their calendar data.
-    @Published private(set) var reloadTrigger: UUID? = nil
 
     private let eventStore = EKEventStore()
     private var calendarsById: [String: EKCalendar] = [:]
@@ -42,21 +33,13 @@ class CalendarStore: ObservableObject {
             }
     }
 
-    func cacheData(_ data: CalendarDayData, plannerKey: String) {
-        cache[plannerKey] = data
-    }
-
-    func attemptFreshLoad(hiddenCalendarIds: Set<String>) {
+    func refreshCalendarsAndAccess() {
         switch EKEventStore.authorizationStatus(for: .event) {
         case .authorized:
             accessDenied = false
-            beginFreshReload(
-                hiddenCalendarIds: hiddenCalendarIds
-            )
+            loadCalendars()
         case .notDetermined:
-            requestAccess(
-                hiddenCalendarIds: hiddenCalendarIds
-            )
+            requestAccess()
         case .denied:
             accessDenied = true
         default:
@@ -66,18 +49,12 @@ class CalendarStore: ObservableObject {
 
     // MARK: - Helper Functions
 
-    private func beginFreshReload(hiddenCalendarIds: Set<String>) {
-        loadCalendars()
-        cache = [:]
-        reloadTrigger = UUID()
-    }
-
-    private func requestAccess(hiddenCalendarIds: Set<String>) {
+    private func requestAccess() {
         eventStore.requestFullAccessToEvents { granted, error in
             Task { @MainActor in
                 if granted {
                     self.accessDenied = false
-                    self.beginFreshReload(hiddenCalendarIds: hiddenCalendarIds)
+                    self.loadCalendars()
                 } else {
                     self.accessDenied = true
                 }

@@ -18,7 +18,7 @@ struct ExpandedPlannerView<Header: View>: View {
     let plannerDay: DateInRegion
     let plannerLocation: Location?
     let sortedPlannerEvents: [PlannerEvent]
-    let calendarDayData: CalendarDayData
+    let calendarDayData: CalendarDayData?
     let settings: PlannerSettings
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -78,23 +78,27 @@ struct ExpandedPlannerView<Header: View>: View {
     var body: some View {
         NavigationStack {
             ScrollViewReader { scrollProxy in
-                PlannerListView(
-                    showLocationSheet: $showLocationSheet,
-                    eventSheetContext: $eventSheetContext,
-                    plannerType: plannerType,
-                    planner: planner,
-                    plannerDay: plannerDay,
-                    plannerLocation: plannerLocation,
-                    sortedOpenPlannerEvents: sortedOpenPlannerEvents,
-                    sortedCheckedPlannerEvents: sortedCheckedPlannerEvents,
-                    sortedPlannerEvents: sortedPlannerEvents,
-                    calendarDayData: calendarDayData,
-                    showChecked: planner.showChecked,
-                    namespace: namespace,
-                    scrollProxy: scrollProxy,
-                    settings: settings,
-                    createEvent: createEvent
-                )
+                ZStack {
+                    if let calendarDayData {
+                        PlannerListView(
+                            showLocationSheet: $showLocationSheet,
+                            eventSheetContext: $eventSheetContext,
+                            plannerType: plannerType,
+                            planner: planner,
+                            plannerDay: plannerDay,
+                            plannerLocation: plannerLocation,
+                            sortedOpenPlannerEvents: sortedOpenPlannerEvents,
+                            sortedCheckedPlannerEvents: sortedCheckedPlannerEvents,
+                            sortedPlannerEvents: sortedPlannerEvents,
+                            calendarDayData: calendarDayData,
+                            showChecked: planner.showChecked,
+                            namespace: namespace,
+                            scrollProxy: scrollProxy,
+                            settings: settings,
+                            createEvent: createEvent
+                        )
+                    }
+                }
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     upperLeftToolbar
@@ -247,7 +251,6 @@ struct ExpandedPlannerView<Header: View>: View {
             } else {
                 SelectedEventActionsView(
                     showTransferSheet: $showTransferSheet,
-                    settings: settings,
                     namespace: namespace
                 )
             }

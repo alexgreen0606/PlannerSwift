@@ -26,6 +26,7 @@ struct PlannerSearchResultsView: View {
     @EnvironmentObject private var weatherStore: WeatherStore
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
     @EnvironmentObject private var plannerSearchManager: PlannerSearchManager
+    @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
 
     @State private var searchText: String = ""
     @State private var filteredCalendarIds: Set<String> = []
@@ -131,11 +132,9 @@ struct PlannerSearchResultsView: View {
                     }
                     .refreshable {
                         weatherStore.beginFreshReload()
-                        calendarStore.attemptFreshLoad(
-                            hiddenCalendarIds: settings
-                                .hiddenCalendarIds
-                        )
+                        calendarStore.refreshCalendarsAndAccess()
                         deviceLocationManager.loadDeviceLocation()
+                        plannerBuildManager.rebuildAllData()
                     }
 
                     // Scroll to top whenever the planner list changes.
@@ -165,8 +164,8 @@ struct PlannerSearchResultsView: View {
         )
         .searchPresentationToolbarBehavior(.avoidHidingContent)
 
-        // Re-buiuld the planner map when the calendar data changes.
-        .onChange(of: calendarStore.reloadTrigger) { _, _ in
+        // Re-build the planner map when the calendar data changes.
+        .onChange(of: plannerBuildManager.rebuildTrigger) { _, _ in
             searchPlanner()
         }
 
