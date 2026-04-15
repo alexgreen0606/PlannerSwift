@@ -37,6 +37,7 @@ struct SortableListView<
     private let bottomAdornment: (_ item: Item) -> BottomAdornment
     private let scrollProxy: ScrollViewProxy?
     private let createItem: (_ at: Int) -> Void
+    private let deleteItem: ((_: Item) -> Void)?
     private let handleTitleChange: ((_ item: Item) -> Void)?
     private let moveItem: (_ from: Int, _ to: Int) -> Void
 
@@ -51,6 +52,7 @@ struct SortableListView<
         tint: @escaping (_: Item) -> Color,
         scrollProxy: ScrollViewProxy? = nil,
         createItem: @escaping (_: Int) -> Void,
+        deleteItem: ((_: Item) -> Void)? = nil,
         moveItem: @escaping (_: Int, _: Int) -> Void,
         floatingInfo: FloatingInfo? = EmptyView(),
         namespace: Namespace.ID? = nil,
@@ -90,6 +92,7 @@ struct SortableListView<
         self.createItem = createItem
         self.handleTitleChange = handleTitleChange
         self.moveItem = moveItem
+        self.deleteItem = deleteItem
     }
 
     @Environment(\.scenePhase) private var appPhase
@@ -163,6 +166,7 @@ struct SortableListView<
                     customToggleConfig: toggleConfig(item),
                     namespace: namespace,
                     createItem: attemptCreateItem,
+                    deleteItem: deleteItem,
                     onToolbarTap: onToolbarTap,
                     onTitleChange: handleTitleChange
                 )

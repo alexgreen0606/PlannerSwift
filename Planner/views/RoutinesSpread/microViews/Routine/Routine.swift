@@ -29,10 +29,12 @@ struct RoutineView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
 
     @StateObject private var notificationManager = NotificationManager()
     @StateObject private var routineManager = ListManager<RoutineEvent>()
     @State private var showTransferSheet = false
+    @State private var invalidatedEventIds: Set<UUID> = []
     @State private var routineEventSheetContext: RoutineEventSheetContext? = nil
 
     @Namespace private var namespace
@@ -50,6 +52,12 @@ struct RoutineView: View {
                     emptyUncheckedLabel: "No recurring events",
                     tint: { _ in accentColor.color },
                     createItem: createEvent,
+                    deleteItem: { event in
+                        modelContext.deleteRoutineEvent(
+                            event,
+                            ekEventStore: calendarStore.ekEventStore
+                        )
+                    },
                     moveItem: moveEvent,
                     namespace: namespace,
                     toolbarSystemImageNames: [
@@ -62,8 +70,16 @@ struct RoutineView: View {
                     leftAdornment: { _ in EmptyView() },
                     rightAdornment: timeAdornment,
                     bottomAdornment: weekdaysAdornment,
-                    handleTitleChange: modelContext
-                        .handleRoutineEventTitleChange
+                    handleTitleChange: { event in
+                        modelContext.handleRoutineEventTitleChange(event)
+                        if !invalidatedEventIds.contains(event.stableId) {
+                            // Mark this event's weekdays for refresh in the planner.
+                            plannerBuildManager.invalidateRoutineDays(
+                                event.weekdays
+                            )
+                            invalidatedEventIds.insert(event.stableId)
+                        }
+                    }
                 )
                 .navigationTitle(weekday.label)
                 .navigationSubtitle("Recurring Events")

@@ -28,9 +28,10 @@ struct RowView<
     private let toolbarSystemImageNames: [String]
     private let customToggleConfig: ToggleConfig<Item>?
     private let namespace: Namespace.ID?
-    private let createItem: ((_ at: Int) -> Void)?
+    private let createItem: ((_: Int) -> Void)?
+    private let deleteItem: ((_: Item) -> Void)?
     private let onToolbarTap: ((String, Item) -> Void)?
-    private let onTitleChange: ((_ item: Item) -> Void)?
+    private let onTitleChange: ((_: Item) -> Void)?
 
     init(
         item: Item,
@@ -46,6 +47,7 @@ struct RowView<
         customToggleConfig: ToggleConfig<Item>? = nil,
         namespace: Namespace.ID? = nil,
         createItem: ((_: Int) -> Void)? = nil,
+        deleteItem: ((_: Item) -> Void)? = nil,
         onToolbarTap: ((String, Item) -> Void)? = nil,
         onTitleChange: ((_: Item) -> Void)? = nil
     ) {
@@ -60,6 +62,7 @@ struct RowView<
         self.toggleOnlyMode = toggleOnlyMode
         self.toolbarSystemImageNames = toolbarSystemImageNames ?? []
         self.createItem = createItem
+        self.deleteItem = deleteItem
         self.customToggleConfig = customToggleConfig
         self.namespace = namespace
         self.onToolbarTap = onToolbarTap
@@ -268,7 +271,11 @@ struct RowView<
 
                 if trimmed.isEmpty {
                     if listManager.protectedId != item.stableId {
-                        modelContext.safeDelete(item)
+                        if let deleteItem {
+                            deleteItem(item)
+                        } else {
+                            modelContext.safeDelete(item)
+                        }
                     }
                 } else {
                     item.title = trimmed
