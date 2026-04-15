@@ -23,12 +23,18 @@ extension ModelContext {
         plannerDay: DateInRegion,
         hiddenCalendarIds: Set<String>,
         ekEventStore: EKEventStore
-    ) -> CalendarDayData {
-        let syncCalendar = buildConfig.cachedCalendarData == nil
+    ) -> CalendarDayData? {
+        let syncCalendar = buildConfig.syncCalendar
         let syncRoutine = buildConfig.syncRoutine
 
+        guard syncCalendar || syncRoutine else {
+            return nil
+        }
+        
         var calendarDayData =
             buildConfig.cachedCalendarData ?? CalendarDayData()
+        
+        print("debug: \(planner.datestamp) syncCalendar: \(syncCalendar), syncRoutine: \(syncRoutine)")
 
         // ------------------------------------------------------------------
         // Load in the day's existing calendar events.
@@ -120,10 +126,11 @@ extension ModelContext {
 
                 plannerEvent.syncWithCalendarEvent(calendarEvent)
 
-            } else if syncRoutine, let routineEvent = plannerEvent.routineEvent, let weekday = Weekday.from(planner.datestamp.weekday)
+            } else if syncRoutine, let routineEvent = plannerEvent.routineEvent,
+                let weekday = Weekday.from(planner.datestamp.weekday)
             {
                 // MARK: Routine Event
-                
+
                 if !routineEvent.weekdays.contains(weekday) {
                     // This weekday was removed. Remove this record and continue.
                     self.delete(plannerEvent)
@@ -276,8 +283,12 @@ extension ModelContext {
         }
 
         self.safeSave("buildPlanner")
+        
+        if syncCalendar {
+            return calendarDayData
+        }
 
-        return calendarDayData
+        return nil
     }
 
     // MARK: - Helper Functions

@@ -23,6 +23,7 @@ struct TransferRoutineEventsFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var notificationManager: NotificationManager
+    @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
     @EnvironmentObject private var routineManager: ListManager<RoutineEvent>
 
     @State private var selectedDaysOfWeek: Set<Weekday> = []
@@ -79,9 +80,6 @@ struct TransferRoutineEventsFormView: View {
     // MARK: - Functions
 
     private func handleTransfer() {
-
-        let eventCount = routineManager.selectedItems.count
-
         modelContext.transferRoutineEvents(
             routineManager.selectedItems,
             to: selectedDaysOfWeek,
@@ -89,9 +87,22 @@ struct TransferRoutineEventsFormView: View {
             sourceDayOfWeek: sourceDayOfWeek
         )
 
-        routineManager.toggleSelectMode()
+        let affectedWeekdays =
+            Set(routineManager.selectedItems.flatMap { $0.sortDateMap.keys })
+            .union(selectedDaysOfWeek)
 
+        plannerBuildManager.invalidateRoutineDays(affectedWeekdays)
+
+        dismiss()
+
+        DispatchQueue.main.async(execute: routineManager.toggleSelectMode)
+
+        showNotification()
+    }
+
+    private func showNotification() {
         let selectedDays = selectedDaysOfWeek
+        let eventCount = routineManager.selectedItems.count
 
         let destinations = {
             if selectedDays.count > 1 {
@@ -136,8 +147,6 @@ struct TransferRoutineEventsFormView: View {
                 )
             )
         }
-        
-        dismiss()
     }
 
 }

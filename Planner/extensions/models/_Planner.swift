@@ -20,8 +20,8 @@ extension Planner {
     }
 
     var finalExcludeRoutine: Bool {
-        if self.excludeRoutine != nil {
-            return self.excludeRoutine!
+        if let customExclusion = self.excludeRoutine {
+            return customExclusion
         }
         return self.trip?.excludeRoutines ?? false
     }

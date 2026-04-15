@@ -73,7 +73,7 @@ struct PlannerEventBuilderView<Header: View>: View {
             }
         }
         .task(id: plannerBuildManager.rebuildTrigger) {
-            buildPlanner()
+            await buildPlanner()
         }
         .task(id: weatherStore.reloadTrigger) {
             loadWeather()
@@ -81,7 +81,11 @@ struct PlannerEventBuilderView<Header: View>: View {
 
         // Reload the weather and events when the location changes.
         .onChange(of: plannerLocation) { _, _ in
-            buildPlanner()
+
+            // TODO: why was I building the planner? when location changes? Maybe I should
+            // do this from the homeLocation setting or the actual location sheet in planners?
+
+            // buildPlanner()
             loadWeather()
         }
     }
@@ -121,30 +125,24 @@ struct PlannerEventBuilderView<Header: View>: View {
 
     // MARK: - Functions
 
-    private func buildPlanner() {
-        let buildConfig = plannerBuildManager.buildConfig(for: planner)
-
-        withAnimation {
-            calendarDayData = modelContext.buildPlanner(
-                for: planner,
-                buildConfig: buildConfig,
-                storageEvents: sortedPlannerEvents,
-                plannerDay: plannerDay,
-                hiddenCalendarIds: settings.hiddenCalendarIds,
-                ekEventStore: calendarStore.ekEventStore
-            )
+    @MainActor
+    private func buildPlanner() async {
+        guard let weekday = Weekday.from(planner.datestamp.weekday) else {
+            return
         }
 
-        if buildConfig.cachedCalendarData == nil, let calendarDayData {
-            plannerBuildManager.cacheCalendarData(
-                calendarDayData,
-                plannerKey: planner.key
-            )
+        let calendarData = await plannerBuildManager.syncPlanner(
+            planner,
+            weekday: weekday,
+            plannerDay: plannerDay,
+            sortedPlannerEvents: sortedPlannerEvents,
+            settings: settings,
+            ekEventStore: calendarStore.ekEventStore,
+            modelContext: modelContext
+        ).value
 
-            DispatchQueue.main.async {
-                hydrateCalendarEvents(calendarDayData: calendarDayData)
-            }
-        }
+        calendarDayData = calendarData
+        hydrateCalendarEvents(calendarDayData: calendarData)
     }
 
     private func loadWeather() {

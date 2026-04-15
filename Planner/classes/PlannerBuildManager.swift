@@ -6,12 +6,10 @@
 //
 
 import Combine
+import EventKit
+import SwiftData
+import SwiftDate
 import SwiftUI
-
-struct PlannerBuildConfig {
-    var cachedCalendarData: CalendarDayData? = nil
-    var syncRoutine: Bool = false
-}
 
 // Clean
 
@@ -20,34 +18,70 @@ class PlannerBuildManager: ObservableObject {
 
     @Published private(set) var rebuildTrigger: UUID? = nil
 
-    @Published private(set) var freshCalendarMap: [String: CalendarDayData] =
-        [:]
+    @Published var freshCalendarMap: [String: CalendarDayData] = [:]
 
     // Datestamps that have loaded for each weekday.
     @Published private(set) var freshRoutineMap: [Weekday: Set<String>] =
         PlannerBuildManager.makeDefaultRoutineMap()
 
+    private var inFlight: [String: Task<CalendarDayData, Never>] = [:]
+
     func beginRebuild() {
         rebuildTrigger = UUID()
     }
 
-    func cacheCalendarData(_ data: CalendarDayData, plannerKey: String) {
-        freshCalendarMap[plannerKey] = data
-    }
+    func syncPlanner(
+        _ planner: Planner,
+        weekday: Weekday,
+        plannerDay: DateInRegion,
+        sortedPlannerEvents: [PlannerEvent],
+        settings: PlannerSettings,
+        ekEventStore: EKEventStore,
+        modelContext: ModelContext
+    ) -> Task<CalendarDayData, Never> {
 
-    func buildConfig(for planner: Planner) -> PlannerBuildConfig {
-        var buildConfig = PlannerBuildConfig()
-
-        guard let weekday = Weekday.from(planner.datestamp.weekday) else {
-            return buildConfig
-        }
-
-        buildConfig.cachedCalendarData = freshCalendarMap[planner.key]
-        buildConfig.syncRoutine = !(freshRoutineMap[weekday] ?? []).contains(
+        let syncRoutine = !(freshRoutineMap[weekday] ?? []).contains(
             planner.datestamp
         )
 
-        return buildConfig
+        if syncRoutine {
+            modelContext.syncRoutine(
+                for: planner,
+                storageEvents: sortedPlannerEvents,
+                plannerDay: plannerDay,
+                weekday: weekday
+            )
+
+            freshRoutineMap[weekday]?.insert(planner.datestamp)
+        }
+
+        if let cachedCalendarData = freshCalendarMap[planner.key] {
+            return Task { cachedCalendarData }
+        }
+
+        if let inFlight = inFlight[planner.key] {
+            return inFlight
+        }
+
+        let task = Task {
+            let calendarData = modelContext.syncCalendar(
+                for: planner,
+                storageEvents: sortedPlannerEvents,
+                plannerDay: plannerDay,
+                hiddenCalendarIds: settings.hiddenCalendarIds,
+                ekEventStore: ekEventStore
+            )
+
+            await MainActor.run {
+                freshCalendarMap[planner.key] = calendarData
+                inFlight.removeValue(forKey: planner.key)
+            }
+
+            return calendarData
+        }
+
+        inFlight[planner.key] = task
+        return task
     }
 
     func invalidateRoutineDays(_ weekdays: Set<Weekday>) {

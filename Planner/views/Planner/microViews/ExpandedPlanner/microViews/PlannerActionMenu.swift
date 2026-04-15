@@ -21,6 +21,7 @@ struct PlannerActionMenuView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var plannerManager: ListManager<PlannerEvent>
     @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
 
     @State private var showDeleteCompletedConfirmation = false
     @State private var showDeleteCanceledConfirmation = false
@@ -84,6 +85,13 @@ struct PlannerActionMenuView: View {
                     for: planner,
                     plannerEvents: plannerEvents
                 )
+
+                if !planner.finalExcludeRoutine,
+                    let weekday = Weekday.from(planner.datestamp.weekday)
+                {
+                    plannerBuildManager.invalidateRoutineDays([weekday])
+                    plannerBuildManager.beginRebuild()
+                }
             },
             label: {
                 Label(

@@ -211,7 +211,7 @@ struct EventFormView: View {
 
         // Refresh calendar in case of recurring events.
         DispatchQueue.main.async {
-            // TODO: smartly determine affected days.
+            // TODO: make this smarter
             plannerBuildManager.rebuildCalendarData()
         }
 
