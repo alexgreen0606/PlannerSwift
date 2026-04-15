@@ -123,15 +123,11 @@ extension ModelContext {
 
         if !planner.finalExcludeRoutine {
 
-            let reverseSortedNewRoutineEvents: [RoutineEvent] = {
-                guard let weekday else {
-                    return []
+            let reverseSortedNewRoutineEvents: [RoutineEvent] =
+                existingRoutineEvents.values
+                .sorted {
+                    $0.sortDateMap[weekday]! > $1.sortDateMap[weekday]!
                 }
-                return existingRoutineEvents.values
-                    .sorted {
-                        $0.sortDateMap[weekday]! > $1.sortDateMap[weekday]!
-                    }
-            }()
 
             for routineEvent in reverseSortedNewRoutineEvents {
 
