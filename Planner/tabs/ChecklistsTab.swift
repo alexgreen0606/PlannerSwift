@@ -79,7 +79,7 @@ struct ChecklistsTabView: View {
 
     private func openItem(_ item: ChecklistItem, from source: ChecklistItem) {
 
-        let isInCurrentFolder = source.items.contains(where: {
+        let isInCurrentFolder = source.safeItems.contains(where: {
             $0.stableId == item.stableId
         })
         if !isInCurrentFolder {

@@ -21,8 +21,8 @@ struct ChecklistView: View {
     @EnvironmentObject private var listManager: ListManager<ChecklistItem>
 
     @StateObject private var notificationManager = NotificationManager()
-    @State private var isEditSheetOpen = false
-    @State private var isTransferSheetOpen = false
+    @State private var showEditSheet = false
+    @State private var showTransferSheet = false
 
     @Namespace private var namespace
 
@@ -103,14 +103,14 @@ struct ChecklistView: View {
         }
 
         // Edit Form
-        .sheet(isPresented: $isEditSheetOpen) {
+        .sheet(isPresented: $showEditSheet) {
             if let parent = checklist.parent {
                 ChecklistItemFormView(item: checklist, parent: parent)
             }
         }
 
         // Transfer Items Form
-        .sheet(isPresented: $isTransferSheetOpen) {
+        .sheet(isPresented: $showTransferSheet) {
             TransferChecklistItemsFormView(
                 source: checklist,
                 selectedIds: listManager.selectedItemIds,
@@ -143,7 +143,13 @@ struct ChecklistView: View {
     private var upperRightToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             if !listManager.isSelectMode {
-                actionMenu
+                ChecklistActionMenu(
+                    isEditSheetOpen: $showEditSheet,
+                    checklist: checklist,
+                    hasCheckedItem: hasCheckedItem,
+                    completedItems: sortedCheckedItems,
+                    visibleItems: visibleItems
+                )
             } else {
                 toggleSelectAllButton
             }
@@ -159,16 +165,16 @@ struct ChecklistView: View {
                 Spacer()
                 createLowerItemButton(scrollProxy: scrollProxy)
             } else {
-                deleteSelectedButton
-                Spacer()
-                transferSelectedButton
+                SelectedChecklistItemActionsView(
+                    showTransferSheet: $showTransferSheet,
+                    canTransferItems: canTransferItems,
+                    namespace: namespace
+                )
             }
         }
     }
 
-    // MARK: - Toolbar Components
-
-    // MARK: Upper Left Toolbar
+    // MARK: Top Leading Toolbar Components
 
     private var dismissButton: some View {
         Button(
@@ -187,17 +193,7 @@ struct ChecklistView: View {
         )
     }
 
-    // MARK: Upper Right Toolbar
-
-    private var actionMenu: some View {
-        ChecklistActionMenu(
-            isEditSheetOpen: $isEditSheetOpen,
-            checklist: checklist,
-            hasCheckedItem: hasCheckedItem,
-            completedItems: sortedCheckedItems,
-            visibleItems: visibleItems
-        )
-    }
+    // MARK: Top Trailing Toolbar Components
 
     private var toggleSelectAllButton: some View {
         Button {
@@ -210,33 +206,7 @@ struct ChecklistView: View {
         .animateSynchronousAction(from: isAllSelected)
     }
 
-    // MARK: Lower Left Toolbar
-
-    private var deleteSelectedButton: some View {
-        DeleteSelectedButtonView(
-            itemsLabel: "items",
-            disabled: listManager.selectedItemIds.isEmpty,
-            delete: deleteSelectedItems
-        )
-    }
-
-    // MARK: Lower Right Toolbar
-
-    private var transferSelectedButton: some View {
-        Button(
-            "Transfer",
-            systemImage: "arrow.left.arrow.right"
-        ) {
-            isTransferSheetOpen = true
-        }
-        .disabled(
-            !canTransferItems || listManager.selectedItemIds.isEmpty
-        )
-        .matchedTransitionSource(
-            id: IdConstants.TRANSFER_BUTTON,
-            in: namespace
-        )
-    }
+    // MARK: Bottom Trailing Toolbar Components
 
     private func createLowerItemButton(scrollProxy: ScrollViewProxy)
         -> some View
@@ -278,15 +248,6 @@ struct ChecklistView: View {
                     anchor: .bottom
                 )
             }
-        }
-    }
-
-    private func deleteSelectedItems() {
-        modelContext.deleteChecklistItems(
-            listManager.selectedItems
-        )
-        DispatchQueue.main.async {
-            listManager.toggleSelectMode()
         }
     }
 

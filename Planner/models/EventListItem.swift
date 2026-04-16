@@ -17,7 +17,7 @@ class EventListItem: ListItem {
 
     // Controlled by drag-and-drop.
     // May go out of sync with the date.
-    var sortDate: Date
+    var sortDate: Date = Date()
 
     init(sortDate: Date) {
         self.sortDate = sortDate

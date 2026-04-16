@@ -11,9 +11,13 @@ import Fuse
 // Clean
 
 extension Trip {
+    
+    var safePlanners: [Planner] {
+        self.planners ?? []
+    }
 
     var sortedPlanners: [Planner] {
-        self.planners.sorted { $0.datestamp < $1.datestamp }
+        safePlanners.sorted { $0.datestamp < $1.datestamp }
     }
 
     var firstDatestamp: String? {
@@ -26,7 +30,7 @@ extension Trip {
 
     var dateComponents: Set<DateComponents> {
         Set(
-            self.planners.compactMap { $0.datestamp.dateComponents }
+            safePlanners.compactMap { $0.datestamp.dateComponents }
         )
     }
 

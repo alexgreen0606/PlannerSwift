@@ -14,7 +14,7 @@ import SwiftUI
 class Planner {
 
     // Converts to the start of day (Date) based on the planner's location (TimeZone).
-    @Attribute(.unique) var datestamp: String
+    var datestamp: String = ""
 
     var showChecked: Bool = false
 

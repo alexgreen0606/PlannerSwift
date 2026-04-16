@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 // Clean
 
@@ -68,7 +69,7 @@ struct FolderContentsListView: View {
 
             HStack(alignment: .center) {
                 if item.type == .checklist {
-                    Text("\(item.items.filter{!$0.isCompleted}.count)")
+                    Text("\(item.safeItems.filter{!$0.isCompleted}.count)")
                         .font(.caption)
                 } else {
                     Image(systemName: "chevron.right")

@@ -250,7 +250,7 @@ struct ExpandedPlannerView<Header: View>: View {
                 Spacer()
                 createLowerEventButton(scrollProxy: scrollProxy)
             } else {
-                SelectedEventActionsView(
+                SelectedPlannerEventActionsView(
                     showTransferSheet: $showTransferSheet,
                     planner: planner,
                     namespace: namespace

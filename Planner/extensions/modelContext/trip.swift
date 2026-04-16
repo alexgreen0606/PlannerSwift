@@ -43,16 +43,16 @@ extension ModelContext {
                     }
 
                     let newPlanner = self.getPlanner(for: datestamp)
-                    trip.planners.append(newPlanner)
+                    trip.planners?.append(newPlanner)
                     newPlanner.trip = trip
                 }
 
                 // Remove any stale planners from this trip.
                 for (_, stalePlanner) in sourcePlanners {
-                    if let index = trip.planners.firstIndex(where: {
+                    if let index = trip.safePlanners.firstIndex(where: {
                         $0 === stalePlanner
                     }) {
-                        trip.planners.remove(at: index)
+                        trip.planners?.remove(at: index)
                     }
                     stalePlanner.trip = nil
                 }

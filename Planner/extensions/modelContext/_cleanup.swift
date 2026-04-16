@@ -26,13 +26,14 @@ extension ModelContext {
             let orphanLocations = try self.fetch(
                 FetchDescriptor<Location>(
                     predicate: #Predicate<Location> {
-                        $0.trips.isEmpty
-                            && $0.planners.isEmpty
-                            && $0.events.isEmpty
-                            && $0.plannerSettings == nil
+                        $0.plannerSettings == nil
                     }
                 )
-            )
+            ).filter {
+                $0.safeTrips.isEmpty
+                    && $0.safePlanners.isEmpty
+                    && $0.safeEvents.isEmpty
+            }
 
             for location in orphanLocations {
                 self.delete(location)

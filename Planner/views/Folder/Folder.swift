@@ -25,13 +25,12 @@ struct FolderView: View {
 
     @StateObject private var notificationManager = NotificationManager()
     @StateObject private var selectManager = ListManager<ChecklistItem>()
-    @State private var showDeleteFolderConfirm = false
     @State private var showTransferSheet = false
     @State private var showCreateSheet = false
     @State private var showEditSheet = false
 
     var sortedItems: [ChecklistItem] {
-        folder.items.sorted { $0.sortIndex < $1.sortIndex }
+        folder.safeItems.sorted { $0.sortIndex < $1.sortIndex }
     }
 
     var isAllSelected: Bool {
@@ -94,7 +93,7 @@ struct FolderView: View {
             }
         }
         .overlay {
-            if folder.items.isEmpty {
+            if folder.safeItems.isEmpty {
                 EmptyLabelView("No contents")
             }
         }
@@ -152,124 +151,26 @@ struct FolderView: View {
     private var topRightToolbar: some ToolbarContent {
         if !selectManager.isSelectMode {
             ToolbarItemGroup(placement: .topBarTrailing) {
-                actionMenu
-                addNewItemButton
+                FolderActionMenuView(
+                    showEditSheet: $showEditSheet,
+                    folder: folder,
+                    sortedItems: sortedItems
+                )
+
+                Button("Add", systemImage: "plus") {
+                    showCreateSheet = true
+                }
             }
         } else {
-            selectedModeActionButtons
-        }
-    }
-
-    // MARK: Action Menu
-
-    @ViewBuilder
-    private var actionMenu: some View {
-        Menu("Action Menu", systemImage: "ellipsis") {
-            editFolderButton
-            selectItemsButton
-            deleteFolderButton
-        }
-        .confirmationDialog(
-            folder.deleteConfirmation,
-            isPresented: $showDeleteFolderConfirm,
-            titleVisibility: .visible
-        ) {
-            Button("Confirm", role: .destructive, action: deleteEntireFolder)
-        } message: {
-            Text(folder.deleteWarning)
-        }
-    }
-
-    private var editFolderButton: some View {
-        Button {
-            showEditSheet = true
-        } label: {
-            Label("Edit folder", systemImage: "pencil")
-        }
-    }
-
-    private var selectItemsButton: some View {
-        Button {
-            selectManager.toggleSelectMode()
-        } label: {
-            Label("Select contents", systemImage: "checkmark.circle")
-        }
-        .disabled(sortedItems.isEmpty)
-    }
-
-    @ViewBuilder
-    private var deleteFolderButton: some View {
-        if folder.parent != nil {
-            Button(role: .destructive) {
-                showDeleteFolderConfirm = true
-            } label: {
-                Label("Delete this folder", systemImage: "trash")
-            }
-        }
-    }
-
-    // MARK: Add New Item Button
-
-    @ViewBuilder
-    private var addNewItemButton: some View {
-        Button("Add", systemImage: "plus") {
-            showCreateSheet = true
-        }
-    }
-
-    // MARK: Select Mode Actions
-
-    @ToolbarContentBuilder
-    private var selectedModeActionButtons: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            DeleteSelectedButtonView(
-                itemsLabel: "contents",
-                disabled: selectManager.selectedItemIds.isEmpty,
-                delete: deleteSelectedItems
+            SelectedFolderItemActionsView(
+                showTransferSheet: $showTransferSheet,
+                canTransferItems: canTranferItems,
+                namespace: namespace
             )
         }
-
-        ToolbarSpacer(.fixed, placement: .topBarTrailing)
-
-        ToolbarItem(placement: .topBarTrailing) {
-            transferItemsButton
-        }
-    }
-
-    private var transferItemsButton: some View {
-        Button(
-            "Transfer",
-            systemImage: "arrow.forward.folder"
-        ) {
-            showTransferSheet = true
-        }
-        .matchedTransitionSource(
-            id: IdConstants.TRANSFER_BUTTON,
-            in: namespace
-        )
-        .disabled(
-            !canTranferItems || selectManager.selectedItemIds.isEmpty
-        )
     }
 
     // MARK: - Functions
-
-    private func deleteEntireFolder() {
-        dismiss()
-        modelContext.safeDelete(folder)
-    }
-
-    private func deleteSelectedItems() {
-        withAnimation {
-            modelContext.deleteChecklistItems(
-                selectManager.selectedItems
-            )
-        }
-
-        DispatchQueue.main.async {
-            selectManager.toggleSelectMode()
-        }
-    }
 
     private func scrollTo(id: UUID?, scrollProxy: ScrollViewProxy) {
         guard let targetId = id else { return }

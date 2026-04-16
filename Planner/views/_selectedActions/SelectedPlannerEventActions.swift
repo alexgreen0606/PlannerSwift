@@ -1,5 +1,5 @@
 //
-//  SelectedEventActions.swift
+//  SelectedPlannerEventActions.swift
 //  Planner
 //
 //  Created by Alex Green on 3/11/26.
@@ -10,7 +10,7 @@ import SwiftUI
 
 // Clean
 
-struct SelectedEventActionsView: View {
+struct SelectedPlannerEventActionsView: View {
     @Binding var showTransferSheet: Bool
     let planner: Planner
     let namespace: Namespace.ID
@@ -21,8 +21,8 @@ struct SelectedEventActionsView: View {
 
     var body: some View {
         DeleteSelectedButtonView(
-            itemsLabel: "events",
-            disabled: plannerManager.selectedItemIds.isEmpty,
+            itemLabel: "event",
+            count: plannerManager.selectedItemIds.count,
             message:
                 "Calendar and planner events will be lost.",
             delete: deleteSelectedEvents

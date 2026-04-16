@@ -22,6 +22,14 @@ struct SelectedRoutineEventActionsView: View {
     @State private var showDeleteConfirmation = false
 
     var body: some View {
+        deleteSelectedButton
+        Spacer()
+        transferSelectedButton
+    }
+
+    // MARK: - View Builders
+
+    private var deleteSelectedButton: some View {
         Button("Delete", systemImage: "trash") {
             showDeleteConfirmation = true
         }
@@ -47,11 +55,7 @@ struct SelectedRoutineEventActionsView: View {
                 "Future occurrences will be deleted from your planner. Removing from \(weekday.label) will not affect other days. This action cannot be undone."
             )
         }
-        Spacer()
-        transferSelectedButton
     }
-
-    // MARK: - View Builders
 
     private var transferSelectedButton: some View {
         Button(
@@ -77,9 +81,7 @@ struct SelectedRoutineEventActionsView: View {
             ekEventStore: calendarStore.ekEventStore
         )
 
-        DispatchQueue.main.async {
-            routineManager.toggleSelectMode()
-        }
+        DispatchQueue.main.async(execute: routineManager.toggleSelectMode)
     }
 
     private func deleteSelectedEventsEverywhere() {
@@ -88,9 +90,7 @@ struct SelectedRoutineEventActionsView: View {
             ekEventStore: calendarStore.ekEventStore
         )
 
-        DispatchQueue.main.async {
-            routineManager.toggleSelectMode()
-        }
+        DispatchQueue.main.async(execute: routineManager.toggleSelectMode)
     }
 
 }

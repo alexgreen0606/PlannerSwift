@@ -13,15 +13,15 @@ import SwiftUI
 @available(iOS 26.0, *)
 @Model
 class ChecklistItem: ListItem {
-    var type: ChecklistItemType
-    var color: ChecklistItemColor
+    var type: ChecklistItemType = ChecklistItemType.checklist
+    var color: ChecklistItemColor = ChecklistItemColor.red
     var showCompleted: Bool = false
 
     @Relationship(
         deleteRule: .cascade,
         inverse: \ChecklistItem.parent
     )
-    var items = [ChecklistItem]()
+    var items: [ChecklistItem]?
 
     var parent: ChecklistItem?
 

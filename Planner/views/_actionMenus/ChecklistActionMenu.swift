@@ -5,6 +5,7 @@
 //  Created by Alex Green on 3/9/26.
 //
 
+import SwiftData
 import SwiftUI
 
 // Clean
@@ -36,7 +37,7 @@ struct ChecklistActionMenu: View {
             titleVisibility: .visible
         ) {
             Button(
-                "Confirm",
+                "Delete Checklist",
                 role: .destructive,
                 action: deleteEntireChecklist
             )
@@ -45,18 +46,21 @@ struct ChecklistActionMenu: View {
                 checklist.deleteWarning
             )
         }
+
         .confirmationDialog(
-            "Delete completed items from this list?",
+            "Delete completed \("item".pluralized(from: completedItems.count)) from \"\(checklist.title)\"?",
             isPresented: $showDeleteCompletedConfirm,
             titleVisibility: .visible
         ) {
             Button(
-                "Confirm",
+                "Delete \(completedItems.count) \("Item".pluralized(from: completedItems.count))",
                 role: .destructive,
                 action: deleteCompletedItems
             )
         } message: {
-            Text("This action is irreversible.")
+            Text(
+                "\(completedItems.count) \("item".pluralized(from: completedItems.count)) will be deleted from this checklist. This can't be undone."
+            )
         }
     }
 
@@ -68,8 +72,8 @@ struct ChecklistActionMenu: View {
         } label: {
             Label(
                 checklist.showCompleted
-                    ? "Hide completed"
-                    : "Show completed",
+                    ? "Hide Completed"
+                    : "Show Completed",
                 systemImage: checklist.showCompleted
                     ? "eye.slash" : "eye"
             )
@@ -81,7 +85,7 @@ struct ChecklistActionMenu: View {
             isEditSheetOpen = true
         } label: {
             Label(
-                "Edit checklist",
+                "Edit Checklist",
                 systemImage: "pencil"
             )
         }
@@ -92,7 +96,7 @@ struct ChecklistActionMenu: View {
             listManager.toggleSelectMode()
         } label: {
             Label(
-                "Select items",
+                "Select Items",
                 systemImage: "checkmark.circle"
             )
         }
@@ -105,7 +109,7 @@ struct ChecklistActionMenu: View {
             deleteListButton
         } label: {
             Label(
-                "Delete options",
+                "Delete Options",
                 systemImage: "trash"
             )
         }
@@ -115,7 +119,7 @@ struct ChecklistActionMenu: View {
         Button(role: .destructive) {
             showDeleteCompletedConfirm = true
         } label: {
-            Text("Delete completed items")
+            Text("Delete Completed")
         }
         .disabled(!hasCheckedItem)
     }
@@ -124,7 +128,7 @@ struct ChecklistActionMenu: View {
         Button(role: .destructive) {
             showDeleteChecklistConfirm = true
         } label: {
-            Text("Delete this list")
+            Text("Delete Checklist")
         }
     }
 

@@ -10,19 +10,19 @@ import SwiftUI
 // Clean
 
 struct DeleteSelectedButtonView: View {
-    let itemsLabel: String
-    let disabled: Bool
+    let itemLabel: String
+    let count: Int
     let message: String?
     let delete: () -> Void
 
     init(
-        itemsLabel: String,
-        disabled: Bool,
+        itemLabel: String,
+        count: Int,
         message: String? = nil,
         delete: @escaping () -> Void
     ) {
-        self.itemsLabel = itemsLabel
-        self.disabled = disabled
+        self.itemLabel = itemLabel
+        self.count = count
         self.message = message
         self.delete = delete
     }
@@ -44,13 +44,17 @@ struct DeleteSelectedButtonView: View {
             showConfirmation = true
         }
         .tint(Color.label)
-        .disabled(disabled)
+        .disabled(count == 0)
         .confirmationDialog(
-            "Delete selected \(itemsLabel)?",
+            "Delete \(count > 1 ? "\(count) \(itemLabel)s" : itemLabel)?",
             isPresented: $showConfirmation,
             titleVisibility: .visible,
         ) {
-            Button("Confirm", role: .destructive, action: delete)
+            Button(
+                "Delete\(count > 1 ? " \(count)" : "") \(itemLabel.pluralized(from: count).capitalizedFirst)",
+                role: .destructive,
+                action: delete
+            )
         } message: {
             Text(fullMessage)
         }

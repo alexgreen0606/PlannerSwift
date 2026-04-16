@@ -141,7 +141,7 @@ struct CurrentFolderListView: View {
     // MARK: - Functions
 
     private func buildSelectableItems() {
-        selectableItems = currentFolder.items
+        selectableItems = currentFolder.safeItems
             .filter { item in
                 guard
                     item.stableId != source.stableId

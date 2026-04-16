@@ -26,6 +26,27 @@ struct PlannerApp: App {
             )
         )
     }
+    
+    private let container: ModelContainer = {
+        let schema = Schema([
+            PlannerSettings.self,
+            Planner.self,
+            PlannerEvent.self,
+            ChecklistItem.self,
+            Trip.self,
+            RoutineEvent.self,
+        ])
+
+        let configuration = ModelConfiguration(
+            schema: schema,
+            cloudKitDatabase: .automatic
+        )
+
+        return try! ModelContainer(
+            for: schema,
+            configurations: [configuration]
+        )
+    }()
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -53,13 +74,6 @@ struct PlannerApp: App {
                 .environmentObject(plannerCoverManager)
                 .environmentObject(plannerBuildManager)
         }
-        .modelContainer(for: [
-            PlannerSettings.self,
-            Planner.self,
-            PlannerEvent.self,
-            ChecklistItem.self,
-            Trip.self,
-            RoutineEvent.self
-        ])
+        .modelContainer(container)
     }
 }

@@ -16,7 +16,7 @@ import SwiftDate
 @Model
 class PlannerEvent: EventListItem {
 
-    var date: Date
+    var date: Date = Date()
     var hasTime: Bool = false
     var isCanceled: Bool = false
 
@@ -33,7 +33,7 @@ class PlannerEvent: EventListItem {
     var isRoutineEventException: Bool = false
 
     // Uniquely identifies recurring event occurrences (calendar events only).
-    @Attribute(.unique) var occurrenceId: String?
+    var occurrenceId: String?
 
     init(
         date: Date,

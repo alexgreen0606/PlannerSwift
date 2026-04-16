@@ -80,6 +80,8 @@ extension ModelContext {
         draftChecklistItem: ChecklistItem
     ) -> UUID? {
         var newItemId: UUID? = nil
+        
+        draftChecklistItem.title = draftChecklistItem.title.trimmingCharacters(in: .whitespacesAndNewlines)
 
         if let sourceItem {
 
@@ -90,7 +92,7 @@ extension ModelContext {
 
         } else {
 
-            let sorted = parent?.items.sorted {
+            let sorted = parent?.safeItems.sorted {
                 $0.sortIndex < $1.sortIndex
             }
             let sortIndex = (sorted?.last?.sortIndex ?? 0) + 8
@@ -121,7 +123,7 @@ extension ModelContext {
         do {
             try self.transaction {
 
-                var sortedDestinationItems = destination.items.sorted {
+                var sortedDestinationItems = destination.safeItems.sorted {
                     $0.sortIndex < $1.sortIndex
                 }
 
@@ -142,7 +144,7 @@ extension ModelContext {
 
                     // Assign both references of the relationship.
                     // Both MUST be applied or else the item may be lost.
-                    destination.items.append(item)
+                    destination.items?.append(item)
                     item.parent = destination
                 }
 

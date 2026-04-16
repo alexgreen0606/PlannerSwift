@@ -12,19 +12,19 @@ import SwiftUI
 
 @Model
 class Location {
-    var name: String
+    var name: String = ""
     var subtitle: String?
-    var latitude: Double
-    var longitude: Double
-    var timeZoneIdentifier: String
+    var latitude: Double = 0.0
+    var longitude: Double = 0.0
+    var timeZoneIdentifier: String = ""
 
     // Used for displaying recents in LocationSearchForm.
-    var selectedOn: Date
+    var selectedOn: Date = Date()
 
-    var trips: [Trip] = []
-    var planners: [Planner] = []
-    var events: [PlannerEvent] = []
-    var plannerSettings: PlannerSettings? = nil
+    var trips: [Trip]?
+    var planners: [Planner]?
+    var events: [PlannerEvent]?
+    var plannerSettings: PlannerSettings?
 
     init(
         name: String,

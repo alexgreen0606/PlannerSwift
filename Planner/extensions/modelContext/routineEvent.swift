@@ -198,7 +198,7 @@ extension ModelContext {
         ekEventStore: EKEventStore,
         skipSave: Bool = false
     ) {
-        for plannerEvent in routineEvent.plannerEvents {
+        for plannerEvent in routineEvent.safePlannerEvents {
             if plannerEvent.isCompleted {
                 continue
             }

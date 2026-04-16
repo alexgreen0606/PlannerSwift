@@ -11,6 +11,10 @@ import SwiftUI
 // Clean
 
 extension RoutineEvent {
+    
+    var safePlannerEvents: [PlannerEvent] {
+        self.plannerEvents ?? []
+    }
 
     var weekdays: Set<Weekday> {
         Set(self.sortDateMap.keys)

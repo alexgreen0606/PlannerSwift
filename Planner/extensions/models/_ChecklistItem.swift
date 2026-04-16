@@ -10,6 +10,10 @@ import SwiftUI
 // Clean
 
 extension ChecklistItem {
+    
+    var safeItems: [ChecklistItem] {
+        self.items ?? []
+    }
 
     var path: String {
         var reversePath: [String] = []
@@ -24,11 +28,14 @@ extension ChecklistItem {
     }
 
     var deleteConfirmation: String {
-        "Delete this entire \(self.type.rawValue)?"
+        "Delete \(self.type.rawValue) \"\(self.title)\"?"
     }
 
     var deleteWarning: String {
-        "\(self.items.isEmpty ? "" : "All \(self.type.childrenLabel) will be lost. ")This action is irreversible."
+        guard !self.safeItems.isEmpty else {
+            return "This can't be undone."
+        }
+        return "This will delete all \(self.type.childrenLabel) in this \(self.type.rawValue). This can't be undone."
     }
 
     // Recursively determines if the given type exists anywhere in the item's tree.
@@ -37,7 +44,7 @@ extension ChecklistItem {
         excluding excludedIds: Set<UUID>
     ) -> Bool {
 
-        for item in self.items where !excludedIds.contains(item.stableId) {
+        for item in self.safeItems where !excludedIds.contains(item.stableId) {
 
             if item.type == type {
                 return true

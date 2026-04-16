@@ -17,7 +17,7 @@ class Trip {
     var title: String = ""
 
     @Relationship(inverse: \Planner.trip)
-    var planners: [Planner] = []
+    var planners: [Planner]?
 
     @Relationship(deleteRule: .nullify, inverse: \Location.trips)
     var location: Location?

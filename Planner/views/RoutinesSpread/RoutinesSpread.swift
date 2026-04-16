@@ -63,7 +63,7 @@ struct RoutinesSpreadView: View {
                                 VStack {
                                     Spacer()
                                     accentColor.color.frame(
-                                        width: 26,
+                                        width: 18,
                                         height: 1
                                     ).padding(.bottom, -3)
                                 }

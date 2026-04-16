@@ -12,6 +12,18 @@ import SwiftDate
 // Clean
 
 extension Location {
+    
+    var safeTrips: [Trip] {
+        self.trips ?? []
+    }
+    
+    var safePlanners: [Planner] {
+        self.planners ?? []
+    }
+    
+    var safeEvents: [PlannerEvent] {
+        self.events ?? []
+    }
 
     var coordinateKey: String {
         CLLocationCoordinate2D(
