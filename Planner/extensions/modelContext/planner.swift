@@ -135,6 +135,7 @@ extension ModelContext {
         for planner: Planner,
         plannerEvents: [PlannerEvent]
     ) {
+        planner.deletedRoutineEventIds.removeAll()
 
         if planner.finalExcludeRoutine {
             planner.excludeRoutine = false

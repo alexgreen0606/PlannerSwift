@@ -163,7 +163,7 @@ struct TextfieldView: UIViewRepresentable {
                 target: self,
                 action: #selector(doneButtonTapped)
             )
-            done.tintColor = UIColor(parent.accentColor)
+            toolbar.tintColor = UIColor(parent.accentColor)
 
             // Build the toolbar.
             toolbar.items = iconButtons + [flexibleSpace] + [done]

@@ -56,6 +56,19 @@ struct RoutinesSpreadView: View {
                                 design: .rounded
                             )
                         )
+                        .overlay {
+                            if todaystampWatcher.todaystamp.weekday
+                                == weekday.label
+                            {
+                                VStack {
+                                    Spacer()
+                                    accentColor.color.frame(
+                                        width: 26,
+                                        height: 1
+                                    ).padding(.bottom, -3)
+                                }
+                            }
+                        }
 
                     let eventCount = weekday.sortedEvents(in: routineEvents)
                         .count

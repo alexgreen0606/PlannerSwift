@@ -32,6 +32,9 @@ extension ModelContext {
         let routineEvents: [RoutineEvent] = self.loadSortedRoutineEvents(
             for: weekday
         )
+        .filter {
+            !planner.deletedRoutineEventIds.contains($0.stableId)
+        }
 
         var existingRoutineEvents = Dictionary(
             uniqueKeysWithValues: routineEvents.map { event in
@@ -55,22 +58,18 @@ extension ModelContext {
 
                 if !routineEvent.weekdays.contains(weekday) {
                     // This weekday was removed. Remove this record and continue.
-                    // TODO: delete from calendar
                     self.delete(plannerEvent)
                     continue
                 }
 
                 if planner.finalExcludeRoutine {
                     // Routines are hidden. Remove this record and continue.
-                    // TODO: delete from calendar
                     self.delete(plannerEvent)
                     continue
                 }
 
-                // TODO: dont sync if it's a calendar event
-                // TODO: does calendar event mark this as an exception?
-
                 existingRoutineEvents.removeValue(forKey: routineEvent.stableId)
+
                 plannerEvent.syncWithRoutineEvent(routineEvent, on: plannerDay)
 
                 if !routineEvent.syncedSortDatePlannerEventIds.contains(

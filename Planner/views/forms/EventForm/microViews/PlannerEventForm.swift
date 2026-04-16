@@ -345,11 +345,10 @@ struct PlannerEventFormView: View {
             sourceCalendarEvent: sourceCalendarEvent
         )
 
-        // Refresh calendar in case of recurring events.
-        DispatchQueue.main.async {
-            // TODO: make this smarter
-            plannerBuildManager.rebuildCalendarData()
-        }
+        // Refresh calendar in case of recurring/all-day events.
+        DispatchQueue.main.async(
+            execute: plannerBuildManager.rebuildCalendarData
+        )
 
         dismiss()
 

@@ -12,6 +12,7 @@ import SwiftUI
 
 struct SelectedEventActionsView: View {
     @Binding var showTransferSheet: Bool
+    let planner: Planner
     let namespace: Namespace.ID
 
     @Environment(\.modelContext) private var modelContext
@@ -51,6 +52,7 @@ struct SelectedEventActionsView: View {
     private func deleteSelectedEvents() {
         modelContext.deletePlannerEvents(
             plannerManager.selectedItems,
+            in: planner,
             ekEventStore: calendarStore.ekEventStore
         )
 

@@ -38,7 +38,7 @@ extension CNContactStore {
             assertionFailure("ERROR CNContactStore.loadBirthdays: \(error)")
         }
 
-        return birthdays
+        return birthdays.sorted { $0.event.title < $1.event.title }
     }
 
 }

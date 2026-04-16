@@ -97,6 +97,7 @@ struct ExpandedPlannerView<Header: View>: View {
                             settings: settings,
                             createEvent: createEvent
                         )
+                        .transition(.opacity)
                     }
                 }
                 .navigationBarTitleDisplayMode(.inline)
@@ -251,6 +252,7 @@ struct ExpandedPlannerView<Header: View>: View {
             } else {
                 SelectedEventActionsView(
                     showTransferSheet: $showTransferSheet,
+                    planner: planner,
                     namespace: namespace
                 )
             }

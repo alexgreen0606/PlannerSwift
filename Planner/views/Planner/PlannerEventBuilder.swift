@@ -79,14 +79,21 @@ struct PlannerEventBuilderView<Header: View>: View {
             loadWeather()
         }
 
-        // Reload the weather and events when the location changes.
-        .onChange(of: plannerLocation) { _, _ in
-
-            // TODO: why was I building the planner? when location changes? Maybe I should
-            // do this from the homeLocation setting or the actual location sheet in planners?
-
-            // buildPlanner()
+        // MARK: Reload the weather and calendar events when the location changes.
+        .onChange(of: plannerLocation) { oldLocation, newLocation in
             loadWeather()
+
+            let current = TimeZone.current.identifier
+            let oldTimeZoneIdentifier =
+                oldLocation?.timeZoneIdentifier ?? current
+            let newTimeZoneIdentifier =
+                newLocation?.timeZoneIdentifier ?? current
+
+            if oldTimeZoneIdentifier != newTimeZoneIdentifier {
+                Task {
+                    await buildPlanner()
+                }
+            }
         }
     }
 
@@ -141,7 +148,10 @@ struct PlannerEventBuilderView<Header: View>: View {
             modelContext: modelContext
         ).value
 
-        calendarDayData = calendarData
+        withAnimation {
+            calendarDayData = calendarData
+        }
+
         hydrateCalendarEvents(calendarDayData: calendarData)
     }
 

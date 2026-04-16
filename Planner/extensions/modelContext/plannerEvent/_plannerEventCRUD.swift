@@ -234,38 +234,49 @@ extension ModelContext {
     // MARK: - DELETE
 
     @MainActor
-    func deleteCalendarEvent(_ event: PlannerEvent, ekEventStore: EKEventStore)
-    {
-        guard let calEvent = event.calendarEvent else {
-            return
-        }
-
-        if ekEventStore.deleteEvent(calEvent) {
-            self.delete(event)
-        }
-
-        self.safeSave("_plannerEventCRUD.deleteCalendarEvent")
-    }
-
-    @MainActor
     func deletePlannerEvents(
         _ events: [PlannerEvent],
-        ekEventStore: EKEventStore? = nil  // deletes calendar events, otherwise they are preserved
+        in planner: Planner,
+        
+        // Deletes calendar events if defined, otherwise they are preserved.
+        ekEventStore: EKEventStore? = nil
     ) {
         for event in events {
-            if let calendarEvent = event.calendarEvent {
-                guard let ekEventStore else {
-                    continue
-                }
-
-                if !ekEventStore.deleteEvent(calendarEvent) {
-                    continue
-                }
-            }
-            self.delete(event)
+            self.deletePlannerEvent(
+                event,
+                in: planner,
+                ekEventStore: ekEventStore,
+                skipSave: true
+            )
         }
 
         self.safeSave("_plannerEventCRUD.deletePlannerEvents")
+    }
+
+    @MainActor
+    func deletePlannerEvent(
+        _ event: PlannerEvent,
+        in planner: Planner,
+        
+        // Deletes calendar events, otherwise they are preserved.
+        ekEventStore: EKEventStore? = nil,
+        skipSave: Bool = false
+    ) {
+        if let calendarEvent = event.calendarEvent, let ekEventStore,
+            !ekEventStore.deleteEvent(calendarEvent)
+        {
+            return
+        }
+
+        if let routineEvent = event.routineEvent {
+            planner.deletedRoutineEventIds.insert(routineEvent.stableId)
+        }
+
+        self.delete(event)
+
+        if !skipSave {
+            self.safeSave("_plannerEventCRUD.deletePlannerEvent")
+        }
     }
 
 }

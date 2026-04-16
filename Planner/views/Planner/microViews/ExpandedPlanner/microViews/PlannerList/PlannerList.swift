@@ -6,9 +6,9 @@
 //
 
 import EventKit
+import SwiftData
 import SwiftDate
 import SwiftUI
-import SwiftData
 import WeatherKit
 
 // Clean
@@ -32,7 +32,7 @@ struct PlannerListView: View {
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
-    
+
     @AppStorage("keepCanceledEventsDuration") private
         var keepCanceledEventsDuration: KeepCanceledEventsDuration =
             KeepCanceledEventsDuration.startOfDay
@@ -43,11 +43,11 @@ struct PlannerListView: View {
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject private var weatherStore: WeatherStore
-    
+
     private var weatherData: DayWeather? {
         weatherStore.getWeather(for: plannerDay, at: plannerLocation)
     }
-    
+
     private var locationLabel: String {
         planner.locationLabel(
             settings: settings,
@@ -67,6 +67,13 @@ struct PlannerListView: View {
             tint: eventTint,
             scrollProxy: scrollProxy,
             createItem: createEvent,
+            deleteItem: { event in
+                modelContext.deletePlannerEvents(
+                    [event],
+                    in: planner,
+                    ekEventStore: calendarStore.ekEventStore
+                )
+            },
             moveItem: moveUncheckedEvent,
             floatingInfo: chipSpread,
             namespace: namespace,
@@ -207,8 +214,9 @@ struct PlannerListView: View {
                         title: "Delete",
                         role: .destructive
                     ) { event in
-                        modelContext.deleteCalendarEvent(
+                        modelContext.deletePlannerEvent(
                             event,
+                            in: planner,
                             ekEventStore: calendarStore.ekEventStore
                         )
                     },

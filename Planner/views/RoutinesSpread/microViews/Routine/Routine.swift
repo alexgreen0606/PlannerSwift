@@ -49,7 +49,7 @@ struct RoutineView: View {
             ScrollViewReader { scrollProxy in
                 SortableListView(
                     uncheckedItems: sortedRoutineEvents,
-                    emptyUncheckedLabel: "No recurring events",
+                    emptyUncheckedLabel: "No \(weekday.label) routine",
                     tint: { _ in accentColor.color },
                     createItem: createEvent,
                     deleteItem: { event in

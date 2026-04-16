@@ -40,6 +40,7 @@ struct SettingsTabView: View {
     @Environment(\.colorScheme) private var systemColorScheme
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
+    @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
 
     private var activeCalendarCount: String {
         String(
@@ -133,7 +134,8 @@ struct SettingsTabView: View {
                             Text("Home Location")
                             Spacer()
                             Text(
-                                settings.homeLocation?.name ?? "Current Location"
+                                settings.homeLocation?.name
+                                    ?? "Current Location"
                             )
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
@@ -148,12 +150,14 @@ struct SettingsTabView: View {
                             Text("Calendars")
                             Spacer()
                             Text(
-                                activeCalendarCount
+                                calendarStore.accessDenied != false
+                                    ? "No Access" : activeCalendarCount
                             )
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                         }
                     }
+                    .disabled(calendarStore.accessDenied != false)
 
                     // Keep Past Events Duration
                     NavigationLink {

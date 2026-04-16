@@ -92,7 +92,9 @@ extension PlannerEvent {
         _ routineEvent: RoutineEvent,
         on plannerDay: DateInRegion
     ) {
-        guard !self.isRoutineEventException else { return }
+        guard !self.isRoutineEventException,
+            self.calendarItemExternalIdentifier == nil
+        else { return }
 
         self.title = routineEvent.title
 
@@ -189,7 +191,7 @@ extension PlannerEvent {
         EventLocationAdornmentView(
             iconConfig: IconConfig(
                 name: "mappin.and.ellipse",
-                primaryColor: accentColor.color
+                primaryColor: self.tint(accentColor: accentColor)
             ),
             locationLabel: locationAdornment,
             timeLabel: timeAdornment,
