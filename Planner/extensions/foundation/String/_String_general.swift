@@ -23,11 +23,6 @@ extension String {
         return trimmed.lowercased()
     }
 
-    var capitalizedFirst: String {
-        guard let first = self.first else { return self }
-        return first.uppercased() + self.dropFirst()
-    }
-
     func pluralized(from itemCount: Int) -> String {
         "\(self)\(itemCount == 1 ? "" : "s")"
     }

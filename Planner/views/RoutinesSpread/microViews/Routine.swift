@@ -227,6 +227,7 @@ struct RoutineView: View {
         Button("Add", systemImage: "plus") {
             createLowerEvent(scrollProxy: scrollProxy)
         }
+        .buttonStyle(.glassProminent)
         .tint(accentColor.color)
     }
 
@@ -290,32 +291,32 @@ struct RoutineView: View {
         routineCoverContext = RoutineCoverContext(weekday: weekday)
     }
 
-    private func eventToggleConfig(_ event: RoutineEvent) -> ToggleConfig<
-        RoutineEvent
-    >? {
+    private func eventToggleConfig(_ event: RoutineEvent) -> ToggleConfig? {
         if event.sortDateMap.keys.count > 1 {
-            ToggleConfig<RoutineEvent>(
+            ToggleConfig(
                 iconConfig: IconConfig(name: ""),
                 uncheckedIconConfig: IconConfig(
                     name: "minus.circle",
                     primaryColor: Color.red,
                     secondaryColor: Color.tertiary
                 ),
-                confirmation: ConfirmationConfig<RoutineEvent>(
+                confirmation: ConfirmationConfig(
                     title: "Delete recurring event?",
                     message:
                         "Future occurrences will be deleted from your planner. Removing from \(weekday.label) will not affect other days. This action cannot be undone.",
-                    needsConfirmation: { _ in true },
                     actions: [
                         ConfirmationAction(
                             title: "Remove from \(weekday.label)s",
                             role: .confirm,
-                            handler: deleteEventFromWeekday
+                            handler: {
+                                deleteEventFromWeekday(event)
+                            }
                         ),
                         ConfirmationAction(
                             title: "Delete everywhere",
-                            role: .destructive,
-                            handler: deleteEventEverywhere
+                            handler: {
+                                deleteEventEverywhere(event)
+                            }
                         ),
                     ]
                 ),
@@ -326,23 +327,23 @@ struct RoutineView: View {
                 }
             )
         } else {
-            ToggleConfig<RoutineEvent>(
+            ToggleConfig(
                 iconConfig: IconConfig(name: ""),
                 uncheckedIconConfig: IconConfig(
                     name: "minus.circle",
                     primaryColor: Color.red,
                     secondaryColor: Color.tertiary
                 ),
-                confirmation: ConfirmationConfig<RoutineEvent>(
+                confirmation: ConfirmationConfig(
                     title: "Delete recurring event?",
                     message:
                         "Future occurrences will be deleted from your planner. This action cannot be undone.",
-                    needsConfirmation: { _ in true },
                     actions: [
                         ConfirmationAction(
                             title: "Delete",
-                            role: .destructive,
-                            handler: deleteEventEverywhere
+                            handler: {
+                                deleteEventEverywhere(event)
+                            }
                         )
                     ]
                 ),

@@ -88,7 +88,7 @@ struct TransferChecklistItemsFormView: View {
                 )
             }
             .navigationTitle(
-                "Transfer \(destinationType.childrenLabel.capitalizedFirst)"
+                "Transfer \(destinationType.childrenLabel.capitalized)"
             )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

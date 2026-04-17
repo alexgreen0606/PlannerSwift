@@ -26,7 +26,7 @@ struct RowView<
     private let bottomAdornment: BottomAdornment
     private let toggleOnlyMode: Bool
     private let toolbarSystemImageNames: [String]
-    private let customToggleConfig: ToggleConfig<Item>?
+    private let customToggleConfig: ToggleConfig?
     private let namespace: Namespace.ID?
     private let createItem: ((_: Int) -> Void)?
     private let deleteItem: ((_: Item) -> Void)?
@@ -44,7 +44,7 @@ struct RowView<
         bottomAdornment: BottomAdornment,
         toggleOnlyMode: Bool = false,
         toolbarSystemImageNames: [String]? = [],
-        customToggleConfig: ToggleConfig<Item>? = nil,
+        customToggleConfig: ToggleConfig? = nil,
         namespace: Namespace.ID? = nil,
         createItem: ((_: Int) -> Void)? = nil,
         deleteItem: ((_: Item) -> Void)? = nil,

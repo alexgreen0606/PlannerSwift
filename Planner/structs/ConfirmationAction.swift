@@ -9,8 +9,18 @@ import SwiftUI
 
 // Clean
 
-struct ConfirmationAction<Item> {
+struct ConfirmationAction {
     let title: String
-    let role: ButtonRole?
-    let handler: (Item) -> Void
+    let role: ButtonRole
+    let handler: () -> Void
+
+    init(
+        title: String,
+        role: ButtonRole = .destructive,
+        handler: @escaping () -> Void
+    ) {
+        self.title = title
+        self.role = role
+        self.handler = handler
+    }
 }

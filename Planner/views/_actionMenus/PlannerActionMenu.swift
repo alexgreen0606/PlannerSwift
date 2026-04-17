@@ -34,6 +34,56 @@ struct PlannerActionMenuView: View {
         plannerEvents.filter { $0.isCanceled }
     }
 
+    private var dateLabel: String {
+        planner.datestamp.dateLabel
+    }
+
+    private var deleteCompletedEventsConfig: ConfirmationConfig {
+        ConfirmationConfig(
+            title:
+                "Delete completed \("event".pluralized(from: completedEvents.count)) from \(dateLabel)?",
+            message: {
+                guard calendarStore.accessDenied == false else {
+                    return genericDeleteWarning
+                }
+
+                return
+                    "Calendar events will not be deleted. \(genericDeleteWarning)"
+            }(),
+            actions: [
+                ConfirmationAction(
+                    title:
+                        "Delete \(completedEvents.count) \("Event".pluralized(from: completedEvents.count))",
+                    handler: deleteCompletedEvents
+                )
+            ]
+        )
+    }
+
+    private var deleteCanceledEventsConfig: ConfirmationConfig {
+        ConfirmationConfig(
+            title:
+                "Delete canceled \("event".pluralized(from: completedEvents.count)) from \(dateLabel)?",
+            message: {
+                guard calendarStore.accessDenied == false else {
+                    return genericDeleteWarning
+                }
+
+                return
+                    "Calendar events will not be deleted. \(genericDeleteWarning)"
+            }(),
+            actions: [
+                ConfirmationAction(
+                    title:
+                        "Delete \(completedEvents.count) \("Event".pluralized(from: completedEvents.count))",
+                    handler: deleteCanceledEvents
+                )
+            ]
+        )
+    }
+    
+    // MARK: - Body
+
     var body: some View {
         Menu("Planner Action Menu", systemImage: "ellipsis") {
             selectEventsButton
@@ -43,37 +93,17 @@ struct PlannerActionMenuView: View {
             deleteActionsMenu
         }
 
-        .confirmationDialog(
-            "Delete completed events from this planner?",
-            isPresented: $showDeleteCompletedConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button(
-                "Confirm",
-                role: .destructive,
-                action: deleteCompletedEvents
-            )
-        } message: {
-            Text(
-                "Calendar events will not be deleted. This action is irreversible."
-            )
-        }
+        // MARK: Delete Completed Confirmation
+        .withConfirmation(
+            deleteCompletedEventsConfig,
+            isPresented: $showDeleteCompletedConfirmation
+        )
 
-        .confirmationDialog(
-            "Delete canceled events from this planner?",
-            isPresented: $showDeleteCanceledConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button(
-                "Confirm",
-                role: .destructive,
-                action: deleteCanceledEvents
-            )
-        } message: {
-            Text(
-                "Calendar events will not be deleted. This action is irreversible."
-            )
-        }
+        // MARK: Delete Canceled Confirmation
+        .withConfirmation(
+            deleteCanceledEventsConfig,
+            isPresented: $showDeleteCanceledConfirmation
+        )
     }
 
     // MARK: - View Builders
@@ -140,7 +170,7 @@ struct PlannerActionMenuView: View {
             plannerManager.toggleSelectMode()
         } label: {
             Label(
-                "Select events",
+                "Select Events",
                 systemImage: "checkmark.circle"
             )
         }
@@ -153,21 +183,21 @@ struct PlannerActionMenuView: View {
             deleteCanceledEventsButton
         } label: {
             Label(
-                "Delete options",
+                "Delete Options",
                 systemImage: "trash"
             )
         }
     }
 
     private var deleteCompletedEventsButton: some View {
-        Button("Delete completed", role: .destructive) {
+        Button("Delete Completed", role: .destructive) {
             showDeleteCompletedConfirmation = true
         }
         .disabled(completedEvents.isEmpty)
     }
 
     private var deleteCanceledEventsButton: some View {
-        Button("Delete canceled", role: .destructive) {
+        Button("Delete Canceled", role: .destructive) {
             showDeleteCanceledConfirmation = true
         }
         .disabled(canceledEvents.isEmpty)

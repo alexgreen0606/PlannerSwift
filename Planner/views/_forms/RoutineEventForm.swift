@@ -287,7 +287,7 @@ struct RoutineEventFormView: View {
                     }
 
                     if let destinationDay = selectedDays.first?.rawValue
-                        .capitalizedFirst
+                        .capitalized
                     {
                         return "\(destinationDay)s"
                     }

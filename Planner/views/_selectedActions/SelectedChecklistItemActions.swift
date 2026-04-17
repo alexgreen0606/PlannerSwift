@@ -8,27 +8,56 @@
 import SwiftData
 import SwiftUI
 
-struct SelectedChecklistItemActionsView: View {
+// Clean
+
+struct SelectedChecklistItemActionsView: ToolbarContent {
     @Binding var showTransferSheet: Bool
     let canTransferItems: Bool
+    let parentType: ChecklistItemType
     let namespace: Namespace.ID
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var listManager: ListManager<ChecklistItem>
 
-    var body: some View {
-        deleteSelectedButton
-        Spacer()
-        transferSelectedButton
+    private var deleteConfirmation: ConfirmationConfig {
+        bulkDeleteChecklistItemConfig(
+            items: listManager.selectedItems,
+            delete: deleteSelectedItems
+        )
+    }
+
+    // MARK: - Body
+
+    var body: some ToolbarContent {
+        if parentType == .checklist {
+            ToolbarItem(placement: .bottomBar) {
+                deleteSelectedButton
+            }
+
+            ToolbarSpacer(placement: .bottomBar)
+
+            ToolbarItem(placement: .bottomBar) {
+                transferSelectedButton
+            }
+        } else {
+            ToolbarItem(placement: .topBarTrailing) {
+                deleteSelectedButton
+            }
+
+            ToolbarSpacer(.fixed, placement: .topBarTrailing)
+
+            ToolbarItem(placement: .topBarTrailing) {
+                transferSelectedButton
+            }
+        }
     }
 
     // MARK: - View Builders
 
     private var deleteSelectedButton: some View {
         DeleteSelectedButtonView(
-            itemLabel: "item",
-            count: listManager.selectedItems.count,
-            delete: deleteSelectedItems
+            confirmationConfig: deleteConfirmation,
+            disabled: listManager.selectedItems.isEmpty
         )
     }
 

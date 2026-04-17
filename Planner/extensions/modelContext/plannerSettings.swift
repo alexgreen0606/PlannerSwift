@@ -20,7 +20,7 @@ extension ModelContext {
     func ensurePlannerSettings(
         settings: [PlannerSettings]
     ) {
-        if let existing = settings.first {
+        if settings.first != nil {
             return
         }
 

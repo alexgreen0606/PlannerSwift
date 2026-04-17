@@ -49,7 +49,11 @@ extension ModelContext {
             sortedItems: sortedItems
         )
 
-        let newItem = ChecklistItem(sortIndex: sortIndex, parent: parent)
+        let newItem = ChecklistItem(
+            type: .item,
+            sortIndex: sortIndex,
+            parent: parent
+        )
 
         insert(newItem)
         self.safeSave("checklistItem.createChecklistItem")

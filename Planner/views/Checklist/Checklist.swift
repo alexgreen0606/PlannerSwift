@@ -83,9 +83,9 @@ struct ChecklistView: View {
                 .navigationTitle(checklist.title)
                 .navigationSubtitle(subtitle)
                 .toolbar {
-                    upperLeftToolbar
-                    upperRightToolbar
-                    lowerToolbar(scrollProxy: scrollProxy)
+                    topLeadingToolbar
+                    topTrailingToolbar
+                    bottomToolbar(scrollProxy: scrollProxy)
                 }
                 .animateSynchronousAction(from: listManager.isSelectMode)
             }
@@ -129,7 +129,7 @@ struct ChecklistView: View {
 
     // MARK: - Toolbars
 
-    private var upperLeftToolbar: some ToolbarContent {
+    private var topLeadingToolbar: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
             if !listManager.isSelectMode {
                 dismissButton
@@ -140,7 +140,7 @@ struct ChecklistView: View {
     }
 
     @ToolbarContentBuilder
-    private var upperRightToolbar: some ToolbarContent {
+    private var topTrailingToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             if !listManager.isSelectMode {
                 ChecklistActionMenu(
@@ -157,20 +157,21 @@ struct ChecklistView: View {
     }
 
     @ToolbarContentBuilder
-    private func lowerToolbar(
+    private func bottomToolbar(
         scrollProxy: ScrollViewProxy
     ) -> some ToolbarContent {
-        ToolbarItemGroup(placement: .bottomBar) {
-            if !listManager.isSelectMode {
-                Spacer()
+        if !listManager.isSelectMode {
+            ToolbarSpacer(placement: .bottomBar)
+            ToolbarItem(placement: .bottomBar) {
                 createLowerItemButton(scrollProxy: scrollProxy)
-            } else {
-                SelectedChecklistItemActionsView(
-                    showTransferSheet: $showTransferSheet,
-                    canTransferItems: canTransferItems,
-                    namespace: namespace
-                )
             }
+        } else {
+            SelectedChecklistItemActionsView(
+                showTransferSheet: $showTransferSheet,
+                canTransferItems: canTransferItems,
+                parentType: .checklist,
+                namespace: namespace
+            )
         }
     }
 
@@ -214,6 +215,7 @@ struct ChecklistView: View {
         Button("Add", systemImage: "plus") {
             createLowerItem(scrollProxy: scrollProxy)
         }
+        .buttonStyle(.glassProminent)
         .tint(checklist.color.swiftUIColor)
     }
 

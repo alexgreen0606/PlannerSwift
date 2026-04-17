@@ -162,9 +162,10 @@ struct FolderView: View {
                 }
             }
         } else {
-            SelectedFolderItemActionsView(
+            SelectedChecklistItemActionsView(
                 showTransferSheet: $showTransferSheet,
                 canTransferItems: canTranferItems,
+                parentType: .folder,
                 namespace: namespace
             )
         }

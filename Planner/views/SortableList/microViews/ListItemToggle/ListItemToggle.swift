@@ -10,16 +10,16 @@ import SwiftUI
 
 // Clean
 
-struct ToggleConfig<Item: ListItem> {
+struct ToggleConfig {
     let iconConfig: IconConfig
     let uncheckedIconConfig: IconConfig
-    let confirmation: ConfirmationConfig<Item>?
+    let confirmation: ConfirmationConfig?
     let onClick: (() -> Void)?
 
     init(
         iconConfig: IconConfig,
         uncheckedIconConfig: IconConfig = IconConfig(name: "circle"),
-        confirmation: ConfirmationConfig<Item>? = nil,
+        confirmation: ConfirmationConfig? = nil,
         onClick: (() -> Void)? = nil
     ) {
         self.iconConfig = iconConfig
@@ -29,11 +29,23 @@ struct ToggleConfig<Item: ListItem> {
     }
 }
 
-struct ConfirmationConfig<Item: ListItem> {
+struct ConfirmationConfig {
     let title: String?
     let message: String?
-    let needsConfirmation: (Item) -> Bool
-    let actions: [ConfirmationAction<Item>]
+    let needsConfirmation: Bool
+    let actions: [ConfirmationAction]
+
+    init(
+        title: String?,
+        message: String? = nil,
+        needsConfirmation: Bool = true,
+        actions: [ConfirmationAction]
+    ) {
+        self.title = title
+        self.message = message
+        self.needsConfirmation = needsConfirmation
+        self.actions = actions
+    }
 }
 
 struct ListItemToggleView<Item: ListItem>: View {
@@ -41,14 +53,14 @@ struct ListItemToggleView<Item: ListItem>: View {
     let tint: Color
     let isChecked: Bool
     let opacity: Double
-    let customToggleConfig: ToggleConfig<Item>?
+    let customToggleConfig: ToggleConfig?
 
     init(
         item: Item,
         tint: Color,
         isChecked: Bool,
         opacity: Double,
-        customToggleConfig: ToggleConfig<Item>? = nil
+        customToggleConfig: ToggleConfig? = nil
     ) {
         self.item = item
         self.tint = tint
@@ -69,7 +81,7 @@ struct ListItemToggleView<Item: ListItem>: View {
         listManager.isSelectMode ? accentColor.color : tint
     }
 
-    private var toggleConfig: ToggleConfig<Item> {
+    private var toggleConfig: ToggleConfig {
         if let customConfig = customToggleConfig,
             !listManager.isSelectMode
         {
@@ -103,7 +115,7 @@ struct ListItemToggleView<Item: ListItem>: View {
     }
 
     private var needsConfirmation: Bool {
-        toggleConfig.confirmation?.needsConfirmation(item) == true
+        toggleConfig.confirmation?.needsConfirmation == true
     }
 
     var body: some View {
@@ -122,16 +134,15 @@ struct ListItemToggleView<Item: ListItem>: View {
             .contentShape(Rectangle())
             .onTapGesture {
                 customToggleConfig?.onClick?()
-                
+
                 if needsConfirmation {
                     isConfirmationOpen = true
                 } else {
                     listManager.toggleItem(item)
                 }
             }
-            .withToggleConfirmation(
+            .withConfirmation(
                 toggleConfig.confirmation,
-                item: item,
                 isPresented: $isConfirmationOpen
             )
     }

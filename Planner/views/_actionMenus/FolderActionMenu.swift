@@ -19,7 +19,14 @@ struct FolderActionMenuView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var selectManager: ListManager<ChecklistItem>
 
-    @State private var showDeleteFolderConfirm = false
+    @State private var showDeleteConfirmation = false
+
+    private var folderDeleteConfirmation: ConfirmationConfig {
+        singleDeleteChecklistItemConfig(
+            item: folder,
+            delete: deleteEntireFolder
+        )
+    }
 
     var body: some View {
         Menu("Action Menu", systemImage: "ellipsis") {
@@ -27,15 +34,12 @@ struct FolderActionMenuView: View {
             selectItemsButton
             deleteFolderButton
         }
-        .confirmationDialog(
-            folder.deleteConfirmation,
-            isPresented: $showDeleteFolderConfirm,
-            titleVisibility: .visible
-        ) {
-            Button("Confirm", role: .destructive, action: deleteEntireFolder)
-        } message: {
-            Text(folder.deleteWarning)
-        }
+
+        // MARK: Delete Folder Confirmation
+        .withConfirmation(
+            folderDeleteConfirmation,
+            isPresented: $showDeleteConfirmation
+        )
     }
 
     // MARK: - View Builders
@@ -61,7 +65,7 @@ struct FolderActionMenuView: View {
     private var deleteFolderButton: some View {
         if folder.parent != nil {
             Button(role: .destructive) {
-                showDeleteFolderConfirm = true
+                showDeleteConfirmation = true
             } label: {
                 Label("Delete Folder", systemImage: "trash")
             }

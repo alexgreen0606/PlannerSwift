@@ -31,7 +31,7 @@ struct SortableListView<
     private let tint: (_ item: Item) -> Color
     private let toolbarSystemImageNames: [String]
     private let onToolbarTap: ((String, Item) -> Void)?
-    private let toggleConfig: (_ item: Item) -> ToggleConfig<Item>?
+    private let toggleConfig: (_ item: Item) -> ToggleConfig?
     private let leftAdornment: (_ item: Item) -> LeftAdornment
     private let rightAdornment: (_ item: Item) -> RightAdornment
     private let bottomAdornment: (_ item: Item) -> BottomAdornment
@@ -58,7 +58,7 @@ struct SortableListView<
         namespace: Namespace.ID? = nil,
         toolbarSystemImageNames: [String] = [],
         onToolbarTap: ((String, Item) -> Void)? = nil,
-        toggleConfig: @escaping (_: Item) -> ToggleConfig<Item>? = { _ in nil },
+        toggleConfig: @escaping (_: Item) -> ToggleConfig? = { _ in nil },
         leftAdornment: @escaping (_: Item) -> LeftAdornment = { _ in
             EmptyView() as! LeftAdornment
         },

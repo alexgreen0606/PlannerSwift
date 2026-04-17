@@ -23,7 +23,7 @@ enum Weekday: String, Codable, CaseIterable {
     }
 
     var label: String {
-        self.rawValue.capitalizedFirst
+        self.rawValue.capitalized
     }
 
     static func from(_ string: String) -> Weekday? {

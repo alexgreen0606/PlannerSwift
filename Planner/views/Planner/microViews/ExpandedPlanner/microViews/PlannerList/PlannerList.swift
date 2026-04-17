@@ -186,34 +186,29 @@ struct PlannerListView: View {
         event.isCompleted.toggle()
     }
 
-    private func eventToggleConfig(_ event: PlannerEvent) -> ToggleConfig<
-        PlannerEvent
-    >? {
-        ToggleConfig<PlannerEvent>(
+    private func eventToggleConfig(_ event: PlannerEvent) -> ToggleConfig? {
+        ToggleConfig(
             iconConfig: IconConfig(
                 name: event.isCanceled ? "circle.slash" : "circle.inset.filled",
                 primaryColor: event.isCanceled
                     ? Color.red : event.tint(accentColor: accentColor),
             ),
-            confirmation: ConfirmationConfig<PlannerEvent>(
+            confirmation: ConfirmationConfig(
                 title: "Delete from calendar?",
                 message: "Hiding only affects visibility in this planner.",
-                needsConfirmation: { event in
-                    event.calendarEvent != nil
-                        && !event.isCanceled && plannerType == .future
-                },
+                needsConfirmation: event.calendarEvent != nil
+                        && !event.isCanceled && plannerType == .future,
                 actions: [
                     ConfirmationAction(
                         title: "Hide",
-                        role: nil
-                    ) { event in
+                        role: .confirm
+                    ) {
                         modelContext.cancelPlannerEvent(event)
                     },
 
                     ConfirmationAction(
                         title: "Delete",
-                        role: .destructive
-                    ) { event in
+                    ) {
                         modelContext.deletePlannerEvent(
                             event,
                             in: planner,

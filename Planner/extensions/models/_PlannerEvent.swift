@@ -21,7 +21,8 @@ extension PlannerEvent {
         settings: PlannerSettings,
         deviceLocation: Location?
     )
-        -> Location?  // nil means the current device location is used and hasn't loaded yet.
+        // nil means the current device location is used and hasn't loaded yet.
+        -> Location?
     {
         eventLocation(
             location: location,

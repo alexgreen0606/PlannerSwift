@@ -10,7 +10,7 @@ import SwiftUI
 
 // Clean
 
-struct SelectedPlannerEventActionsView: View {
+struct SelectedPlannerEventActionsView: ToolbarContent {
     @Binding var showTransferSheet: Bool
     let planner: Planner
     let namespace: Namespace.ID
@@ -19,19 +19,35 @@ struct SelectedPlannerEventActionsView: View {
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var plannerManager: ListManager<PlannerEvent>
 
-    var body: some View {
-        DeleteSelectedButtonView(
-            itemLabel: "event",
-            count: plannerManager.selectedItemIds.count,
-            message:
-                "Calendar and planner events will be lost.",
+    private var deleteConfig: ConfirmationConfig {
+        bulkDeletePlannerEventConfig(
+            events: plannerManager.selectedItems,
             delete: deleteSelectedEvents
         )
-        Spacer()
-        transferSelectedButton
+    }
+
+    // MARK: - Body
+
+    var body: some ToolbarContent {
+        ToolbarItem(placement: .bottomBar) {
+            deleteSelectedButton
+        }
+
+        ToolbarSpacer(placement: .bottomBar)
+
+        ToolbarItem(placement: .bottomBar) {
+            transferSelectedButton
+        }
     }
 
     // MARK: - View Builders
+
+    private var deleteSelectedButton: some View {
+        DeleteSelectedButtonView(
+            confirmationConfig: deleteConfig,
+            disabled: plannerManager.selectedItemIds.isEmpty
+        )
+    }
 
     private var transferSelectedButton: some View {
         Button(

@@ -21,8 +21,33 @@ struct ChecklistActionMenu: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var listManager: ListManager<ChecklistItem>
 
-    @State private var showDeleteCompletedConfirm = false
-    @State private var showDeleteChecklistConfirm = false
+    @State private var showDeleteCompletedConfirmation = false
+    @State private var showDeleteChecklistConfirmation = false
+
+    private var deleteCompletedConfirmationConfig: ConfirmationConfig {
+        ConfirmationConfig(
+            title:
+                "Delete completed \("item".pluralized(from: completedItems.count)) from \"\(checklist.title)\"?",
+            message:
+                "\(completedItems.count) \("item".pluralized(from: completedItems.count)) will be deleted from this checklist. \(genericDeleteWarning)",
+            actions: [
+                ConfirmationAction(
+                    title:
+                        "Delete \(completedItems.count) \("Item".pluralized(from: completedItems.count))",
+                    handler: deleteCompletedItems
+                )
+            ]
+        )
+    }
+
+    private var checklistDeleteConfirmation: ConfirmationConfig {
+        singleDeleteChecklistItemConfig(
+            item: checklist,
+            delete: deleteEntireChecklist
+        )
+    }
+
+    // MARK: - Body
 
     var body: some View {
         Menu("Action Menu", systemImage: "ellipsis") {
@@ -31,37 +56,18 @@ struct ChecklistActionMenu: View {
             selectItemsButton
             deleteActionMenu
         }
-        .confirmationDialog(
-            checklist.deleteConfirmation,
-            isPresented: $showDeleteChecklistConfirm,
-            titleVisibility: .visible
-        ) {
-            Button(
-                "Delete Checklist",
-                role: .destructive,
-                action: deleteEntireChecklist
-            )
-        } message: {
-            Text(
-                checklist.deleteWarning
-            )
-        }
 
-        .confirmationDialog(
-            "Delete completed \("item".pluralized(from: completedItems.count)) from \"\(checklist.title)\"?",
-            isPresented: $showDeleteCompletedConfirm,
-            titleVisibility: .visible
-        ) {
-            Button(
-                "Delete \(completedItems.count) \("Item".pluralized(from: completedItems.count))",
-                role: .destructive,
-                action: deleteCompletedItems
-            )
-        } message: {
-            Text(
-                "\(completedItems.count) \("item".pluralized(from: completedItems.count)) will be deleted from this checklist. This can't be undone."
-            )
-        }
+        // MARK: Delete Completed Confirmation
+        .withConfirmation(
+            deleteCompletedConfirmationConfig,
+            isPresented: $showDeleteCompletedConfirmation
+        )
+
+        // MARK: Delete Checklist Confirmation
+        .withConfirmation(
+            checklistDeleteConfirmation,
+            isPresented: $showDeleteChecklistConfirmation
+        )
     }
 
     // MARK: - View Builders
@@ -117,7 +123,7 @@ struct ChecklistActionMenu: View {
 
     private var deleteCompletedItemsButton: some View {
         Button(role: .destructive) {
-            showDeleteCompletedConfirm = true
+            showDeleteCompletedConfirmation = true
         } label: {
             Text("Delete Completed")
         }
@@ -126,7 +132,7 @@ struct ChecklistActionMenu: View {
 
     private var deleteListButton: some View {
         Button(role: .destructive) {
-            showDeleteChecklistConfirm = true
+            showDeleteChecklistConfirmation = true
         } label: {
             Text("Delete Checklist")
         }

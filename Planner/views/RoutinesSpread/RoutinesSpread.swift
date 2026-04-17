@@ -64,7 +64,7 @@ struct RoutinesSpreadView: View {
                                     Spacer()
                                     accentColor.color.frame(
                                         width: 18,
-                                        height: 1
+                                        height: 2
                                     ).padding(.bottom, -3)
                                 }
                             }

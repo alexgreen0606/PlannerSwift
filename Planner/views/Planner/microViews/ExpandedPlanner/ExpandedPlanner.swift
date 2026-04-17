@@ -88,7 +88,8 @@ struct ExpandedPlannerView<Header: View>: View {
                             plannerDay: plannerDay,
                             plannerLocation: plannerLocation,
                             sortedOpenPlannerEvents: sortedOpenPlannerEvents,
-                            sortedCheckedPlannerEvents: sortedCheckedPlannerEvents,
+                            sortedCheckedPlannerEvents:
+                                sortedCheckedPlannerEvents,
                             sortedPlannerEvents: sortedPlannerEvents,
                             calendarDayData: calendarDayData,
                             showChecked: planner.showChecked,
@@ -245,17 +246,17 @@ struct ExpandedPlannerView<Header: View>: View {
     private func lowerToolbar(scrollProxy: ScrollViewProxy)
         -> some ToolbarContent
     {
-        ToolbarItemGroup(placement: .bottomBar) {
-            if !plannerManager.isSelectMode {
-                Spacer()
+        if !plannerManager.isSelectMode {
+            ToolbarSpacer(placement: .bottomBar)
+            ToolbarItem(placement: .bottomBar) {
                 createLowerEventButton(scrollProxy: scrollProxy)
-            } else {
-                SelectedPlannerEventActionsView(
-                    showTransferSheet: $showTransferSheet,
-                    planner: planner,
-                    namespace: namespace
-                )
             }
+        } else {
+            SelectedPlannerEventActionsView(
+                showTransferSheet: $showTransferSheet,
+                planner: planner,
+                namespace: namespace
+            )
         }
     }
 
@@ -265,6 +266,7 @@ struct ExpandedPlannerView<Header: View>: View {
         Button("Add", systemImage: "plus") {
             createLowerEvent(scrollProxy: scrollProxy)
         }
+        .buttonStyle(.glassProminent)
         .tint(accentColor.color)
     }
 
