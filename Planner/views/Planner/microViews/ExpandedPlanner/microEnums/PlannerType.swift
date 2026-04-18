@@ -29,7 +29,8 @@ enum PlannerType: String {
     func checkedFooter(
         for datestamp: String,
         todaystamp: String,
-        keepCanceledEvents: KeepCanceledEventsDuration
+        keepCanceledEvents: KeepCanceledEventsDuration,
+        hasCalendarAccess: Bool
     ) -> String? {
         guard keepCanceledEvents != .forever, self != .pastOrPresent else {
             return nil
@@ -58,7 +59,7 @@ enum PlannerType: String {
             : "the morning of \(formatted)"
 
         return
-            "These canceled events will be deleted \(displayDate). Calendar events will not be deleted."
+            "These canceled events will be deleted \(displayDate).\(hasCalendarAccess ? " Calendar events will not be deleted." : "")"
     }
 
     // MARK: - Helper Variables

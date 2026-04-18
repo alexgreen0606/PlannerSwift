@@ -12,15 +12,12 @@ enum ChecklistItemType: String, Codable {
     case checklist
     case item
 
-    var iconName: String {
+    var systemImageName: String {
         switch self {
         case .folder: return "folder.fill"
         case .checklist: return "list.bullet"
         case .item: return "exclamationmark"
         }
     }
-
-    var childrenLabel: String {
-        self == .checklist ? "items" : "contents"
-    }
+    
 }

@@ -21,6 +21,7 @@ struct PlannerActionMenuView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var plannerManager: ListManager<PlannerEvent>
     @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
 
     @State private var showDeleteCompletedConfirmation = false
@@ -35,21 +36,32 @@ struct PlannerActionMenuView: View {
     }
 
     private var dateLabel: String {
-        planner.datestamp.dateLabel
+        planner.datestamp.proximityFormat(
+            using: [
+                ProximityRule(
+                    proximity: .withinADay,
+                    format: .countdown,
+                    ordinal: true
+                ),
+                ProximityRule(
+                    proximity: .next7Days,
+                    format: .weekday
+                ),
+                ProximityRule(
+                    proximity: .fallback,
+                    format: .dateLabel,
+                    ordinal: true
+                ),
+            ],
+            todaystamp: todaystampWatcher.todaystamp
+        )
     }
 
     private var deleteCompletedEventsConfig: ConfirmationConfig {
         ConfirmationConfig(
             title:
                 "Delete completed \("event".pluralized(from: completedEvents.count)) from \(dateLabel)?",
-            message: {
-                guard calendarStore.accessDenied == false else {
-                    return genericDeleteWarning
-                }
-
-                return
-                    "Calendar events will not be deleted. \(genericDeleteWarning)"
-            }(),
+            message: deleteMessage(for: completedEvents),
             actions: [
                 ConfirmationAction(
                     title:
@@ -63,25 +75,18 @@ struct PlannerActionMenuView: View {
     private var deleteCanceledEventsConfig: ConfirmationConfig {
         ConfirmationConfig(
             title:
-                "Delete canceled \("event".pluralized(from: completedEvents.count)) from \(dateLabel)?",
-            message: {
-                guard calendarStore.accessDenied == false else {
-                    return genericDeleteWarning
-                }
-
-                return
-                    "Calendar events will not be deleted. \(genericDeleteWarning)"
-            }(),
+                "Delete canceled \("event".pluralized(from: canceledEvents.count)) from \(dateLabel)?",
+            message: deleteMessage(for: canceledEvents),
             actions: [
                 ConfirmationAction(
                     title:
-                        "Delete \(completedEvents.count) \("Event".pluralized(from: completedEvents.count))",
+                        "Delete \(canceledEvents.count) \("Event".pluralized(from: canceledEvents.count))",
                     handler: deleteCanceledEvents
                 )
             ]
         )
     }
-    
+
     // MARK: - Body
 
     var body: some View {
@@ -215,6 +220,19 @@ struct PlannerActionMenuView: View {
         // Note: Don't pass the EKEventStore here.
         // Calendar events are meant to survive mass-deletion so users can look back on their calendar.
         modelContext.deletePlannerEvents(canceledEvents, in: planner)
+    }
+
+    private func deleteMessage(for events: [PlannerEvent]) -> String {
+        let hasCalendarEvent = events.contains(where: {
+            $0.calendarEvent != nil
+        })
+
+        guard hasCalendarEvent else {
+            return genericDeleteWarning
+        }
+
+        return
+            "Associated calendar events will not be deleted. \(genericDeleteWarning)"
     }
 
 }

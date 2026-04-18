@@ -87,7 +87,8 @@ struct PlannerListView: View {
             checkedFooter: plannerType.checkedFooter(
                 for: planner.datestamp,
                 todaystamp: todaystampWatcher.todaystamp,
-                keepCanceledEvents: keepCanceledEventsDuration
+                keepCanceledEvents: keepCanceledEventsDuration,
+                hasCalendarAccess: calendarStore.accessDenied == false
             )
         )
         .task(id: planner.datestamp) {

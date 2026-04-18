@@ -86,7 +86,7 @@ struct CurrentFolderListView: View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading) {
                 Image(
-                    systemName: item.type.iconName
+                    systemName: item.type.systemImageName
                 )
                 .foregroundColor(item.color.swiftUIColor)
                 .imageScale(.medium)

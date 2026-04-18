@@ -49,9 +49,10 @@ func bulkDeletePlannerEventConfig(
             let hasCalendarEvent = events.contains(where: {
                 $0.calendarEvent != nil
             })
+            
             if hasCalendarEvent {
                 return
-                    "Calendar events will also be deleted. This cannot be undone."
+                    "Associated calendar events will also be deleted. \(genericDeleteWarning)"
             }
 
             return genericDeleteWarning

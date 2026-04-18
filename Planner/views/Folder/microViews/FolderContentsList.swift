@@ -95,7 +95,7 @@ struct FolderContentsListView: View {
 
     private func itemIcon(for item: ChecklistItem) -> some View {
         Image(
-            systemName: item.type.iconName
+            systemName: item.type.systemImageName
         )
         .foregroundColor(item.color.swiftUIColor)
         .imageScale(.medium)

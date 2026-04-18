@@ -88,7 +88,7 @@ struct TransferChecklistItemsFormView: View {
                 )
             }
             .navigationTitle(
-                "Transfer \(destinationType.childrenLabel.capitalized)"
+                "Transfer Items"
             )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -153,7 +153,7 @@ struct TransferChecklistItemsFormView: View {
             title: transferCount,
             subtitle: source.title,
             iconConfig: IconConfig(
-                name: source.type.iconName,
+                name: source.type.systemImageName,
                 primaryColor: source.color.swiftUIColor.opacity(0.8)
             )
         )
@@ -164,7 +164,7 @@ struct TransferChecklistItemsFormView: View {
         TransferDestinationIndicatorView(
             title: selectedItem.title,
             iconConfig: IconConfig(
-                name: selectedItem.type.iconName,
+                name: selectedItem.type.systemImageName,
                 primaryColor: selectedItem.color.swiftUIColor
             )
         )
