@@ -159,21 +159,13 @@ struct RoutineEventFormView: View {
                         showDeleteConfirmation = true
                     }
                 )
-                .confirmationDialog(
-                    "Delete recurring event?",
-                    isPresented: $showDeleteConfirmation,
-                    titleVisibility: .visible
-                ) {
-                    Button(
-                        "Confirm",
-                        role: .destructive,
-                        action: deleteEvent
-                    )
-                } message: {
-                    Text(
-                        "This will delete all occurrences of the event from your routines and planner. This action cannot be undone."
-                    )
-                }
+                .withConfirmation(
+                    deleteRoutineEventConfig(
+                        event: sourceRoutineEvent!,
+                        delete: deleteEvent
+                    ),
+                    isPresented: $showDeleteConfirmation
+                )
             }
             .sharedBackgroundVisibility(.hidden)
         }
@@ -266,8 +258,10 @@ struct RoutineEventFormView: View {
             sourceRoutineEvent: sourceRoutineEvent,
             sortedSourceEvents: sortedSourceEvents
         )
-        
-        let affectedWeekdays = (sourceRoutineEvent?.weekdays ?? []).union(draftRoutineEvent.daysOfWeek)
+
+        let affectedWeekdays = (sourceRoutineEvent?.weekdays ?? []).union(
+            draftRoutineEvent.daysOfWeek
+        )
         plannerBuildManager.invalidateRoutineDays(affectedWeekdays)
 
         dismiss()

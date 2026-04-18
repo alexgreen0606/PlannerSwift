@@ -35,26 +35,15 @@ struct SelectedRoutineEventActionsView: View {
         }
         .tint(Color.label)
         .disabled(routineManager.selectedItemIds.isEmpty)
-        .confirmationDialog(
-            "Delete selected recurring events?",
-            isPresented: $showDeleteConfirmation,
-            titleVisibility: .visible,
-        ) {
-            Button(
-                "Remove from \(weekday.label)s",
-                role: .confirm,
-                action: deleteSelectedEventsFromWeekday
-            )
-            Button(
-                "Delete everywhere",
-                role: .destructive,
-                action: deleteSelectedEventsEverywhere
-            )
-        } message: {
-            Text(
-                "Future occurrences will be deleted from your planner. Removing from \(weekday.label) will not affect other days. This action cannot be undone."
-            )
-        }
+        .withConfirmation(
+            bulkRemoveRoutineEventFromWeekdayConfig(
+                events: routineManager.selectedItems,
+                weekday: weekday,
+                remove: deleteSelectedEventsFromWeekday,
+                delete: deleteSelectedEventsEverywhere
+            ),
+            isPresented: $showDeleteConfirmation
+        )
     }
 
     private var transferSelectedButton: some View {

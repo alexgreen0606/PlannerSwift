@@ -81,7 +81,7 @@ struct RoutineView: View {
                         }
                     }
                 )
-                .navigationTitle(weekday.label)
+                .navigationTitle("\(weekday.label) Routine")
                 .navigationSubtitle("Recurring Events")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -292,71 +292,32 @@ struct RoutineView: View {
     }
 
     private func eventToggleConfig(_ event: RoutineEvent) -> ToggleConfig? {
-        if event.sortDateMap.keys.count > 1 {
-            ToggleConfig(
-                iconConfig: IconConfig(name: ""),
-                uncheckedIconConfig: IconConfig(
-                    name: "minus.circle",
-                    primaryColor: Color.red,
-                    secondaryColor: Color.tertiary
-                ),
-                confirmation: ConfirmationConfig(
-                    title: "Delete recurring event?",
-                    message:
-                        "Future occurrences will be deleted from your planner. Removing from \(weekday.label) will not affect other days. This action cannot be undone.",
-                    actions: [
-                        ConfirmationAction(
-                            title: "Remove from \(weekday.label)s",
-                            role: .confirm,
-                            handler: {
-                                deleteEventFromWeekday(event)
-                            }
-                        ),
-                        ConfirmationAction(
-                            title: "Delete everywhere",
-                            handler: {
-                                deleteEventEverywhere(event)
-                            }
-                        ),
-                    ]
-                ),
-                onClick: {
-                    if routineManager.focusedId == event.stableId {
-                        routineManager.focusedId = nil
-                    }
+        ToggleConfig(
+            iconConfig: IconConfig(name: ""),
+            uncheckedIconConfig: IconConfig(
+                name: "minus.circle",
+                primaryColor: Color.red,
+                secondaryColor: Color.tertiary
+            ),
+            confirmation: removeRoutineEventFromWeekdayConfig(
+                event: event,
+                weekday: weekday,
+                remove: {
+                    removeEventFromWeekday(event)
+                },
+                delete: {
+                    deleteEventEverywhere(event)
                 }
-            )
-        } else {
-            ToggleConfig(
-                iconConfig: IconConfig(name: ""),
-                uncheckedIconConfig: IconConfig(
-                    name: "minus.circle",
-                    primaryColor: Color.red,
-                    secondaryColor: Color.tertiary
-                ),
-                confirmation: ConfirmationConfig(
-                    title: "Delete recurring event?",
-                    message:
-                        "Future occurrences will be deleted from your planner. This action cannot be undone.",
-                    actions: [
-                        ConfirmationAction(
-                            title: "Delete",
-                            handler: {
-                                deleteEventEverywhere(event)
-                            }
-                        )
-                    ]
-                ),
-                onClick: {
-                    if routineManager.focusedId == event.stableId {
-                        routineManager.focusedId = nil
-                    }
+            ),
+            onClick: {
+                if routineManager.focusedId == event.stableId {
+                    routineManager.focusedId = nil
                 }
-            )
-        }
+            }
+        )
     }
 
-    private func deleteEventFromWeekday(_ event: RoutineEvent) {
+    private func removeEventFromWeekday(_ event: RoutineEvent) {
         modelContext.deleteRoutineEvents(
             [event],
             from: weekday,

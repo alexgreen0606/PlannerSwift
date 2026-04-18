@@ -7,9 +7,9 @@
 
 import SwiftUI
 
-// Clean
+// MARK: - Single Delete
 
-func singleDeletePlannerEventConfig(
+func deletePlannerEventConfig(
     event: PlannerEvent,
     delete: @escaping () -> Void
 ) -> ConfirmationConfig {
@@ -31,13 +31,15 @@ func singleDeletePlannerEventConfig(
     )
 }
 
+// MARK: - Bulk Delete
+
 func bulkDeletePlannerEventConfig(
     events: [PlannerEvent],
     delete: @escaping () -> Void
 ) -> ConfirmationConfig {
     let count = events.count
     if count == 1 {
-        return singleDeletePlannerEventConfig(
+        return deletePlannerEventConfig(
             event: events.first!,
             delete: delete
         )
@@ -49,7 +51,7 @@ func bulkDeletePlannerEventConfig(
             let hasCalendarEvent = events.contains(where: {
                 $0.calendarEvent != nil
             })
-            
+
             if hasCalendarEvent {
                 return
                     "Associated calendar events will also be deleted. \(genericDeleteWarning)"
@@ -65,4 +67,61 @@ func bulkDeletePlannerEventConfig(
             )
         ]
     )
+}
+
+// MARK: - Completed Bulk Delete
+
+func bulkDeleteCompletedPlannerEventConfig(
+    completedEvents: [PlannerEvent],
+    dateLabel: String,
+    delete: @escaping () -> Void
+) -> ConfirmationConfig {
+    ConfirmationConfig(
+        title:
+            "Delete completed \("event".pluralized(from: completedEvents.count)) from \(dateLabel)?",
+        message: deleteMessage(for: completedEvents),
+        actions: [
+            ConfirmationAction(
+                title:
+                    "Delete \(completedEvents.count) \("Event".pluralized(from: completedEvents.count))",
+                handler: delete
+            )
+        ]
+    )
+}
+
+// MARK: - Canceled Bulk Delete
+
+func deleteCanceledEventsConfig(
+    canceledEvents: [PlannerEvent],
+    dateLabel: String,
+    delete: @escaping () -> Void
+) -> ConfirmationConfig {
+    ConfirmationConfig(
+        title:
+            "Delete canceled \("event".pluralized(from: canceledEvents.count)) from \(dateLabel)?",
+        message: deleteMessage(for: canceledEvents),
+        actions: [
+            ConfirmationAction(
+                title:
+                    "Delete \(canceledEvents.count) \("Event".pluralized(from: canceledEvents.count))",
+                handler: delete
+            )
+        ]
+    )
+}
+
+// MARK: - Helpers
+
+private func deleteMessage(for events: [PlannerEvent]) -> String {
+    let hasCalendarEvent = events.contains(where: {
+        $0.calendarEvent != nil
+    })
+
+    guard hasCalendarEvent else {
+        return genericDeleteWarning
+    }
+
+    return
+        "Associated calendar events will not be deleted. \(genericDeleteWarning)"
 }

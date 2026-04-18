@@ -49,7 +49,7 @@ struct ChecklistView: View {
             && !visibleItems.isEmpty
     }
 
-    private var hasCheckedItem: Bool {
+    private var completedItemExists: Bool {
         sortedItems.contains(where: \.isCompleted)
     }
 
@@ -144,9 +144,9 @@ struct ChecklistView: View {
         ToolbarItem(placement: .topBarTrailing) {
             if !listManager.isSelectMode {
                 ChecklistActionMenu(
-                    isEditSheetOpen: $showEditSheet,
+                    showEditSheet: $showEditSheet,
                     checklist: checklist,
-                    hasCheckedItem: hasCheckedItem,
+                    completedItemExists: completedItemExists,
                     completedItems: sortedCheckedItems,
                     visibleItems: visibleItems
                 )

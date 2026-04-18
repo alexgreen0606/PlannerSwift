@@ -21,8 +21,8 @@ struct FolderActionMenuView: View {
 
     @State private var showDeleteConfirmation = false
 
-    private var folderDeleteConfirmation: ConfirmationConfig {
-        singleDeleteChecklistItemConfig(
+    private var deleteFolderConfig: ConfirmationConfig {
+        deleteChecklistItemConfig(
             item: folder,
             delete: deleteEntireFolder
         )
@@ -37,7 +37,7 @@ struct FolderActionMenuView: View {
 
         // MARK: Delete Folder Confirmation
         .withConfirmation(
-            folderDeleteConfirmation,
+            deleteFolderConfig,
             isPresented: $showDeleteConfirmation
         )
     }

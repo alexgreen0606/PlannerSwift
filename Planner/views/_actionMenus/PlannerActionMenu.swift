@@ -57,33 +57,19 @@ struct PlannerActionMenuView: View {
         )
     }
 
-    private var deleteCompletedEventsConfig: ConfirmationConfig {
-        ConfirmationConfig(
-            title:
-                "Delete completed \("event".pluralized(from: completedEvents.count)) from \(dateLabel)?",
-            message: deleteMessage(for: completedEvents),
-            actions: [
-                ConfirmationAction(
-                    title:
-                        "Delete \(completedEvents.count) \("Event".pluralized(from: completedEvents.count))",
-                    handler: deleteCompletedEvents
-                )
-            ]
+    private var deleteCompletedConfig: ConfirmationConfig {
+        bulkDeleteCompletedPlannerEventConfig(
+            completedEvents: completedEvents,
+            dateLabel: dateLabel,
+            delete: deleteCompletedEvents
         )
     }
 
-    private var deleteCanceledEventsConfig: ConfirmationConfig {
-        ConfirmationConfig(
-            title:
-                "Delete canceled \("event".pluralized(from: canceledEvents.count)) from \(dateLabel)?",
-            message: deleteMessage(for: canceledEvents),
-            actions: [
-                ConfirmationAction(
-                    title:
-                        "Delete \(canceledEvents.count) \("Event".pluralized(from: canceledEvents.count))",
-                    handler: deleteCanceledEvents
-                )
-            ]
+    private var deleteCanceledConfig: ConfirmationConfig {
+        deleteCanceledEventsConfig(
+            canceledEvents: canceledEvents,
+            dateLabel: dateLabel,
+            delete: deleteCompletedEvents
         )
     }
 
@@ -100,13 +86,13 @@ struct PlannerActionMenuView: View {
 
         // MARK: Delete Completed Confirmation
         .withConfirmation(
-            deleteCompletedEventsConfig,
+            deleteCompletedConfig,
             isPresented: $showDeleteCompletedConfirmation
         )
 
         // MARK: Delete Canceled Confirmation
         .withConfirmation(
-            deleteCanceledEventsConfig,
+            deleteCanceledConfig,
             isPresented: $showDeleteCanceledConfirmation
         )
     }
@@ -181,6 +167,8 @@ struct PlannerActionMenuView: View {
         }
         .disabled(visibleEvents.isEmpty)
     }
+    
+    // MARK: Delete Menu
 
     private var deleteActionsMenu: some View {
         Menu {
@@ -220,19 +208,6 @@ struct PlannerActionMenuView: View {
         // Note: Don't pass the EKEventStore here.
         // Calendar events are meant to survive mass-deletion so users can look back on their calendar.
         modelContext.deletePlannerEvents(canceledEvents, in: planner)
-    }
-
-    private func deleteMessage(for events: [PlannerEvent]) -> String {
-        let hasCalendarEvent = events.contains(where: {
-            $0.calendarEvent != nil
-        })
-
-        guard hasCalendarEvent else {
-            return genericDeleteWarning
-        }
-
-        return
-            "Associated calendar events will not be deleted. \(genericDeleteWarning)"
     }
 
 }

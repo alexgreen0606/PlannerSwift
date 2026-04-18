@@ -11,10 +11,10 @@ import SwiftUI
 // Clean
 
 struct ChecklistActionMenu: View {
-    @Binding var isEditSheetOpen: Bool
+    @Binding var showEditSheet: Bool
     let checklist: ChecklistItem
-    let hasCheckedItem: Bool
-    let completedItems: [ChecklistItem]
+    let completedItemExists: Bool
+    let completedItems: [ChecklistItem] // TODO: these aren't raw. They are based on UI
     let visibleItems: [ChecklistItem]
 
     @Environment(\.modelContext) private var modelContext
@@ -24,24 +24,16 @@ struct ChecklistActionMenu: View {
     @State private var showDeleteCompletedConfirmation = false
     @State private var showDeleteChecklistConfirmation = false
 
-    private var deleteCompletedConfirmationConfig: ConfirmationConfig {
-        ConfirmationConfig(
-            title:
-                "Delete completed \("item".pluralized(from: completedItems.count)) from \"\(checklist.title)\"?",
-            message:
-                "\(completedItems.count) \("item".pluralized(from: completedItems.count)) will be deleted from this checklist. \(genericDeleteWarning)",
-            actions: [
-                ConfirmationAction(
-                    title:
-                        "Delete \(completedItems.count) \("Item".pluralized(from: completedItems.count))",
-                    handler: deleteCompletedItems
-                )
-            ]
+    private var deleteCompletedConfig: ConfirmationConfig {
+        bulkDeleteCompletedChecklistItemConfig(
+            completedItems: completedItems,
+            checklist: checklist,
+            delete: deleteCompletedItems
         )
     }
 
-    private var checklistDeleteConfirmation: ConfirmationConfig {
-        singleDeleteChecklistItemConfig(
+    private var deleteChecklistConfig: ConfirmationConfig {
+        deleteChecklistItemConfig(
             item: checklist,
             delete: deleteEntireChecklist
         )
@@ -59,13 +51,13 @@ struct ChecklistActionMenu: View {
 
         // MARK: Delete Completed Confirmation
         .withConfirmation(
-            deleteCompletedConfirmationConfig,
+            deleteCompletedConfig,
             isPresented: $showDeleteCompletedConfirmation
         )
 
         // MARK: Delete Checklist Confirmation
         .withConfirmation(
-            checklistDeleteConfirmation,
+            deleteChecklistConfig,
             isPresented: $showDeleteChecklistConfirmation
         )
     }
@@ -88,7 +80,7 @@ struct ChecklistActionMenu: View {
 
     private var editChecklistButton: some View {
         Button {
-            isEditSheetOpen = true
+            showEditSheet = true
         } label: {
             Label(
                 "Edit Checklist",
@@ -127,7 +119,7 @@ struct ChecklistActionMenu: View {
         } label: {
             Text("Delete Completed")
         }
-        .disabled(!hasCheckedItem)
+        .disabled(!completedItemExists)
     }
 
     private var deleteListButton: some View {
