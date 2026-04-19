@@ -53,16 +53,6 @@ struct ChecklistView: View {
         sortedItems.contains(where: \.isCompleted)
     }
 
-    private var subtitle: String {
-        if listManager.isSelectMode {
-            let count = listManager.selectedItems.count
-            return
-                "\(count == 0 ? "No" : String(count)) item\(count == 1 ? "" : "s") selected"
-        }
-
-        return checklist.path
-    }
-
     var body: some View {
         NavigationStack {
             ScrollViewReader { scrollProxy in
@@ -81,7 +71,7 @@ struct ChecklistView: View {
                     moveItem: moveItem
                 )
                 .navigationTitle(checklist.title)
-                .navigationSubtitle(subtitle)
+                .navigationSubtitle(checklist.path)
                 .toolbar {
                     topLeadingToolbar
                     topTrailingToolbar

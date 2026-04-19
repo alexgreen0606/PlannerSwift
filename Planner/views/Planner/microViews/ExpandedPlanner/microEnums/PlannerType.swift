@@ -23,7 +23,7 @@ enum PlannerType: String {
     }
 
     func toggleCheckedLabel(_ showChecked: Bool) -> String {
-        showChecked ? "Hide \(checkedLabel)" : "Show \(checkedLabel)"
+        showChecked ? "Hide \(checkedLabel.capitalized)" : "Show \(checkedLabel.capitalized)"
     }
 
     func checkedFooter(

@@ -79,8 +79,8 @@ struct PlannerActionMenuView: View {
 
     var body: some View {
         Menu("Planner Action Menu", systemImage: "ellipsis") {
-            selectEventsButton
             showCheckedToggle
+            selectEventsButton
             editLocationButton
             toggleRoutineExclusionButton
             deleteActionsMenu
@@ -100,46 +100,6 @@ struct PlannerActionMenuView: View {
     }
 
     // MARK: - View Builders
-
-    private var toggleRoutineExclusionButton: some View {
-        Button(
-            action: {
-                modelContext.togglePlannerRoutineExclusion(
-                    for: planner,
-                    plannerEvents: plannerEvents
-                )
-
-                if !planner.finalExcludeRoutine,
-                    let weekday = Weekday.from(planner.datestamp.weekday)
-                {
-                    plannerBuildManager.invalidateRoutineDays([weekday])
-                    plannerBuildManager.beginRebuild()
-                }
-            },
-            label: {
-                Label(
-                    planner.finalExcludeRoutine
-                        ? "Include Routine" : "Exclude Routine",
-                    systemImage: planner.finalExcludeRoutine
-                        ? "repeat" : "repeat.badge.xmark",
-                )
-            }
-        )
-    }
-
-    private var editLocationButton: some View {
-        Button(
-            action: {
-                showLocationSheet = true
-            },
-            label: {
-                Label(
-                    "Edit Location",
-                    systemImage: "mappin.and.ellipse"
-                )
-            }
-        )
-    }
 
     private var showCheckedToggle: some View {
         Button(
@@ -169,7 +129,47 @@ struct PlannerActionMenuView: View {
         }
         .disabled(visibleEvents.isEmpty)
     }
-    
+
+    private var editLocationButton: some View {
+        Button(
+            action: {
+                showLocationSheet = true
+            },
+            label: {
+                Label(
+                    "Edit Location",
+                    systemImage: "mappin.and.ellipse"
+                )
+            }
+        )
+    }
+
+    private var toggleRoutineExclusionButton: some View {
+        Button(
+            action: {
+                modelContext.togglePlannerRoutineExclusion(
+                    for: planner,
+                    plannerEvents: plannerEvents
+                )
+
+                if !planner.finalExcludeRoutine,
+                    let weekday = Weekday.from(planner.datestamp.weekday)
+                {
+                    plannerBuildManager.invalidateRoutineDays([weekday])
+                    plannerBuildManager.beginRebuild()
+                }
+            },
+            label: {
+                Label(
+                    planner.finalExcludeRoutine
+                        ? "Include Routine" : "Exclude Routine",
+                    systemImage: planner.finalExcludeRoutine
+                        ? "repeat" : "repeat.badge.xmark",
+                )
+            }
+        )
+    }
+
     // MARK: Delete Menu
 
     private var deleteActionsMenu: some View {

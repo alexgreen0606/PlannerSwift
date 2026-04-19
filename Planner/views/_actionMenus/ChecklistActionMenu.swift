@@ -43,8 +43,8 @@ struct ChecklistActionMenu: View {
 
     var body: some View {
         Menu("Action Menu", systemImage: "ellipsis") {
-            showCompletedToggle
             editChecklistButton
+            showCompletedToggle
             selectItemsButton
             deleteActionMenu
         }
@@ -63,7 +63,18 @@ struct ChecklistActionMenu: View {
     }
 
     // MARK: - View Builders
-
+    
+    private var editChecklistButton: some View {
+        Button {
+            showEditSheet = true
+        } label: {
+            Label(
+                "Edit Checklist",
+                systemImage: "pencil"
+            )
+        }
+    }
+    
     private var showCompletedToggle: some View {
         Button {
             checklist.showCompleted.toggle()
@@ -77,18 +88,7 @@ struct ChecklistActionMenu: View {
             )
         }
     }
-
-    private var editChecklistButton: some View {
-        Button {
-            showEditSheet = true
-        } label: {
-            Label(
-                "Edit Checklist",
-                systemImage: "pencil"
-            )
-        }
-    }
-
+    
     private var selectItemsButton: some View {
         Button {
             listManager.toggleSelectMode()

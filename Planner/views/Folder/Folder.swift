@@ -37,16 +37,6 @@ struct FolderView: View {
         selectManager.selectedItemIds.count == sortedItems.count
     }
 
-    private var navigationSubtitle: String {
-        if selectManager.isSelectMode {
-            let count = selectManager.selectedItems.count
-            return
-                "\(count == 0 ? "No" : String(count)) items selected"
-        }
-
-        return folder.path
-    }
-
     var body: some View {
         ScrollViewReader { scrollProxy in
             FolderContentsListView(
@@ -57,7 +47,7 @@ struct FolderView: View {
                 updateTransferAvailability: updateTransferAvailability
             )
             .navigationTitle(folder.title)
-            .navigationSubtitle(navigationSubtitle)
+            .navigationSubtitle(folder.path)
             .navigationBarBackButtonHidden(true)
             .toolbar {
                 topLeftToolbar

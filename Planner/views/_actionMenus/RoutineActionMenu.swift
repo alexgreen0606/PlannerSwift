@@ -46,7 +46,7 @@ struct RoutineActionMenuView: View {
             routineManager.toggleSelectMode()
         } label: {
             Label(
-                "Select events",
+                "Select Events",
                 systemImage: "checkmark.circle"
             )
         }
@@ -58,7 +58,7 @@ struct RoutineActionMenuView: View {
             showDeleteRoutineConfirmation = true
         } label: {
             Label(
-                "Delete \(weekday.label) Routine",
+                "Delete Routine",
                 systemImage: "trash"
             )
         }
