@@ -27,7 +27,7 @@ struct ChecklistActionMenu: View {
     private var deleteCompletedConfig: ConfirmationConfig {
         bulkDeleteCompletedChecklistItemConfig(
             completedItems: completedItems,
-            checklist: checklist,
+            item: checklist,
             delete: deleteCompletedItems
         )
     }

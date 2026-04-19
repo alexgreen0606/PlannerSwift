@@ -61,6 +61,7 @@ struct PlannerActionMenuView: View {
         bulkDeleteCompletedPlannerEventConfig(
             completedEvents: completedEvents,
             dateLabel: dateLabel,
+            hasCalendarAccess: calendarStore.accessDenied == false,
             delete: deleteCompletedEvents
         )
     }
@@ -69,6 +70,7 @@ struct PlannerActionMenuView: View {
         deleteCanceledEventsConfig(
             canceledEvents: canceledEvents,
             dateLabel: dateLabel,
+            hasCalendarAccess: calendarStore.accessDenied == false,
             delete: deleteCompletedEvents
         )
     }

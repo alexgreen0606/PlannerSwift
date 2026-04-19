@@ -74,23 +74,6 @@ struct TripFormView: View {
         "\(dayCount) day\(dayCount == 1 ? "" : "s")"
     }
 
-    private var cancelMessage: String {
-        guard let sourceTrip else {
-            return ""
-        }
-
-        var message =
-            "Events will not be affected. This action is irreversible."
-
-        if sourceTrip.location != nil {
-            message =
-                "Planner locations will reset to your home location. "
-                + message
-        }
-
-        return message
-    }
-
     private var invalidDayMessage: String? {
         let existing = Set(existingTripDateComponents.compactMap(\.datestamp))
         let draft = Set(draftTrip.dateComponents.compactMap(\.datestamp))
@@ -189,29 +172,20 @@ struct TripFormView: View {
 
     @ToolbarContentBuilder
     private var cancelTripButton: some ToolbarContent {
-        if !isNewTrip {
+        if let sourceTrip {
             ToolbarItem(placement: .bottomBar) {
                 ActionButtonView(
-                    label: "Cancel Trip",
+                    label: "Delete Trip",
                     systemImage: "trash",
                     color: Color.red,
                     onTap: {
                         showDeleteConfirmation = true
                     }
                 )
-                .confirmationDialog(
-                    "Cancel this trip?",
-                    isPresented: $showDeleteConfirmation,
-                    titleVisibility: .visible
-                ) {
-                    Button(
-                        "Confirm",
-                        role: .destructive,
-                        action: cancelTrip
-                    )
-                } message: {
-                    Text(cancelMessage)
-                }
+                .withConfirmation(
+                    deleteTripConfig(trip: sourceTrip, delete: deleteTrip),
+                    isPresented: $showDeleteConfirmation
+                )
             }
             .sharedBackgroundVisibility(.hidden)
         }
@@ -338,7 +312,7 @@ struct TripFormView: View {
         } catch {}
     }
 
-    private func cancelTrip() {
+    private func deleteTrip() {
         dismiss()
         if let trip = sourceTrip {
             modelContext.safeDelete(trip)

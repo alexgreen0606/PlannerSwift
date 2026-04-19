@@ -162,6 +162,7 @@ struct RoutineEventFormView: View {
                 .withConfirmation(
                     deleteRoutineEventConfig(
                         event: sourceRoutineEvent!,
+                        inForm: true,
                         delete: deleteEvent
                     ),
                     isPresented: $showDeleteConfirmation

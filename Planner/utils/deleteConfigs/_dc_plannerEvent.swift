@@ -1,5 +1,5 @@
 //
-//  bulkDeletePlannerEventConfig.swift
+//  _dc_plannerEvent.swift
 //  Planner
 //
 //  Created by Alex Green on 4/17/26.
@@ -11,10 +11,12 @@ import SwiftUI
 
 func deletePlannerEventConfig(
     event: PlannerEvent,
+    inForm: Bool = false,
     delete: @escaping () -> Void
 ) -> ConfirmationConfig {
     ConfirmationConfig(
-        title: "Delete event \"\(event.title)\"?",
+        title:
+            "Delete\(inForm ? " this" : "") event\(inForm ? "" : " \"\(event.title)\"")?",
         message: {
             if event.calendarEvent == nil {
                 return genericDeleteWarning
@@ -31,7 +33,7 @@ func deletePlannerEventConfig(
     )
 }
 
-// MARK: - Bulk Delete
+// MARK: - Bulk Delete Selections
 
 func bulkDeletePlannerEventConfig(
     events: [PlannerEvent],
@@ -69,17 +71,18 @@ func bulkDeletePlannerEventConfig(
     )
 }
 
-// MARK: - Completed Bulk Delete
+// MARK: - Bulk Delete Category: Completed
 
 func bulkDeleteCompletedPlannerEventConfig(
     completedEvents: [PlannerEvent],
     dateLabel: String,
+    hasCalendarAccess: Bool,
     delete: @escaping () -> Void
 ) -> ConfirmationConfig {
     ConfirmationConfig(
         title:
-            "Delete completed \("event".pluralized(from: completedEvents.count)) from \(dateLabel)?",
-        message: deleteMessage(for: completedEvents),
+            "Delete completed events from \(dateLabel)?",
+        message: deleteCategoryMessage(hasCalendarAccess: hasCalendarAccess),
         actions: [
             ConfirmationAction(
                 title:
@@ -90,17 +93,18 @@ func bulkDeleteCompletedPlannerEventConfig(
     )
 }
 
-// MARK: - Canceled Bulk Delete
+// MARK: - Bulk Delete Category: Canceled
 
 func deleteCanceledEventsConfig(
     canceledEvents: [PlannerEvent],
     dateLabel: String,
+    hasCalendarAccess: Bool,
     delete: @escaping () -> Void
 ) -> ConfirmationConfig {
     ConfirmationConfig(
         title:
-            "Delete canceled \("event".pluralized(from: canceledEvents.count)) from \(dateLabel)?",
-        message: deleteMessage(for: canceledEvents),
+            "Delete canceled events from \(dateLabel)?",
+        message: deleteCategoryMessage(hasCalendarAccess: hasCalendarAccess),
         actions: [
             ConfirmationAction(
                 title:
@@ -113,12 +117,10 @@ func deleteCanceledEventsConfig(
 
 // MARK: - Helpers
 
-private func deleteMessage(for events: [PlannerEvent]) -> String {
-    let hasCalendarEvent = events.contains(where: {
-        $0.calendarEvent != nil
-    })
-
-    guard hasCalendarEvent else {
+private func deleteCategoryMessage(
+    hasCalendarAccess: Bool
+) -> String {
+    guard hasCalendarAccess else {
         return genericDeleteWarning
     }
 

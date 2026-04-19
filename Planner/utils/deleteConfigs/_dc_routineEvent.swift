@@ -11,10 +11,11 @@ import SwiftUI
 
 func deleteRoutineEventConfig(
     event: RoutineEvent,
+    inForm: Bool = false,
     delete: @escaping () -> Void
 ) -> ConfirmationConfig {
     ConfirmationConfig(
-        title: "Delete \"\(event.title)\"?",
+        title: "Delete\(inForm ? " this" : "") recurring event\(inForm ? "" : " \"\(event.title)\"")?",
         message:
             "Associated planner events will be deleted. \(genericDeleteWarning)",
         actions: [
@@ -82,12 +83,12 @@ func bulkRemoveRoutineEventFromWeekdayConfig(
         actions: [
             ConfirmationAction(
                 title:
-                    "Remove Events From \(weekday.label)s",
+                    "Remove \(count) Recurring Events From \(weekday.label)s",
                 role: .confirm,
                 handler: remove
             ),
             ConfirmationAction(
-                title: "Delete Events Everywhere",
+                title: "Delete \(count) Recurring Events Everywhere",
                 handler: delete
             ),
         ]

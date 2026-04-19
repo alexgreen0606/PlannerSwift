@@ -15,15 +15,18 @@ struct ChecklistItemFormView: View {
     private let sourceItem: ChecklistItem?
     private let parent: ChecklistItem?
     private let onSave: ((UUID?) -> Void)?
+    private let onDelete: (() -> Void)?
 
     init(
         item: ChecklistItem? = nil,
         parent: ChecklistItem?,
-        onSave: ((UUID?) -> Void)? = nil
+        onSave: ((UUID?) -> Void)? = nil,
+        onDelete: (() -> Void)? = nil
     ) {
         self.sourceItem = item
         self.parent = parent
         self.onSave = onSave
+        self.onDelete = onDelete
 
         if let item {
             _draftChecklistItem = State(
@@ -48,11 +51,10 @@ struct ChecklistItemFormView: View {
 
     @State private var draftChecklistItem: ChecklistItem
     @State private var hasTitleAutoFocused = false
+    @State private var hasAutoFocused = false
+    @State private var showDeleteConfirmation = false
 
     @FocusState private var isTitleFocused: Bool
-    @State private var hasAutoFocused = false
-
-    private var isEditForm: Bool { sourceItem != nil }
 
     private var canSave: Bool {
         !draftChecklistItem.title.isEmpty
@@ -115,9 +117,10 @@ struct ChecklistItemFormView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 submitButton
+                deleteButton
             }
         }
-        .presentationDetents([.height(isEditForm ? 204 : 260)])
+        .presentationDetents([.height(260)])
         .presentationBackground(.clear)
     }
 
@@ -131,6 +134,35 @@ struct ChecklistItemFormView: View {
                         ? Color.label : draftChecklistItem.color.swiftUIColor
                 )
                 .disabled(!canSave)
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var deleteButton: some ToolbarContent {
+        if let sourceItem {
+            ToolbarItem(placement: .bottomBar) {
+                ActionButtonView(
+                    label: "Delete \(sourceItem.type.rawValue.capitalized)",
+                    systemImage: "trash",
+                    color: Color.red,
+                    onTap: {
+                        showDeleteConfirmation = true
+                    }
+                )
+                .withConfirmation(
+                    deleteChecklistItemConfig(
+                        item: sourceItem,
+                        inForm: true,
+                        delete: {
+                            modelContext.safeDelete(sourceItem)
+                            dismiss()
+                            onDelete?()
+                        }
+                    ),
+                    isPresented: $showDeleteConfirmation
+                )
+            }
+            .sharedBackgroundVisibility(.hidden)
         }
     }
 

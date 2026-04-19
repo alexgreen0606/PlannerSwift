@@ -148,7 +148,7 @@ struct PlannerEventFormView: View {
 
     @ToolbarContentBuilder
     private var deleteButton: some ToolbarContent {
-        if !isCreateForm {
+        if let sourcePlannerEvent {
             ToolbarItem(placement: .bottomBar) {
                 ActionButtonView(
                     label: "Delete Event",
@@ -158,21 +158,14 @@ struct PlannerEventFormView: View {
                         showDeleteConfirmation = true
                     }
                 )
-                .confirmationDialog(
-                    "Delete this event?",
-                    isPresented: $showDeleteConfirmation,
-                    titleVisibility: .visible
-                ) {
-                    Button(
-                        "Confirm",
-                        role: .destructive,
-                        action: deleteEvent
-                    )
-                } message: {
-                    Text(
-                        "This action is irreversible."
-                    )
-                }
+                .withConfirmation(
+                    deletePlannerEventConfig(
+                        event: sourcePlannerEvent,
+                        inForm: true,
+                        delete: deleteEvent
+                    ),
+                    isPresented: $showDeleteConfirmation
+                )
             }
             .sharedBackgroundVisibility(.hidden)
         }

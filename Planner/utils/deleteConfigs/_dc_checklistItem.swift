@@ -11,10 +11,12 @@ import SwiftUI
 
 func deleteChecklistItemConfig(
     item: ChecklistItem,
+    inForm: Bool = false,
     delete: @escaping () -> Void
 ) -> ConfirmationConfig {
     ConfirmationConfig(
-        title: "Delete \(item.type.rawValue) \"\(item.title)\"?",
+        title:
+            "Delete\(inForm ? " this" : "") \(item.type.rawValue)\(inForm ? "" : " \"\(item.title)\"")?",
         message: {
             if item.safeItems.isEmpty {
                 return genericDeleteWarning
@@ -32,7 +34,7 @@ func deleteChecklistItemConfig(
     )
 }
 
-// MARK: - Bulk Delete
+// MARK: - Bulk Delete Selections
 
 func bulkDeleteChecklistItemConfig(
     items: [ChecklistItem],
@@ -49,8 +51,14 @@ func bulkDeleteChecklistItemConfig(
     let childType = checklistItemsType(items)
     return ConfirmationConfig(
         title: "Delete \(count) \(childType.capitalized)s?",
-        message:
-            "Contents within these \(childType)s will also be deleted. \(genericDeleteWarning)",
+        message: {
+            guard items.contains(where: { !$0.safeItems.isEmpty }) else {
+                return genericDeleteWarning
+            }
+
+            return
+                "Contents within these \(childType)s will also be deleted. \(genericDeleteWarning)"
+        }(),
         actions: [
             ConfirmationAction(
                 title:
@@ -61,18 +69,17 @@ func bulkDeleteChecklistItemConfig(
     )
 }
 
-// MARK: - Completed Bulk Delete
+// MARK: - Bulk Delete Category: Completed
 
 func bulkDeleteCompletedChecklistItemConfig(
     completedItems: [ChecklistItem],
-    checklist: ChecklistItem,
+    item: ChecklistItem,
     delete: @escaping () -> Void
 ) -> ConfirmationConfig {
     ConfirmationConfig(
         title:
-            "Delete completed \("item".pluralized(from: completedItems.count)) from \"\(checklist.title)\"?",
-        message:
-            "\(completedItems.count) \("item".pluralized(from: completedItems.count)) will be deleted from this checklist. \(genericDeleteWarning)",
+            "Delete completed items from \"\(item.title)\"?",
+        message: genericDeleteWarning,
         actions: [
             ConfirmationAction(
                 title:

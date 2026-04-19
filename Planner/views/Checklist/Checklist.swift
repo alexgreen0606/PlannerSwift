@@ -105,7 +105,13 @@ struct ChecklistView: View {
         // Edit Form
         .sheet(isPresented: $showEditSheet) {
             if let parent = checklist.parent {
-                ChecklistItemFormView(item: checklist, parent: parent)
+                ChecklistItemFormView(
+                    item: checklist,
+                    parent: parent,
+                    onDelete: {
+                        dismiss()
+                    }
+                )
             }
         }
 
