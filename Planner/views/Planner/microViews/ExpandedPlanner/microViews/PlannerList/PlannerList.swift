@@ -249,6 +249,7 @@ struct PlannerListView: View {
     private func handleEventTitleChange(event: PlannerEvent) {
         modelContext.handlePlannerEventTitleChange(
             event,
+            in: planner,
             plannerDay: plannerDay,
             eventKitStore: calendarStore.ekEventStore,
             defaultLocation: plannerLocation

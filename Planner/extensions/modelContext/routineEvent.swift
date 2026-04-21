@@ -65,6 +65,29 @@ extension ModelContext {
         return []
     }
 
+    @MainActor
+    func loadRoutineEvent(
+        for calendarItemExternalIdentifier: String
+    ) -> RoutineEvent? {
+        do {
+            let matchingRoutineVariants = try self.fetch(
+                FetchDescriptor<RoutineEventVariant>(
+                    predicate: #Predicate<RoutineEventVariant> {
+                        $0.calendarItemExternalIdentifier
+                            == calendarItemExternalIdentifier
+                    }
+                )
+            )
+
+            return matchingRoutineVariants.first?.routineEvent
+
+        } catch {
+            assertionFailure("ERROR loadRoutineEvent: \(error)")
+        }
+
+        return nil
+    }
+
     // MARK: - UPDATE
 
     @MainActor
@@ -133,16 +156,18 @@ extension ModelContext {
 
     @MainActor
     func deleteAllRoutines(
-        ekEventStore: EKEventStore
+        ekEventStore: EKEventStore,
+        plannerBuildManager: PlannerBuildManager
     ) {
         do {
             let allRoutineEvents = try self.fetch(
                 FetchDescriptor<RoutineEvent>()
             )
 
-            self.deleteRoutineEvents(
+            deleteRoutineEvents(
                 allRoutineEvents,
-                ekEventStore: ekEventStore
+                ekEventStore: ekEventStore,
+                plannerBuildManager: plannerBuildManager
             )
 
         } catch {
@@ -153,13 +178,15 @@ extension ModelContext {
     @MainActor
     func deleteRoutineEvents(
         _ events: [RoutineEvent],
-        ekEventStore: EKEventStore
+        ekEventStore: EKEventStore,
+        plannerBuildManager: PlannerBuildManager
     ) {
         for event in events {
-            self.deleteRoutineEvent(
+            deleteRoutineEvent(
                 event,
                 ekEventStore: ekEventStore,
-                skipSave: true
+                skipSave: true,
+                plannerBuildManager: plannerBuildManager
             )
         }
 
@@ -170,7 +197,8 @@ extension ModelContext {
     func deleteRoutineEvents(
         _ events: [RoutineEvent],
         from weekday: Weekday,
-        ekEventStore: EKEventStore
+        ekEventStore: EKEventStore,
+        plannerBuildManager: PlannerBuildManager
     ) {
         for event in events {
             guard event.sortDateMap[weekday] != nil else {
@@ -178,14 +206,16 @@ extension ModelContext {
             }
 
             if event.sortDateMap.keys.count == 1 {
-                self.deleteRoutineEvent(
+                deleteRoutineEvent(
                     event,
                     ekEventStore: ekEventStore,
-                    skipSave: true
+                    skipSave: true,
+                    plannerBuildManager: plannerBuildManager
                 )
                 continue
             }
 
+            // Events will be lazily deleted in this case.
             event.sortDateMap.removeValue(forKey: weekday)
         }
 
@@ -196,7 +226,8 @@ extension ModelContext {
     func deleteRoutineEvent(
         _ routineEvent: RoutineEvent,
         ekEventStore: EKEventStore,
-        skipSave: Bool = false
+        skipSave: Bool = false,
+        plannerBuildManager: PlannerBuildManager
     ) {
         for plannerEvent in routineEvent.safePlannerEvents {
             if plannerEvent.isCompleted {
@@ -209,10 +240,29 @@ extension ModelContext {
                 ekEventStore.deleteEvent(for: calendarItemExternalIdentifier)
             }
 
-            self.delete(plannerEvent)
+            delete(plannerEvent)
         }
 
-        self.delete(routineEvent)
+        var needsCalendarRefresh: Bool = false
+
+        // Delete variant records and any calendar references to this routine event.
+        for variant in routineEvent.safeVariants {
+            if let calendarItemExternalIdentifier = variant
+                .calendarItemExternalIdentifier
+            {
+                ekEventStore.deleteEvent(for: calendarItemExternalIdentifier)
+                needsCalendarRefresh = true
+            }
+
+            delete(variant)
+        }
+
+        delete(routineEvent)
+
+        if needsCalendarRefresh {
+            // Refresh calendar data whenever calendar variants exist.
+            plannerBuildManager.invalidateCalendar()
+        }
 
         if !skipSave {
             self.safeSave("routineEvent.deleteRoutineEvent")

@@ -55,7 +55,8 @@ struct RoutineView: View {
                     deleteItem: { event in
                         modelContext.deleteRoutineEvent(
                             event,
-                            ekEventStore: calendarStore.ekEventStore
+                            ekEventStore: calendarStore.ekEventStore,
+                            plannerBuildManager: plannerBuildManager
                         )
                     },
                     moveItem: moveEvent,
@@ -321,14 +322,16 @@ struct RoutineView: View {
         modelContext.deleteRoutineEvents(
             [event],
             from: weekday,
-            ekEventStore: calendarStore.ekEventStore
+            ekEventStore: calendarStore.ekEventStore,
+            plannerBuildManager: plannerBuildManager
         )
     }
 
     private func deleteEventEverywhere(_ event: RoutineEvent) {
         modelContext.deleteRoutineEvent(
             event,
-            ekEventStore: calendarStore.ekEventStore
+            ekEventStore: calendarStore.ekEventStore,
+            plannerBuildManager: plannerBuildManager
         )
     }
 

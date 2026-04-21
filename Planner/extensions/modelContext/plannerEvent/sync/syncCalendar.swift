@@ -11,10 +11,8 @@ import EventKit
 import SwiftData
 import SwiftDate
 
-// Clean
-
 extension ModelContext {
-
+    
     @MainActor
     func syncCalendar(
         for planner: Planner,
@@ -65,7 +63,7 @@ extension ModelContext {
                     let calendarEvent = existingCalendarEvents[calendarEventId]
                 else {
                     // Calendar event is deleted. Remove this record and continue.
-                    self.deletePlannerEvent(
+                    deletePlannerEvent(
                         plannerEvent,
                         in: planner,
                         skipSave: true
@@ -174,7 +172,7 @@ extension ModelContext {
             calendarEvent.calendar.calendarIdentifier
         ) {
             // Calendar is hidden in settings. Remove this record and continue.
-            self.deletePlannerEventIfExists(
+            deletePlannerEventIfExists(
                 plannerEvent,
                 in: planner,
                 ekEventStore: ekEventStore
@@ -185,7 +183,7 @@ extension ModelContext {
         if calendarEvent.isAllDay {
             // Collect all-day events as planner chips.
             calendarDayData.plannerChipEvents.append(calendarEvent)
-            self.deletePlannerEventIfExists(
+            deletePlannerEventIfExists(
                 plannerEvent,
                 in: planner,
                 ekEventStore: ekEventStore
@@ -201,7 +199,7 @@ extension ModelContext {
 
             if !calendarEvent.startDate.belongsTo(plannerDay) {
                 // Only display the event if it starts during this day.
-                self.deletePlannerEventIfExists(
+                deletePlannerEventIfExists(
                     plannerEvent,
                     in: planner,
                     ekEventStore: ekEventStore

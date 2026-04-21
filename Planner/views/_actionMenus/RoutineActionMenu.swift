@@ -17,6 +17,7 @@ struct RoutineActionMenuView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var routineManager: ListManager<RoutineEvent>
     @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
 
     @State private var showDeleteRoutineConfirmation = false
 
@@ -71,7 +72,8 @@ struct RoutineActionMenuView: View {
         modelContext.deleteRoutineEvents(
             sortedRoutineEvents,
             from: weekday,
-            ekEventStore: calendarStore.ekEventStore
+            ekEventStore: calendarStore.ekEventStore,
+            plannerBuildManager: plannerBuildManager
         )
     }
 

@@ -25,7 +25,6 @@ struct PlannerEventFormView: View {
     let sourceCalendarEvent: EKEvent?
     let sourcePlannerEvent: PlannerEvent?
     let sourcePlanner: Planner?
-    let sourceDatestamp: String?
     let showNotification: (String?, String?, EKEvent?) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -326,7 +325,7 @@ struct PlannerEventFormView: View {
 
         let destinationDatestamp = modelContext.updatePlannerEvent(
             with: draftPlannerEvent,
-            sourceDatestamp: sourceDatestamp,
+            sourcePlanner: sourcePlanner,
             targetDatestamp: DateInRegion(
                 draftPlannerEvent.date,
                 region: eventRegion
@@ -345,7 +344,7 @@ struct PlannerEventFormView: View {
 
         dismiss()
 
-        showNotification(sourceDatestamp, destinationDatestamp, nil)
+        showNotification(sourcePlanner?.datestamp, destinationDatestamp, nil)
     }
 
     private func addEventToCalendar() {

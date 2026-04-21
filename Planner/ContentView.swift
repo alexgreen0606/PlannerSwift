@@ -177,6 +177,7 @@ struct ContentView: View {
                         in: namespace
                     )
                 )
+                .interactiveDismissDisabled(true)
             }
         }
 
@@ -279,8 +280,8 @@ struct ContentView: View {
         lastCleansedDatestamp = todaystampWatcher.todaystamp
 
         if keepPastEventsDuration != .forever {
-            modelContext.deleteOldData(
-                before: keepPastEventsDuration.cutoffDate
+            modelContext.deleteStorageRecords(
+                olderThan: keepPastEventsDuration.cutoffDate
             )
         }
 

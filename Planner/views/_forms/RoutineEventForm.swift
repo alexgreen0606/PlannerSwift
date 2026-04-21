@@ -254,16 +254,17 @@ struct RoutineEventFormView: View {
     // MARK: - Functions
 
     private func saveRoutineEvent() {
+        let affectedWeekdays = (sourceRoutineEvent?.weekdays ?? []).union(
+            draftRoutineEvent.daysOfWeek
+        )
+        
+        plannerBuildManager.invalidateRoutineDays(affectedWeekdays)
+        
         modelContext.updateRoutineEvent(
             with: draftRoutineEvent,
             sourceRoutineEvent: sourceRoutineEvent,
             sortedSourceEvents: sortedSourceEvents
         )
-
-        let affectedWeekdays = (sourceRoutineEvent?.weekdays ?? []).union(
-            draftRoutineEvent.daysOfWeek
-        )
-        plannerBuildManager.invalidateRoutineDays(affectedWeekdays)
 
         dismiss()
 

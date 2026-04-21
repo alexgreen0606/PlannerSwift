@@ -17,11 +17,11 @@ extension ModelContext {
     @MainActor
     func handlePlannerEventTitleChange(
         _ event: PlannerEvent,
+        in planner: Planner,
         plannerDay: DateInRegion,
         eventKitStore: EKEventStore,
         defaultLocation: Location?
     ) {
-
         if let calendarEvent = event.calendarEvent {
             // Event is a calendar event. Update its title in the calendar.
             calendarEvent.title = event.title
@@ -33,7 +33,11 @@ extension ModelContext {
         guard let defaultLocation,
             let (date, updatedText) = event.title.separateDate(for: plannerDay)
         else {
-            event.validateRoutineEventException(in: plannerDay.region.timeZone)
+            updatePlannerEventRoutineVariance(
+                event,
+                in: plannerDay.region.timeZone,
+                sourcePlanner: planner
+            )
             return
         }
 
@@ -41,7 +45,11 @@ extension ModelContext {
         event.location = defaultLocation
         event.date = date
         event.hasTime = true
-        event.validateRoutineEventException(in: plannerDay.region.timeZone)
+        updatePlannerEventRoutineVariance(
+            event,
+            in: plannerDay.region.timeZone,
+            sourcePlanner: planner
+        )
 
         self.safeSave("handlePlannerEventTitleChange")
     }

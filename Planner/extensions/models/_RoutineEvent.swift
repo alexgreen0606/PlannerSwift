@@ -15,6 +15,10 @@ extension RoutineEvent {
     var safePlannerEvents: [PlannerEvent] {
         self.plannerEvents ?? []
     }
+    
+    var safeVariants: [RoutineEventVariant] {
+        self.variants ?? []
+    }
 
     var weekdays: Set<Weekday> {
         Set(self.sortDateMap.keys)

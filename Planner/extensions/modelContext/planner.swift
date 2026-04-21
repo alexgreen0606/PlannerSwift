@@ -135,17 +135,16 @@ extension ModelContext {
         for planner: Planner,
         plannerEvents: [PlannerEvent]
     ) {
-        planner.deletedRoutineEventIds.removeAll()
 
-        if planner.finalExcludeRoutine {
+        if planner.safeExcludeRoutine {
             planner.excludeRoutine = false
         } else {
             planner.excludeRoutine = true
-            
+
             // Delete all routine event records.
             for plannerEvent in plannerEvents {
                 if plannerEvent.routineEvent != nil {
-                    self.delete(plannerEvent)
+                    delete(plannerEvent)
                 }
             }
         }
@@ -155,6 +154,11 @@ extension ModelContext {
         {
             // Revert flag back to nil so it inherits from the trip.
             planner.excludeRoutine = nil
+        }
+
+        // Clean the planner of all routine variants so they may be re-synced.
+        for routineEventVariant in planner.safeRoutineEventVariants {
+            delete(routineEventVariant)
         }
 
         self.safeSave("planner.togglePlannerRoutineExclusion")

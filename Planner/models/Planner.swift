@@ -22,7 +22,7 @@ class Planner {
     // If trip is nil, defaults to false.
     var excludeRoutine: Bool? = nil
     
-    var deletedRoutineEventIds: Set<UUID> = []
+    var routineEventVariants: [RoutineEventVariant]?
 
     var trip: Trip? = nil
 

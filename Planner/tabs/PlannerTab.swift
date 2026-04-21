@@ -169,6 +169,15 @@ struct PlannerTabView: View {
                         .discreetListItem()
                     }
 
+                    if sortedUpcomingTrips.isEmpty {
+                        Section("Trips") {
+                            EmptyLabelView("No upcoming trips")
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .frame(height: 40, alignment: .center)
+                        }
+                        .discreetListItem()
+                    }
+
                     // MARK: BOTTOM PADDING
                     Section {
                         Color.clear.frame(height: 16)

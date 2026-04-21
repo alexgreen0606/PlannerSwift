@@ -18,8 +18,12 @@ extension Planner {
         let locationKey = location?.coordinateKey ?? "HOME_LOCATION"
         return "\(datestamp)-\(locationKey)"
     }
+    
+    var safeRoutineEventVariants: [RoutineEventVariant] {
+        self.routineEventVariants ?? []
+    }
 
-    var finalExcludeRoutine: Bool {
+    var safeExcludeRoutine: Bool {
         if let customExclusion = self.excludeRoutine {
             return customExclusion
         }

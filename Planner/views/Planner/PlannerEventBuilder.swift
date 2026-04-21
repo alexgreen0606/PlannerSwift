@@ -134,7 +134,7 @@ struct PlannerEventBuilderView<Header: View>: View {
 
     @MainActor
     private func buildPlanner() async {
-        guard let weekday = Weekday.from(planner.datestamp.weekday) else {
+        guard let weekday = Weekday.forDatestamp(planner.datestamp) else {
             return
         }
 

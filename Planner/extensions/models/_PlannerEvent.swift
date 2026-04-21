@@ -14,6 +14,17 @@ import SwiftUI
 
 extension PlannerEvent {
 
+    var isRoutineVariant: Bool {
+        routineEventVariant != nil && routineEvent != nil
+    }
+    
+    func isRoutineVariant(notFrom planner: Planner) -> Bool {
+        guard let routineEventVariant, routineEvent != nil else {
+            return false
+        }
+        return routineEventVariant.planner !== planner
+    }
+
     // MARK: - Location Variables
 
     private func location(
@@ -83,9 +94,6 @@ extension PlannerEvent {
         self.calendarItemExternalIdentifier =
             calendarEvent.calendarItemExternalIdentifier
         self.occurrenceId = calendarEvent.occurrenceId
-
-        // Ensure events never link to routines when they are on the calendar.
-        self.isRoutineEventException = true
     }
 
     @MainActor
@@ -93,9 +101,9 @@ extension PlannerEvent {
         _ routineEvent: RoutineEvent,
         on plannerDay: DateInRegion
     ) {
-        guard !self.isRoutineEventException,
-            self.calendarItemExternalIdentifier == nil
-        else { return }
+        guard !isRoutineVariant else {
+            return
+        }
 
         self.title = routineEvent.title
 
@@ -108,16 +116,42 @@ extension PlannerEvent {
 
         self.routineEvent = routineEvent
     }
-
-    @MainActor
-    func validateRoutineEventException(in timeZone: TimeZone) {
-        if let routineEvent = self.routineEvent {
-            // Mark the routine exception flag based on its match with the parent.
-            self.isRoutineEventException = !self.matches(
-                routineEvent,
-                in: timeZone
-            )
+    
+    func matches(
+        _ routineEvent: RoutineEvent,
+        in timeZone: TimeZone
+    ) -> Bool {
+        guard calendarItemExternalIdentifier == nil, location == nil else {
+            return false
         }
+
+        let calendar = Calendar(identifier: .gregorian)
+
+        var plannerCalendar = calendar
+        plannerCalendar.timeZone = timeZone
+
+        var utcCalendar = calendar
+        utcCalendar.timeZone = TimeZone(secondsFromGMT: 0)!
+
+        let eventComponents: DateComponents? = {
+            guard self.hasTime else {
+                return nil
+            }
+            return plannerCalendar.dateComponents(
+                [.hour, .minute],
+                from: self.date
+            )
+        }()
+        let routineComponents: DateComponents? = {
+            guard let time = routineEvent.time else {
+                return nil
+            }
+            return utcCalendar.dateComponents([.hour, .minute], from: time)
+        }()
+
+        return self.title == routineEvent.title
+            && eventComponents?.hour == routineComponents?.hour
+            && eventComponents?.minute == routineComponents?.minute
     }
 
     // MARK: - View Builders
@@ -255,43 +289,6 @@ extension PlannerEvent {
         }
 
         return nil
-    }
-
-    // MARK: - Helpers
-
-    private func matches(
-        _ routineEvent: RoutineEvent,
-        in timeZone: TimeZone
-    ) -> Bool {
-        let calendar = Calendar(identifier: .gregorian)
-
-        var plannerCalendar = calendar
-        plannerCalendar.timeZone = timeZone
-
-        var utcCalendar = calendar
-        utcCalendar.timeZone = TimeZone(secondsFromGMT: 0)!
-
-        let eventComponents: DateComponents? = {
-            guard self.hasTime else {
-                return nil
-            }
-            return plannerCalendar.dateComponents(
-                [.hour, .minute],
-                from: self.date
-            )
-        }()
-        let routineComponents: DateComponents? = {
-            guard let time = routineEvent.time else {
-                return nil
-            }
-            return utcCalendar.dateComponents([.hour, .minute], from: time)
-        }()
-
-        return self.title == routineEvent.title
-            && eventComponents?.hour == routineComponents?.hour
-            && eventComponents?.minute == routineComponents?.minute
-            && self.location == nil
-            && self.calendarItemExternalIdentifier == nil
     }
 
 }

@@ -14,14 +14,28 @@ import SwiftUI
 extension ModelContext {
 
     @MainActor
-    func deleteOldData(
-        before date: Date
+    func deleteStorageRecords(
+        olderThan date: Date
     ) {
         let datestamp = DateInRegion(date, region: .local).datestamp
 
         do {
 
-            // Delete locations that have no parents.
+            // MARK: Delete routine event variants that have no parents.
+
+            let orphanVariants = try self.fetch(
+                FetchDescriptor<RoutineEventVariant>()
+            ).filter {
+                $0.routineEvent == nil
+                    && $0.plannerEvent == nil
+                    && $0.planner == nil
+            }
+
+            for variant in orphanVariants {
+                self.delete(variant)
+            }
+
+            // MARK: Delete locations that have no parents.
 
             let orphanLocations = try self.fetch(
                 FetchDescriptor<Location>(
@@ -39,7 +53,7 @@ extension ModelContext {
                 self.delete(location)
             }
 
-            // Delete events that occurred before the cutoff date.
+            // MARK: Delete events that occurred before the cutoff date.
 
             let expiredEvents = try self.fetch(
                 FetchDescriptor<PlannerEvent>(
@@ -53,7 +67,7 @@ extension ModelContext {
                 self.delete(event)
             }
 
-            // Delete planners that occurred before the cutoff date.
+            // MARK: Delete planners that occurred before the cutoff date.
 
             let expiredPlanners = try self.fetch(
                 FetchDescriptor<Planner>(
@@ -67,7 +81,7 @@ extension ModelContext {
                 self.delete(planner)
             }
 
-            // Delete trips that ended before the cutoff date.
+            // MARK: Delete trips that ended before the cutoff date.
 
             let trips = try self.fetch(FetchDescriptor<Trip>())
             let expiredTrips = trips.filter { trip in
@@ -84,7 +98,7 @@ extension ModelContext {
             }
 
         } catch {
-            assertionFailure("cleanup.deleteOldData: \(error)")
+            assertionFailure("cleanup.deleteStorageRecords: \(error)")
         }
 
         // Sepcial case: do NOT save the context here. This will be done in the parent

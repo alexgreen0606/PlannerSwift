@@ -140,7 +140,6 @@ struct EventFormView: View {
                     sourceCalendarEvent: sourceCalendarEvent,
                     sourcePlannerEvent: sourcePlannerEvent,
                     sourcePlanner: sourcePlanner,
-                    sourceDatestamp: sourcePlanner?.datestamp,
                     showNotification: showNotification
                 )
             }
@@ -203,10 +202,9 @@ struct EventFormView: View {
 
         let destinationDatestamp = modelContext.handleCalendarEventChange(
             event,
-            sourceDatestamp: sourcePlanner?.datestamp,
+            sourcePlanner: sourcePlanner,
             sourcePlannerEvent: sourcePlannerEvent,
-            settings: settings,
-            ekEventStore: calendarStore.ekEventStore
+            settings: settings
         )
 
         // Refresh calendar in case of recurring/all-day events.

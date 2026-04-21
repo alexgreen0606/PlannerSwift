@@ -30,7 +30,7 @@ class PlannerEvent: EventListItem {
 
     var routineEvent: RoutineEvent?
 
-    var isRoutineEventException: Bool = false
+    var routineEventVariant: RoutineEventVariant?
 
     // Uniquely identifies recurring event occurrences (calendar events only).
     var occurrenceId: String?

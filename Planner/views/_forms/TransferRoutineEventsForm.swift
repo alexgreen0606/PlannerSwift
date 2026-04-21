@@ -80,18 +80,18 @@ struct TransferRoutineEventsFormView: View {
     // MARK: - Functions
 
     private func handleTransfer() {
+        let affectedWeekdays =
+            Set(routineManager.selectedItems.flatMap { $0.sortDateMap.keys })
+            .union(selectedDaysOfWeek)
+        
+        plannerBuildManager.invalidateRoutineDays(affectedWeekdays)
+        
         modelContext.transferRoutineEvents(
             routineManager.selectedItems,
             to: selectedDaysOfWeek,
             sortedSourceEvents: sortedSourceRoutineEvents,
             sourceDayOfWeek: sourceDayOfWeek
         )
-
-        let affectedWeekdays =
-            Set(routineManager.selectedItems.flatMap { $0.sortDateMap.keys })
-            .union(selectedDaysOfWeek)
-
-        plannerBuildManager.invalidateRoutineDays(affectedWeekdays)
 
         dismiss()
 

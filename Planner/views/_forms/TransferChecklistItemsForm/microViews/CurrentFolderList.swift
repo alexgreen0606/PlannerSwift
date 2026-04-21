@@ -53,7 +53,9 @@ struct CurrentFolderListView: View {
                 )
             }
         }
-        .task(buildSelectableItems)
+        .task(id: currentFolder) {
+            buildSelectableItems()
+        }
     }
 
     // MARK: - View Builders

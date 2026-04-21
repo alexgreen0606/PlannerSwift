@@ -74,6 +74,7 @@ struct ChecklistsTabView: View {
                     in: namespace
                 )
             )
+            .interactiveDismissDisabled(true)
         }
     }
 

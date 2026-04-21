@@ -18,6 +18,7 @@ struct SelectedRoutineEventActionsView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var routineManager: ListManager<RoutineEvent>
     @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
 
     @State private var showDeleteConfirmation = false
 
@@ -67,7 +68,8 @@ struct SelectedRoutineEventActionsView: View {
         modelContext.deleteRoutineEvents(
             routineManager.selectedItems,
             from: weekday,
-            ekEventStore: calendarStore.ekEventStore
+            ekEventStore: calendarStore.ekEventStore,
+            plannerBuildManager: plannerBuildManager
         )
 
         DispatchQueue.main.async(execute: routineManager.toggleSelectMode)
@@ -76,7 +78,8 @@ struct SelectedRoutineEventActionsView: View {
     private func deleteSelectedEventsEverywhere() {
         modelContext.deleteRoutineEvents(
             routineManager.selectedItems,
-            ekEventStore: calendarStore.ekEventStore
+            ekEventStore: calendarStore.ekEventStore,
+            plannerBuildManager: plannerBuildManager
         )
 
         DispatchQueue.main.async(execute: routineManager.toggleSelectMode)

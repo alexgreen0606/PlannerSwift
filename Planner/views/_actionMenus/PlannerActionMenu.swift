@@ -152,8 +152,8 @@ struct PlannerActionMenuView: View {
                     plannerEvents: plannerEvents
                 )
 
-                if !planner.finalExcludeRoutine,
-                    let weekday = Weekday.from(planner.datestamp.weekday)
+                if !planner.safeExcludeRoutine,
+                    let weekday = Weekday.forDatestamp(planner.datestamp)
                 {
                     plannerBuildManager.invalidateRoutineDays([weekday])
                     plannerBuildManager.beginRebuild()
@@ -161,9 +161,9 @@ struct PlannerActionMenuView: View {
             },
             label: {
                 Label(
-                    planner.finalExcludeRoutine
+                    planner.safeExcludeRoutine
                         ? "Include Routine" : "Exclude Routine",
-                    systemImage: planner.finalExcludeRoutine
+                    systemImage: planner.safeExcludeRoutine
                         ? "repeat" : "repeat.badge.xmark",
                 )
             }

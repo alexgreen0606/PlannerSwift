@@ -20,7 +20,8 @@ extension ModelContext {
         for planner: Planner,
         storageEvents: [PlannerEvent],
         plannerDay: DateInRegion,
-        weekday: Weekday
+        weekday: Weekday,
+        ekEventStore: EKEventStore
     ) {
 
         print("debug \(planner.datestamp) syncRoutine")
@@ -29,12 +30,9 @@ extension ModelContext {
         // MARK: Load in the day's existing routine events.
         // ------------------------------------------------------------------
 
-        let routineEvents: [RoutineEvent] = self.loadSortedRoutineEvents(
+        let routineEvents: [RoutineEvent] = loadSortedRoutineEvents(
             for: weekday
         )
-        .filter {
-            !planner.deletedRoutineEventIds.contains($0.stableId)
-        }
 
         var existingRoutineEvents = Dictionary(
             uniqueKeysWithValues: routineEvents.map { event in
@@ -46,31 +44,51 @@ extension ModelContext {
         // MARK: Sync/Delete Existing Planner Events.
         // ------------------------------------------------------------------
 
-        var validEvents: [PlannerEvent] = []
+        var finalPlannerEvents: [PlannerEvent] = []
         var eventsToMove: [PlannerEvent] = []
 
         for plannerEvent in storageEvents {
 
-            if let routineEvent = plannerEvent.routineEvent,
-                let weekday = Weekday.from(planner.datestamp.weekday)
-            {
+            if let routineEvent = plannerEvent.routineEvent {
                 // MARK: Routine Event
-
-                if !routineEvent.weekdays.contains(weekday) {
-                    // This weekday was removed. Remove this record and continue.
-                    self.delete(plannerEvent)
+                
+                if planner.safeExcludeRoutine {
+                    // Routines are excluded. Remove this record and continue.
+                    deletePlannerEvent(
+                        plannerEvent,
+                        in: planner,
+                        ekEventStore: ekEventStore
+                    )
                     continue
                 }
 
-                if planner.finalExcludeRoutine {
-                    // Routines are hidden. Remove this record and continue.
-                    self.delete(plannerEvent)
+                guard
+                    validatePlannerEventWeekday(
+                        plannerEvent: plannerEvent,
+                        routineEvent: routineEvent,
+                        planner: planner,
+                        ekEventStore: ekEventStore
+                    )
+                else {
                     continue
                 }
 
-                existingRoutineEvents.removeValue(forKey: routineEvent.stableId)
+                // Only consider the routine event as "existing" if this record originates from this planner.
+                if plannerEvent.routineEventVariant == nil
+                    || plannerEvent.routineEventVariant?.planner === planner
+                {
+                    existingRoutineEvents.removeValue(
+                        forKey: routineEvent.stableId
+                    )
+                }
 
-                plannerEvent.syncWithRoutineEvent(routineEvent, on: plannerDay)
+                if !plannerEvent.isRoutineVariant {
+                    // Event is not a variant. Sync the event with the routine.
+                    plannerEvent.syncWithRoutineEvent(
+                        routineEvent,
+                        on: plannerDay
+                    )
+                }
 
                 if !routineEvent.syncedSortDatePlannerEventIds.contains(
                     plannerEvent.stableId
@@ -83,7 +101,7 @@ extension ModelContext {
             }
 
             // Track the events that still exist in the planner.
-            validEvents.append(plannerEvent)
+            finalPlannerEvents.append(plannerEvent)
         }
 
         // ------------------------------------------------------------------
@@ -99,17 +117,17 @@ extension ModelContext {
             let targetIndex = generateTargetIndex(
                 near: routineEvent.stableId,
                 from: routineEvents,
-                to: validEvents,
+                to: finalPlannerEvents,
                 destinationComparatorId: { $0.routineEvent?.stableId }
             )
 
             plannerEvent.sortDate = generateSortDate(
                 at: targetIndex,
-                in: validEvents,
+                in: finalPlannerEvents,
                 plannerDay: plannerDay
             )
 
-            validEvents.insert(plannerEvent, at: targetIndex)
+            finalPlannerEvents.insert(plannerEvent, at: targetIndex)
 
             routineEvent.syncedSortDatePlannerEventIds.insert(
                 plannerEvent.stableId
@@ -120,28 +138,35 @@ extension ModelContext {
         // MARK: Create New Routine Events.
         // ------------------------------------------------------------------
 
-        if !planner.finalExcludeRoutine {
+        if !planner.safeExcludeRoutine {
 
-            let reverseSortedNewRoutineEvents: [RoutineEvent] =
+            let variantIds = Set(
+                planner.routineEventVariants?.compactMap {
+                    $0.routineEvent?.stableId
+                } ?? []
+            )
+
+            let reverseSortedEvents: [RoutineEvent] =
                 existingRoutineEvents.values
                 .sorted {
                     $0.sortDateMap[weekday]! > $1.sortDateMap[weekday]!
                 }
 
-            for routineEvent in reverseSortedNewRoutineEvents {
+            for routineEvent in reverseSortedEvents
+            where !variantIds.contains(routineEvent.stableId) {
 
                 // Find a position for the event closest to its routine siblings.
                 // Defaults to top of list otherwise.
                 let targetIndex = generateTargetIndex(
                     near: routineEvent.stableId,
                     from: routineEvents,
-                    to: validEvents,
+                    to: finalPlannerEvents,
                     destinationComparatorId: { $0.routineEvent?.stableId }
                 )
 
                 let sortDate = generateSortDate(
                     at: targetIndex,
-                    in: validEvents,
+                    in: finalPlannerEvents,
                     plannerDay: plannerDay
                 )
 
@@ -153,14 +178,48 @@ extension ModelContext {
                         plannerDay: plannerDay
                     )
 
-                self.insert(newEvent)
+                insert(newEvent)
 
                 // Track the event at its position in the planner.
-                validEvents.insert(newEvent, at: targetIndex)
+                finalPlannerEvents.insert(newEvent, at: targetIndex)
             }
 
         }
 
+    }
+
+    // MARK: - Helpers
+
+    private func validatePlannerEventWeekday(
+        plannerEvent: PlannerEvent,
+        routineEvent: RoutineEvent,
+        planner: Planner,
+        ekEventStore: EKEventStore
+    ) -> Bool {
+        let sourceWeekday = {
+            if let variantPlanner = plannerEvent.routineEventVariant?
+                .planner
+            {
+                return Weekday.forDatestamp(variantPlanner.datestamp)
+            }
+            return Weekday.forDatestamp(planner.datestamp)
+        }()
+
+        if sourceWeekday == nil
+            || !routineEvent.weekdays.contains(sourceWeekday!)
+        {
+
+            // This weekday was removed from the routine event. Remove this record and continue.
+            deletePlannerEvent(
+                plannerEvent,
+                in: planner,
+                ekEventStore: ekEventStore
+            )
+
+            return false
+        }
+
+        return true
     }
 
 }

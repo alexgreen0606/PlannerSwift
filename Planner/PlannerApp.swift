@@ -35,6 +35,7 @@ struct PlannerApp: App {
             ChecklistItem.self,
             Trip.self,
             RoutineEvent.self,
+            RoutineEventVariant.self
         ])
 
         let configuration = ModelConfiguration(

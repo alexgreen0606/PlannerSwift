@@ -49,7 +49,8 @@ class PlannerBuildManager: ObservableObject {
                 for: planner,
                 storageEvents: sortedPlannerEvents,
                 plannerDay: plannerDay,
-                weekday: weekday
+                weekday: weekday,
+                ekEventStore: ekEventStore
             )
 
             freshRoutineMap[weekday]?.insert(planner.datestamp)
@@ -95,9 +96,13 @@ class PlannerBuildManager: ObservableObject {
             freshCalendarMap.removeValue(forKey: key)
         }
     }
+    
+    func invalidateCalendar() {
+        freshCalendarMap.removeAll()
+    }
 
     func rebuildCalendarData() {
-        freshCalendarMap.removeAll()
+        invalidateCalendar()
         beginRebuild()
     }
 
@@ -112,13 +117,13 @@ class PlannerBuildManager: ObservableObject {
 
     static func makeDefaultRoutineMap() -> [Weekday: Set<String>] {
         [
-            .friday: [],
-            .saturday: [],
-            .sunday: [],
-            .monday: [],
-            .tuesday: [],
-            .wednesday: [],
-            .thursday: [],
+            .Friday: [],
+            .Saturday: [],
+            .Sunday: [],
+            .Monday: [],
+            .Tuesday: [],
+            .Wednesday: [],
+            .Thursday: [],
         ]
     }
 

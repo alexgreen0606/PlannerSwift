@@ -102,7 +102,7 @@ extension ModelContext {
     @MainActor
     func updatePlannerEvent(
         with draftPlannerEvent: DraftPlannerEvent,
-        sourceDatestamp: String?,
+        sourcePlanner: Planner?,
         targetDatestamp: String,
         settings: PlannerSettings,
         ekEventStore: EKEventStore,
@@ -111,7 +111,6 @@ extension ModelContext {
         sourceCalendarEvent: EKEvent?
     ) -> String?  // The datestamp the event is now in.
     {
-
         let event =
             sourcePlannerEvent
             ?? PlannerEvent(
@@ -126,7 +125,7 @@ extension ModelContext {
         event.calendarItemExternalIdentifier = nil
 
         if !event.hasTime {
-            let targetPlanner = self.getPlanner(
+            let targetPlanner = getPlanner(
                 for: targetDatestamp
             )
 
@@ -134,7 +133,7 @@ extension ModelContext {
                 let destinationDay = targetPlanner.datestamp
                     .startOfDay(in: targetPlanner.region(settings: settings))
             else {
-                return sourceDatestamp
+                return sourcePlanner?.datestamp
             }
 
             // Untimed events MUST have their date set to the planner's startOfDay.
@@ -144,15 +143,22 @@ extension ModelContext {
             event.date = draftPlannerEvent.date
         }
 
-        let destinationDatestamp = self.ensureValidSortDate(
+        let destinationDatestamp = ensureValidSortDate(
             for: event,
             settings: settings,
-            sourceDatestamp: sourceDatestamp
+            sourceDatestamp: sourcePlanner?.datestamp
         )
 
-        event.validateRoutineEventException(in: timeZone)
+        if let sourcePlanner {
+            updatePlannerEventRoutineVariance(
+                event,
+                sourceCalendarEvent: sourceCalendarEvent,
+                in: timeZone,
+                sourcePlanner: sourcePlanner
+            )
+        }
 
-        self.insertIfNeeded(event)
+        insertIfNeeded(event)
 
         // Delete the old calendar event.
         if let sourceCalendarEvent {
@@ -163,6 +169,59 @@ extension ModelContext {
         // Allow the context to auto-save when ready.
 
         return destinationDatestamp
+    }
+
+    // Note: This function will only be called if no calendar event exists.
+    @MainActor
+    func updatePlannerEventRoutineVariance(
+        _ plannerEvent: PlannerEvent,
+        sourceCalendarEvent: EKEvent? = nil,
+        in timeZone: TimeZone,
+        sourcePlanner: Planner
+    ) {
+        let routineEvent: RoutineEvent? = {
+            if let existing = plannerEvent.routineEvent {
+                return existing
+            }
+            if let sourceCalendarEventId = sourceCalendarEvent?
+                .calendarItemExternalIdentifier
+            {
+                return loadRoutineEvent(for: sourceCalendarEventId)
+            }
+            return nil
+        }()
+
+        if let routineEvent {
+
+            let isRoutineEventVariant = !plannerEvent.matches(
+                routineEvent,
+                in: timeZone
+            )
+
+            if isRoutineEventVariant {
+                if let existingVariant = plannerEvent.routineEventVariant {
+                    existingVariant.calendarItemExternalIdentifier = nil
+                } else {
+                    let routineEventVariant = RoutineEventVariant(
+                        routineEvent: routineEvent,
+                        planner: sourcePlanner,
+                        plannerEvent: plannerEvent
+                    )
+
+                    routineEvent.variants?.append(routineEventVariant)
+                    sourcePlanner.routineEventVariants?.append(
+                        routineEventVariant
+                    )
+                    plannerEvent.routineEventVariant = routineEventVariant
+
+                    insert(routineEventVariant)
+                }
+            } else {
+                if let existingVariant = plannerEvent.routineEventVariant {
+                    delete(existingVariant)
+                }
+            }
+        }
     }
 
     @MainActor
@@ -237,7 +296,7 @@ extension ModelContext {
     func deletePlannerEvents(
         _ events: [PlannerEvent],
         in planner: Planner,
-        
+
         // Deletes calendar events if defined, otherwise they are preserved.
         ekEventStore: EKEventStore? = nil
     ) {
@@ -256,10 +315,13 @@ extension ModelContext {
     @MainActor
     func deletePlannerEvent(
         _ event: PlannerEvent,
+
+        // Marks routine events as variants so they are not synced.
         in planner: Planner,
-        
+
         // Deletes calendar events, otherwise they are preserved.
         ekEventStore: EKEventStore? = nil,
+
         skipSave: Bool = false
     ) {
         if let calendarEvent = event.calendarEvent, let ekEventStore,
@@ -268,11 +330,22 @@ extension ModelContext {
             return
         }
 
-        if let routineEvent = event.routineEvent {
-            planner.deletedRoutineEventIds.insert(routineEvent.stableId)
+        if let routineEvent = event.routineEvent,
+            event.routineEventVariant == nil
+        {
+            // Mark this routine event as a variant so it is not synced after deletion.
+            let routineEventVariant = RoutineEventVariant(
+                routineEvent: routineEvent,
+                planner: planner
+            )
+
+            routineEvent.variants?.append(routineEventVariant)
+            planner.routineEventVariants?.append(routineEventVariant)
+
+            insert(routineEventVariant)
         }
 
-        self.delete(event)
+        delete(event)
 
         if !skipSave {
             self.safeSave("_plannerEventCRUD.deletePlannerEvent")
