@@ -23,7 +23,6 @@ struct FolderView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @StateObject private var notificationManager = NotificationManager()
     @StateObject private var selectManager = ListManager<ChecklistItem>()
     @State private var showTransferSheet = false
     @State private var showCreateSheet = false
@@ -47,7 +46,6 @@ struct FolderView: View {
                 updateTransferAvailability: updateTransferAvailability
             )
             .navigationTitle(folder.title)
-            .navigationSubtitle(folder.path)
             .navigationBarBackButtonHidden(true)
             .toolbar {
                 topLeftToolbar
@@ -87,19 +85,7 @@ struct FolderView: View {
                 EmptyLabelView("No contents")
             }
         }
-        .overlay {
-            if !notificationManager.notifications.isEmpty {
-                // Note: Must be rendered conditionally within this file.
-                // Changes to notifications are sometimes not recognized within the NotificationsView
-                // due to overlay restrictions.
-                NotificationsView()
-                    .transition(
-                        .move(edge: .leading).combined(with: .opacity)
-                    )
-            }
-        }
         .environmentObject(selectManager)
-        .environmentObject(notificationManager)
     }
 
     // MARK: - Toolbars

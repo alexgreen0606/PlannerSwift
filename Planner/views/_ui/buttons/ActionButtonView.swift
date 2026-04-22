@@ -13,18 +13,24 @@ struct ActionButtonView: View {
     let label: String
     let systemImage: String
     let color: Color?
+    let spacing: CGFloat
+    let endAdornment: Bool
     let onTap: () -> Void
 
     init(
         label: String,
         systemImage: String,
         color: Color? = nil,
+        spacing: CGFloat = 6,
+        endAdornment: Bool = false,
         onTap: @escaping () -> Void
     ) {
         self.label = label
         self.systemImage = systemImage
         self.color = color
         self.onTap = onTap
+        self.spacing = spacing
+        self.endAdornment = endAdornment
         self.accentColor = accentColor
     }
 
@@ -35,12 +41,25 @@ struct ActionButtonView: View {
         Button {
             onTap()
         } label: {
-            HStack {
-                Image(systemName: systemImage)
-                    .imageScale(.medium)
+            HStack(spacing: spacing) {
+                if !endAdornment {
+                    adornment
+                }
+
                 ActionTextView(label, color: color)
+
+                if endAdornment {
+                    adornment
+                }
             }
             .foregroundStyle(color ?? accentColor.color)
         }
+    }
+
+    private var adornment: some View {
+        Image(systemName: systemImage)
+            .imageScale(.medium)
+            .fontWeight(.bold)
+            .fontDesign(.rounded)
     }
 }

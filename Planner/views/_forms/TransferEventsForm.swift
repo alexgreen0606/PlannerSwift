@@ -33,11 +33,11 @@ struct TransferEventsFormView: View {
         KeepPastEventsDuration =
             KeepPastEventsDuration.oneMonth
 
+    @Environment(\.showToast) private var showToast
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
     @EnvironmentObject private var calendarStore: CalendarStore
-    @EnvironmentObject private var notificationManager: NotificationManager
     @EnvironmentObject private var plannerManager: ListManager<PlannerEvent>
 
     @State private var destinationDate: Date
@@ -205,8 +205,8 @@ struct TransferEventsFormView: View {
         dismiss()
 
         DispatchQueue.main.async {
-            notificationManager.addNotification(
-                NotificationConfig(
+            showToast(
+                Toast(
                     title:
                         "Moved \(eventCount) event\(eventCount == 1 ? "" : "s")",
                     subtitle: offsetLabel,

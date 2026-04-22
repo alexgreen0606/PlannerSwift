@@ -20,7 +20,6 @@ struct ChecklistView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var listManager: ListManager<ChecklistItem>
 
-    @StateObject private var notificationManager = NotificationManager()
     @State private var showEditSheet = false
     @State private var showTransferSheet = false
 
@@ -71,24 +70,12 @@ struct ChecklistView: View {
                     moveItem: moveItem
                 )
                 .navigationTitle(checklist.title)
-                .navigationSubtitle(checklist.path)
                 .toolbar {
                     topLeadingToolbar
                     topTrailingToolbar
                     bottomToolbar(scrollProxy: scrollProxy)
                 }
                 .animateSynchronousAction(from: listManager.isSelectMode)
-            }
-        }
-        .overlay {
-            if !notificationManager.notifications.isEmpty {
-                // Note: Must be rendered conditionally within this file.
-                // Changes to notifications are sometimes not recognized within the NotificationsView
-                // due to overlay restrictions.
-                NotificationsView()
-                    .transition(
-                        .move(edge: .leading).combined(with: .opacity)
-                    )
             }
         }
 
@@ -119,8 +106,6 @@ struct ChecklistView: View {
                 )
             )
         }
-
-        .environmentObject(notificationManager)
     }
 
     // MARK: - Toolbars

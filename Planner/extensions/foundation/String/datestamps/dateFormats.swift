@@ -40,7 +40,7 @@ extension String {
     var shortWeekday: String {
         formatted("EEE").uppercased()
     }
-    
+
     // MARK: Difference Calculator
     func daysUntil(_ other: String) -> Int? {
         guard
@@ -83,6 +83,27 @@ extension String {
         let year = calendar.component(.year, from: date)
 
         return year == currentYear ? dateWithoutYear : dateWithYear
+    }
+
+    // EX: "Sep 12", "Sep 12, 2032"
+    var shortDateLabel: String {
+        guard let date = toDate() else { return "" }
+
+        let calendar = Calendar.current
+        let currentYear = calendar.component(.year, from: Date())
+        let year = calendar.component(.year, from: date)
+
+        return year == currentYear ? shortDateWithoutYear : shortDateWithYear
+    }
+
+    // Ex: "Sep 12"
+    var shortDateWithoutYear: String {
+        formatted("MMM d")
+    }
+
+    // Ex: "Sep 12, 2032"
+    var shortDateWithYear: String {
+        formatted("MMM d, yyyy")
     }
 
     // Ex: "May 12"

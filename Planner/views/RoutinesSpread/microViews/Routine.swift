@@ -31,7 +31,6 @@ struct RoutineView: View {
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
 
-    @StateObject private var notificationManager = NotificationManager()
     @StateObject private var routineManager = ListManager<RoutineEvent>()
     @State private var showTransferSheet = false
     @State private var invalidatedEventIds: Set<UUID> = []
@@ -93,17 +92,6 @@ struct RoutineView: View {
                 .animateSynchronousAction(from: routineManager.isSelectMode)
             }
         }
-        .overlay {
-            if !notificationManager.notifications.isEmpty {
-                // Note: Must be rendered conditionally within this file.
-                // Changes to notifications are sometimes not recognized within the NotificationsView
-                // due to overlay restrictions.
-                NotificationsView()
-                    .transition(
-                        .move(edge: .leading).combined(with: .opacity)
-                    )
-            }
-        }
 
         // MARK: Routine Event Sheet
         .sheet(item: $routineEventSheetContext) { context in
@@ -141,7 +129,6 @@ struct RoutineView: View {
 
         // Inject the environment objects last so they can be accessed in the sheets.
         .environmentObject(routineManager)
-        .environmentObject(notificationManager)
     }
 
     // MARK: - Toolbars

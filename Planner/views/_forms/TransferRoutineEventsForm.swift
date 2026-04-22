@@ -20,9 +20,9 @@ struct TransferRoutineEventsFormView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
 
+    @Environment(\.showToast) private var showToast
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var notificationManager: NotificationManager
     @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
     @EnvironmentObject private var routineManager: ListManager<RoutineEvent>
 
@@ -134,16 +134,16 @@ struct TransferRoutineEventsFormView: View {
             } : nil
 
         DispatchQueue.main.async {
-            notificationManager.addNotification(
-                NotificationConfig(
+            showToast(
+                Toast(
                     title:
-                        "Moved \(eventCount) recurring event\(eventCount == 1 ? "" : "s")",
-                    subtitle: "to \(destinations)",
+                        "Moved \(eventCount) Recurring Event\(eventCount == 1 ? "" : "s")!",
                     iconConfig: IconConfig(
                         name: "checkmark",
                         primaryColor: Color.green
                     ),
-                    onClick: onClick
+                    actionText: destinations,
+                    action: onClick
                 )
             )
         }

@@ -61,10 +61,15 @@ struct SelectedChecklistItemActionsView: ToolbarContent {
         )
     }
 
+    @ViewBuilder
     private var transferSelectedButton: some View {
+        let icon =
+            parentType == .checklist
+            ? "arrow.left.arrow.right" : "arrow.forward.folder"
+        
         Button(
             "Transfer",
-            systemImage: "arrow.left.arrow.right"
+            systemImage: icon
         ) {
             showTransferSheet = true
         }

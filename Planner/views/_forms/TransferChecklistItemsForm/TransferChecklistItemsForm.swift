@@ -50,10 +50,10 @@ struct TransferChecklistItemsFormView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
 
+    @Environment(\.showToast) private var showToast
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var listManager: ListManager<ChecklistItem>
-    @EnvironmentObject private var notificationManager: NotificationManager
 
     @State private var destinationType: ChecklistItemType
     @State private var selectedItem: ChecklistItem?
@@ -179,6 +179,7 @@ struct TransferChecklistItemsFormView: View {
             return
         }
 
+        let selectedType = checklistItemsType(listManager.selectedItems)
         let itemCount = listManager.selectedItemIds.count
 
         modelContext.transferChecklistItems(
@@ -191,16 +192,25 @@ struct TransferChecklistItemsFormView: View {
         dismiss()
 
         DispatchQueue.main.async {
-            notificationManager.addNotification(
-                NotificationConfig(
-                    title:
-                        "Transferred \(itemCount) item\(itemCount == 1 ? "" : "s")",
-                    subtitle: "to \(selectedItem.title)",
+
+            let icon =
+                source.type == .checklist
+                ? "arrow.left.arrow.right" : "arrow.forward.folder"
+            
+            let variant: ToastVariant = source.type == .folder ? .tab : .sheet
+
+            showToast(
+                Toast(
+                    title:  // TODO; render thew item count inside pluralized
+                        "Transferred \(itemCount) \(selectedType.capitalized.pluralized(from: itemCount))!",
+                    variant: variant,
                     iconConfig: IconConfig(
-                        name: "checkmark",
-                        primaryColor: Color.green
+                        name: icon,
+                        primaryColor: Color.label,
+                        secondaryColor: Color.label
                     ),
-                    onClick: {
+                    actionText: selectedItem.title,
+                    action: {
                         openItem(
                             selectedItem,
                             destinationType == .folder ? source : source.parent!

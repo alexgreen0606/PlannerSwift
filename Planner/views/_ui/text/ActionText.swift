@@ -29,5 +29,7 @@ struct ActionTextView: View {
             .foregroundStyle(
                 color ?? accentColor.color
             )
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
     }
 }

@@ -31,7 +31,6 @@ struct ExpandedPlannerView<Header: View>: View {
     @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
 
-    @StateObject private var notificationManager = NotificationManager()
     @StateObject private var plannerManager = ListManager<PlannerEvent>(
         isItemChecked: { event in
             event.isChecked
@@ -111,16 +110,6 @@ struct ExpandedPlannerView<Header: View>: View {
                 .animateSynchronousAction(from: plannerManager.isSelectMode)
             }
         }
-        .overlay {
-            if !notificationManager.notifications.isEmpty {
-                // Note: Must be rendered conditionally within this file.
-                // Changes to notifications are sometimes not recognized within the NotificationsView
-                // due to overlay restrictions.
-                NotificationsView()
-                    .transition(.move(edge: .leading).combined(with: .opacity))
-                    .padding(.bottom, plannerManager.focusedId == nil ? 0 : 8)
-            }
-        }
 
         // MARK: Event Sheet
         .sheet(item: $eventSheetContext) { context in
@@ -157,7 +146,6 @@ struct ExpandedPlannerView<Header: View>: View {
 
         // Inject the environment objects last so they can be accessed in the sheets.
         .environmentObject(plannerManager)
-        .environmentObject(notificationManager)
     }
 
     // MARK: - Toolbars
@@ -178,12 +166,15 @@ struct ExpandedPlannerView<Header: View>: View {
     private var backButton: some View {
         Button("Back", systemImage: "chevron.left") {
             if plannerCoverManager.isPresentingDefault {
-                withAnimation(.linear) {
+                if plannerCoverManager.todaystampAtInit != planner.datestamp {
                     plannerCoverManager.isPresentingDefault = false
+                } else {
+                    withAnimation(.linear) {
+                        plannerCoverManager.isPresentingDefault = false
+                    }
                 }
-            } else {
-                dismiss()
             }
+            dismiss()
         }
     }
 

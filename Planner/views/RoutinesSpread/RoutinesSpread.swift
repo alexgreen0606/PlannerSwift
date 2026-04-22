@@ -56,17 +56,14 @@ struct RoutinesSpreadView: View {
                                 design: .rounded
                             )
                         )
-                        .overlay {
+                        .overlay(alignment: .bottom) {
                             if todaystampWatcher.todaystamp.weekday
                                 == weekday.label
                             {
-                                VStack {
-                                    Spacer()
-                                    accentColor.color.frame(
-                                        width: 18,
-                                        height: 2
-                                    ).padding(.bottom, -3)
-                                }
+                                Capsule()
+                                    .fill(accentColor.color)
+                                    .frame(width: 18, height: 2)
+                                    .padding(.bottom, -3)
                             }
                         }
 

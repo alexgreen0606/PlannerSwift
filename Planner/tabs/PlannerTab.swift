@@ -52,7 +52,6 @@ struct PlannerTabView: View {
 
     @Query private var trips: [Trip]
 
-    @StateObject private var notificationManager = NotificationManager()
     @State private var tappedDates: Set<DateComponents> = []
     @State private var showNewEventSheet = false
     @State private var showNewRoutineEventSheet = false
@@ -242,25 +241,11 @@ struct PlannerTabView: View {
                     }
                 }
             }
-            .overlay {
-                if !notificationManager.notifications.isEmpty {
-                    // Note: Must be rendered conditionally within this file.
-                    // Changes to notifications are sometimes not recognized within the NotificationsView
-                    // due to overlay restrictions.
-                    NotificationsView()
-                        .transition(
-                            .move(edge: .leading).combined(with: .opacity)
-                        )
-                        .padding(.bottom)
-                }
-            }
 
             // Build the week's datestamps now and at midnight.
             .task(id: todaystampWatcher.todaystamp) {
                 buildThisWeekDatestamps()
             }
-
-            .environmentObject(notificationManager)
         }
     }
 

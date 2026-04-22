@@ -61,13 +61,13 @@ struct ChecklistsTabView: View {
 
         // Checklist Cover
         .fullScreenCover(item: $checklistCoverId) { checklistId in
-            ChecklistBuilderView(
-                checklistId: checklistId.id,
-                canTransferItems: canTransferChecklistItems,
-                openItem: openItem
-            )
-            .id(checklistId.id)
-            .environmentObject(checklistsManager)
+            ToastRootView {
+                ChecklistBuilderView(
+                    checklistId: checklistId.id,
+                    canTransferItems: canTransferChecklistItems,
+                    openItem: openItem
+                )
+            }
             .navigationTransition(
                 .zoom(
                     sourceID: checklistId.id,
@@ -75,6 +75,8 @@ struct ChecklistsTabView: View {
                 )
             )
             .interactiveDismissDisabled(true)
+            .id(checklistId.id)
+            .environmentObject(checklistsManager)
         }
     }
 

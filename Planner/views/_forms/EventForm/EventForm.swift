@@ -109,10 +109,10 @@ struct EventFormView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.showToast) private var showToast
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
     @EnvironmentObject private var deviceLocationManager: DeviceLocationManager
-    @EnvironmentObject private var notificationManager: NotificationManager
     @EnvironmentObject private var plannerCoverManager: PlannerCoverManager
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
 
@@ -226,40 +226,21 @@ struct EventFormView: View {
         destinationDatestamp: String?,
         finalEkEvent: EKEvent? = nil
     ) {
-        var config: NotificationConfig?
+        var config: Toast?
 
         if sourcePlanner == nil {
             if let destinationDatestamp {
-                let ordinalDestinationDay =
-                    destinationDatestamp.proximityFormat(
-                        using: [
-                            ProximityRule(
-                                proximity: .withinADay,
-                                format: .countdown,
-                                ordinal: true
-                            ),
-                            ProximityRule(
-                                proximity: .next7Days,
-                                format: .weekday
-                            ),
-                            ProximityRule(
-                                proximity: .fallback,
-                                format: .dateLabel,
-                                ordinal: true
-                            ),
-                        ],
-                        todaystamp: todaystampWatcher.todaystamp
-                    )
-
-                config = NotificationConfig(
-                    title: "Event scheduled",
-                    subtitle:
-                        "for \(ordinalDestinationDay)",
+                config = Toast(
+                    title:
+                        "Created Event!",
+                    variant: .tab,
                     iconConfig: IconConfig(
-                        name: "checkmark",
-                        primaryColor: Color.green
+                        name: "calendar.day.timeline.leading",
+                        primaryColor: Color.label,
+                        secondaryColor: Color.label
                     ),
-                    onClick: {
+                    actionText: destinationDatestamp.shortDateLabel,
+                    action: {
                         plannerCoverManager.context = PlannerCoverContext(
                             datestamp: destinationDatestamp
                         )
@@ -268,35 +249,15 @@ struct EventFormView: View {
             }
         } else if let destinationDatestamp {
             if destinationDatestamp != sourceDatestamp {
-                let ordinalDestinationDay =
-                    destinationDatestamp.proximityFormat(
-                        using: [
-                            ProximityRule(
-                                proximity: .withinADay,
-                                format: .countdown,
-                                ordinal: true
-                            ),
-                            ProximityRule(
-                                proximity: .next7Days,
-                                format: .weekday
-                            ),
-                            ProximityRule(
-                                proximity: .fallback,
-                                format: .dateLabel,
-                                ordinal: true
-                            ),
-                        ],
-                        todaystamp: todaystampWatcher.todaystamp
-                    )
-
-                config = NotificationConfig(
-                    title: "Event moved",
-                    subtitle: "to \(ordinalDestinationDay)",
+                config = Toast(
+                    title: "Moved Event!",
                     iconConfig: IconConfig(
-                        name: "checkmark",
-                        primaryColor: Color.green
+                        name: "arrow.right.arrow.left",
+                        primaryColor: Color.label,
+                        secondaryColor: Color.label
                     ),
-                    onClick: {
+                    actionText: destinationDatestamp.shortDateLabel,
+                    action: {
                         plannerCoverManager.context = PlannerCoverContext(
                             datestamp: destinationDatestamp
                         )
@@ -305,24 +266,25 @@ struct EventFormView: View {
             }
         }
 
+        // TODO: add an added to calendar notification
+
         // Show the deletion message if no higher priority message is set.
         if finalEkEvent == nil,
             sourceCalendarEvent != nil,
             config == nil
         {
-            config = NotificationConfig(
-                title: "Event deleted",
-                subtitle: "from calendar",
+            config = Toast(
+                title: "Deleted Calendar Event!",
                 iconConfig: IconConfig(
-                    name: "checkmark",
-                    primaryColor: Color.green
+                    name: "calendar",
+                    primaryColor: Color.label
                 )
             )
         }
 
         if let config {
             DispatchQueue.main.async {
-                notificationManager.addNotification(config)
+                showToast(config)
             }
         }
     }

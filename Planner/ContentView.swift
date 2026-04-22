@@ -113,46 +113,51 @@ struct ContentView: View {
             if let settings {
 
                 // MARK: Standard App Navigation
-                TabView {
-                    Tab(
-                        "",
-                        systemImage: todaystampWatcher.todaystamp
-                            .calendarSymbolName
-                    ) {
-                        PlannerTabView(
-                            settings: settings,
-                            namespace: namespace
-                        )
-                    }
 
-                    Tab("", systemImage: "checklist") {
-                        ChecklistsTabView()
-                    }
+                ToastRootView {
+                    TabView {
+                        Tab(
+                            "",
+                            systemImage: todaystampWatcher.todaystamp
+                                .calendarSymbolName
+                        ) {
+                            PlannerTabView(
+                                settings: settings,
+                                namespace: namespace
+                            )
+                        }
 
-                    Tab("", systemImage: "gear") {
-                        SettingsTabView(settings: settings)
-                    }
+                        Tab("", systemImage: "checklist") {
+                            ChecklistsTabView()
+                        }
 
-                    Tab(role: .search) {
-                        PlannerSearchTabView(
-                            todaystamp: todaystampWatcher.todaystamp,
-                            settings: settings,
-                            namespace: namespace
-                        )
-                        .environmentObject(plannerSearchManager)
+                        Tab("", systemImage: "gear") {
+                            SettingsTabView(settings: settings)
+                        }
+
+                        Tab(role: .search) {
+                            PlannerSearchTabView(
+                                todaystamp: todaystampWatcher.todaystamp,
+                                settings: settings,
+                                namespace: namespace
+                            )
+                            .environmentObject(plannerSearchManager)
+                        }
                     }
+                    .tabBarMinimizeBehavior(.onScrollDown)
+                    .opacity(plannerCoverManager.isPresentingDefault ? 0 : 1)
                 }
-                .tabBarMinimizeBehavior(.onScrollDown)
-                .opacity(plannerCoverManager.isPresentingDefault ? 0 : 1)
 
                 // MARK: Default App Landing. Today Planner.
-                PlannerBuilderView(
-                    datestamp: plannerCoverManager.todaystampAtInit,
-                    settings: settings,
-                    header: plannerCoverHeader(
-                        plannerCoverManager.todaystampAtInit
+                ToastRootView {
+                    PlannerBuilderView(
+                        datestamp: plannerCoverManager.todaystampAtInit,
+                        settings: settings,
+                        header: plannerCoverHeader(
+                            plannerCoverManager.todaystampAtInit
+                        )
                     )
-                )
+                }
                 .opacity(plannerCoverManager.isPresentingDefault ? 1 : 0)
 
             }
@@ -164,21 +169,23 @@ struct ContentView: View {
 
         // MARK: Expanded Planner Cover
         .fullScreenCover(item: $plannerCoverManager.context) { context in
-            if let settings {
-                PlannerBuilderView(
-                    datestamp: context.datestamp,
-                    settings: settings,
-                    header: plannerCoverHeader(context.datestamp)
-                )
-                .id(context.datestamp)
-                .navigationTransition(
-                    .zoom(
-                        sourceID: context.id,
-                        in: namespace
+            ToastRootView {
+                if let settings {
+                    PlannerBuilderView(
+                        datestamp: context.datestamp,
+                        settings: settings,
+                        header: plannerCoverHeader(context.datestamp)
                     )
-                )
-                .interactiveDismissDisabled(true)
+                }
             }
+            .navigationTransition(
+                .zoom(
+                    sourceID: context.id,
+                    in: namespace
+                )
+            )
+            .interactiveDismissDisabled(true)
+            .id(context.datestamp)
         }
 
         // Reload all calendar records when the app gains focus.
@@ -194,7 +201,9 @@ struct ContentView: View {
         }
 
         // Re-load the weather when the device's location changes.
-        .onChange(of: deviceLocationManager.deviceClLocation?.coordinate.key) {
+        .onChange(
+            of: deviceLocationManager.deviceClLocation?.coordinate.key
+        ) {
             _,
             _ in
             weatherStore.beginFreshReload()

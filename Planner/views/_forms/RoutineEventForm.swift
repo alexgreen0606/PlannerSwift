@@ -71,9 +71,9 @@ struct RoutineEventFormView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
 
+    @Environment(\.showToast) private var showToast
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var notificationManager: NotificationManager
     @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
 
     @State private var draftRoutineEvent: DraftRoutineEvent
@@ -304,28 +304,27 @@ struct RoutineEventFormView: View {
                     } : nil
 
                 if sourceRoutineEvent != nil {
-                    notificationManager.addNotification(
-                        NotificationConfig(
-                            title: "Moved recurring event",
-                            subtitle: "to \(destinations)",
+                    showToast(
+                        Toast(
+                            title: "Moved Recurring Event",
                             iconConfig: IconConfig(
                                 name: "checkmark",
                                 primaryColor: Color.green
                             ),
-                            onClick: onClick
+                            actionText: destinations,
+                            action: onClick
                         )
                     )
                 } else {
-                    notificationManager.addNotification(
-                        NotificationConfig(
-                            title: "Recurring event scheduled",
-                            subtitle:
-                                "for \(destinations)",
+                    showToast(
+                        Toast(
+                            title: "Recurring Event Scheduled!",
                             iconConfig: IconConfig(
                                 name: "checkmark",
                                 primaryColor: Color.green
                             ),
-                            onClick: onClick
+                            actionText: destinations,
+                            action: onClick
                         )
                     )
                 }
