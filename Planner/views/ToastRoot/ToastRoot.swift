@@ -46,15 +46,17 @@ struct ToastRootView<Content: View>: View {
                 } completion: {
                     toastDismissWorkItem?.cancel()
 
-                    withAnimation(animation) {
-                        activeToast = toast
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                        withAnimation(animation) {
+                            activeToast = toast
+                        }
                     }
 
                     toastDismissWorkItem = .init(block: dismiss)
 
                     if let toastDismissWorkItem {
                         DispatchQueue.main.asyncAfter(
-                            deadline: .now() + 6,
+                            deadline: .now() + 7,
                             execute: toastDismissWorkItem
                         )
                     }

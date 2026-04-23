@@ -10,8 +10,6 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-// Clean
-
 struct ExpandedPlannerView<Header: View>: View {
     let planner: Planner
     let header: Header
@@ -75,77 +73,80 @@ struct ExpandedPlannerView<Header: View>: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationStack {
-            ScrollViewReader { scrollProxy in
-                ZStack {
-                    if let calendarDayData {
-                        PlannerListView(
-                            showLocationSheet: $showLocationSheet,
-                            eventSheetContext: $eventSheetContext,
-                            plannerType: plannerType,
-                            planner: planner,
-                            plannerDay: plannerDay,
-                            plannerLocation: plannerLocation,
-                            sortedOpenPlannerEvents: sortedOpenPlannerEvents,
-                            sortedCheckedPlannerEvents:
-                                sortedCheckedPlannerEvents,
-                            sortedPlannerEvents: sortedPlannerEvents,
-                            calendarDayData: calendarDayData,
-                            showChecked: planner.showChecked,
-                            namespace: namespace,
-                            scrollProxy: scrollProxy,
-                            settings: settings,
-                            createEvent: createEvent
-                        )
-                        .transition(.opacity)
+        ToastRootView {
+            NavigationStack {
+                ScrollViewReader { scrollProxy in
+                    ZStack {
+                        if let calendarDayData {
+                            PlannerListView(
+                                showLocationSheet: $showLocationSheet,
+                                eventSheetContext: $eventSheetContext,
+                                plannerType: plannerType,
+                                planner: planner,
+                                plannerDay: plannerDay,
+                                plannerLocation: plannerLocation,
+                                sortedOpenPlannerEvents:
+                                    sortedOpenPlannerEvents,
+                                sortedCheckedPlannerEvents:
+                                    sortedCheckedPlannerEvents,
+                                sortedPlannerEvents: sortedPlannerEvents,
+                                calendarDayData: calendarDayData,
+                                showChecked: planner.showChecked,
+                                namespace: namespace,
+                                scrollProxy: scrollProxy,
+                                settings: settings,
+                                createEvent: createEvent
+                            )
+                            .transition(.opacity)
+                        }
                     }
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        upperLeftToolbar
+                        upperRightToolbar
+                        headerToolbar
+                        lowerToolbar(scrollProxy: scrollProxy)
+                    }
+                    .animateSynchronousAction(from: plannerManager.isSelectMode)
                 }
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    upperLeftToolbar
-                    upperRightToolbar
-                    headerToolbar
-                    lowerToolbar(scrollProxy: scrollProxy)
+            }
+
+            // MARK: Event Sheet
+            .sheet(item: $eventSheetContext) { context in
+                EventFormView(
+                    sourcePlanner: planner,
+                    plannerEvent: context.plannerEvent,
+                    calendarEvent: context.calendarEvent,
+                    settings: settings
+                )
+                .navigationTransition(
+                    .zoom(
+                        sourceID: context.id,
+                        in: namespace
+                    )
+                )
+                .onDisappear {
+                    plannerManager.protectedId = nil
                 }
-                .animateSynchronousAction(from: plannerManager.isSelectMode)
             }
-        }
 
-        // MARK: Event Sheet
-        .sheet(item: $eventSheetContext) { context in
-            EventFormView(
-                sourcePlanner: planner,
-                plannerEvent: context.plannerEvent,
-                calendarEvent: context.calendarEvent,
-                settings: settings
-            )
-            .navigationTransition(
-                .zoom(
-                    sourceID: context.id,
-                    in: namespace
+            // MARK: Transfer Event Sheet
+            .sheet(isPresented: $showTransferSheet) {
+                TransferEventsFormView(
+                    sourceStartOfDay: plannerDay,
+                    settings: settings
                 )
-            )
-            .onDisappear {
-                plannerManager.protectedId = nil
+                .navigationTransition(
+                    .zoom(
+                        sourceID: IdConstants.TRANSFER_BUTTON,
+                        in: namespace
+                    )
+                )
             }
-        }
 
-        // MARK: Transfer Event Sheet
-        .sheet(isPresented: $showTransferSheet) {
-            TransferEventsFormView(
-                sourceStartOfDay: plannerDay,
-                settings: settings
-            )
-            .navigationTransition(
-                .zoom(
-                    sourceID: IdConstants.TRANSFER_BUTTON,
-                    in: namespace
-                )
-            )
+            // Inject the environment objects last so they can be accessed in the sheets.
+            .environmentObject(plannerManager)
         }
-
-        // Inject the environment objects last so they can be accessed in the sheets.
-        .environmentObject(plannerManager)
     }
 
     // MARK: - Toolbars

@@ -257,9 +257,9 @@ struct RoutineEventFormView: View {
         let affectedWeekdays = (sourceRoutineEvent?.weekdays ?? []).union(
             draftRoutineEvent.daysOfWeek
         )
-        
+
         plannerBuildManager.invalidateRoutineDays(affectedWeekdays)
-        
+
         modelContext.updateRoutineEvent(
             with: draftRoutineEvent,
             sourceRoutineEvent: sourceRoutineEvent,
@@ -271,63 +271,63 @@ struct RoutineEventFormView: View {
         if sourceDayOfWeek == nil
             || !draftRoutineEvent.daysOfWeek.contains(sourceDayOfWeek!)
         {
-            DispatchQueue.main.async {
-                let selectedDays = draftRoutineEvent.daysOfWeek
+            let selectedDays = draftRoutineEvent.daysOfWeek
 
-                let destinations = {
-                    if selectedDays.count > 1 {
-                        return Weekday.allCases
-                            .filter { selectedDays.contains($0) }
-                            .map { $0.initial }
-                            .joined()
-                    }
-
-                    if let destinationDay = selectedDays.first?.rawValue
-                        .capitalized
-                    {
-                        return "\(destinationDay)s"
-                    }
-
-                    return ""
-                }()
-
-                let canOpenDestinationRoutine = {
-                    guard selectedDays.count == 1 else { return false }
-
-                    return selectedDays.first! != sourceDayOfWeek
-                }()
-
-                let onClick =
-                    canOpenDestinationRoutine
-                    ? {
-                        openRoutine(selectedDays.first!)
-                    } : nil
-
-                if sourceRoutineEvent != nil {
-                    showToast(
-                        Toast(
-                            title: "Moved Recurring Event!",
-                            iconConfig: IconConfig(
-                                name: "repeat",
-                                primaryColor: Color.label
-                            ),
-                            actionText: destinations,
-                            action: onClick
-                        )
-                    )
-                } else {
-                    showToast(
-                        Toast(
-                            title: "Created Recurring Event!",
-                            iconConfig: IconConfig(
-                                name: "repeat",
-                                primaryColor: Color.label
-                            ),
-                            actionText: destinations,
-                            action: onClick
-                        )
-                    )
+            let destinations = {
+                if selectedDays.count > 1 {
+                    return Weekday.allCases
+                        .filter { selectedDays.contains($0) }
+                        .map { $0.initial }
+                        .joined()
                 }
+
+                if let destinationDay = selectedDays.first?.rawValue
+                    .capitalized
+                {
+                    return "\(destinationDay)s"
+                }
+
+                return ""
+            }()
+
+            let canOpenDestinationRoutine = {
+                guard selectedDays.count == 1 else { return false }
+
+                return selectedDays.first! != sourceDayOfWeek
+            }()
+
+            let onClick =
+                canOpenDestinationRoutine
+                ? {
+                    openRoutine(selectedDays.first!)
+                } : nil
+
+            if sourceRoutineEvent != nil {
+                showToast(
+                    Toast(
+                        title: "Successfully moved recurring event!",
+                        subtitle: destinations,
+                        iconConfig: IconConfig(
+                            name: "arrow.left.arrow.right",
+                            primaryColor: Color.label,
+                            secondaryColor: Color.label
+                        ),
+                        action: onClick
+                    )
+                )
+            } else {
+                showToast(
+                    Toast(
+                        title: "Successfully created recurring event!",
+                        subtitle: destinations,
+                        iconConfig: IconConfig(
+                            name: "repeat",
+                            primaryColor: Color.label
+                        ),
+                        variant: .tab,
+                        action: onClick
+                    )
+                )
             }
         }
     }

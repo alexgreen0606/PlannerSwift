@@ -138,6 +138,7 @@ struct PlannerEventFormView: View {
                 ActionButtonView(
                     label: "Add To Calendar",
                     systemImage: "calendar.badge.plus",
+                    endAdornment: !isCreateForm,
                     onTap: addEventToCalendar
                 )
             }
@@ -148,25 +149,43 @@ struct PlannerEventFormView: View {
     @ToolbarContentBuilder
     private var deleteButton: some ToolbarContent {
         if let sourcePlannerEvent {
-            ToolbarItem(placement: .bottomBar) {
-                ActionButtonView(
-                    label: "Delete Event",
-                    systemImage: "trash",
-                    color: Color.red,
-                    onTap: {
+            if !showCalendarButton {
+                ToolbarItem(placement: .bottomBar) {
+                    ActionButtonView(
+                        label: "Delete Event",
+                        systemImage: "trash",
+                        color: Color.red,
+                        onTap: {
+                            showDeleteConfirmation = true
+                        }
+                    )
+                    .withConfirmation(
+                        deletePlannerEventConfig(
+                            event: sourcePlannerEvent,
+                            inForm: true,
+                            delete: deleteEvent
+                        ),
+                        isPresented: $showDeleteConfirmation
+                    )
+                }
+                .sharedBackgroundVisibility(.hidden)
+            } else {
+                ToolbarItem(placement: .bottomBar) {
+                    Button("Delete Event", systemImage: "trash") {
                         showDeleteConfirmation = true
                     }
-                )
-                .withConfirmation(
-                    deletePlannerEventConfig(
-                        event: sourcePlannerEvent,
-                        inForm: true,
-                        delete: deleteEvent
-                    ),
-                    isPresented: $showDeleteConfirmation
-                )
+                    .foregroundStyle(Color.red)
+                    .tint(Color.red)
+                    .withConfirmation(
+                        deletePlannerEventConfig(
+                            event: sourcePlannerEvent,
+                            inForm: true,
+                            delete: deleteEvent
+                        ),
+                        isPresented: $showDeleteConfirmation
+                    )
+                }
             }
-            .sharedBackgroundVisibility(.hidden)
         }
     }
 

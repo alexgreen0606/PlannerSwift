@@ -191,34 +191,31 @@ struct TransferChecklistItemsFormView: View {
 
         dismiss()
 
-        DispatchQueue.main.async {
+        let icon =
+            source.type == .checklist
+            ? "arrow.left.arrow.right" : "arrow.forward.folder"
 
-            let icon =
-                source.type == .checklist
-                ? "arrow.left.arrow.right" : "arrow.forward.folder"
-            
-            let variant: ToastVariant = source.type == .folder ? .tab : .sheet
+        let variant: ToastVariant = source.type == .folder ? .tab : .sheet
 
-            showToast(
-                Toast(
-                    title:  // TODO; render thew item count inside pluralized
-                        "Transferred \(itemCount) \(selectedType.capitalized.pluralized(from: itemCount))!",
-                    variant: variant,
-                    iconConfig: IconConfig(
-                        name: icon,
-                        primaryColor: Color.label,
-                        secondaryColor: Color.label
-                    ),
-                    actionText: selectedItem.title,
-                    action: {
-                        openItem(
-                            selectedItem,
-                            destinationType == .folder ? source : source.parent!
-                        )
-                    }
-                )
+        showToast(
+            Toast(
+                title:
+                    "Successfully transferred \(selectedType.pluralized(from: itemCount))!",
+                subtitle: selectedItem.title,
+                iconConfig: IconConfig(
+                    name: icon,
+                    primaryColor: Color.label,
+                    secondaryColor: Color.label
+                ),
+                variant: variant,
+                action: {
+                    openItem(
+                        selectedItem,
+                        destinationType == .folder ? source : source.parent!
+                    )
+                }
             )
-        }
+        )
     }
 
 }

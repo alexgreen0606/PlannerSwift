@@ -24,7 +24,7 @@ extension String {
     }
 
     func pluralized(from itemCount: Int) -> String {
-        "\(self)\(itemCount == 1 ? "" : "s")"
+        "\(itemCount) \(self)\(itemCount == 1 ? "" : "s")"
     }
 
 }

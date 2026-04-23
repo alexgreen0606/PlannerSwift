@@ -14,23 +14,32 @@ struct ToastView: View {
         AccentColor.blue
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack {
             Image(systemName: config.iconConfig.name)
                 .foregroundStyle(
                     config.iconConfig.primaryColor,
                     config.iconConfig.secondaryColor
                 )
 
-            Text(config.title)
-                .font(.system(size: 15))
-                .lineLimit(1)
-                .layoutPriority(1)
+            VStack(alignment: .leading) {
+                Text(config.title)
+                    .font(.system(size: 16))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+
+                if let subtitle = config.subtitle {
+                    Text(subtitle)
+                        .font(.system(size: 12))
+                        .lineLimit(1)
+                        .foregroundStyle(Color.secondary)
+                }
+            }
 
             Spacer()
 
-            if let actionText = config.actionText, let action = config.action {
+            if let action = config.action {
                 ActionButtonView(
-                    label: actionText,
+                    label: "View",
                     systemImage: "chevron.right",
                     spacing: 0,
                     endAdornment: true,
@@ -44,7 +53,7 @@ struct ToastView: View {
         .contentShape(.capsule)
         .glassEffect(.regular, in: .capsule)
         .padding(.horizontal)
-        .padding(.trailing, config.variant.trailingPadding + 16)
+        .padding(.trailing, config.variant.trailingPadding)
         .offset(y: -config.variant.verticalOffset)
         .transition(
             .offset(y: config.variant.verticalOffset + 30).combined(

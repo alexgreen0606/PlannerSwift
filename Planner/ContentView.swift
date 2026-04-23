@@ -114,50 +114,47 @@ struct ContentView: View {
 
                 // MARK: Standard App Navigation
 
-                ToastRootView {
-                    TabView {
-                        Tab(
-                            "",
-                            systemImage: todaystampWatcher.todaystamp
-                                .calendarSymbolName
-                        ) {
-                            PlannerTabView(
-                                settings: settings,
-                                namespace: namespace
-                            )
-                        }
-
-                        Tab("", systemImage: "checklist") {
-                            ChecklistsTabView()
-                        }
-
-                        Tab("", systemImage: "gear") {
-                            SettingsTabView(settings: settings)
-                        }
-
-                        Tab(role: .search) {
-                            PlannerSearchTabView(
-                                todaystamp: todaystampWatcher.todaystamp,
-                                settings: settings,
-                                namespace: namespace
-                            )
-                            .environmentObject(plannerSearchManager)
-                        }
+                TabView {
+                    Tab(
+                        "",
+                        systemImage: todaystampWatcher.todaystamp
+                            .calendarSymbolName
+                    ) {
+                        PlannerTabView(
+                            settings: settings,
+                            namespace: namespace
+                        )
                     }
-                    .tabBarMinimizeBehavior(.onScrollDown)
-                    .opacity(plannerCoverManager.isPresentingDefault ? 0 : 1)
+
+                    Tab("", systemImage: "checklist") {
+                        ChecklistsTabView()
+                    }
+
+                    Tab("", systemImage: "gear") {
+                        SettingsTabView(settings: settings)
+                    }
+
+                    Tab(role: .search) {
+                        PlannerSearchTabView(
+                            todaystamp: todaystampWatcher.todaystamp,
+                            settings: settings,
+                            namespace: namespace
+                        )
+                        .environmentObject(plannerSearchManager)
+                    }
                 }
+                .accentColor(accentColor.color)
+                .tabBarMinimizeBehavior(.onScrollDown)
+                .opacity(plannerCoverManager.isPresentingDefault ? 0 : 1)
 
                 // MARK: Default App Landing. Today Planner.
-                ToastRootView {
-                    PlannerBuilderView(
-                        datestamp: plannerCoverManager.todaystampAtInit,
-                        settings: settings,
-                        header: plannerCoverHeader(
-                            plannerCoverManager.todaystampAtInit
-                        )
+                PlannerBuilderView(
+                    datestamp: plannerCoverManager.todaystampAtInit,
+                    settings: settings,
+                    header: plannerCoverHeader(
+                        plannerCoverManager.todaystampAtInit
                     )
-                }
+                )
                 .opacity(plannerCoverManager.isPresentingDefault ? 1 : 0)
 
             }
@@ -169,23 +166,21 @@ struct ContentView: View {
 
         // MARK: Expanded Planner Cover
         .fullScreenCover(item: $plannerCoverManager.context) { context in
-            ToastRootView {
-                if let settings {
-                    PlannerBuilderView(
-                        datestamp: context.datestamp,
-                        settings: settings,
-                        header: plannerCoverHeader(context.datestamp)
-                    )
-                }
-            }
-            .navigationTransition(
-                .zoom(
-                    sourceID: context.id,
-                    in: namespace
+            if let settings {
+                PlannerBuilderView(
+                    datestamp: context.datestamp,
+                    settings: settings,
+                    header: plannerCoverHeader(context.datestamp)
                 )
-            )
-            .interactiveDismissDisabled(true)
-            .id(context.datestamp)
+                .navigationTransition(
+                    .zoom(
+                        sourceID: context.id,
+                        in: namespace
+                    )
+                )
+                .interactiveDismissDisabled(true)
+                .id(context.datestamp)
+            }
         }
 
         // Reload all calendar records when the app gains focus.

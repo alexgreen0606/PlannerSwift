@@ -82,7 +82,7 @@ struct FolderView: View {
         }
         .overlay {
             if folder.safeItems.isEmpty {
-                EmptyLabelView("No contents")
+                EmptyLabelView("No items")
             }
         }
         .environmentObject(selectManager)

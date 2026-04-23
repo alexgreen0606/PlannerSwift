@@ -48,9 +48,9 @@ struct ChecklistView: View {
             && !visibleItems.isEmpty
     }
 
-    private var completedItemExists: Bool {
-        sortedItems.contains(where: \.isCompleted)
-    }
+//    private var completedItemExists: Bool {
+//        sortedItems.contains(where: \.isCompleted)
+//    }
 
     var body: some View {
         NavigationStack {
@@ -127,8 +127,7 @@ struct ChecklistView: View {
                 ChecklistActionMenu(
                     showEditSheet: $showEditSheet,
                     checklist: checklist,
-                    completedItemExists: completedItemExists,
-                    completedItems: sortedCheckedItems,
+                    sortedItems: sortedItems,
                     visibleItems: visibleItems
                 )
             } else {
@@ -165,6 +164,7 @@ struct ChecklistView: View {
         ) {
             dismiss()
         }
+        .tint(Color.label)
     }
 
     private var cancelSelectModeButton: some View {
@@ -173,6 +173,7 @@ struct ChecklistView: View {
             systemImage: "xmark",
             action: listManager.toggleSelectMode
         )
+        .tint(Color.label)
     }
 
     // MARK: Top Trailing Toolbar Components

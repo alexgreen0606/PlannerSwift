@@ -198,7 +198,6 @@ struct PlannerSearchResultsView: View {
     private var emptyPlannersLabel: some View {
         if plannerSearchManager.results.sortedYears.isEmpty {
             EmptyLabelView(emptyResultsLabel)
-                .frame(height: ListLayout.EMPTY_LABEL_HEIGHT)
         }
     }
 

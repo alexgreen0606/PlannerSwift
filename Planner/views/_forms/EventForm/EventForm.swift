@@ -232,14 +232,15 @@ struct EventFormView: View {
             if let destinationDatestamp {
                 config = Toast(
                     title:
-                        "Created Event!",
-                    variant: .tab,
+                        "Successfully created event!",
+                    subtitle:
+                        "\(destinationDatestamp.dateWithYear) | \(destinationDatestamp.weekday)",
                     iconConfig: IconConfig(
                         name: "calendar.day.timeline.leading",
                         primaryColor: Color.label,
-                        secondaryColor: Color.label
+                        secondaryColor: Color.secondary
                     ),
-                    actionText: destinationDatestamp.shortDateLabel,
+                    variant: .tab,
                     action: {
                         plannerCoverManager.context = PlannerCoverContext(
                             datestamp: destinationDatestamp
@@ -249,14 +250,22 @@ struct EventFormView: View {
             }
         } else if let destinationDatestamp {
             if destinationDatestamp != sourceDatestamp {
+                let primaryColor =
+                    destinationDatestamp > sourceDatestamp!
+                    ? Color.secondary : Color.label
+                let secondaryColor =
+                    destinationDatestamp > sourceDatestamp!
+                    ? Color.label : Color.secondary
+
                 config = Toast(
-                    title: "Moved Event!",
+                    title: "Successfully moved event!",
+                    subtitle:
+                        "\(destinationDatestamp.dateWithYear) | \(destinationDatestamp.weekday)",
                     iconConfig: IconConfig(
-                        name: "arrow.right.arrow.left",
-                        primaryColor: Color.label,
-                        secondaryColor: Color.label
+                        name: "arrow.left.arrow.right",
+                        primaryColor: primaryColor,
+                        secondaryColor: secondaryColor
                     ),
-                    actionText: destinationDatestamp.shortDateLabel,
                     action: {
                         plannerCoverManager.context = PlannerCoverContext(
                             datestamp: destinationDatestamp
@@ -266,15 +275,22 @@ struct EventFormView: View {
             }
         }
 
-        // TODO: add an added to calendar notification
-
         // Show the deletion message if no higher priority message is set.
         if finalEkEvent == nil,
             sourceCalendarEvent != nil,
             config == nil
         {
             config = Toast(
-                title: "Deleted Calendar Event!",
+                title: "Successfully deleted from calendar!",
+                iconConfig: IconConfig(
+                    name: "calendar",
+                    primaryColor: Color.label
+                )
+            )
+        } else if finalEkEvent != nil, sourceCalendarEvent == nil, config == nil
+        {
+            config = Toast(
+                title: "Successfully added to calendar!",
                 iconConfig: IconConfig(
                     name: "calendar",
                     primaryColor: Color.label
@@ -283,9 +299,7 @@ struct EventFormView: View {
         }
 
         if let config {
-            DispatchQueue.main.async {
-                showToast(config)
-            }
+            showToast(config)
         }
     }
 

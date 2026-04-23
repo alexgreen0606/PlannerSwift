@@ -218,10 +218,15 @@ struct SortableListView<
                         customToggleConfig: toggleConfig(item)
                     )
                 }
+
+                if checkedItems.isEmpty {
+                    EmptyLabelView(emptyCheckedLabel)
+                        .discreetListItem()
+                        .frame(maxWidth: .infinity)
+                        .frame(height: ListLayout.EMPTY_LABEL_HEIGHT)
+                }
             } header: {
-                Text(
-                    checkedItems.isEmpty ? emptyCheckedLabel : checkedHeader
-                )
+                Text(checkedHeader)
             } footer: {
                 if checkedFooter != nil && !checkedItems.isEmpty {
                     Text(checkedFooter!)

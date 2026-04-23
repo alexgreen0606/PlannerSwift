@@ -86,7 +86,7 @@ func bulkDeleteCompletedPlannerEventConfig(
         actions: [
             ConfirmationAction(
                 title:
-                    "Delete \(completedEvents.count) \("Event".pluralized(from: completedEvents.count))",
+                    "Delete \("Event".pluralized(from: completedEvents.count))",
                 handler: delete
             )
         ]
@@ -108,7 +108,7 @@ func deleteCanceledEventsConfig(
         actions: [
             ConfirmationAction(
                 title:
-                    "Delete \(canceledEvents.count) \("Event".pluralized(from: canceledEvents.count))",
+                    "Delete \("Event".pluralized(from: canceledEvents.count))",
                 handler: delete
             )
         ]

@@ -67,7 +67,6 @@ struct PlannerApp: App {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(appColorScheme.colorScheme)
-                .accentColor(accentColor.color)
                 .environmentObject(todaystampWatcher)
                 .environmentObject(weatherStore)
                 .environmentObject(calendarStore)

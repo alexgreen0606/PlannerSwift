@@ -35,48 +35,50 @@ struct ChecklistsTabView: View {
     }
 
     var body: some View {
-        NavigationStack(path: $folderPath) {
-            if let root = rootFolder {
-                FolderView(
-                    folder: root,
-                    namespace: namespace,
-                    openItem: openItem,
-                    canTranferItems: canTransferFolderItems,
-                    updateTransferAvailability: updateFolderTransferAvailability
-                )
-                .navigationDestination(for: ChecklistItem.self) { item in
-                    if item.type == .folder {
-                        FolderView(
-                            folder: item,
-                            namespace: namespace,
-                            openItem: openItem,
-                            canTranferItems: canTransferFolderItems,
-                            updateTransferAvailability:
-                                updateFolderTransferAvailability
-                        )
+        ToastRootView {
+            NavigationStack(path: $folderPath) {
+                if let root = rootFolder {
+                    FolderView(
+                        folder: root,
+                        namespace: namespace,
+                        openItem: openItem,
+                        canTranferItems: canTransferFolderItems,
+                        updateTransferAvailability: updateFolderTransferAvailability
+                    )
+                    .navigationDestination(for: ChecklistItem.self) { item in
+                        if item.type == .folder {
+                            FolderView(
+                                folder: item,
+                                namespace: namespace,
+                                openItem: openItem,
+                                canTranferItems: canTransferFolderItems,
+                                updateTransferAvailability:
+                                    updateFolderTransferAvailability
+                            )
+                        }
                     }
                 }
             }
-        }
-
-        // Checklist Cover
-        .fullScreenCover(item: $checklistCoverId) { checklistId in
-            ToastRootView {
-                ChecklistBuilderView(
-                    checklistId: checklistId.id,
-                    canTransferItems: canTransferChecklistItems,
-                    openItem: openItem
+            
+            // Checklist Cover
+            .fullScreenCover(item: $checklistCoverId) { checklistId in
+                ToastRootView {
+                    ChecklistBuilderView(
+                        checklistId: checklistId.id,
+                        canTransferItems: canTransferChecklistItems,
+                        openItem: openItem
+                    )
+                }
+                .navigationTransition(
+                    .zoom(
+                        sourceID: checklistId.id,
+                        in: namespace
+                    )
                 )
+                .interactiveDismissDisabled(true)
+                .id(checklistId.id)
+                .environmentObject(checklistsManager)
             }
-            .navigationTransition(
-                .zoom(
-                    sourceID: checklistId.id,
-                    in: namespace
-                )
-            )
-            .interactiveDismissDisabled(true)
-            .id(checklistId.id)
-            .environmentObject(checklistsManager)
         }
     }
 

@@ -83,7 +83,7 @@ func bulkDeleteCompletedChecklistItemConfig(
         actions: [
             ConfirmationAction(
                 title:
-                    "Delete \(completedItems.count) \("Item".pluralized(from: completedItems.count))",
+                    "Delete \("Item".pluralized(from: completedItems.count))",
                 handler: delete
             )
         ]

@@ -8,13 +8,10 @@
 import SwiftData
 import SwiftUI
 
-// Clean
-
 struct ChecklistActionMenu: View {
     @Binding var showEditSheet: Bool
     let checklist: ChecklistItem
-    let completedItemExists: Bool
-    let completedItems: [ChecklistItem] // TODO: these aren't raw. They are based on UI
+    let sortedItems: [ChecklistItem]
     let visibleItems: [ChecklistItem]
 
     @Environment(\.modelContext) private var modelContext
@@ -23,6 +20,10 @@ struct ChecklistActionMenu: View {
 
     @State private var showDeleteCompletedConfirmation = false
     @State private var showDeleteChecklistConfirmation = false
+
+    private var completedItems: [ChecklistItem] {
+        sortedItems.filter(\.isCompleted)
+    }
 
     private var deleteCompletedConfig: ConfirmationConfig {
         bulkDeleteCompletedChecklistItemConfig(
@@ -37,6 +38,10 @@ struct ChecklistActionMenu: View {
             item: checklist,
             delete: deleteEntireChecklist
         )
+    }
+
+    private var completedItemExists: Bool {
+        !completedItems.isEmpty
     }
 
     // MARK: - Body
@@ -63,7 +68,7 @@ struct ChecklistActionMenu: View {
     }
 
     // MARK: - View Builders
-    
+
     private var editChecklistButton: some View {
         Button {
             showEditSheet = true
@@ -74,7 +79,7 @@ struct ChecklistActionMenu: View {
             )
         }
     }
-    
+
     private var showCompletedToggle: some View {
         Button {
             checklist.showCompleted.toggle()
@@ -88,7 +93,7 @@ struct ChecklistActionMenu: View {
             )
         }
     }
-    
+
     private var selectItemsButton: some View {
         Button {
             listManager.toggleSelectMode()

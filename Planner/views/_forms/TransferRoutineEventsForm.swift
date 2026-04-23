@@ -83,9 +83,9 @@ struct TransferRoutineEventsFormView: View {
         let affectedWeekdays =
             Set(routineManager.selectedItems.flatMap { $0.sortDateMap.keys })
             .union(selectedDaysOfWeek)
-        
+
         plannerBuildManager.invalidateRoutineDays(affectedWeekdays)
-        
+
         modelContext.transferRoutineEvents(
             routineManager.selectedItems,
             to: selectedDaysOfWeek,
@@ -133,21 +133,19 @@ struct TransferRoutineEventsFormView: View {
                 openRoutine(selectedDays.first!)
             } : nil
 
-        DispatchQueue.main.async {
-            showToast(
-                Toast(
-                    title:
-                        "Moved \(eventCount) Recurring \("Event".pluralized(from: eventCount))\(onClick != nil ? "" : " to \(destinations)")!",
-                    iconConfig: IconConfig(
-                        name: "arrow.left.arrow.right",
-                        primaryColor: Color.label,
-                        secondaryColor: Color.label
-                    ),
-                    actionText: destinations,
-                    action: onClick
-                )
+        showToast(
+            Toast(
+                title:
+                    "Successfully moved \("recurring event".pluralized(from: eventCount))!",
+                subtitle: destinations,
+                iconConfig: IconConfig(
+                    name: "arrow.left.arrow.right",
+                    primaryColor: Color.label,
+                    secondaryColor: Color.label
+                ),
+                action: onClick
             )
-        }
+        )
     }
 
 }

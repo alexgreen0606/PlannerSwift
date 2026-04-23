@@ -207,19 +207,18 @@ struct TransferEventsFormView: View {
         let primaryColor = dayOffset > 0 ? Color.secondary : Color.label
         let secondaryColor = dayOffset > 0 ? Color.label : Color.secondary
 
-        DispatchQueue.main.async {
-            showToast(
-                Toast(
-                    title:
-                        "Shifted \(eventCount) \("Event".pluralized(from: eventCount)) \(offsetLabel.capitalized)!",
-                    iconConfig: IconConfig(
-                        name: "arrow.left.arrow.right",
-                        primaryColor: primaryColor,
-                        secondaryColor: secondaryColor
-                    )
+        showToast(
+            Toast(
+                title:
+                    "Successfully shifted \("event".pluralized(from: eventCount))!",
+                subtitle: offsetLabel,
+                iconConfig: IconConfig(
+                    name: "arrow.left.arrow.right",
+                    primaryColor: primaryColor,
+                    secondaryColor: secondaryColor
                 )
             )
-        }
+        )
     }
 
 }
