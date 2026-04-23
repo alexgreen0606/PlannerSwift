@@ -10,8 +10,6 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-// Clean
-
 struct RoutineCoverContext: Identifiable {
     var weekday: Weekday
 
@@ -44,7 +42,7 @@ struct RoutinesSpreadView: View {
                     Spacer()
                 }
 
-                VStack {
+                VStack(spacing: 0) {
                     Text(weekday.initial)
                         .foregroundStyle(
                             Color.label
@@ -56,22 +54,21 @@ struct RoutinesSpreadView: View {
                                 design: .rounded
                             )
                         )
-                        .overlay(alignment: .bottom) {
-                            if todaystampWatcher.todaystamp.weekday
-                                == weekday.label
-                            {
-                                Capsule()
-                                    .fill(accentColor.color)
-                                    .frame(width: 18, height: 2)
-                                    .padding(.bottom, -3)
-                            }
-                        }
+
+                    Capsule()
+                        .fill(accentColor.color)
+                        .frame(width: 18, height: 2)
+                        .opacity(
+                            todaystampWatcher.todaystamp.weekday
+                                == weekday.label ? 1 : 0
+                        )
 
                     let eventCount = weekday.sortedEvents(in: routineEvents)
                         .count
                     Text(eventCount > 0 ? "\(eventCount)" : "")
                         .font(.footnote)
                         .foregroundStyle(Color.secondary)
+                        .padding(.top, 2)
                 }
                 .matchedTransitionSource(id: weekday, in: namespace)
                 .contentShape(Rectangle())
@@ -92,13 +89,15 @@ struct RoutinesSpreadView: View {
                 plannerBuildManager.beginRebuild()
             }
         ) { context in
-            RoutineView(
-                routineCoverContext: $routineCoverContext,
-                weekday: context.weekday,
-                sortedRoutineEvents: context.weekday.sortedEvents(
-                    in: routineEvents
+            ToastRootView {
+                RoutineView(
+                    routineCoverContext: $routineCoverContext,
+                    weekday: context.weekday,
+                    sortedRoutineEvents: context.weekday.sortedEvents(
+                        in: routineEvents
+                    )
                 )
-            )
+            }
             .id(context.weekday)
             .navigationTransition(
                 .zoom(

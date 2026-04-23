@@ -22,7 +22,7 @@ struct ToastView: View {
                 )
 
             Text(config.title)
-                .font(.body)
+                .font(.system(size: 15))
                 .lineLimit(1)
                 .layoutPriority(1)
 

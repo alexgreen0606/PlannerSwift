@@ -137,10 +137,11 @@ struct TransferRoutineEventsFormView: View {
             showToast(
                 Toast(
                     title:
-                        "Moved \(eventCount) Recurring Event\(eventCount == 1 ? "" : "s")!",
+                        "Moved \(eventCount) Recurring \("Event".pluralized(from: eventCount))\(onClick != nil ? "" : " to \(destinations)")!",
                     iconConfig: IconConfig(
-                        name: "checkmark",
-                        primaryColor: Color.green
+                        name: "arrow.left.arrow.right",
+                        primaryColor: Color.label,
+                        secondaryColor: Color.label
                     ),
                     actionText: destinations,
                     action: onClick

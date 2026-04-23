@@ -204,15 +204,18 @@ struct TransferEventsFormView: View {
 
         dismiss()
 
+        let primaryColor = dayOffset > 0 ? Color.secondary : Color.label
+        let secondaryColor = dayOffset > 0 ? Color.label : Color.secondary
+
         DispatchQueue.main.async {
             showToast(
                 Toast(
                     title:
-                        "Moved \(eventCount) event\(eventCount == 1 ? "" : "s")",
-                    subtitle: offsetLabel,
+                        "Shifted \(eventCount) \("Event".pluralized(from: eventCount)) \(offsetLabel.capitalized)!",
                     iconConfig: IconConfig(
-                        name: "checkmark",
-                        primaryColor: Color.green
+                        name: "arrow.left.arrow.right",
+                        primaryColor: primaryColor,
+                        secondaryColor: secondaryColor
                     )
                 )
             )

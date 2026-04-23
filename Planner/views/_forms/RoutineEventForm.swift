@@ -306,10 +306,10 @@ struct RoutineEventFormView: View {
                 if sourceRoutineEvent != nil {
                     showToast(
                         Toast(
-                            title: "Moved Recurring Event",
+                            title: "Moved Recurring Event!",
                             iconConfig: IconConfig(
-                                name: "checkmark",
-                                primaryColor: Color.green
+                                name: "repeat",
+                                primaryColor: Color.label
                             ),
                             actionText: destinations,
                             action: onClick
@@ -318,10 +318,10 @@ struct RoutineEventFormView: View {
                 } else {
                     showToast(
                         Toast(
-                            title: "Recurring Event Scheduled!",
+                            title: "Created Recurring Event!",
                             iconConfig: IconConfig(
-                                name: "checkmark",
-                                primaryColor: Color.green
+                                name: "repeat",
+                                primaryColor: Color.label
                             ),
                             actionText: destinations,
                             action: onClick
