@@ -7,16 +7,13 @@
 
 import SwiftUI
 
-// Clean
-
 struct TripChipView: View {
     let trip: Trip
     let planner: Planner
     let settings: PlannerSettings
     let namespace: Namespace.ID
 
-    private let chipHeight: CGFloat = 48
-    private let progressBarWidth: CGFloat = 100
+    private let chipHeight: CGFloat = 40
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -26,52 +23,21 @@ struct TripChipView: View {
     @State private var showTripSheet = false
 
     private var day: CGFloat {
-        guard
-            let index = trip.sortedPlanners.firstIndex(where: {
-                $0 === planner
-            })
-        else {
-            return 0.0
-        }
-        return Double(index) + 1.0
-    }
-
-    private var tripProgress: Double {
-        guard trip.sortedPlanners.count > 0 else { return 0 }
-        return day / Double(trip.sortedPlanners.count)
-    }
-
-    private var locationLabel: String {
-        planner.locationLabel(
-            settings: settings,
-            deviceLocation: deviceLocationManager.deviceLocation
-        )
-    }
-
-    private var locationIconConfig: IconConfig {
-        planner.locationIconConfig(settings: settings, accentColor: accentColor)
+        trip.day(of: planner.datestamp)
     }
 
     var body: some View {
         HStack {
             Group {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(trip.title)
-                        .font(
-                            .system(size: 16, weight: .bold, design: .rounded)
-                        )
-                        .foregroundStyle(
-                            Color.label
-                        )
-
-                    AdornedValueView(
-                        locationLabel,
-                        color: .secondary,
-                        iconConfig: locationIconConfig,
-                        scale: 0.7
+                Text(trip.title)
+                    .font(
+                        .system(size: 16, weight: .bold, design: .rounded)
                     )
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                    .foregroundStyle(
+                        Color.label
+                    )
+
+                Spacer()
 
                 VStack(alignment: .trailing) {
                     progressBar
@@ -93,9 +59,7 @@ struct TripChipView: View {
         }
         .glassEffect(
             .regular.interactive(true),
-            in: .rect(
-                cornerRadius: chipHeight / 2
-            )
+            in: .capsule
         )
         .matchedTransitionSource(
             id: IdConstants.TRIP_CHIP,
@@ -120,26 +84,7 @@ struct TripChipView: View {
     // MARK: - View Builders
 
     private var progressBar: some View {
-        ZStack(alignment: .leading) {
-            Capsule()
-                .fill(Color.secondary.opacity(0.15))
-                .frame(width: progressBarWidth)
-
-            Capsule()
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            accentColor.color,
-                            accentColor.color.opacity(0.7),
-                        ],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
-                .frame(width: progressBarWidth * tripProgress)
-                .animation(.easeInOut(duration: 0.3), value: tripProgress)
-        }
-        .frame(height: 8)
+        trip.progressBar(day: day, accentColor: accentColor)
     }
 
 }

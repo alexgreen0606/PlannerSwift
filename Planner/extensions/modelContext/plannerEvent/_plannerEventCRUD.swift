@@ -31,7 +31,7 @@ extension ModelContext {
         )
 
         let newEvent = PlannerEvent(
-            date: startOfDay.date,
+            datestamp: startOfDay.datestamp,
             sortDate: sortDate
         )
 
@@ -58,7 +58,8 @@ extension ModelContext {
 
         insert(
             PlannerEvent(
-                date: calendarEvent.startDate,
+                time: calendarEvent.startDate,
+                datestamp: plannerDay?.datestamp,
                 sortDate: sortDate,
                 calendarEvent: calendarEvent
             )
@@ -75,13 +76,18 @@ extension ModelContext {
         -> [PlannerEvent]
     {
         let nextDay = plannerDay + 1.days
+        let datestamp = plannerDay.datestamp
 
         do {
             return try fetch(
                 FetchDescriptor<PlannerEvent>(
                     predicate: #Predicate {
-                        $0.date >= plannerDay.date
-                            && $0.date < nextDay.date
+                        if let time = $0.time {
+                            return time >= plannerDay.date
+                                && time < nextDay.date
+                        } else {
+                            return $0.datestamp == datestamp
+                        }
                     },
                     sortBy: [
                         SortDescriptor(\PlannerEvent.sortDate)
@@ -114,34 +120,17 @@ extension ModelContext {
         let event =
             sourcePlannerEvent
             ?? PlannerEvent(
-                date: draftPlannerEvent.date,
                 sortDate: draftPlannerEvent.date
             )
 
-        event.title = draftPlannerEvent.title
-        event.hasTime = draftPlannerEvent.hasTime
+        event.title = draftPlannerEvent.title.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
         event.location = draftPlannerEvent.location
         event.calendarEvent = nil
         event.calendarItemExternalIdentifier = nil
-
-        if !event.hasTime {
-            let targetPlanner = getPlanner(
-                for: targetDatestamp
-            )
-
-            guard
-                let destinationDay = targetPlanner.datestamp
-                    .startOfDay(in: targetPlanner.region(settings: settings))
-            else {
-                return sourcePlanner?.datestamp
-            }
-
-            // Untimed events MUST have their date set to the planner's startOfDay.
-            event.date = destinationDay.date
-
-        } else {
-            event.date = draftPlannerEvent.date
-        }
+        event.datestamp = targetDatestamp
+        event.time = draftPlannerEvent.hasTime ? draftPlannerEvent.date : nil
 
         let destinationDatestamp = ensureValidSortDate(
             for: event,
@@ -224,6 +213,7 @@ extension ModelContext {
         }
     }
 
+    // Ensures that moved events end up at the top of their new planner day.
     @MainActor
     func ensureValidSortDate(
         for event: PlannerEvent,
@@ -233,14 +223,14 @@ extension ModelContext {
     {
 
         guard
-            let plannerDay = self.getEarliestPlannerDay(
-                for: event.date,
-                settings: settings,
-                requireExactMatch: !event.hasTime
+            let plannerDay = getEarliestPlannerDay(
+                for: event.time,
+                datestamp: event.datestamp,
+                settings: settings
             )
         else {
-            // Event does not belong to any planners. Use its actual date as the sortDate.
-            event.sortDate = event.date
+            // Event does not belong to any planners. Use its actual time as the sortDate.
+            event.sortDate = event.time ?? Date()
             return nil
         }
 
@@ -331,7 +321,10 @@ extension ModelContext {
         }
 
         if let routineEvent = event.routineEvent,
-            event.routineEventVariant == nil
+            event.routineEventVariant == nil,
+
+            // Variants do not need to be created when routine is excluded.
+            !planner.safeExcludeRoutine
         {
             // Mark this routine event as a variant so it is not synced after deletion.
             let routineEventVariant = RoutineEventVariant(

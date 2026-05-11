@@ -44,6 +44,7 @@ struct TripFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
+    @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
 
     @Query private var trips: [Trip]
 
@@ -61,7 +62,9 @@ struct TripFormView: View {
     }
 
     private var canSave: Bool {
-        !draftTrip.title.isEmpty
+        !draftTrip.title.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        ).isEmpty
             && !draftTrip.dateComponents.isEmpty
             && invalidDayMessage == nil
     }
@@ -294,22 +297,14 @@ struct TripFormView: View {
     // MARK: - Functions
 
     private func saveTrip() {
-        do {
-            try modelContext.transaction {
+        let savedTrip = modelContext.updateTrip(
+            from: draftTrip,
+            to: sourceTrip,
+            plannerBuildManager: plannerBuildManager
+        )
 
-                guard
-                    let savedTrip = modelContext.updateTrip(
-                        from: draftTrip,
-                        to: sourceTrip
-                    )
-                else {
-                    return
-                }
-
-                dismiss()
-                onSave?(savedTrip)
-            }
-        } catch {}
+        dismiss()
+        onSave?(savedTrip)
     }
 
     private func deleteTrip() {

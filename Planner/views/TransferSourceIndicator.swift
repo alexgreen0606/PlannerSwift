@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-// Clean
-
 struct TransferSourceIndicatorView: View {
     let title: String
     let subtitle: String
@@ -16,25 +14,26 @@ struct TransferSourceIndicatorView: View {
 
     var body: some View {
         VStack(spacing: 2) {
-            Text(title)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(Color.label)
 
             HStack(spacing: 4) {
                 Image(systemName: iconConfig.name)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 10, height: 10)
+                    .frame(width: 12, height: 12)
                     .foregroundStyle(
                         iconConfig.primaryColor
                     )
 
                 Text(subtitle)
-                    .font(.system(size: 8, weight: .medium))
+                    .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(
-                        Color.secondary
+                        Color.label
                     )
             }
+
+            Text(title)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(Color.secondary)
         }
     }
 }

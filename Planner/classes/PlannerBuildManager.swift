@@ -11,8 +11,6 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-// Clean
-
 @MainActor
 class PlannerBuildManager: ObservableObject {
 
@@ -37,6 +35,7 @@ class PlannerBuildManager: ObservableObject {
         sortedPlannerEvents: [PlannerEvent],
         settings: PlannerSettings,
         ekEventStore: EKEventStore,
+        todaystamp: String,
         modelContext: ModelContext
     ) -> Task<CalendarDayData, Never> {
 
@@ -50,7 +49,8 @@ class PlannerBuildManager: ObservableObject {
                 storageEvents: sortedPlannerEvents,
                 plannerDay: plannerDay,
                 weekday: weekday,
-                ekEventStore: ekEventStore
+                ekEventStore: ekEventStore,
+                todaystamp: todaystamp
             )
 
             freshRoutineMap[weekday]?.insert(planner.datestamp)
@@ -96,9 +96,23 @@ class PlannerBuildManager: ObservableObject {
             freshCalendarMap.removeValue(forKey: key)
         }
     }
-    
+
     func invalidateCalendar() {
         freshCalendarMap.removeAll()
+    }
+
+    func invalidateDatestampRoutine(_ datestamp: String) {
+        guard let weekday = Weekday.forDatestamp(datestamp) else {
+            return
+        }
+
+        freshRoutineMap[weekday]?.remove(datestamp)
+    }
+
+    // Re-syncs a single datestamp's routine.
+    func rebuildDatestampRoutine(_ datestamp: String) {
+        invalidateDatestampRoutine(datestamp)
+        beginRebuild()
     }
 
     func rebuildCalendarData() {

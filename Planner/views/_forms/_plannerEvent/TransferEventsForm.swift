@@ -122,9 +122,20 @@ struct TransferEventsFormView: View {
 
     private var transferIndicator: some View {
         HStack {
+
+            if destinationDate != sourceDate, destinationDate < sourceDate {
+                destinationChip
+
+                Image(systemName: "arrow.left")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 12, height: 12)
+                    .foregroundStyle(Color.secondary)
+            }
+
             sourceChip
 
-            if destinationDate != sourceDate {
+            if destinationDate != sourceDate, destinationDate > sourceDate {
                 Image(systemName: "arrow.right")
                     .resizable()
                     .scaledToFit()
@@ -153,7 +164,9 @@ struct TransferEventsFormView: View {
                 todaystamp: todaystampWatcher.todaystamp
             ),
             iconConfig: IconConfig(
-                name: "note"
+                name: sourceDatestamp.calendarSymbolName,
+                primaryColor: sourceDatestamp == todaystampWatcher.todaystamp
+                    ? accentColor.color : Color.secondary
             )
         )
     }
@@ -168,7 +181,10 @@ struct TransferEventsFormView: View {
                 todaystamp: todaystampWatcher.todaystamp
             ),
             iconConfig: IconConfig(
-                name: destinationDatestamp.calendarSymbolName
+                name: destinationDatestamp.calendarSymbolName,
+                primaryColor: destinationDatestamp
+                    == todaystampWatcher.todaystamp
+                    ? accentColor.color : Color.secondary
             )
         )
     }

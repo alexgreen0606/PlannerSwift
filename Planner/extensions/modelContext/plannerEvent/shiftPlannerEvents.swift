@@ -24,17 +24,6 @@ extension ModelContext {
         eventStore: EKEventStore
     ) {
 
-        // Load in the planner for the selected datestamp.
-        // This will only be used for untimed events.
-        let destinationPlanner = getPlanner(for: targetDatestamp)
-        guard
-            let destinationPlannerDay = destinationPlanner.datestamp.startOfDay(
-                in: destinationPlanner.region(settings: settings)
-            )
-        else {
-            return
-        }
-
         // Assemble the events in reverse-chronological ordering so they
         // are inserted correctly.
         let reverseSortedEvents = events.sorted { $0.sortDate > $1.sortDate }
@@ -56,16 +45,13 @@ extension ModelContext {
                 }
             }
 
-            if !event.hasTime {
-
-                // Untimed events MUST have their date set to the planner's start date.
-                event.date = destinationPlannerDay.date
-
-            } else {
-                event.date = event.date + days
+            if let time = event.time {
+                event.time = time + days
             }
 
-            let _ = self.ensureValidSortDate(
+            event.datestamp = targetDatestamp
+
+            let _ = ensureValidSortDate(
                 for: event,
                 settings: settings,
                 sourceDatestamp: sourceDatestamp

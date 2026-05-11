@@ -7,8 +7,9 @@
 
 import SwiftUI
 
-struct ToastView: View {
+struct ToastView<ListItemType: ListItem>: View {
     let config: Toast
+    let listManager: ListManager<ListItemType>?
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -27,7 +28,9 @@ struct ToastView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
 
-                if let subtitle = config.subtitle {
+                if let customSubtitle = config.customSubtitle {
+                    customSubtitle
+                } else if let subtitle = config.subtitle {
                     Text(subtitle)
                         .font(.system(size: 12))
                         .lineLimit(1)
@@ -43,10 +46,14 @@ struct ToastView: View {
                     systemImage: "chevron.right",
                     spacing: 0,
                     endAdornment: true,
-                    onTap: action
+                    onTap: {
+                        action()
+                        listManager?.focusedId = nil
+                    }
                 )
             }
         }
+        // TODO: use this capsule logic for the trip chip as well (and all chips)?
         .padding(.horizontal)
         .frame(height: 50)
         .clipShape(.capsule)

@@ -70,7 +70,9 @@ struct PlannerEventFormView: View {
     }
 
     private var canSave: Bool {
-        !draftPlannerEvent.title.isEmpty
+        !draftPlannerEvent.title.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        ).isEmpty
     }
 
     private var showCalendarButton: Bool {

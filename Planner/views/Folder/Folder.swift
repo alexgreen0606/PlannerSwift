@@ -8,10 +8,9 @@
 import SwiftData
 import SwiftUI
 
-// Clean
-
 struct FolderView: View {
     let folder: ChecklistItem
+    let rootFolder: ChecklistItem
     let namespace: Namespace.ID
     let openItem: (ChecklistItem, ChecklistItem) -> Void
     let canTranferItems: Bool
@@ -53,23 +52,24 @@ struct FolderView: View {
             }
             .animateSynchronousAction(from: selectManager.isSelectMode)
 
-            // Create Item Form
+            // MARK: Create Item Form
             .sheet(isPresented: $showCreateSheet) {
                 ChecklistItemFormView(parent: folder) { newItemId in
                     scrollTo(id: newItemId, scrollProxy: scrollProxy)
                 }
             }
 
-            // Edit Form
+            // MARK: Edit Form
             .sheet(isPresented: $showEditSheet) {
                 ChecklistItemFormView(item: folder, parent: folder.parent)
             }
 
-            // Transfer Items Form
+            // MARK: Transfer Items Form
             .sheet(isPresented: $showTransferSheet) {
                 TransferChecklistItemsFormView(
                     source: folder,
                     selectedIds: selectManager.selectedItemIds,
+                    rootFolder: rootFolder,
                     openItem: openItem
                 )
                 .navigationTransition(

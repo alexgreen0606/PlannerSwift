@@ -135,21 +135,21 @@ extension ModelContext {
         sortedSourceEvents: [RoutineEvent]?
     ) {
         guard !draftRoutineEvent.daysOfWeek.isEmpty else { return }
-
+        
         let event =
             sourceRoutineEvent
             ?? RoutineEvent()
 
         event.syncWithDraftRoutineEvent(draftRoutineEvent)
 
-        self.updateEventWeekdays(
+        updateEventWeekdays(
             event,
             with: Set(draftRoutineEvent.daysOfWeek),
             sortedSourceEvents: sortedSourceEvents
         )
 
-        self.insertIfNeeded(event)
-        self.safeSave("routineEvent.updateRoutineEvent")
+        insertIfNeeded(event)
+        safeSave("routineEvent.updateRoutineEvent")
     }
 
     // MARK: - DELETE

@@ -9,12 +9,23 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-// Clean
-
 struct WeekdaySpreadView: View {
     let selected: Set<Weekday>
     let scale: Double
     let spacing: CGFloat?
+    let customAccentColor: Color?
+
+    init(
+        selected: Set<Weekday>,
+        scale: Double,
+        spacing: CGFloat? = nil,
+        customAccentColor: Color? = nil
+    ) {
+        self.selected = selected
+        self.scale = scale
+        self.spacing = spacing
+        self.customAccentColor = customAccentColor
+    }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -28,7 +39,7 @@ struct WeekdaySpreadView: View {
                 Text(weekday.initial)
                     .foregroundStyle(
                         selected.contains(weekday)
-                            ? accentColor.color : .tertiary
+                            ? customAccentColor ?? accentColor.color : .tertiary
                     )
                     .font(
                         .system(

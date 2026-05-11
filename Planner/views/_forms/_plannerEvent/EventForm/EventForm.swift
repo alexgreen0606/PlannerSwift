@@ -11,8 +11,6 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-// Clean
-
 struct EventFormView: View {
     private let sourcePlanner: Planner?
     private let sourcePlannerEvent: PlannerEvent?
@@ -58,13 +56,13 @@ struct EventFormView: View {
             // ----------------------------------------------------------
 
             draftPlannerEvent.title = plannerEvent.title
-            draftPlannerEvent.hasTime = plannerEvent.hasTime
+            draftPlannerEvent.hasTime = plannerEvent.time != nil
             draftPlannerEvent.location = plannerEvent.location
 
-            if plannerEvent.hasTime {
+            if let time = plannerEvent.time {
                 // Use the existing time for the event.
                 draftPlannerEvent.date =
-                    plannerEvent.date.roundedDownNearest5Minutes
+                    time.roundedDownNearest5Minutes
             }
         }
 
@@ -171,6 +169,17 @@ struct EventFormView: View {
                 ekEventStore: calendarStore.ekEventStore
             ) { action, event in
                 guard action != .canceled else {
+                    if let sourcePlannerEvent, let sourcePlanner,
+                        sourcePlannerEvent.title.trimmingCharacters(
+                            in: .whitespacesAndNewlines
+                        ).isEmpty
+                    {
+                        // The source event had an empty title. Delete it.
+                        modelContext.deletePlannerEvent(
+                            sourcePlannerEvent,
+                            in: sourcePlanner
+                        )
+                    }
                     dismiss()
                     return
                 }
@@ -281,7 +290,7 @@ struct EventFormView: View {
             config == nil
         {
             config = Toast(
-                title: "Successfully deleted from calendar!",
+                title: "Successfully removed event from calendar!",
                 iconConfig: IconConfig(
                     name: "calendar",
                     primaryColor: Color.label
@@ -290,7 +299,7 @@ struct EventFormView: View {
         } else if finalEkEvent != nil, sourceCalendarEvent == nil, config == nil
         {
             config = Toast(
-                title: "Successfully added to calendar!",
+                title: "Successfully added event to calendar!",
                 iconConfig: IconConfig(
                     name: "calendar",
                     primaryColor: Color.label

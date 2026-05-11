@@ -11,8 +11,6 @@ import EventKit
 import SwiftData
 import SwiftDate
 
-// Clean
-
 extension ModelContext {
 
     @MainActor
@@ -21,10 +19,23 @@ extension ModelContext {
         storageEvents: [PlannerEvent],
         plannerDay: DateInRegion,
         weekday: Weekday,
-        ekEventStore: EKEventStore
+        ekEventStore: EKEventStore,
+        todaystamp: String
     ) {
+        if planner.datestamp < todaystamp {
+            // Never sync planners from the past. Their routine events will remain as-is.
+            return
+        }
 
         print("debug \(planner.datestamp) syncRoutine")
+
+        if planner.safeExcludeRoutine {
+            // Delete all routine variants when the routine is excluded from the planner.
+            for variant in planner.safeRoutineEventVariants {
+                delete(variant)
+            }
+            planner.routineEventVariants = []
+        }
 
         // ------------------------------------------------------------------
         // MARK: Load in the day's existing routine events.
@@ -51,7 +62,7 @@ extension ModelContext {
 
             if let routineEvent = plannerEvent.routineEvent {
                 // MARK: Routine Event
-                
+
                 if planner.safeExcludeRoutine {
                     // Routines are excluded. Remove this record and continue.
                     deletePlannerEvent(
@@ -172,7 +183,7 @@ extension ModelContext {
 
                 let newEvent =
                     PlannerEvent(
-                        date: plannerDay.date,
+                        datestamp: planner.datestamp,
                         sortDate: sortDate,
                         routineEvent: routineEvent,
                         plannerDay: plannerDay

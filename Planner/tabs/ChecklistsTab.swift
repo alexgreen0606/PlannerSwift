@@ -35,40 +35,40 @@ struct ChecklistsTabView: View {
     }
 
     var body: some View {
-        ToastRootView {
+        if let rootFolder {
             NavigationStack(path: $folderPath) {
-                if let root = rootFolder {
-                    FolderView(
-                        folder: root,
-                        namespace: namespace,
-                        openItem: openItem,
-                        canTranferItems: canTransferFolderItems,
-                        updateTransferAvailability: updateFolderTransferAvailability
-                    )
-                    .navigationDestination(for: ChecklistItem.self) { item in
-                        if item.type == .folder {
-                            FolderView(
-                                folder: item,
-                                namespace: namespace,
-                                openItem: openItem,
-                                canTranferItems: canTransferFolderItems,
-                                updateTransferAvailability:
-                                    updateFolderTransferAvailability
-                            )
-                        }
+                FolderView(
+                    folder: rootFolder,
+                    rootFolder: rootFolder,
+                    namespace: namespace,
+                    openItem: openItem,
+                    canTranferItems: canTransferFolderItems,
+                    updateTransferAvailability:
+                        updateFolderTransferAvailability
+                )
+                .navigationDestination(for: ChecklistItem.self) { item in
+                    if item.type == .folder  {
+                        FolderView(
+                            folder: item,
+                            rootFolder: rootFolder,
+                            namespace: namespace,
+                            openItem: openItem,
+                            canTranferItems: canTransferFolderItems,
+                            updateTransferAvailability:
+                                updateFolderTransferAvailability
+                        )
                     }
                 }
             }
             
-            // Checklist Cover
+            // MARK: Checklist Cover
             .fullScreenCover(item: $checklistCoverId) { checklistId in
-                ToastRootView {
-                    ChecklistBuilderView(
-                        checklistId: checklistId.id,
-                        canTransferItems: canTransferChecklistItems,
-                        openItem: openItem
-                    )
-                }
+                ChecklistBuilderView(
+                    rootFolder: rootFolder,
+                    checklistId: checklistId.id,
+                    canTransferItems: canTransferChecklistItems,
+                    openItem: openItem
+                )
                 .navigationTransition(
                     .zoom(
                         sourceID: checklistId.id,
@@ -79,21 +79,26 @@ struct ChecklistsTabView: View {
                 .id(checklistId.id)
                 .environmentObject(checklistsManager)
             }
+            
         }
     }
 
     private func openItem(_ item: ChecklistItem, from source: ChecklistItem) {
+        guard let rootFolder else {
+            return
+        }
 
         let isInCurrentFolder = source.safeItems.contains(where: {
             $0.stableId == item.stableId
         })
+        
         if !isInCurrentFolder {
             buildPath(to: item)
         }
 
         if item.type == .folder {
             canTransferFolderItems =
-                rootFolder?.hasChildType(
+                rootFolder.hasChildType(
                     .folder,
                     excluding: Set([item.stableId])
                 )
@@ -102,7 +107,7 @@ struct ChecklistsTabView: View {
             folderPath.append(item)
         } else {
             canTransferChecklistItems =
-                rootFolder?.hasChildType(
+                rootFolder.hasChildType(
                     .checklist,
                     excluding: Set([item.stableId])
                 )

@@ -104,12 +104,9 @@ struct TransferRoutineEventsFormView: View {
         let selectedDays = selectedDaysOfWeek
         let eventCount = routineManager.selectedItems.count
 
-        let destinations = {
+        let subtitle: String? = {
             if selectedDays.count > 1 {
-                return Weekday.allCases
-                    .filter { selectedDays.contains($0) }
-                    .map { $0.initial }
-                    .joined()
+                return nil
             }
 
             if let destinationDay = selectedDays.first?.rawValue
@@ -119,6 +116,18 @@ struct TransferRoutineEventsFormView: View {
             }
 
             return ""
+        }()
+        
+        let customSubtitle: AnyView? = {
+            if selectedDays.count == 1 {
+                return nil
+            }
+            return AnyView(WeekdaySpreadView(
+                selected: selectedDays,
+                scale: 0.66,
+                spacing: 1,
+                customAccentColor: Color.label
+            ))
         }()
 
         let canOpenDestinationRoutine = {
@@ -137,7 +146,8 @@ struct TransferRoutineEventsFormView: View {
             Toast(
                 title:
                     "Successfully moved \("recurring event".pluralized(from: eventCount))!",
-                subtitle: destinations,
+                subtitle: subtitle,
+                customSubtitle: customSubtitle,
                 iconConfig: IconConfig(
                     name: "arrow.left.arrow.right",
                     primaryColor: Color.label,

@@ -11,8 +11,6 @@ import SwiftDate
 import SwiftUI
 import WeatherKit
 
-// Clean
-
 struct PlannerListView: View {
     @Binding var showLocationSheet: Bool
     @Binding var eventSheetContext: EventSheetContext?
@@ -23,7 +21,7 @@ struct PlannerListView: View {
     let sortedOpenPlannerEvents: [PlannerEvent]
     let sortedCheckedPlannerEvents: [PlannerEvent]
     let sortedPlannerEvents: [PlannerEvent]
-    let calendarDayData: CalendarDayData
+    let calendarDayData: CalendarDayData?
     let showChecked: Bool
     let namespace: Namespace.ID
     let scrollProxy: ScrollViewProxy
@@ -97,7 +95,7 @@ struct PlannerListView: View {
         .animateAsynchronousAction(from: weatherData)
         .animateAsynchronousAction(from: locationLabel)
         .animateAsynchronousAction(
-            from: calendarDayData.plannerChipEvents.map(\.title)
+            from: calendarDayData?.plannerChipEvents.map(\.title)
         )
     }
 
@@ -112,7 +110,6 @@ struct PlannerListView: View {
             weatherData: weatherData,
             locationLabel: locationLabel,
             calendarDayData: calendarDayData,
-            sortedPlannerEvents: sortedPlannerEvents,
             namespace: namespace,
             settings: settings,
             openCalendarEventSheet: { calEvent in

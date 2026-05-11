@@ -17,7 +17,7 @@ extension PlannerEvent {
     var isRoutineVariant: Bool {
         routineEventVariant != nil && routineEvent != nil
     }
-    
+
     func isRoutineVariant(notFrom planner: Planner) -> Bool {
         guard let routineEventVariant, routineEvent != nil else {
             return false
@@ -85,11 +85,10 @@ extension PlannerEvent {
     @MainActor
     func syncWithCalendarEvent(_ calendarEvent: EKEvent) {
         self.title = calendarEvent.title
-        self.date = calendarEvent.startDate
+        self.time = calendarEvent.startDate
         self.location = calendarEvent.location(
             storageEvent: self
         )
-        self.hasTime = true
         self.calendarEvent = calendarEvent
         self.calendarItemExternalIdentifier =
             calendarEvent.calendarItemExternalIdentifier
@@ -108,15 +107,14 @@ extension PlannerEvent {
         self.title = routineEvent.title
 
         if let time = routineEvent.date(in: plannerDay) {
-            self.date = time
-            self.hasTime = true
+            self.time = time
         } else {
-            self.hasTime = false
+            self.time = nil
         }
 
         self.routineEvent = routineEvent
     }
-    
+
     func matches(
         _ routineEvent: RoutineEvent,
         in timeZone: TimeZone
@@ -134,12 +132,12 @@ extension PlannerEvent {
         utcCalendar.timeZone = TimeZone(secondsFromGMT: 0)!
 
         let eventComponents: DateComponents? = {
-            guard self.hasTime else {
+            guard let time = self.time else {
                 return nil
             }
             return plannerCalendar.dateComponents(
                 [.hour, .minute],
-                from: self.date
+                from: time
             )
         }()
         let routineComponents: DateComponents? = {
@@ -163,9 +161,9 @@ extension PlannerEvent {
         scale: Double = 1,
         openEventSheet: (() -> Void)?
     ) -> some View {
-        if self.hasTime {
+        if let time = self.time {
             TimeView(
-                timeInRegion: DateInRegion(self.date, region: plannerRegion),
+                timeInRegion: DateInRegion(time, region: plannerRegion),
                 color: self.tint(accentColor: accentColor),
                 scale: scale,
                 openEventSheet: openEventSheet
@@ -214,9 +212,9 @@ extension PlannerEvent {
             isLocationLabelDifferent ? eventLocationLabel : nil
 
         let timeAdornment: String? = {
-            if isTimeZoneDifferent, hasTime {
+            if isTimeZoneDifferent, let time {
                 return DateInRegion(
-                    date,
+                    time,
                     region: eventRegion
                 ).timeWithTimezone
             }
@@ -256,9 +254,16 @@ extension PlannerEvent {
             return nil
         }
 
-        if !query.containsDate(self.date) {
-            // Exclude. Doesn't match the time range.
-            return nil
+        if let time {
+            if !query.containsDate(time) {
+                // Exclude. Doesn't match the time range.
+                return nil
+            }
+        } else if let datestamp {
+            if !query.containsDatestamp(datestamp) {
+                // Exclude. Doesn't match the time range.
+                return nil
+            }
         }
 
         if query.text.isEmpty {

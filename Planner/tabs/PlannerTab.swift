@@ -90,7 +90,7 @@ struct PlannerTabView: View {
     }
 
     var body: some View {
-        ToastRootView {
+        ToastRootView(listManager: nil) {
             NavigationStack {
                 ScrollViewReader { scrollProxy in
                     List {
@@ -157,7 +157,7 @@ struct PlannerTabView: View {
                             } header: {
                                 ZStack {
                                     if index == 0 {
-                                        Text("Upcoming Trips")
+                                        Text("Trips")
                                     } else {
                                         YearSectionHeaderView(year)
                                     }

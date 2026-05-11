@@ -63,11 +63,6 @@ struct SearchResultsWeatherView: View {
             return false
         }
 
-        if weatherData != nil {
-            // Show location whenever weather exists.
-            return true
-        }
-
         if locationLabel != homeLocationLabel {
             // Show the location when the planner's location
             // differs from the home location.
@@ -111,41 +106,18 @@ struct SearchResultsWeatherView: View {
     }
 
     var body: some View {
-        VStack(alignment: .trailing) {
-            HStack(alignment: .bottom) {
+        VStack(alignment: .trailing, spacing: 0) {
 
-                VStack(alignment: .trailing, spacing: 0) {
+            if let weatherData {
+                HStack {
 
-                    if let weatherData {
+                    VStack(alignment: .trailing, spacing: 0) {
                         Text(weatherData.condition.description)
                             .font(.system(size: 12, design: .rounded))
+
+                        TemperatureView(weatherData: weatherData)
                     }
 
-                    if let locationLabel {
-                        HStack(spacing: 6) {
-                            if showLocationIcon {
-                                Image(systemName: locationIconConfig.name)
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 11, height: 11)
-                                    .foregroundStyle(
-                                        locationIconConfig.primaryColor,
-                                        locationIconConfig.secondaryColor
-                                    )
-                            }
-
-                            if showLocationLabel {
-                                Text(locationLabel)
-                                    .foregroundStyle(
-                                        Color.secondary
-                                    )
-                                    .font(.system(size: 10))
-                            }
-                        }
-                    }
-                }
-
-                if let weatherData {
                     Image(systemName: weatherData.symbolName)
                         .symbolVariant(isDarkMode ? .fill : .none)
                         .symbolRenderingMode(
@@ -156,13 +128,84 @@ struct SearchResultsWeatherView: View {
                 }
             }
 
-            if let weatherData {
-                TemperatureView(weatherData: weatherData)
+            if showLocationLabel, let locationLabel  {
+                HStack(spacing: 6) {
+                    if showLocationIcon {
+                        Image(systemName: locationIconConfig.name)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 11, height: 11)
+                            .foregroundStyle(
+                                locationIconConfig.primaryColor,
+                                locationIconConfig.secondaryColor
+                            )
+                    }
+
+                    if showLocationLabel {
+                        Text(locationLabel)
+                            .foregroundStyle(
+                                Color.secondary
+                            )
+                            .font(.system(size: 10))
+                    }
+                }
             }
 
         }
         .animateAsynchronousAction(from: weatherData != nil)
         .animateAsynchronousAction(from: locationLabel != nil)
+        //        VStack(alignment: .trailing) {
+        //            HStack(alignment: .bottom) {
+        //
+        //                VStack(alignment: .trailing, spacing: 0) {
+        //
+        //                    if let weatherData {
+        //                        Text(weatherData.condition.description)
+        //                            .font(.system(size: 12, design: .rounded))
+        //                    }
+        //
+        //                    if let locationLabel {
+        //                        HStack(spacing: 6) {
+        //                            if showLocationIcon {
+        //                                Image(systemName: locationIconConfig.name)
+        //                                    .resizable()
+        //                                    .scaledToFit()
+        //                                    .frame(width: 11, height: 11)
+        //                                    .foregroundStyle(
+        //                                        locationIconConfig.primaryColor,
+        //                                        locationIconConfig.secondaryColor
+        //                                    )
+        //                            }
+        //
+        //                            if showLocationLabel {
+        //                                Text(locationLabel)
+        //                                    .foregroundStyle(
+        //                                        Color.secondary
+        //                                    )
+        //                                    .font(.system(size: 10))
+        //                            }
+        //                        }
+        //                    }
+        //                }
+        //
+        //                if let weatherData {
+        //                    Image(systemName: weatherData.symbolName)
+        //                        .symbolVariant(isDarkMode ? .fill : .none)
+        //                        .symbolRenderingMode(
+        //                            isDarkMode ? .multicolor : .monochrome
+        //                        )
+        //                        .imageScale(.medium)
+        //                        .frame(maxHeight: .infinity)
+        //                }
+        //            }
+        //
+        //            if let weatherData {
+        //                TemperatureView(weatherData: weatherData)
+        //            }
+        //
+        //        }
+        //        .animateAsynchronousAction(from: weatherData != nil)
+        //        .animateAsynchronousAction(from: locationLabel != nil)
     }
 
 }

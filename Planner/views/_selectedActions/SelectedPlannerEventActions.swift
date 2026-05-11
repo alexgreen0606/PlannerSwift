@@ -16,6 +16,7 @@ struct SelectedPlannerEventActionsView: ToolbarContent {
     let namespace: Namespace.ID
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.showToast) private var showToast
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var plannerManager: ListManager<PlannerEvent>
 
@@ -66,11 +67,29 @@ struct SelectedPlannerEventActionsView: ToolbarContent {
     // MARK: - Functions
 
     private func deleteSelectedEvents() {
+
+        let calendarEventCount = plannerManager.selectedItems.count(where: {
+            $0.calendarEvent != nil
+        })
+
         modelContext.deletePlannerEvents(
             plannerManager.selectedItems,
             in: planner,
             ekEventStore: calendarStore.ekEventStore
         )
+
+        if calendarEventCount > 0 {
+            showToast(
+                Toast(
+                    title:
+                        "Successfully removed \("event".pluralized(from: calendarEventCount)) from calendar!",
+                    iconConfig: IconConfig(
+                        name: "calendar",
+                        primaryColor: Color.label
+                    )
+                )
+            )
+        }
 
         DispatchQueue.main.async(execute: plannerManager.toggleSelectMode)
     }

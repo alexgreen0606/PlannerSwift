@@ -44,91 +44,92 @@ struct RoutineView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollViewReader { scrollProxy in
-                SortableListView(
-                    uncheckedItems: sortedRoutineEvents,
-                    emptyUncheckedLabel: "No \(weekday.label) routine",
-                    tint: { _ in accentColor.color },
-                    createItem: createEvent,
-                    deleteItem: { event in
-                        modelContext.deleteRoutineEvent(
-                            event,
-                            ekEventStore: calendarStore.ekEventStore,
-                            plannerBuildManager: plannerBuildManager
-                        )
-                    },
-                    moveItem: moveEvent,
-                    namespace: namespace,
-                    toolbarSystemImageNames: [
-                        "rectangle.and.pencil.and.ellipsis"
-                    ],
-                    onToolbarTap: { _, event in
-                        openRoutineEventSheet(for: event)
-                    },
-                    toggleConfig: eventToggleConfig,
-                    leftAdornment: { _ in EmptyView() },
-                    rightAdornment: timeAdornment,
-                    bottomAdornment: weekdaysAdornment,
-                    handleTitleChange: { event in
-                        modelContext.handleRoutineEventTitleChange(event)
-                        if !invalidatedEventIds.contains(event.stableId) {
-                            // Mark this event's weekdays for refresh in the planner.
-                            plannerBuildManager.invalidateRoutineDays(
-                                event.weekdays
+        ToastRootView(listManager: routineManager) {
+            NavigationStack {
+                ScrollViewReader { scrollProxy in
+                    SortableListView(
+                        uncheckedItems: sortedRoutineEvents,
+                        emptyUncheckedLabel: "No \(weekday.label) routine",
+                        tint: { _ in accentColor.color },
+                        createItem: createEvent,
+                        deleteItem: { event in
+                            modelContext.deleteRoutineEvent(
+                                event,
+                                ekEventStore: calendarStore.ekEventStore,
+                                plannerBuildManager: plannerBuildManager
                             )
-                            invalidatedEventIds.insert(event.stableId)
+                        },
+                        moveItem: moveEvent,
+                        namespace: namespace,
+                        toolbarSystemImageNames: [
+                            "rectangle.and.pencil.and.ellipsis"
+                        ],
+                        onToolbarTap: { _, event in
+                            openRoutineEventSheet(for: event)
+                        },
+                        toggleConfig: eventToggleConfig,
+                        leftAdornment: { _ in EmptyView() },
+                        rightAdornment: timeAdornment,
+                        bottomAdornment: weekdaysAdornment,
+                        handleTitleChange: { event in
+                            modelContext.handleRoutineEventTitleChange(event)
+                            if !invalidatedEventIds.contains(event.stableId) {
+                                // Mark this event's weekdays for refresh in the planner.
+                                plannerBuildManager.invalidateRoutineDays(
+                                    event.weekdays
+                                )
+                                invalidatedEventIds.insert(event.stableId)
+                            }
                         }
+                    )
+                    .navigationTitle("\(weekday.label) Routine")
+                    .navigationSubtitle("Recurring Events")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        topLeadingToolbar
+                        topTrailingToolbar
+                        bottomToolbar(scrollProxy: scrollProxy)
                     }
-                )
-                .navigationTitle("\(weekday.label) Routine")
-                .navigationSubtitle("Recurring Events")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    topLeadingToolbar
-                    topTrailingToolbar
-                    bottomToolbar(scrollProxy: scrollProxy)
+                    .animateSynchronousAction(from: routineManager.isSelectMode)
                 }
-                .animateSynchronousAction(from: routineManager.isSelectMode)
             }
-        }
 
-        // MARK: Routine Event Sheet
-        .sheet(item: $routineEventSheetContext) { context in
-            RoutineEventFormView(
-                sourceRoutineEvent: context.routineEvent,
-                sourceDayOfWeek: weekday,
-                sortedSourceEvents: sortedRoutineEvents,
-                openRoutine: openRoutine
-            )
-            .navigationTransition(
-                .zoom(
-                    sourceID: context.id,
-                    in: namespace
+            // MARK: Routine Event Sheet
+            .sheet(item: $routineEventSheetContext) { context in
+                RoutineEventFormView(
+                    sourceRoutineEvent: context.routineEvent,
+                    sourceDayOfWeek: weekday,
+                    sortedSourceEvents: sortedRoutineEvents,
+                    openRoutine: openRoutine
                 )
-            )
-            .onDisappear {
-                routineManager.protectedId = nil
+                .navigationTransition(
+                    .zoom(
+                        sourceID: context.id,
+                        in: namespace
+                    )
+                )
+                .onDisappear {
+                    routineManager.protectedId = nil
+                }
             }
-        }
 
-        // MARK: Transfer Event Sheet
-        .sheet(isPresented: $showTransferSheet) {
-            TransferRoutineEventsFormView(
-                sourceDayOfWeek: weekday,
-                sortedSourceRoutineEvents: sortedRoutineEvents,
-                openRoutine: openRoutine
-            )
-            .navigationTransition(
-                .zoom(
-                    sourceID: IdConstants.TRANSFER_BUTTON,
-                    in: namespace
+            // MARK: Transfer Event Sheet
+            .sheet(isPresented: $showTransferSheet) {
+                TransferRoutineEventsFormView(
+                    sourceDayOfWeek: weekday,
+                    sortedSourceRoutineEvents: sortedRoutineEvents,
+                    openRoutine: openRoutine
                 )
-            )
-        }
+                .navigationTransition(
+                    .zoom(
+                        sourceID: IdConstants.TRANSFER_BUTTON,
+                        in: namespace
+                    )
+                )
+            }
 
-        // Inject the environment objects last so they can be accessed in the sheets.
-        .environmentObject(routineManager)
+            .environmentObject(routineManager)
+        }
     }
 
     // MARK: - Toolbars

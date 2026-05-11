@@ -12,8 +12,6 @@ import SwiftUI
 import WeatherKit
 import WrappingHStack
 
-// Clean
-
 struct PlannerPreviewView<Header: View>: View {
     let type: PlannerPreviewType
     let searchQuery: PlannerSearchQuery?
@@ -52,11 +50,11 @@ struct PlannerPreviewView<Header: View>: View {
     // MARK: Separated Time Events
 
     private var timedPlannerEvents: [PlannerEvent] {
-        filteredPlannerEvents.filter { $0.hasTime }
+        filteredPlannerEvents.filter { $0.time != nil }
     }
 
     private var untimedPlannerEvents: [PlannerEvent] {
-        filteredPlannerEvents.filter { !$0.hasTime }
+        filteredPlannerEvents.filter { $0.time == nil }
     }
 
     // MARK: Preview Events

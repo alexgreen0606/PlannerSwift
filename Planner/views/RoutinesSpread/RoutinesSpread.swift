@@ -89,15 +89,13 @@ struct RoutinesSpreadView: View {
                 plannerBuildManager.beginRebuild()
             }
         ) { context in
-            ToastRootView {
-                RoutineView(
-                    routineCoverContext: $routineCoverContext,
-                    weekday: context.weekday,
-                    sortedRoutineEvents: context.weekday.sortedEvents(
-                        in: routineEvents
-                    )
+            RoutineView(
+                routineCoverContext: $routineCoverContext,
+                weekday: context.weekday,
+                sortedRoutineEvents: context.weekday.sortedEvents(
+                    in: routineEvents
                 )
-            }
+            )
             .id(context.weekday)
             .navigationTransition(
                 .zoom(

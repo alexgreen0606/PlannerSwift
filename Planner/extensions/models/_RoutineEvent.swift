@@ -27,7 +27,7 @@ extension RoutineEvent {
     func syncWithDraftRoutineEvent(
         _ draft: DraftRoutineEvent
     ) {
-        self.title = draft.title
+        self.title = draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
         self.time = draft.hasTime ? draft.date : nil
     }
 

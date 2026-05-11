@@ -62,17 +62,35 @@ extension ModelContext {
 
     @MainActor
     func getEarliestPlannerDay(
-        for date: Date,
-        settings: PlannerSettings,
-        requireExactMatch: Bool = false
+        for time: Date?,
+        datestamp: String? = nil,
+        settings: PlannerSettings
     ) -> DateInRegion? {
 
+        guard let time else {
+            guard let datestamp else {
+                return nil
+            }
+
+            let planner = getPlanner(for: datestamp)
+            guard
+                let plannerDay = planner.datestamp.startOfDay(
+                    in: planner.region(settings: settings)
+                )
+            else {
+                return nil
+            }
+
+            // Return the planner day for the untimed event.
+            return plannerDay
+        }
+
         let sortedPossibleDatestamps =
-            getSortedPossibleDatestamps(for: date)
+            getSortedPossibleDatestamps(for: time)
 
         for datestamp in sortedPossibleDatestamps {
 
-            let planner = self.getPlanner(for: datestamp)
+            let planner = getPlanner(for: datestamp)
             guard
                 let plannerDay = planner.datestamp.startOfDay(
                     in: planner.region(settings: settings)
@@ -81,11 +99,7 @@ extension ModelContext {
                 continue
             }
 
-            if requireExactMatch {
-                if date == plannerDay.date {
-                    return plannerDay
-                }
-            } else if date.belongsTo(plannerDay) {
+            if time.belongsTo(plannerDay) {
                 return plannerDay
             }
         }
@@ -109,45 +123,20 @@ extension ModelContext {
     @MainActor
     func updatePlannerLocation(
         for planner: Planner,
-        to newLocation: Location?,
-        settings: PlannerSettings,
-        storageEvents: [PlannerEvent]
+        to newLocation: Location?
     ) {
-
-        let newRegion = newLocation?.region ?? settings.homeRegion
-        guard let newStartOfDay = planner.datestamp.startOfDay(in: newRegion)
-        else {
-            return
-        }
-
         planner.location = newLocation
-
-        for event in storageEvents where !event.hasTime {
-            // Untimed events MUST have their date set to the planner's startOfDay.
-            event.date = newStartOfDay.date
-        }
-
         self.safeSave("planner.updatePlannerLocation")
     }
 
     @MainActor
     func togglePlannerRoutineExclusion(
         for planner: Planner,
-        plannerEvents: [PlannerEvent]
+        plannerEvents: [PlannerEvent],
+        plannerBuildManager: PlannerBuildManager
     ) {
 
-        if planner.safeExcludeRoutine {
-            planner.excludeRoutine = false
-        } else {
-            planner.excludeRoutine = true
-
-            // Delete all routine event records.
-            for plannerEvent in plannerEvents {
-                if plannerEvent.routineEvent != nil {
-                    delete(plannerEvent)
-                }
-            }
-        }
+        planner.excludeRoutine = !planner.safeExcludeRoutine
 
         if let trip = planner.trip,
             trip.excludeRoutines == planner.excludeRoutine
@@ -156,12 +145,12 @@ extension ModelContext {
             planner.excludeRoutine = nil
         }
 
-        // Clean the planner of all routine variants so they may be re-synced.
-        for routineEventVariant in planner.safeRoutineEventVariants {
-            delete(routineEventVariant)
-        }
+        safeSave("planner.togglePlannerRoutineExclusion")
 
-        self.safeSave("planner.togglePlannerRoutineExclusion")
+        // Re-sync the planner's routine events.
+        plannerBuildManager.rebuildDatestampRoutine(
+            planner.datestamp
+        )
     }
 
 }

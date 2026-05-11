@@ -13,8 +13,15 @@ extension EnvironmentValues {
     @Entry var showToast: (Toast) -> Void = { _ in }
 }
 
-struct ToastRootView<Content: View>: View {
+struct ToastRootView<Content: View, ListItemType: ListItem>: View {
+    let listManager: ListManager<ListItemType>?
     @ViewBuilder var content: Content
+
+    // TODO: fix
+//    init(dynamicBottomPadding: CGFloat = 0, content: () -> Content) {
+//        self.dynamicBottomPadding = dynamicBottomPadding
+//        self.content = content
+//    }
 
     private let animation: Animation = .interpolatingSpring(
         duration: 0.35,
@@ -25,13 +32,18 @@ struct ToastRootView<Content: View>: View {
     @State private var activeToast: Toast? = nil
 
     @State private var toastDismissWorkItem: DispatchWorkItem?
+    
+    private var keyboardPadding: CGFloat {
+        listManager?.focusedId != nil ? -40 : 0
+    }
 
     var body: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .overlay(alignment: .bottom) {
                 if let activeToast {
-                    ToastView(config: activeToast)
+                    ToastView(config: activeToast, listManager: listManager)
+                        .padding(.bottom, keyboardPadding)
                 }
             }
             .environment(\.showToast) { toast in

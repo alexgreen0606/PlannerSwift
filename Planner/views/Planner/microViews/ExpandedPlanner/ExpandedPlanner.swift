@@ -73,32 +73,33 @@ struct ExpandedPlannerView<Header: View>: View {
     // MARK: - Body
 
     var body: some View {
-        ToastRootView {
+        ToastRootView(
+            // TODO: focusing must blur the keyboard
+            listManager: plannerManager
+        ) {
             NavigationStack {
                 ScrollViewReader { scrollProxy in
                     ZStack {
-                        if let calendarDayData {
-                            PlannerListView(
-                                showLocationSheet: $showLocationSheet,
-                                eventSheetContext: $eventSheetContext,
-                                plannerType: plannerType,
-                                planner: planner,
-                                plannerDay: plannerDay,
-                                plannerLocation: plannerLocation,
-                                sortedOpenPlannerEvents:
-                                    sortedOpenPlannerEvents,
-                                sortedCheckedPlannerEvents:
-                                    sortedCheckedPlannerEvents,
-                                sortedPlannerEvents: sortedPlannerEvents,
-                                calendarDayData: calendarDayData,
-                                showChecked: planner.showChecked,
-                                namespace: namespace,
-                                scrollProxy: scrollProxy,
-                                settings: settings,
-                                createEvent: createEvent
-                            )
-                            .transition(.opacity)
-                        }
+                        PlannerListView(
+                            showLocationSheet: $showLocationSheet,
+                            eventSheetContext: $eventSheetContext,
+                            plannerType: plannerType,
+                            planner: planner,
+                            plannerDay: plannerDay,
+                            plannerLocation: plannerLocation,
+                            sortedOpenPlannerEvents:
+                                sortedOpenPlannerEvents,
+                            sortedCheckedPlannerEvents:
+                                sortedCheckedPlannerEvents,
+                            sortedPlannerEvents: sortedPlannerEvents,
+                            calendarDayData: calendarDayData,
+                            showChecked: planner.showChecked,
+                            namespace: namespace,
+                            scrollProxy: scrollProxy,
+                            settings: settings,
+                            createEvent: createEvent
+                        )
+                        .transition(.opacity)
                     }
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
@@ -144,7 +145,6 @@ struct ExpandedPlannerView<Header: View>: View {
                 )
             }
 
-            // Inject the environment objects last so they can be accessed in the sheets.
             .environmentObject(plannerManager)
         }
     }

@@ -14,7 +14,7 @@ struct TransferDestinationIndicatorView: View {
     let iconConfig: IconConfig
 
     var body: some View {
-        HStack {
+        HStack(spacing: 6) {
             Image(systemName: iconConfig.name)
                 .imageScale(.medium)
                 .foregroundStyle(

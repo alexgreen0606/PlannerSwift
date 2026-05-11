@@ -8,8 +8,6 @@
 import SwiftData
 import SwiftUI
 
-// Clean
-
 struct PlannerActionMenuView: View {
     @Binding var showLocationSheet: Bool
     let plannerType: PlannerType
@@ -146,19 +144,7 @@ struct PlannerActionMenuView: View {
 
     private var toggleRoutineExclusionButton: some View {
         Button(
-            action: {
-                modelContext.togglePlannerRoutineExclusion(
-                    for: planner,
-                    plannerEvents: plannerEvents
-                )
-
-                if !planner.safeExcludeRoutine,
-                    let weekday = Weekday.forDatestamp(planner.datestamp)
-                {
-                    plannerBuildManager.invalidateRoutineDays([weekday])
-                    plannerBuildManager.beginRebuild()
-                }
-            },
+            action: toggleRoutineExclusion,
             label: {
                 Label(
                     planner.safeExcludeRoutine
@@ -210,6 +196,14 @@ struct PlannerActionMenuView: View {
         // Note: Don't pass the EKEventStore here.
         // Calendar events are meant to survive mass-deletion so users can look back on their calendar.
         modelContext.deletePlannerEvents(canceledEvents, in: planner)
+    }
+
+    private func toggleRoutineExclusion() {
+        modelContext.togglePlannerRoutineExclusion(
+            for: planner,
+            plannerEvents: plannerEvents,
+            plannerBuildManager: plannerBuildManager
+        )
     }
 
 }

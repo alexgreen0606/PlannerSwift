@@ -8,13 +8,12 @@
 import Contacts
 import ContactsUI
 import EventKit
+import Fuse
 import SwiftData
 import SwiftDate
 import SwiftUI
 import WeatherKit
 import WrappingHStack
-
-// Clean
 
 struct PlannerChipSpreadView: View {
     @Binding var showLocationSheet: Bool
@@ -22,8 +21,7 @@ struct PlannerChipSpreadView: View {
     let plannerDay: DateInRegion
     let weatherData: DayWeather?
     let locationLabel: String
-    let calendarDayData: CalendarDayData
-    let sortedPlannerEvents: [PlannerEvent]
+    let calendarDayData: CalendarDayData?
     var namespace: Namespace.ID
     let settings: PlannerSettings
     let openCalendarEventSheet: (EKEvent) -> Void
@@ -52,15 +50,18 @@ struct PlannerChipSpreadView: View {
     var body: some View {
         WrappingHStack(alignment: .leading) {
             tripChip
-            locationChip
-            weatherChip
+            HStack(alignment: .top) {
+                locationChip
+                Spacer()
+                weatherChip
+            }
             ForEach(
-                calendarDayData.birthdays,
+                calendarDayData?.birthdays ?? [],
                 id: \.event.eventIdentifier,
                 content: birthdayChip
             )
             ForEach(
-                calendarDayData.plannerChipEvents,
+                calendarDayData?.plannerChipEvents ?? [],
                 id: \.eventIdentifier,
                 content: eventChip
             )
@@ -68,7 +69,7 @@ struct PlannerChipSpreadView: View {
 
         // Location Sheet
         .sheet(isPresented: $showLocationSheet) {
-            let form = LocationSearchFormView(
+            LocationSearchFormView(
                 title: "Edit Planner Location",
                 subtitle: planner.datestamp.dateWithYear,
                 mode: .planner,
@@ -78,23 +79,15 @@ struct PlannerChipSpreadView: View {
             ) { location in
                 modelContext.updatePlannerLocation(
                     for: planner,
-                    to: location,
-                    settings: settings,
-                    storageEvents: sortedPlannerEvents
+                    to: location
                 )
             }
-            
-            if planner.trip == nil {
-                form
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: IdConstants.LOCATION_CHIP,
-                            in: namespace
-                        )
-                    )
-            } else {
-                form
-            }
+            .navigationTransition(
+                .zoom(
+                    sourceID: IdConstants.LOCATION_CHIP,
+                    in: namespace
+                )
+            )
         }
 
         // Contact Sheet
@@ -127,17 +120,15 @@ struct PlannerChipSpreadView: View {
 
     @ViewBuilder
     private var locationChip: some View {
-        if planner.trip == nil {
-            AdornedValueView(
-                locationLabel,
-                iconConfig: locationIconConfig
-            )
-            .glassChip(onTap: openLocationSheet)
-            .matchedTransitionSource(
-                id: IdConstants.LOCATION_CHIP,
-                in: namespace
-            )
-        }
+        AdornedValueView(
+            locationLabel,
+            iconConfig: locationIconConfig
+        )
+        .glassChip(onTap: openLocationSheet)
+        .matchedTransitionSource(
+            id: IdConstants.LOCATION_CHIP,
+            in: namespace
+        )
     }
 
     @ViewBuilder

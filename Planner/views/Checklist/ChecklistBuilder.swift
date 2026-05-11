@@ -9,17 +9,18 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-// Clean
-
 struct ChecklistBuilderView: View {
+    private let rootFolder: ChecklistItem
     private let canTransferItems: Bool
     private let openItem: (ChecklistItem, ChecklistItem) -> Void
 
     init(
+        rootFolder: ChecklistItem,
         checklistId: UUID,
         canTransferItems: Bool,
         openItem: @escaping (ChecklistItem, ChecklistItem) -> Void
     ) {
+        self.rootFolder = rootFolder
         self.canTransferItems = canTransferItems
         self.openItem = openItem
 
@@ -50,6 +51,7 @@ struct ChecklistBuilderView: View {
         if let checklist {
             ChecklistView(
                 checklist: checklist,
+                rootFolder: rootFolder,
                 sortedItems: sortedItems,
                 canTransferItems: canTransferItems,
                 openItem: openItem

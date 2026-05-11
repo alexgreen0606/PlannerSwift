@@ -54,11 +54,19 @@ extension ModelContext {
             }
 
             // MARK: Delete events that occurred before the cutoff date.
+            
+            let expirationDatestamp = date.datestamp
 
             let expiredEvents = try self.fetch(
                 FetchDescriptor<PlannerEvent>(
-                    predicate: #Predicate<PlannerEvent> {
-                        $0.date < date
+                    predicate: #Predicate<PlannerEvent> { event in
+                        if let time = event.time {
+                            return time < date
+                        } else if let datestamp = event.datestamp {
+                            return datestamp < expirationDatestamp
+                        } else {
+                            return false
+                        }
                     }
                 )
             )

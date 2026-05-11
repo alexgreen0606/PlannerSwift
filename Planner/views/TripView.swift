@@ -45,7 +45,7 @@ struct TripView: View {
     }
 
     private var datesLabel: String {
-        trip.dateRangeLabel(todaystamp: todaystampWatcher.todaystamp) ?? ""
+        trip.dateRangeLabel(todaystamp: todaystampWatcher.todaystamp)
     }
 
     private var countdownLabel: String {
@@ -105,9 +105,13 @@ struct TripView: View {
                 Text(datesLabel)
                     .font(.system(size: 14, weight: .bold, design: .rounded))
 
-                Text(countdownLabel)
-                    .font(.footnote)
-                    .foregroundStyle(Color.secondary)
+                if countdownLabel.count == 0 {
+                    progressBar
+                } else {
+                    Text(countdownLabel)
+                        .font(.footnote)
+                        .foregroundStyle(Color.secondary)
+                }
             }
         }
         .padding()
@@ -156,6 +160,13 @@ struct TripView: View {
         }
         .scrollIndicators(.hidden)
         .background(Color.clear)
+    }
+
+    private var progressBar: some View {
+        trip.progressBar(
+            day: trip.day(of: todaystamp),
+            accentColor: accentColor
+        )
     }
 
     private var editTripCard: some View {

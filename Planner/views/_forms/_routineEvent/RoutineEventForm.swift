@@ -89,7 +89,9 @@ struct RoutineEventFormView: View {
     }
 
     private var canSave: Bool {
-        !draftRoutineEvent.title.isEmpty
+        !draftRoutineEvent.title.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        ).isEmpty
             && !draftRoutineEvent.daysOfWeek.isEmpty
     }
 
@@ -272,13 +274,10 @@ struct RoutineEventFormView: View {
             || !draftRoutineEvent.daysOfWeek.contains(sourceDayOfWeek!)
         {
             let selectedDays = draftRoutineEvent.daysOfWeek
-
-            let destinations = {
+            
+            let subtitle: String? = {
                 if selectedDays.count > 1 {
-                    return Weekday.allCases
-                        .filter { selectedDays.contains($0) }
-                        .map { $0.initial }
-                        .joined()
+                    return nil
                 }
 
                 if let destinationDay = selectedDays.first?.rawValue
@@ -288,6 +287,18 @@ struct RoutineEventFormView: View {
                 }
 
                 return ""
+            }()
+            
+            let customSubtitle: AnyView? = {
+                if selectedDays.count == 1 {
+                    return nil
+                }
+                return AnyView(WeekdaySpreadView(
+                    selected: selectedDays,
+                    scale: 0.66,
+                    spacing: 1,
+                    customAccentColor: Color.label
+                ))
             }()
 
             let canOpenDestinationRoutine = {
@@ -306,7 +317,8 @@ struct RoutineEventFormView: View {
                 showToast(
                     Toast(
                         title: "Successfully moved recurring event!",
-                        subtitle: destinations,
+                        subtitle: subtitle,
+                        customSubtitle: customSubtitle,
                         iconConfig: IconConfig(
                             name: "arrow.left.arrow.right",
                             primaryColor: Color.label,
@@ -319,7 +331,8 @@ struct RoutineEventFormView: View {
                 showToast(
                     Toast(
                         title: "Successfully created recurring event!",
-                        subtitle: destinations,
+                        subtitle: subtitle,
+                        customSubtitle: customSubtitle,
                         iconConfig: IconConfig(
                             name: "repeat",
                             primaryColor: Color.label

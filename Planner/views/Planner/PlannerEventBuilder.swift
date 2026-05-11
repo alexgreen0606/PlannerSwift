@@ -12,8 +12,6 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-// Clean
-
 struct PlannerEventBuilderView<Header: View>: View {
     private let planner: Planner
     private let plannerDay: DateInRegion
@@ -42,13 +40,18 @@ struct PlannerEventBuilderView<Header: View>: View {
 
         let startOfNextDay = (plannerDay + 1.days)
 
+        let plannerDatestamp = planner.datestamp
+        let dayStart = plannerDay.date
+        let nextDay = startOfNextDay.date
+
         _sortedPlannerEvents = Query(
             filter: #Predicate<PlannerEvent> { event in
-                if !event.hasTime {
-                    return event.date == plannerDay.date
+                if let time = event.time {
+                    return time >= dayStart && time < nextDay
+                } else if let datestamp = event.datestamp {
+                    return datestamp == plannerDatestamp
                 } else {
-                    return event.date >= plannerDay.date
-                        && event.date < startOfNextDay.date
+                    return false
                 }
             },
             sort: \.sortDate
@@ -59,6 +62,7 @@ struct PlannerEventBuilderView<Header: View>: View {
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var weatherStore: WeatherStore
     @EnvironmentObject private var plannerBuildManager: PlannerBuildManager
+    @EnvironmentObject private var todaystampWatcher: TodaystampWatcher
 
     @Query private var sortedPlannerEvents: [PlannerEvent]
 
@@ -145,7 +149,8 @@ struct PlannerEventBuilderView<Header: View>: View {
             sortedPlannerEvents: sortedPlannerEvents,
             settings: settings,
             ekEventStore: calendarStore.ekEventStore,
-            modelContext: modelContext
+            todaystamp: todaystampWatcher.todaystamp,
+            modelContext: modelContext,
         ).value
 
         withAnimation {

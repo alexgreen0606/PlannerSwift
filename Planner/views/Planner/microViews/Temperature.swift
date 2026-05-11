@@ -8,8 +8,6 @@
 import SwiftUI
 import WeatherKit
 
-// Clean
-
 struct TemperatureView: View {
     let weatherData: DayWeather
 

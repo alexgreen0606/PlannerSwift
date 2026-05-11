@@ -9,8 +9,6 @@ import SwiftDate
 import SwiftUI
 import WeatherKit
 
-// Clean
-
 struct PreviewCardWeatherView: View {
     let planner: Planner
     let plannerDay: DateInRegion

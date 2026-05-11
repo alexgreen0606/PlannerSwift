@@ -12,6 +12,7 @@ import SwiftUI
 
 struct ChecklistView: View {
     let checklist: ChecklistItem
+    let rootFolder: ChecklistItem
     let sortedItems: [ChecklistItem]
     let canTransferItems: Bool
     let openItem: (ChecklistItem, ChecklistItem) -> Void
@@ -48,63 +49,62 @@ struct ChecklistView: View {
             && !visibleItems.isEmpty
     }
 
-//    private var completedItemExists: Bool {
-//        sortedItems.contains(where: \.isCompleted)
-//    }
-
     var body: some View {
-        NavigationStack {
-            ScrollViewReader { scrollProxy in
-                SortableListView<
-                    ChecklistItem, EmptyView, EmptyView, EmptyView, EmptyView
-                >(
-                    uncheckedItems: sortedUncheckedItems,
-                    checkedItems: sortedCheckedItems,
-                    showChecked: checklist.showCompleted,
-                    checkedHeader: "Completed items",
-                    emptyUncheckedLabel: "No items",
-                    emptyCheckedLabel: "No completed items",
-                    tint: { _ in checklist.color.swiftUIColor },
-                    scrollProxy: scrollProxy,
-                    createItem: createItem,
-                    moveItem: moveItem
-                )
-                .navigationTitle(checklist.title)
-                .toolbar {
-                    topLeadingToolbar
-                    topTrailingToolbar
-                    bottomToolbar(scrollProxy: scrollProxy)
-                }
-                .animateSynchronousAction(from: listManager.isSelectMode)
-            }
-        }
-
-        // Edit Form
-        .sheet(isPresented: $showEditSheet) {
-            if let parent = checklist.parent {
-                ChecklistItemFormView(
-                    item: checklist,
-                    parent: parent,
-                    onDelete: {
-                        dismiss()
+        ToastRootView(listManager: listManager) {
+            NavigationStack {
+                ScrollViewReader { scrollProxy in
+                    SortableListView<
+                        ChecklistItem, EmptyView, EmptyView, EmptyView, EmptyView
+                    >(
+                        uncheckedItems: sortedUncheckedItems,
+                        checkedItems: sortedCheckedItems,
+                        showChecked: checklist.showCompleted,
+                        checkedHeader: "Completed items",
+                        emptyUncheckedLabel: "No items",
+                        emptyCheckedLabel: "No completed items",
+                        tint: { _ in checklist.color.swiftUIColor },
+                        scrollProxy: scrollProxy,
+                        createItem: createItem,
+                        moveItem: moveItem
+                    )
+                    .navigationTitle(checklist.title)
+                    .toolbar {
+                        topLeadingToolbar
+                        topTrailingToolbar
+                        bottomToolbar(scrollProxy: scrollProxy)
                     }
+                    .animateSynchronousAction(from: listManager.isSelectMode)
+                }
+            }
+            
+            // Edit Form
+            .sheet(isPresented: $showEditSheet) {
+                if let parent = checklist.parent {
+                    ChecklistItemFormView(
+                        item: checklist,
+                        parent: parent,
+                        onDelete: {
+                            dismiss()
+                        }
+                    )
+                }
+            }
+            
+            // Transfer Items Form
+            .sheet(isPresented: $showTransferSheet) {
+                TransferChecklistItemsFormView(
+                    source: checklist,
+                    selectedIds: listManager.selectedItemIds,
+                    rootFolder: rootFolder,
+                    openItem: openItem
+                )
+                .navigationTransition(
+                    .zoom(
+                        sourceID: IdConstants.TRANSFER_BUTTON,
+                        in: namespace
+                    )
                 )
             }
-        }
-
-        // Transfer Items Form
-        .sheet(isPresented: $showTransferSheet) {
-            TransferChecklistItemsFormView(
-                source: checklist,
-                selectedIds: listManager.selectedItemIds,
-                openItem: openItem
-            )
-            .navigationTransition(
-                .zoom(
-                    sourceID: IdConstants.TRANSFER_BUTTON,
-                    in: namespace
-                )
-            )
         }
     }
 

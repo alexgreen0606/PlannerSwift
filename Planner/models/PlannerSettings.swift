@@ -8,8 +8,6 @@
 import SwiftData
 import SwiftUI
 
-// Clean
-
 @Model
 class PlannerSettings {
 

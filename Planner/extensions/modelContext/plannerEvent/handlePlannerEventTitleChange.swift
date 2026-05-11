@@ -31,7 +31,7 @@ extension ModelContext {
 
         // Scan the title for a date.
         guard let defaultLocation,
-            let (date, updatedText) = event.title.separateDate(for: plannerDay)
+            let (time, updatedText) = event.title.separateDate(for: plannerDay)
         else {
             updatePlannerEventRoutineVariance(
                 event,
@@ -43,8 +43,7 @@ extension ModelContext {
 
         event.title = updatedText
         event.location = defaultLocation
-        event.date = date
-        event.hasTime = true
+        event.time = time
         updatePlannerEventRoutineVariance(
             event,
             in: plannerDay.region.timeZone,

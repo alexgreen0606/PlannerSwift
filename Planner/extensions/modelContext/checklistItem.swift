@@ -78,7 +78,7 @@ extension ModelContext {
     }
 
     @MainActor
-    func handleChecklistItemChange(
+    func updateChecklistItem(
         sourceItem: ChecklistItem?,
         parent: ChecklistItem?,
         draftChecklistItem: ChecklistItem

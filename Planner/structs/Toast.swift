@@ -34,16 +34,20 @@ struct Toast {
     let iconConfig: IconConfig
     let variant: ToastVariant
     let action: (() -> Void)?
+    
+    let customSubtitle: AnyView?
 
     init(
         title: String,
         subtitle: String? = nil,
+        customSubtitle: AnyView? = nil,
         iconConfig: IconConfig,
         variant: ToastVariant = .sheet,
         action: (() -> Void)? = nil
     ) {
         self.title = title
         self.subtitle = subtitle
+        self.customSubtitle = customSubtitle
         self.variant = variant
         self.iconConfig = iconConfig
         self.action = action

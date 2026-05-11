@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-// Clean
-
 struct CurrentFolderListView: View {
     @Binding var selectedItem: ChecklistItem?
     @Binding var currentFolder: ChecklistItem
@@ -49,7 +47,7 @@ struct CurrentFolderListView: View {
         .overlay {
             if selectableItems.isEmpty {
                 EmptyLabelView(
-                    "No Available \(destinationType.rawValue.capitalized)s"
+                    "No available \(destinationType.rawValue)s"
                 )
             }
         }
@@ -145,12 +143,24 @@ struct CurrentFolderListView: View {
     private func buildSelectableItems() {
         selectableItems = currentFolder.safeItems
             .filter { item in
+                if item.stableId == source.stableId {
+                    if destinationType == .folder, item.type == .folder,
+                        item.hasChildType(
+                            .folder,
+                            excluding: listManager.selectedItemIds
+                        )
+                    {
+                        // This it the source. BUT we are looking for folders and this source contains a folder. Display it.
+                        return true
+                    }
+                    return false
+                }
+
                 guard
-                    item.stableId != source.stableId
-                        && !listManager.selectedItemIds
-                            .contains(
-                                item.stableId
-                            )
+                    !listManager.selectedItemIds
+                        .contains(
+                            item.stableId
+                        )
                 else { return false }
 
                 if destinationType == .folder {

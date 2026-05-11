@@ -10,14 +10,15 @@ import Foundation
 import SwiftData
 import SwiftDate
 
-// Clean
-
 @available(iOS 26.0, *)
 @Model
 class PlannerEvent: EventListItem {
 
-    var date: Date = Date()
-    var hasTime: Bool = false
+    var time: Date?
+    
+    // Must be set when an event doesn't have a time.
+    var datestamp: String?
+    
     var isCanceled: Bool = false
 
     @Relationship(deleteRule: .nullify, inverse: \Location.events)
@@ -36,39 +37,38 @@ class PlannerEvent: EventListItem {
     var occurrenceId: String?
 
     init(
-        date: Date,
+        time: Date? = nil,
+        datestamp: String? = nil,
         sortDate: Date,
         calendarEvent: EKEvent? = nil,
         routineEvent: RoutineEvent? = nil,
         plannerDay: DateInRegion? = nil
     ) {
-        self.date = date
+        self.time = time
+        self.datestamp = datestamp
 
         super.init(sortDate: sortDate)
 
         // Calendar event synchronization.
         if let calendarEvent {
             self.title = calendarEvent.title
-            self.date = calendarEvent.startDate
+            self.time = calendarEvent.startDate
             self.calendarEvent = calendarEvent
             self.calendarItemExternalIdentifier =
                 calendarEvent.calendarItemExternalIdentifier
             self.occurrenceId = calendarEvent.occurrenceId
             self.location = calendarEvent.location(storageEvent: nil)
-            self.hasTime = true
             return
         }
 
+        // Routine event synchronization.
         if let routineEvent {
             self.title = routineEvent.title
 
             if let plannerDay,
                 let time = routineEvent.date(in: plannerDay)
             {
-                self.date = time
-                self.hasTime = true
-            } else {
-                self.hasTime = false
+                self.time = time
             }
 
             self.routineEvent = routineEvent

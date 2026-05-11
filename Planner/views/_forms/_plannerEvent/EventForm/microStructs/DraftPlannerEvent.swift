@@ -9,8 +9,6 @@ import SwiftUI
 import EventKit
 import SwiftDate
 
-// Clean
-
 struct DraftPlannerEvent {
     var title: String = ""
     var date: Date = Date()

@@ -13,8 +13,6 @@ enum FolderNavigationDirection {
     case backward
 }
 
-// Clean
-
 struct TransferChecklistItemsFormView: View {
     private let source: ChecklistItem
     private let openItem: (ChecklistItem, ChecklistItem) -> Void
@@ -22,7 +20,8 @@ struct TransferChecklistItemsFormView: View {
     init(
         source: ChecklistItem,
         selectedIds: Set<UUID>,
-        openItem: @escaping (ChecklistItem, ChecklistItem) -> Void
+        rootFolder: ChecklistItem,
+        openItem: @escaping (ChecklistItem, ChecklistItem) -> Void,
     ) {
         self.source = source
         self.openItem = openItem
@@ -32,19 +31,36 @@ struct TransferChecklistItemsFormView: View {
             ? source
             : source.parent!
 
+        let excludedOptions = Set(selectedIds + [source.stableId])
+
         // Step backwards through folders until you find one with a selectable item.
         while !folderPointer.hasChildType(
             source.type,
-            excluding: Set(selectedIds + [source.stableId])
+            excluding: excludedOptions
         ),
             let parent = folderPointer.parent
         {
             folderPointer = parent
         }
 
-        self.currentFolder = folderPointer
-        self.destinationType =
+        let destinationType: ChecklistItemType =
             source.type == .folder ? .folder : .checklist
+
+        if destinationType == .folder {
+            let selectableFolders = rootFolder.folders(
+                excluding: excludedOptions
+            )
+
+            if selectableFolders.count == 1 {
+                // Looking for folders and there's only one available. Automatically select it.
+                self._selectedItem = State(
+                    initialValue: selectableFolders.first!
+                )
+            }
+        }
+
+        self.currentFolder = folderPointer
+        self.destinationType = destinationType
     }
 
     @AppStorage("accentColor") var accentColor: AccentColor =

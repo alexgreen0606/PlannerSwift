@@ -122,9 +122,16 @@ actor PlannerSearchActor {
                     continue
                 }
 
+                guard let time = plannerEvent.time else {
+                    if let datestamp = plannerEvent.datestamp {
+                        datestampScores[datestamp, default: 0] += score
+                    }
+                    continue
+                }
+
                 // Add the datestamps that own this event.
                 try updateDatestamps(
-                    with: plannerEvent.date,
+                    with: time,
                     datestampScores: &datestampScores,
                     plannerCache: &plannerCache,
                     calendarDayCache: &calendarDayCache,

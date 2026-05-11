@@ -7,11 +7,10 @@
 
 import Foundation
 import Fuse
-
-// Clean
+import SwiftUI
 
 extension Trip {
-    
+
     var safePlanners: [Planner] {
         self.planners ?? []
     }
@@ -32,6 +31,52 @@ extension Trip {
         Set(
             safePlanners.compactMap { $0.datestamp.dateComponents }
         )
+    }
+
+    func day(of datestamp: String) -> CGFloat {
+        guard
+            let index = sortedPlanners.firstIndex(where: {
+                $0.datestamp == datestamp
+            })
+        else {
+            return 0.0
+        }
+        return Double(index) + 1.0
+    }
+
+    @ViewBuilder
+    func progressBar(
+        day: CGFloat,
+        accentColor: AccentColor,
+    ) -> some View {
+
+        let progressBarWidth: CGFloat = 100
+
+        let tripProgress: Double = {
+            guard sortedPlanners.count > 0 else { return 0 }
+            return day / Double(sortedPlanners.count)
+        }()
+
+        ZStack(alignment: .leading) {
+            Capsule()
+                .fill(Color.secondary.opacity(0.15))
+                .frame(width: progressBarWidth)
+
+            Capsule()
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            accentColor.color,
+                            accentColor.color.opacity(0.7),
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .frame(width: progressBarWidth * tripProgress)
+                .animation(.easeInOut(duration: 0.3), value: tripProgress)
+        }
+        .frame(height: 8)
     }
 
     func dateRangeLabel(todaystamp: String) -> String {

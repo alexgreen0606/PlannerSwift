@@ -57,7 +57,9 @@ struct ChecklistItemFormView: View {
     @FocusState private var isTitleFocused: Bool
 
     private var canSave: Bool {
-        !draftChecklistItem.title.isEmpty
+        !draftChecklistItem.title.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        ).isEmpty
     }
 
     var body: some View {
@@ -169,7 +171,7 @@ struct ChecklistItemFormView: View {
     // MARK: - Functions
 
     private func handleSave() {
-        let newItemId = modelContext.handleChecklistItemChange(
+        let newItemId = modelContext.updateChecklistItem(
             sourceItem: sourceItem,
             parent: parent,
             draftChecklistItem: draftChecklistItem
