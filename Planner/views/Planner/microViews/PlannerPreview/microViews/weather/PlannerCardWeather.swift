@@ -1,16 +1,15 @@
 //
-//  SearchResultsWeather.swift
+//  PlannerCardWeather.swift
 //  Planner
 //
-//  Created by Alex Green on 4/4/26.
+//  Created by Alex Green on 5/12/26.
 //
 
 import SwiftDate
 import SwiftUI
 import WeatherKit
 
-struct SearchResultsWeatherView: View {
-    let plannerSearchQuery: PlannerSearchQuery
+struct PlannerCardWeatherView: View {
     let planner: Planner
     let plannerDay: DateInRegion
     let plannerLocation: Location?
@@ -26,10 +25,6 @@ struct SearchResultsWeatherView: View {
     }
 
     private var showLocationLabel: Bool {
-        guard planner.searchQueryScore(plannerSearchQuery) != nil else {
-            return false
-        }
-
         if locationLabel != homeLocationLabel {
             // Show the location when the planner's location
             // differs from the home location.
@@ -55,6 +50,7 @@ struct SearchResultsWeatherView: View {
             plannerLocation: plannerLocation,
             settings: settings
         )
+        .frame(maxWidth: .infinity, alignment: .trailing)
     }
 
 }

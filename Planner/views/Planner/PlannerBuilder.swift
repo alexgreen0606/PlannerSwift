@@ -137,7 +137,7 @@ struct PlannerBuilderView<Header: View>: View {
                     alignment: .center
                 )
             if let plannerDay, let planner {
-                PreviewCardWeatherView(
+                PlannerCardWeatherView(
                     planner: planner,
                     plannerDay: plannerDay,
                     plannerLocation: plannerLocation,
