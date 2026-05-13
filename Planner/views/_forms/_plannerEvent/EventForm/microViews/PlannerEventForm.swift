@@ -79,6 +79,13 @@ struct PlannerEventFormView: View {
         calendarStore.accessDenied == false
     }
 
+    private var bottomBarPadding: CGFloat {
+        if isTitleFocused {
+            return 4
+        }
+        return 0
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -91,6 +98,8 @@ struct PlannerEventFormView: View {
             .toolbar {
                 cancelButton
                 saveButton
+            }
+            .safeAreaInset(edge: .bottom) {
                 bottomToolbar
             }
         }
@@ -121,77 +130,77 @@ struct PlannerEventFormView: View {
         }
     }
 
-    @ToolbarContentBuilder
-    private var bottomToolbar: some ToolbarContent {
-        deleteButton
+    // MARK: - View Builders
 
-        // When both buttons visible, space them apart.
-        if showCalendarButton, !isCreateForm {
-            ToolbarSpacer(placement: .bottomBar)
-        }
+    @ViewBuilder
+    private var bottomToolbar: some View {
+        HStack {
+            deleteButton
 
-        addToCalendarButton
-    }
-
-    @ToolbarContentBuilder
-    private var addToCalendarButton: some ToolbarContent {
-        if showCalendarButton {
-            ToolbarItem(placement: .bottomBar) {
-                ActionButtonView(
-                    label: "Add To Calendar",
-                    systemImage: "calendar.badge.plus",
-                    endAdornment: !isCreateForm,
-                    onTap: addEventToCalendar
-                )
+            // When both buttons visible, space them apart.
+            if showCalendarButton, !isCreateForm {
+                Spacer()
             }
-            .sharedBackgroundVisibility(.hidden)
+
+            addToCalendarButton
+        }
+        .padding(.horizontal)
+        .padding(.top)
+        .padding(.bottom, bottomBarPadding)
+    }
+
+    @ViewBuilder
+    private var addToCalendarButton: some View {
+        if showCalendarButton {
+            GlassIconButtonView(systemImage: "calendar.badge.plus") {
+                isTitleFocused = false
+                DispatchQueue.main.async(execute: addEventToCalendar)
+            }
+            // TODO: pick a design.
+            //            ActionButtonView(
+            //                label: "Add To Calendar",
+            //                systemImage: "calendar.badge.plus",
+            //                endAdornment: !isCreateForm,
+            //                onTap: addEventToCalendar
+            //            )
         }
     }
 
-    @ToolbarContentBuilder
-    private var deleteButton: some ToolbarContent {
+    @ViewBuilder
+    private var deleteButton: some View {
         if let sourcePlannerEvent {
             if !showCalendarButton {
-                ToolbarItem(placement: .bottomBar) {
-                    ActionButtonView(
-                        label: "Delete Event",
-                        systemImage: "trash",
-                        color: Color.red,
-                        onTap: {
-                            showDeleteConfirmation = true
-                        }
-                    )
-                    .withConfirmation(
-                        deletePlannerEventConfig(
-                            event: sourcePlannerEvent,
-                            inForm: true,
-                            delete: deleteEvent
-                        ),
-                        isPresented: $showDeleteConfirmation
-                    )
-                }
-                .sharedBackgroundVisibility(.hidden)
-            } else {
-                ToolbarItem(placement: .bottomBar) {
-                    Button("Delete Event", systemImage: "trash") {
+                ActionButtonView(
+                    label: "Delete Event",
+                    systemImage: "trash",
+                    color: Color.red,
+                    onTap: {
                         showDeleteConfirmation = true
                     }
-                    .foregroundStyle(Color.red)
-                    .tint(Color.red)
-                    .withConfirmation(
-                        deletePlannerEventConfig(
-                            event: sourcePlannerEvent,
-                            inForm: true,
-                            delete: deleteEvent
-                        ),
-                        isPresented: $showDeleteConfirmation
-                    )
+                )
+                .withConfirmation(
+                    deletePlannerEventConfig(
+                        event: sourcePlannerEvent,
+                        inForm: true,
+                        delete: deleteEvent
+                    ),
+                    isPresented: $showDeleteConfirmation
+                )
+            } else {
+                GlassIconButtonView(systemImage: "trash", color: Color.red) {
+                    showDeleteConfirmation = true
                 }
+                .withConfirmation(
+                    deletePlannerEventConfig(
+                        event: sourcePlannerEvent,
+                        inForm: true,
+                        delete: deleteEvent
+                    ),
+                    isPresented: $showDeleteConfirmation
+                )
             }
         }
     }
-
-    // MARK: - View Builders
 
     private var titleSection: some View {
         FormTitleFieldView(

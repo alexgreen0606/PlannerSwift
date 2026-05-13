@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-// Clean
-
 extension EnvironmentValues {
     @Entry var showToast: (Toast) -> Void = { _ in }
 }
@@ -17,11 +15,13 @@ struct ToastRootView<Content: View, ListItemType: ListItem>: View {
     let listManager: ListManager<ListItemType>?
     @ViewBuilder var content: Content
 
-    // TODO: fix
-//    init(dynamicBottomPadding: CGFloat = 0, content: () -> Content) {
-//        self.dynamicBottomPadding = dynamicBottomPadding
-//        self.content = content
-//    }
+    init(
+        listManager: ListManager<ListItemType>? = nil,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.listManager = listManager
+        self.content = content()
+    }
 
     private let animation: Animation = .interpolatingSpring(
         duration: 0.35,
@@ -32,7 +32,7 @@ struct ToastRootView<Content: View, ListItemType: ListItem>: View {
     @State private var activeToast: Toast? = nil
 
     @State private var toastDismissWorkItem: DispatchWorkItem?
-    
+
     private var keyboardPadding: CGFloat {
         listManager?.focusedId != nil ? -40 : 0
     }

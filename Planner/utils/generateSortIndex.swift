@@ -5,10 +5,9 @@
 //  Created by Alex Green on 12/3/25.
 //
 
-// Clean
-
 func generateSortIndex<Item: ListItem>(
     index: Int,
+    
     // May or may not contain the item being placed.
     sortedItems: [Item]
 ) -> Double {

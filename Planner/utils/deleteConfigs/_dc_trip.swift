@@ -13,7 +13,7 @@ func deleteTripConfig(
         title: "Delete this trip?",
         message: {
             var message =
-                "Events won't deleted. \(genericDeleteWarning)"
+                "Events won't be deleted. \(genericDeleteWarning)"
 
             if trip.location != nil {
                 message = "Planner locations will default to your home location. \(message)"

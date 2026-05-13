@@ -8,7 +8,7 @@
 import EventKit
 
 // Note: Moving this to separate file broke ZOOM transitions of file rows.
-// If this issue persists, move back to ExpandedPlanner.
+// If this issue returns, move back to ExpandedPlanner.
 struct EventSheetContext: Identifiable {
     var plannerEvent: PlannerEvent?
     var calendarEvent: EKEvent?

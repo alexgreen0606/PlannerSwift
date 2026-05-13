@@ -10,8 +10,6 @@ import MapKit
 import SwiftData
 import SwiftUI
 
-// Clean
-
 enum LocationSearchMode {
     case home
     case planner
@@ -105,11 +103,18 @@ struct LocationSearchFormView: View {
         }
     }
 
-    private var lowerOptionPadding: CGFloat {
+    private var bottomBarPadding: CGFloat {
         if isSearchFocused {
+            if mode == .home {
+                return 16
+            }
             return 8
         }
-        return mode == .home ? 20 : 0
+
+        if mode == .home {
+            return 32
+        }
+        return 0
     }
 
     var body: some View {
@@ -138,7 +143,6 @@ struct LocationSearchFormView: View {
             .toolbar {
                 backButton
                 saveButton
-                bottomButton
             }
             .safeAreaInset(edge: .top) {
                 LocationSearchHeaderView(
@@ -149,6 +153,9 @@ struct LocationSearchFormView: View {
                     selectedLocation: selectedLocation,
                     homeLocation: settings.homeLocation,
                 )
+            }
+            .safeAreaInset(edge: .bottom) {
+                bottomButton
             }
             .overlay {
                 emptyOptionsLabel
@@ -198,18 +205,20 @@ struct LocationSearchFormView: View {
         }
     }
 
-    @ToolbarContentBuilder
-    private var bottomButton: some ToolbarContent {
-        ToolbarItem(placement: .bottomBar) {
+    // MARK: - View Builders
+
+    @ViewBuilder
+    private var bottomButton: some View {
+        ZStack {
             currentLocationButton
             homeLocationButton
             plannerLocationButton
             tripLocationButton
         }
-        .sharedBackgroundVisibility(.hidden)
+        .padding(.horizontal)
+        .padding(.top)
+        .padding(.bottom, bottomBarPadding)
     }
-
-    // MARK: - View Builders
 
     @ViewBuilder
     private var currentLocationButton: some View {

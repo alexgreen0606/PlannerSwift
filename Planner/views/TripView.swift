@@ -15,7 +15,7 @@ struct TripView: View {
     let namespace: Namespace.ID
     let settings: PlannerSettings
     let scrollToTrip: () -> Void
-    let openTripForm: () -> Void
+    let openEditSheet: () -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         AccentColor.blue
@@ -192,9 +192,9 @@ struct TripView: View {
                 )
         )
         .contentShape(Rectangle())
-        .onTapGesture(perform: openTripForm)
+        .onTapGesture(perform: openEditSheet)
         .matchedTransitionSource(
-            id: trip.id,
+            id: "\(trip.id)",
             in: namespace
         )
     }

@@ -7,8 +7,6 @@
 
 import SwiftData
 
-// Clean
-
 extension ModelContext {
 
     @MainActor
@@ -23,7 +21,7 @@ extension ModelContext {
     @MainActor
     func safeDelete<Item: PersistentModel>(_ item: Item) {
         self.delete(item)
-        self.safeSave("general.safeDelete")
+        self.safeSave("_general.safeDelete")
     }
 
     @MainActor
@@ -31,7 +29,7 @@ extension ModelContext {
         for item in items {
             self.delete(item)
         }
-        self.safeSave("general.safeBulkDelete")
+        self.safeSave("_general.safeBulkDelete")
     }
 
     @MainActor

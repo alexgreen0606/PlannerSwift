@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-// Clean
-
 extension View {
 
     // Hides list separator and background.
@@ -47,9 +45,7 @@ extension View {
                         .interactive(onTap != nil)
                     : .regular
                         .interactive(onTap != nil),
-                in: .rect(
-                    cornerRadius: (height ?? PlannerLayout.CHIP_HEIGHT) / 2
-                )
+                in: .capsule
             )
     }
 

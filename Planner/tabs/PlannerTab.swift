@@ -10,19 +10,16 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-// Clean
-
 struct TripSheetContext: Identifiable {
     var trip: Trip?
 
     var id: String {
-        String(describing: trip?.id)
-    }
+        if let trip {
+            return "\(trip.id)"
+        }
 
-    var transitionId: PersistentIdentifier? {
-        trip?.id
+        return "FALLBACK_NEW_SHEET"
     }
-
 }
 
 struct PlannerTabView: View {
@@ -52,14 +49,15 @@ struct PlannerTabView: View {
 
     @Query private var trips: [Trip]
 
-    @State private var tappedDates: Set<DateComponents> = []
     @State private var showNewEventSheet = false
     @State private var showNewRoutineEventSheet = false
     @State private var showCalendarPicker = false
+
+    @State private var tappedDates: Set<DateComponents> = []
     @State private var thisWeekDatestamps: [String]
-    @State private var tripSheetContext: TripSheetContext? = nil
     @State private var expandedTrips: Set<PersistentIdentifier> = []
     @State private var routineCoverContext: RoutineCoverContext? = nil
+    @State private var tripSheetContext: TripSheetContext? = nil
 
     private var sortedUpcomingTrips: [Trip] {
         trips.filter { trip in
@@ -90,11 +88,11 @@ struct PlannerTabView: View {
     }
 
     var body: some View {
-        ToastRootView(listManager: nil) {
+        ToastRootView {
             NavigationStack {
                 ScrollViewReader { scrollProxy in
                     List {
-                        
+
                         // MARK: THIS WEEK
                         Section {
                             ScrollView(.horizontal) {
@@ -109,7 +107,9 @@ struct PlannerTabView: View {
                                     height: PlannerLayout.PREVIEW_CARD_HEIGHT
                                 )
                                 .padding(.horizontal)
-                                .animateAsynchronousAction(from: thisWeekDatestamps)
+                                .animateAsynchronousAction(
+                                    from: thisWeekDatestamps
+                                )
                             }
                             .scrollIndicators(.hidden)
                             .background(Color.clear)
@@ -120,7 +120,7 @@ struct PlannerTabView: View {
                         .listSectionMargins(.top, 0)
                         .listRowInsets(EdgeInsets())
                         .discreetListItem()
-                        
+
                         // MARK: ROUTINES
                         Section("Routines") {
                             RoutinesSpreadView(
@@ -128,10 +128,12 @@ struct PlannerTabView: View {
                             )
                         }
                         .discreetListItem()
-                        
+
                         // MARK: TRIPS
-                        ForEach(Array(sortedTripYears.enumerated()), id: \.element)
-                        {
+                        ForEach(
+                            Array(sortedTripYears.enumerated()),
+                            id: \.element
+                        ) {
                             index,
                             year in
                             Section {
@@ -147,12 +149,13 @@ struct PlannerTabView: View {
                                                 trip: trip,
                                                 scrollProxy: scrollProxy
                                             )
+                                        },
+                                        openEditSheet: {
+                                            tripSheetContext = TripSheetContext(
+                                                trip: trip
+                                            )
                                         }
-                                    ) {
-                                        tripSheetContext = TripSheetContext(
-                                            trip: trip
-                                        )
-                                    }
+                                    )
                                 }
                             } header: {
                                 ZStack {
@@ -168,16 +171,19 @@ struct PlannerTabView: View {
                             .listRowInsets(EdgeInsets())
                             .discreetListItem()
                         }
-                        
+
                         if sortedUpcomingTrips.isEmpty {
                             Section("Trips") {
                                 EmptyLabelView("No upcoming trips")
-                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .frame(
+                                        maxWidth: .infinity,
+                                        alignment: .center
+                                    )
                                     .frame(height: 40, alignment: .center)
                             }
                             .discreetListItem()
                         }
-                        
+
                         // MARK: BOTTOM PADDING
                         Section {
                             Color.clear.frame(height: 16)
@@ -199,7 +205,7 @@ struct PlannerTabView: View {
                         deviceLocationManager.loadDeviceLocation()
                         plannerBuildManager.rebuildAllData()
                     }
-                    
+
                     // MARK: New Event Sheet
                     .sheet(isPresented: $showNewEventSheet) {
                         EventFormView(
@@ -208,7 +214,7 @@ struct PlannerTabView: View {
                             settings: settings
                         )
                     }
-                    
+
                     // MARK: New Routine Event Sheet
                     .sheet(isPresented: $showNewRoutineEventSheet) {
                         RoutineEventFormView { weekday in
@@ -217,10 +223,10 @@ struct PlannerTabView: View {
                             )
                         }
                     }
-                    
-                    // MARK: New Trip Sheet
+
+                    // MARK: Trip Sheet
                     .sheet(item: $tripSheetContext) { context in
-                        let form = TripFormView(
+                        TripFormView(
                             sourceTrip: context.trip,
                             settings: settings
                         ) {
@@ -228,21 +234,15 @@ struct PlannerTabView: View {
                             expandedTrips.insert(trip.id)
                             scrollToTrip(trip: trip, scrollProxy: scrollProxy)
                         }
-                        
-                        if let transitionId = context.transitionId {
-                            form
-                                .navigationTransition(
-                                    .zoom(
-                                        sourceID: transitionId,
-                                        in: namespace
-                                    )
-                                )
-                        } else {
-                            form
-                        }
+                        .navigationTransition(
+                            .zoom(
+                                sourceID: context.id,
+                                in: namespace
+                            )
+                        )
                     }
                 }
-                
+
                 // Build the week's datestamps now and at midnight.
                 .task(id: todaystampWatcher.todaystamp) {
                     buildThisWeekDatestamps()
@@ -312,7 +312,7 @@ struct PlannerTabView: View {
                 }
 
                 Button("Create Trip", systemImage: "suitcase") {
-                    tripSheetContext = TripSheetContext()
+                    tripSheetContext = TripSheetContext(trip: nil)
                 }
             }
         }

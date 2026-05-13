@@ -11,8 +11,6 @@ import SwiftDate
 import SwiftUI
 import SwiftUIIntrospect
 
-// Clean
-
 struct TripFormView: View {
     private let sourceTrip: Trip?
     private let settings: PlannerSettings
@@ -309,9 +307,10 @@ struct TripFormView: View {
 
     private func deleteTrip() {
         dismiss()
-        if let trip = sourceTrip {
-            modelContext.safeDelete(trip)
-        }
+        
+        guard let trip = sourceTrip else { return }
+
+        modelContext.safeDelete(trip)
     }
 
     private func buildExistingTripDates() {

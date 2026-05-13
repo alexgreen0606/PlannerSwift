@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-// Clean
-
 private struct ConfirmationModifier: ViewModifier {
     let config: ConfirmationConfig?
     @Binding var isPresented: Bool
@@ -28,11 +26,9 @@ private struct ConfirmationModifier: ViewModifier {
 
                         Button(
                             action.title,
-                            role: action.role
-                        ) {
-                            action.handler()
-                            isPresented = false
-                        }
+                            role: action.role,
+                            action: action.handler
+                        )
                     }
                 } message: {
                     if let message = config.message {
