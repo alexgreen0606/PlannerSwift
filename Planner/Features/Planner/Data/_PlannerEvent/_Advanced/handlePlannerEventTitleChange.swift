@@ -10,8 +10,6 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-// Clean
-
 extension ModelContext {
 
     @MainActor

@@ -321,7 +321,7 @@ struct PlannerTabView: View {
     // MARK: - View Builders
 
     private func plannerPreview(_ datestamp: String) -> some View {
-        PlannerPreviewCardView(
+        UpcomingDayPreviewCardView(
             datestamp: datestamp,
             settings: settings,
             namespace: namespace

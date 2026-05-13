@@ -1,5 +1,5 @@
 //
-//  PlannerPreviewCard.swift
+//  PlannerPreviewCardView.swift
 //  Planner
 //
 //  Created by Alex Green on 5/13/26.
@@ -9,19 +9,21 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-struct PlannerPreviewCardView: View {
+struct PlannerPreviewCardView<Header: View>: View {
     let datestamp: String
+    let header: Header
+    let width: CGFloat
     let settings: PlannerSettings
     let namespace: Namespace.ID
+    let transitionId: String
 
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
-    @EnvironmentObject private var todaystampService: TodaystampService
 
     var body: some View {
         PlannerLoaderView(datestamp: datestamp, settings: settings) { context in
             VStack(alignment: .leading) {
 
-                PlannerHeaderView(datestamp: datestamp)
+                header
 
                 if let calendarDayData = context.calendarDayData {
                     PlannerPreviewView(
@@ -51,8 +53,7 @@ struct PlannerPreviewCardView: View {
             }
             .padding()
             .frame(
-                width: todaystampService.todaystamp == datestamp
-                    ? 350 : 240,
+                width: width,
                 height: PlannerLayout.PREVIEW_CARD_HEIGHT,
                 alignment: .top
             )
@@ -61,14 +62,14 @@ struct PlannerPreviewCardView: View {
                     .fill(Color.cardBackground)
             )
             .matchedTransitionSource(
-                id: datestamp,
+                id: transitionId,
                 in: namespace
             )
             .contentShape(Rectangle())
             .onTapGesture {
                 plannerCoverStore.context = PlannerCoverContext(
                     datestamp: datestamp,
-                    source: datestamp
+                    source: transitionId
                 )
             }
         }
