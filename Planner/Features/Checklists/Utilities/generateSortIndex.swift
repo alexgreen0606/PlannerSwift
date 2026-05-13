@@ -5,6 +5,8 @@
 //  Created by Alex Green on 12/3/25.
 //
 
+// TODO: remove sort index from ListItem?
+
 func generateSortIndex<Item: ListItem>(
     index: Int,
     

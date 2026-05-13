@@ -5,14 +5,12 @@
 //  Created by Alex Green on 1/4/26.
 //
 
-// Clean
-
 import Combine
 import EventKit
 import SwiftData
 import SwiftUI
 
-struct SettingsTabView: View {
+struct SettingsRootView: View {
     let settings: PlannerSettings
 
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme

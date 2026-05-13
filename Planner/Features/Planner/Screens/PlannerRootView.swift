@@ -22,7 +22,15 @@ struct TripSheetContext: Identifiable {
     }
 }
 
-struct PlannerTabView: View {
+private func getThisWeekDatestamps() -> [String] {
+    (0..<7).map {
+        DateInRegion(Date(), region: .local)
+            .dateByAdding($0, .day)
+            .toFormat("yyyy-MM-dd")
+    }.sorted()
+}
+
+struct PlannerRootView: View {
     let settings: PlannerSettings
     let namespace: Namespace.ID
 

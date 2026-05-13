@@ -10,7 +10,7 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-struct ExpandedPlannerView<Header: View>: View {
+struct PlannerDayRootView<Header: View>: View {
     let planner: Planner
     let header: Header
     let plannerDay: DateInRegion

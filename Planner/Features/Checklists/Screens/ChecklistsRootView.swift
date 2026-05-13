@@ -9,9 +9,7 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-// Clean
-
-struct ChecklistsTabView: View {
+struct ChecklistsRootView: View {
 
     // Only one item should exist without a parent.
     @Query(

@@ -118,22 +118,22 @@ struct RootView: View {
                         systemImage: TodaystampService.todaystamp
                             .calendarSymbolName
                     ) {
-                        PlannerTabView(
+                        PlannerRootView(
                             settings: settings,
                             namespace: namespace
                         )
                     }
 
                     Tab("", systemImage: "checklist") {
-                        ChecklistsTabView()
+                        ChecklistsRootView()
                     }
 
                     Tab("", systemImage: "gear") {
-                        SettingsTabView(settings: settings)
+                        SettingsRootView(settings: settings)
                     }
 
                     Tab(role: .search) {
-                        PlannerSearchTabView(
+                        PlannerSearchRootView(
                             todaystamp: TodaystampService.todaystamp,
                             settings: settings,
                             namespace: namespace
@@ -150,7 +150,7 @@ struct RootView: View {
                     datestamp: PlannerCoverStore.todaystampAtInit,
                     settings: settings
                 ) { context in
-                    ExpandedPlannerView(
+                    PlannerDayRootView(
                         planner: context.planner,
                         header: plannerCoverHeader(
                             PlannerCoverStore.todaystampAtInit
@@ -178,7 +178,7 @@ struct RootView: View {
                     datestamp: context.datestamp,
                     settings: settings
                 ) { plannerContext in
-                    ExpandedPlannerView(
+                    PlannerDayRootView(
                         planner: plannerContext.planner,
                         header: plannerCoverHeader(
                             context.datestamp

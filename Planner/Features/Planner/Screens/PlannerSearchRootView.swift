@@ -12,9 +12,9 @@ import SwiftDate
 import SwiftUI
 import SwiftUIIntrospect
 
-// Clean
+// TODO: change this to a Loader.
 
-struct PlannerSearchTabView: View {
+struct PlannerSearchRootView: View {
     private let todaystamp: String
     private let settings: PlannerSettings
     private let namespace: Namespace.ID
