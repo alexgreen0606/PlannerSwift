@@ -20,33 +20,31 @@ struct PlannerPreviewCardView<Header: View>: View {
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
     var body: some View {
-        PlannerLoaderView(datestamp: datestamp, settings: settings) { context in
+        PlannerLoaderView(datestamp: datestamp, settings: settings) {
+            plannerContext,
+            eventContext in
             VStack(alignment: .leading) {
                 header
 
-                if let calendarDayData = context.calendarDayData {
-                    PlannerPreviewView(
-                        type: .planner,
-                        searchQuery: nil, // TODO: make this optional
-                        header: EmptyView(),
-                        planner: context.planner,
-                        plannerDay: context.plannerDay,
-                        plannerLocation: context.plannerLocation,
-                        plannerEvents: context.sortedPlannerEvents,
-                        calendarDayData: calendarDayData, // TODO: allow this to be nil
-                        settings: settings
-                    )
-                    .frame(
-                        maxWidth: .infinity,
-                        maxHeight: .infinity,
-                        alignment: .center
-                    )
-                }
+                PlannerPreviewView(
+                    type: .planner,
+                    planner: plannerContext.planner,
+                    plannerDay: plannerContext.plannerDay,
+                    plannerLocation: plannerContext.plannerLocation,
+                    plannerEvents: eventContext.sortedPlannerEvents,
+                    calendarDayData: eventContext.calendarDayData,
+                    settings: settings
+                )
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity,
+                    alignment: .center
+                )
 
                 PlannerCardWeatherView(
-                    planner: context.planner,
-                    plannerDay: context.plannerDay,
-                    plannerLocation: context.plannerLocation,
+                    planner: plannerContext.planner,
+                    plannerDay: plannerContext.plannerDay,
+                    plannerLocation: plannerContext.plannerLocation,
                     settings: settings
                 )
             }

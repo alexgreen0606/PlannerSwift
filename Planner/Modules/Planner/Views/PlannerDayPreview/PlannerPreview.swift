@@ -11,16 +11,35 @@ import SwiftDate
 import SwiftUI
 import WrappingHStack
 
-struct PlannerPreviewView<Header: View>: View {
+struct PlannerPreviewView: View {
     let type: PlannerPreviewType
     let searchQuery: PlannerSearchQuery?
-    let header: Header
     let planner: Planner
     let plannerDay: DateInRegion
     let plannerLocation: Location?
     let plannerEvents: [PlannerEvent]
-    let calendarDayData: CalendarDayData
+    let calendarDayData: CalendarDayData?
     let settings: PlannerSettings
+
+    init(
+        type: PlannerPreviewType,
+        searchQuery: PlannerSearchQuery? = nil,
+        planner: Planner,
+        plannerDay: DateInRegion,
+        plannerLocation: Location?,
+        plannerEvents: [PlannerEvent],
+        calendarDayData: CalendarDayData? = nil,
+        settings: PlannerSettings
+    ) {
+        self.type = type
+        self.searchQuery = searchQuery
+        self.planner = planner
+        self.plannerDay = plannerDay
+        self.plannerLocation = plannerLocation
+        self.plannerEvents = plannerEvents
+        self.calendarDayData = calendarDayData
+        self.settings = settings
+    }
 
     private let maxPreviewEvents = 5
 
@@ -35,15 +54,15 @@ struct PlannerPreviewView<Header: View>: View {
     }
 
     private var filteredChipEvents: [EKEvent] {
-        calendarDayData.plannerChipEvents.filter {
+        calendarDayData?.plannerChipEvents.filter {
             $0.searchQueryScore(searchQuery) != nil
-        }
+        } ?? []
     }
 
     private var filteredBirthdays: [Birthday] {
-        calendarDayData.birthdays.filter {
+        calendarDayData?.birthdays.filter {
             $0.event.searchQueryScore(searchQuery) != nil
-        }
+        } ?? []
     }
 
     // MARK: Separated Time Events
@@ -60,7 +79,7 @@ struct PlannerPreviewView<Header: View>: View {
 
     private var tripLabel: String? {
         guard type != .trip, let trip = planner.trip,
-              trip.searchQueryScore(searchQuery) != nil
+            trip.searchQueryScore(searchQuery) != nil
         else {
             return nil
         }

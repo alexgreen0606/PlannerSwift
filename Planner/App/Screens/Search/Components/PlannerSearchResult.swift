@@ -20,37 +20,38 @@ struct PlannerSearchResultView: View {
 
     var body: some View {
         PlannerLoaderView(datestamp: datestamp, settings: settings) {
-            context in
+            plannerContext,
+            eventContext in
             VStack(alignment: .leading) {
                 HStack(alignment: .top) {
                     PlannerHeaderView(
                         datestamp: datestamp,
                         title:
-                        datestamp.proximityFormat(
-                            using: [
-                                ProximityRule(
-                                    proximity:
-                                    .withinADay,
-                                    format:
-                                    .countdown
-                                ),
-                                ProximityRule(
-                                    proximity:
-                                    .next7Days,
-                                    format: .weekday
-                                ),
-                                ProximityRule(
-                                    proximity:
-                                    .fallback,
-                                    // Custom Here: Never show the year.
-                                    format:
-                                    .dateWithoutYear
-                                ),
-                            ],
-                            todaystamp:
-                            todaystampService
-                                .todaystamp
-                        )
+                            datestamp.proximityFormat(
+                                using: [
+                                    ProximityRule(
+                                        proximity:
+                                            .withinADay,
+                                        format:
+                                            .countdown
+                                    ),
+                                    ProximityRule(
+                                        proximity:
+                                            .next7Days,
+                                        format: .weekday
+                                    ),
+                                    ProximityRule(
+                                        proximity:
+                                            .fallback,
+                                        // Custom Here: Never show the year.
+                                        format:
+                                            .dateWithoutYear
+                                    ),
+                                ],
+                                todaystamp:
+                                    todaystampService
+                                    .todaystamp
+                            )
                     )
 
                     Spacer()
@@ -58,27 +59,24 @@ struct PlannerSearchResultView: View {
                     if let plannerSearchQuery {
                         SearchResultsWeatherView(
                             plannerSearchQuery: plannerSearchQuery,
-                            planner: context.planner,
-                            plannerDay: context.plannerDay,
-                            plannerLocation: context.plannerLocation,
+                            planner: plannerContext.planner,
+                            plannerDay: plannerContext.plannerDay,
+                            plannerLocation: plannerContext.plannerLocation,
                             settings: settings
                         )
                     }
                 }
 
-                if let calendarDayData = context.calendarDayData {
-                    PlannerPreviewView(
-                        type: .search,
-                        searchQuery: plannerSearchQuery,
-                        header: EmptyView(), // TODO: remove header here
-                        planner: context.planner,
-                        plannerDay: context.plannerDay,
-                        plannerLocation: context.plannerLocation,
-                        plannerEvents: context.sortedPlannerEvents,
-                        calendarDayData: calendarDayData,
-                        settings: settings
-                    )
-                }
+                PlannerPreviewView(
+                    type: .search,
+                    searchQuery: plannerSearchQuery,
+                    planner: plannerContext.planner,
+                    plannerDay: plannerContext.plannerDay,
+                    plannerLocation: plannerContext.plannerLocation,
+                    plannerEvents: eventContext.sortedPlannerEvents,
+                    calendarDayData: eventContext.calendarDayData,
+                    settings: settings
+                )
             }
         }
         .frame(maxWidth: .infinity)

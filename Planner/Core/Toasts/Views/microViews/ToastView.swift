@@ -53,7 +53,6 @@ struct ToastView<ListItemType: ListItem>: View {
                 )
             }
         }
-        // TODO: use this capsule logic for the trip chip as well (and all chips)?
         .padding(.horizontal)
         .frame(height: 50)
         .clipShape(.capsule)
