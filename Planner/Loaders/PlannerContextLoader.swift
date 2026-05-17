@@ -9,15 +9,7 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-struct PlannerContext {
-    let planner: Planner
-    let plannerDay: DateInRegion
-    let plannerLocation: Location?
-    let sortedPlannerEvents: [PlannerEvent]
-    let calendarDayData: CalendarDayData?
-}
-
-struct PlannerLoaderView<Content: View>: View {
+struct PlannerContextLoaderView<Content: View>: View {
     private let datestamp: String
     private let settings: PlannerSettings
     private let content: (PlannerContext) -> Content
@@ -67,14 +59,13 @@ struct PlannerLoaderView<Content: View>: View {
     var body: some View {
         ZStack {
             if let planner, let plannerDay {
-                PlannerEventLoaderView(
-                    planner: planner,
-                    plannerDay: plannerDay,
-                    plannerLocation: plannerLocation,
-                    settings: settings
-                ) { context in
-                    content(context)
-                }
+                content(
+                    PlannerContext(
+                        planner: planner,
+                        plannerDay: plannerDay,
+                        plannerLocation: plannerLocation
+                    )
+                )
             }
         }
         .task {

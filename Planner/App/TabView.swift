@@ -21,40 +21,40 @@ struct RootTabView: View {
         // Navigation titles rounded fonts.
         if var descriptor =
             UIFontDescriptor
-                .preferredFontDescriptor(withTextStyle: .largeTitle)
-                .withDesign(.rounded)
+            .preferredFontDescriptor(withTextStyle: .largeTitle)
+            .withDesign(.rounded)
         {
             descriptor = descriptor.addingAttributes([
                 .traits: [
-                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy,
-                ],
+                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy
+                ]
             ])
 
             UINavigationBar.appearance().largeTitleTextAttributes = [
                 .font: UIFont(
                     descriptor: descriptor,
                     size: descriptor.pointSize
-                ),
+                )
             ]
         }
 
         // Navigation subtitles rounded fonts.
         if var descriptor =
             UIFontDescriptor
-                .preferredFontDescriptor(withTextStyle: .headline)
-                .withDesign(.rounded)
+            .preferredFontDescriptor(withTextStyle: .headline)
+            .withDesign(.rounded)
         {
             descriptor = descriptor.addingAttributes([
                 .traits: [
-                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy,
-                ],
+                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy
+                ]
             ])
 
             UINavigationBar.appearance().titleTextAttributes = [
                 .font: UIFont(
                     descriptor: descriptor,
                     size: descriptor.pointSize
-                ),
+                )
             ]
         }
     }
@@ -64,14 +64,15 @@ struct RootTabView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @AppStorage("keepCanceledEventsDuration") private var keepCanceledEventsDuration: KeepCanceledEventsDuration =
-        .startOfDay
+    @AppStorage("keepCanceledEventsDuration") private
+        var keepCanceledEventsDuration: KeepCanceledEventsDuration =
+            .startOfDay
 
     @AppStorage("lastCleansedDatestamp") var lastCleansedDatestamp: String = ""
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
-        .oneMonth
+            .oneMonth
 
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var modelContext
@@ -121,12 +122,18 @@ struct RootTabView: View {
                     }
 
                     Tab(role: .search) {
-                        PlannerSearchRootView(
-                            todaystamp: todaystampService.todaystamp,
-                            settings: settings,
-                            namespace: namespace
-                        )
-                        .environmentObject(plannerSearchStore)
+                        PlannerContextLoaderView(
+                            datestamp: todaystampService.todaystamp,
+                            settings: settings
+                        ) {
+                            context in
+                            PlannerSearchRootView(
+                                todayDay: context.plannerDay,
+                                settings: settings,
+                                namespace: namespace
+                            )
+                            .environmentObject(plannerSearchStore)
+                        }
                     }
                 }
                 .tabBarMinimizeBehavior(.onScrollDown)
@@ -138,13 +145,13 @@ struct RootTabView: View {
                 PlannerLoaderView(
                     datestamp: plannerCoverStore.todaystampAtInit,
                     settings: settings
-                ) { context in
+                ) { plannerContext, eventContext in
                     PlannerDayRootView(
-                        planner: context.planner,
-                        plannerDay: context.plannerDay,
-                        plannerLocation: context.plannerLocation,
-                        sortedPlannerEvents: context.sortedPlannerEvents,
-                        calendarDayData: context.calendarDayData,
+                        planner: plannerContext.planner,
+                        plannerDay: plannerContext.plannerDay,
+                        plannerLocation: plannerContext.plannerLocation,
+                        sortedPlannerEvents: eventContext.sortedPlannerEvents,
+                        calendarDayData: eventContext.calendarDayData,
                         settings: settings
                     )
                 }
@@ -163,13 +170,13 @@ struct RootTabView: View {
                 PlannerLoaderView(
                     datestamp: context.datestamp,
                     settings: settings
-                ) { plannerContext in
+                ) { plannerContext, eventContext in
                     PlannerDayRootView(
                         planner: plannerContext.planner,
                         plannerDay: plannerContext.plannerDay,
                         plannerLocation: plannerContext.plannerLocation,
-                        sortedPlannerEvents: plannerContext.sortedPlannerEvents,
-                        calendarDayData: plannerContext.calendarDayData,
+                        sortedPlannerEvents: eventContext.sortedPlannerEvents,
+                        calendarDayData: eventContext.calendarDayData,
                         settings: settings
                     )
                 }

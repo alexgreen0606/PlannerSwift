@@ -12,7 +12,7 @@ import SwiftDate
 import SwiftUI
 import SwiftUIIntrospect
 
-struct PlannerSearchResultsView: View {
+struct PlannerSearchRootView: View {
     let todayDay: DateInRegion
     let settings: PlannerSettings
     let namespace: Namespace.ID

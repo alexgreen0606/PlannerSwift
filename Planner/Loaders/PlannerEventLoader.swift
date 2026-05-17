@@ -12,29 +12,24 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-struct PlannerEventLoaderView<Content: View>: View {
-    private let planner: Planner
-    private let plannerDay: DateInRegion
-    private let plannerLocation: Location?
+struct PlannerEventContextLoaderView<Content: View>: View {
+    private let plannerContext: PlannerContext
     private let settings: PlannerSettings
-    private var content: (PlannerContext) -> Content
+    private var content: (PlannerContext, PlannerEventContext) -> Content
 
     init(
-        planner: Planner,
-        plannerDay: DateInRegion,
-        plannerLocation: Location?,
+        plannerContext: PlannerContext,
         settings: PlannerSettings,
-        @ViewBuilder content: @escaping (PlannerContext) -> Content
+        @ViewBuilder content:
+            @escaping (PlannerContext, PlannerEventContext) -> Content
     ) {
-        self.planner = planner
-        self.plannerDay = plannerDay
-        self.plannerLocation = plannerLocation
+        self.plannerContext = plannerContext
         self.settings = settings
         self.content = content
 
-        let startOfNextDay = (plannerDay + 1.days)
-        let plannerDatestamp = planner.datestamp
-        let dayStart = plannerDay.date
+        let startOfNextDay = (plannerContext.plannerDay + 1.days)
+        let plannerDatestamp = plannerContext.planner.datestamp
+        let dayStart = plannerContext.plannerDay.date
         let nextDay = startOfNextDay.date
 
         _sortedPlannerEvents = Query(
@@ -64,10 +59,8 @@ struct PlannerEventLoaderView<Content: View>: View {
     var body: some View {
         ZStack {
             content(
-                PlannerContext(
-                    planner: planner,
-                    plannerDay: plannerDay,
-                    plannerLocation: plannerLocation,
+                plannerContext,
+                PlannerEventContext(
                     sortedPlannerEvents: sortedPlannerEvents,
                     calendarDayData: calendarDayData
                 )
@@ -82,7 +75,9 @@ struct PlannerEventLoaderView<Content: View>: View {
 
         // MARK: Reload the weather and calendar events when the time zone changes.
 
-        .onChange(of: plannerLocation) { oldLocation, newLocation in
+        .onChange(of: plannerContext.plannerLocation) {
+            oldLocation,
+            newLocation in
             loadWeather()
 
             let current = TimeZone.current.identifier
@@ -103,14 +98,16 @@ struct PlannerEventLoaderView<Content: View>: View {
 
     @MainActor
     private func buildPlanner() async {
-        guard let weekday = Weekday.forDatestamp(planner.datestamp) else {
+        guard
+            let weekday = Weekday.forDatestamp(plannerContext.planner.datestamp)
+        else {
             return
         }
 
         let calendarData = await plannerSyncStore.syncPlanner(
-            planner,
+            plannerContext.planner,
             weekday: weekday,
-            plannerDay: plannerDay,
+            plannerDay: plannerContext.plannerDay,
             sortedPlannerEvents: sortedPlannerEvents,
             settings: settings,
             ekEventStore: calendarStore.ekEventStore,
@@ -128,8 +125,8 @@ struct PlannerEventLoaderView<Content: View>: View {
     private func loadWeather() {
         Task {
             await weatherStore.loadWeatherIfNeeded(
-                location: plannerLocation,
-                region: plannerDay.region
+                location: plannerContext.plannerLocation,
+                region: plannerContext.plannerDay.region
             )
         }
     }
