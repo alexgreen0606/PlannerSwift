@@ -51,7 +51,7 @@ struct PlannerPreviewCardView<Header: View>: View {
             .padding()
             .frame(
                 width: width,
-                height: PlannerLayout.PREVIEW_CARD_HEIGHT,
+                height: PlannerPreviewCardLayout.PREVIEW_CARD_HEIGHT,
                 alignment: .top
             )
             .background(

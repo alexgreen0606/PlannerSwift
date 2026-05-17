@@ -75,7 +75,7 @@ struct SelectedChecklistItemActionsView: ToolbarContent {
             !canTransferItems || ListStore.selectedItemIds.isEmpty
         )
         .matchedTransitionSource(
-            id: IdConstants.TRANSFER_BUTTON,
+            id: ListIds.TRANSFER_BUTTON,
             in: namespace
         )
     }

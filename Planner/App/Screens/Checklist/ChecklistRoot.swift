@@ -98,7 +98,7 @@ struct ChecklistRootView: View {
                 )
                 .navigationTransition(
                     .zoom(
-                        sourceID: IdConstants.TRANSFER_BUTTON,
+                        sourceID: ListIds.TRANSFER_BUTTON,
                         in: namespace
                     )
                 )
@@ -226,7 +226,7 @@ struct ChecklistRootView: View {
         DispatchQueue.main.async {
             withAnimation {
                 scrollProxy.scrollTo(
-                    IdConstants.UNCHECKED_ITEMS,
+                    ListIds.UNCHECKED_ITEMS,
                     anchor: .bottom
                 )
             }

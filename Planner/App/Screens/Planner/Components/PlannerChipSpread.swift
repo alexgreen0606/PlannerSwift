@@ -25,6 +25,8 @@ struct PlannerChipSpreadView: View {
     var namespace: Namespace.ID
     let settings: PlannerSettings
     let openCalendarEventSheet: (EKEvent) -> Void
+    
+    private let LOCATION_CHIP_ID = "LOCATION_CHIP_ID"
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
@@ -84,7 +86,7 @@ struct PlannerChipSpreadView: View {
             }
             .navigationTransition(
                 .zoom(
-                    sourceID: IdConstants.LOCATION_CHIP,
+                    sourceID: LOCATION_CHIP_ID,
                     in: namespace
                 )
             )
@@ -122,9 +124,9 @@ struct PlannerChipSpreadView: View {
             locationLabel,
             iconConfig: locationIconConfig
         )
-        .glassChip(onTap: openLocationSheet)
+        .glassChip(height: PlannerLayout.CHIP_HEIGHT, onTap: openLocationSheet)
         .matchedTransitionSource(
-            id: IdConstants.LOCATION_CHIP,
+            id: LOCATION_CHIP_ID,
             in: namespace
         )
     }
@@ -159,7 +161,7 @@ struct PlannerChipSpreadView: View {
                 primaryColor: calendarColor
             )
         )
-        .glassChip {
+        .glassChip(height: PlannerLayout.CHIP_HEIGHT) {
             openCalendarEventSheet(event)
         }
         .matchedTransitionSource(

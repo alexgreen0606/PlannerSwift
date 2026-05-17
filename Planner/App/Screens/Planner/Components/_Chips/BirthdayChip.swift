@@ -9,8 +9,6 @@ import Contacts
 import EventKit
 import SwiftUI
 
-// Clean
-
 struct BirthdayChipView: View {
     let birthday: Birthday
     let settings: PlannerSettings
@@ -32,7 +30,8 @@ struct BirthdayChipView: View {
         BirthdayView(birthday: birthday, settings: settings)
             .padding(.leading, leadingPadding)
             .glassChip(
-                color: contactPhotoExists ? nil : birthday.event.calendar.color
+                color: contactPhotoExists ? nil : birthday.event.calendar.color,
+                height: PlannerLayout.CHIP_HEIGHT
             ) {
                 openContactSheet(birthday)
             }

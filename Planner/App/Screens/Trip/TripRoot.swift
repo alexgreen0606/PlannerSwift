@@ -168,7 +168,7 @@ struct TripRootView: View {
         .font(.system(size: 14, weight: .bold, design: .rounded))
         .frame(
             width: 240,
-            height: PlannerLayout.PREVIEW_CARD_HEIGHT,
+            height: PlannerPreviewCardLayout.PREVIEW_CARD_HEIGHT,
             alignment: .center
         )
         .overlay(

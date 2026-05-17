@@ -24,12 +24,16 @@ extension View {
     }
 
     /// Pill-shaped, glass chip.
-    func glassChip(color: Color? = nil, onTap: (() -> Void)? = nil, height: Double? = nil)
+    func glassChip(
+        color: Color? = nil,
+        height: Double,
+        onTap: (() -> Void)? = nil,
+    )
         -> some View
     {
-        padding(.horizontal, (height ?? PlannerLayout.CHIP_HEIGHT) / 3)
+        padding(.horizontal, height / 3)
             .padding(.vertical, 4)
-            .frame(height: height ?? PlannerLayout.CHIP_HEIGHT)
+            .frame(height: height)
             .contentShape(Rectangle())
             .onTapGesture {
                 onTap?()
@@ -37,10 +41,10 @@ extension View {
             .glassEffect(
                 color != nil
                     ? .regular
-                    .tint(color!.opacity(0.05))
-                    .interactive(onTap != nil)
+                        .tint(color!.opacity(0.05))
+                        .interactive(onTap != nil)
                     : .regular
-                    .interactive(onTap != nil),
+                        .interactive(onTap != nil),
                 in: .capsule
             )
     }

@@ -34,7 +34,7 @@ struct LabelValueChipView: View {
                 }
             }
         }
-        .glassChip(color: nil, onTap: nil, height: 40)
+        .glassChip(height: 40)
         .animateAsynchronousAction(from: value)
     }
 }

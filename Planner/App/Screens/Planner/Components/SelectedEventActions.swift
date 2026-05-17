@@ -59,7 +59,7 @@ struct SelectedPlannerEventActionsView: ToolbarContent {
         }
         .disabled(plannerManager.selectedItemIds.isEmpty)
         .matchedTransitionSource(
-            id: IdConstants.TRANSFER_BUTTON,
+            id: ListIds.TRANSFER_BUTTON,
             in: namespace
         )
     }

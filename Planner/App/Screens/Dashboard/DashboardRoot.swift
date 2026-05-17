@@ -20,6 +20,8 @@ struct DashboardRootView: View {
 
         _thisWeekDatestamps = State(initialValue: getThisWeekDatestamps())
     }
+    
+    private let CALENDAR_BUTTON_ID = "CALENDAR_BUTTON_ID"
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
@@ -92,7 +94,7 @@ struct DashboardRootView: View {
                                     )
                                 }
                                 .frame(
-                                    height: PlannerLayout.PREVIEW_CARD_HEIGHT
+                                    height: PlannerPreviewCardLayout.PREVIEW_CARD_HEIGHT
                                 )
                                 .padding(.horizontal)
                                 .animateAsynchronousAction(
@@ -285,7 +287,7 @@ struct DashboardRootView: View {
                 .presentationCompactAdaptation(.popover)
             }
             .matchedTransitionSource(
-                id: IdConstants.CALENDAR_BUTTON,
+                id: CALENDAR_BUTTON_ID,
                 in: namespace
             )
         }
@@ -334,7 +336,7 @@ struct DashboardRootView: View {
         DispatchQueue.main.async {
             plannerCoverStore.context = PlannerCoverContext(
                 datestamp: datestamp,
-                source: IdConstants.CALENDAR_BUTTON
+                source: CALENDAR_BUTTON_ID
             )
         }
     }

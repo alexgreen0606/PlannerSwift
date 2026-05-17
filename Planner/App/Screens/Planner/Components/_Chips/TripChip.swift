@@ -13,12 +13,13 @@ struct TripChipView: View {
     let settings: PlannerSettings
     let namespace: Namespace.ID
 
+    private let TRIP_CHIP_ID = "TRIP_CHIP"
     private let chipHeight: CGFloat = 40
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @EnvironmentObject private var LocationService: LocationService
+    @EnvironmentObject private var locationService: LocationService
 
     @State private var showTripSheet = false
 
@@ -61,7 +62,7 @@ struct TripChipView: View {
             in: .capsule
         )
         .matchedTransitionSource(
-            id: IdConstants.TRIP_CHIP,
+            id: TRIP_CHIP_ID,
             in: namespace
         )
 
@@ -73,7 +74,7 @@ struct TripChipView: View {
             )
             .navigationTransition(
                 .zoom(
-                    sourceID: IdConstants.TRIP_CHIP,
+                    sourceID: TRIP_CHIP_ID,
                     in: namespace
                 )
             )

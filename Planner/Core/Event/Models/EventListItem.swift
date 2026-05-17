@@ -17,7 +17,7 @@ class EventListItem: ListItem {
     var sortDate: Date = Date()
 
     init(sortDate: Date) {
+        super.init()
         self.sortDate = sortDate
-        super.init(sortIndex: 0)
     }
 }

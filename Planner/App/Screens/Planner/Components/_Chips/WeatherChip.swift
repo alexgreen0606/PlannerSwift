@@ -41,7 +41,7 @@ struct WeatherChipView: View {
 
             TemperatureView(weatherData: weatherData)
         }
-        .glassChip(onTap: openWeatherApp)
+        .glassChip(height: PlannerLayout.CHIP_HEIGHT, onTap: openWeatherApp)
     }
 
     // MARK: - Functions

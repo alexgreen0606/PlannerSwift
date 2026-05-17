@@ -125,7 +125,7 @@ struct LocationSearchHeaderView: View {
                     primaryColor: accentColor.color
                 )
             )
-            .glassChip()
+            .glassChip(height: 40)
         }
     }
 

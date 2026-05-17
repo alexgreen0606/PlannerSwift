@@ -146,7 +146,7 @@ struct RootTabView: View {
                     datestamp: plannerCoverStore.todaystampAtInit,
                     settings: settings
                 ) { plannerContext, eventContext in
-                    PlannerDayRootView(
+                    PlannerRootView(
                         planner: plannerContext.planner,
                         plannerDay: plannerContext.plannerDay,
                         plannerLocation: plannerContext.plannerLocation,
@@ -171,7 +171,7 @@ struct RootTabView: View {
                     datestamp: context.datestamp,
                     settings: settings
                 ) { plannerContext, eventContext in
-                    PlannerDayRootView(
+                    PlannerRootView(
                         planner: plannerContext.planner,
                         plannerDay: plannerContext.plannerDay,
                         plannerLocation: plannerContext.plannerLocation,

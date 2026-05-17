@@ -7,12 +7,6 @@
 
 import SwiftUI
 
-// Clean
-
-// TODO: split up
-
-
 enum PlannerLayout {
     static let CHIP_HEIGHT: CGFloat = 28
-    static let PREVIEW_CARD_HEIGHT: CGFloat = 320
 }

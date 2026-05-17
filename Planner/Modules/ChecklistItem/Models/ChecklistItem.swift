@@ -14,6 +14,7 @@ class ChecklistItem: ListItem {
     var type: ChecklistItemType = ChecklistItemType.checklist
     var color: ChecklistItemColor = ChecklistItemColor.red
     var showCompleted: Bool = false
+    var sortIndex: Double = 10.0
 
     @Relationship(
         deleteRule: .cascade,
@@ -30,11 +31,10 @@ class ChecklistItem: ListItem {
         sortIndex: Double,
         parent: ChecklistItem? = nil
     ) {
+        super.init()
         self.type = type
         self.color = color
         self.parent = parent
-
-        super.init(sortIndex: sortIndex)
         self.title = title
     }
 }

@@ -15,9 +15,10 @@ class ListItem {
 
     var title: String = ""
     var isCompleted: Bool = false
-    var sortIndex: Double = 10.0
+    // var sortIndex: Double = 10.0
 
-    init(sortIndex: Double) {
-        self.sortIndex = sortIndex
-    }
+//    init(sortIndex: Double) {
+//        self.sortIndex = sortIndex
+//    }
+    init(){}
 }

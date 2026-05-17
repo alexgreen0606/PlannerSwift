@@ -1,5 +1,5 @@
 //
-//  PlannerDayRoot.swift
+//  PlannerRoot.swift
 //  Planner
 //
 //  Created by Alex Green on 12/1/25.
@@ -10,7 +10,7 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-struct PlannerDayRootView: View {
+struct PlannerRootView: View {
     let planner: Planner
     let plannerDay: DateInRegion
     let plannerLocation: Location?
@@ -73,8 +73,7 @@ struct PlannerDayRootView: View {
 
     var body: some View {
         ToastRootView(
-            // TODO: focusing must blur the keyboard
-            ListStore: plannerManager
+            listStore: plannerManager
         ) {
             NavigationStack {
                 ScrollViewReader { scrollProxy in
@@ -140,7 +139,7 @@ struct PlannerDayRootView: View {
                 )
                 .navigationTransition(
                     .zoom(
-                        sourceID: IdConstants.TRANSFER_BUTTON,
+                        sourceID: ListIds.TRANSFER_BUTTON,
                         in: namespace
                     )
                 )
@@ -304,7 +303,7 @@ struct PlannerDayRootView: View {
         DispatchQueue.main.async {
             withAnimation {
                 scrollProxy.scrollTo(
-                    IdConstants.UNCHECKED_ITEMS,
+                    ListIds.UNCHECKED_ITEMS,
                     anchor: .bottom
                 )
             }

@@ -55,7 +55,7 @@ struct SelectedRoutineEventActionsView: View {
         .tint(Color.label)
         .disabled(routineManager.selectedItemIds.isEmpty)
         .matchedTransitionSource(
-            id: IdConstants.TRANSFER_BUTTON,
+            id: ListIds.TRANSFER_BUTTON,
             in: namespace
         )
     }

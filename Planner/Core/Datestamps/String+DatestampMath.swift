@@ -33,4 +33,24 @@ extension String {
             return "\(diff) days ago"
         }
     }
+    
+    /// True if between Today and the next 6 days.
+    func isNext7Days(todaystamp: String) -> Bool {
+        if self < todaystamp {
+            return false
+        }
+
+        guard let diff = todaystamp.daysUntil(self)
+        else { return false }
+
+        return diff < 7
+    }
+
+    /// True if Yesterday, Today, or Tomorrow.
+    func isWithinADay(todaystamp: String) -> Bool {
+        guard let diff = daysUntil(todaystamp)
+        else { return false }
+
+        return abs(diff) < 2
+    }
 }
