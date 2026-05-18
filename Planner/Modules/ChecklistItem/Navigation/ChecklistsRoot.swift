@@ -1,5 +1,5 @@
 //
-//  ChecklistsRootView.swift
+//  ChecklistsRoot.swift
 //  Planner
 //
 //  Created by Alex Green on 12/14/25.
@@ -17,12 +17,11 @@ struct ChecklistsRootView: View {
         }
     ) var rootFolderList: [ChecklistItem]
 
-    @StateObject private var checklistsManager = ListStore<ChecklistItem>()
+    @StateObject private var checklistsManager = ListEngine<ChecklistItem>()
     @State private var folderPath = NavigationPath()
     @State private var checklistCoverId: ChecklistCoverContext?
 
-    // Considers the selected items and whether any destination items exist to house them.
-    @State private var canTransferChecklistItems: Bool = false
+    // Considers the selected items and whether any folders exist to house them.
     @State private var canTransferFolderItems: Bool = false
 
     @Namespace private var namespace
@@ -41,7 +40,7 @@ struct ChecklistsRootView: View {
                     openItem: openItem,
                     canTranferItems: canTransferFolderItems,
                     updateTransferAvailability:
-                    updateFolderTransferAvailability
+                        updateFolderTransferAvailability
                 )
                 .navigationDestination(for: ChecklistItem.self) { item in
                     if item.type == .folder {
@@ -52,7 +51,7 @@ struct ChecklistsRootView: View {
                             openItem: openItem,
                             canTranferItems: canTransferFolderItems,
                             updateTransferAvailability:
-                            updateFolderTransferAvailability
+                                updateFolderTransferAvailability
                         )
                     }
                 }
@@ -64,7 +63,6 @@ struct ChecklistsRootView: View {
                 ChecklistBuilderView(
                     rootFolder: rootFolder,
                     checklistId: checklistId.id,
-                    canTransferItems: canTransferChecklistItems,
                     openItem: openItem
                 )
                 .navigationTransition(
@@ -103,12 +101,6 @@ struct ChecklistsRootView: View {
 
             folderPath.append(item)
         } else {
-            canTransferChecklistItems =
-                rootFolder.hasChildType(
-                    .checklist,
-                    excluding: Set([item.stableId])
-                )
-                == true
             checklistCoverId = ChecklistCoverContext(id: item.stableId)
         }
     }
@@ -139,7 +131,7 @@ struct ChecklistsRootView: View {
     }
 
     private func updateFolderTransferAvailability(
-        considering itemIds: Set<UUID> // Includes: items to transfer + their current folder
+        considering itemIds: Set<UUID>  // Includes: items to transfer + their current folder
     ) {
         canTransferFolderItems =
             rootFolder?.hasChildType(.folder, excluding: itemIds) == true

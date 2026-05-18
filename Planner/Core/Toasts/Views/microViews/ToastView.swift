@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ToastView<ListItemType: ListItem>: View {
     let config: Toast
-    let listStore: ListStore<ListItemType>?
+    let listEngine: ListEngine<ListItemType>?
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
@@ -48,7 +48,7 @@ struct ToastView<ListItemType: ListItem>: View {
                     endAdornment: true,
                     onTap: {
                         action()
-                        listStore?.focusedId = nil
+                        listEngine?.focusedId = nil
                     }
                 )
             }

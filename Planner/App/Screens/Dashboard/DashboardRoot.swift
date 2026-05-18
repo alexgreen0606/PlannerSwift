@@ -20,7 +20,7 @@ struct DashboardRootView: View {
 
         _thisWeekDatestamps = State(initialValue: getThisWeekDatestamps())
     }
-    
+
     private let CALENDAR_BUTTON_ID = "CALENDAR_BUTTON_ID"
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
@@ -186,8 +186,6 @@ struct DashboardRootView: View {
                     .animation(.linear, value: expandedTrips)
                     .listStyle(.plain)
                     .background(Color.appBackground)
-                    .navigationTitle("Planner")
-                    .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
                         datePickerToolbarPopover
                         createMenu

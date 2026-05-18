@@ -96,7 +96,7 @@ struct SortableListView<
     }
 
     @Environment(\.scenePhase) private var appPhase
-    @EnvironmentObject private var ListStore: ListStore<Item>
+    @EnvironmentObject private var ListEngine: ListEngine<Item>
 
     var body: some View {
         let list = List {
@@ -115,13 +115,13 @@ struct SortableListView<
         .animateSynchronousAction(from: uncheckedItems)
         // Blur the textfield when the list unmounts (deletes empty items).
         .onDisappear {
-            ListStore.focusedId = nil
+            ListEngine.focusedId = nil
         }
 
         // Blur the textfield when the app exits focus (deletes empty items).
         .onChange(of: appPhase) { _, phase in
             if phase == .inactive {
-                ListStore.focusedId = nil
+                ListEngine.focusedId = nil
             }
         }
 
@@ -149,7 +149,8 @@ struct SortableListView<
             .discreetListItem()
             .listRowInsets(EdgeInsets())
 
-            ForEach(Array(uncheckedItems.enumerated()), id: \.element.stableId) { index, item in
+            ForEach(Array(uncheckedItems.enumerated()), id: \.element.stableId)
+            { index, item in
                 RowView(
                     item: item,
                     index: index,
@@ -188,7 +189,7 @@ struct SortableListView<
 
         } header: {
             floatingInfo
-                .listRowInsets(.top, 0)
+                .listRowInsets(.vertical, 0)
         }
         .listSectionSeparator(.hidden)
         .listSectionMargins(.top, 0)

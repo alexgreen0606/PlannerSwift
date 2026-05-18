@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import SwiftDate
 import SwiftData
+import SwiftDate
 
 extension String {
     var dateComponents: DateComponents? {
@@ -22,7 +22,7 @@ extension String {
 
         return DateComponents(year: year, month: month, day: day)
     }
-    
+
     var date: Date? {
         DatestampFormatter.parseDatestamp(self)
     }
@@ -30,7 +30,7 @@ extension String {
     func startOfDay(in region: Region) -> DateInRegion? {
         guard
             let result = toDate("yyyy-MM-dd", region: region)?
-                .dateAtStartOf(.day)
+            .dateAtStartOf(.day)
         else {
             return nil
         }

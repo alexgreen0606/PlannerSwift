@@ -11,18 +11,18 @@ import SwiftUI
 struct ChecklistActionMenu: View {
     @Binding var showEditSheet: Bool
     let checklist: ChecklistItem
-    let sortedItems: [ChecklistItem]
+    let items: [ChecklistItem]
     let visibleItems: [ChecklistItem]
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var ListStore: ListStore<ChecklistItem>
+    @EnvironmentObject private var listEngine: ListEngine<ChecklistItem>
 
     @State private var showDeleteCompletedConfirmation = false
     @State private var showDeleteChecklistConfirmation = false
 
     private var completedItems: [ChecklistItem] {
-        sortedItems.filter(\.isCompleted)
+        items.filter(\.isCompleted)
     }
 
     private var deleteCompletedConfig: ConfirmationConfig {
@@ -40,6 +40,10 @@ struct ChecklistActionMenu: View {
         )
     }
 
+    private var visibleItemExists: Bool {
+        !visibleItems.isEmpty
+    }
+
     private var completedItemExists: Bool {
         !completedItems.isEmpty
     }
@@ -47,7 +51,7 @@ struct ChecklistActionMenu: View {
     // MARK: - Body
 
     var body: some View {
-        Menu("Action Menu", systemImage: "ellipsis") {
+        Menu("Checklist Action Menu", systemImage: "ellipsis") {
             editChecklistButton
             showCompletedToggle
             selectItemsButton
@@ -55,14 +59,12 @@ struct ChecklistActionMenu: View {
         }
 
         // MARK: Delete Completed Confirmation
-
         .withConfirmation(
             deleteCompletedConfig,
             isPresented: $showDeleteCompletedConfirmation
         )
 
         // MARK: Delete Checklist Confirmation
-
         .withConfirmation(
             deleteChecklistConfig,
             isPresented: $showDeleteChecklistConfirmation
@@ -98,15 +100,17 @@ struct ChecklistActionMenu: View {
 
     private var selectItemsButton: some View {
         Button {
-            ListStore.toggleSelectMode()
+            listEngine.toggleSelectMode()
         } label: {
             Label(
                 "Select Items",
                 systemImage: "checkmark.circle"
             )
         }
-        .disabled(visibleItems.isEmpty)
+        .disabled(!visibleItemExists)
     }
+
+    // MARK: Delete Action Menu
 
     private var deleteActionMenu: some View {
         Menu {

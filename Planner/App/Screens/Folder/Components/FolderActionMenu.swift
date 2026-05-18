@@ -17,7 +17,7 @@ struct FolderActionMenuView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var selectManager: ListStore<ChecklistItem>
+    @EnvironmentObject private var selectManager: ListEngine<ChecklistItem>
 
     @State private var showDeleteConfirmation = false
 

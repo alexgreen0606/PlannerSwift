@@ -1,5 +1,5 @@
 //
-//  SettingsRootView.swift
+//  SettingsRoot.swift
 //  Planner
 //
 //  Created by Alex Green on 1/4/26.

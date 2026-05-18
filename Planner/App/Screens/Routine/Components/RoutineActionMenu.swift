@@ -13,7 +13,7 @@ struct RoutineActionMenuView: View {
     let sortedRoutineEvents: [RoutineEvent]
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var routineManager: ListStore<RoutineEvent>
+    @EnvironmentObject private var routineManager: ListEngine<RoutineEvent>
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var PlannerSyncStore: PlannerSyncStore
 

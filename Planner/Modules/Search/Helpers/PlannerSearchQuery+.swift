@@ -1,5 +1,5 @@
 //
-//  PlannerSearchQueryExtension.swift
+//  PlannerSearchQuery+.swift
 //  Planner
 //
 //  Created by Alex Green on 3/17/26.
@@ -13,7 +13,7 @@ import SwiftUI
 
 extension PlannerSearchQuery {
     static let fuzzyThreshold: Double = 0.35
-    
+
     var isSearching: Bool {
         !text.isEmpty
             || !filteredCalendarIds.isEmpty

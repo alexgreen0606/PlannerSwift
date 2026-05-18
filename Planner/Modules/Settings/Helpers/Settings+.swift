@@ -1,5 +1,5 @@
 //
-//  SettingsExtension.swift
+//  Settings+.swift
 //  Planner
 //
 //  Created by Alex Green on 2/14/26.

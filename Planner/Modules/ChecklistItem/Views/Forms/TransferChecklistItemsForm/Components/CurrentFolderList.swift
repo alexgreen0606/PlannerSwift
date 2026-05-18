@@ -14,7 +14,7 @@ struct CurrentFolderListView: View {
     let source: ChecklistItem
     let destinationType: ChecklistItemType
 
-    @EnvironmentObject private var ListStore: ListStore<ChecklistItem>
+    @EnvironmentObject private var ListEngine: ListEngine<ChecklistItem>
 
     @State private var selectableItems: [ChecklistItem] = []
 
@@ -147,7 +147,7 @@ struct CurrentFolderListView: View {
                     if destinationType == .folder, item.type == .folder,
                        item.hasChildType(
                            .folder,
-                           excluding: ListStore.selectedItemIds
+                           excluding: ListEngine.selectedItemIds
                        )
                     {
                         // This it the source. BUT we are looking for folders and this source contains a folder. Display it.
@@ -157,7 +157,7 @@ struct CurrentFolderListView: View {
                 }
 
                 guard
-                    !ListStore.selectedItemIds
+                    !ListEngine.selectedItemIds
                     .contains(
                         item.stableId
                     )

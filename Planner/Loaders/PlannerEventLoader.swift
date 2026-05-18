@@ -21,7 +21,7 @@ struct PlannerEventContextLoaderView<Content: View>: View {
         plannerContext: PlannerContext,
         settings: PlannerSettings,
         @ViewBuilder content:
-            @escaping (PlannerContext, PlannerEventContext) -> Content
+        @escaping (PlannerContext, PlannerEventContext) -> Content
     ) {
         self.plannerContext = plannerContext
         self.settings = settings

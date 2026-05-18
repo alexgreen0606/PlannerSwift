@@ -28,7 +28,7 @@ struct PlannerRootView: View {
     @EnvironmentObject private var PlannerCoverStore: PlannerCoverStore
     @EnvironmentObject private var LocationService: LocationService
 
-    @StateObject private var plannerManager = ListStore<PlannerEvent>(
+    @StateObject private var plannerManager = ListEngine<PlannerEvent>(
         isItemChecked: { event in
             event.isChecked
         }
@@ -73,7 +73,7 @@ struct PlannerRootView: View {
 
     var body: some View {
         ToastRootView(
-            listStore: plannerManager
+            listEngine: plannerManager
         ) {
             NavigationStack {
                 ScrollViewReader { scrollProxy in

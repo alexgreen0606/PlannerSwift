@@ -25,13 +25,12 @@ extension String {
     func extractTime(for plannerDay: DateInRegion) -> (
         date: Date, updatedText: String
     )? {
-
         // MARK: Search for a time value.
 
-        let range = NSRange(startIndex..<endIndex, in: self)
+        let range = NSRange(startIndex ..< endIndex, in: self)
 
         guard let match = Self.timeRegex.firstMatch(in: self, range: range),
-            let matchRange = Range(match.range, in: self)
+              let matchRange = Range(match.range, in: self)
         else { return nil }
 
         let fullMatch = String(self[matchRange])
@@ -43,8 +42,8 @@ extension String {
 
         let minute =
             match.range(at: 2).location != NSNotFound
-            ? Int(self[Range(match.range(at: 2), in: self)!]) ?? 0
-            : 0
+                ? Int(self[Range(match.range(at: 2), in: self)!]) ?? 0
+                : 0
 
         let periodPart = String(self[Range(match.range(at: 3), in: self)!])
             .uppercased()

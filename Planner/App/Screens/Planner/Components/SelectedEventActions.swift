@@ -1,5 +1,5 @@
 //
-//  SelectedPlannerEventActions.swift
+//  SelectedEventActions.swift
 //  Planner
 //
 //  Created by Alex Green on 3/11/26.
@@ -18,7 +18,7 @@ struct SelectedPlannerEventActionsView: ToolbarContent {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.showToast) private var showToast
     @EnvironmentObject private var calendarStore: CalendarStore
-    @EnvironmentObject private var plannerManager: ListStore<PlannerEvent>
+    @EnvironmentObject private var plannerManager: ListEngine<PlannerEvent>
 
     private var deleteConfig: ConfirmationConfig {
         bulkDeletePlannerEventConfig(

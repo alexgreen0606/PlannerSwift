@@ -8,7 +8,6 @@
 import SwiftUI
 
 enum DatestampFormatter {
-
     private static var formatterCache: [String: DateFormatter] = [:]
     private static let formatterQueue = DispatchQueue(
         label: "formatter.cache.queue"
@@ -41,5 +40,4 @@ enum DatestampFormatter {
     ) -> Date? {
         baseFormatter.date(from: value)
     }
-
 }

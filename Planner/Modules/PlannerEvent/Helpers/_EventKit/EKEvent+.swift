@@ -1,5 +1,5 @@
 //
-//  EKEventExtension.swift
+//  EKEvent+.swift
 //  Planner
 //
 //  Created by Alex Green on 12/27/25.
@@ -35,12 +35,12 @@ extension EKEvent {
         storageEvent: PlannerEvent? = nil
     ) -> Location? {
         if let locationLabel = location,
-            let structuredLocation,
-            let latitude = structuredLocation.geoLocation?.coordinate
-                .latitude,
-            let longitude = structuredLocation.geoLocation?.coordinate
-                .longitude,
-            let timeZone = timeZone
+           let structuredLocation,
+           let latitude = structuredLocation.geoLocation?.coordinate
+           .latitude,
+           let longitude = structuredLocation.geoLocation?.coordinate
+           .longitude,
+           let timeZone = timeZone
         {
             let newLocation = Location(
                 name: locationLabel,
@@ -50,7 +50,7 @@ extension EKEvent {
             )
 
             guard let existingLocation = storageEvent?.location,
-                existingLocation.coordinateKey == newLocation.coordinateKey
+                  existingLocation.coordinateKey == newLocation.coordinateKey
             else {
                 return newLocation
             }
@@ -108,8 +108,8 @@ extension EKEvent {
 
         // Scan the location for a match.
         if let location = location,
-            self.location(storageEvent: nil) != nil,
-            let locationScore = query.score(for: location)
+           self.location(storageEvent: nil) != nil,
+           let locationScore = query.score(for: location)
         {
             score += locationScore
         }

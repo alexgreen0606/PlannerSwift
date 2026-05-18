@@ -36,7 +36,7 @@ struct PlannerListView: View {
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
-    @EnvironmentObject private var plannerManager: ListStore<PlannerEvent>
+    @EnvironmentObject private var plannerManager: ListEngine<PlannerEvent>
     @EnvironmentObject private var LocationService: LocationService
     @EnvironmentObject private var TodaystampService: TodaystampService
     @EnvironmentObject private var weatherStore: WeatherStore

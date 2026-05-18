@@ -15,11 +15,11 @@ struct SelectedChecklistItemActionsView: ToolbarContent {
     let namespace: Namespace.ID
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var ListStore: ListStore<ChecklistItem>
+    @EnvironmentObject private var ListEngine: ListEngine<ChecklistItem>
 
     private var deleteConfirmation: ConfirmationConfig {
         bulkDeleteChecklistItemConfig(
-            items: ListStore.selectedItems,
+            items: ListEngine.selectedItems,
             delete: deleteSelectedItems
         )
     }
@@ -55,7 +55,7 @@ struct SelectedChecklistItemActionsView: ToolbarContent {
     private var deleteSelectedButton: some View {
         DeleteSelectedButtonView(
             confirmationConfig: deleteConfirmation,
-            disabled: ListStore.selectedItems.isEmpty
+            disabled: ListEngine.selectedItems.isEmpty
         )
     }
 
@@ -72,7 +72,7 @@ struct SelectedChecklistItemActionsView: ToolbarContent {
             showTransferSheet = true
         }
         .disabled(
-            !canTransferItems || ListStore.selectedItemIds.isEmpty
+            !canTransferItems || ListEngine.selectedItemIds.isEmpty
         )
         .matchedTransitionSource(
             id: ListIds.TRANSFER_BUTTON,
@@ -84,9 +84,9 @@ struct SelectedChecklistItemActionsView: ToolbarContent {
 
     private func deleteSelectedItems() {
         modelContext.deleteChecklistItems(
-            ListStore.selectedItems
+            ListEngine.selectedItems
         )
 
-        DispatchQueue.main.async(execute: ListStore.toggleSelectMode)
+        DispatchQueue.main.async(execute: ListEngine.toggleSelectMode)
     }
 }

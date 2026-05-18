@@ -1,5 +1,5 @@
 //
-//  TripModelContext.swift
+//  ModelContext+Trip.swift
 //  Planner
 //
 //  Created by Alex Green on 3/23/26.

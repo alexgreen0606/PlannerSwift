@@ -1,5 +1,5 @@
 //
-//  CleanupModelContext.swift
+//  ModelContext+Cleanup.swift
 //  Planner
 //
 //  Created by Alex Green on 3/20/26.

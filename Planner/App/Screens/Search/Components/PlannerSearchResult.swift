@@ -27,31 +27,31 @@ struct PlannerSearchResultView: View {
                     PlannerHeaderView(
                         datestamp: datestamp,
                         title:
-                            datestamp.proximityFormat(
-                                using: [
-                                    ProximityRule(
-                                        proximity:
-                                            .withinADay,
-                                        format:
-                                            .countdown
-                                    ),
-                                    ProximityRule(
-                                        proximity:
-                                            .next7Days,
-                                        format: .weekday
-                                    ),
-                                    ProximityRule(
-                                        proximity:
-                                            .fallback,
-                                        // Custom Here: Never show the year.
-                                        format:
-                                            .dateWithoutYear
-                                    ),
-                                ],
-                                todaystamp:
-                                    todaystampService
-                                    .todaystamp
-                            )
+                        datestamp.proximityFormat(
+                            using: [
+                                ProximityRule(
+                                    proximity:
+                                    .withinADay,
+                                    format:
+                                    .countdown
+                                ),
+                                ProximityRule(
+                                    proximity:
+                                    .next7Days,
+                                    format: .weekday
+                                ),
+                                ProximityRule(
+                                    proximity:
+                                    .fallback,
+                                    // Custom Here: Never show the year.
+                                    format:
+                                    .dateWithoutYear
+                                ),
+                            ],
+                            todaystamp:
+                            todaystampService
+                                .todaystamp
+                        )
                     )
 
                     Spacer()

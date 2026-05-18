@@ -1,5 +1,5 @@
 //
-//  PlannerSearchResults.swift
+//  PlannerSearchRootView.swift
 //  Planner
 //
 //  Created by Alex Green on 4/3/26.

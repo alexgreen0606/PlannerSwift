@@ -12,14 +12,14 @@ extension EnvironmentValues {
 }
 
 struct ToastRootView<Content: View, ListItemType: ListItem>: View {
-    private let listStore: ListStore<ListItemType>?
+    private let listEngine: ListEngine<ListItemType>?
     private var content: Content
 
     init(
-        listStore: ListStore<ListItemType>? = nil,
+        listEngine: ListEngine<ListItemType>? = nil,
         @ViewBuilder content: @escaping () -> Content
     ) {
-        self.listStore = listStore
+        self.listEngine = listEngine
         self.content = content()
     }
 
@@ -34,7 +34,7 @@ struct ToastRootView<Content: View, ListItemType: ListItem>: View {
     @State private var toastDismissWorkItem: DispatchWorkItem?
 
     private var keyboardPadding: CGFloat {
-        listStore?.focusedId != nil ? -40 : 0
+        listEngine?.focusedId != nil ? -40 : 0
     }
 
     var body: some View {
@@ -42,7 +42,7 @@ struct ToastRootView<Content: View, ListItemType: ListItem>: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .overlay(alignment: .bottom) {
                 if let activeToast {
-                    ToastView(config: activeToast, listStore: listStore)
+                    ToastView(config: activeToast, listEngine: listEngine)
                         .padding(.bottom, keyboardPadding)
                 }
             }

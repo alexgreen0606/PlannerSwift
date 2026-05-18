@@ -1,5 +1,5 @@
 //
-//  Routine.swift
+//  RoutineRoot.swift
 //  Planner
 //
 //  Created by Alex Green on 4/5/26.
@@ -21,7 +21,7 @@ struct RoutineRootView: View {
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var PlannerSyncStore: PlannerSyncStore
 
-    @StateObject private var routineManager = ListStore<RoutineEvent>()
+    @StateObject private var routineManager = ListEngine<RoutineEvent>()
     @State private var showTransferSheet = false
     @State private var invalidatedEventIds: Set<UUID> = []
     @State private var routineEventSheetContext: RoutineEventSheetContext? = nil
@@ -34,7 +34,7 @@ struct RoutineRootView: View {
     }
 
     var body: some View {
-        ToastRootView(ListStore: routineManager) {
+        ToastRootView(listEngine: routineManager) {
             NavigationStack {
                 ScrollViewReader { scrollProxy in
                     SortableListView(

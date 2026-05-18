@@ -1,5 +1,5 @@
 //
-//  ListStore.swift
+//  ListEngine.swift
 //  Planner
 //
 //  Created by Alex Green on 12/2/25.
@@ -17,7 +17,7 @@ enum ListToggleType: String {
 typealias StatusGuard<Item> = (_ item: Item) -> Bool
 
 @MainActor
-final class ListStore<Item: ListItem>: ObservableObject {
+final class ListEngine<Item: ListItem>: ObservableObject {
     private var toggleItem: ((Item) -> Void)?
     private let customIsItemChecked: StatusGuard<Item>?
 

@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-// Clean
-
 func syncAppIconWithSettings(
     accentColor: AccentColor,
     systemColorScheme: ColorScheme

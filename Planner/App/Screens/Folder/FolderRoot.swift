@@ -1,5 +1,5 @@
 //
-//  Folder.swift
+//  FolderRoot.swift
 //  Planner
 //
 //  Created by Alex Green on 12/14/25.
@@ -22,7 +22,7 @@ struct FolderRootView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @StateObject private var selectManager = ListStore<ChecklistItem>()
+    @StateObject private var selectManager = ListEngine<ChecklistItem>()
     @State private var showTransferSheet = false
     @State private var showCreateSheet = false
     @State private var showEditSheet = false

@@ -26,8 +26,6 @@ extension ModelContext {
             return
         }
 
-        print("debug \(planner.datestamp) syncRoutine")
-
         if planner.safeExcludeRoutine {
             // Delete all routine variants when the routine is excluded from the planner.
             for variant in planner.safeRoutineEventVariants {

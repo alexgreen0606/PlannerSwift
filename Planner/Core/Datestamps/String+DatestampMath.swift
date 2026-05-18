@@ -33,7 +33,7 @@ extension String {
             return "\(diff) days ago"
         }
     }
-    
+
     /// True if between Today and the next 6 days.
     func isNext7Days(todaystamp: String) -> Bool {
         if self < todaystamp {

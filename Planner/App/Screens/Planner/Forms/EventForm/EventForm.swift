@@ -228,7 +228,7 @@ struct EventFormView: View {
     private func showNotification(
         sourceDatestamp: String?,
         destinationDatestamp: String?,
-        finalEkEvent: EKEvent? = nil
+        finalEkEvent _: EKEvent? = nil
     ) {
         var config: Toast?
 

@@ -17,7 +17,7 @@ struct PlannerActionMenuView: View {
     let visibleEvents: [PlannerEvent]
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var plannerManager: ListStore<PlannerEvent>
+    @EnvironmentObject private var plannerManager: ListEngine<PlannerEvent>
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var TodaystampService: TodaystampService
     @EnvironmentObject private var PlannerSyncStore: PlannerSyncStore

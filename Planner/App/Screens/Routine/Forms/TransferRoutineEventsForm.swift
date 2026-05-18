@@ -24,7 +24,7 @@ struct TransferRoutineEventsFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var PlannerSyncStore: PlannerSyncStore
-    @EnvironmentObject private var routineManager: ListStore<RoutineEvent>
+    @EnvironmentObject private var routineManager: ListEngine<RoutineEvent>
 
     @State private var selectedDaysOfWeek: Set<Weekday> = []
 

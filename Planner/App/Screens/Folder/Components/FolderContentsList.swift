@@ -21,7 +21,7 @@ struct FolderContentsListView: View {
         .blue
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var selectManager: ListStore<ChecklistItem>
+    @EnvironmentObject private var selectManager: ListEngine<ChecklistItem>
 
     var body: some View {
         List {

@@ -20,5 +20,5 @@ class ListItem {
 //    init(sortIndex: Double) {
 //        self.sortIndex = sortIndex
 //    }
-    init(){}
+    init() {}
 }

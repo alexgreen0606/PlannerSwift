@@ -1,5 +1,5 @@
 //
-//  StringExtension+Planner.swift
+//  String+PlannerSearch.swift
 //  Planner
 //
 //  Created by Alex Green on 5/14/26.

@@ -1,5 +1,5 @@
 //
-//  PlannerContextLoader.swift
+//  PlannerLoader.swift
 //  Planner
 //
 //  Created by Alex Green on 5/17/26.
@@ -18,7 +18,7 @@ struct PlannerLoaderView<Content: View>: View {
         datestamp: String,
         settings: PlannerSettings,
         @ViewBuilder content:
-            @escaping (PlannerContext, PlannerEventContext) -> Content
+        @escaping (PlannerContext, PlannerEventContext) -> Content
     ) {
         self.datestamp = datestamp
         self.settings = settings

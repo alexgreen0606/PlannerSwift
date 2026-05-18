@@ -1,5 +1,5 @@
 //
-//  PlannerEventModelContext.swift
+//  ModelContext+PlannerEvent.swift
 //  Planner
 //
 //  Created by Alex Green on 3/8/26.

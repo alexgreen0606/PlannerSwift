@@ -79,7 +79,7 @@ struct PlannerPreviewView: View {
 
     private var tripLabel: String? {
         guard type != .trip, let trip = planner.trip,
-            trip.searchQueryScore(searchQuery) != nil
+              trip.searchQueryScore(searchQuery) != nil
         else {
             return nil
         }

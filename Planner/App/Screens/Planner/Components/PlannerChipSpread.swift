@@ -25,7 +25,7 @@ struct PlannerChipSpreadView: View {
     var namespace: Namespace.ID
     let settings: PlannerSettings
     let openCalendarEventSheet: (EKEvent) -> Void
-    
+
     private let LOCATION_CHIP_ID = "LOCATION_CHIP_ID"
 
     @AppStorage("accentColor") var accentColor: AccentColor =

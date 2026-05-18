@@ -1,5 +1,5 @@
 //
-//  EKEventStoreExtension.swift
+//  EKEventStore+.swift
 //  Planner
 //
 //  Created by Alex Green on 3/3/26.
@@ -8,7 +8,7 @@
 import EventKit
 
 extension EKEventStore {
-    // Returns the success of the update attempt.
+    /// Returns the success of the update attempt.
     func attemptUpdateEvent(_ event: EKEvent) -> Bool {
         guard event.calendar.allowsContentModifications else {
             return false
@@ -29,7 +29,7 @@ extension EKEventStore {
         return true
     }
 
-    // Returns the success of the deletion attempt.
+    /// Returns the success of the deletion attempt.
     func attemptDeleteEvent(_ event: EKEvent) -> Bool {
         guard event.calendar.allowsContentModifications else {
             return false

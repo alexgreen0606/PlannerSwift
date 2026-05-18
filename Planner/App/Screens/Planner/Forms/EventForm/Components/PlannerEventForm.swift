@@ -30,7 +30,7 @@ struct PlannerEventFormView: View {
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
-            .oneMonth
+        .oneMonth
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
@@ -238,7 +238,7 @@ struct PlannerEventFormView: View {
                 "",
                 selection: $draftPlannerEvent.date,
                 in: keepPastEventsDuration
-                    .cutoffDate...todaystampService
+                    .cutoffDate ... todaystampService
                     .maxCalendarDate,
                 displayedComponents: .date
             )
@@ -293,7 +293,7 @@ struct PlannerEventFormView: View {
                     "",
                     selection: $draftPlannerEvent.date,
                     in: keepPastEventsDuration
-                        .cutoffDate...todaystampService
+                        .cutoffDate ... todaystampService
                         .maxCalendarDate,
                     displayedComponents: .hourAndMinute
                 )
@@ -377,13 +377,13 @@ struct PlannerEventFormView: View {
         // Build a calendar event to represent the form values.
         let event =
             sourceCalendarEvent
-            ?? EKEvent(
-                eventStore: calendarStore.ekEventStore
-            )
+                ?? EKEvent(
+                    eventStore: calendarStore.ekEventStore
+                )
         event.calendar =
             sourceCalendarEvent?.calendar
-            ?? calendarStore.ekEventStore
-            .defaultCalendarForNewEvents
+                ?? calendarStore.ekEventStore
+                .defaultCalendarForNewEvents
 
         if let location = draftPlannerEvent.location ?? defaultLocation {
             // Location display name.

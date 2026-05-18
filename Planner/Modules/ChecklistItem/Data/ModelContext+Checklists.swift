@@ -1,5 +1,5 @@
 //
-//  ChecklistItemModelContext.swift
+//  ModelContext+Checklists.swift
 //  Planner
 //
 //  Created by Alex Green on 2/12/26.

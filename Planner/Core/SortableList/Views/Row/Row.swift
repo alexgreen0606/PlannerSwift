@@ -70,7 +70,7 @@ struct RowView<
     }
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var ListStore: ListStore<Item>
+    @EnvironmentObject private var listEngine: ListEngine<Item>
 
     /// Will be updated dynamically within the TextfieldView.
     @State private var height: CGFloat = 0
@@ -78,19 +78,19 @@ struct RowView<
     @State private var titleChangeHandlerTask: Task<Void, Never>? = nil
 
     private var isFocused: Bool {
-        ListStore.focusedId == item.stableId
+        listEngine.focusedId == item.stableId
     }
 
     private var isChecked: Bool {
-        if ListStore.isSelectMode {
-            return ListStore.selectedItemIds.contains(item.stableId)
+        if listEngine.isSelectMode {
+            return listEngine.selectedItemIds.contains(item.stableId)
         }
-        return ListStore.isItemChecked(item)
+        return listEngine.isItemChecked(item)
     }
 
     private var opacity: Double {
-        if !showChecked, ListStore.fadingItemIds.contains(item.stableId) {
-            return ListStore.fadingOpacity
+        if !showChecked, listEngine.fadingItemIds.contains(item.stableId) {
+            return listEngine.fadingOpacity
         }
         return 1
     }
@@ -104,9 +104,9 @@ struct RowView<
                 .padding(.horizontal)
                 // Trigger focus for new items.
                 .onAppear {
-                    if ListStore.pendingFocusId == item.stableId {
-                        ListStore.pendingFocusId = nil
-                        ListStore.focusedId = item.stableId
+                    if listEngine.pendingFocusId == item.stableId {
+                        listEngine.pendingFocusId = nil
+                        listEngine.focusedId = item.stableId
                     }
                 }
 
@@ -145,8 +145,8 @@ struct RowView<
                 showUpperDivider: isUpperItem,
                 opacity: opacity,
                 onTap: {
-                    if ListStore.isSelectMode || toggleOnlyMode {
-                        ListStore.toggleItem(item)
+                    if listEngine.isSelectMode || toggleOnlyMode {
+                        listEngine.toggleItem(item)
                         return
                     }
 
@@ -185,8 +185,8 @@ struct RowView<
                 showLowerDivider: true,
                 opacity: opacity,
                 onTap: {
-                    if ListStore.isSelectMode || toggleOnlyMode {
-                        ListStore.toggleItem(item)
+                    if listEngine.isSelectMode || toggleOnlyMode {
+                        listEngine.toggleItem(item)
                         return
                     }
 
@@ -205,20 +205,20 @@ struct RowView<
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
             .onTapGesture {
-                if ListStore.isSelectMode || toggleOnlyMode {
-                    ListStore.toggleItem(item)
+                if listEngine.isSelectMode || toggleOnlyMode {
+                    listEngine.toggleItem(item)
                     return
                 }
 
                 if !isChecked {
-                    ListStore.focusedId = item.stableId
+                    listEngine.focusedId = item.stableId
                 }
             }
     }
 
     private var textfield: some View {
         TextfieldView(
-            focusedId: $ListStore.focusedId,
+            focusedId: $listEngine.focusedId,
             text: $item.title,
             height: $height,
             itemId: item.stableId,
@@ -232,7 +232,7 @@ struct RowView<
                     createItem?(index + 1)
                 } else {
                     // Triggers a deletion of the item in the below handler.
-                    ListStore.focusedId = nil
+                    listEngine.focusedId = nil
                 }
             }
         )
@@ -265,7 +265,7 @@ struct RowView<
                 )
 
                 if trimmed.isEmpty {
-                    if ListStore.protectedId != item.stableId {
+                    if listEngine.protectedId != item.stableId {
                         if let deleteItem {
                             deleteItem(item)
                         } else {

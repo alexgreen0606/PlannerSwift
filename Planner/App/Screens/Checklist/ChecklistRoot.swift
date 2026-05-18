@@ -9,15 +9,35 @@ import SwiftData
 import SwiftUI
 
 struct ChecklistRootView: View {
-    let checklist: ChecklistItem
-    let rootFolder: ChecklistItem
-    let sortedItems: [ChecklistItem]
-    let canTransferItems: Bool
-    let openItem: (ChecklistItem, ChecklistItem) -> Void
+    private let checklist: ChecklistItem
+    private let rootFolder: ChecklistItem
+    private let sortedItems: [ChecklistItem]
+    private let openItem: (ChecklistItem, ChecklistItem) -> Void
+
+    init(
+        checklist: ChecklistItem,
+        rootFolder: ChecklistItem,
+        sortedItems: [ChecklistItem],
+        openItem: @escaping (ChecklistItem, ChecklistItem) -> Void
+    ) {
+        self.checklist = checklist
+        self.rootFolder = rootFolder
+        self.sortedItems = sortedItems
+        self.openItem = openItem
+
+        self.canTransferSelectedItems =
+            rootFolder.hasChildType(
+                .checklist,
+                excluding: Set([checklist.stableId])
+            )
+            == true
+    }
+
+    private let canTransferSelectedItems: Bool
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var ListStore: ListStore<ChecklistItem>
+    @EnvironmentObject private var listEngine: ListEngine<ChecklistItem>
 
     @State private var showEditSheet = false
     @State private var showTransferSheet = false
@@ -26,15 +46,14 @@ struct ChecklistRootView: View {
 
     private var sortedUncheckedItems: [ChecklistItem] {
         sortedItems
-            .filter(ListStore.isItemInUncheckedList)
+            .filter(listEngine.isItemInUncheckedList)
     }
 
     private var sortedCheckedItems: [ChecklistItem] {
         sortedItems
-            .filter(ListStore.isItemInCheckedList)
+            .filter(listEngine.isItemInCheckedList)
     }
 
-    /// Used for the "Select All" button.
     private var visibleItems: [ChecklistItem] {
         if checklist.showCompleted {
             return sortedUncheckedItems + sortedCheckedItems
@@ -43,16 +62,19 @@ struct ChecklistRootView: View {
     }
 
     private var isAllSelected: Bool {
-        ListStore.selectedItemIds.count == visibleItems.count
-            && !visibleItems.isEmpty
+        !visibleItems.isEmpty
+            && listEngine.selectedItemIds.count == visibleItems.count
     }
 
+    // MARK: - Body
+
     var body: some View {
-        ToastRootView(ListStore: ListStore) {
+        ToastRootView(listEngine: listEngine) {
             NavigationStack {
                 ScrollViewReader { scrollProxy in
                     SortableListView<
-                        ChecklistItem, EmptyView, EmptyView, EmptyView, EmptyView
+                        ChecklistItem, EmptyView, EmptyView, EmptyView,
+                        EmptyView
                     >(
                         uncheckedItems: sortedUncheckedItems,
                         checkedItems: sortedCheckedItems,
@@ -71,11 +93,11 @@ struct ChecklistRootView: View {
                         topTrailingToolbar
                         bottomToolbar(scrollProxy: scrollProxy)
                     }
-                    .animateSynchronousAction(from: ListStore.isSelectMode)
+                    .animateSynchronousAction(from: listEngine.isSelectMode)
                 }
             }
 
-            // Edit Form
+            // MARK: Edit Checklist Form
             .sheet(isPresented: $showEditSheet) {
                 if let parent = checklist.parent {
                     ChecklistItemFormView(
@@ -88,11 +110,11 @@ struct ChecklistRootView: View {
                 }
             }
 
-            // Transfer Items Form
+            // MARK: Transfer Selected Items Form
             .sheet(isPresented: $showTransferSheet) {
                 TransferChecklistItemsFormView(
                     source: checklist,
-                    selectedIds: ListStore.selectedItemIds,
+                    selectedIds: listEngine.selectedItemIds,
                     rootFolder: rootFolder,
                     openItem: openItem
                 )
@@ -108,52 +130,17 @@ struct ChecklistRootView: View {
 
     // MARK: - Toolbars
 
+    // MARK: Top Leading Toolbar
+
     private var topLeadingToolbar: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            if !ListStore.isSelectMode {
+            if !listEngine.isSelectMode {
                 dismissButton
             } else {
                 cancelSelectModeButton
             }
         }
     }
-
-    @ToolbarContentBuilder
-    private var topTrailingToolbar: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            if !ListStore.isSelectMode {
-                ChecklistActionMenu(
-                    showEditSheet: $showEditSheet,
-                    checklist: checklist,
-                    sortedItems: sortedItems,
-                    visibleItems: visibleItems
-                )
-            } else {
-                toggleSelectAllButton
-            }
-        }
-    }
-
-    @ToolbarContentBuilder
-    private func bottomToolbar(
-        scrollProxy: ScrollViewProxy
-    ) -> some ToolbarContent {
-        if !ListStore.isSelectMode {
-            ToolbarSpacer(placement: .bottomBar)
-            ToolbarItem(placement: .bottomBar) {
-                createLowerItemButton(scrollProxy: scrollProxy)
-            }
-        } else {
-            SelectedChecklistItemActionsView(
-                showTransferSheet: $showTransferSheet,
-                canTransferItems: canTransferItems,
-                parentType: .checklist,
-                namespace: namespace
-            )
-        }
-    }
-
-    // MARK: Top Leading Toolbar Components
 
     private var dismissButton: some View {
         Button(
@@ -167,18 +154,34 @@ struct ChecklistRootView: View {
 
     private var cancelSelectModeButton: some View {
         Button(
-            "Cancel",
+            "Cancel Select Mode",
             systemImage: "xmark",
-            action: ListStore.toggleSelectMode
+            action: listEngine.toggleSelectMode
         )
         .tint(Color.label)
     }
 
-    // MARK: Top Trailing Toolbar Components
+    // MARK: Top Trailing Toolbar
+
+    @ToolbarContentBuilder
+    private var topTrailingToolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            if !listEngine.isSelectMode {
+                ChecklistActionMenu(
+                    showEditSheet: $showEditSheet,
+                    checklist: checklist,
+                    items: sortedItems,
+                    visibleItems: visibleItems
+                )
+            } else {
+                toggleSelectAllButton
+            }
+        }
+    }
 
     private var toggleSelectAllButton: some View {
         Button {
-            ListStore.toggleSelectAll(visibleItems: visibleItems)
+            listEngine.toggleSelectAll(visibleItems: visibleItems)
         } label: {
             Text(isAllSelected ? "Deselect All" : "Select All")
                 .fontWeight(.semibold)
@@ -189,10 +192,29 @@ struct ChecklistRootView: View {
 
     // MARK: Bottom Trailing Toolbar Components
 
+    @ToolbarContentBuilder
+    private func bottomToolbar(
+        scrollProxy: ScrollViewProxy
+    ) -> some ToolbarContent {
+        if !listEngine.isSelectMode {
+            ToolbarSpacer(placement: .bottomBar)
+            ToolbarItem(placement: .bottomBar) {
+                createLowerItemButton(scrollProxy: scrollProxy)
+            }
+        } else {
+            SelectedChecklistItemActionsView(
+                showTransferSheet: $showTransferSheet,
+                canTransferItems: canTransferSelectedItems,
+                parentType: .checklist,
+                namespace: namespace
+            )
+        }
+    }
+
     private func createLowerItemButton(scrollProxy: ScrollViewProxy)
         -> some View
     {
-        Button("Add", systemImage: "plus") {
+        Button("Create Item", systemImage: "plus") {
             createLowerItem(scrollProxy: scrollProxy)
         }
         .buttonStyle(.glassProminent)
@@ -202,8 +224,9 @@ struct ChecklistRootView: View {
     // MARK: - Functions
 
     private func createItem(at index: Int) {
-        ListStore.pendingFocusId = modelContext.createChecklistItem(
+        listEngine.pendingFocusId = modelContext.createChecklistItem(
             at: index,
+            // TODO: cant 2 items have the same sort ID (one unchecked, one checked) DESIGN FLAW
             in: sortedUncheckedItems,
             parent: checklist
         )

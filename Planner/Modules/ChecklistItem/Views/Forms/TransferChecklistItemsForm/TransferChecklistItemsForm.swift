@@ -69,7 +69,7 @@ struct TransferChecklistItemsFormView: View {
     @Environment(\.showToast) private var showToast
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var ListStore: ListStore<ChecklistItem>
+    @EnvironmentObject private var ListEngine: ListEngine<ChecklistItem>
 
     @State private var destinationType: ChecklistItemType
     @State private var selectedItem: ChecklistItem?
@@ -79,7 +79,7 @@ struct TransferChecklistItemsFormView: View {
     @State private var folderNavDirection: FolderNavigationDirection = .forward
 
     private var transferCount: String {
-        let count = ListStore.selectedItems.count
+        let count = ListEngine.selectedItems.count
         return
             "\(String(count)) item\(count == 1 ? "" : "s")"
     }
@@ -195,15 +195,15 @@ struct TransferChecklistItemsFormView: View {
             return
         }
 
-        let selectedType = checklistItemsType(ListStore.selectedItems)
-        let itemCount = ListStore.selectedItemIds.count
+        let selectedType = checklistItemsType(ListEngine.selectedItems)
+        let itemCount = ListEngine.selectedItemIds.count
 
         modelContext.transferChecklistItems(
-            ListStore.selectedItems,
+            ListEngine.selectedItems,
             into: selectedItem
         )
 
-        ListStore.toggleSelectMode()
+        ListEngine.toggleSelectMode()
 
         dismiss()
 

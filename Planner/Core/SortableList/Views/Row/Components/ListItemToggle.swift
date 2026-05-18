@@ -72,18 +72,18 @@ struct ListItemToggleView<Item: ListItem>: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @EnvironmentObject private var ListStore: ListStore<Item>
+    @EnvironmentObject private var ListEngine: ListEngine<Item>
 
     /// Only used by custom toggles that require confirmation.
     @State private var isConfirmationOpen: Bool = false
 
     private var activeTint: Color {
-        ListStore.isSelectMode ? accentColor.color : tint
+        ListEngine.isSelectMode ? accentColor.color : tint
     }
 
     private var toggleConfig: ToggleConfig {
         if let customConfig = customToggleConfig,
-           !ListStore.isSelectMode
+           !ListEngine.isSelectMode
         {
             return customConfig
         }
@@ -138,7 +138,7 @@ struct ListItemToggleView<Item: ListItem>: View {
                 if needsConfirmation {
                     isConfirmationOpen = true
                 } else {
-                    ListStore.toggleItem(item)
+                    ListEngine.toggleItem(item)
                 }
             }
             .withConfirmation(

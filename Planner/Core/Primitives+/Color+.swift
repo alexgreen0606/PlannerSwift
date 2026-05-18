@@ -1,5 +1,5 @@
 //
-//  Color.swift
+//  Color+.swift
 //  Planner
 //
 //  Created by Alex Green on 12/19/25.

@@ -20,7 +20,6 @@ extension ModelContext {
         hiddenCalendarIds: Set<String>,
         ekEventStore: EKEventStore
     ) -> CalendarDayData {
-        print("debug \(planner.datestamp) syncCalendar")
 
         var calendarDayData = CalendarDayData()
 

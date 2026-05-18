@@ -1,5 +1,5 @@
 //
-//  ChecklistBuilder.swift
+//  ChecklistLoader.swift
 //  Planner
 //
 //  Created by Alex Green on 2/24/26.
@@ -11,17 +11,14 @@ import SwiftUI
 
 struct ChecklistBuilderView: View {
     private let rootFolder: ChecklistItem
-    private let canTransferItems: Bool
     private let openItem: (ChecklistItem, ChecklistItem) -> Void
 
     init(
         rootFolder: ChecklistItem,
         checklistId: UUID,
-        canTransferItems: Bool,
         openItem: @escaping (ChecklistItem, ChecklistItem) -> Void
     ) {
         self.rootFolder = rootFolder
-        self.canTransferItems = canTransferItems
         self.openItem = openItem
 
         _checklists = Query(
@@ -53,7 +50,6 @@ struct ChecklistBuilderView: View {
                 checklist: checklist,
                 rootFolder: rootFolder,
                 sortedItems: sortedItems,
-                canTransferItems: canTransferItems,
                 openItem: openItem
             )
         }

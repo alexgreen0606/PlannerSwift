@@ -1,5 +1,5 @@
 //
-//  proximityFormat.swift
+//  String+ProximityFormat.swift
 //  Planner
 //
 //  Created by Alex Green on 4/9/26.

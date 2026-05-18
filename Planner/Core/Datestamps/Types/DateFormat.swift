@@ -39,7 +39,7 @@ enum DateFormat {
                 : datestamp.dateLabel(todaystamp: todaystamp)
         }
     }
-    
+
     private func formatOrdinalDateString(
         // Must always be of the format "June 6" or "June 6, 2000"
         _ text: String
@@ -48,13 +48,13 @@ enum DateFormat {
 
         if !formatted.contains(",") {
             if let dayString = formatted.split(separator: " ").last,
-                let dayInt = Int(dayString)
+               let dayInt = Int(dayString)
             {
                 let formatter = NumberFormatter()
                 formatter.numberStyle = .ordinal
 
                 if let ordinalDay = formatter.string(from: NSNumber(value: dayInt)),
-                    let range = formatted.range(of: dayString, options: .backwards)
+                   let range = formatted.range(of: dayString, options: .backwards)
                 {
                     formatted.replaceSubrange(range, with: ordinalDay)
                 }
