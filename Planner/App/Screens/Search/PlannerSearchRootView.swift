@@ -24,7 +24,7 @@ struct PlannerSearchRootView: View {
     @EnvironmentObject private var weatherStore: WeatherStore
     @EnvironmentObject private var LocationService: LocationService
     @EnvironmentObject private var plannerSearchStore: PlannerSearchStore
-    @EnvironmentObject private var PlannerSyncStore: PlannerSyncStore
+    @EnvironmentObject private var PlannerSyncStore: PlannerSyncService
 
     @State private var searchText: String = ""
     @State private var filteredCalendarIds: Set<String> = []

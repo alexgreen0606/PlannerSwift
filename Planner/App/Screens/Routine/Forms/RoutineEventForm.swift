@@ -35,7 +35,7 @@ struct RoutineEventFormView: View {
         self.sortedSourceEvents = sortedSourceEvents
         self.openRoutine = openRoutine
 
-        let daysOfWeek: Set<Weekday> = sourceRoutineEvent?.weekdays ?? []
+        let daysOfWeek: Set<Weekday> = Set(sourceRoutineEvent?.weekdays ?? [])
 
         let time = {
             if let existingTime = sourceRoutineEvent?.time {
@@ -74,7 +74,7 @@ struct RoutineEventFormView: View {
     @Environment(\.showToast) private var showToast
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var PlannerSyncStore: PlannerSyncStore
+    @EnvironmentObject private var PlannerSyncStore: PlannerSyncService
 
     @State private var draftRoutineEvent: DraftRoutineEvent
 
@@ -254,7 +254,7 @@ struct RoutineEventFormView: View {
     // MARK: - Functions
 
     private func saveRoutineEvent() {
-        let affectedWeekdays = (sourceRoutineEvent?.weekdays ?? []).union(
+        let affectedWeekdays = (Set(sourceRoutineEvent?.weekdays ?? [])).union(
             draftRoutineEvent.daysOfWeek
         )
 

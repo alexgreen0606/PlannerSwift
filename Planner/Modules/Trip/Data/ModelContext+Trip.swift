@@ -9,11 +9,28 @@ import Foundation
 import SwiftData
 
 extension ModelContext {
+
+    func getExistingTripDatestamps() -> Set<String> {
+        do {
+            let existingTrips = try fetch(
+                FetchDescriptor<Trip>()
+            )
+
+            return existingTrips.reduce(into: Set<String>()) {
+                result,
+                trip in
+                result.formUnion(trip.safePlanners.map(\.datestamp))
+            }
+        } catch {
+            return []
+        }
+    }
+
     @MainActor
     func updateTrip(
         from draftTrip: DraftTrip,
         to sourceTrip: Trip?,
-        PlannerSyncStore: PlannerSyncStore
+        PlannerSyncStore: PlannerSyncService
     ) -> Trip {
         var sourcePlanners: [String: Planner] = Dictionary(
             uniqueKeysWithValues: (sourceTrip?.planners ?? []).map {
@@ -78,6 +95,9 @@ extension ModelContext {
 
             stalePlanner.trip = nil
         }
+
+        trip.firstDatestamp = trip.sortedPlanners.first?.datestamp ?? ""
+        trip.lastDatestamp = trip.sortedPlanners.last?.datestamp ?? ""
 
         insertIfNeeded(trip)
         safeSave("trip.updateTrip")

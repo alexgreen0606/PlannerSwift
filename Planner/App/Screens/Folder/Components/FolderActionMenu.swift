@@ -8,8 +8,6 @@
 import SwiftData
 import SwiftUI
 
-// Clean
-
 struct FolderActionMenuView: View {
     @Binding var showEditSheet: Bool
     let folder: ChecklistItem

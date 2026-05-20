@@ -23,7 +23,7 @@ struct TransferRoutineEventsFormView: View {
     @Environment(\.showToast) private var showToast
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var PlannerSyncStore: PlannerSyncStore
+    @EnvironmentObject private var PlannerSyncStore: PlannerSyncService
     @EnvironmentObject private var routineManager: ListEngine<RoutineEvent>
 
     @State private var selectedDaysOfWeek: Set<Weekday> = []
@@ -79,8 +79,8 @@ struct TransferRoutineEventsFormView: View {
     // MARK: - Functions
 
     private func handleTransfer() {
-        let affectedWeekdays =
-            Set(routineManager.selectedItems.flatMap { $0.sortDateMap.keys })
+        let affectedWeekdays: Set<Weekday> =
+            Set(routineManager.selectedItems.flatMap { $0.weekdays })
                 .union(selectedDaysOfWeek)
 
         PlannerSyncStore.invalidateRoutineDays(affectedWeekdays)

@@ -12,14 +12,14 @@ import SwiftDate
 import SwiftUI
 
 @MainActor
-class PlannerSyncStore: ObservableObject {
+class PlannerSyncService: ObservableObject {
     @Published private(set) var rebuildTrigger: UUID? = nil
 
     @Published var freshCalendarMap: [String: CalendarDayData] = [:]
 
     /// Datestamps that have loaded for each weekday.
     @Published private(set) var freshRoutineMap: [Weekday: Set<String>] =
-        PlannerSyncStore.makeDefaultRoutineMap()
+        PlannerSyncService.makeDefaultRoutineMap()
 
     private var inFlight: [String: Task<CalendarDayData, Never>] = [:]
 

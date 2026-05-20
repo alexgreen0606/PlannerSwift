@@ -9,6 +9,6 @@ struct RoutineCoverContext: Identifiable {
     var weekday: Weekday
 
     var id: String {
-        weekday.rawValue
+        String(weekday.rawValue)
     }
 }

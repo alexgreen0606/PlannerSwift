@@ -52,15 +52,18 @@ extension ModelContext {
         )
 
         insert(newItem)
-        safeSave("checklistItem.createChecklistItem")
 
         return newItem.stableId
+
+        // Note: Don't save the context here.
+        // It can cause flickered duplicates in the list.
     }
 
     // MARK: - UPDATE
 
     @MainActor
-    func moveChecklistItem(in sortedItems: [ChecklistItem], from: Int, to: Int) {
+    func moveChecklistItem(in sortedItems: [ChecklistItem], from: Int, to: Int)
+    {
         guard from != to else { return }
 
         let movedItem = sortedItems[from]
@@ -80,7 +83,9 @@ extension ModelContext {
     ) -> UUID? {
         var newItemId: UUID? = nil
 
-        draftChecklistItem.title = draftChecklistItem.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        draftChecklistItem.title = draftChecklistItem.title.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
 
         if let sourceItem {
             // Edit the existing item.

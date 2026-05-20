@@ -6,6 +6,7 @@
 //
 
 import SwiftDate
+import Foundation
 
 extension String {
     /// Returns a grammatically correct pluralized string for the given count.
@@ -15,5 +16,9 @@ extension String {
     /// - "2 events"
     func inflected(for count: Int) -> String {
         "^[\(count) \(self)](inflect: true)"
+    }
+    
+    var trimmed: String {
+        trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

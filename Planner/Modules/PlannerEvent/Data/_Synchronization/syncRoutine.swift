@@ -150,20 +150,25 @@ extension ModelContext {
 
         if !planner.safeExcludeRoutine {
             let variantIds = Set(
-                planner.routineEventVariants?.compactMap {
+                planner.safeRoutineEventVariants.compactMap {
                     $0.routineEvent?.stableId
-                } ?? []
+                }
             )
 
-            let reverseSortedEvents: [RoutineEvent] =
-                existingRoutineEvents.values
-                    .sorted {
-                        $0.sortDateMap[weekday]! > $1.sortDateMap[weekday]!
+            let reverseSortedEvents: [RoutineEvent] = existingRoutineEvents
+                .values.sorted {
+                    guard
+                        let firstSortDate = $0.instance(on: weekday)?.sortDate,
+                        let secondSortDate = $1.instance(on: weekday)?.sortDate
+                    else {
+                        return false
                     }
 
+                    return firstSortDate > secondSortDate
+                }
+
             for routineEvent in reverseSortedEvents
-                where !variantIds.contains(routineEvent.stableId)
-            {
+            where !variantIds.contains(routineEvent.stableId) {
                 // Find a position for the event closest to its routine siblings.
                 // Defaults to top of list otherwise.
                 let targetIndex = generateTargetIndex(
@@ -213,7 +218,7 @@ extension ModelContext {
         }()
 
         if sourceWeekday == nil
-            || !routineEvent.weekdays.contains(sourceWeekday!)
+            || routineEvent.instance(on: sourceWeekday!) == nil
         {
             // This weekday was removed from the routine event. Remove this record and continue.
             deletePlannerEvent(

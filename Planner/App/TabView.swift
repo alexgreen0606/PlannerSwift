@@ -81,7 +81,7 @@ struct RootTabView: View {
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var weatherStore: WeatherStore
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
-    @EnvironmentObject private var plannerSyncStore: PlannerSyncStore
+    @EnvironmentObject private var plannerSyncStore: PlannerSyncService
 
     @Query private var plannerSettingsList: [PlannerSettings]
     @Query private var checklistItems: [ChecklistItem]

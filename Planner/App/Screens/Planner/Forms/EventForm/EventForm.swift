@@ -106,7 +106,7 @@ struct EventFormView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.showToast) private var showToast
     @EnvironmentObject private var calendarStore: CalendarStore
-    @EnvironmentObject private var PlannerSyncStore: PlannerSyncStore
+    @EnvironmentObject private var PlannerSyncStore: PlannerSyncService
     @EnvironmentObject private var LocationService: LocationService
     @EnvironmentObject private var PlannerCoverStore: PlannerCoverStore
     @EnvironmentObject private var TodaystampService: TodaystampService

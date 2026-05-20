@@ -5,11 +5,8 @@
 //  Created by Alex Green on 3/21/26.
 //
 
-import EventKit
 import SwiftData
-import SwiftDate
 import SwiftUI
-import SwiftUIIntrospect
 
 struct TripFormView: View {
     private let sourceTrip: Trip?
@@ -27,13 +24,13 @@ struct TripFormView: View {
 
         var draftTrip = DraftTrip()
         if let sourceTrip {
-            draftTrip.dateComponents = sourceTrip.dateComponents
             draftTrip.title = sourceTrip.title
-            draftTrip.excludeRoutines = sourceTrip.excludeRoutines
+            draftTrip.selectedDates = sourceTrip.dateComponents
             draftTrip.location = sourceTrip.location
+            draftTrip.excludeRoutines = sourceTrip.excludeRoutines
         }
 
-        self.draftTrip = draftTrip
+        self._draftTrip = State(initialValue: draftTrip)
     }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -42,56 +39,62 @@ struct TripFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var todaystampService: TodaystampService
-    @EnvironmentObject private var PlannerSyncStore: PlannerSyncStore
-
-    @Query private var trips: [Trip]
+    @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
     @State private var draftTrip: DraftTrip
-    @State private var showDeleteConfirmation = false
-    @State private var showDatesPicker: Bool = false
-    @State private var hasAutoFocused: Bool = false
-    @State private var existingTripDateComponents: Set<DateComponents> = []
-    @State private var hasTitleAutoFocused = false
 
     @FocusState private var isTitleFocused
+    @State private var hasTitleAutoFocused = false
+
+    @State private var showDatePicker: Bool = false
+    @State private var existingTripDatestamps: Set<String> = []
+
+    @State private var showDeleteConfirmation = false
 
     private var isNewTrip: Bool {
         sourceTrip == nil
     }
 
     private var canSave: Bool {
-        !draftTrip.title.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        ).isEmpty
-            && !draftTrip.dateComponents.isEmpty
-            && invalidDayMessage == nil
+        !draftTrip.title.trimmed.isEmpty
+            && !draftTrip.selectedDates.isEmpty
+            && datesError == nil
     }
 
-    private var dayCount: Int {
-        draftTrip.dateComponents.count
+    private var datesLabel: String {
+        let sortedDatestamps = draftTrip.datestamps.sorted()
+
+        guard let firstDatestamp = sortedDatestamps.first,
+            let lastDatestamp = sortedDatestamps.last
+        else {
+            return "Select Dates"
+        }
+
+        return buildDateRangeLabel(
+            firstDatestamp: firstDatestamp,
+            lastDatestamp: lastDatestamp,
+            todaystamp: todaystampService.todaystamp
+        )
     }
 
-    private var dayCountLabel: String {
-        "\(dayCount) day\(dayCount == 1 ? "" : "s")"
+    private var dayCountLabel: LocalizedStringKey {
+        "^[\(draftTrip.selectedDates.count) day](inflect: true)"
     }
 
-    private var invalidDayMessage: String? {
-        let existing = Set(existingTripDateComponents.compactMap(\.datestamp))
-        let draft = Set(draftTrip.dateComponents.compactMap(\.datestamp))
-
+    private var datesError: String? {
         guard
-            let conflict = existing.intersection(draft).first
+            let dateConflict = existingTripDatestamps.intersection(
+                draftTrip.datestamps
+            ).first
         else {
             return nil
         }
 
-        return "\(conflict.dateLabel(todaystamp: todaystampService.todaystamp)) is linked to a different trip."
+        return
+            "\(dateConflict.dateLabel(todaystamp: todaystampService.todaystamp)) is linked to a different trip."
     }
 
-    private var datesLabel: String {
-        draftTrip.dateRangeLabel(todaystamp: todaystampService.todaystamp)
-            ?? "Select Dates"
-    }
+    // MARK: - Body
 
     var body: some View {
         NavigationStack {
@@ -100,35 +103,42 @@ struct TripFormView: View {
                 detailsSection
                 routineSection
             }
-            .navigationTitle(isNewTrip ? "Create Trip" : "Edit Trip")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 cancelButton
                 saveButton
-                cancelTripButton
+                deleteTripButton
             }
+            .navigationTitle("\(isNewTrip ? "Create" : "Edit") Trip")
+            .navigationBarTitleDisplayMode(.inline)
         }
-        .animation(.linear, value: showDatesPicker)
-        .animation(.linear, value: invalidDayMessage)
+        .animation(.linear, value: showDatePicker)
+        .animation(.linear, value: datesError)
         .tint(accentColor.color)
         .task {
-            buildExistingTripDates()
+            showDatePicker = isNewTrip
 
-            if isNewTrip {
-                showDatesPicker = true
+            var existingTripDatestamps =
+                modelContext.getExistingTripDatestamps()
+
+            if let sourceTrip {
+                existingTripDatestamps = existingTripDatestamps.filter {
+                    datestamp in
+                    !sourceTrip.safePlanners.contains(where: {
+                        $0.datestamp == datestamp
+                    })
+                }
             }
+
+            self.existingTripDatestamps = existingTripDatestamps
         }
 
-        // Blur the title field when another field is modified.
-        .onChange(of: draftTrip.dateComponents) { _, _ in
-            if isTitleFocused {
-                isTitleFocused = false
-            }
+        // MARK: Blur the title field when another field is modified.
+
+        .onChange(of: draftTrip.selectedDates) { _, _ in
+            isTitleFocused = false
         }
         .onChange(of: draftTrip.excludeRoutines) { _, _ in
-            if isTitleFocused {
-                isTitleFocused = false
-            }
+            isTitleFocused = false
         }
     }
 
@@ -155,7 +165,7 @@ struct TripFormView: View {
     }
 
     @ToolbarContentBuilder
-    private var cancelTripButton: some ToolbarContent {
+    private var deleteTripButton: some ToolbarContent {
         if let sourceTrip {
             ToolbarItem(placement: .bottomBar) {
                 ActionButtonView(
@@ -178,7 +188,6 @@ struct TripFormView: View {
     // MARK: - View Builders
 
     // MARK: Title
-
     private var titleSection: some View {
         FormTitleFieldView(
             text: $draftTrip.title,
@@ -193,7 +202,7 @@ struct TripFormView: View {
     private var detailsSection: some View {
         Section {
             datesField
-            datesPicker
+            datePicker
             locationField
         }
         .listSectionSeparator(.hidden)
@@ -204,27 +213,28 @@ struct TripFormView: View {
             systemImageName: "calendar",
             value: datesLabel,
             detail: dayCountLabel,
-            color: invalidDayMessage != nil ? Color.red : nil
-        ) {
-            if !showDatesPicker {
-                isTitleFocused = false
+            color: datesError != nil ? Color.red : nil,
+            onTap: {
+                if !showDatePicker {
+                    isTitleFocused = false
+                }
+                showDatePicker.toggle()
             }
-            showDatesPicker.toggle()
-        }
-        .id("DATES_FIELD_\(invalidDayMessage != nil)")
-        .listRowSeparator(showDatesPicker ? .hidden : .visible)
+        )
+        .listRowSeparator(showDatePicker ? .hidden : .visible)
+        .id("DATES_FIELD_\(datesError != nil)")
     }
 
     @ViewBuilder
-    private var datesPicker: some View {
-        if showDatesPicker {
+    private var datePicker: some View {
+        if showDatePicker {
             VStack {
                 DateRangePickerView(
-                    selectedDates: $draftTrip.dateComponents
+                    selectedDates: $draftTrip.selectedDates
                 )
 
-                if let invalidDayMessage {
-                    Text(invalidDayMessage)
+                if let datesError {
+                    Text(datesError)
                         .font(.footnote)
                         .foregroundStyle(Color.red)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -237,7 +247,7 @@ struct TripFormView: View {
     private var locationField: some View {
         NavigationLink {
             LocationSearchFormView(
-                title: "Edit Trip Location",
+                title: "Trip Location",
                 mode: .trip,
                 settings: settings,
                 initialLocation: draftTrip.location
@@ -252,7 +262,6 @@ struct TripFormView: View {
                             ? Color.secondary : accentColor.color,
                         Color.label
                     )
-                Text("")
                 Spacer()
                 Text(
                     draftTrip.location?.name ?? "Home Location"
@@ -264,7 +273,6 @@ struct TripFormView: View {
     }
 
     // MARK: Routines
-
     private var routineSection: some View {
         Section {
             Toggle(isOn: $draftTrip.excludeRoutines) {
@@ -281,7 +289,7 @@ struct TripFormView: View {
         let savedTrip = modelContext.updateTrip(
             from: draftTrip,
             to: sourceTrip,
-            PlannerSyncStore: PlannerSyncStore
+            PlannerSyncStore: plannerSyncService
         )
 
         dismiss()
@@ -290,15 +298,8 @@ struct TripFormView: View {
 
     private func deleteTrip() {
         dismiss()
-
-        guard let trip = sourceTrip else { return }
-
-        modelContext.safeDelete(trip)
-    }
-
-    private func buildExistingTripDates() {
-        for trip in trips where trip.id != sourceTrip?.id {
-            existingTripDateComponents.formUnion(trip.dateComponents)
+        if let sourceTrip {
+            modelContext.safeDelete(sourceTrip)
         }
     }
 }

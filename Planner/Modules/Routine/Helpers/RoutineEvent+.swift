@@ -8,8 +8,6 @@
 import SwiftDate
 import SwiftUI
 
-// Clean
-
 extension RoutineEvent {
     var safePlannerEvents: [PlannerEvent] {
         plannerEvents ?? []
@@ -19,8 +17,22 @@ extension RoutineEvent {
         variants ?? []
     }
 
+    var safeWeekdayInstances: [RoutineEventWeekdayInstance] {
+        weekdayInstances ?? []
+    }
+
     var weekdays: Set<Weekday> {
-        Set(sortDateMap.keys)
+        Set(
+            safeWeekdayInstances.compactMap {
+                Weekday(rawValue: $0.weekdayRawValue)
+            }
+        )
+    }
+
+    func instance(on weekday: Weekday) -> RoutineEventWeekdayInstance? {
+        safeWeekdayInstances.first(where: {
+            $0.weekdayRawValue == weekday.rawValue
+        })
     }
 
     func syncWithDraftRoutineEvent(
@@ -70,9 +82,9 @@ extension RoutineEvent {
     func weekdaysAdornment(
         openEventSheet: (() -> Void)?
     ) -> some View {
-        if sortDateMap.keys.count > 1 {
+        if weekdays.count > 1 {
             WeekdaySpreadView(
-                selected: weekdays,
+                selected: Set(weekdays),
                 scale: 0.66,
                 spacing: 1
             )

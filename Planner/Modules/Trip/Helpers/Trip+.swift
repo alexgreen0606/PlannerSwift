@@ -18,14 +18,6 @@ extension Trip {
         safePlanners.sorted { $0.datestamp < $1.datestamp }
     }
 
-    var firstDatestamp: String? {
-        sortedPlanners.first?.datestamp
-    }
-
-    var lastDatestamp: String? {
-        sortedPlanners.last?.datestamp
-    }
-
     var dateComponents: Set<DateComponents> {
         Set(
             safePlanners.compactMap { $0.datestamp.dateComponents }
@@ -78,18 +70,16 @@ extension Trip {
     }
 
     func dateRangeLabel(todaystamp: String) -> String {
-        guard let firstDatestamp,
-              let lastDatestamp
-        else {
-            return ""
-        }
-
-        return buildDateRangeLabel(
+        buildDateRangeLabel(
             firstDatestamp: firstDatestamp,
             lastDatestamp: lastDatestamp,
             todaystamp: todaystamp,
             referenceYear: firstDatestamp.year
         )
+    }
+    
+    var transitionId: String {
+        "\(String(describing: id))"
     }
 
     func transitionId(for datestamp: String) -> String {
@@ -103,10 +93,6 @@ extension Trip {
         guard let query else {
             // Include. No query set.
             return 1.0
-        }
-
-        guard let firstDatestamp, let lastDatestamp else {
-            return nil
         }
 
         if !query.containsDatestampRange(

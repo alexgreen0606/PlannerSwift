@@ -27,18 +27,4 @@ enum Weekday: String, Codable, CaseIterable {
     static func forDatestamp(_ datestamp: String) -> Weekday? {
         Weekday(rawValue: datestamp.weekday)
     }
-
-    func sortedEvents(in routineEvents: [RoutineEvent], reversed: Bool = false)
-        -> [RoutineEvent]
-    {
-        routineEvents
-            .filter { $0.sortDateMap[self] != nil }
-            .sorted {
-                if reversed {
-                    $0.sortDateMap[self]! > $1.sortDateMap[self]!
-                } else {
-                    $0.sortDateMap[self]! < $1.sortDateMap[self]!
-                }
-            }
-    }
 }

@@ -6,8 +6,8 @@
 //
 
 import Combine
-import Foundation
 import SwiftDate
+import SwiftUI
 
 @MainActor
 class TodaystampService: ObservableObject {
@@ -19,10 +19,25 @@ class TodaystampService: ObservableObject {
         timer?.invalidate()
     }
 
+    @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
+        KeepPastEventsDuration =
+            .oneMonth
+
     @Published private(set) var todaystamp: String =
         TodaystampService.buildTodaystamp()
 
-    @Published private(set) var maxCalendarDate: Date =
+    @Published private(set) var next7Datestamps: [String] =
+        TodaystampService.buildNext7Datestamps()
+    
+    var datePickerBounds: ClosedRange<Date> {
+        keepPastEventsDuration.cutoffDate...maxCalendarDate
+    }
+
+    var multiDatePickerBounds: Range<Date> {
+        keepPastEventsDuration.cutoffDate..<maxCalendarDate
+    }
+    
+    private var maxCalendarDate: Date =
         TodaystampService.buildMaxCalendarDate()
 
     private var timer: Timer?
@@ -38,6 +53,16 @@ class TodaystampService: ObservableObject {
         DateInRegion(Date(), region: .local)
             .dateByAdding(3, .year)
             .date
+    }
+
+    private static func buildNext7Datestamps() -> [String] {
+        let today = DateInRegion(region: .local)
+
+        return (0..<7).map { index in
+            today
+                .dateByAdding(index, .day)
+                .toFormat("yyyy-MM-dd")
+        }
     }
 
     private func scheduleMidnightUpdate() {
@@ -60,6 +85,7 @@ class TodaystampService: ObservableObject {
     @objc private func updateStamp() {
         todaystamp = Self.buildTodaystamp()
         maxCalendarDate = Self.buildMaxCalendarDate()
+        next7Datestamps = Self.buildNext7Datestamps()
 
         // Reschedule for tomorrow.
         scheduleMidnightUpdate()

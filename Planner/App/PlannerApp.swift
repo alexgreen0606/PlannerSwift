@@ -35,7 +35,7 @@ struct PlannerApp: App {
             ChecklistItem.self,
             Trip.self,
             RoutineEvent.self,
-            RoutineEventVariant.self,
+            RoutineEventVariant.self
         ])
 
         let configuration = ModelConfiguration(
@@ -55,7 +55,7 @@ struct PlannerApp: App {
     @StateObject private var calendarStore = CalendarStore()
     @StateObject private var todaystampService = TodaystampService()
     @StateObject private var plannerCoverStore = PlannerCoverStore()
-    @StateObject private var plannerSyncStore = PlannerSyncStore()
+    @StateObject private var plannerSyncStore = PlannerSyncService()
 
     var body: some Scene {
         WindowGroup {

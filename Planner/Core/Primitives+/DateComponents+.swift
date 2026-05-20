@@ -1,8 +1,8 @@
 //
-//  DateComponents+Trip.swift
+//  DateComponents+.swift
 //  Planner
 //
-//  Created by Alex Green on 5/15/26.
+//  Created by Alex Green on 5/20/26.
 //
 
 import SwiftUI
@@ -10,9 +10,9 @@ import SwiftUI
 extension DateComponents {
     var datestamp: String? {
         guard
-            let year = year,
-            let month = month,
-            let day = day
+            let year,
+            let month,
+            let day
         else { return nil }
 
         return String(

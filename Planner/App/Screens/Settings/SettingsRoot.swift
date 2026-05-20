@@ -36,7 +36,7 @@ struct SettingsRootView: View {
     @Environment(\.colorScheme) private var systemColorScheme
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var locationService: LocationService
-    @EnvironmentObject private var plannerSyncStore: PlannerSyncStore
+    @EnvironmentObject private var plannerSyncStore: PlannerSyncService
 
     private var activeCalendarCount: String {
         String(

@@ -41,7 +41,7 @@ struct CalendarsFormView: View {
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
-    @EnvironmentObject private var PlannerSyncStore: PlannerSyncStore
+    @EnvironmentObject private var PlannerSyncStore: PlannerSyncService
 
     @State private var calendarStoreRefreshTask: Task<Void, Never>?
 

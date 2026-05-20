@@ -15,6 +15,10 @@ class Trip {
 
     @Relationship(inverse: \Planner.trip)
     var planners: [Planner]?
+    
+    /// SwiftData query helpers.
+    var firstDatestamp: String = ""
+    var lastDatestamp: String = ""
 
     @Relationship(deleteRule: .nullify, inverse: \Location.trips)
     var location: Location?

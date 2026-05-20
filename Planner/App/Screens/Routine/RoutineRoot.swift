@@ -19,7 +19,7 @@ struct RoutineRootView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
-    @EnvironmentObject private var PlannerSyncStore: PlannerSyncStore
+    @EnvironmentObject private var PlannerSyncStore: PlannerSyncService
 
     @StateObject private var routineManager = ListEngine<RoutineEvent>()
     @State private var showTransferSheet = false

@@ -11,19 +11,16 @@ import SwiftData
 
 @Model
 class RoutineEventVariant {
-    @Relationship(
-        deleteRule: .nullify,
-        inverse: \RoutineEvent.variants
-    )
+    
     var routineEvent: RoutineEvent?
+    
+    var calendarItemExternalIdentifier: String?
 
     @Relationship(deleteRule: .nullify, inverse: \Planner.routineEventVariants)
     var planner: Planner?
 
     @Relationship(deleteRule: .nullify, inverse: \PlannerEvent.routineEventVariant)
     var plannerEvent: PlannerEvent?
-
-    var calendarItemExternalIdentifier: String?
 
     init(
         routineEvent: RoutineEvent,

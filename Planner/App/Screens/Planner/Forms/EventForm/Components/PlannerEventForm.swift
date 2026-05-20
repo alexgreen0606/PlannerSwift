@@ -28,16 +28,12 @@ struct PlannerEventFormView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
-        KeepPastEventsDuration =
-        .oneMonth
-
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var todaystampService: TodaystampService
     @EnvironmentObject private var PlannerCoverStore: PlannerCoverStore
-    @EnvironmentObject private var PlannerSyncStore: PlannerSyncStore
+    @EnvironmentObject private var PlannerSyncStore: PlannerSyncService
     @EnvironmentObject private var LocationService: LocationService
 
     @State private var showDeleteConfirmation = false
@@ -237,9 +233,7 @@ struct PlannerEventFormView: View {
             DatePicker(
                 "",
                 selection: $draftPlannerEvent.date,
-                in: keepPastEventsDuration
-                    .cutoffDate ... todaystampService
-                    .maxCalendarDate,
+                in: todaystampService.datePickerBounds,
                 displayedComponents: .date
             )
             .datePickerStyle(.graphical)
@@ -292,9 +286,7 @@ struct PlannerEventFormView: View {
                 DatePicker(
                     "",
                     selection: $draftPlannerEvent.date,
-                    in: keepPastEventsDuration
-                        .cutoffDate ... todaystampService
-                        .maxCalendarDate,
+                    in: todaystampService.datePickerBounds,
                     displayedComponents: .hourAndMinute
                 )
                 .labelsHidden()

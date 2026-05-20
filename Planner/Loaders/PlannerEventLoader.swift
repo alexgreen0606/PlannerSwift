@@ -49,7 +49,7 @@ struct PlannerEventContextLoaderView<Content: View>: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var weatherStore: WeatherStore
-    @EnvironmentObject private var plannerSyncStore: PlannerSyncStore
+    @EnvironmentObject private var plannerSyncStore: PlannerSyncService
     @EnvironmentObject private var todaystampService: TodaystampService
 
     @Query private var sortedPlannerEvents: [PlannerEvent]

@@ -5,8 +5,6 @@
 //  Created by Alex Green on 5/13/26.
 //
 
-import SwiftData
-import SwiftDate
 import SwiftUI
 
 struct UpcomingDayPreviewCardView: View {
@@ -21,7 +19,8 @@ struct UpcomingDayPreviewCardView: View {
             datestamp: datestamp,
             header: PlannerHeaderView(datestamp: datestamp),
             width: todaystampService.todaystamp == datestamp
-                ? 350 : 240,
+                ? PlannerPreviewCardLayout.TODAY_WIDTH
+                : PlannerPreviewCardLayout.DEFAULT_WIDTH,
             settings: settings,
             namespace: namespace,
             transitionId: datestamp

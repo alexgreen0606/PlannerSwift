@@ -5,8 +5,6 @@
 //  Created by Alex Green on 5/13/26.
 //
 
-import SwiftData
-import SwiftDate
 import SwiftUI
 
 struct TripDayPreviewCardView: View {
@@ -25,7 +23,6 @@ struct TripDayPreviewCardView: View {
                 subtitle: datestamp.weekday,
                 iconFormat: .conciseMonth
             ),
-            width: 240,
             settings: settings,
             namespace: namespace,
             transitionId: trip.transitionId(

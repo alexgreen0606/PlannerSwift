@@ -10,10 +10,9 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-// Clean
-
 extension ModelContext {
-    static let baseRoutineDay = DateInRegion("2000-06-06", region: .UTC)?
+    static let baseRoutineDay =
+        DateInRegion("2000-06-06", region: .UTC)?
         .dateAtStartOf(.day)
 
     // MARK: - CREATE
@@ -23,7 +22,7 @@ extension ModelContext {
         at index: Int,
         in events: [RoutineEvent],
         weekday: Weekday
-    ) -> UUID? // The ID of the new event.
+    ) -> UUID?  // The ID of the new event.
     {
         let sortDate = generateRoutineEventSortDate(
             at: index,
@@ -32,7 +31,13 @@ extension ModelContext {
         )
 
         let newEvent = RoutineEvent()
-        newEvent.sortDateMap[weekday] = sortDate
+        let instance = RoutineEventWeekdayInstance(
+            weekday: weekday,
+            sortDate: sortDate
+        )
+
+        newEvent.weekdayInstances?.append(instance)
+        instance.routineEvent = newEvent
 
         insert(newEvent)
         safeSave("routineEvent.createRoutineEvent")
@@ -48,14 +53,23 @@ extension ModelContext {
         reversed: Bool = false
     ) -> [RoutineEvent] {
         do {
+            let weekdayRawValue = weekday.rawValue
+
             let allRoutineEvents = try fetch(
-                FetchDescriptor<RoutineEvent>()
+                FetchDescriptor<RoutineEventWeekdayInstance>(
+                    predicate: #Predicate {
+                        $0.weekdayRawValue == weekdayRawValue
+                    },
+                    sortBy: [
+                        SortDescriptor(
+                            \RoutineEventWeekdayInstance.sortDate,
+                            order: reversed ? .reverse : .forward
+                        )
+                    ]
+                )
             )
 
-            return weekday.sortedEvents(
-                in: allRoutineEvents,
-                reversed: reversed
-            )
+            return allRoutineEvents.compactMap(\.routineEvent)
 
         } catch {
             assertionFailure("ERROR loadSortedRoutineEvents: \(error)")
@@ -97,11 +111,12 @@ extension ModelContext {
         sortedEvents: [RoutineEvent]
     ) {
         let movedEvent = sortedEvents[from]
-        movedEvent.sortDateMap[weekday] = generateRoutineEventSortDate(
-            at: to,
-            in: sortedEvents,
-            weekday: weekday
-        )
+        movedEvent.instance(on: weekday)?.sortDate =
+            generateRoutineEventSortDate(
+                at: to,
+                in: sortedEvents,
+                weekday: weekday
+            )
         movedEvent.syncedSortDatePlannerEventIds.removeAll()
 
         safeSave("routineEvent.moveRoutineEvent")
@@ -137,7 +152,7 @@ extension ModelContext {
 
         let event =
             sourceRoutineEvent
-                ?? RoutineEvent()
+            ?? RoutineEvent()
 
         event.syncWithDraftRoutineEvent(draftRoutineEvent)
 
@@ -156,7 +171,7 @@ extension ModelContext {
     @MainActor
     func deleteAllRoutines(
         ekEventStore: EKEventStore,
-        PlannerSyncStore: PlannerSyncStore
+        PlannerSyncStore: PlannerSyncService
     ) {
         do {
             let allRoutineEvents = try fetch(
@@ -178,7 +193,7 @@ extension ModelContext {
     func deleteRoutineEvents(
         _ events: [RoutineEvent],
         ekEventStore: EKEventStore,
-        PlannerSyncStore: PlannerSyncStore
+        PlannerSyncStore: PlannerSyncService
     ) {
         for event in events {
             deleteRoutineEvent(
@@ -197,14 +212,10 @@ extension ModelContext {
         _ events: [RoutineEvent],
         from weekday: Weekday,
         ekEventStore: EKEventStore,
-        PlannerSyncStore: PlannerSyncStore
+        PlannerSyncStore: PlannerSyncService
     ) {
         for event in events {
-            guard event.sortDateMap[weekday] != nil else {
-                continue
-            }
-
-            if event.sortDateMap.keys.count == 1 {
+            if event.safeWeekdayInstances.count == 1 {
                 deleteRoutineEvent(
                     event,
                     ekEventStore: ekEventStore,
@@ -215,7 +226,10 @@ extension ModelContext {
             }
 
             // Events will be lazily deleted in this case.
-            event.sortDateMap.removeValue(forKey: weekday)
+            for instance in event.safeWeekdayInstances
+            where instance.weekdayRawValue == weekday.rawValue {
+                delete(instance)
+            }
         }
 
         safeSave("routineEvent.deleteRoutineEvents")
@@ -226,7 +240,7 @@ extension ModelContext {
         _ routineEvent: RoutineEvent,
         ekEventStore: EKEventStore,
         skipSave: Bool = false,
-        PlannerSyncStore: PlannerSyncStore
+        PlannerSyncStore: PlannerSyncService
     ) {
         for plannerEvent in routineEvent.safePlannerEvents {
             if plannerEvent.isCompleted {
@@ -236,10 +250,10 @@ extension ModelContext {
             if let calendarItemExternalIdentifier = plannerEvent
                 .calendarItemExternalIdentifier
             {
-                ekEventStore.deleteEvent(identifier: calendarItemExternalIdentifier)
+                ekEventStore.deleteEvent(
+                    identifier: calendarItemExternalIdentifier
+                )
             }
-
-            delete(plannerEvent)
         }
 
         var needsCalendarRefresh = false
@@ -249,11 +263,11 @@ extension ModelContext {
             if let calendarItemExternalIdentifier = variant
                 .calendarItemExternalIdentifier
             {
-                ekEventStore.deleteEvent(identifier: calendarItemExternalIdentifier)
+                ekEventStore.deleteEvent(
+                    identifier: calendarItemExternalIdentifier
+                )
                 needsCalendarRefresh = true
             }
-
-            delete(variant)
         }
 
         delete(routineEvent)
@@ -317,7 +331,7 @@ extension ModelContext {
 
     private func generateRoutineEventSortDate(
         at index: Int,
-        in sortedEvents: [RoutineEvent], // May or may not contain the event being placed.
+        in sortedEvents: [RoutineEvent],  // May or may not contain the event being placed.
         weekday: Weekday
     ) -> Date {
         guard let baseDay = Self.baseRoutineDay else {
@@ -329,10 +343,10 @@ extension ModelContext {
             in: sortedEvents,
             plannerDay: baseDay,
             getSortDate: {
-                $0.sortDateMap[weekday]!
+                $0.instance(on: weekday)?.sortDate ?? baseDay.date
             },
             setSortDate: { event, sortDate in
-                event.sortDateMap[weekday] = sortDate
+                event.instance(on: weekday)?.sortDate = sortDate
             }
         )
     }
@@ -343,21 +357,29 @@ extension ModelContext {
         with newWeekdays: Set<Weekday>,
         sortedSourceEvents: [RoutineEvent]? = []
     ) {
-        let existingWeekdays = Set(event.sortDateMap.keys)
+        let existingWeekdays = event.weekdays
 
         let daysToRemove = existingWeekdays.subtracting(newWeekdays)
         for day in daysToRemove {
             // Remove days that no longer exist.
-            event.sortDateMap.removeValue(forKey: day)
+            for instance in event.safeWeekdayInstances
+            where instance.weekdayRawValue == day.rawValue {
+                delete(instance)
+            }
         }
 
         let daysToAdd = newWeekdays.subtracting(existingWeekdays)
         for day in daysToAdd {
             // Place new events near their old siblings.
-            event.sortDateMap[day] = generateNewSortDateNearSiblings(
-                for: event,
-                in: day,
-                from: sortedSourceEvents ?? []
+            event.weekdayInstances?.append(
+                RoutineEventWeekdayInstance(
+                    weekday: day,
+                    sortDate: generateNewSortDateNearSiblings(
+                        for: event,
+                        in: day,
+                        from: sortedSourceEvents ?? []
+                    )
+                )
             )
         }
     }

@@ -20,7 +20,7 @@ struct PlannerActionMenuView: View {
     @EnvironmentObject private var plannerManager: ListEngine<PlannerEvent>
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var TodaystampService: TodaystampService
-    @EnvironmentObject private var PlannerSyncStore: PlannerSyncStore
+    @EnvironmentObject private var PlannerSyncStore: PlannerSyncService
 
     @State private var showDeleteCompletedConfirmation = false
     @State private var showDeleteCanceledConfirmation = false

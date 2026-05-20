@@ -5,7 +5,6 @@
 //  Created by Alex Green on 2/3/26.
 //
 
-import EventKit
 import SwiftData
 import SwiftDate
 import SwiftUI
@@ -14,18 +13,7 @@ struct DashboardRootView: View {
     let settings: PlannerSettings
     let namespace: Namespace.ID
 
-    init(settings: PlannerSettings, namespace: Namespace.ID) {
-        self.settings = settings
-        self.namespace = namespace
-
-        _thisWeekDatestamps = State(initialValue: getThisWeekDatestamps())
-    }
-
     private let CALENDAR_BUTTON_ID = "CALENDAR_BUTTON_ID"
-
-    @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
-        KeepPastEventsDuration =
-        .oneMonth
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
@@ -35,47 +23,18 @@ struct DashboardRootView: View {
     @EnvironmentObject private var weatherStore: WeatherStore
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
-    @EnvironmentObject private var plannerSyncStore: PlannerSyncStore
+    @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
-    @Query private var trips: [Trip]
+    @State private var showCalendarPicker = false
+    @State private var tappedDates: Set<DateComponents> = []
 
     @State private var showNewEventSheet = false
+
     @State private var showNewRoutineEventSheet = false
-    @State private var showCalendarPicker = false
-
-    @State private var tappedDates: Set<DateComponents> = []
-    @State private var thisWeekDatestamps: [String]
-    @State private var expandedTrips: Set<PersistentIdentifier> = []
     @State private var routineCoverContext: RoutineCoverContext? = nil
+
     @State private var tripSheetContext: TripSheetContext? = nil
-
-    private var sortedUpcomingTrips: [Trip] {
-        trips.filter { trip in
-            guard trip.firstDatestamp != nil,
-                  let lastDatestamp = trip.lastDatestamp
-            else {
-                return false
-            }
-            return lastDatestamp >= todaystampService.todaystamp
-        }.sorted { $0.firstDatestamp! < $1.firstDatestamp! }
-    }
-
-    private var tripsByYear: [String: [Trip]] {
-        Dictionary(grouping: sortedUpcomingTrips) { trip in
-            guard let firstDatestamp = trip.firstDatestamp else {
-                return "Unknown"
-            }
-            return String(firstDatestamp.prefix(4))
-        }
-    }
-
-    private var sortedTripYears: [String] {
-        tripsByYear.keys.sorted(by: <)
-    }
-
-    private var dateBounds: Range<Date> {
-        keepPastEventsDuration.cutoffDate ..< todaystampService.maxCalendarDate
-    }
+    @State private var expandedTripIds: Set<PersistentIdentifier> = []
 
     var body: some View {
         ToastRootView {
@@ -83,122 +42,42 @@ struct DashboardRootView: View {
                 ScrollViewReader { scrollProxy in
                     List {
                         // MARK: THIS WEEK
-
-                        Section {
-                            ScrollView(.horizontal) {
-                                HStack {
-                                    ForEach(
-                                        thisWeekDatestamps,
-                                        id: \.self,
-                                        content: plannerPreview
-                                    )
-                                }
-                                .frame(
-                                    height: PlannerPreviewCardLayout.PREVIEW_CARD_HEIGHT
-                                )
-                                .padding(.horizontal)
-                                .animateAsynchronousAction(
-                                    from: thisWeekDatestamps
-                                )
-                            }
-                            .scrollIndicators(.hidden)
-                            .background(Color.clear)
-                        } header: {
-                            Text("This Week")
-                                .padding()
-                        }
-                        .listSectionMargins(.top, 0)
-                        .listRowInsets(EdgeInsets())
-                        .discreetListItem()
+                        ThisWeekSectionView(
+                            settings: settings,
+                            namespace: namespace
+                        )
 
                         // MARK: ROUTINES
+                        RoutineSectionView(
+                            routineCoverContext: $routineCoverContext,
+                            namespace: namespace
+                        )
 
-                        Section("Routines") {
-                            RoutinesSpreadView(
-                                routineCoverContext: $routineCoverContext
-                            )
-                        }
-                        .discreetListItem()
-
-                        // MARK: TRIPS
-
-                        ForEach(
-                            Array(sortedTripYears.enumerated()),
-                            id: \.element
-                        ) {
-                            index,
-                            year in
-                            Section {
-                                ForEach(tripsByYear[year]!, id: \.id) {
-                                    trip in
-                                    TripRootView(
-                                        expandedTrips: $expandedTrips,
-                                        trip: trip,
-                                        namespace: namespace,
-                                        settings: settings,
-                                        scrollToTrip: {
-                                            scrollToTrip(
-                                                trip: trip,
-                                                scrollProxy: scrollProxy
-                                            )
-                                        },
-                                        openEditSheet: {
-                                            tripSheetContext = TripSheetContext(
-                                                trip: trip
-                                            )
-                                        }
-                                    )
-                                }
-                            } header: {
-                                ZStack {
-                                    if index == 0 {
-                                        Text("Trips")
-                                    } else {
-                                        YearSectionHeaderView(year)
-                                    }
-                                }
-                                .padding(.horizontal)
-                                .padding(.bottom)
-                            }
-                            .listRowInsets(EdgeInsets())
-                            .discreetListItem()
-                        }
-
-                        if sortedUpcomingTrips.isEmpty {
-                            Section("Trips") {
-                                EmptyLabelView("No upcoming trips")
-                                    .frame(
-                                        maxWidth: .infinity,
-                                        alignment: .center
-                                    )
-                                    .frame(height: 40, alignment: .center)
-                            }
-                            .discreetListItem()
-                        }
-
-                        // MARK: BOTTOM PADDING
-
-                        Section {
-                            Color.clear.frame(height: 16)
-                        }
-                        .discreetListItem()
+                        // MARK: Trips
+                        TripSectionView(
+                            tripSheetContext: $tripSheetContext,
+                            expandedTripIds: $expandedTripIds,
+                            todaystamp: todaystampService.todaystamp,
+                            scrollProxy: scrollProxy,
+                            settings: settings,
+                            namespace: namespace
+                        )
                     }
-                    .animation(.linear, value: expandedTrips)
+                    .animation(.linear, value: expandedTripIds)
                     .listStyle(.plain)
+                    .refreshable {
+                        weatherStore.beginFreshReload()
+                        calendarStore.refreshCalendarsAndAccess()
+                        locationService.loadDeviceLocation()
+                        plannerSyncService.rebuildAllData()
+                    }
                     .background(Color.appBackground)
                     .toolbar {
                         datePickerToolbarPopover
                         createMenu
                     }
-                    .refreshable {
-                        weatherStore.beginFreshReload()
-                        calendarStore.refreshCalendarsAndAccess()
-                        locationService.loadDeviceLocation()
-                        plannerSyncStore.rebuildAllData()
-                    }
 
-                    // MARK: New Event Sheet
-
+                    // MARK: New Event Form
                     .sheet(isPresented: $showNewEventSheet) {
                         EventFormView(
                             plannerEvent: nil,
@@ -207,39 +86,74 @@ struct DashboardRootView: View {
                         )
                     }
 
-                    // MARK: New Routine Event Sheet
-
+                    // MARK: New Routine Event Form
                     .sheet(isPresented: $showNewRoutineEventSheet) {
-                        RoutineEventFormView { weekday in
-                            routineCoverContext = RoutineCoverContext(
-                                weekday: weekday
+                        RoutineEventFormView(
+                            openRoutine: { weekday in
+                                routineCoverContext = RoutineCoverContext(
+                                    weekday: weekday
+                                )
+                            }
+                        )
+                    }
+
+                    // MARK: Trip Form
+                    .sheet(item: $tripSheetContext) { context in
+                        let form = TripFormView(
+                            sourceTrip: context.trip,
+                            settings: settings,
+                            onSave: { trip in
+                                expandedTripIds.insert(trip.id)
+                            }
+                        )
+
+                        if let trip = context.trip {
+                            form.navigationTransition(
+                                .zoom(
+                                    sourceID: trip.transitionId,
+                                    in: namespace
+                                )
                             )
+                        } else {
+                            form
                         }
                     }
 
-                    // MARK: Trip Sheet
-
-                    .sheet(item: $tripSheetContext) { context in
-                        TripFormView(
-                            sourceTrip: context.trip,
-                            settings: settings
-                        ) {
-                            trip in
-                            expandedTrips.insert(trip.id)
-                            scrollToTrip(trip: trip, scrollProxy: scrollProxy)
+                    // MARK: Routine Root
+                    .fullScreenCover(
+                        item: $routineCoverContext,
+                        onDismiss: plannerSyncService.beginRebuild
+                    ) { context in
+                        RoutineEventLoaderView(weekday: context.weekday) {
+                            events in
+                            RoutineRootView(
+                                routineCoverContext: $routineCoverContext,
+                                weekday: context.weekday,
+                                sortedRoutineEvents: events
+                            )
+                            .id(context.weekday)
                         }
                         .navigationTransition(
                             .zoom(
-                                sourceID: context.id,
+                                sourceID: context.weekday,
                                 in: namespace
                             )
                         )
                     }
-                }
 
-                // Build the week's datestamps now and at midnight.
-                .task(id: todaystampService.todaystamp) {
-                    buildThisWeekDatestamps()
+                    // MARK: Scroll to expanded trips.
+                    .onChange(of: expandedTripIds) { oldValue, newValue in
+                        guard
+                            let newlyExpandedTripId = newValue.subtracting(
+                                oldValue
+                            ).first
+                        else { return }
+
+                        scrollToExpandedTrip(
+                            id: newlyExpandedTripId,
+                            scrollProxy: scrollProxy
+                        )
+                    }
                 }
             }
         }
@@ -253,41 +167,26 @@ struct DashboardRootView: View {
             Button("Calendar", systemImage: "calendar") {
                 showCalendarPicker = true
             }
-            .popover(isPresented: $showCalendarPicker) {
-                VStack {
-                    MultiDatePicker(
-                        "Open a planner",
-                        selection: $tappedDates,
-                        in: dateBounds
-                    )
-                    .tint(accentColor.color)
-                    .onChange(of: tappedDates) { _, newValue in
-                        guard let selected = newValue.first,
-                              let year = selected.year,
-                              let month = selected.month,
-                              let day = selected.day
-                        else { return }
-
-                        handlePlannerDateSelect(
-                            datestamp: String(
-                                format: "%04d-%02d-%02d",
-                                year,
-                                month,
-                                day
-                            )
-                        )
-
-                        tappedDates.removeAll()
-                    }
-                }
-                .frame(width: 340, height: 320)
-                .padding()
-                .presentationCompactAdaptation(.popover)
-            }
             .matchedTransitionSource(
                 id: CALENDAR_BUTTON_ID,
                 in: namespace
             )
+            .popover(isPresented: $showCalendarPicker) {
+                Group {
+                    MultiDatePicker(
+                        "Open a planner",
+                        selection: $tappedDates,
+                        in: todaystampService.multiDatePickerBounds
+                    )
+                    .tint(accentColor.color)
+                    .onChange(of: tappedDates) { _, selectedDates in
+                        handlePlannerDateSelect(selectedDates: selectedDates)
+                    }
+                }
+                .presentationCompactAdaptation(.popover)
+                .frame(width: 340, height: 320)
+                .padding()
+            }
         }
     }
 
@@ -306,30 +205,21 @@ struct DashboardRootView: View {
                 }
 
                 Button("Create Trip", systemImage: "suitcase") {
-                    tripSheetContext = TripSheetContext(trip: nil)
+                    tripSheetContext = TripSheetContext()
                 }
             }
         }
     }
 
-    // MARK: - View Builders
+    // MARK: - Function
 
-    private func plannerPreview(_ datestamp: String) -> some View {
-        UpcomingDayPreviewCardView(
-            datestamp: datestamp,
-            settings: settings,
-            namespace: namespace
-        )
-    }
+    private func handlePlannerDateSelect(selectedDates: Set<DateComponents>) {
+        guard let clickedDate = selectedDates.first,
+            let datestamp = clickedDate.datestamp
+        else { return }
 
-    // MARK: - Helper Functions
-
-    private func buildThisWeekDatestamps() {
-        thisWeekDatestamps = getThisWeekDatestamps()
-    }
-
-    private func handlePlannerDateSelect(datestamp: String) {
         showCalendarPicker = false
+        tappedDates.removeAll()
 
         DispatchQueue.main.async {
             plannerCoverStore.context = PlannerCoverContext(
@@ -339,12 +229,16 @@ struct DashboardRootView: View {
         }
     }
 
-    private func scrollToTrip(trip: Trip, scrollProxy: ScrollViewProxy) {
+    private func scrollToExpandedTrip(
+        id: PersistentIdentifier,
+        scrollProxy: ScrollViewProxy
+    ) {
         DispatchQueue.main.async {
-            let isExpanded = expandedTrips.contains(trip.id)
-            let tripId = "\(trip.id)_\(String(isExpanded))"
             withAnimation {
-                scrollProxy.scrollTo(tripId, anchor: .top)
+                scrollProxy.scrollTo(
+                    getTripRenderId(tripId: id, isExpanded: true),
+                    anchor: .top
+                )
             }
         }
     }

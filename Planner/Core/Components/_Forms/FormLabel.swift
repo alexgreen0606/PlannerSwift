@@ -13,7 +13,7 @@ struct FormLabelView: View {
     private let systemImageName: String
     private let label: String
     private let value: String
-    private let detail: String?
+    private let detail: LocalizedStringKey?
     private let color: Color?
     private let onTap: (() -> Void)?
 
@@ -21,7 +21,7 @@ struct FormLabelView: View {
         systemImageName: String,
         label: String = "",
         value: String,
-        detail: String? = nil,
+        detail: LocalizedStringKey? = nil,
         color: Color? = nil,
         onTap: (() -> Void)? = nil
     ) {
