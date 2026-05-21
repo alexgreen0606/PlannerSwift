@@ -5,13 +5,10 @@
 //  Created by Alex Green on 12/17/25.
 //
 
-import Contacts
-import ContactsUI
 import EventKit
-import Fuse
+import SwiftUI
 import SwiftData
 import SwiftDate
-import SwiftUI
 import WeatherKit
 import WrappingHStack
 
@@ -22,8 +19,8 @@ struct PlannerChipSpreadView: View {
     let weatherData: DayWeather?
     let locationLabel: String
     let calendarDayData: CalendarDayData?
-    var namespace: Namespace.ID
     let settings: PlannerSettings
+    var namespace: Namespace.ID
     let openCalendarEventSheet: (EKEvent) -> Void
 
     private let LOCATION_CHIP_ID = "LOCATION_CHIP_ID"
@@ -51,12 +48,12 @@ struct PlannerChipSpreadView: View {
 
     var body: some View {
         WrappingHStack(alignment: .leading) {
-            tripChip
             HStack(alignment: .top) {
                 locationChip
                 Spacer()
                 weatherChip
             }
+            tripChip
             ForEach(
                 calendarDayData?.birthdays ?? [],
                 id: \.event.eventIdentifier,
@@ -124,7 +121,9 @@ struct PlannerChipSpreadView: View {
             locationLabel,
             iconConfig: locationIconConfig
         )
-        .glassChip(height: PlannerLayout.CHIP_HEIGHT, onTap: openLocationSheet)
+        .glassChip(height: PlannerLayout.CHIP_HEIGHT, onTap: {
+            showLocationSheet = true
+        })
         .matchedTransitionSource(
             id: LOCATION_CHIP_ID,
             in: namespace
@@ -142,7 +141,9 @@ struct PlannerChipSpreadView: View {
         BirthdayChipView(
             birthday: birthday,
             settings: settings,
-            openContactSheet: openContactSheet
+            openContactSheet: {
+                contactSheetContext = birthday
+            }
         )
         .matchedTransitionSource(
             id: birthday.event.transitionId,
@@ -168,15 +169,5 @@ struct PlannerChipSpreadView: View {
             id: event.transitionId,
             in: namespace
         )
-    }
-
-    // MARK: - Functions
-
-    private func openContactSheet(for birthday: Birthday) {
-        contactSheetContext = birthday
-    }
-
-    private func openLocationSheet() {
-        showLocationSheet = true
     }
 }

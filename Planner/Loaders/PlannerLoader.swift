@@ -35,6 +35,12 @@ struct PlannerLoaderView<Content: View>: View {
     @EnvironmentObject private var locationService: LocationService
 
     @Query private var planners: [Planner]
+    
+    @StateObject private var plannerManager = ListEngine<PlannerEvent>(
+        isItemChecked: { event in
+            event.isChecked
+        }
+    )
 
     private var planner: Planner? {
         planners.first
@@ -70,6 +76,7 @@ struct PlannerLoaderView<Content: View>: View {
                 ) { plannerContext, eventContext in
                     content(plannerContext, eventContext)
                 }
+                .environmentObject(plannerManager)
             }
         }
         .task {

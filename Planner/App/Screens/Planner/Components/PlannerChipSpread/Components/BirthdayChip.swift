@@ -12,7 +12,7 @@ import SwiftUI
 struct BirthdayChipView: View {
     let birthday: Birthday
     let settings: PlannerSettings
-    let openContactSheet: (Birthday) -> Void
+    let openContactSheet: () -> Void
 
     private var contactPhotoExists: Bool {
         birthday.contact.thumbnailImageData != nil
@@ -35,9 +35,7 @@ struct BirthdayChipView: View {
             .glassChip(
                 color: contactPhotoExists ? nil : birthday.event.calendar.color,
                 height: PlannerLayout.CHIP_HEIGHT,
-                onTap: {
-                    openContactSheet(birthday)
-                }
+                onTap: openContactSheet
             )
     }
 }

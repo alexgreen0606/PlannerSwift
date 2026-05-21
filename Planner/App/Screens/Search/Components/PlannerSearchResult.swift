@@ -73,7 +73,7 @@ struct PlannerSearchResultView: View {
                     planner: plannerContext.planner,
                     plannerDay: plannerContext.plannerDay,
                     plannerLocation: plannerContext.plannerLocation,
-                    plannerEvents: eventContext.sortedPlannerEvents,
+                    plannerEvents: eventContext.sortedPlannerEvents, // TODO: maybe just need pending?
                     calendarDayData: eventContext.calendarDayData,
                     settings: settings
                 )

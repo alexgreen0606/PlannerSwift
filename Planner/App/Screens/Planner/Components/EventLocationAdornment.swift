@@ -7,27 +7,26 @@
 
 import SwiftUI
 
-// Clean
-
 struct EventLocationAdornmentView: View {
     let iconConfig: IconConfig
     let locationLabel: String?
     let timeLabel: String?
     let openEventSheet: () -> Void
 
+    // MARK: - Body
+
     var body: some View {
         if locationLabel != nil || timeLabel != nil {
             HStack {
                 if let locationLabel {
-                    HStack(alignment: .top, spacing: 4) {
+                    HStack(spacing: 4) {
                         Image(systemName: iconConfig.name)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 10, height: 10)
-                            .foregroundStyle(iconConfig.primaryColor, iconConfig.secondaryColor)
+                            .foregroundStyle(
+                                iconConfig.primaryColor,
+                                iconConfig.secondaryColor
+                            )
 
                         Text(locationLabel)
-                            .font(.system(size: 10))
                             .foregroundColor(.secondary)
                     }
                 }
@@ -36,12 +35,11 @@ struct EventLocationAdornmentView: View {
 
                 if let timeLabel {
                     Text(timeLabel)
-                        .font(.system(size: 9))
                         .foregroundColor(.secondary)
                 }
             }
+            .font(.system(size: 10))
             .frame(maxWidth: .infinity)
-            .padding(.bottom, 4)
             .contentShape(Rectangle())
             .onTapGesture(perform: openEventSheet)
         }

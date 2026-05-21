@@ -47,7 +47,7 @@ struct PlannerPreviewCardView<Header: View>: View {
                     planner: plannerContext.planner,
                     plannerDay: plannerContext.plannerDay,
                     plannerLocation: plannerContext.plannerLocation,
-                    plannerEvents: eventContext.sortedPlannerEvents,
+                    plannerEvents: eventContext.sortedPlannerEvents, // TODO: is all events needed?
                     calendarDayData: eventContext.calendarDayData,
                     settings: settings
                 )

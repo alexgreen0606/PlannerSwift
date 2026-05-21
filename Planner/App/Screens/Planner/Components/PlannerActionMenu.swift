@@ -10,26 +10,26 @@ import SwiftUI
 
 struct PlannerActionMenuView: View {
     @Binding var showLocationSheet: Bool
-    let plannerType: PlannerType
     let planner: Planner
-    let showChecked: Bool
+    let plannerType: PlannerType
     let plannerEvents: [PlannerEvent]
-    let visibleEvents: [PlannerEvent]
+    let hasVisibleEvents: Bool
+    let showChecked: Bool
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var plannerManager: ListEngine<PlannerEvent>
     @EnvironmentObject private var calendarStore: CalendarStore
-    @EnvironmentObject private var TodaystampService: TodaystampService
-    @EnvironmentObject private var PlannerSyncStore: PlannerSyncService
+    @EnvironmentObject private var todaystampService: TodaystampService
+    @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
     @State private var showDeleteCompletedConfirmation = false
     @State private var showDeleteCanceledConfirmation = false
-
-    private var completedEvents: [PlannerEvent] {
-        plannerEvents.filter { $0.isCompleted }
+    
+    private var rawCompletedEvents: [PlannerEvent] {
+        plannerEvents.filter { $0.isCompleted && !$0.isCanceled }
     }
-
-    private var canceledEvents: [PlannerEvent] {
+    
+    private var rawCanceledEvents: [PlannerEvent] {
         plannerEvents.filter { $0.isCanceled }
     }
 
@@ -51,13 +51,13 @@ struct PlannerActionMenuView: View {
                     ordinal: true
                 ),
             ],
-            todaystamp: TodaystampService.todaystamp
+            todaystamp: todaystampService.todaystamp
         )
     }
 
     private var deleteCompletedConfig: ConfirmationConfig {
         bulkDeleteCompletedPlannerEventConfig(
-            completedEvents: completedEvents,
+            completedEventCount: rawCompletedEvents.count,
             dateLabel: dateLabel,
             hasCalendarAccess: calendarStore.accessDenied == false,
             delete: deleteCompletedEvents
@@ -66,7 +66,7 @@ struct PlannerActionMenuView: View {
 
     private var deleteCanceledConfig: ConfirmationConfig {
         deleteCanceledEventsConfig(
-            canceledEvents: canceledEvents,
+            canceledEventCount: rawCanceledEvents.count,
             dateLabel: dateLabel,
             hasCalendarAccess: calendarStore.accessDenied == false,
             delete: deleteCompletedEvents
@@ -85,14 +85,12 @@ struct PlannerActionMenuView: View {
         }
 
         // MARK: Delete Completed Confirmation
-
         .withConfirmation(
             deleteCompletedConfig,
             isPresented: $showDeleteCompletedConfirmation
         )
 
         // MARK: Delete Canceled Confirmation
-
         .withConfirmation(
             deleteCanceledConfig,
             isPresented: $showDeleteCanceledConfirmation
@@ -127,7 +125,7 @@ struct PlannerActionMenuView: View {
                 systemImage: "checkmark.circle"
             )
         }
-        .disabled(visibleEvents.isEmpty)
+        .disabled(!hasVisibleEvents)
     }
 
     private var editLocationButton: some View {
@@ -176,14 +174,14 @@ struct PlannerActionMenuView: View {
         Button("Delete Completed", role: .destructive) {
             showDeleteCompletedConfirmation = true
         }
-        .disabled(completedEvents.isEmpty)
+        .disabled(rawCanceledEvents.isEmpty)
     }
 
     private var deleteCanceledEventsButton: some View {
         Button("Delete Canceled", role: .destructive) {
             showDeleteCanceledConfirmation = true
         }
-        .disabled(canceledEvents.isEmpty)
+        .disabled(rawCanceledEvents.isEmpty)
     }
 
     // MARK: - Functions
@@ -191,20 +189,19 @@ struct PlannerActionMenuView: View {
     private func deleteCompletedEvents() {
         // Note: Don't pass the EKEventStore here.
         // Calendar events are meant to survive mass-deletion so users can look back on their calendar.
-        modelContext.deletePlannerEvents(completedEvents, in: planner)
+        modelContext.deletePlannerEvents(rawCompletedEvents, in: planner)
     }
 
     private func deleteCanceledEvents() {
         // Note: Don't pass the EKEventStore here.
         // Calendar events are meant to survive mass-deletion so users can look back on their calendar.
-        modelContext.deletePlannerEvents(canceledEvents, in: planner)
+        modelContext.deletePlannerEvents(rawCanceledEvents, in: planner)
     }
 
     private func toggleRoutineExclusion() {
         modelContext.togglePlannerRoutineExclusion(
             for: planner,
-            plannerEvents: plannerEvents,
-            PlannerSyncStore: PlannerSyncStore
+            PlannerSyncStore: plannerSyncService
         )
     }
 }

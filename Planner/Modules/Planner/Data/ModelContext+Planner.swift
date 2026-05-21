@@ -129,7 +129,6 @@ extension ModelContext {
     @MainActor
     func togglePlannerRoutineExclusion(
         for planner: Planner,
-        plannerEvents _: [PlannerEvent],
         PlannerSyncStore: PlannerSyncService
     ) {
         planner.excludeRoutine = !planner.safeExcludeRoutine

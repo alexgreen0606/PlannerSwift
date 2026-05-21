@@ -11,11 +11,8 @@ import SwiftDate
 import SwiftUI
 
 struct PlannerRootView: View {
-    let planner: Planner
-    let plannerDay: DateInRegion
-    let plannerLocation: Location?
-    let sortedPlannerEvents: [PlannerEvent]
-    let calendarDayData: CalendarDayData?
+    let context: PlannerContext
+    let eventContext: PlannerEventContext
     let settings: PlannerSettings
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -23,16 +20,12 @@ struct PlannerRootView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var todaystampService: TodaystampService
     @EnvironmentObject private var PlannerCoverStore: PlannerCoverStore
     @EnvironmentObject private var LocationService: LocationService
 
-    @StateObject private var plannerManager = ListEngine<PlannerEvent>(
-        isItemChecked: { event in
-            event.isChecked
-        }
-    )
     @State private var eventSheetContext: EventSheetContext?
     @State private var showTransferSheet = false
     @State private var showLocationSheet = false
@@ -40,40 +33,67 @@ struct PlannerRootView: View {
     @Namespace private var namespace
 
     // MARK: - Computed Variables
+    
+    private var planner: Planner {
+        context.planner
+    }
+    
+    private var plannerDay: DateInRegion {
+        context.plannerDay
+    }
+    
+    private var plannerLocation: Location? {
+        context.plannerLocation
+    }
 
     private var plannerType: PlannerType {
         planner.datestamp <= todaystampService.todaystamp
             ? .pastOrPresent : .future
     }
+    
+    private var sortedPendingPlannerEvents: [PlannerEvent] {
+        eventContext.sortedPlannerEvents.filter { event in
+            (!event.isCompleted
+                && !plannerEngine.newlyUncheckedIds.contains(event.stableId))
+                || plannerEngine.newlyCheckedIds.contains(event.stableId)
+        }
+    }
+
+    private var sortedCompletePlannerEvents: [PlannerEvent] {
+        eventContext.sortedPlannerEvents.filter { event in
+            !event.isCanceled && (event.isCompleted
+                && !plannerEngine.newlyCheckedIds.contains(event.stableId))
+                || plannerEngine.newlyUncheckedIds.contains(event.stableId)
+        }
+    }
+    
+    private var sortedCanceledPlannerEvents: [PlannerEvent] {
+        eventContext.sortedPlannerEvents.filter { event in
+            (event.isCanceled
+                && !plannerEngine.newlyCheckedIds.contains(event.stableId))
+                || plannerEngine.newlyUncheckedIds.contains(event.stableId)
+        }
+    }
 
     private var visibleEvents: [PlannerEvent] {
         if planner.showChecked {
-            return sortedOpenPlannerEvents + sortedCheckedPlannerEvents
+            return eventContext.sortedPlannerEvents
         }
 
-        return sortedOpenPlannerEvents
+        return sortedPendingPlannerEvents
     }
 
     private var isAllSelected: Bool {
         !visibleEvents.isEmpty
-            && plannerManager.selectedItemIds.count == visibleEvents.count
+            && plannerEngine.selectedItemIds.count == visibleEvents.count
     }
 
-    // MARK: Event Lists
-
-    private var sortedOpenPlannerEvents: [PlannerEvent] {
-        sortedPlannerEvents.filter(plannerManager.isItemInUncheckedList)
-    }
-
-    private var sortedCheckedPlannerEvents: [PlannerEvent] {
-        sortedPlannerEvents.filter(plannerManager.isItemInCheckedList)
-    }
 
     // MARK: - Body
 
     var body: some View {
         ToastRootView(
-            listEngine: plannerManager
+            listEngine: plannerEngine
         ) {
             NavigationStack {
                 ScrollViewReader { scrollProxy in
@@ -86,11 +106,11 @@ struct PlannerRootView: View {
                             plannerDay: plannerDay,
                             plannerLocation: plannerLocation,
                             sortedOpenPlannerEvents:
-                            sortedOpenPlannerEvents,
+                                sortedPendingPlannerEvents,
                             sortedCheckedPlannerEvents:
-                            sortedCheckedPlannerEvents,
-                            sortedPlannerEvents: sortedPlannerEvents,
-                            calendarDayData: calendarDayData,
+                                sortedCompletePlannerEvents,
+                            sortedPlannerEvents: eventContext.sortedPlannerEvents,
+                            calendarDayData: eventContext.calendarDayData,
                             showChecked: planner.showChecked,
                             namespace: namespace,
                             scrollProxy: scrollProxy,
@@ -106,7 +126,7 @@ struct PlannerRootView: View {
                         headerToolbar
                         lowerToolbar(scrollProxy: scrollProxy)
                     }
-                    .animateSynchronousAction(from: plannerManager.isSelectMode)
+                    .animateSynchronousAction(from: plannerEngine.isSelectMode)
                 }
             }
 
@@ -126,7 +146,7 @@ struct PlannerRootView: View {
                     )
                 )
                 .onDisappear {
-                    plannerManager.protectedId = nil
+                    plannerEngine.protectedId = nil
                 }
             }
 
@@ -144,8 +164,6 @@ struct PlannerRootView: View {
                     )
                 )
             }
-
-            .environmentObject(plannerManager)
         }
     }
 
@@ -156,7 +174,7 @@ struct PlannerRootView: View {
     @ToolbarContentBuilder
     private var upperLeftToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
-            if !plannerManager.isSelectMode {
+            if !plannerEngine.isSelectMode {
                 backButton
             } else {
                 cancelSelectModeButton
@@ -183,7 +201,7 @@ struct PlannerRootView: View {
         Button(
             "Cancel Select Mode",
             systemImage: "xmark",
-            action: plannerManager.toggleSelectMode
+            action: plannerEngine.toggleSelectMode
         )
         // Note: This fixes a bug where opening select mode while a keyboard is open causes this button to
         // appear tinted as the accent color.
@@ -194,7 +212,7 @@ struct PlannerRootView: View {
 
     @ToolbarContentBuilder
     private var headerToolbar: some ToolbarContent {
-        if !plannerManager.isSelectMode {
+        if !plannerEngine.isSelectMode {
             ToolbarItem(placement: .topBarLeading) {
                 header
                     .frame(width: 250, alignment: .leading)
@@ -208,13 +226,13 @@ struct PlannerRootView: View {
     @ToolbarContentBuilder
     private var upperRightToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
-            if !plannerManager.isSelectMode {
+            if !plannerEngine.isSelectMode {
                 PlannerActionMenuView(
                     showLocationSheet: $showLocationSheet,
-                    plannerType: plannerType,
                     planner: planner,
+                    plannerType: plannerType,
                     showChecked: planner.showChecked,
-                    plannerEvents: sortedPlannerEvents,
+                    plannerEvents: eventContext.sortedPlannerEvents,
                     visibleEvents: visibleEvents
                 )
             } else {
@@ -225,7 +243,7 @@ struct PlannerRootView: View {
 
     private var selectAllToggle: some View {
         Button {
-            plannerManager.toggleSelectAll(visibleItems: visibleEvents)
+            plannerEngine.toggleSelectAll(visibleItems: visibleEvents)
         } label: {
             Text(isAllSelected ? "Deselect All" : "Select All")
                 .fontWeight(.semibold)
@@ -239,7 +257,7 @@ struct PlannerRootView: View {
     private func lowerToolbar(scrollProxy: ScrollViewProxy)
         -> some ToolbarContent
     {
-        if !plannerManager.isSelectMode {
+        if !plannerEngine.isSelectMode {
             ToolbarSpacer(placement: .bottomBar)
             ToolbarItem(placement: .bottomBar) {
                 createLowerEventButton(scrollProxy: scrollProxy)
@@ -287,15 +305,15 @@ struct PlannerRootView: View {
     // MARK: - Functions
 
     private func createEvent(at index: Int) {
-        plannerManager.pendingFocusId = modelContext.createPlannerEvent(
+        plannerEngine.pendingFocusId = modelContext.createPlannerEvent(
             at: index,
-            in: sortedOpenPlannerEvents,
+            in: eventContext.sortedPendingPlannerEvents,
             startOfDay: plannerDay
         )
     }
 
     private func createLowerEvent(scrollProxy: ScrollViewProxy) {
-        createEvent(at: sortedOpenPlannerEvents.count)
+        createEvent(at: eventContext.sortedPendingPlannerEvents.count)
         scrollToBottom(scrollProxy: scrollProxy)
     }
 

@@ -74,7 +74,7 @@ func bulkDeletePlannerEventConfig(
 // MARK: - Bulk Delete Category: Completed
 
 func bulkDeleteCompletedPlannerEventConfig(
-    completedEvents: [PlannerEvent],
+    completedEventCount: Int,
     dateLabel: String,
     hasCalendarAccess: Bool,
     delete: @escaping () -> Void
@@ -86,7 +86,7 @@ func bulkDeleteCompletedPlannerEventConfig(
         actions: [
             ConfirmationAction(
                 title:
-                "Delete \("Event".inflected(for: completedEvents.count))",
+                "Delete \("Event".inflected(for: completedEventCount))",
                 handler: delete
             ),
         ]
@@ -96,7 +96,7 @@ func bulkDeleteCompletedPlannerEventConfig(
 // MARK: - Bulk Delete Category: Canceled
 
 func deleteCanceledEventsConfig(
-    canceledEvents: [PlannerEvent],
+    canceledEventCount: Int,
     dateLabel: String,
     hasCalendarAccess: Bool,
     delete: @escaping () -> Void
@@ -108,7 +108,7 @@ func deleteCanceledEventsConfig(
         actions: [
             ConfirmationAction(
                 title:
-                "Delete \("Event".inflected(for: canceledEvents.count))",
+                "Delete \("Event".inflected(for: canceledEventCount))",
                 handler: delete
             ),
         ]

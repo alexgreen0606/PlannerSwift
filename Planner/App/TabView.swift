@@ -146,11 +146,8 @@ struct RootTabView: View {
                     settings: settings
                 ) { plannerContext, eventContext in
                     PlannerRootView(
-                        planner: plannerContext.planner,
-                        plannerDay: plannerContext.plannerDay,
-                        plannerLocation: plannerContext.plannerLocation,
-                        sortedPlannerEvents: eventContext.sortedPlannerEvents,
-                        calendarDayData: eventContext.calendarDayData,
+                        context: plannerContext,
+                        eventContext: eventContext,
                         settings: settings
                     )
                 }
@@ -171,11 +168,8 @@ struct RootTabView: View {
                     settings: settings
                 ) { plannerContext, eventContext in
                     PlannerRootView(
-                        planner: plannerContext.planner,
-                        plannerDay: plannerContext.plannerDay,
-                        plannerLocation: plannerContext.plannerLocation,
-                        sortedPlannerEvents: eventContext.sortedPlannerEvents,
-                        calendarDayData: eventContext.calendarDayData,
+                        context: plannerContext,
+                        eventContext: eventContext,
                         settings: settings
                     )
                 }
