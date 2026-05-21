@@ -68,10 +68,6 @@ extension PlannerEvent {
 
     // MARK: - Style Variables
 
-    var isChecked: Bool {
-        isCompleted || isCanceled
-    }
-
     func tint(accentColor: AccentColor) -> Color {
         if let calendar = calendarEvent?.calendar {
             return calendar.color
@@ -236,7 +232,7 @@ extension PlannerEvent {
     {
         guard let query else {
             // Query not set. Include if unchecked.
-            if isChecked {
+            if isCompleted {
                 return nil
             } else {
                 return 1.0
@@ -266,7 +262,7 @@ extension PlannerEvent {
 
         if query.text.isEmpty {
             // Search text not set. Inclide if unchecked.
-            if isChecked {
+            if isCompleted {
                 return nil
             } else {
                 return 1.0

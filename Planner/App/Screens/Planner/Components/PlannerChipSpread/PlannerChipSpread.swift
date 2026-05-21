@@ -6,9 +6,8 @@
 //
 
 import EventKit
-import SwiftUI
-import SwiftData
 import SwiftDate
+import SwiftUI
 import WeatherKit
 import WrappingHStack
 
@@ -16,31 +15,23 @@ struct PlannerChipSpreadView: View {
     @Binding var showLocationSheet: Bool
     let planner: Planner
     let plannerDay: DateInRegion
-    let weatherData: DayWeather?
-    let locationLabel: String
+    let plannerLocation: Location?
     let calendarDayData: CalendarDayData?
     let settings: PlannerSettings
     var namespace: Namespace.ID
     let openCalendarEventSheet: (EKEvent) -> Void
 
-    private let LOCATION_CHIP_ID = "LOCATION_CHIP_ID"
-
-    @AppStorage("accentColor") var accentColor: AccentColor =
-        .blue
-
-    @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var weatherStore: WeatherStore
-    @EnvironmentObject private var LocationService: LocationService
+    
+    private var weatherData: DayWeather? {
+        weatherStore.getWeather(for: plannerDay, at: plannerLocation)
+    }
 
-    @State private var contactSheetContext: Birthday? = nil
-
-    // MARK: - Computed Variables
-
-    private var locationIconConfig: IconConfig {
-        planner.locationIconConfig(
+    private var locationLabel: String {
+        planner.locationLabel(
             settings: settings,
-            accentColor: accentColor
+            deviceLocation: locationService.deviceLocation
         )
     }
 
@@ -48,7 +39,7 @@ struct PlannerChipSpreadView: View {
 
     var body: some View {
         WrappingHStack(alignment: .leading) {
-            HStack(alignment: .top) {
+            HStack {
                 locationChip
                 Spacer()
                 weatherChip
@@ -65,44 +56,31 @@ struct PlannerChipSpreadView: View {
                 content: eventChip
             )
         }
-
-        // Location Sheet
-        .sheet(isPresented: $showLocationSheet) {
-            LocationSearchFormView(
-                title: "Edit Planner Location",
-                subtitle: planner.datestamp.dateWithYear,
-                mode: .planner,
-                settings: settings,
-                initialLocation: planner.location,
-                sourcePlanner: planner
-            ) { location in
-                modelContext.updatePlannerLocation(
-                    for: planner,
-                    to: location
-                )
-            }
-            .navigationTransition(
-                .zoom(
-                    sourceID: LOCATION_CHIP_ID,
-                    in: namespace
-                )
-            )
-        }
-
-        // Contact Sheet
-        .sheet(item: $contactSheetContext) { context in
-            ContactFormView(contact: context.contact)
-                .ignoresSafeArea()
-                .navigationTransition(
-                    .zoom(
-                        sourceID: context.event.transitionId,
-                        in: namespace
-                    )
-                )
-        }
+        .animateAsynchronousAction(from: weatherData)
+        .animateAsynchronousAction(
+            from: calendarDayData?.plannerChipEvents.map(\.title)
+        )
+        .animateAsynchronousAction(from: locationLabel)
     }
 
     // MARK: - View Builders
+
+    private var locationChip: some View {
+        LocationChipView(
+            showLocationSheet: $showLocationSheet,
+            locationLabel: locationLabel,
+            planner: planner,
+            settings: settings,
+            namespace: namespace
+        )
+    }
+
+    @ViewBuilder
+    private var weatherChip: some View {
+        if let weatherData {
+            WeatherChipView(weatherData: weatherData)
+        }
+    }
 
     @ViewBuilder
     private var tripChip: some View {
@@ -116,38 +94,11 @@ struct PlannerChipSpreadView: View {
         }
     }
 
-    private var locationChip: some View {
-        AdornedValueView(
-            locationLabel,
-            iconConfig: locationIconConfig
-        )
-        .glassChip(height: PlannerLayout.CHIP_HEIGHT, onTap: {
-            showLocationSheet = true
-        })
-        .matchedTransitionSource(
-            id: LOCATION_CHIP_ID,
-            in: namespace
-        )
-    }
-
-    @ViewBuilder
-    private var weatherChip: some View {
-        if let weatherData {
-            WeatherChipView(weatherData: weatherData)
-        }
-    }
-
     private func birthdayChip(_ birthday: Birthday) -> some View {
         BirthdayChipView(
             birthday: birthday,
             settings: settings,
-            openContactSheet: {
-                contactSheetContext = birthday
-            }
-        )
-        .matchedTransitionSource(
-            id: birthday.event.transitionId,
-            in: namespace
+            namespace: namespace
         )
     }
 

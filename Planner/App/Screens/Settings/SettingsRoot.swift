@@ -26,9 +26,6 @@ struct SettingsRootView: View {
         KeepPastEventsDuration =
         .oneMonth
 
-    @AppStorage("keepCanceledEventsDuration") private var keepCanceledEventsDuration: KeepCanceledEventsDuration =
-        .startOfDay
-
     @AppStorage("toggleTransitionDuration") private var toggleTransitionDuration: ToggleTransitionDuration =
         .threeSeconds
 
@@ -160,21 +157,6 @@ struct SettingsRootView: View {
                             Spacer()
                             Text(
                                 keepPastEventsDuration.label
-                            )
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        }
-                    }
-
-                    // Keep Canceled Events Duration
-                    NavigationLink {
-                        KeepCanceledEventsFormView()
-                    } label: {
-                        HStack {
-                            Text(KeepCanceledEventsDuration.title)
-                            Spacer()
-                            Text(
-                                keepCanceledEventsDuration.label
                             )
                             .font(.subheadline)
                             .foregroundStyle(.secondary)

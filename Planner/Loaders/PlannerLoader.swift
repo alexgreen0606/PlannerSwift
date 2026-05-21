@@ -36,11 +36,7 @@ struct PlannerLoaderView<Content: View>: View {
 
     @Query private var planners: [Planner]
     
-    @StateObject private var plannerManager = ListEngine<PlannerEvent>(
-        isItemChecked: { event in
-            event.isChecked
-        }
-    )
+    @StateObject private var plannerManager = ListEngine<PlannerEvent>()
 
     private var planner: Planner? {
         planners.first

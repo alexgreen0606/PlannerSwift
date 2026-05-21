@@ -64,9 +64,6 @@ struct RootTabView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @AppStorage("keepCanceledEventsDuration") private var keepCanceledEventsDuration: KeepCanceledEventsDuration =
-        .startOfDay
-
     @AppStorage("lastCleansedDatestamp") var lastCleansedDatestamp: String = ""
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
@@ -275,13 +272,6 @@ struct RootTabView: View {
         if keepPastEventsDuration != .forever {
             modelContext.deleteStaleData(
                 cutoffDate: keepPastEventsDuration.cutoffDate
-            )
-        }
-
-        if keepCanceledEventsDuration != .forever, let settings {
-            modelContext.deleteCanceledPlannerEvents(
-                on: todaystampService.todaystamp,
-                settings: settings
             )
         }
 

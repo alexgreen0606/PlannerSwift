@@ -16,6 +16,7 @@ struct TripDayPreviewCardView: View {
 
     var body: some View {
         PlannerPreviewCardView(
+            type: .trip,
             datestamp: datestamp,
             header: PlannerHeaderView(
                 datestamp: datestamp,

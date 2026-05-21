@@ -14,53 +14,42 @@ import WeatherKit
 struct PlannerListView: View {
     @Binding var showLocationSheet: Bool
     @Binding var eventSheetContext: EventSheetContext?
-    let plannerType: PlannerType
     let planner: Planner
     let plannerDay: DateInRegion
     let plannerLocation: Location?
-    let sortedOpenPlannerEvents: [PlannerEvent]
-    let sortedCheckedPlannerEvents: [PlannerEvent]
     let sortedPlannerEvents: [PlannerEvent]
+    let sortedPendingPlannerEvents: [PlannerEvent]
+    let sortedCompletePlannerEvents: [PlannerEvent]
     let calendarDayData: CalendarDayData?
-    let showChecked: Bool
-    let namespace: Namespace.ID
+    let showCompleted: Bool
     let scrollProxy: ScrollViewProxy
     let settings: PlannerSettings
+    let namespace: Namespace.ID
     let createEvent: (Int) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @AppStorage("keepCanceledEventsDuration") private var keepCanceledEventsDuration: KeepCanceledEventsDuration =
-        .startOfDay
-
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
-    @EnvironmentObject private var plannerManager: ListEngine<PlannerEvent>
-    @EnvironmentObject private var LocationService: LocationService
-    @EnvironmentObject private var TodaystampService: TodaystampService
-    @EnvironmentObject private var weatherStore: WeatherStore
+    @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
+    @EnvironmentObject private var locationService: LocationService
 
-    private var weatherData: DayWeather? {
-        weatherStore.getWeather(for: plannerDay, at: plannerLocation)
+    private var emptyPendingEventsLabel: String {
+        "No \(!sortedCompletePlannerEvents.isEmpty && showCompleted ? "more " : "")plans"
     }
 
-    private var locationLabel: String {
-        planner.locationLabel(
-            settings: settings,
-            deviceLocation: LocationService.deviceLocation
-        )
-    }
+    // MARK: - Body
 
     var body: some View {
         SortableListView(
-            uncheckedItems: sortedOpenPlannerEvents,
-            checkedItems: sortedCheckedPlannerEvents,
+            uncheckedItems: sortedPendingPlannerEvents,
+            checkedItems: sortedCompletePlannerEvents,
             rowId: eventId,
-            showChecked: showChecked,
-            checkedHeader: plannerType.checkedHeader,
-            emptyUncheckedLabel: "No plans",
-            emptyCheckedLabel: plannerType.emptyCheckedLabel,
+            showChecked: showCompleted,
+            checkedHeader: "Completed Events",
+            emptyUncheckedLabel: emptyPendingEventsLabel,
+            emptyCheckedLabel: "No completed events",
             tint: eventTint,
             scrollProxy: scrollProxy,
             createItem: createEvent,
@@ -76,25 +65,10 @@ struct PlannerListView: View {
             namespace: namespace,
             toolbarSystemImageNames: ["rectangle.and.pencil.and.ellipsis"],
             onToolbarTap: handleToolbarTap,
-            toggleConfig: eventToggleConfig,
-            leftAdornment: leftAdornment,
-            rightAdornment: rightAdornment,
+            leftAdornment: leadingAdornment,
+            rightAdornment: trailingAdornment,
             bottomAdornment: bottomAdornment,
-            handleTitleChange: handleEventTitleChange,
-            checkedFooter: plannerType.checkedFooter(
-                for: planner.datestamp,
-                todaystamp: TodaystampService.todaystamp,
-                keepCanceledEvents: keepCanceledEventsDuration,
-                hasCalendarAccess: calendarStore.accessDenied == false
-            )
-        )
-        .task(id: planner.datestamp) {
-            plannerManager.setToggleItem(toggleEvent)
-        }
-        .animateAsynchronousAction(from: weatherData)
-        .animateAsynchronousAction(from: locationLabel)
-        .animateAsynchronousAction(
-            from: calendarDayData?.plannerChipEvents.map(\.title)
+            handleTitleChange: handleEventTitleChange
         )
     }
 
@@ -105,11 +79,10 @@ struct PlannerListView: View {
             showLocationSheet: $showLocationSheet,
             planner: planner,
             plannerDay: plannerDay,
-            weatherData: weatherData,
-            locationLabel: locationLabel,
+            plannerLocation: plannerLocation,
             calendarDayData: calendarDayData,
-            namespace: namespace,
             settings: settings,
+            namespace: namespace,
             openCalendarEventSheet: { calEvent in
                 eventSheetContext =
                     EventSheetContext(
@@ -121,16 +94,16 @@ struct PlannerListView: View {
     }
 
     @ViewBuilder
-    private func leftAdornment(event: PlannerEvent) -> some View {
+    private func leadingAdornment(event: PlannerEvent) -> some View {
         if let calendarEvent = event.calendarEvent,
-           let calendar = calendarEvent.calendar
+            let calendar = calendarEvent.calendar
         {
             Image(
                 systemName:
-                calendar.systemImageName(settings: settings)
+                    calendar.systemImageName(settings: settings)
             )
             .foregroundStyle(calendar.color)
-            .padding(.trailing, 6)
+            .padding(.trailing, 4)
             .contentShape(Rectangle())
             .onTapGesture {
                 openPlannerEventSheet(event)
@@ -138,89 +111,38 @@ struct PlannerListView: View {
         }
     }
 
-    private func rightAdornment(event: PlannerEvent) -> some View {
+    private func trailingAdornment(event: PlannerEvent) -> some View {
         event.timeAdornment(
             in: plannerDay.region,
-            accentColor: accentColor
-        ) {
-            openPlannerEventSheet(event)
-        }
+            accentColor: accentColor,
+            openEventSheet: {
+                openPlannerEventSheet(event)
+            }
+        )
     }
 
     private func bottomAdornment(event: PlannerEvent) -> some View {
         event.locationAdornment(
             in: planner,
             settings: settings,
-            deviceLocation: LocationService.deviceLocation,
-            accentColor: accentColor
-        ) {
-            openPlannerEventSheet(event)
-        }
+            deviceLocation: locationService.deviceLocation,
+            accentColor: accentColor,
+            openEventSheet: {
+                openPlannerEventSheet(event)
+            }
+        )
     }
 
     // MARK: - Functions
 
-    private func toggleEvent(_ event: PlannerEvent) {
-        // If an event is canceled, reset its entire checked state.
-        if event.isCanceled {
-            event.isCanceled = false
-            event.isCompleted = false
-            return
-        }
-
-        // If this is a future event, cancel it and clear the completed state.
-        if plannerType == .future {
-            event.isCanceled = true
-            event.isCompleted = false
-            return
-        }
-
-        // Otherwise just toggle the completed state.
-        event.isCompleted.toggle()
-    }
-
-    private func eventToggleConfig(_ event: PlannerEvent) -> ToggleConfig? {
-        ToggleConfig(
-            iconConfig: IconConfig(
-                name: event.isCanceled ? "circle.slash" : "circle.inset.filled",
-                primaryColor: event.isCanceled
-                    ? Color.red : event.tint(accentColor: accentColor)
-            ),
-            confirmation: ConfirmationConfig(
-                title: "Delete from calendar?",
-                message: "Hiding only affects visibility in this planner.",
-                needsConfirmation: event.calendarEvent != nil
-                    && !event.isCanceled && plannerType == .future,
-                actions: [
-                    ConfirmationAction(
-                        title: "Hide",
-                        role: .confirm
-                    ) {
-                        modelContext.cancelPlannerEvent(event)
-                    },
-
-                    ConfirmationAction(
-                        title: "Delete"
-                    ) {
-                        modelContext.deletePlannerEvent(
-                            event,
-                            in: planner,
-                            ekEventStore: calendarStore.ekEventStore
-                        )
-                    },
-                ]
-            )
-        )
-    }
-
     private func openPlannerEventSheet(_ event: PlannerEvent) {
-        if plannerManager.isSelectMode || event.isChecked {
-            plannerManager.toggleItem(event)
+        if plannerEngine.isSelectMode || event.isCompleted {
+            plannerEngine.toggleItem(event)
             return
         }
 
-        plannerManager.protectedId = event.stableId
-        plannerManager.focusedId = nil
+        plannerEngine.protectedId = event.stableId
+        plannerEngine.focusedId = nil
 
         eventSheetContext =
             EventSheetContext(
@@ -234,7 +156,8 @@ struct PlannerListView: View {
             from: from,
             to: to,
             plannerDay: plannerDay,
-            sortedEvents: sortedOpenPlannerEvents
+            // TODO: need to consider the sort ID based on ALL events
+            sortedEvents: sortedPendingPlannerEvents
         )
     }
 

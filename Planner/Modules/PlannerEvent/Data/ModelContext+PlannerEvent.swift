@@ -250,12 +250,6 @@ extension ModelContext {
     }
 
     @MainActor
-    func cancelPlannerEvent(_ event: PlannerEvent) {
-        event.isCanceled = true
-        safeSave("_plannerEventCRUD.cancelPlannerEvent")
-    }
-
-    @MainActor
     func movePlannerEvent(
         from: Int,
         to: Int,
@@ -275,28 +269,6 @@ extension ModelContext {
     }
 
     // MARK: - DELETE
-
-    @MainActor
-    func deleteCanceledPlannerEvents(on todaystamp: String, settings: PlannerSettings) {
-        let planner = getPlanner(for: todaystamp)
-
-        guard
-            let plannerDay = todaystamp.startOfDay(
-                in: planner.region(settings: settings)
-            )
-        else {
-            return
-        }
-
-        let events = getSortedStorageEvents(for: plannerDay)
-
-        for event in events where event.isCanceled {
-            self.delete(event)
-        }
-
-        // Sepcial case: do NOT save the context here. This will be done in the parent
-        // function that called this.
-    }
 
     @MainActor
     func deletePlannerEvents(

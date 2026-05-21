@@ -12,7 +12,9 @@ import SwiftUI
 struct BirthdayChipView: View {
     let birthday: Birthday
     let settings: PlannerSettings
-    let openContactSheet: () -> Void
+    let namespace: Namespace.ID
+
+    @State private var showContactSheet: Bool = false
 
     private var contactPhotoExists: Bool {
         birthday.contact.thumbnailImageData != nil
@@ -26,7 +28,7 @@ struct BirthdayChipView: View {
 
         return 2 - (PlannerLayout.CHIP_HEIGHT / 3)
     }
-    
+
     // MARK: - Body
 
     var body: some View {
@@ -35,7 +37,25 @@ struct BirthdayChipView: View {
             .glassChip(
                 color: contactPhotoExists ? nil : birthday.event.calendar.color,
                 height: PlannerLayout.CHIP_HEIGHT,
-                onTap: openContactSheet
+                onTap: {
+                    showContactSheet = true
+                }
             )
+            .matchedTransitionSource(
+                id: birthday.event.transitionId,
+                in: namespace
+            )
+
+            // MARK: Contact Form
+            .sheet(isPresented: $showContactSheet) {
+                ContactFormView(contact: birthday.contact)
+                    .ignoresSafeArea()
+                    .navigationTransition(
+                        .zoom(
+                            sourceID: birthday.event.transitionId,
+                            in: namespace
+                        )
+                    )
+            }
     }
 }

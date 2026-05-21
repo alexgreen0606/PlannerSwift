@@ -18,8 +18,6 @@ class PlannerEvent: EventListItem {
     /// Must be set when an event doesn't have a time.
     var datestamp: String?
 
-    var isCanceled: Bool = false
-
     @Relationship(deleteRule: .nullify, inverse: \Location.events)
     var location: Location?
 

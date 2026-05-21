@@ -16,6 +16,7 @@ enum ListToggleType: String {
 
 typealias StatusGuard<Item> = (_ item: Item) -> Bool
 
+// TODO: remove custom stuff
 @MainActor
 final class ListEngine<Item: ListItem>: ObservableObject {
     private var toggleItem: ((Item) -> Void)?

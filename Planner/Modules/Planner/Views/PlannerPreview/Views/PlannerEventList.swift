@@ -28,8 +28,6 @@ struct PlannerEventListView: View {
                     ZStack {
                         if event.isCompleted {
                             Image(systemName: "checkmark").imageScale(.small)
-                        } else if event.isCanceled {
-                            Image(systemName: "xmark").imageScale(.small)
                         }
                     }
                     .frame(height: 17)

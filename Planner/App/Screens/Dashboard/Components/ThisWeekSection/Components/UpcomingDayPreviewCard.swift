@@ -16,6 +16,7 @@ struct UpcomingDayPreviewCardView: View {
 
     var body: some View {
         PlannerPreviewCardView(
+            type: .planner,
             datestamp: datestamp,
             header: PlannerHeaderView(datestamp: datestamp),
             width: todaystampService.todaystamp == datestamp

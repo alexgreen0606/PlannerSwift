@@ -39,7 +39,7 @@ extension Planner {
     }
 
     func region(settings: PlannerSettings) -> Region {
-        location?.region ?? settings.homeRegion
+        location?.region ?? trip?.location?.region ?? settings.homeRegion
     }
 
     func locationLabel(settings: PlannerSettings, deviceLocation: Location?)

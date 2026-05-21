@@ -11,7 +11,6 @@ import SwiftUI
 struct PlannerActionMenuView: View {
     @Binding var showLocationSheet: Bool
     let planner: Planner
-    let plannerType: PlannerType
     let plannerEvents: [PlannerEvent]
     let hasVisibleEvents: Bool
     let showChecked: Bool
@@ -23,16 +22,12 @@ struct PlannerActionMenuView: View {
     @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
     @State private var showDeleteCompletedConfirmation = false
-    @State private var showDeleteCanceledConfirmation = false
-    
+
     private var rawCompletedEvents: [PlannerEvent] {
-        plannerEvents.filter { $0.isCompleted && !$0.isCanceled }
-    }
-    
-    private var rawCanceledEvents: [PlannerEvent] {
-        plannerEvents.filter { $0.isCanceled }
+        plannerEvents.filter { $0.isCompleted }
     }
 
+    // TODO: ordinal broken
     private var dateLabel: String {
         planner.datestamp.proximityFormat(
             using: [
@@ -64,15 +59,6 @@ struct PlannerActionMenuView: View {
         )
     }
 
-    private var deleteCanceledConfig: ConfirmationConfig {
-        deleteCanceledEventsConfig(
-            canceledEventCount: rawCanceledEvents.count,
-            dateLabel: dateLabel,
-            hasCalendarAccess: calendarStore.accessDenied == false,
-            delete: deleteCompletedEvents
-        )
-    }
-
     // MARK: - Body
 
     var body: some View {
@@ -89,12 +75,6 @@ struct PlannerActionMenuView: View {
             deleteCompletedConfig,
             isPresented: $showDeleteCompletedConfirmation
         )
-
-        // MARK: Delete Canceled Confirmation
-        .withConfirmation(
-            deleteCanceledConfig,
-            isPresented: $showDeleteCanceledConfirmation
-        )
     }
 
     // MARK: - View Builders
@@ -106,9 +86,7 @@ struct PlannerActionMenuView: View {
             },
             label: {
                 Label(
-                    plannerType.toggleCheckedLabel(
-                        showChecked
-                    ),
+                    showChecked ? "Hide Completed" : "Show Completed",
                     systemImage: showChecked
                         ? "eye.slash" : "eye"
                 )
@@ -161,7 +139,6 @@ struct PlannerActionMenuView: View {
     private var deleteActionsMenu: some View {
         Menu {
             deleteCompletedEventsButton
-            deleteCanceledEventsButton
         } label: {
             Label(
                 "Delete Options",
@@ -174,14 +151,7 @@ struct PlannerActionMenuView: View {
         Button("Delete Completed", role: .destructive) {
             showDeleteCompletedConfirmation = true
         }
-        .disabled(rawCanceledEvents.isEmpty)
-    }
-
-    private var deleteCanceledEventsButton: some View {
-        Button("Delete Canceled", role: .destructive) {
-            showDeleteCanceledConfirmation = true
-        }
-        .disabled(rawCanceledEvents.isEmpty)
+        .disabled(rawCompletedEvents.isEmpty)
     }
 
     // MARK: - Functions
@@ -190,12 +160,6 @@ struct PlannerActionMenuView: View {
         // Note: Don't pass the EKEventStore here.
         // Calendar events are meant to survive mass-deletion so users can look back on their calendar.
         modelContext.deletePlannerEvents(rawCompletedEvents, in: planner)
-    }
-
-    private func deleteCanceledEvents() {
-        // Note: Don't pass the EKEventStore here.
-        // Calendar events are meant to survive mass-deletion so users can look back on their calendar.
-        modelContext.deletePlannerEvents(rawCanceledEvents, in: planner)
     }
 
     private func toggleRoutineExclusion() {

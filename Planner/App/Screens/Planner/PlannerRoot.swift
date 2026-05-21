@@ -45,11 +45,6 @@ struct PlannerRootView: View {
     private var plannerLocation: Location? {
         context.plannerLocation
     }
-
-    private var plannerType: PlannerType {
-        planner.datestamp <= todaystampService.todaystamp
-            ? .pastOrPresent : .future
-    }
     
     private var sortedPendingPlannerEvents: [PlannerEvent] {
         eventContext.sortedPlannerEvents.filter { event in
@@ -61,15 +56,7 @@ struct PlannerRootView: View {
 
     private var sortedCompletePlannerEvents: [PlannerEvent] {
         eventContext.sortedPlannerEvents.filter { event in
-            !event.isCanceled && (event.isCompleted
-                && !plannerEngine.newlyCheckedIds.contains(event.stableId))
-                || plannerEngine.newlyUncheckedIds.contains(event.stableId)
-        }
-    }
-    
-    private var sortedCanceledPlannerEvents: [PlannerEvent] {
-        eventContext.sortedPlannerEvents.filter { event in
-            (event.isCanceled
+            (event.isCompleted
                 && !plannerEngine.newlyCheckedIds.contains(event.stableId))
                 || plannerEngine.newlyUncheckedIds.contains(event.stableId)
         }
@@ -101,20 +88,19 @@ struct PlannerRootView: View {
                         PlannerListView(
                             showLocationSheet: $showLocationSheet,
                             eventSheetContext: $eventSheetContext,
-                            plannerType: plannerType,
                             planner: planner,
                             plannerDay: plannerDay,
                             plannerLocation: plannerLocation,
-                            sortedOpenPlannerEvents:
-                                sortedPendingPlannerEvents,
-                            sortedCheckedPlannerEvents:
-                                sortedCompletePlannerEvents,
                             sortedPlannerEvents: eventContext.sortedPlannerEvents,
+                            sortedPendingPlannerEvents:
+                                sortedPendingPlannerEvents,
+                            sortedCompletePlannerEvents:
+                                sortedCompletePlannerEvents,
                             calendarDayData: eventContext.calendarDayData,
-                            showChecked: planner.showChecked,
-                            namespace: namespace,
+                            showCompleted: planner.showChecked,
                             scrollProxy: scrollProxy,
                             settings: settings,
+                            namespace: namespace,
                             createEvent: createEvent
                         )
                         .transition(.opacity)
@@ -230,10 +216,9 @@ struct PlannerRootView: View {
                 PlannerActionMenuView(
                     showLocationSheet: $showLocationSheet,
                     planner: planner,
-                    plannerType: plannerType,
-                    showChecked: planner.showChecked,
                     plannerEvents: eventContext.sortedPlannerEvents,
-                    visibleEvents: visibleEvents
+                    hasVisibleEvents: !visibleEvents.isEmpty,
+                    showChecked: planner.showChecked
                 )
             } else {
                 selectAllToggle
@@ -307,13 +292,13 @@ struct PlannerRootView: View {
     private func createEvent(at index: Int) {
         plannerEngine.pendingFocusId = modelContext.createPlannerEvent(
             at: index,
-            in: eventContext.sortedPendingPlannerEvents,
+            in: sortedPendingPlannerEvents,
             startOfDay: plannerDay
         )
     }
 
     private func createLowerEvent(scrollProxy: ScrollViewProxy) {
-        createEvent(at: eventContext.sortedPendingPlannerEvents.count)
+        createEvent(at: sortedPendingPlannerEvents.count)
         scrollToBottom(scrollProxy: scrollProxy)
     }
 
