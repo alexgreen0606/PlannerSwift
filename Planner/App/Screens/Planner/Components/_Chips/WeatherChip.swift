@@ -11,6 +11,8 @@ import WeatherKit
 struct WeatherChipView: View {
     let weatherData: DayWeather
 
+    private let ICON_SIZE: CGFloat = 17
+
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
         .dark
 
@@ -24,17 +26,19 @@ struct WeatherChipView: View {
         }
     }
 
+    // MARK: - Body
+
     var body: some View {
-        HStack(alignment: .center, spacing: 8) {
-            HStack(alignment: .center, spacing: 4) {
+        HStack(spacing: 8) {
+            HStack(spacing: 4) {
                 Image(systemName: weatherData.symbolName)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 14, height: 14)
                     .symbolVariant(isDarkMode ? .fill : .none)
                     .symbolRenderingMode(
                         isDarkMode ? .multicolor : .monochrome
                     )
+                    .frame(width: ICON_SIZE, height: ICON_SIZE)
 
                 ValueView(weatherData.condition.description)
             }

@@ -32,6 +32,7 @@ extension Trip {
         else {
             return 0.0
         }
+        
         return Double(index) + 1.0
     }
 

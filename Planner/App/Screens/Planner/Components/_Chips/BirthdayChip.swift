@@ -23,17 +23,21 @@ struct BirthdayChipView: View {
         guard contactPhotoExists else {
             return 0
         }
+
         return 2 - (PlannerLayout.CHIP_HEIGHT / 3)
     }
+    
+    // MARK: - Body
 
     var body: some View {
         BirthdayView(birthday: birthday, settings: settings)
             .padding(.leading, leadingPadding)
             .glassChip(
                 color: contactPhotoExists ? nil : birthday.event.calendar.color,
-                height: PlannerLayout.CHIP_HEIGHT
-            ) {
-                openContactSheet(birthday)
-            }
+                height: PlannerLayout.CHIP_HEIGHT,
+                onTap: {
+                    openContactSheet(birthday)
+                }
+            )
     }
 }

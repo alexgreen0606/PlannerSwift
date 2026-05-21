@@ -14,49 +14,44 @@ struct TripChipView: View {
     let namespace: Namespace.ID
 
     private let TRIP_CHIP_ID = "TRIP_CHIP"
-    private let chipHeight: CGFloat = 40
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @EnvironmentObject private var locationService: LocationService
-
     @State private var showTripSheet = false
 
-    private var day: CGFloat {
+    private var dayOfTrip: CGFloat {
         trip.day(of: planner.datestamp)
     }
 
+    // MARK: - Body
+
     var body: some View {
-        HStack {
-            Group {
+        Group {
+            HStack(spacing: 0) {
                 Text(trip.title)
+                    .lineLimit(2)
                     .font(
                         .system(size: 16, weight: .bold, design: .rounded)
                     )
-                    .foregroundStyle(
-                        Color.label
-                    )
-
-                Spacer()
+                    .foregroundStyle(Color.label)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
                 VStack(alignment: .trailing) {
                     progressBar
 
-                    Text("Day \(Int(day)) of \(trip.sortedPlanners.count)")
-                        .font(
-                            .system(size: 9, weight: .heavy, design: .rounded)
-                        )
+                    Text(
+                        "Day \(Int(dayOfTrip)) of \(trip.sortedPlanners.count)"
+                    )
+                    .font(
+                        .system(size: 9, weight: .heavy, design: .rounded)
+                    )
                 }
             }
             .padding(.horizontal)
+            .padding(.vertical, 8)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: chipHeight)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            showTripSheet = true
-        }
         .glassEffect(
             .regular.interactive(true),
             in: .capsule
@@ -65,8 +60,12 @@ struct TripChipView: View {
             id: TRIP_CHIP_ID,
             in: namespace
         )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            showTripSheet = true
+        }
 
-        // Trip Sheet
+        // MARK: Trip Sheet
         .sheet(isPresented: $showTripSheet) {
             TripFormView(
                 sourceTrip: trip,
@@ -84,6 +83,6 @@ struct TripChipView: View {
     // MARK: - View Builders
 
     private var progressBar: some View {
-        trip.progressBar(day: day, accentColor: accentColor)
+        trip.progressBar(day: dayOfTrip, accentColor: accentColor)
     }
 }
