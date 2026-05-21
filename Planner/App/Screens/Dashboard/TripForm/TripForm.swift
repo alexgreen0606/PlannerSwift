@@ -221,8 +221,8 @@ struct TripFormView: View {
                 showDatePicker.toggle()
             }
         )
-        .listRowSeparator(showDatePicker ? .hidden : .visible)
         .id("DATES_FIELD_\(datesError != nil)")
+        .listRowSeparator(showDatePicker ? .hidden : .visible)
     }
 
     @ViewBuilder

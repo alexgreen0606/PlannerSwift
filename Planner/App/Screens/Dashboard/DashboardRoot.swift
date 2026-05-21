@@ -36,6 +36,8 @@ struct DashboardRootView: View {
     @State private var tripSheetContext: TripSheetContext? = nil
     @State private var expandedTripIds: Set<PersistentIdentifier> = []
 
+    // MARK: - Body
+
     var body: some View {
         ToastRootView {
             NavigationStack {
@@ -133,6 +135,7 @@ struct DashboardRootView: View {
                             )
                             .id(context.weekday)
                         }
+                        .interactiveDismissDisabled(true)
                         .navigationTransition(
                             .zoom(
                                 sourceID: context.weekday,
@@ -142,16 +145,11 @@ struct DashboardRootView: View {
                     }
 
                     // MARK: Scroll to expanded trips.
-                    .onChange(of: expandedTripIds) { oldValue, newValue in
-                        guard
-                            let newlyExpandedTripId = newValue.subtracting(
-                                oldValue
-                            ).first
-                        else { return }
-
-                        scrollToExpandedTrip(
-                            id: newlyExpandedTripId,
-                            scrollProxy: scrollProxy
+                    .onChange(of: expandedTripIds) { oldIds, newIds in
+                        scrollProxy.scrollToNewItem(
+                            oldItems: oldIds,
+                            newItems: newIds,
+                            getId: { $0 }
                         )
                     }
                 }

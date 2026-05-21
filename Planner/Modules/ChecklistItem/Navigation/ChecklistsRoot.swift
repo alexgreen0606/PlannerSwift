@@ -12,17 +12,12 @@ import SwiftUI
 struct ChecklistsRootView: View {
     /// Only one item should exist without a parent.
     @Query(
-        filter: #Predicate<ChecklistItem> { item in
-            item.parent == nil
-        }
+        filter: #Predicate<ChecklistItem> { $0.parent == nil }
     ) var rootFolderList: [ChecklistItem]
 
     @StateObject private var checklistsManager = ListEngine<ChecklistItem>()
     @State private var folderPath = NavigationPath()
     @State private var checklistCoverId: ChecklistCoverContext?
-
-    // Considers the selected items and whether any folders exist to house them.
-    @State private var canTransferFolderItems: Bool = false
 
     @Namespace private var namespace
 
@@ -33,26 +28,36 @@ struct ChecklistsRootView: View {
     var body: some View {
         if let rootFolder {
             NavigationStack(path: $folderPath) {
-                FolderRootView(
-                    folder: rootFolder,
+                ChecklistItemLoaderView(
                     rootFolder: rootFolder,
-                    namespace: namespace,
-                    openItem: openItem,
-                    canTranferItems: canTransferFolderItems,
-                    updateTransferAvailability:
-                        updateFolderTransferAvailability
-                )
+                    stableId: rootFolder.stableId,
+                    listEngine: checklistsManager,
+                    openItem: openItem
+                ) { rootFolder, sortedItems, _ in
+                    FolderRootView(
+                        folder: rootFolder,
+                        sortedItems: sortedItems,
+                        rootFolder: rootFolder,
+                        namespace: namespace,
+                        openItem: openItem
+                    )
+                }
                 .navigationDestination(for: ChecklistItem.self) { item in
                     if item.type == .folder {
-                        FolderRootView(
-                            folder: item,
+                        ChecklistItemLoaderView(
                             rootFolder: rootFolder,
-                            namespace: namespace,
-                            openItem: openItem,
-                            canTranferItems: canTransferFolderItems,
-                            updateTransferAvailability:
-                                updateFolderTransferAvailability
-                        )
+                            stableId: item.stableId,
+                            listEngine: checklistsManager,
+                            openItem: openItem
+                        ) { folder, sortedItems, _ in
+                            FolderRootView(
+                                folder: folder,
+                                sortedItems: sortedItems,
+                                rootFolder: rootFolder,
+                                namespace: namespace,
+                                openItem: openItem
+                            )
+                        }
                     }
                 }
             }
@@ -60,11 +65,20 @@ struct ChecklistsRootView: View {
             // MARK: Checklist Cover
 
             .fullScreenCover(item: $checklistCoverId) { checklistId in
-                ChecklistBuilderView(
+                ChecklistItemLoaderView(
                     rootFolder: rootFolder,
-                    checklistId: checklistId.id,
+                    stableId: checklistId.id,
+                    listEngine: checklistsManager,
                     openItem: openItem
-                )
+                ) { checklist, sortedUncheckedItems, sortedCheckedItems in
+                    ChecklistRootView(
+                        checklist: checklist,
+                        rootFolder: rootFolder,
+                        sortedUncheckedItems: sortedUncheckedItems,
+                        sortedCheckedItems: sortedCheckedItems,
+                        openItem: openItem
+                    )
+                }
                 .navigationTransition(
                     .zoom(
                         sourceID: checklistId.id,
@@ -79,10 +93,6 @@ struct ChecklistsRootView: View {
     }
 
     private func openItem(_ item: ChecklistItem, from source: ChecklistItem) {
-        guard let rootFolder else {
-            return
-        }
-
         let isInCurrentFolder = source.safeItems.contains(where: {
             $0.stableId == item.stableId
         })
@@ -92,13 +102,6 @@ struct ChecklistsRootView: View {
         }
 
         if item.type == .folder {
-            canTransferFolderItems =
-                rootFolder.hasChildType(
-                    .folder,
-                    excluding: Set([item.stableId])
-                )
-                == true
-
             folderPath.append(item)
         } else {
             checklistCoverId = ChecklistCoverContext(id: item.stableId)
@@ -128,12 +131,5 @@ struct ChecklistsRootView: View {
         }
 
         folderPath = path
-    }
-
-    private func updateFolderTransferAvailability(
-        considering itemIds: Set<UUID>  // Includes: items to transfer + their current folder
-    ) {
-        canTransferFolderItems =
-            rootFolder?.hasChildType(.folder, excluding: itemIds) == true
     }
 }

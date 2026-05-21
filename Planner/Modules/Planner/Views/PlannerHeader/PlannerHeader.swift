@@ -51,10 +51,6 @@ struct PlannerHeaderView: View {
             ?? datestamp.proximityFormat(
                 using: [
                     ProximityRule(
-                        proximity: .withinADay,
-                        format: .countdown
-                    ),
-                    ProximityRule(
                         proximity: .next7Days,
                         format: .weekday
                     ),
@@ -69,23 +65,7 @@ struct PlannerHeaderView: View {
 
     var subtitle: String {
         customSubtitle
-            ?? datestamp.proximityFormat(
-                using: [
-                    ProximityRule(
-                        proximity: .withinADay,
-                        format: .weekday
-                    ),
-                    ProximityRule(
-                        proximity: .next7Days,
-                        format: .countdown
-                    ),
-                    ProximityRule(
-                        proximity: .fallback,
-                        format: .countdown
-                    ),
-                ],
-                todaystamp: todaystamp
-            )
+            ?? datestamp.countdown(todaystamp: todaystamp)
     }
 
     var iconFormat: DateFormat {

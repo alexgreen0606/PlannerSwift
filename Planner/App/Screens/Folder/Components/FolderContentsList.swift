@@ -8,20 +8,19 @@
 import SwiftData
 import SwiftUI
 
-// Clean
-
 struct FolderContentsListView: View {
     let folder: ChecklistItem
     let sortedItems: [ChecklistItem]
     let namespace: Namespace.ID
     let openItem: (ChecklistItem, ChecklistItem) -> Void
-    let updateTransferAvailability: (Set<UUID>) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var selectManager: ListEngine<ChecklistItem>
+    @EnvironmentObject private var itemSelectEngine: ListEngine<ChecklistItem>
+
+    // MARK: - Body
 
     var body: some View {
         List {
@@ -39,43 +38,55 @@ struct FolderContentsListView: View {
     private func row(for item: ChecklistItem) -> some View {
         HStack(alignment: .top, spacing: FolderLayout.ROW_SPACING) {
             HStack(
-                spacing: selectManager.isSelectMode
+                spacing: itemSelectEngine.isSelectMode
                     ? FolderLayout.TOGGLE_SPACING : 0
             ) {
+                // MARK: Toggle
                 ListItemToggleView(
                     item: item,
                     tint: accentColor.color,
-                    isChecked: selectManager.selectedItemIds.contains(
+                    isChecked: itemSelectEngine.selectedItemIds.contains(
                         item.stableId
                     ),
-                    opacity: selectManager.isSelectMode ? 1 : 0
+                    opacity: itemSelectEngine.isSelectMode ? 1 : 0
                 )
                 .frame(
-                    width: selectManager.isSelectMode
+                    width: itemSelectEngine.isSelectMode
                         ? FolderLayout.TOGGLE_WIDTH : 0
                 )
-                .allowsHitTesting(selectManager.isSelectMode)
+                .allowsHitTesting(itemSelectEngine.isSelectMode)
 
-                itemIcon(for: item)
+                // MARK: Icon
+                Image(
+                    systemName: item.type.systemImageName
+                )
+                .imageScale(.medium)
+                .foregroundColor(item.color.swiftUIColor)
+                .frame(
+                    width: FolderLayout.ICON_WIDTH,
+                    height: FolderLayout.ICON_CONTAINER_HEIGHT
+                )
             }
-            .frame(height: FolderLayout.HORIZONTAL_ADORNMENT_HEIGHT)
+            .frame(height: FolderLayout.ADORNMENT_HEIGHT)
 
+            // MARK: Title
             Text(item.title)
-                .font(.system(size: ListLayout.FONT_SIZE))
                 .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)
+                .font(.system(size: ListLayout.FONT_SIZE))
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            HStack(alignment: .center) {
+            // MARK: End Adornment
+            Group {
                 if item.type == .checklist {
                     Text("\(item.safeItems.filter { !$0.isCompleted }.count)")
-                        .font(.caption)
                 } else {
                     Image(systemName: "chevron.right")
                 }
             }
-            .frame(height: FolderLayout.HORIZONTAL_ADORNMENT_HEIGHT)
-            .foregroundColor(.secondary)
+            .font(.caption)
+            .foregroundStyle(Color.secondary)
+            .frame(height: FolderLayout.ADORNMENT_HEIGHT)
         }
         .id(item.stableId)
         .alignmentGuide(.listRowSeparatorLeading) { _ in
@@ -92,37 +103,21 @@ struct FolderContentsListView: View {
         }
     }
 
-    private func itemIcon(for item: ChecklistItem) -> some View {
-        Image(
-            systemName: item.type.systemImageName
-        )
-        .foregroundColor(item.color.swiftUIColor)
-        .imageScale(.medium)
-        .frame(
-            width: FolderLayout.ICON_WIDTH,
-            height: FolderLayout.ICON_CONTAINER_HEIGHT,
-            alignment: .center
-        )
-    }
-
     // MARK: - Functions
 
     private func moveItem(from sources: IndexSet, to destination: Int) {
-        for from in sources {
-            modelContext.moveChecklistItem(
-                in: sortedItems,
-                from: from,
-                to: destination
-            )
-        }
+        guard let from = sources.first else { return }
+
+        modelContext.moveChecklistItem(
+            in: sortedItems,
+            from: from,
+            to: destination
+        )
     }
 
     private func handleTap(of item: ChecklistItem) {
-        if selectManager.isSelectMode {
-            selectManager.toggleItem(item)
-            updateTransferAvailability(
-                Set(selectManager.selectedItemIds + [folder.stableId])
-            )
+        if itemSelectEngine.isSelectMode {
+            itemSelectEngine.toggleItem(item)
             return
         }
 

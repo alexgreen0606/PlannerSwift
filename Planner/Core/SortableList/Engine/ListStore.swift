@@ -79,6 +79,11 @@ final class ListEngine<Item: ListItem>: ObservableObject {
             }
         }
     }
+    
+    func clearSelections() {
+        selectedItemIds = []
+        selectedItems = []
+    }
 
     func toggleSelectAll(visibleItems: [Item]) {
         if selectedItemIds.count == visibleItems.count {
@@ -99,6 +104,7 @@ final class ListEngine<Item: ListItem>: ObservableObject {
         }
     }
 
+    // TODO: remove. Not needed.
     func isItemChecked(_ item: Item) -> Bool {
         if let customIsItemChecked {
             return customIsItemChecked(item)
@@ -106,12 +112,14 @@ final class ListEngine<Item: ListItem>: ObservableObject {
         return item.isCompleted
     }
 
+    // TODO: remove. Not needed.
     func isItemInUncheckedList(_ item: Item) -> Bool {
         (!isItemChecked(item)
             && !newlyUncheckedIds.contains(item.stableId))
             || newlyCheckedIds.contains(item.stableId)
     }
 
+    // TODO: remove. Not needed.
     func isItemInCheckedList(_ item: Item) -> Bool {
         (isItemChecked(item)
             && !newlyCheckedIds.contains(item.stableId))

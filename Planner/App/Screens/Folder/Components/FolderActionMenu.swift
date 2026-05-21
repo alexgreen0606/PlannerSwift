@@ -11,30 +11,31 @@ import SwiftUI
 struct FolderActionMenuView: View {
     @Binding var showEditSheet: Bool
     let folder: ChecklistItem
-    let sortedItems: [ChecklistItem]
+    let items: [ChecklistItem]
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var selectManager: ListEngine<ChecklistItem>
+    @EnvironmentObject private var itemSelectEngine: ListEngine<ChecklistItem>
 
     @State private var showDeleteConfirmation = false
 
     private var deleteFolderConfig: ConfirmationConfig {
         deleteChecklistItemConfig(
             item: folder,
-            delete: deleteEntireFolder
+            delete: deleteFolder
         )
     }
 
+    // MARK: - Body
+
     var body: some View {
-        Menu("Action Menu", systemImage: "ellipsis") {
+        Menu("Folder Action Menu", systemImage: "ellipsis") {
             editFolderButton
             selectItemsButton
             deleteFolderButton
         }
 
         // MARK: Delete Folder Confirmation
-
         .withConfirmation(
             deleteFolderConfig,
             isPresented: $showDeleteConfirmation
@@ -53,11 +54,11 @@ struct FolderActionMenuView: View {
 
     private var selectItemsButton: some View {
         Button {
-            selectManager.toggleSelectMode()
+            itemSelectEngine.toggleSelectMode()
         } label: {
             Label("Select Items", systemImage: "checkmark.circle")
         }
-        .disabled(sortedItems.isEmpty)
+        .disabled(items.isEmpty)
     }
 
     @ViewBuilder
@@ -73,8 +74,13 @@ struct FolderActionMenuView: View {
 
     // MARK: - Functions
 
-    private func deleteEntireFolder() {
-        dismiss()
-        modelContext.safeDelete(folder)
+    private func deleteFolder() {
+        DispatchQueue.main.async {
+            dismiss()
+            
+            DispatchQueue.main.async {
+                modelContext.safeDelete(folder)
+            }
+        }
     }
 }

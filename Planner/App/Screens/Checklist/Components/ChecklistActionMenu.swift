@@ -21,6 +21,7 @@ struct ChecklistActionMenu: View {
     @State private var showDeleteCompletedConfirmation = false
     @State private var showDeleteChecklistConfirmation = false
 
+    // TODO: is this wasteful? Should I compute this in the function?
     private var completedItems: [ChecklistItem] {
         items.filter(\.isCompleted)
     }
@@ -148,7 +149,12 @@ struct ChecklistActionMenu: View {
     }
 
     private func deleteEntireChecklist() {
-        dismiss()
-        modelContext.safeDelete(checklist)
+        DispatchQueue.main.async {
+            dismiss()
+            
+            DispatchQueue.main.async {
+                modelContext.safeDelete(checklist)
+            }
+        }
     }
 }

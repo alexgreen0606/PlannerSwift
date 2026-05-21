@@ -10,30 +10,28 @@ import SwiftUI
 
 struct FolderRootView: View {
     let folder: ChecklistItem
+    let sortedItems: [ChecklistItem]
     let rootFolder: ChecklistItem
     let namespace: Namespace.ID
     let openItem: (ChecklistItem, ChecklistItem) -> Void
-    let canTranferItems: Bool
-    let updateTransferAvailability: (Set<UUID>) -> Void
 
-    @AppStorage("accentColor") var accentColor: AccentColor =
-        .blue
-
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @StateObject private var selectManager = ListEngine<ChecklistItem>()
-    @State private var showTransferSheet = false
-    @State private var showCreateSheet = false
-    @State private var showEditSheet = false
+    @StateObject private var itemSelectEngine = ListEngine<ChecklistItem>()
 
-    var sortedItems: [ChecklistItem] {
-        folder.safeItems.sorted { $0.sortIndex < $1.sortIndex }
-    }
+    @State private var showEditSheet = false
+    @State private var showTransferSheet = false
+    @State private var showNewItemSheet = false
+
+    /// Considers the selected items and whether any other folder exist to house them.
+    @State private var canTransferSelectedItems: Bool = false
 
     var isAllSelected: Bool {
-        selectManager.selectedItemIds.count == sortedItems.count
+        !sortedItems.isEmpty
+            && itemSelectEngine.selectedItemIds.count == sortedItems.count
     }
+
+    // MARK: - Body
 
     var body: some View {
         ScrollViewReader { scrollProxy in
@@ -41,109 +39,137 @@ struct FolderRootView: View {
                 folder: folder,
                 sortedItems: sortedItems,
                 namespace: namespace,
-                openItem: openItem,
-                updateTransferAvailability: updateTransferAvailability
+                openItem: openItem
             )
-            .navigationTitle(folder.title)
-            .navigationBarBackButtonHidden(true)
-            .toolbar {
-                topLeftToolbar
-                topRightToolbar
-            }
-            .animateSynchronousAction(from: selectManager.isSelectMode)
-
-            // MARK: Create Item Form
-
-            .sheet(isPresented: $showCreateSheet) {
-                ChecklistItemFormView(parent: folder) { newItemId in
-                    scrollTo(id: newItemId, scrollProxy: scrollProxy)
+            .overlay {
+                if folder.safeItems.isEmpty {
+                    EmptyLabelView("No items")
                 }
             }
-
-            // MARK: Edit Form
-
-            .sheet(isPresented: $showEditSheet) {
-                ChecklistItemFormView(item: folder, parent: folder.parent)
+            .toolbar {
+                topLeadingToolbar
+                topTrailingToolbar
             }
+            .animateSynchronousAction(from: itemSelectEngine.isSelectMode)
+            .navigationTitle(folder.title)
+            .navigationBarBackButtonHidden(true)
 
-            // MARK: Transfer Items Form
-
-            .sheet(isPresented: $showTransferSheet) {
-                TransferChecklistItemsFormView(
-                    source: folder,
-                    selectedIds: selectManager.selectedItemIds,
-                    rootFolder: rootFolder,
-                    openItem: openItem
-                )
-                .navigationTransition(
-                    .zoom(
-                        sourceID: ListIds.TRANSFER_BUTTON,
-                        in: namespace
-                    )
+            // MARK: Scroll to new items.
+            .onChange(of: sortedItems) { oldItems, newItems in
+                scrollProxy.scrollToNewItem(
+                    oldItems: oldItems,
+                    newItems: newItems,
+                    getId: { $0.stableId }
                 )
             }
         }
-        .overlay {
-            if folder.safeItems.isEmpty {
-                EmptyLabelView("No items")
-            }
+
+        // MARK: Transfer Checklist Items Form
+        .sheet(isPresented: $showTransferSheet) {
+            TransferChecklistItemsFormView(
+                source: folder,
+                selectedIds: itemSelectEngine.selectedItemIds,
+                rootFolder: rootFolder,
+                openItem: openItem
+            )
+            .navigationTransition(
+                .zoom(
+                    sourceID: ListIds.TRANSFER_BUTTON,
+                    in: namespace
+                )
+            )
         }
-        .environmentObject(selectManager)
+        .environmentObject(itemSelectEngine)
+
+        // MARK: Edit Form
+        .sheet(isPresented: $showEditSheet) {
+            ChecklistItemFormView(item: folder, parent: folder.parent)
+        }
+
+        // MARK: New Item Form
+        .sheet(isPresented: $showNewItemSheet) {
+            ChecklistItemFormView(parent: folder)
+        }
+
+        // MARK: Update transferability when selected items change.
+        .onChange(of: itemSelectEngine.selectedItemIds) { _, _ in
+            updateTransferability()
+        }
     }
 
     // MARK: - Toolbars
 
+    // MARK: Top Leading Toolbar
+
     @ToolbarContentBuilder
-    private var topLeftToolbar: some ToolbarContent {
-        if !selectManager.isSelectMode {
+    private var topLeadingToolbar: some ToolbarContent {
+        if !itemSelectEngine.isSelectMode {
             if folder.parent != nil {
                 ToolbarItemGroup(placement: .topBarLeading) {
-                    Button("Back", systemImage: "chevron.left") {
-                        dismiss()
-                    }
+                    dismissButton
                 }
             }
         } else {
             ToolbarItem(placement: .topBarLeading) {
-                Button(
-                    "Close",
-                    systemImage: "xmark",
-                    action: selectManager.toggleSelectMode
-                )
+                cancelSelectModeButton
             }
-
             ToolbarSpacer(.fixed, placement: .topBarLeading)
-
             ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    selectManager.toggleSelectAll(visibleItems: sortedItems)
-                } label: {
-                    Text(isAllSelected ? "Deselect All" : "Select All")
-                        .fontWeight(.semibold)
-                }
-                .disabled(sortedItems.isEmpty)
+                toggleSelectAllButton
             }
         }
     }
 
+    private var dismissButton: some View {
+        Button(
+            "Back",
+            systemImage: "chevron.left"
+        ) {
+            dismiss()
+        }
+        .tint(Color.label)
+    }
+
+    private var cancelSelectModeButton: some View {
+        Button(
+            "Cancel Select Mode",
+            systemImage: "xmark",
+            action: itemSelectEngine.toggleSelectMode
+        )
+        .tint(Color.label)
+    }
+
+    private var toggleSelectAllButton: some View {
+        Button {
+            itemSelectEngine.toggleSelectAll(visibleItems: sortedItems)
+        } label: {
+            Text(isAllSelected ? "Deselect All" : "Select All")
+                .fontWeight(.semibold)
+        }
+        .animateSynchronousAction(from: isAllSelected)
+        .disabled(sortedItems.isEmpty)
+    }
+
+    // MARK: Top Trailing Toolbar
+
     @ToolbarContentBuilder
-    private var topRightToolbar: some ToolbarContent {
-        if !selectManager.isSelectMode {
+    private var topTrailingToolbar: some ToolbarContent {
+        if !itemSelectEngine.isSelectMode {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 FolderActionMenuView(
                     showEditSheet: $showEditSheet,
                     folder: folder,
-                    sortedItems: sortedItems
+                    items: sortedItems
                 )
 
                 Button("Add", systemImage: "plus") {
-                    showCreateSheet = true
+                    showNewItemSheet = true
                 }
             }
         } else {
             SelectedChecklistItemActionsView(
                 showTransferSheet: $showTransferSheet,
-                canTransferItems: canTranferItems,
+                canTransferItems: canTransferSelectedItems,
                 parentType: .folder,
                 namespace: namespace
             )
@@ -152,16 +178,14 @@ struct FolderRootView: View {
 
     // MARK: - Functions
 
-    private func scrollTo(id: UUID?, scrollProxy: ScrollViewProxy) {
-        guard let targetId = id else { return }
-
-        DispatchQueue.main.async {
-            withAnimation {
-                scrollProxy.scrollTo(
-                    targetId,
-                    anchor: .bottom
+    private func updateTransferability() {
+        canTransferSelectedItems =
+            rootFolder.hasChildType(
+                .folder,
+                excluding: itemSelectEngine.selectedItemIds.union([
+                    folder.stableId
+                ]
                 )
-            }
-        }
+            ) == true
     }
 }

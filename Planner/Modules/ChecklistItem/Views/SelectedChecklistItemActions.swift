@@ -15,11 +15,11 @@ struct SelectedChecklistItemActionsView: ToolbarContent {
     let namespace: Namespace.ID
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var ListEngine: ListEngine<ChecklistItem>
+    @EnvironmentObject private var listEngine: ListEngine<ChecklistItem>
 
     private var deleteConfirmation: ConfirmationConfig {
         bulkDeleteChecklistItemConfig(
-            items: ListEngine.selectedItems,
+            items: listEngine.selectedItems,
             delete: deleteSelectedItems
         )
     }
@@ -55,7 +55,7 @@ struct SelectedChecklistItemActionsView: ToolbarContent {
     private var deleteSelectedButton: some View {
         DeleteSelectedButtonView(
             confirmationConfig: deleteConfirmation,
-            disabled: ListEngine.selectedItems.isEmpty
+            disabled: listEngine.selectedItems.isEmpty
         )
     }
 
@@ -63,7 +63,7 @@ struct SelectedChecklistItemActionsView: ToolbarContent {
     private var transferSelectedButton: some View {
         let icon =
             parentType == .checklist
-                ? "arrow.left.arrow.right" : "arrow.forward.folder"
+            ? "arrow.left.arrow.right" : "arrow.forward.folder"
 
         Button(
             "Transfer",
@@ -72,7 +72,7 @@ struct SelectedChecklistItemActionsView: ToolbarContent {
             showTransferSheet = true
         }
         .disabled(
-            !canTransferItems || ListEngine.selectedItemIds.isEmpty
+            !canTransferItems || listEngine.selectedItemIds.isEmpty
         )
         .matchedTransitionSource(
             id: ListIds.TRANSFER_BUTTON,
@@ -83,10 +83,16 @@ struct SelectedChecklistItemActionsView: ToolbarContent {
     // MARK: - Functions
 
     private func deleteSelectedItems() {
-        modelContext.deleteChecklistItems(
-            ListEngine.selectedItems
-        )
+        let selections = listEngine.selectedItems
 
-        DispatchQueue.main.async(execute: ListEngine.toggleSelectMode)
+        listEngine.clearSelections()
+
+        DispatchQueue.main.async {
+            modelContext.deleteChecklistItems(
+                selections
+            )
+
+            DispatchQueue.main.async(execute: listEngine.toggleSelectMode)
+        }
     }
 }

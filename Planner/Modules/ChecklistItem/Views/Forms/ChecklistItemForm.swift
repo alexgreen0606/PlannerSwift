@@ -9,23 +9,18 @@ import SwiftData
 import SwiftUI
 import SwiftUIIntrospect
 
-// Clean
-
 struct ChecklistItemFormView: View {
     private let sourceItem: ChecklistItem?
     private let parent: ChecklistItem?
-    private let onSave: ((UUID?) -> Void)?
     private let onDelete: (() -> Void)?
 
     init(
         item: ChecklistItem? = nil,
         parent: ChecklistItem?,
-        onSave: ((UUID?) -> Void)? = nil,
         onDelete: (() -> Void)? = nil
     ) {
         sourceItem = item
         self.parent = parent
-        self.onSave = onSave
         self.onDelete = onDelete
 
         if let item {
@@ -170,13 +165,12 @@ struct ChecklistItemFormView: View {
     // MARK: - Functions
 
     private func handleSave() {
-        let newItemId = modelContext.updateChecklistItem(
+        modelContext.updateChecklistItem(
             sourceItem: sourceItem,
             parent: parent,
             draftChecklistItem: draftChecklistItem
         )
 
         dismiss()
-        onSave?(newItemId)
     }
 }

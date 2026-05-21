@@ -9,6 +9,7 @@ import SwiftUI
 
 // MARK: - Single Delete
 
+@MainActor
 func deleteChecklistItemConfig(
     item: ChecklistItem,
     inForm: Bool = false,
@@ -36,6 +37,7 @@ func deleteChecklistItemConfig(
 
 // MARK: - Bulk Delete Selections
 
+@MainActor
 func bulkDeleteChecklistItemConfig(
     items: [ChecklistItem],
     delete: @escaping () -> Void
@@ -71,6 +73,7 @@ func bulkDeleteChecklistItemConfig(
 
 // MARK: - Bulk Delete Category: Completed
 
+@MainActor
 func bulkDeleteCompletedChecklistItemConfig(
     completedItems: [ChecklistItem],
     item: ChecklistItem,

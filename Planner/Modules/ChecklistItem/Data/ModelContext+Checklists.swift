@@ -80,8 +80,7 @@ extension ModelContext {
         sourceItem: ChecklistItem?,
         parent: ChecklistItem?,
         draftChecklistItem: ChecklistItem
-    ) -> UUID? {
-        var newItemId: UUID? = nil
+    ) {
 
         draftChecklistItem.title = draftChecklistItem.title.trimmingCharacters(
             in: .whitespacesAndNewlines
@@ -100,21 +99,18 @@ extension ModelContext {
             let sortIndex = (sorted?.last?.sortIndex ?? 0) + 8
 
             // Create a new item.
-            let newItem = ChecklistItem(
-                type: draftChecklistItem.type,
-                title: draftChecklistItem.title,
-                color: draftChecklistItem.color,
-                sortIndex: sortIndex,
-                parent: parent
+            insert(
+                ChecklistItem(
+                    type: draftChecklistItem.type,
+                    title: draftChecklistItem.title,
+                    color: draftChecklistItem.color,
+                    sortIndex: sortIndex,
+                    parent: parent
+                )
             )
-            insert(newItem)
-
-            newItemId = newItem.stableId
         }
 
         safeSave("checklistItem.handleChecklistItemChange")
-
-        return newItemId
     }
 
     @MainActor

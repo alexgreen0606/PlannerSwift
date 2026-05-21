@@ -7,11 +7,12 @@
 
 // Modifier order:
 // View
+// Important (ID, animation)
 // View-specific
 //Style(Style, Font, Color, Opacity),
 //Layout(Frame, Padding),
-// Toolbar
 // Overlay
+// Toolbar
 //Other(Custom),
 //Transition,
 //Tap

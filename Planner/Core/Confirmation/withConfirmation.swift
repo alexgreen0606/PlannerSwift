@@ -13,7 +13,7 @@ private struct ConfirmationModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         if let config,
-           config.needsConfirmation
+            config.needsConfirmation
         {
             content
                 .confirmationDialog(

@@ -11,18 +11,21 @@ import SwiftUI
 struct ChecklistRootView: View {
     private let checklist: ChecklistItem
     private let rootFolder: ChecklistItem
-    private let sortedItems: [ChecklistItem]
+    private let sortedUncheckedItems: [ChecklistItem]
+    private let sortedCheckedItems: [ChecklistItem]
     private let openItem: (ChecklistItem, ChecklistItem) -> Void
 
     init(
         checklist: ChecklistItem,
         rootFolder: ChecklistItem,
-        sortedItems: [ChecklistItem],
+        sortedUncheckedItems: [ChecklistItem],
+        sortedCheckedItems: [ChecklistItem],
         openItem: @escaping (ChecklistItem, ChecklistItem) -> Void
     ) {
         self.checklist = checklist
         self.rootFolder = rootFolder
-        self.sortedItems = sortedItems
+        self.sortedUncheckedItems = sortedUncheckedItems
+        self.sortedCheckedItems = sortedCheckedItems
         self.openItem = openItem
 
         self.canTransferSelectedItems =
@@ -44,19 +47,13 @@ struct ChecklistRootView: View {
 
     @Namespace private var namespace
 
-    private var sortedUncheckedItems: [ChecklistItem] {
-        sortedItems
-            .filter(listEngine.isItemInUncheckedList)
-    }
-
-    private var sortedCheckedItems: [ChecklistItem] {
-        sortedItems
-            .filter(listEngine.isItemInCheckedList)
+    private var allItems: [ChecklistItem] {
+        sortedUncheckedItems + sortedCheckedItems
     }
 
     private var visibleItems: [ChecklistItem] {
         if checklist.showCompleted {
-            return sortedUncheckedItems + sortedCheckedItems
+            return allItems
         }
         return sortedUncheckedItems
     }
@@ -170,7 +167,7 @@ struct ChecklistRootView: View {
                 ChecklistActionMenu(
                     showEditSheet: $showEditSheet,
                     checklist: checklist,
-                    items: sortedItems,
+                    items: allItems,
                     visibleItems: visibleItems
                 )
             } else {
@@ -186,8 +183,8 @@ struct ChecklistRootView: View {
             Text(isAllSelected ? "Deselect All" : "Select All")
                 .fontWeight(.semibold)
         }
-        .disabled(visibleItems.isEmpty)
         .animateSynchronousAction(from: isAllSelected)
+        .disabled(visibleItems.isEmpty)
     }
 
     // MARK: Bottom Trailing Toolbar Components
