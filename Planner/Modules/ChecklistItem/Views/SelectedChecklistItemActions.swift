@@ -61,22 +61,12 @@ struct SelectedChecklistItemActionsView: ToolbarContent {
 
     @ViewBuilder
     private var transferSelectedButton: some View {
-        let icon =
-            parentType == .checklist
-            ? "arrow.left.arrow.right" : "arrow.forward.folder"
-
-        Button(
-            "Transfer",
-            systemImage: icon
-        ) {
-            showTransferSheet = true
-        }
-        .disabled(
-            !canTransferItems || listEngine.selectedItemIds.isEmpty
-        )
-        .matchedTransitionSource(
-            id: ListIds.TRANSFER_BUTTON,
-            in: namespace
+        TransferSelectedButtonView<ChecklistItem>(
+            showTransferSheet: $showTransferSheet,
+            systemImage: parentType == .folder
+                ? "arrow.forward.folder" : "arrow.left.arrow.right",
+            disabled: !canTransferItems,
+            namespace: namespace
         )
     }
 

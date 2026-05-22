@@ -10,6 +10,7 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
+// TODO: pass in needed stuff, not context.
 struct PlannerRootView: View {
     let context: PlannerContext
     let eventContext: PlannerEventContext
@@ -248,7 +249,7 @@ struct PlannerRootView: View {
                 createLowerEventButton(scrollProxy: scrollProxy)
             }
         } else {
-            SelectedPlannerEventActionsView(
+            SelectedEventActionsView(
                 showTransferSheet: $showTransferSheet,
                 planner: planner,
                 namespace: namespace

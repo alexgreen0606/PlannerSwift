@@ -16,10 +16,13 @@ struct TransferEventsFormView: View {
     init(sourceStartOfDay: DateInRegion, settings: PlannerSettings) {
         self.settings = settings
 
-        sourceDate = sourceStartOfDay.date
-        sourceDatestamp = sourceStartOfDay.datestamp
         _destinationDate = State(initialValue: sourceStartOfDay.date)
+        
+        self.sourceDate = sourceStartOfDay.date
+        self.sourceDatestamp = sourceStartOfDay.datestamp
     }
+    
+    // TODO: dates count is off when testing at 11 PM. The date is marked as yesterday, but today and yesterday count as 0 days.
 
     private let sourceDate: Date
     private let sourceDatestamp: String
@@ -30,7 +33,7 @@ struct TransferEventsFormView: View {
     @Environment(\.showToast) private var showToast
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var TodaystampService: TodaystampService
+    @EnvironmentObject private var todaystampService: TodaystampService
     @EnvironmentObject private var calendarStore: CalendarStore
     @EnvironmentObject private var plannerManager: ListEngine<PlannerEvent>
 
@@ -69,7 +72,7 @@ struct TransferEventsFormView: View {
                     DatePicker(
                         "Select a Destination",
                         selection: $destinationDate,
-                        in: TodaystampService.datePickerBounds,
+                        in: todaystampService.datePickerBounds,
                         displayedComponents: .date
                     )
                     .datePickerStyle(.graphical)
@@ -151,11 +154,11 @@ struct TransferEventsFormView: View {
                         format: .dateLabel
                     ),
                 ],
-                todaystamp: TodaystampService.todaystamp
+                todaystamp: todaystampService.todaystamp
             ),
             iconConfig: IconConfig(
                 name: sourceDatestamp.calendarSymbolName,
-                primaryColor: sourceDatestamp == TodaystampService.todaystamp
+                primaryColor: sourceDatestamp == todaystampService.todaystamp
                     ? accentColor.color : Color.secondary
             )
         )
@@ -168,12 +171,12 @@ struct TransferEventsFormView: View {
                     ProximityRule(proximity: .next7Days, format: .weekday),
                     ProximityRule(proximity: .fallback, format: .dateLabel),
                 ],
-                todaystamp: TodaystampService.todaystamp
+                todaystamp: todaystampService.todaystamp
             ),
             iconConfig: IconConfig(
                 name: destinationDatestamp.calendarSymbolName,
                 primaryColor: destinationDatestamp
-                    == TodaystampService.todaystamp
+                    == todaystampService.todaystamp
                     ? accentColor.color : Color.secondary
             )
         )
