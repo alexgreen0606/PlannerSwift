@@ -30,7 +30,7 @@ struct ToastView<ListItemType: ListItem>: View {
 
                 if let customSubtitle = config.customSubtitle {
                     customSubtitle
-                } else if let subtitle = config.subtitle {
+                } else if let subtitle = config.subtitle as LocalizedStringKey? {
                     Text(subtitle)
                         .font(.system(size: 12))
                         .lineLimit(1)
@@ -51,6 +51,7 @@ struct ToastView<ListItemType: ListItem>: View {
                         listEngine?.focusedId = nil
                     }
                 )
+                .padding(.leading, 6)
             }
         }
         .padding(.horizontal)

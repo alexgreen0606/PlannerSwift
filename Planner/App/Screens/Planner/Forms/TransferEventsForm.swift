@@ -5,7 +5,6 @@
 //  Created by Alex Green on 2/12/26.
 //
 
-import EventKit
 import SwiftData
 import SwiftDate
 import SwiftUI
@@ -17,190 +16,130 @@ struct TransferEventsFormView: View {
         self.settings = settings
 
         _destinationDate = State(initialValue: sourceStartOfDay.date)
-        
-        self.sourceDate = sourceStartOfDay.date
+
+        self.sourceRegion = sourceStartOfDay.region
         self.sourceDatestamp = sourceStartOfDay.datestamp
     }
-    
-    // TODO: dates count is off when testing at 11 PM. The date is marked as yesterday, but today and yesterday count as 0 days.
 
-    private let sourceDate: Date
     private let sourceDatestamp: String
+    private let sourceRegion: Region
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @Environment(\.showToast) private var showToast
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.showToast) private var showToast
     @EnvironmentObject private var todaystampService: TodaystampService
     @EnvironmentObject private var calendarStore: CalendarStore
-    @EnvironmentObject private var plannerManager: ListEngine<PlannerEvent>
+    @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
+    @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
     @State private var destinationDate: Date
-
-    private var destinationDatestamp: String {
-        destinationDate.datestamp
-    }
-
-    private var transferCount: String {
-        let count = plannerManager.selectedItems.count
-        return
-            "\(String(count)) event\(count == 1 ? "" : "s")"
-    }
-
-    private var dayOffset: Int {
-        Int(
-            sourceDatestamp.daysUntil(destinationDatestamp) ?? 0
-        )
-    }
-
-    private var offsetLabel: String {
-        let absOffset = abs(dayOffset)
-        return
-            "\(absOffset) day\(absOffset == 1 ? "" : "s") \(dayOffset > 0 ? "later" : "earlier")"
-    }
 
     private var canSave: Bool {
         destinationDatestamp != sourceDatestamp
     }
+
+    private var destinationDatestamp: String {
+        destinationDate.datestamp(in: sourceRegion)
+    }
+
+    private var transferCount: LocalizedStringKey {
+        "^[\(plannerEngine.selectedItems.count) event](inflect: true)"
+    }
+
+    // MARK: - Body
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
                     DatePicker(
-                        "Select a Destination",
+                        "",
                         selection: $destinationDate,
                         in: todaystampService.datePickerBounds,
                         displayedComponents: .date
                     )
+                    .environment(\.timeZone, sourceRegion.timeZone)
                     .datePickerStyle(.graphical)
+                    .tint(accentColor.color)
+                    .listRowInsets(.top, 0)
                     .discreetListItem()
-
-                } header: {
-                    offsetCountIndicator
                 }
-                .discreetListItem()
                 .listSectionMargins(.top, 0)
+                .discreetListItem()
             }
             .scrollDisabled(true)
-            .navigationTitle("Reschedule Events")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                saveButton
-            }
             .safeAreaInset(edge: .top) {
                 transferIndicator
             }
+            .toolbar {
+                FormSaveButtonView(canSave: canSave, save: transferEvents)
+            }
+            .navigationTitle("Transfer Events")
+            .navigationBarTitleDisplayMode(.inline)
         }
-        .presentationDetents([.height(500)])
-    }
-
-    // MARK: - Toolbars
-
-    @ToolbarContentBuilder
-    private var saveButton: some ToolbarContent {
-        ToolbarItem(placement: .confirmationAction) {
-            Button(
-                "Save",
-                systemImage: "checkmark",
-                action: handleTransfer
-            )
-            .tint(accentColor.color)
-            .disabled(!canSave)
-        }
+        .presentationDetents([.height(450)])
     }
 
     // MARK: - View Builders
 
     private var transferIndicator: some View {
         HStack {
-            if destinationDate != sourceDate, destinationDate < sourceDate {
+            if destinationDatestamp < sourceDatestamp {
                 destinationChip
-
-                Image(systemName: "arrow.left")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 12, height: 12)
-                    .foregroundStyle(Color.secondary)
+                transferDirectionArrow("arrow.left")
             }
 
             sourceChip
 
-            if destinationDate != sourceDate, destinationDate > sourceDate {
-                Image(systemName: "arrow.right")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 12, height: 12)
-                    .foregroundStyle(Color.secondary)
-
+            if destinationDatestamp > sourceDatestamp {
+                transferDirectionArrow("arrow.right")
                 destinationChip
             }
         }
+        .animateSynchronousAction(from: destinationDate)
         .frame(maxWidth: .infinity)
         .padding(.horizontal)
-        .animateSynchronousAction(from: destinationDate)
     }
 
     private var sourceChip: some View {
         TransferSourceIndicatorView(
-            title: transferCount,
-            subtitle: sourceDatestamp.proximityFormat(
-                using: [
-                    ProximityRule(proximity: .next7Days, format: .weekday),
-                    ProximityRule(
-                        proximity: .fallback,
-                        format: .dateLabel
-                    ),
-                ],
+            title: sourceDatestamp.dateLabel(
                 todaystamp: todaystampService.todaystamp
             ),
-            iconConfig: IconConfig(
-                name: sourceDatestamp.calendarSymbolName,
-                primaryColor: sourceDatestamp == todaystampService.todaystamp
-                    ? accentColor.color : Color.secondary
-            )
+            subtitle: transferCount
         )
     }
 
     private var destinationChip: some View {
         TransferDestinationIndicatorView(
-            title: destinationDatestamp.proximityFormat(
-                using: [
-                    ProximityRule(proximity: .next7Days, format: .weekday),
-                    ProximityRule(proximity: .fallback, format: .dateLabel),
-                ],
+            title: destinationDatestamp.dateLabel(
                 todaystamp: todaystampService.todaystamp
-            ),
-            iconConfig: IconConfig(
-                name: destinationDatestamp.calendarSymbolName,
-                primaryColor: destinationDatestamp
-                    == todaystampService.todaystamp
-                    ? accentColor.color : Color.secondary
             )
         )
     }
 
-    private var offsetCountIndicator: some View {
-        HStack {
-            Spacer()
-            Text(offsetLabel)
-                .font(
-                    .system(size: 12, weight: .bold, design: .rounded)
-                )
-                .foregroundStyle(Color.secondary)
-                .opacity(dayOffset == 0 ? 0 : 1)
-        }
+    private func transferDirectionArrow(_ systemImageName: String)
+        -> some View
+    {
+        Image(systemName: systemImageName)
+            .font(.system(size: 14))
+            .foregroundStyle(Color.secondary)
     }
 
     // MARK: - Functions
 
-    private func handleTransfer() {
-        let eventCount = plannerManager.selectedItems.count
+    private func transferEvents() {
+        guard let dayOffset = sourceDatestamp.daysUntil(destinationDatestamp),
+            dayOffset != 0
+        else {
+            return
+        }
 
         modelContext.shiftPlannerEvents(
-            plannerManager.selectedItems,
+            plannerEngine.selectedItems,
             days: dayOffset.days,
             sourceDatestamp: sourceDatestamp,
             targetDatestamp: destinationDatestamp,
@@ -208,24 +147,38 @@ struct TransferEventsFormView: View {
             eventStore: calendarStore.ekEventStore
         )
 
-        plannerManager.toggleSelectMode()
-
         dismiss()
 
-        let primaryColor = dayOffset > 0 ? Color.secondary : Color.label
-        let secondaryColor = dayOffset > 0 ? Color.label : Color.secondary
+        DispatchQueue.main.async {
+            let eventCount = plannerEngine.selectedItems.count
 
-        showToast(
-            Toast(
-                title:
-                "Successfully shifted \("event".inflected(for: eventCount))!",
-                subtitle: offsetLabel,
-                iconConfig: IconConfig(
-                    name: "arrow.left.arrow.right",
-                    primaryColor: primaryColor,
-                    secondaryColor: secondaryColor
+            plannerEngine.toggleSelectMode()
+
+            DispatchQueue.main.async {
+                showToast(
+                    Toast(
+                        title:
+                            "Successfully transferred ^[\(eventCount) event](inflect: true)!",
+                        subtitle: LocalizedStringKey(
+                            destinationDatestamp.dateLabel(
+                                todaystamp: todaystampService.todaystamp
+                            )
+                        ),
+                        iconConfig: IconConfig(
+                            name: "arrow.left.arrow.right",
+                            primaryColor: dayOffset > 0
+                                ? Color.secondary : Color.label,
+                            secondaryColor: dayOffset > 0
+                                ? Color.label : Color.secondary
+                        ),
+                        action: {
+                            plannerCoverStore.context = PlannerCoverContext(
+                                datestamp: destinationDatestamp
+                            )
+                        }
+                    )
                 )
-            )
-        )
+            }
+        }
     }
 }

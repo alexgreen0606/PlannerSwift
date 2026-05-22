@@ -84,13 +84,13 @@ struct ChecklistRootView: View {
                         createItem: createItem,
                         moveItem: moveItem
                     )
-                    .navigationTitle(checklist.title)
                     .toolbar {
                         topLeadingToolbar
                         topTrailingToolbar
                         bottomToolbar(scrollProxy: scrollProxy)
                     }
                     .animateSynchronousAction(from: listEngine.isSelectMode)
+                    .navigationTitle(checklist.title)
                 }
             }
 

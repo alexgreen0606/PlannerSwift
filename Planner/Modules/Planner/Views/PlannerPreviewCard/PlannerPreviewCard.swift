@@ -84,7 +84,7 @@ struct PlannerPreviewCardView<Header: View>: View {
             .onTapGesture {
                 plannerCoverStore.context = PlannerCoverContext(
                     datestamp: datestamp,
-                    source: transitionId
+                    transitionId: transitionId
                 )
             }
         }

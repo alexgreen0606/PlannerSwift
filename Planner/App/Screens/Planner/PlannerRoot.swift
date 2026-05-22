@@ -12,7 +12,9 @@ import SwiftUI
 
 // TODO: pass in needed stuff, not context.
 struct PlannerRootView: View {
-    let context: PlannerContext
+    let planner: Planner
+    let plannerDay: DateInRegion
+    let plannerLocation: Location?
     let eventContext: PlannerEventContext
     let settings: PlannerSettings
 
@@ -34,18 +36,6 @@ struct PlannerRootView: View {
     @Namespace private var namespace
 
     // MARK: - Computed Variables
-    
-    private var planner: Planner {
-        context.planner
-    }
-    
-    private var plannerDay: DateInRegion {
-        context.plannerDay
-    }
-    
-    private var plannerLocation: Location? {
-        context.plannerLocation
-    }
     
     private var sortedPendingPlannerEvents: [PlannerEvent] {
         eventContext.sortedPlannerEvents.filter { event in
@@ -218,8 +208,7 @@ struct PlannerRootView: View {
                     showLocationSheet: $showLocationSheet,
                     planner: planner,
                     plannerEvents: eventContext.sortedPlannerEvents,
-                    hasVisibleEvents: !visibleEvents.isEmpty,
-                    showChecked: planner.showChecked
+                    hasVisibleEvents: !visibleEvents.isEmpty
                 )
             } else {
                 selectAllToggle

@@ -32,7 +32,7 @@ struct TripChipView: View {
                 Text(trip.title)
                     .lineLimit(2)
                     .font(
-                        .system(size: 16, weight: .bold, design: .rounded)
+                        .system(size: 16, weight: .semibold, design: .rounded)
                     )
                     .foregroundStyle(Color.label)
                     .frame(maxWidth: .infinity, alignment: .leading)

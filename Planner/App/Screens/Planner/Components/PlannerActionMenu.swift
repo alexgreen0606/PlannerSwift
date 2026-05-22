@@ -13,7 +13,6 @@ struct PlannerActionMenuView: View {
     let planner: Planner
     let plannerEvents: [PlannerEvent]
     let hasVisibleEvents: Bool
-    let showChecked: Bool
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var plannerManager: ListEngine<PlannerEvent>
@@ -63,8 +62,16 @@ struct PlannerActionMenuView: View {
 
     var body: some View {
         Menu("Planner Action Menu", systemImage: "ellipsis") {
-            showCheckedToggle
-            selectEventsButton
+            ToggleCompletedVisibilityView(
+                showCompleted: planner.showChecked,
+                toggle: { planner.showChecked.toggle() }
+            )
+
+            SelectItemsButtonView<PlannerEvent>(
+                itemsLabel: "Events",
+                hasVisibleItem: hasVisibleEvents
+            )
+
             editLocationButton
             toggleRoutineExclusionButton
             deleteActionsMenu
@@ -78,33 +85,6 @@ struct PlannerActionMenuView: View {
     }
 
     // MARK: - View Builders
-
-    private var showCheckedToggle: some View {
-        Button(
-            action: {
-                planner.showChecked.toggle()
-            },
-            label: {
-                Label(
-                    showChecked ? "Hide Completed" : "Show Completed",
-                    systemImage: showChecked
-                        ? "eye.slash" : "eye"
-                )
-            }
-        )
-    }
-
-    private var selectEventsButton: some View {
-        Button {
-            plannerManager.toggleSelectMode()
-        } label: {
-            Label(
-                "Select Events",
-                systemImage: "checkmark.circle"
-            )
-        }
-        .disabled(!hasVisibleEvents)
-    }
 
     private var editLocationButton: some View {
         Button(

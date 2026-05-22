@@ -11,19 +11,26 @@ import SwiftUI
 
 struct TransferDestinationIndicatorView: View {
     let title: String
-    let iconConfig: IconConfig
+    let iconConfig: IconConfig?
+    
+    init(title: String, iconConfig: IconConfig? = nil) {
+        self.title = title
+        self.iconConfig = iconConfig
+    }
 
     var body: some View {
         HStack(spacing: 6) {
-            Image(systemName: iconConfig.name)
-                .imageScale(.medium)
-                .foregroundStyle(
-                    iconConfig.primaryColor
-                )
+            if let iconConfig {
+                Image(systemName: iconConfig.name)
+                    .foregroundStyle(
+                        iconConfig.primaryColor,
+                        iconConfig.secondaryColor
+                    )
+            }
 
             Text(title)
-                .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(Color.label)
         }
+        .font(.system(size: 14, weight: .bold, design: .rounded))
     }
 }

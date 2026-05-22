@@ -7,14 +7,14 @@
 
 struct PlannerCoverContext: Identifiable, Equatable {
     let datestamp: String
-    let source: String?
+    let transitionId: String?
 
-    init(datestamp: String, source: String? = nil) {
+    init(datestamp: String, transitionId: String? = nil) {
         self.datestamp = datestamp
-        self.source = source
+        self.transitionId = transitionId
     }
 
     var id: String {
-        source ?? datestamp
+        transitionId ?? datestamp
     }
 }

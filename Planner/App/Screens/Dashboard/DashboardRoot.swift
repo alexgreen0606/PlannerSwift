@@ -222,7 +222,7 @@ struct DashboardRootView: View {
         DispatchQueue.main.async {
             plannerCoverStore.context = PlannerCoverContext(
                 datestamp: datestamp,
-                source: CALENDAR_BUTTON_ID
+                transitionId: CALENDAR_BUTTON_ID
             )
         }
     }

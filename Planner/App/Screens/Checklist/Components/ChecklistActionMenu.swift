@@ -41,7 +41,7 @@ struct ChecklistActionMenu: View {
         )
     }
 
-    private var visibleItemExists: Bool {
+    private var hasVisibleItem: Bool {
         !visibleItems.isEmpty
     }
 
@@ -54,8 +54,14 @@ struct ChecklistActionMenu: View {
     var body: some View {
         Menu("Checklist Action Menu", systemImage: "ellipsis") {
             editChecklistButton
-            showCompletedToggle
-            selectItemsButton
+
+            ToggleCompletedVisibilityView(
+                showCompleted: checklist.showCompleted,
+                toggle: { checklist.showCompleted.toggle() }
+            )
+
+            SelectItemsButtonView<ChecklistItem>(hasVisibleItem: hasVisibleItem)
+
             deleteActionMenu
         }
 
@@ -83,32 +89,6 @@ struct ChecklistActionMenu: View {
                 systemImage: "pencil"
             )
         }
-    }
-
-    private var showCompletedToggle: some View {
-        Button {
-            checklist.showCompleted.toggle()
-        } label: {
-            Label(
-                checklist.showCompleted
-                    ? "Hide Completed"
-                    : "Show Completed",
-                systemImage: checklist.showCompleted
-                    ? "eye.slash" : "eye"
-            )
-        }
-    }
-
-    private var selectItemsButton: some View {
-        Button {
-            listEngine.toggleSelectMode()
-        } label: {
-            Label(
-                "Select Items",
-                systemImage: "checkmark.circle"
-            )
-        }
-        .disabled(!visibleItemExists)
     }
 
     // MARK: Delete Action Menu
@@ -151,7 +131,7 @@ struct ChecklistActionMenu: View {
     private func deleteEntireChecklist() {
         DispatchQueue.main.async {
             dismiss()
-            
+
             DispatchQueue.main.async {
                 modelContext.safeDelete(checklist)
             }

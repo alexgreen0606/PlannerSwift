@@ -29,8 +29,8 @@ enum ToastVariant {
 struct Toast {
     let id = UUID()
 
-    let title: String
-    let subtitle: String?
+    let title: LocalizedStringKey
+    let subtitle: LocalizedStringKey?
     let iconConfig: IconConfig
     let variant: ToastVariant
     let action: (() -> Void)?
@@ -38,8 +38,8 @@ struct Toast {
     let customSubtitle: AnyView?
 
     init(
-        title: String,
-        subtitle: String? = nil,
+        title: LocalizedStringKey,
+        subtitle: LocalizedStringKey? = nil,
         customSubtitle: AnyView? = nil,
         iconConfig: IconConfig,
         variant: ToastVariant = .sheet,

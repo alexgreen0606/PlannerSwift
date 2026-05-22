@@ -7,19 +7,19 @@
 
 import EventKit
 
-/// Note: Moving this to separate file broke ZOOM transitions of file rows.
-/// If this issue returns, move back to ExpandedPlanner.
+/// Note:  In the past, moving this to separate file broke zoom transitions on planner event rows.
+/// If this issue returns, move this struct back to PlannerRoot.
 struct EventSheetContext: Identifiable {
     var plannerEvent: PlannerEvent?
     var calendarEvent: EKEvent?
 
     var id: String {
-        if let plannerEventId = plannerEvent?.stableId {
-            return "\(plannerEventId)"
-        }
-
         if let calEvent = calendarEvent {
             return calEvent.transitionId
+        }
+
+        if let plannerEvent = plannerEvent {
+            return plannerEvent.transitionId
         }
 
         return "FALLBACK_NO_EVENT"

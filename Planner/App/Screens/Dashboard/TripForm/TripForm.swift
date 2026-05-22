@@ -105,7 +105,7 @@ struct TripFormView: View {
             }
             .toolbar {
                 cancelButton
-                saveButton
+                FormSaveButtonView(canSave: canSave, save: saveTrip)
                 deleteTripButton
             }
             .navigationTitle("\(isNewTrip ? "Create" : "Edit") Trip")
@@ -151,16 +151,6 @@ struct TripFormView: View {
                 dismiss()
             }
             .tint(Color.label)
-        }
-    }
-
-    @ToolbarContentBuilder
-    private var saveButton: some ToolbarContent {
-        ToolbarItem(placement: .confirmationAction) {
-            Button("Save", systemImage: "checkmark", action: saveTrip)
-                .buttonStyle(.glassProminent)
-                .tint(canSave ? accentColor.color : .tertiary)
-                .disabled(!canSave)
         }
     }
 

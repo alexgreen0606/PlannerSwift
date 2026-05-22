@@ -273,7 +273,7 @@ struct RoutineEventFormView: View {
         {
             let selectedDays = draftRoutineEvent.daysOfWeek
 
-            let subtitle: String? = {
+            let subtitle: LocalizedStringKey? = {
                 if selectedDays.count > 1 {
                     return nil
                 }

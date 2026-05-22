@@ -24,7 +24,7 @@ extension String {
 
     /// Example: "06.calendar"
     var calendarSymbolName: String {
-        "\(suffix(2)).calendar"
+        "\(Int(suffix(2)) ?? 0).calendar"
     }
 
     /// Example: "06"

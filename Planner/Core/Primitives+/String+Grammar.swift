@@ -6,7 +6,7 @@
 //
 
 import SwiftDate
-import Foundation
+import SwiftUI
 
 extension String {
     /// Returns a grammatically correct pluralized string for the given count.
@@ -14,7 +14,7 @@ extension String {
     /// Example:
     /// - "1 event"
     /// - "2 events"
-    func inflected(for count: Int) -> String {
+    func inflected(for count: Int) -> LocalizedStringKey {
         "^[\(count) \(self)](inflect: true)"
     }
     

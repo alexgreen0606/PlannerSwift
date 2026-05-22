@@ -78,10 +78,10 @@ struct TransferChecklistItemsFormView: View {
     /// Controls the animation of the folder navigator.
     @State private var folderNavDirection: FolderNavigationDirection = .forward
 
-    private var transferCount: String {
+    private var transferCount: LocalizedStringKey {
         let count = ListEngine.selectedItems.count
         return
-            "\(String(count)) item\(count == 1 ? "" : "s")"
+            "^[\(count) item](inflect: true)"
     }
 
     private var canSave: Bool {
@@ -166,8 +166,8 @@ struct TransferChecklistItemsFormView: View {
 
     private var sourceChip: some View {
         TransferSourceIndicatorView(
-            title: transferCount,
-            subtitle: source.title,
+            title: source.title,
+            subtitle: transferCount,
             iconConfig: IconConfig(
                 name: source.type.systemImageName,
                 primaryColor: source.color.swiftUIColor.opacity(0.8)
@@ -217,7 +217,7 @@ struct TransferChecklistItemsFormView: View {
             Toast(
                 title:
                 "Successfully transferred \(selectedType.inflected(for: itemCount))!",
-                subtitle: selectedItem.title,
+                subtitle: LocalizedStringKey(selectedItem.title),
                 iconConfig: IconConfig(
                     name: icon,
                     primaryColor: Color.label,

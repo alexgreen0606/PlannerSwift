@@ -103,7 +103,7 @@ struct TransferRoutineEventsFormView: View {
         let selectedDays = selectedDaysOfWeek
         let eventCount = routineManager.selectedItems.count
 
-        let subtitle: String? = {
+        let subtitle: LocalizedStringKey? = {
             if selectedDays.count > 1 {
                 return nil
             }

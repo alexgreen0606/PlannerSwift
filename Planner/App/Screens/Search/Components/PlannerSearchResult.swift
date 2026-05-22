@@ -31,12 +31,6 @@ struct PlannerSearchResultView: View {
                             using: [
                                 ProximityRule(
                                     proximity:
-                                    .withinADay,
-                                    format:
-                                    .countdown
-                                ),
-                                ProximityRule(
-                                    proximity:
                                     .next7Days,
                                     format: .weekday
                                 ),

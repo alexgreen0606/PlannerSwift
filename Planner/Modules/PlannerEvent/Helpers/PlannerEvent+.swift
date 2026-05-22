@@ -13,6 +13,10 @@ import SwiftUI
 // Clean
 
 extension PlannerEvent {
+    var transitionId: String {
+        "\(stableId)"
+    }
+    
     var isRoutineVariant: Bool {
         routineEventVariant != nil && routineEvent != nil
     }
