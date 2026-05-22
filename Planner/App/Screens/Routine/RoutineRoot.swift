@@ -52,7 +52,7 @@ struct RoutineRootView: View {
                         moveItem: moveEvent,
                         namespace: namespace,
                         toolbarSystemImageNames: [
-                            "rectangle.and.pencil.and.ellipsis",
+                            "rectangle.and.pencil.and.ellipsis"
                         ],
                         onToolbarTap: { _, event in
                             openRoutineEventSheet(for: event)
@@ -72,15 +72,15 @@ struct RoutineRootView: View {
                             }
                         }
                     )
-                    .navigationTitle("\(weekday.label) Routine")
-                    .navigationSubtitle("Recurring Events")
-                    .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
                         topLeadingToolbar
                         topTrailingToolbar
                         bottomToolbar(scrollProxy: scrollProxy)
                     }
                     .animateSynchronousAction(from: routineManager.isSelectMode)
+                    .navigationTitle("\(weekday.label) Routine")
+                    .navigationSubtitle("Recurring Events")
+                    .navigationBarTitleDisplayMode(.inline)
                 }
             }
 
@@ -126,37 +126,16 @@ struct RoutineRootView: View {
 
     // MARK: - Toolbars
 
-    // MARK: Top Left Toolbar
-
     @ToolbarContentBuilder
     private var topLeadingToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             if !routineManager.isSelectMode {
-                backButton
+                BackButtonView()
             } else {
-                cancelSelectModeButton
+                CancelButtonView(cancel: routineManager.toggleSelectMode)
             }
         }
     }
-
-    private var backButton: some View {
-        Button("Back", systemImage: "chevron.left") {
-            dismiss()
-        }
-    }
-
-    private var cancelSelectModeButton: some View {
-        Button(
-            "Cancel Select Mode",
-            systemImage: "xmark",
-            action: routineManager.toggleSelectMode
-        )
-        // Note: This fixes a bug where opening select mode while a keyboard is open causes this button to
-        // appear tinted as the accent color.
-        .tint(Color.label)
-    }
-
-    // MARK: Top Trailing Toolbar
 
     @ToolbarContentBuilder
     private var topTrailingToolbar: some ToolbarContent {
@@ -164,52 +143,32 @@ struct RoutineRootView: View {
             if !routineManager.isSelectMode {
                 RoutineActionMenuView(
                     weekday: weekday,
-                    sortedRoutineEvents: sortedRoutineEvents
+                    routineEvents: sortedRoutineEvents
                 )
             } else {
-                selectAllToggle
+                SelectAllToggleView(visibleItems: sortedRoutineEvents)
             }
         }
     }
-
-    private var selectAllToggle: some View {
-        Button {
-            routineManager.toggleSelectAll(visibleItems: sortedRoutineEvents)
-        } label: {
-            Text(isAllSelected ? "Deselect All" : "Select All")
-                .fontWeight(.semibold)
-        }
-        .disabled(sortedRoutineEvents.isEmpty)
-    }
-
-    // MARK: Bottom Toolbar
 
     @ToolbarContentBuilder
     private func bottomToolbar(scrollProxy: ScrollViewProxy)
         -> some ToolbarContent
     {
-        ToolbarItemGroup(placement: .bottomBar) {
-            if !routineManager.isSelectMode {
-                Spacer()
-                createLowerEventButton(scrollProxy: scrollProxy)
-            } else {
-                SelectedRoutineEventActionsView(
-                    showTransferSheet: $showTransferSheet,
-                    weekday: weekday,
-                    namespace: namespace
-                )
+        if !routineManager.isSelectMode {
+            ToolbarSpacer(placement: .bottomBar)
+            ToolbarItem(placement: .bottomBar) {
+                CreateLowerItemButtonView {
+                    createLowerEvent(scrollProxy: scrollProxy)
+                }
             }
+        } else {
+            SelectedRoutineEventActionsView(
+                showTransferSheet: $showTransferSheet,
+                weekday: weekday,
+                namespace: namespace
+            )
         }
-    }
-
-    private func createLowerEventButton(scrollProxy: ScrollViewProxy)
-        -> some View
-    {
-        Button("Add", systemImage: "plus") {
-            createLowerEvent(scrollProxy: scrollProxy)
-        }
-        .buttonStyle(.glassProminent)
-        .tint(accentColor.color)
     }
 
     // MARK: - View Builders
@@ -263,7 +222,7 @@ struct RoutineRootView: View {
 
     private func createLowerEvent(scrollProxy: ScrollViewProxy) {
         createEvent(at: sortedRoutineEvents.count)
-        scrollToBottom(scrollProxy: scrollProxy)
+        scrollProxy.scrollToListBottom()
     }
 
     private func openRoutine(for weekday: Weekday) {
@@ -311,16 +270,5 @@ struct RoutineRootView: View {
             ekEventStore: calendarStore.ekEventStore,
             PlannerSyncStore: PlannerSyncStore
         )
-    }
-
-    private func scrollToBottom(scrollProxy: ScrollViewProxy) {
-        DispatchQueue.main.async {
-            withAnimation {
-                scrollProxy.scrollTo(
-                    ListIds.UNCHECKED_ITEMS,
-                    anchor: .bottom
-                )
-            }
-        }
     }
 }

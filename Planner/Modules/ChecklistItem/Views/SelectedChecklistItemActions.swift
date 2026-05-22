@@ -53,9 +53,8 @@ struct SelectedChecklistItemActionsView: ToolbarContent {
     // MARK: - View Builders
 
     private var deleteSelectedButton: some View {
-        DeleteSelectedButtonView(
-            confirmationConfig: deleteConfirmation,
-            disabled: listEngine.selectedItems.isEmpty
+        DeleteSelectedButtonView<ChecklistItem>(
+            confirmationConfig: deleteConfirmation
         )
     }
 

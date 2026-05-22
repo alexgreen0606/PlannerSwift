@@ -84,9 +84,7 @@ extension RoutineEvent {
     ) -> some View {
         if weekdays.count > 1 {
             WeekdaySpreadView(
-                selected: Set(weekdays),
-                scale: 0.66,
-                spacing: 1
+                selected: Set(weekdays)
             )
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())

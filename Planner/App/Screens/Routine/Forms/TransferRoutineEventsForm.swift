@@ -10,8 +10,6 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-// Clean
-
 struct TransferRoutineEventsFormView: View {
     let sourceDayOfWeek: Weekday
     let sortedSourceRoutineEvents: [RoutineEvent]
@@ -37,6 +35,8 @@ struct TransferRoutineEventsFormView: View {
     private var canSave: Bool {
         !selectedDaysOfWeek.isEmpty
     }
+    
+    // MARK: - Body
 
     var body: some View {
         NavigationStack {
@@ -123,9 +123,7 @@ struct TransferRoutineEventsFormView: View {
             }
             return AnyView(WeekdaySpreadView(
                 selected: selectedDays,
-                scale: 0.66,
-                spacing: 1,
-                customAccentColor: Color.label
+                accentColor: Color.label
             ))
         }()
 

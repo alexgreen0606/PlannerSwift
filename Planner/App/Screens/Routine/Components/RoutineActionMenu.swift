@@ -10,12 +10,11 @@ import SwiftUI
 
 struct RoutineActionMenuView: View {
     let weekday: Weekday
-    let sortedRoutineEvents: [RoutineEvent]
+    let routineEvents: [RoutineEvent]
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var routineManager: ListEngine<RoutineEvent>
     @EnvironmentObject private var calendarStore: CalendarStore
-    @EnvironmentObject private var PlannerSyncStore: PlannerSyncService
+    @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
     @State private var showDeleteRoutineConfirmation = false
 
@@ -27,12 +26,15 @@ struct RoutineActionMenuView: View {
 
     var body: some View {
         Menu("Routine Action Menu", systemImage: "ellipsis") {
-            selectEventsButton
+            SelectItemsButtonView<RoutineEvent>(
+                itemsLabel: "Events",
+                hasVisibleItem: !routineEvents.isEmpty
+            )
+
             deleteRoutineButton
         }
 
         // MARK: Delete Routine Confirmation
-
         .withConfirmation(
             deleteConfig,
             isPresented: $showDeleteRoutineConfirmation
@@ -40,18 +42,6 @@ struct RoutineActionMenuView: View {
     }
 
     // MARK: - View Builders
-
-    private var selectEventsButton: some View {
-        Button {
-            routineManager.toggleSelectMode()
-        } label: {
-            Label(
-                "Select Events",
-                systemImage: "checkmark.circle"
-            )
-        }
-        .disabled(sortedRoutineEvents.isEmpty)
-    }
 
     private var deleteRoutineButton: some View {
         Button(role: .destructive) {
@@ -62,17 +52,17 @@ struct RoutineActionMenuView: View {
                 systemImage: "trash"
             )
         }
-        .disabled(sortedRoutineEvents.isEmpty)
+        .disabled(routineEvents.isEmpty)
     }
 
     // MARK: - Functions
 
     private func deleteRoutine() {
         modelContext.deleteRoutineEvents(
-            sortedRoutineEvents,
+            routineEvents,
             from: weekday,
             ekEventStore: calendarStore.ekEventStore,
-            PlannerSyncStore: PlannerSyncStore
+            PlannerSyncStore: plannerSyncService
         )
     }
 }

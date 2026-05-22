@@ -293,9 +293,7 @@ struct RoutineEventFormView: View {
                 }
                 return AnyView(WeekdaySpreadView(
                     selected: selectedDays,
-                    scale: 0.66,
-                    spacing: 1,
-                    customAccentColor: Color.label
+                    accentColor: Color.label
                 ))
             }()
 

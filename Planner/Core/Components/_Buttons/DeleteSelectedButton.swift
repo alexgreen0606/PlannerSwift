@@ -7,11 +7,10 @@
 
 import SwiftUI
 
-// Clean
-
-struct DeleteSelectedButtonView: View {
+struct DeleteSelectedButtonView<Item: ListItem>: View {
     let confirmationConfig: ConfirmationConfig
-    let disabled: Bool
+    
+    @EnvironmentObject private var listEngine: ListEngine<Item>
 
     @State private var showConfirmation = false
 
@@ -20,7 +19,7 @@ struct DeleteSelectedButtonView: View {
             showConfirmation = true
         }
         .tint(Color.label)
-        .disabled(disabled)
+        .disabled(listEngine.selectedItemIds.isEmpty)
         .withConfirmation(confirmationConfig, isPresented: $showConfirmation)
     }
 }

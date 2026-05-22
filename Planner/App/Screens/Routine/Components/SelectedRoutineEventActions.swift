@@ -8,78 +8,78 @@
 import SwiftData
 import SwiftUI
 
-struct SelectedRoutineEventActionsView: View {
+struct SelectedRoutineEventActionsView: ToolbarContent {
     @Binding var showTransferSheet: Bool
     let weekday: Weekday
     let namespace: Namespace.ID
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var routineManager: ListEngine<RoutineEvent>
+    @EnvironmentObject private var routineEngine: ListEngine<RoutineEvent>
     @EnvironmentObject private var calendarStore: CalendarStore
-    @EnvironmentObject private var PlannerSyncStore: PlannerSyncService
+    @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
     @State private var showDeleteConfirmation = false
 
-    var body: some View {
-        deleteSelectedButton
-        Spacer()
-        transferSelectedButton
-    }
-
-    // MARK: - View Builders
-
-    private var deleteSelectedButton: some View {
-        Button("Delete", systemImage: "trash") {
-            showDeleteConfirmation = true
-        }
-        .tint(Color.label)
-        .disabled(routineManager.selectedItemIds.isEmpty)
-        .withConfirmation(
-            bulkRemoveRoutineEventFromWeekdayConfig(
-                events: routineManager.selectedItems,
-                weekday: weekday,
-                remove: deleteSelectedEventsFromWeekday,
-                delete: deleteSelectedEventsEverywhere
-            ),
-            isPresented: $showDeleteConfirmation
+    private var deleteConfirmation: ConfirmationConfig {
+        bulkRemoveRoutineEventFromWeekdayConfig(
+            events: routineEngine.selectedItems,
+            weekday: weekday,
+            remove: deleteSelectedEventsFromWeekday,
+            delete: deleteSelectedEventsEverywhere
         )
     }
 
-    private var transferSelectedButton: some View {
-        Button(
-            "Transfer",
-            systemImage: "arrow.left.arrow.right"
-        ) {
-            showTransferSheet = true
+    // MARK: - Body
+
+    var body: some ToolbarContent {
+        ToolbarItem(placement: .bottomBar) {
+            DeleteSelectedButtonView<RoutineEvent>(
+                confirmationConfig: deleteConfirmation
+            )
         }
-        .tint(Color.label)
-        .disabled(routineManager.selectedItemIds.isEmpty)
-        .matchedTransitionSource(
-            id: ListIds.TRANSFER_BUTTON,
-            in: namespace
-        )
+
+        ToolbarSpacer(placement: .bottomBar)
+
+        ToolbarItem(placement: .bottomBar) {
+            TransferSelectedButtonView<RoutineEvent>(
+                showTransferSheet: $showTransferSheet,
+                namespace: namespace
+            )
+        }
     }
 
     // MARK: - Functions
 
     private func deleteSelectedEventsFromWeekday() {
-        modelContext.deleteRoutineEvents(
-            routineManager.selectedItems,
-            from: weekday,
-            ekEventStore: calendarStore.ekEventStore,
-            PlannerSyncStore: PlannerSyncStore
-        )
+        let selections = routineEngine.selectedItems
 
-        DispatchQueue.main.async(execute: routineManager.toggleSelectMode)
+        routineEngine.clearSelections()
+
+        DispatchQueue.main.async {
+            modelContext.deleteRoutineEvents(
+                selections,
+                from: weekday,
+                ekEventStore: calendarStore.ekEventStore,
+                PlannerSyncStore: plannerSyncService
+            )
+
+            DispatchQueue.main.async(execute: routineEngine.toggleSelectMode)
+        }
     }
 
     private func deleteSelectedEventsEverywhere() {
-        modelContext.deleteRoutineEvents(
-            routineManager.selectedItems,
-            ekEventStore: calendarStore.ekEventStore,
-            PlannerSyncStore: PlannerSyncStore
-        )
+        let selections = routineEngine.selectedItems
 
-        DispatchQueue.main.async(execute: routineManager.toggleSelectMode)
+        routineEngine.clearSelections()
+
+        DispatchQueue.main.async {
+            modelContext.deleteRoutineEvents(
+                selections,
+                ekEventStore: calendarStore.ekEventStore,
+                PlannerSyncStore: plannerSyncService
+            )
+
+            DispatchQueue.main.async(execute: routineEngine.toggleSelectMode)
+        }
     }
 }

@@ -28,9 +28,8 @@ struct SelectedEventActionsView: ToolbarContent {
 
     var body: some ToolbarContent {
         ToolbarItem(placement: .bottomBar) {
-            DeleteSelectedButtonView(
-                confirmationConfig: deleteConfig,
-                disabled: plannerEngine.selectedItemIds.isEmpty
+            DeleteSelectedButtonView<PlannerEvent>(
+                confirmationConfig: deleteConfig
             )
         }
 
