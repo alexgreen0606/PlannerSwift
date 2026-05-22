@@ -11,20 +11,20 @@ import SwiftUI
 struct ChecklistRootView: View {
     private let checklist: ChecklistItem
     private let rootFolder: ChecklistItem
-    private let sortedUncheckedItems: [ChecklistItem]
+    private let sortedPendingItems: [ChecklistItem]
     private let sortedCheckedItems: [ChecklistItem]
     private let openItem: (ChecklistItem, ChecklistItem) -> Void
 
     init(
         checklist: ChecklistItem,
         rootFolder: ChecklistItem,
-        sortedUncheckedItems: [ChecklistItem],
+        sortedPendingItems: [ChecklistItem],
         sortedCheckedItems: [ChecklistItem],
         openItem: @escaping (ChecklistItem, ChecklistItem) -> Void
     ) {
         self.checklist = checklist
         self.rootFolder = rootFolder
-        self.sortedUncheckedItems = sortedUncheckedItems
+        self.sortedPendingItems = sortedPendingItems
         self.sortedCheckedItems = sortedCheckedItems
         self.openItem = openItem
 
@@ -48,19 +48,14 @@ struct ChecklistRootView: View {
     @Namespace private var namespace
 
     private var allItems: [ChecklistItem] {
-        sortedUncheckedItems + sortedCheckedItems
+        sortedPendingItems + sortedCheckedItems
     }
 
     private var visibleItems: [ChecklistItem] {
         if checklist.showCompleted {
             return allItems
         }
-        return sortedUncheckedItems
-    }
-
-    private var isAllSelected: Bool {
-        !visibleItems.isEmpty
-            && listEngine.selectedItemIds.count == visibleItems.count
+        return sortedPendingItems
     }
 
     // MARK: - Body
@@ -73,7 +68,7 @@ struct ChecklistRootView: View {
                         ChecklistItem, EmptyView, EmptyView, EmptyView,
                         EmptyView
                     >(
-                        uncheckedItems: sortedUncheckedItems,
+                        uncheckedItems: sortedPendingItems,
                         checkedItems: sortedCheckedItems,
                         showChecked: checklist.showCompleted,
                         checkedHeader: "Completed items",
@@ -127,38 +122,15 @@ struct ChecklistRootView: View {
 
     // MARK: - Toolbars
 
-    // MARK: Top Leading Toolbar
-
     private var topLeadingToolbar: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
             if !listEngine.isSelectMode {
-                dismissButton
+                BackButtonView()
             } else {
-                cancelSelectModeButton
+                CancelButtonView(cancel: listEngine.toggleSelectMode)
             }
         }
     }
-
-    private var dismissButton: some View {
-        Button(
-            "Back",
-            systemImage: "chevron.left"
-        ) {
-            dismiss()
-        }
-        .tint(Color.label)
-    }
-
-    private var cancelSelectModeButton: some View {
-        Button(
-            "Cancel Select Mode",
-            systemImage: "xmark",
-            action: listEngine.toggleSelectMode
-        )
-        .tint(Color.label)
-    }
-
-    // MARK: Top Trailing Toolbar
 
     @ToolbarContentBuilder
     private var topTrailingToolbar: some ToolbarContent {
@@ -171,23 +143,10 @@ struct ChecklistRootView: View {
                     visibleItems: visibleItems
                 )
             } else {
-                toggleSelectAllButton
+                SelectAllToggleView(visibleItems: visibleItems)
             }
         }
     }
-
-    private var toggleSelectAllButton: some View {
-        Button {
-            listEngine.toggleSelectAll(visibleItems: visibleItems)
-        } label: {
-            Text(isAllSelected ? "Deselect All" : "Select All")
-                .fontWeight(.semibold)
-        }
-        .animateSynchronousAction(from: isAllSelected)
-        .disabled(visibleItems.isEmpty)
-    }
-
-    // MARK: Bottom Trailing Toolbar Components
 
     @ToolbarContentBuilder
     private func bottomToolbar(
@@ -196,7 +155,9 @@ struct ChecklistRootView: View {
         if !listEngine.isSelectMode {
             ToolbarSpacer(placement: .bottomBar)
             ToolbarItem(placement: .bottomBar) {
-                createLowerItemButton(scrollProxy: scrollProxy)
+                CreateLowerItemButtonView(tint: checklist.color.swiftUIColor) {
+                    createLowerItem(scrollProxy: scrollProxy)
+                }
             }
         } else {
             SelectedChecklistItemActionsView(
@@ -208,48 +169,28 @@ struct ChecklistRootView: View {
         }
     }
 
-    private func createLowerItemButton(scrollProxy: ScrollViewProxy)
-        -> some View
-    {
-        Button("Create Item", systemImage: "plus") {
-            createLowerItem(scrollProxy: scrollProxy)
-        }
-        .buttonStyle(.glassProminent)
-        .tint(checklist.color.swiftUIColor)
-    }
-
     // MARK: - Functions
 
     private func createItem(at index: Int) {
         listEngine.pendingFocusId = modelContext.createChecklistItem(
             at: index,
             // TODO: cant 2 items have the same sort ID (one unchecked, one checked) DESIGN FLAW
-            in: sortedUncheckedItems,
+            in: sortedPendingItems,
             parent: checklist
         )
     }
 
     private func moveItem(from: Int, to: Int) {
         modelContext.moveChecklistItem(
-            in: sortedUncheckedItems,
+            in: sortedPendingItems,
             from: from,
             to: to
         )
     }
 
     private func createLowerItem(scrollProxy: ScrollViewProxy) {
-        createItem(at: sortedUncheckedItems.count)
-        scrollToBottom(scrollProxy: scrollProxy)
+        createItem(at: sortedPendingItems.count)
+        scrollProxy.scrollToListBottom()
     }
-
-    private func scrollToBottom(scrollProxy: ScrollViewProxy) {
-        DispatchQueue.main.async {
-            withAnimation {
-                scrollProxy.scrollTo(
-                    ListIds.UNCHECKED_ITEMS,
-                    anchor: .bottom
-                )
-            }
-        }
-    }
+    
 }

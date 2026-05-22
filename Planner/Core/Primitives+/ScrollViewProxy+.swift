@@ -8,22 +8,17 @@
 import SwiftUI
 
 extension ScrollViewProxy {
-//    func scrollToNewItem<Item: ListItem>(oldItems: [Item], newItems: [Item]) {
-//        guard
-//            let newItem = Set(newItems).subtracting(
-//                Set(oldItems)
-//            ).first
-//        else { return }
-//
-//        DispatchQueue.main.async {
-//            withAnimation {
-//                scrollTo(
-//                    newItem.stableId,
-//                    anchor: .bottom
-//                )
-//            }
-//        }
-//    }
+    func scrollToListBottom() {
+        DispatchQueue.main.async {
+            withAnimation {
+                scrollTo(
+                    ListIds.UNCHECKED_ITEMS,
+                    anchor: .bottom
+                )
+            }
+        }
+    }
+
     func scrollToNewItem<C: Collection, ID: Hashable>(
         oldItems: C,
         newItems: C,

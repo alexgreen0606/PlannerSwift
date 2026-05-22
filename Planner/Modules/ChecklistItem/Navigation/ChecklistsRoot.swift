@@ -70,11 +70,11 @@ struct ChecklistsRootView: View {
                     stableId: checklistId.id,
                     listEngine: checklistsManager,
                     openItem: openItem
-                ) { checklist, sortedUncheckedItems, sortedCheckedItems in
+                ) { checklist, sortedPendingItems, sortedCheckedItems in
                     ChecklistRootView(
                         checklist: checklist,
                         rootFolder: rootFolder,
-                        sortedUncheckedItems: sortedUncheckedItems,
+                        sortedPendingItems: sortedPendingItems,
                         sortedCheckedItems: sortedCheckedItems,
                         openItem: openItem
                     )

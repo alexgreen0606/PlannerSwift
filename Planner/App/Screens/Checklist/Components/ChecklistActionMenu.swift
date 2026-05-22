@@ -21,7 +21,6 @@ struct ChecklistActionMenu: View {
     @State private var showDeleteCompletedConfirmation = false
     @State private var showDeleteChecklistConfirmation = false
 
-    // TODO: is this wasteful? Should I compute this in the function?
     private var completedItems: [ChecklistItem] {
         items.filter(\.isCompleted)
     }
@@ -41,10 +40,6 @@ struct ChecklistActionMenu: View {
         )
     }
 
-    private var hasVisibleItem: Bool {
-        !visibleItems.isEmpty
-    }
-
     private var completedItemExists: Bool {
         !completedItems.isEmpty
     }
@@ -60,7 +55,7 @@ struct ChecklistActionMenu: View {
                 toggle: { checklist.showCompleted.toggle() }
             )
 
-            SelectItemsButtonView<ChecklistItem>(hasVisibleItem: hasVisibleItem)
+            SelectItemsButtonView<ChecklistItem>(hasVisibleItem: !visibleItems.isEmpty)
 
             deleteActionMenu
         }
@@ -80,6 +75,7 @@ struct ChecklistActionMenu: View {
 
     // MARK: - View Builders
 
+    // MARK: Edit Checklist Button
     private var editChecklistButton: some View {
         Button {
             showEditSheet = true

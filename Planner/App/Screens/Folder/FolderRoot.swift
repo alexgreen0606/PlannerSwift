@@ -15,8 +15,6 @@ struct FolderRootView: View {
     let namespace: Namespace.ID
     let openItem: (ChecklistItem, ChecklistItem) -> Void
 
-    @Environment(\.dismiss) private var dismiss
-
     @StateObject private var itemSelectEngine = ListEngine<ChecklistItem>()
 
     @State private var showEditSheet = false
@@ -25,11 +23,6 @@ struct FolderRootView: View {
 
     /// Considers the selected items and whether any other folder exist to house them.
     @State private var canTransferSelectedItems: Bool = false
-
-    var isAllSelected: Bool {
-        !sortedItems.isEmpty
-            && itemSelectEngine.selectedItemIds.count == sortedItems.count
-    }
 
     // MARK: - Body
 
@@ -99,58 +92,24 @@ struct FolderRootView: View {
 
     // MARK: - Toolbars
 
-    // MARK: Top Leading Toolbar
-
     @ToolbarContentBuilder
     private var topLeadingToolbar: some ToolbarContent {
         if !itemSelectEngine.isSelectMode {
             if folder.parent != nil {
                 ToolbarItemGroup(placement: .topBarLeading) {
-                    dismissButton
+                    BackButtonView()
                 }
             }
         } else {
             ToolbarItem(placement: .topBarLeading) {
-                cancelSelectModeButton
+                CancelButtonView(cancel: itemSelectEngine.toggleSelectMode)
             }
             ToolbarSpacer(.fixed, placement: .topBarLeading)
             ToolbarItem(placement: .topBarLeading) {
-                toggleSelectAllButton
+                SelectAllToggleView(visibleItems: sortedItems)
             }
         }
     }
-
-    private var dismissButton: some View {
-        Button(
-            "Back",
-            systemImage: "chevron.left"
-        ) {
-            dismiss()
-        }
-        .tint(Color.label)
-    }
-
-    private var cancelSelectModeButton: some View {
-        Button(
-            "Cancel Select Mode",
-            systemImage: "xmark",
-            action: itemSelectEngine.toggleSelectMode
-        )
-        .tint(Color.label)
-    }
-
-    private var toggleSelectAllButton: some View {
-        Button {
-            itemSelectEngine.toggleSelectAll(visibleItems: sortedItems)
-        } label: {
-            Text(isAllSelected ? "Deselect All" : "Select All")
-                .fontWeight(.semibold)
-        }
-        .animateSynchronousAction(from: isAllSelected)
-        .disabled(sortedItems.isEmpty)
-    }
-
-    // MARK: Top Trailing Toolbar
 
     @ToolbarContentBuilder
     private var topTrailingToolbar: some ToolbarContent {

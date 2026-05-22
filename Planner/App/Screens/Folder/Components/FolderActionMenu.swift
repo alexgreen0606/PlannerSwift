@@ -15,7 +15,6 @@ struct FolderActionMenuView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var itemSelectEngine: ListEngine<ChecklistItem>
 
     @State private var showDeleteConfirmation = false
 
@@ -31,7 +30,7 @@ struct FolderActionMenuView: View {
     var body: some View {
         Menu("Folder Action Menu", systemImage: "ellipsis") {
             editFolderButton
-            selectItemsButton
+            SelectItemsButtonView(hasVisibleItem: !items.isEmpty)
             deleteFolderButton
         }
 
@@ -52,15 +51,6 @@ struct FolderActionMenuView: View {
         }
     }
 
-    private var selectItemsButton: some View {
-        Button {
-            itemSelectEngine.toggleSelectMode()
-        } label: {
-            Label("Select Items", systemImage: "checkmark.circle")
-        }
-        .disabled(items.isEmpty)
-    }
-
     @ViewBuilder
     private var deleteFolderButton: some View {
         if folder.parent != nil {
@@ -77,7 +67,7 @@ struct FolderActionMenuView: View {
     private func deleteFolder() {
         DispatchQueue.main.async {
             dismiss()
-            
+
             DispatchQueue.main.async {
                 modelContext.safeDelete(folder)
             }

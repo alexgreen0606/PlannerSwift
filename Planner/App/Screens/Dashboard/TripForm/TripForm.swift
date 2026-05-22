@@ -147,10 +147,9 @@ struct TripFormView: View {
     @ToolbarContentBuilder
     private var cancelButton: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            Button("Cancel", systemImage: "xmark") {
+            CancelButtonView() {
                 dismiss()
             }
-            .tint(Color.label)
         }
     }
 
