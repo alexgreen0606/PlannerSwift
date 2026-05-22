@@ -380,7 +380,7 @@
               }
             }
           ],
-          "glass" : true,
+          "glass" : false,
           "image-name" : "Subtract.png",
           "name" : "Subtract",
           "position" : {
