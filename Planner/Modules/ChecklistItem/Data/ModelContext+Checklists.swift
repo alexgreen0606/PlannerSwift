@@ -14,10 +14,17 @@ extension ModelContext {
     // MARK: - ENSURE
 
     @MainActor
-    func ensureRootFolder(
-        folders: [ChecklistItem]
-    ) {
-        if folders.first != nil {
+    func ensureRootFolder() {
+        let existingRoots =
+            (try? fetch(
+                FetchDescriptor<ChecklistItem>(
+                    predicate: #Predicate<ChecklistItem> { item in
+                        item.parent == nil
+                    }
+                )
+            )) ?? []
+
+        if existingRoots.first != nil {
             return
         }
 

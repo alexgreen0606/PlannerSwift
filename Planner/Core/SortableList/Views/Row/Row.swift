@@ -112,7 +112,7 @@ struct RowView<
 
         if let namespace {
             row
-                .matchedTransitionSource(id: "\(item.stableId)", in: namespace)
+                .matchedTransitionSource(id: item.stableId.uuidString, in: namespace)
         } else {
             row
         }

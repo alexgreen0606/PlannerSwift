@@ -29,8 +29,8 @@ struct FolderActionMenuView: View {
 
     var body: some View {
         Menu("Folder Action Menu", systemImage: "ellipsis") {
-            editFolderButton
             SelectItemsButtonView(hasVisibleItem: !items.isEmpty)
+            editFolderButton
             deleteFolderButton
         }
 

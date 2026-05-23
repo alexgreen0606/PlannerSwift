@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-// Clean
-
 struct ActionButtonView: View {
     let label: String
     let systemImage: String

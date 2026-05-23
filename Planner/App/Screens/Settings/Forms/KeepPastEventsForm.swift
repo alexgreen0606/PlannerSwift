@@ -7,15 +7,15 @@
 
 import SwiftUI
 
-// Clean
-
 struct KeepPastEventsFormView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
-        .oneMonth
+            .oneMonth
+    
+    // MARK: - Body
 
     var body: some View {
         List {
@@ -37,20 +37,17 @@ struct KeepPastEventsFormView: View {
 
     // MARK: - View Builders
 
-    @ViewBuilder
     private func row(for pastPlansDuration: KeepPastEventsDuration)
         -> some View
     {
-        let isActive = pastPlansDuration == keepPastEventsDuration
         HStack {
             Text(pastPlansDuration.label)
+                .frame(maxWidth: .infinity)
 
-            Spacer()
-
-            if isActive {
+            if pastPlansDuration == keepPastEventsDuration {
                 Image(systemName: "checkmark")
-                    .foregroundStyle(accentColor.color)
                     .fontWeight(.semibold)
+                    .foregroundStyle(accentColor.color)
             }
         }
         .contentShape(Rectangle())

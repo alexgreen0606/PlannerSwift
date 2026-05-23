@@ -9,7 +9,7 @@ import SwiftData
 import SwiftUI
 
 struct RoutineSectionView: View {
-    @Binding var routineCoverContext: RoutineCoverContext?
+    @Binding var routineCoverContext: Weekday?
     let namespace: Namespace.ID
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -36,9 +36,7 @@ struct RoutineSectionView: View {
                         .matchedTransitionSource(id: weekday, in: namespace)
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            routineCoverContext = RoutineCoverContext(
-                                weekday: weekday
-                            )
+                            routineCoverContext = weekday
                         }
                 }
             }

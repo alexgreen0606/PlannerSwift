@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct TripDayPreviewCardView: View {
+    let trip: Trip
     let datestamp: String
     let index: Int
-    let trip: Trip
     let settings: PlannerSettings
     let namespace: Namespace.ID
 

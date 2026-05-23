@@ -43,6 +43,7 @@ struct SelectedRoutineEventActionsView: ToolbarContent {
         ToolbarItem(placement: .bottomBar) {
             TransferSelectedButtonView<RoutineEvent>(
                 showTransferSheet: $showTransferSheet,
+                systemImage: "plus.square.on.square",
                 namespace: namespace
             )
         }

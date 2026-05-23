@@ -85,9 +85,9 @@ struct ChecklistsRootView: View {
                         in: namespace
                     )
                 )
-                .interactiveDismissDisabled(true)
                 .id(checklistId.id)
                 .environmentObject(checklistsManager)
+                .interactiveDismissDisabled(true)
             }
         }
     }

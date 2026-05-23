@@ -20,6 +20,7 @@ struct EmptyLabelView: View {
 
     var body: some View {
         Text(text)
+            .multilineTextAlignment(.center)
             .font(.system(size: 16 * scale, weight: .heavy, design: .rounded))
             .foregroundStyle(Color(uiColor: .tertiaryLabel))
     }

@@ -1,5 +1,5 @@
 //
-//  TabView.swift
+//  RootTabs.swift
 //  Planner
 //
 //  Created by Alex Green on 12/1/25.
@@ -15,46 +15,46 @@ import SwiftUI
 
 struct RootTabView: View {
     init() {
-        // Date picker 5 minute intervals.
+        // Date picker -> 5 minute intervals.
         UIDatePicker.appearance().minuteInterval = 5
 
-        // Navigation titles rounded fonts.
+        // Navigation titles -> rounded fonts.
         if var descriptor =
             UIFontDescriptor
-                .preferredFontDescriptor(withTextStyle: .largeTitle)
-                .withDesign(.rounded)
+            .preferredFontDescriptor(withTextStyle: .largeTitle)
+            .withDesign(.rounded)
         {
             descriptor = descriptor.addingAttributes([
                 .traits: [
-                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy,
-                ],
+                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy
+                ]
             ])
 
             UINavigationBar.appearance().largeTitleTextAttributes = [
                 .font: UIFont(
                     descriptor: descriptor,
                     size: descriptor.pointSize
-                ),
+                )
             ]
         }
 
-        // Navigation subtitles rounded fonts.
+        // Navigation subtitles -> rounded fonts.
         if var descriptor =
             UIFontDescriptor
-                .preferredFontDescriptor(withTextStyle: .headline)
-                .withDesign(.rounded)
+            .preferredFontDescriptor(withTextStyle: .headline)
+            .withDesign(.rounded)
         {
             descriptor = descriptor.addingAttributes([
                 .traits: [
-                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy,
-                ],
+                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy
+                ]
             ])
 
             UINavigationBar.appearance().titleTextAttributes = [
                 .font: UIFont(
                     descriptor: descriptor,
                     size: descriptor.pointSize
-                ),
+                )
             ]
         }
     }
@@ -68,7 +68,7 @@ struct RootTabView: View {
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
-        .oneMonth
+            .oneMonth
 
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var modelContext
@@ -78,25 +78,24 @@ struct RootTabView: View {
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var weatherStore: WeatherStore
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
-    @EnvironmentObject private var plannerSyncStore: PlannerSyncService
+    @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
     @Query private var plannerSettingsList: [PlannerSettings]
-    @Query private var checklistItems: [ChecklistItem]
-    @Query private var planners: [Planner]
-
-    @Namespace private var namespace
 
     @StateObject private var plannerSearchStore = PlannerSearchStore()
+
+    @Namespace private var namespace
 
     private var settings: PlannerSettings? {
         plannerSettingsList.first
     }
 
+    // MARK: - Body
+
     var body: some View {
-        ZStack {
+        Group {
             if let settings {
                 // MARK: Standard App Navigation
-
                 TabView {
                     Tab(
                         "",
@@ -123,7 +122,7 @@ struct RootTabView: View {
                             settings: settings
                         ) {
                             context in
-                            PlannerSearchRootView(
+                            SearchRootView(
                                 todayDay: context.plannerDay,
                                 settings: settings,
                                 namespace: namespace
@@ -136,8 +135,7 @@ struct RootTabView: View {
                 .accentColor(accentColor.color)
                 .opacity(plannerCoverStore.isPresentingDefault ? 0 : 1)
 
-                // MARK: Default App Landing. Today Planner Day.
-
+                // MARK: Default App Landing. Today Planner.
                 PlannerLoaderView(
                     datestamp: plannerCoverStore.todaystampAtInit,
                     settings: settings
@@ -156,11 +154,10 @@ struct RootTabView: View {
         }
         .task {
             initializeAppData()
-            initializePlannerSearchResults()
+            initializeSearchResults()
         }
 
-        // MARK: Planner Day Cover
-
+        // MARK: Planner Cover
         .fullScreenCover(item: $plannerCoverStore.context) { context in
             if let settings {
                 PlannerLoaderView(
@@ -175,19 +172,19 @@ struct RootTabView: View {
                         calendarDayData: eventContext.calendarDayData,
                         settings: settings
                     )
+                    .id(context.datestamp)
                 }
-                .id(context.datestamp)
-                .interactiveDismissDisabled(true)
                 .navigationTransition(
                     .zoom(
                         sourceID: context.id,
                         in: namespace
                     )
                 )
+                .interactiveDismissDisabled(true)
             }
         }
 
-        // Refresh external data when the app focuses.
+        // MARK: Refresh external data when the app focuses.
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 calendarStore.refreshCalendarsAndAccess()
@@ -195,11 +192,11 @@ struct RootTabView: View {
                     accentColor: accentColor,
                     systemColorScheme: systemColorScheme
                 )
-                plannerSyncStore.rebuildCalendarData()
+                plannerSyncService.rebuildCalendarData()
             }
         }
 
-        // Refresh weather data when the device's location changes.
+        // MARK: Refresh weather data when the device's location changes.
         .onChange(
             of: locationService.deviceClLocation?.coordinate.key
         ) {
@@ -211,63 +208,61 @@ struct RootTabView: View {
 
     // MARK: - Functions
 
-    private func initializePlannerSearchResults() {
-        if let settings = plannerSettingsList.first {
-            let todayPlanner = modelContext.getPlanner(
-                for: todaystampService.todaystamp
-            )
+    // TODO: find a way to initialize the search query in init.
+    private func initializeSearchResults() {
+        guard let settings else { return }
 
-            guard
-                let todayStartOfDay = todayPlanner.datestamp.startOfDay(
-                    in: todayPlanner.region(settings: settings)
-                )
-            else {
-                return
-            }
+        let todayPlanner = modelContext.getPlanner(
+            for: todaystampService.todaystamp
+        )
 
-            plannerSearchStore.search(
-                with: PlannerSearchQuery(
-                    text: "",
-                    filteredCalendarIds: [],
-                    filterPast: false,
-                    todayStartOfDay: todayStartOfDay,
-                    fuse: Fuse()
-                ),
-                modelContainer: modelContext.container,
-                settings: settings,
-                ekEventStore: calendarStore.ekEventStore
+        guard
+            let todayStartOfDay = todayPlanner.datestamp.startOfDay(
+                in: todayPlanner.region(settings: settings)
             )
+        else {
+            return
         }
+
+        plannerSearchStore.search(
+            with: PlannerSearchQuery(
+                text: "",
+                calendarIds: [],
+                past: false,
+                todayStartOfDay: todayStartOfDay,
+                fuse: Fuse()
+            ),
+            modelContainer: modelContext.container,
+            settings: settings,
+            ekEventStore: calendarStore.ekEventStore
+        )
     }
 
+    /// Runs each time the app opens.
     private func initializeAppData() {
+        // Update the app icon to match the theme settings.
         syncAppIconWithSettings(
             accentColor: accentColor,
             systemColorScheme: systemColorScheme
         )
 
+        // Ensure needed data exists in storage.
         modelContext.ensurePlannerSettings(
             settings: plannerSettingsList
         )
+        modelContext.ensureRootFolder()
 
-        modelContext.ensureRootFolder(folders: checklistItems)
-
+        // Request access for external data.
         calendarStore.refreshCalendarsAndAccess()
-
-        cleanseStorage()
-
         Task {
-            do {
-                try await contactsStore.requestAccess(for: .contacts)
-            } catch {
-                assertionFailure(
-                    "ERROR TabView.initializeAppData: \(error)"
-                )
-            }
+            try? await contactsStore.requestAccess(for: .contacts)
         }
+
+        // Clean stale storage data.
+        cleanseStorage()
     }
 
-    /// Runs the first time the app opens each day.
+    /// Runs once a day (if app is opened).
     private func cleanseStorage() {
         guard lastCleansedDatestamp != todaystampService.todaystamp else {
             return
@@ -281,6 +276,6 @@ struct RootTabView: View {
             )
         }
 
-        modelContext.safeSave("TabView.cleanseStorage")
+        modelContext.safeSave("RootTabs.cleanseStorage")
     }
 }

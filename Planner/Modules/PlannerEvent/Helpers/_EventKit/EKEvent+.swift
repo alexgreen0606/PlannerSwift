@@ -80,7 +80,7 @@ extension EKEvent {
         }
 
         if calendar.isHidden(
-            filteredCalendarIds: query.filteredCalendarIds
+            filteredCalendarIds: query.calendarIds
         ) {
             // Calendar is hidden. Exclude.
             return nil

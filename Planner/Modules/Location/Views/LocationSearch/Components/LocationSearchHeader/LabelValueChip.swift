@@ -24,6 +24,7 @@ struct LabelValueChipView: View {
             VStack(alignment: .leading) {
                 Text(label)
                     .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(Color.label)
 
                 if let value {
                     Text(value)

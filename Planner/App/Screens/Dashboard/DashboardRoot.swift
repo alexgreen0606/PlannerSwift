@@ -31,7 +31,7 @@ struct DashboardRootView: View {
     @State private var showNewEventSheet = false
 
     @State private var showNewRoutineEventSheet = false
-    @State private var routineCoverContext: RoutineCoverContext? = nil
+    @State private var routineCoverContext: Weekday? = nil
 
     @State private var tripSheetContext: TripSheetContext? = nil
     @State private var expandedTripIds: Set<PersistentIdentifier> = []
@@ -79,71 +79,6 @@ struct DashboardRootView: View {
                         createMenu
                     }
 
-                    // MARK: New Event Form
-                    .sheet(isPresented: $showNewEventSheet) {
-                        EventFormView(
-                            plannerEvent: nil,
-                            calendarEvent: nil,
-                            settings: settings
-                        )
-                    }
-
-                    // MARK: New Routine Event Form
-                    .sheet(isPresented: $showNewRoutineEventSheet) {
-                        RoutineEventFormView(
-                            openRoutine: { weekday in
-                                routineCoverContext = RoutineCoverContext(
-                                    weekday: weekday
-                                )
-                            }
-                        )
-                    }
-
-                    // MARK: Trip Form
-                    .sheet(item: $tripSheetContext) { context in
-                        let form = TripFormView(
-                            sourceTrip: context.trip,
-                            settings: settings,
-                            onSave: { trip in
-                                expandedTripIds.insert(trip.id)
-                            }
-                        )
-
-                        if let trip = context.trip {
-                            form.navigationTransition(
-                                .zoom(
-                                    sourceID: trip.transitionId,
-                                    in: namespace
-                                )
-                            )
-                        } else {
-                            form
-                        }
-                    }
-
-                    // MARK: Routine Root
-                    .fullScreenCover(
-                        item: $routineCoverContext,
-                        onDismiss: plannerSyncService.beginRebuild
-                    ) { context in
-                        RoutineEventLoaderView(weekday: context.weekday) {
-                            events in
-                            RoutineRootView(
-                                routineCoverContext: $routineCoverContext,
-                                weekday: context.weekday,
-                                sortedRoutineEvents: events
-                            )
-                            .id(context.weekday)
-                        }
-                        .interactiveDismissDisabled(true)
-                        .navigationTransition(
-                            .zoom(
-                                sourceID: context.weekday,
-                                in: namespace
-                            )
-                        )
-                    }
-
                     // MARK: Scroll to expanded trips.
                     .onChange(of: expandedTripIds) { oldIds, newIds in
                         scrollProxy.scrollToNewItem(
@@ -153,6 +88,69 @@ struct DashboardRootView: View {
                         )
                     }
                 }
+            }
+
+            // MARK: New Event Form
+            .sheet(isPresented: $showNewEventSheet) {
+                EventFormView(
+                    plannerEvent: nil,
+                    calendarEvent: nil,
+                    settings: settings
+                )
+            }
+
+            // MARK: New Routine Event Form
+            .sheet(isPresented: $showNewRoutineEventSheet) {
+                RoutineEventFormView(
+                    openRoutine: { weekday in
+                        routineCoverContext = weekday
+                    }
+                )
+            }
+
+            // MARK: Trip Form
+            .sheet(item: $tripSheetContext) { context in
+                let form = TripFormView(
+                    sourceTrip: context.trip,
+                    settings: settings,
+                    onSave: { trip in
+                        expandedTripIds.insert(trip.id)
+                    }
+                )
+
+                if let trip = context.trip {
+                    form.navigationTransition(
+                        .zoom(
+                            sourceID: trip.transitionId,
+                            in: namespace
+                        )
+                    )
+                } else {
+                    form
+                }
+            }
+
+            // MARK: Routine Root
+            .fullScreenCover(
+                item: $routineCoverContext,
+                onDismiss: plannerSyncService.beginRebuild
+            ) { weekday in
+                RoutineEventLoaderView(weekday: weekday) {
+                    events in
+                    RoutineRootView(
+                        routineCoverContext: $routineCoverContext,
+                        weekday: weekday,
+                        sortedRoutineEvents: events
+                    )
+                    .id(weekday)
+                }
+                .navigationTransition(
+                    .zoom(
+                        sourceID: weekday,
+                        in: namespace
+                    )
+                )
+                .interactiveDismissDisabled(true)
             }
         }
     }

@@ -7,14 +7,15 @@
 
 import SwiftUI
 
-// Clean
-
 struct ToggleTransitionFormView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @AppStorage("toggleTransitionDuration") private var toggleTransitionDuration: ToggleTransitionDuration =
-        .threeSeconds
+    @AppStorage("toggleTransitionDuration") private
+        var toggleTransitionDuration: ToggleTransitionDuration =
+            .threeSeconds
+
+    // MARK: - Body
 
     var body: some View {
         List {
@@ -36,20 +37,17 @@ struct ToggleTransitionFormView: View {
 
     // MARK: - View Builders
 
-    @ViewBuilder
     private func row(for transitionDuration: ToggleTransitionDuration)
         -> some View
     {
-        let isActive = transitionDuration == toggleTransitionDuration
         HStack {
             Text(transitionDuration.label)
+                .frame(maxWidth: .infinity)
 
-            Spacer()
-
-            if isActive {
+            if transitionDuration == toggleTransitionDuration {
                 Image(systemName: "checkmark")
-                    .foregroundStyle(accentColor.color)
                     .fontWeight(.semibold)
+                    .foregroundStyle(accentColor.color)
             }
         }
         .contentShape(Rectangle())

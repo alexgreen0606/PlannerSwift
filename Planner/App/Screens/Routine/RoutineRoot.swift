@@ -9,7 +9,7 @@ import SwiftData
 import SwiftUI
 
 struct RoutineRootView: View {
-    @Binding var routineCoverContext: RoutineCoverContext?
+    @Binding var routineCoverContext: Weekday?
     let weekday: Weekday
     let sortedRoutineEvents: [RoutineEvent]
 
@@ -19,22 +19,21 @@ struct RoutineRootView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
-    @EnvironmentObject private var PlannerSyncStore: PlannerSyncService
+    @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
-    @StateObject private var routineManager = ListEngine<RoutineEvent>()
+    @StateObject private var routineEngine = ListEngine<RoutineEvent>()
+
     @State private var showTransferSheet = false
-    @State private var invalidatedEventIds: Set<UUID> = []
     @State private var routineEventSheetContext: RoutineEventSheetContext? = nil
+
+    @State private var invalidatedEventIds: Set<UUID> = []
 
     @Namespace private var namespace
 
-    private var isAllSelected: Bool {
-        !sortedRoutineEvents.isEmpty
-            && routineManager.selectedItemIds.count == sortedRoutineEvents.count
-    }
+    // MARK: - Body
 
     var body: some View {
-        ToastRootView(listEngine: routineManager) {
+        ToastRootView(listEngine: routineEngine) {
             NavigationStack {
                 ScrollViewReader { scrollProxy in
                     SortableListView(
@@ -46,7 +45,7 @@ struct RoutineRootView: View {
                             modelContext.deleteRoutineEvent(
                                 event,
                                 ekEventStore: calendarStore.ekEventStore,
-                                PlannerSyncStore: PlannerSyncStore
+                                PlannerSyncStore: plannerSyncService
                             )
                         },
                         moveItem: moveEvent,
@@ -61,31 +60,37 @@ struct RoutineRootView: View {
                         leftAdornment: { _ in EmptyView() },
                         rightAdornment: timeAdornment,
                         bottomAdornment: weekdaysAdornment,
-                        handleTitleChange: { event in
-                            modelContext.handleRoutineEventTitleChange(event)
-                            if !invalidatedEventIds.contains(event.stableId) {
-                                // Mark this event's weekdays for refresh in the planner.
-                                PlannerSyncStore.invalidateRoutineDays(
-                                    event.weekdays
-                                )
-                                invalidatedEventIds.insert(event.stableId)
-                            }
-                        }
+                        handleTitleChange: handleTitleChange
                     )
                     .toolbar {
                         topLeadingToolbar
                         topTrailingToolbar
                         bottomToolbar(scrollProxy: scrollProxy)
                     }
-                    .animateSynchronousAction(from: routineManager.isSelectMode)
+                    .animateSynchronousAction(from: routineEngine.isSelectMode)
                     .navigationTitle("\(weekday.label) Routine")
                     .navigationSubtitle("Recurring Events")
                     .navigationBarTitleDisplayMode(.inline)
                 }
             }
 
-            // MARK: Routine Event Sheet
+            // MARK: Transfer Routine Events Form
+            .sheet(isPresented: $showTransferSheet) {
+                TransferRoutineEventsFormView(
+                    sourceDayOfWeek: weekday,
+                    sortedSourceRoutineEvents: sortedRoutineEvents,
+                    openRoutine: openRoutine
+                )
+                .navigationTransition(
+                    .zoom(
+                        sourceID: ListIds.TRANSFER_BUTTON,
+                        in: namespace
+                    )
+                )
+            }
+            .environmentObject(routineEngine)
 
+            // MARK: Routine Event Form
             .sheet(item: $routineEventSheetContext) { context in
                 RoutineEventFormView(
                     sourceRoutineEvent: context.routineEvent,
@@ -100,27 +105,9 @@ struct RoutineRootView: View {
                     )
                 )
                 .onDisappear {
-                    routineManager.protectedId = nil
+                    routineEngine.protectedId = nil
                 }
             }
-
-            // MARK: Transfer Event Sheet
-
-            .sheet(isPresented: $showTransferSheet) {
-                TransferRoutineEventsFormView(
-                    sourceDayOfWeek: weekday,
-                    sortedSourceRoutineEvents: sortedRoutineEvents,
-                    openRoutine: openRoutine
-                )
-                .navigationTransition(
-                    .zoom(
-                        sourceID: ListIds.TRANSFER_BUTTON,
-                        in: namespace
-                    )
-                )
-            }
-
-            .environmentObject(routineManager)
         }
     }
 
@@ -129,10 +116,10 @@ struct RoutineRootView: View {
     @ToolbarContentBuilder
     private var topLeadingToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
-            if !routineManager.isSelectMode {
+            if !routineEngine.isSelectMode {
                 BackButtonView()
             } else {
-                CancelButtonView(cancel: routineManager.toggleSelectMode)
+                CancelButtonView(cancel: routineEngine.toggleSelectMode)
             }
         }
     }
@@ -140,7 +127,7 @@ struct RoutineRootView: View {
     @ToolbarContentBuilder
     private var topTrailingToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
-            if !routineManager.isSelectMode {
+            if !routineEngine.isSelectMode {
                 RoutineActionMenuView(
                     weekday: weekday,
                     routineEvents: sortedRoutineEvents
@@ -155,7 +142,7 @@ struct RoutineRootView: View {
     private func bottomToolbar(scrollProxy: ScrollViewProxy)
         -> some ToolbarContent
     {
-        if !routineManager.isSelectMode {
+        if !routineEngine.isSelectMode {
             ToolbarSpacer(placement: .bottomBar)
             ToolbarItem(placement: .bottomBar) {
                 CreateLowerItemButtonView {
@@ -189,46 +176,6 @@ struct RoutineRootView: View {
 
     // MARK: - Functions
 
-    private func createEvent(at index: Int) {
-        routineManager.pendingFocusId = modelContext.createRoutineEvent(
-            at: index,
-            in: sortedRoutineEvents,
-            weekday: weekday
-        )
-    }
-
-    private func moveEvent(from: Int, to: Int) {
-        modelContext.moveRoutineEvent(
-            from: from,
-            to: to,
-            on: weekday,
-            sortedEvents: sortedRoutineEvents
-        )
-        PlannerSyncStore.invalidateRoutineDays([weekday])
-    }
-
-    private func openRoutineEventSheet(for event: RoutineEvent) {
-        if routineManager.isSelectMode {
-            routineManager.toggleItem(event)
-            return
-        }
-
-        routineManager.protectedId = event.stableId
-        routineManager.focusedId = nil
-        routineEventSheetContext = RoutineEventSheetContext(
-            routineEvent: event
-        )
-    }
-
-    private func createLowerEvent(scrollProxy: ScrollViewProxy) {
-        createEvent(at: sortedRoutineEvents.count)
-        scrollProxy.scrollToListBottom()
-    }
-
-    private func openRoutine(for weekday: Weekday) {
-        routineCoverContext = RoutineCoverContext(weekday: weekday)
-    }
-
     private func eventToggleConfig(_ event: RoutineEvent) -> ToggleConfig? {
         ToggleConfig(
             iconConfig: IconConfig(name: ""),
@@ -248,11 +195,62 @@ struct RoutineRootView: View {
                 }
             ),
             onClick: {
-                if routineManager.focusedId == event.stableId {
-                    routineManager.focusedId = nil
+                if routineEngine.focusedId == event.stableId {
+                    routineEngine.focusedId = nil
                 }
             }
         )
+    }
+
+    private func createEvent(at index: Int) {
+        routineEngine.pendingFocusId = modelContext.createRoutineEvent(
+            at: index,
+            in: sortedRoutineEvents,
+            weekday: weekday
+        )
+    }
+
+    private func moveEvent(from: Int, to: Int) {
+        modelContext.moveRoutineEvent(
+            from: from,
+            to: to,
+            on: weekday,
+            sortedEvents: sortedRoutineEvents
+        )
+        plannerSyncService.invalidateRoutineDays([weekday])
+    }
+
+    private func handleTitleChange(event: RoutineEvent) {
+        modelContext.handleRoutineEventTitleChange(event)
+        if !invalidatedEventIds.contains(event.stableId) {
+            // Mark this event's weekdays for refresh in the planner.
+            plannerSyncService.invalidateRoutineDays(
+                event.weekdays
+            )
+            invalidatedEventIds.insert(event.stableId)
+        }
+    }
+
+    private func openRoutineEventSheet(for event: RoutineEvent) {
+        if routineEngine.isSelectMode {
+            routineEngine.toggleItem(event)
+            return
+        }
+
+        routineEngine.protectedId = event.stableId
+        routineEngine.focusedId = nil
+        routineEventSheetContext = RoutineEventSheetContext(
+            routineEvent: event
+        )
+    }
+
+    private func createLowerEvent(scrollProxy: ScrollViewProxy) {
+        createEvent(at: sortedRoutineEvents.count)
+        scrollProxy.scrollToListBottom()
+    }
+
+    private func openRoutine(for weekday: Weekday) {
+        routineCoverContext = weekday
     }
 
     private func removeEventFromWeekday(_ event: RoutineEvent) {
@@ -260,7 +258,7 @@ struct RoutineRootView: View {
             [event],
             from: weekday,
             ekEventStore: calendarStore.ekEventStore,
-            PlannerSyncStore: PlannerSyncStore
+            PlannerSyncStore: plannerSyncService
         )
     }
 
@@ -268,7 +266,7 @@ struct RoutineRootView: View {
         modelContext.deleteRoutineEvent(
             event,
             ekEventStore: calendarStore.ekEventStore,
-            PlannerSyncStore: PlannerSyncStore
+            PlannerSyncStore: plannerSyncService
         )
     }
 }

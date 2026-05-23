@@ -44,7 +44,7 @@ struct SortableListView<
     init(
         uncheckedItems: [Item],
         checkedItems: [Item] = [],
-        rowId: @escaping (_ item: Item) -> String = { "\($0.stableId)" },
+        rowId: @escaping (_ item: Item) -> String = { $0.stableId.uuidString },
         showChecked: Bool = false,
         checkedHeader: String = "",
         emptyUncheckedLabel: String,

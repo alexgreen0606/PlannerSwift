@@ -14,7 +14,7 @@ import SwiftUI
 
 extension PlannerEvent {
     var transitionId: String {
-        "\(stableId)"
+        stableId.uuidString
     }
     
     var isRoutineVariant: Bool {
@@ -245,7 +245,7 @@ extension PlannerEvent {
 
         if let calendarEvent = calendarEvent,
            calendarEvent.calendar.isHidden(
-               filteredCalendarIds: query.filteredCalendarIds
+               filteredCalendarIds: query.calendarIds
            )
         {
             // Exclude. Calendar is hidden.

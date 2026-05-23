@@ -5,7 +5,6 @@
 //  Created by Alex Green on 1/4/26.
 //
 
-import Combine
 import EventKit
 import SwiftData
 import SwiftUI
@@ -22,18 +21,17 @@ struct SettingsRootView: View {
     @AppStorage("showListDividers") private var showListDividers: Bool =
         true
 
+    @AppStorage("toggleTransitionDuration") private
+        var toggleTransitionDuration: ToggleTransitionDuration =
+            .threeSeconds
+
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
-        .oneMonth
-
-    @AppStorage("toggleTransitionDuration") private var toggleTransitionDuration: ToggleTransitionDuration =
-        .threeSeconds
+            .oneMonth
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var systemColorScheme
     @EnvironmentObject private var calendarStore: CalendarStore
-    @EnvironmentObject private var locationService: LocationService
-    @EnvironmentObject private var plannerSyncStore: PlannerSyncService
 
     private var activeCalendarCount: String {
         String(
@@ -43,11 +41,13 @@ struct SettingsRootView: View {
         )
     }
 
+    // MARK: - Body
+
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    // App Theme
+                    // MARK: App Theme
                     Picker("Theme", selection: $appColorScheme) {
                         ForEach(AppColorScheme.allCases, id: \.rawValue) {
                             colorScheme in
@@ -56,20 +56,20 @@ struct SettingsRootView: View {
                         }
                     }
 
-                    // Accent Color
+                    // MARK: Accent Color
                     HStack {
                         Text(AccentColor.title)
-                        Spacer()
+                            .frame(maxWidth: .infinity)
                         IconSelectorView(
                             selectedIconConfig: IconConfig(
                                 name: "square.fill",
                                 primaryColor: accentColor.color
                             ),
-                            options: AccentColor.allCases.map {
-                                let isSelected = $0 == accentColor
-                                return IconConfig(
-                                    name: isSelected ? "circle.fill" : "circle",
-                                    primaryColor: $0.color
+                            options: AccentColor.allCases.map { colorConfig in
+                                IconConfig(
+                                    name: colorConfig == accentColor
+                                        ? "circle.fill" : "circle",
+                                    primaryColor: colorConfig.color
                                 )
                             },
                             numColumns: 3,
@@ -84,17 +84,17 @@ struct SettingsRootView: View {
                         )
                     }
 
-                    // List Separators
-                    Toggle("Show List Separators", isOn: $showListDividers)
+                    // MARK: List Dividers
+                    Toggle("Show List Dividers", isOn: $showListDividers)
                         .tint(accentColor.color)
 
-                    // Toggle Transition Duration
+                    // MARK: Toggle Transition Duration
                     NavigationLink {
                         ToggleTransitionFormView()
                     } label: {
                         HStack {
                             Text(ToggleTransitionDuration.title)
-                            Spacer()
+                                .frame(maxWidth: .infinity)
                             Text(
                                 toggleTransitionDuration.label
                             )
@@ -105,23 +105,23 @@ struct SettingsRootView: View {
                 }
 
                 Section("Planner") {
-                    // Home Location
+                    // MARK: Home Location
                     NavigationLink {
                         LocationSearchFormView(
-                            title: "Edit Home Location",
+                            title: "Home Location",
                             mode: .home,
                             settings: settings,
                             initialLocation: settings.homeLocation
-                        ) { location in
+                        ) {
                             modelContext.updateHomeLocation(
                                 in: settings,
-                                to: location
+                                to: $0
                             )
                         }
                     } label: {
                         HStack {
                             Text("Home Location")
-                            Spacer()
+                                .frame(maxWidth: .infinity)
                             Text(
                                 settings.homeLocation?.name
                                     ?? "Current Location"
@@ -131,13 +131,13 @@ struct SettingsRootView: View {
                         }
                     }
 
-                    // Calendars
+                    // MARK: Calendars
                     NavigationLink {
                         CalendarsFormView(settings: settings)
                     } label: {
                         HStack {
                             Text("Calendars")
-                            Spacer()
+                                .frame(maxWidth: .infinity)
                             Text(
                                 calendarStore.accessDenied != false
                                     ? "No Access" : activeCalendarCount
@@ -148,13 +148,13 @@ struct SettingsRootView: View {
                     }
                     .disabled(calendarStore.accessDenied != false)
 
-                    // Keep Past Events Duration
+                    // MARK: Keep Past Events Duration
                     NavigationLink {
                         KeepPastEventsFormView()
                     } label: {
                         HStack {
                             Text(KeepPastEventsDuration.title)
-                            Spacer()
+                                .frame(maxWidth: .infinity)
                             Text(
                                 keepPastEventsDuration.label
                             )
@@ -166,12 +166,16 @@ struct SettingsRootView: View {
             }
             .navigationTitle("Settings")
         }
+
+        // MARK: Update app icon when accent color changes.
         .onChange(of: accentColor) { _, _ in
             syncAppIconWithSettings(
                 accentColor: accentColor,
                 systemColorScheme: systemColorScheme
             )
         }
+
+        // MARK: Update app icon when color scheme changes.
         .onChange(of: systemColorScheme) { _, _ in
             syncAppIconWithSettings(
                 accentColor: accentColor,

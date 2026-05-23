@@ -1,5 +1,5 @@
 //
-//  PlannerList.swift
+//  PlannerContentsList.swift
 //  Planner
 //
 //  Created by Alex Green on 3/11/26.
@@ -11,7 +11,7 @@ import SwiftDate
 import SwiftUI
 import WeatherKit
 
-struct PlannerListView: View {
+struct PlannerContentsListView: View {
     @Binding var showLocationSheet: Bool
     @Binding var eventSheetContext: EventSheetContext?
     let planner: Planner
@@ -65,9 +65,9 @@ struct PlannerListView: View {
             namespace: namespace,
             toolbarSystemImageNames: ["rectangle.and.pencil.and.ellipsis"],
             onToolbarTap: handleToolbarTap,
-            leftAdornment: leadingAdornment,
-            rightAdornment: trailingAdornment,
-            bottomAdornment: bottomAdornment,
+            leftAdornment: calendarAdornment,
+            rightAdornment: timeAdornment,
+            bottomAdornment: locationAdornment,
             handleTitleChange: handleEventTitleChange
         )
     }
@@ -94,7 +94,7 @@ struct PlannerListView: View {
     }
 
     @ViewBuilder
-    private func leadingAdornment(event: PlannerEvent) -> some View {
+    private func calendarAdornment(event: PlannerEvent) -> some View {
         if let calendarEvent = event.calendarEvent,
             let calendar = calendarEvent.calendar
         {
@@ -111,7 +111,7 @@ struct PlannerListView: View {
         }
     }
 
-    private func trailingAdornment(event: PlannerEvent) -> some View {
+    private func timeAdornment(event: PlannerEvent) -> some View {
         event.timeAdornment(
             in: plannerDay.region,
             accentColor: accentColor,
@@ -121,7 +121,7 @@ struct PlannerListView: View {
         )
     }
 
-    private func bottomAdornment(event: PlannerEvent) -> some View {
+    private func locationAdornment(event: PlannerEvent) -> some View {
         event.locationAdornment(
             in: planner,
             settings: settings,
@@ -143,7 +143,6 @@ struct PlannerListView: View {
 
         plannerEngine.protectedId = event.stableId
         plannerEngine.focusedId = nil
-
         eventSheetContext =
             EventSheetContext(
                 plannerEvent: event,

@@ -18,8 +18,8 @@ actor PlannerSearchService {
     ) -> [String: [String]] {
         do {
             let text = query?.text ?? ""
-            let filteredCalendarIds = query?.filteredCalendarIds ?? []
-            let filterPast = query?.filterPast ?? false
+            let filteredCalendarIds = query?.calendarIds ?? []
+            let filterPast = query?.past ?? false
 
             let onlySearchCalendar =
                 filteredCalendarIds.count > 0 && text.isEmpty
@@ -56,7 +56,7 @@ actor PlannerSearchService {
                     plannerCache[planner.datestamp] = planner.datestamp
                         .startOfDay(in: planner.region(settings: settings))
 
-                    if query.filterPast,
+                    if query.past,
                         planner.datestamp < query.todayStartOfDay.datestamp
                     {
                         return true

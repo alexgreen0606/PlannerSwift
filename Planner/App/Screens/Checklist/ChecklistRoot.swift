@@ -136,7 +136,7 @@ struct ChecklistRootView: View {
     private var topTrailingToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             if !listEngine.isSelectMode {
-                ChecklistActionMenu(
+                ChecklistActionMenuView(
                     showEditSheet: $showEditSheet,
                     checklist: checklist,
                     items: allItems,

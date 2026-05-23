@@ -50,7 +50,7 @@ struct LocationChipView: View {
         // MARK: Location Search Form
         .sheet(isPresented: $showLocationSheet) {
             LocationSearchFormView(
-                title: "Edit Planner Location",
+                title: "Planner Location",
                 subtitle: planner.datestamp.dateWithYear,
                 mode: .planner,
                 settings: settings,

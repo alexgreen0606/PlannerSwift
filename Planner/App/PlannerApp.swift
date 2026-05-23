@@ -10,8 +10,6 @@ import SwiftUI
 
 @main
 struct PlannerApp: App {
-    @StateObject private var weatherStore: WeatherStore
-    @StateObject private var locationService: LocationService
 
     init() {
         let LocationService = LocationService()
@@ -27,6 +25,9 @@ struct PlannerApp: App {
         )
     }
 
+    @StateObject private var weatherStore: WeatherStore
+    @StateObject private var locationService: LocationService
+
     private let modelContainer: ModelContainer = {
         let schema = Schema([
             PlannerSettings.self,
@@ -35,7 +36,7 @@ struct PlannerApp: App {
             ChecklistItem.self,
             Trip.self,
             RoutineEvent.self,
-            RoutineEventVariant.self
+            RoutineEventVariant.self,
         ])
 
         let configuration = ModelConfiguration(
@@ -55,7 +56,7 @@ struct PlannerApp: App {
     @StateObject private var calendarStore = CalendarStore()
     @StateObject private var todaystampService = TodaystampService()
     @StateObject private var plannerCoverStore = PlannerCoverStore()
-    @StateObject private var plannerSyncStore = PlannerSyncService()
+    @StateObject private var plannerSyncService = PlannerSyncService()
 
     var body: some Scene {
         WindowGroup {
@@ -66,7 +67,7 @@ struct PlannerApp: App {
                 .environmentObject(calendarStore)
                 .environmentObject(locationService)
                 .environmentObject(plannerCoverStore)
-                .environmentObject(plannerSyncStore)
+                .environmentObject(plannerSyncService)
         }
         .modelContainer(modelContainer)
     }

@@ -15,134 +15,115 @@ struct TransferRoutineEventsFormView: View {
     let sortedSourceRoutineEvents: [RoutineEvent]
     let openRoutine: (Weekday) -> Void
 
-    @AppStorage("accentColor") var accentColor: AccentColor =
-        .blue
+    init(
+        sourceDayOfWeek: Weekday,
+        sortedSourceRoutineEvents: [RoutineEvent],
+        openRoutine: @escaping (Weekday) -> Void
+    ) {
+        self.sourceDayOfWeek = sourceDayOfWeek
+        self.sortedSourceRoutineEvents = sortedSourceRoutineEvents
+        self.openRoutine = openRoutine
+
+        self._destinationWeekdays = State(initialValue: [sourceDayOfWeek])
+    }
 
     @Environment(\.showToast) private var showToast
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var PlannerSyncStore: PlannerSyncService
-    @EnvironmentObject private var routineManager: ListEngine<RoutineEvent>
+    @EnvironmentObject private var plannerSyncService: PlannerSyncService
+    @EnvironmentObject private var routineEngine: ListEngine<RoutineEvent>
 
-    @State private var selectedDaysOfWeek: Set<Weekday> = []
-
-    private var transferCount: String {
-        let count = routineManager.selectedItems.count
-        return
-            "\(String(count)) recurring event\(count == 1 ? "" : "s")"
-    }
+    @State private var destinationWeekdays: Set<Weekday> = []
 
     private var canSave: Bool {
-        !selectedDaysOfWeek.isEmpty
+        !destinationWeekdays.isEmpty
     }
-    
+
     // MARK: - Body
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    DayOfWeekPickerView(daysOfWeek: $selectedDaysOfWeek)
-                } footer: {
-                    Text(
-                        "Events will only appear in the selected days."
-                    )
+                    DayOfWeekPickerView(daysOfWeek: $destinationWeekdays)
+                        .listRowInsets(.top, 0)
                 }
                 .listSectionMargins(.top, 0)
                 .discreetListItem()
             }
             .scrollDisabled(true)
-            .navigationTitle("Reschedule Recurring Events")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                saveButton
+                FormSaveButtonView(canSave: canSave, save: handleTransfer)
             }
+            .navigationTitle("Duplicate Recurring Events")
+            .navigationBarTitleDisplayMode(.inline)
         }
-        .presentationDetents([.height(180)])
-    }
-
-    // MARK: - Toolbars
-
-    @ToolbarContentBuilder
-    private var saveButton: some ToolbarContent {
-        ToolbarItem(placement: .confirmationAction) {
-            Button(
-                "Save",
-                systemImage: "checkmark",
-                action: handleTransfer
-            )
-            .tint(accentColor.color)
-            .disabled(!canSave)
-        }
+        .presentationDetents([.height(110)])
     }
 
     // MARK: - Functions
 
     private func handleTransfer() {
         let affectedWeekdays: Set<Weekday> =
-            Set(routineManager.selectedItems.flatMap { $0.weekdays })
-                .union(selectedDaysOfWeek)
+            Set(routineEngine.selectedItems.flatMap { $0.weekdays })
+            .union(destinationWeekdays)
 
-        PlannerSyncStore.invalidateRoutineDays(affectedWeekdays)
+        plannerSyncService.invalidateRoutineDays(affectedWeekdays)
 
         modelContext.transferRoutineEvents(
-            routineManager.selectedItems,
-            to: selectedDaysOfWeek,
+            routineEngine.selectedItems,
+            to: destinationWeekdays,
             sortedSourceEvents: sortedSourceRoutineEvents,
             sourceDayOfWeek: sourceDayOfWeek
         )
 
         dismiss()
 
-        DispatchQueue.main.async(execute: routineManager.toggleSelectMode)
+        DispatchQueue.main.async {
+            let eventCount = routineEngine.selectedItems.count
 
-        showNotification()
+            routineEngine.toggleSelectMode()
+
+            DispatchQueue.main.async {
+                showNotification(eventCount: eventCount)
+            }
+        }
     }
 
-    private func showNotification() {
-        let selectedDays = selectedDaysOfWeek
-        let eventCount = routineManager.selectedItems.count
+    private func showNotification(eventCount: Int) {
+        guard !destinationWeekdays.contains(sourceDayOfWeek) else {
+            return
+        }
 
-        let subtitle: LocalizedStringKey? = {
-            if selectedDays.count > 1 {
-                return nil
-            }
+        let title: LocalizedStringKey =
+            "Successfully \(destinationWeekdays.count > 1 ? "duplicated" : "moved") ^[\(eventCount) recurring event](inflect: true)!"
 
-            if let destinationDay = selectedDays.first?.rawValue
+        var subtitle: LocalizedStringKey?
+        var customSubtitle: AnyView?
+        var action: (() -> Void)?
+
+        if destinationWeekdays.count == 1 {
+            if let destinationDay = destinationWeekdays.first?.rawValue
                 .capitalized
             {
-                return "\(destinationDay)s"
+                subtitle = "\(destinationDay)s"
+
+                action = {
+                    openRoutine(destinationWeekdays.first!)
+                }
             }
-
-            return ""
-        }()
-
-        let customSubtitle: AnyView? = {
-            if selectedDays.count == 1 {
-                return nil
-            }
-            return AnyView(WeekdaySpreadView(
-                selected: selectedDays,
-                accentColor: Color.label
-            ))
-        }()
-
-        let canOpenDestinationRoutine = {
-            guard selectedDays.count == 1 else { return false }
-
-            return selectedDays.first! != sourceDayOfWeek
-        }()
-
-        let onClick =
-            canOpenDestinationRoutine
-                ? {
-                    openRoutine(selectedDays.first!)
-                } : nil
+        } else {
+            customSubtitle = AnyView(
+                WeekdaySpreadView(
+                    selected: destinationWeekdays,
+                    accentColor: Color.label
+                )
+            )
+        }
 
         showToast(
             Toast(
-                title:
-                "Successfully moved \("recurring event".inflected(for: eventCount))!",
+                title: title,
                 subtitle: subtitle,
                 customSubtitle: customSubtitle,
                 iconConfig: IconConfig(
@@ -150,7 +131,7 @@ struct TransferRoutineEventsFormView: View {
                     primaryColor: Color.label,
                     secondaryColor: Color.label
                 ),
-                action: onClick
+                action: action
             )
         )
     }

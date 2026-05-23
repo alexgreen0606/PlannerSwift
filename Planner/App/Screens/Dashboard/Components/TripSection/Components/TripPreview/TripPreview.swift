@@ -125,9 +125,9 @@ struct TripPreviewView: View {
                     id: \.element.datestamp
                 ) { index, planner in
                     TripDayPreviewCardView(
+                        trip: trip,
                         datestamp: planner.datestamp,
                         index: index,
-                        trip: trip,
                         settings: settings,
                         namespace: namespace
                     )

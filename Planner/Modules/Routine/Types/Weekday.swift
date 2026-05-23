@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-enum Weekday: String, Codable, CaseIterable {
+enum Weekday: String, Codable, CaseIterable, Identifiable {
     case Sunday
     case Monday
     case Tuesday
@@ -15,6 +15,10 @@ enum Weekday: String, Codable, CaseIterable {
     case Thursday
     case Friday
     case Saturday
+    
+    var id: String {
+        rawValue
+    }
 
     var initial: String {
         String(rawValue.prefix(1))

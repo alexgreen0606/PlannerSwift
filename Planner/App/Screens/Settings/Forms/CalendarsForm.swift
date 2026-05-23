@@ -10,8 +10,6 @@ import EventKit
 import SwiftData
 import SwiftUI
 
-// Clean
-
 struct CalendarsFormView: View {
     let settings: PlannerSettings
 
@@ -41,7 +39,7 @@ struct CalendarsFormView: View {
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarStore
-    @EnvironmentObject private var PlannerSyncStore: PlannerSyncService
+    @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
     @State private var calendarStoreRefreshTask: Task<Void, Never>?
 
@@ -57,18 +55,13 @@ struct CalendarsFormView: View {
                 Text(
                     "Turn off a calendar to hide its events throughout the app."
                 )
+                .padding(.bottom, 16)
             }
-
-            // MARK: BOTTOM PADDING
-
-            Section {
-                Color.clear.frame(height: 16)
-            }
-            .discreetListItem()
         }
         .navigationTitle("Calendars")
         .navigationBarTitleDisplayMode(.inline)
-        // Refresh the calendar store when the hidden calendars change.
+
+        // MARK: Refresh the calendar store when the hidden calendars change.
         .onChange(of: settings.hiddenCalendarIds) { _, _ in
             scheduleCalendarStoreRefresh()
         }
@@ -81,30 +74,30 @@ struct CalendarsFormView: View {
             IconSelectorView(
                 selectedIconConfig: IconConfig(
                     name: calendar.systemImageName(settings: settings),
-                    primaryColor: calendar.color
+                    primaryColor: calendar.color,
+                    secondaryColor: calendar.color
                 ),
-                options: systemImageNameOptions.map {
-                    let isSelected =
-                        $0 == calendar.systemImageName(settings: settings)
-                    return IconConfig(
-                        name: $0,
-                        primaryColor: isSelected ? calendar.color : .label,
+                options: systemImageNameOptions.map { option in
+                    IconConfig(
+                        name: option,
+                        primaryColor: option
+                            == calendar.systemImageName(settings: settings)
+                            ? calendar.color : .label,
                         secondaryColor: .label
                     )
                 },
                 numColumns: 4,
-                onTap: { config in
+                onTap: {
                     modelContext.updateCalendarIcon(
                         in: settings,
                         for: calendar,
-                        to: config.name
+                        to: $0.name
                     )
                 }
             )
 
             Text(calendar.title)
-
-            Spacer()
+                .frame(maxWidth: .infinity)
 
             Toggle(
                 "",
@@ -134,12 +127,11 @@ struct CalendarsFormView: View {
 
         calendarStoreRefreshTask = Task {
             do {
-                try await Task.sleep(for: .milliseconds(2000))
+                try await Task.sleep(for: .milliseconds(5000))
                 guard !Task.isCancelled else { return }
 
                 calendarStore.refreshCalendarsAndAccess()
-                PlannerSyncStore.rebuildCalendarData()
-
+                plannerSyncService.rebuildCalendarData()
             } catch {}
         }
     }

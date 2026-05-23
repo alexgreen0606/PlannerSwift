@@ -8,7 +8,7 @@
 import SwiftData
 import SwiftUI
 
-struct ChecklistActionMenu: View {
+struct ChecklistActionMenuView: View {
     @Binding var showEditSheet: Bool
     let checklist: ChecklistItem
     let items: [ChecklistItem]
@@ -48,15 +48,16 @@ struct ChecklistActionMenu: View {
 
     var body: some View {
         Menu("Checklist Action Menu", systemImage: "ellipsis") {
-            editChecklistButton
-
             ToggleCompletedVisibilityView(
                 showCompleted: checklist.showCompleted,
                 toggle: { checklist.showCompleted.toggle() }
             )
 
-            SelectItemsButtonView<ChecklistItem>(hasVisibleItem: !visibleItems.isEmpty)
+            SelectItemsButtonView<ChecklistItem>(
+                hasVisibleItem: !visibleItems.isEmpty
+            )
 
+            editChecklistButton
             deleteActionMenu
         }
 

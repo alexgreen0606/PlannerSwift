@@ -155,30 +155,34 @@ struct TransferEventsFormView: View {
             plannerEngine.toggleSelectMode()
 
             DispatchQueue.main.async {
-                showToast(
-                    Toast(
-                        title:
-                            "Successfully transferred ^[\(eventCount) event](inflect: true)!",
-                        subtitle: LocalizedStringKey(
-                            destinationDatestamp.dateLabel(
-                                todaystamp: todaystampService.todaystamp
-                            )
-                        ),
-                        iconConfig: IconConfig(
-                            name: "arrow.left.arrow.right",
-                            primaryColor: dayOffset > 0
-                                ? Color.secondary : Color.label,
-                            secondaryColor: dayOffset > 0
-                                ? Color.label : Color.secondary
-                        ),
-                        action: {
-                            plannerCoverStore.context = PlannerCoverContext(
-                                datestamp: destinationDatestamp
-                            )
-                        }
-                    )
-                )
+                showNotification(eventCount: eventCount, dayOffset: dayOffset)
             }
         }
+    }
+
+    private func showNotification(eventCount: Int, dayOffset: Int) {
+        showToast(
+            Toast(
+                title:
+                    "Successfully transferred ^[\(eventCount) event](inflect: true)!",
+                subtitle: LocalizedStringKey(
+                    destinationDatestamp.dateLabel(
+                        todaystamp: todaystampService.todaystamp
+                    )
+                ),
+                iconConfig: IconConfig(
+                    name: "arrow.left.arrow.right",
+                    primaryColor: dayOffset > 0
+                        ? Color.secondary : Color.label,
+                    secondaryColor: dayOffset > 0
+                        ? Color.label : Color.secondary
+                ),
+                action: {
+                    plannerCoverStore.context = PlannerCoverContext(
+                        datestamp: destinationDatestamp
+                    )
+                }
+            )
+        )
     }
 }

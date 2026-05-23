@@ -59,7 +59,7 @@ final class PlannerSearchStore: ObservableObject {
 
             await MainActor.run {
                 let sortedKeys = datestampMap.keys.sorted {
-                    query.filterPast ? $0 > $1 : $0 < $1
+                    query.past ? $0 > $1 : $0 < $1
                 }
 
                 let top = sortedKeys.first.flatMap { datestampMap[$0]?.first }

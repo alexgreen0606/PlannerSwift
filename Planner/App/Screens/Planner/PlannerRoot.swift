@@ -70,7 +70,7 @@ struct PlannerRootView: View {
         ToastRootView(listEngine: plannerEngine) {
             NavigationStack {
                 ScrollViewReader { scrollProxy in
-                    PlannerListView(
+                    PlannerContentsListView(
                         showLocationSheet: $showLocationSheet,
                         eventSheetContext: $eventSheetContext,
                         planner: planner,
