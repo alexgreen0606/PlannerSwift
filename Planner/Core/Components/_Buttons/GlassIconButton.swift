@@ -11,12 +11,11 @@ struct GlassIconButtonView: View {
     private let systemImage: String
     private let onTap: () -> Void
 
-    init(systemImage: String, color: Color? = nil, onTap: @escaping () -> Void)
-    {
+    init(systemImage: String, color: Color? = nil, onTap: @escaping () -> Void) {
         self.systemImage = systemImage
         self.onTap = onTap
 
-        self.customColor = color
+        customColor = color
     }
 
     private let customColor: Color?

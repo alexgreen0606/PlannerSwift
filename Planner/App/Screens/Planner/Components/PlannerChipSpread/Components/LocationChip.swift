@@ -48,6 +48,7 @@ struct LocationChipView: View {
         )
 
         // MARK: Location Search Form
+
         .sheet(isPresented: $showLocationSheet) {
             LocationSearchFormView(
                 title: "Planner Location",

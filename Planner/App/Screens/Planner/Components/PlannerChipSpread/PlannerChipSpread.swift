@@ -23,7 +23,7 @@ struct PlannerChipSpreadView: View {
 
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var weatherStore: WeatherStore
-    
+
     private var weatherData: DayWeather? {
         weatherStore.getWeather(for: plannerDay, at: plannerLocation)
     }
@@ -111,7 +111,7 @@ struct PlannerChipSpreadView: View {
                 name: event.calendar.systemImageName(settings: settings),
                 primaryColor: calendarColor
             ),
-            color: calendarColor,
+            color: calendarColor
         )
         .glassChip(height: PlannerLayout.CHIP_HEIGHT) {
             openCalendarEventSheet(event)

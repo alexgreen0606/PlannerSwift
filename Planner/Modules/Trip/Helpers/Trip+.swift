@@ -32,7 +32,7 @@ extension Trip {
         else {
             return 0.0
         }
-        
+
         return Double(index) + 1.0
     }
 
@@ -78,7 +78,7 @@ extension Trip {
             referenceYear: firstDatestamp.year
         )
     }
-    
+
     var transitionId: String {
         "\(String(describing: id))"
     }

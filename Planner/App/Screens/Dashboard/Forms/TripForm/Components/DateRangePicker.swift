@@ -32,6 +32,7 @@ struct DateRangePickerView: View {
     ) {
         if newDates.count == selectedDates.count {
             // MARK: Date was de-selected. Clear the entire selection.
+
             // Limitation: MultiDatePicker does not grant access to which date was "removed" from the selections.
             // In this case we'll need to just clear the list and have the user start again.
             selectedDates = []
@@ -48,7 +49,7 @@ struct DateRangePickerView: View {
 
             let sortedNewDates = newDates.sorted {
                 guard let lhsDate = calendar.date(from: $0),
-                    let rhsDate = calendar.date(from: $1)
+                      let rhsDate = calendar.date(from: $1)
                 else {
                     return false
                 }
@@ -65,7 +66,7 @@ struct DateRangePickerView: View {
 
             let sortedPrevDates = selectedDates.sorted {
                 guard let lhsDate = calendar.date(from: $0),
-                    let rhsDate = calendar.date(from: $1)
+                      let rhsDate = calendar.date(from: $1)
                 else {
                     return false
                 }
@@ -77,7 +78,7 @@ struct DateRangePickerView: View {
 
             guard
                 let clickedDateComponents = newDates.subtracting(selectedDates)
-                    .first,
+                .first,
                 let clickedDate = calendar.date(from: clickedDateComponents),
                 let prevEarliestDate = calendar.date(
                     from: prevEarliest
@@ -107,7 +108,7 @@ struct DateRangePickerView: View {
         let calendar = Calendar.current
 
         guard let startDate = calendar.date(from: start),
-            let endDate = calendar.date(from: end)
+              let endDate = calendar.date(from: end)
         else {
             return
         }

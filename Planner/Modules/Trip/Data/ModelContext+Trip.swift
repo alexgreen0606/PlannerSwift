@@ -9,7 +9,6 @@ import Foundation
 import SwiftData
 
 extension ModelContext {
-
     func getExistingTripDatestamps() -> Set<String> {
         do {
             let existingTrips = try fetch(

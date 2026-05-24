@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-// Clean
-
 /// Finds a new position for an item that places it close as possible to its previous siblings.
 func generateTargetIndex<Destination: EventListItem>(
     near sourceId: UUID,

@@ -45,6 +45,7 @@ struct PlannerContentsListView: View {
         SortableListView(
             uncheckedItems: sortedPendingPlannerEvents,
             checkedItems: sortedCompletePlannerEvents,
+            sortedItems: sortedPlannerEvents,
             rowId: eventId,
             showChecked: showCompleted,
             checkedHeader: "Completed Events",
@@ -96,11 +97,11 @@ struct PlannerContentsListView: View {
     @ViewBuilder
     private func calendarAdornment(event: PlannerEvent) -> some View {
         if let calendarEvent = event.calendarEvent,
-            let calendar = calendarEvent.calendar
+           let calendar = calendarEvent.calendar
         {
             Image(
                 systemName:
-                    calendar.systemImageName(settings: settings)
+                calendar.systemImageName(settings: settings)
             )
             .foregroundStyle(calendar.color)
             .padding(.trailing, 4)
@@ -155,8 +156,8 @@ struct PlannerContentsListView: View {
             from: from,
             to: to,
             plannerDay: plannerDay,
-            // TODO: need to consider the sort ID based on ALL events
-            sortedEvents: sortedPendingPlannerEvents
+            sortedPendingPlannerEvents: sortedPendingPlannerEvents,
+            sortedPlannerEvents: sortedPlannerEvents
         )
     }
 

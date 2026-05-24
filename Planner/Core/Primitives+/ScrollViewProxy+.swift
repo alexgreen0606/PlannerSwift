@@ -12,7 +12,7 @@ extension ScrollViewProxy {
         DispatchQueue.main.async {
             withAnimation {
                 scrollTo(
-                    ListIds.UNCHECKED_ITEMS,
+                    ListIds.PENDING_ITEMS,
                     anchor: .bottom
                 )
             }
@@ -26,8 +26,8 @@ extension ScrollViewProxy {
     ) where C.Element: Hashable {
         guard
             let newItem = Set(newItems)
-                .subtracting(Set(oldItems))
-                .first
+            .subtracting(Set(oldItems))
+            .first
         else { return }
 
         DispatchQueue.main.async {

@@ -1,5 +1,5 @@
 //
-//  PlannerSyncStore.swift
+//  PlannerSyncService.swift
 //  Planner
 //
 //  Created by Alex Green on 4/14/26.

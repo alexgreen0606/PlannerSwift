@@ -38,7 +38,7 @@ actor PlannerSearchService {
 
             let trips =
                 !onlySearchCalendar
-                ? try modelContext.fetch(FetchDescriptor<Trip>()) : []
+                    ? try modelContext.fetch(FetchDescriptor<Trip>()) : []
 
             for trip in trips {
                 guard let score = trip.searchQueryScore(query) else {
@@ -57,7 +57,7 @@ actor PlannerSearchService {
                         .startOfDay(in: planner.region(settings: settings))
 
                     if query.past,
-                        planner.datestamp < query.todayStartOfDay.datestamp
+                       planner.datestamp < query.todayStartOfDay.datestamp
                     {
                         return true
                     } else if planner.datestamp
@@ -146,10 +146,10 @@ actor PlannerSearchService {
 
             let startDate =
                 filterPast
-                ? (DateInRegion() - 2.years).date : DateInRegion().date
+                    ? (DateInRegion() - 2.years).date : DateInRegion().date
             let endDate =
                 filterPast
-                ? DateInRegion().date : (DateInRegion() + 2.years).date
+                    ? DateInRegion().date : (DateInRegion() + 2.years).date
 
             // Range: 1 year ago to 3 years from now.
             let calendarEvents = ekEventStore.events(
@@ -225,8 +225,8 @@ actor PlannerSearchService {
         for datestamp in possibleDatestamps {
             // Skip this datestamp if it is outside the search frame.
             if let todaystamp,
-                (filterPast && datestamp >= todaystamp)
-                    || (!filterPast && datestamp < todaystamp)
+               (filterPast && datestamp >= todaystamp)
+               || (!filterPast && datestamp < todaystamp)
             {
                 continue
             }
@@ -291,18 +291,18 @@ actor PlannerSearchService {
     {
         let topDatestamps =
             datestampScores
-            .sorted {
-                if $0.value == $1.value {
-                    // Scores are equal. Sort by datestamp filterPast.
-                    return filterPast
-                        ? $0.key > $1.key  // descending
-                        : $0.key < $1.key  // ascending
+                .sorted {
+                    if $0.value == $1.value {
+                        // Scores are equal. Sort by datestamp filterPast.
+                        return filterPast
+                            ? $0.key > $1.key // descending
+                            : $0.key < $1.key // ascending
+                    }
+                    // Sort by scores descending.
+                    return $0.value > $1.value
                 }
-                // Sort by scores descending.
-                return $0.value > $1.value
-            }
-            .prefix(10)
-            .map { $0.key }
+                .prefix(10)
+                .map { $0.key }
 
         return Dictionary(grouping: topDatestamps) {
             datestamp in
@@ -310,8 +310,8 @@ actor PlannerSearchService {
         }.mapValues { datestamps in
             datestamps.sorted {
                 filterPast
-                    ? $0 > $1  // descending
-                    : $0 < $1  // ascending
+                    ? $0 > $1 // descending
+                    : $0 < $1 // ascending
             }
         }
     }
@@ -324,12 +324,12 @@ actor PlannerSearchService {
     {
         let limitedDatestamps =
             datestampScores.keys
-            .sorted {
-                filterPast
-                    ? $0 > $1  // descending
-                    : $0 < $1  // ascending
-            }
-            .prefix(10)
+                .sorted {
+                    filterPast
+                        ? $0 > $1 // descending
+                        : $0 < $1 // ascending
+                }
+                .prefix(10)
 
         return Dictionary(grouping: limitedDatestamps) {
             datestamp in
@@ -337,8 +337,8 @@ actor PlannerSearchService {
         }.mapValues { datestamps in
             datestamps.sorted {
                 filterPast
-                    ? $0 > $1  // descending
-                    : $0 < $1  // ascending
+                    ? $0 > $1 // descending
+                    : $0 < $1 // ascending
             }
         }
     }

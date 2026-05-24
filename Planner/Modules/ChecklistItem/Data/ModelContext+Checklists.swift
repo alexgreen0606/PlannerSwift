@@ -69,11 +69,13 @@ extension ModelContext {
     // MARK: - UPDATE
 
     @MainActor
-    func moveChecklistItem(in sortedItems: [ChecklistItem], from: Int, to: Int)
-    {
-        guard from != to else { return }
-
-        let movedItem = sortedItems[from]
+    func moveChecklistItem(
+        from: Int,
+        to: Int,
+        sortedPendingItems: [ChecklistItem],
+        sortedItems: [ChecklistItem]
+    ) {
+        let movedItem = sortedPendingItems[from]
         movedItem.sortIndex = generateSortIndex(
             index: to,
             sortedItems: sortedItems
@@ -88,7 +90,6 @@ extension ModelContext {
         parent: ChecklistItem?,
         draftChecklistItem: ChecklistItem
     ) {
-
         draftChecklistItem.title = draftChecklistItem.title.trimmingCharacters(
             in: .whitespacesAndNewlines
         )

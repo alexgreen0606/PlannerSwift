@@ -20,7 +20,6 @@ extension ModelContext {
         hiddenCalendarIds: Set<String>,
         ekEventStore: EKEventStore
     ) -> CalendarDayData {
-
         var calendarDayData = CalendarDayData()
 
         // ------------------------------------------------------------------

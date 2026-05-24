@@ -27,10 +27,10 @@ struct ActionButtonView: View {
         self.endAdornment = endAdornment
         self.spacing = spacing
         self.onTap = onTap
-        
-        self.customColor = color
+
+        customColor = color
     }
-    
+
     private let customColor: Color?
 
     @AppStorage("accentColor") var accentColor: AccentColor =

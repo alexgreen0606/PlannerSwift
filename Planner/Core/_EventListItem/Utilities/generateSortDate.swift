@@ -5,14 +5,17 @@
 //  Created by Alex Green on 2/19/26.
 //
 
-import EventKit
 import SwiftDate
 import SwiftUI
 
-@MainActor
+private let MINIMUM_SECONDS_GAP = 0.0001
+
 func generateSortDate<Event: EventListItem>(
     at index: Int,
-    in sortedEvents: [Event], // May or may not contain the event being placed.
+
+    // May or may not contain the event being placed.
+    in sortedEvents: [Event],
+
     plannerDay: DateInRegion,
     getSortDate: (Event) -> Date = { $0.sortDate },
     setSortDate: (Event, Date) -> Void = { event, sortDate in
@@ -22,20 +25,21 @@ func generateSortDate<Event: EventListItem>(
     let dayStart = plannerDay.date
     let dayEnd = (plannerDay + 1.days).date
 
-    // No events for the day. Place at noon.
     if sortedEvents.isEmpty {
-        return dayStart + 12.hours
+        // No events for the day. Place at noon.
+        return midpoint(between: dayStart, and: dayEnd)
     }
 
     var prevDate = index == 0 ? dayStart : getSortDate(sortedEvents[index - 1])
     var nextDate =
         index >= sortedEvents.count ? dayEnd : getSortDate(sortedEvents[index])
-    let interval = nextDate.timeIntervalSince(prevDate)
 
-    if interval < 1.0 {
+    let secondsGap = nextDate.timeIntervalSince(prevDate)
+
+    if secondsGap < MINIMUM_SECONDS_GAP {
         // Interval too small. Normalize all events.
         normalizeSortDates(
-            events: sortedEvents,
+            for: sortedEvents,
             startOfDay: plannerDay,
             setSortDate: setSortDate
         )
@@ -58,16 +62,15 @@ private func midpoint(between a: Date, and b: Date) -> Date {
 
 @MainActor
 private func normalizeSortDates<Event: EventListItem>(
-    events: [Event],
+    for events: [Event],
     startOfDay: DateInRegion,
     setSortDate: (Event, Date) -> Void = { event, sortDate in
         event.sortDate = sortDate
     }
 ) {
-    guard !events.isEmpty else { return }
-
     let dayStart = startOfDay.date
     let dayEnd = (startOfDay + 1.days).date
+
     let increment =
         dayEnd.timeIntervalSince(dayStart) / Double(events.count + 1)
 

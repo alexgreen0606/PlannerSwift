@@ -12,9 +12,6 @@ import SwiftData
 @available(iOS 26.0, *)
 @Model
 class RoutineEvent: EventListItem {
-
-    var time: Date?
-    
     /// When a planner event's ID does not exist here, it will re-sync its sortDate with this event
     /// and add itself to this set.
     var syncedSortDatePlannerEventIds: Set<UUID> = []

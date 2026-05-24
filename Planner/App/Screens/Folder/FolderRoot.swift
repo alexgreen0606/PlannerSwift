@@ -43,11 +43,11 @@ struct FolderRootView: View {
                 topLeadingToolbar
                 topTrailingToolbar
             }
-            .animateSynchronousAction(from: itemSelectEngine.isSelectMode)
             .navigationTitle(folder.title)
             .navigationBarBackButtonHidden(true)
 
             // MARK: Scroll to new items.
+
             .onChange(of: sortedItems) { oldItems, newItems in
                 scrollProxy.scrollToNewItem(
                     oldItems: oldItems,
@@ -58,6 +58,7 @@ struct FolderRootView: View {
         }
 
         // MARK: Transfer Checklist Items Form
+
         .sheet(isPresented: $showTransferSheet) {
             TransferChecklistItemsFormView(
                 source: folder,
@@ -75,16 +76,19 @@ struct FolderRootView: View {
         .environmentObject(itemSelectEngine)
 
         // MARK: Edit Form
+
         .sheet(isPresented: $showEditSheet) {
             ChecklistItemFormView(item: folder, parent: folder.parent)
         }
 
         // MARK: New Item Form
+
         .sheet(isPresented: $showNewItemSheet) {
             ChecklistItemFormView(parent: folder)
         }
 
         // MARK: Update transferability when selected items change.
+
         .onChange(of: itemSelectEngine.selectedItemIds) { _, _ in
             updateTransferability()
         }
@@ -142,9 +146,8 @@ struct FolderRootView: View {
             rootFolder.hasChildType(
                 .folder,
                 excluding: itemSelectEngine.selectedItemIds.union([
-                    folder.stableId
-                ]
-                )
+                    folder.stableId,
+                ])
             ) == true
     }
 }

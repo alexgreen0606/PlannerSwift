@@ -21,7 +21,7 @@ struct PlannerEventContextLoaderView<Content: View>: View {
         plannerContext: PlannerContext,
         settings: PlannerSettings,
         @ViewBuilder content:
-            @escaping (PlannerContext, PlannerEventContext) -> Content
+        @escaping (PlannerContext, PlannerEventContext) -> Content
     ) {
         self.plannerContext = plannerContext
         self.settings = settings
@@ -75,6 +75,7 @@ struct PlannerEventContextLoaderView<Content: View>: View {
         }
 
         // MARK: Reload the weather and calendar events when the time zone changes.
+
         .onChange(of: plannerContext.plannerLocation) {
             oldLocation,
             newLocation in

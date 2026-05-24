@@ -16,9 +16,9 @@ extension String {
     var dateComponents: DateComponents? {
         let parts = split(separator: "-")
         guard parts.count == 3,
-            let year = Int(parts[0]),
-            let month = Int(parts[1]),
-            let day = Int(parts[2])
+              let year = Int(parts[0]),
+              let month = Int(parts[1]),
+              let day = Int(parts[2])
         else {
             return nil
         }
@@ -29,7 +29,7 @@ extension String {
     func startOfDay(in region: Region) -> DateInRegion? {
         guard
             let result = toDate("yyyy-MM-dd", region: region)?
-                .dateAtStartOf(.day)
+            .dateAtStartOf(.day)
         else {
             return nil
         }

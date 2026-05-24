@@ -23,7 +23,7 @@ struct SearchResultWeatherView: View {
         guard planner.searchQueryScore(activeQuery) != nil else {
             return false
         }
-        
+
         if activeQuery.isSearching {
             return true
         }

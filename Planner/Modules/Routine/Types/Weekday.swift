@@ -15,7 +15,7 @@ enum Weekday: String, Codable, CaseIterable, Identifiable {
     case Thursday
     case Friday
     case Saturday
-    
+
     var id: String {
         rawValue
     }

@@ -5,9 +5,9 @@
 //  Created by Alex Green on 3/16/26.
 //
 
+import Foundation
 import Fuse
 import SwiftDate
-import Foundation
 
 struct PlannerSearchQuery: Equatable {
     var text: String
@@ -25,16 +25,16 @@ struct PlannerSearchQuery: Equatable {
         lhs.text == rhs.text && lhs.calendarIds == rhs.calendarIds
             && lhs.past == rhs.past
     }
-    
+
     // MARK: - Helpers
-    
+
     var timeFrameLabel: String {
         switch past {
         case true: return "past"
         case false: return "future"
         }
     }
-    
+
     static let fuzzyThreshold: Double = 0.35
 
     var isSearching: Bool {

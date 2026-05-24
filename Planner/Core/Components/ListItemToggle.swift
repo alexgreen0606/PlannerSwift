@@ -23,7 +23,7 @@ struct ListItemToggleView<Item: ListItem>: View {
         self.opacity = opacity
         self.customToggleConfig = customToggleConfig
 
-        self.customColor = color
+        customColor = color
     }
 
     private let customColor: Color?
@@ -45,7 +45,7 @@ struct ListItemToggleView<Item: ListItem>: View {
 
     private var toggleConfig: ToggleConfig {
         if let customConfig = customToggleConfig,
-            !listEngine.isSelectMode
+           !listEngine.isSelectMode
         {
             return customConfig
         }

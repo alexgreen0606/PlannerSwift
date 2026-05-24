@@ -15,7 +15,7 @@ struct Value: View {
         self.title = title
         self.scale = scale
 
-        self.customColor = color
+        customColor = color
     }
 
     private let customColor: Color?

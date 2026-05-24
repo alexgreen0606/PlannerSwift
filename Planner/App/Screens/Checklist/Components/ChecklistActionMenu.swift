@@ -62,12 +62,14 @@ struct ChecklistActionMenuView: View {
         }
 
         // MARK: Delete Completed Confirmation
+
         .withConfirmation(
             deleteCompletedConfig,
             isPresented: $showDeleteCompletedConfirmation
         )
 
         // MARK: Delete Checklist Confirmation
+
         .withConfirmation(
             deleteChecklistConfig,
             isPresented: $showDeleteChecklistConfirmation
@@ -77,6 +79,7 @@ struct ChecklistActionMenuView: View {
     // MARK: - View Builders
 
     // MARK: Edit Checklist Button
+
     private var editChecklistButton: some View {
         Button {
             showEditSheet = true

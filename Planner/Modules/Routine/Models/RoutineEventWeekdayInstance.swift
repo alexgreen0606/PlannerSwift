@@ -11,7 +11,6 @@ import SwiftData
 
 @Model
 class RoutineEventWeekdayInstance {
-
     /// Note: This is required by SwiftData limitations. Query by enums is currently not supported.
     var weekdayRawValue: String = ""
 
@@ -20,7 +19,7 @@ class RoutineEventWeekdayInstance {
     var routineEvent: RoutineEvent?
 
     init(weekday: Weekday, sortDate: Date) {
-        self.weekdayRawValue = weekday.rawValue
+        weekdayRawValue = weekday.rawValue
         self.sortDate = sortDate
     }
 }

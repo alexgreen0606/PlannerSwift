@@ -21,40 +21,40 @@ struct RootTabView: View {
         // Navigation titles -> rounded fonts.
         if var descriptor =
             UIFontDescriptor
-            .preferredFontDescriptor(withTextStyle: .largeTitle)
-            .withDesign(.rounded)
+                .preferredFontDescriptor(withTextStyle: .largeTitle)
+                .withDesign(.rounded)
         {
             descriptor = descriptor.addingAttributes([
                 .traits: [
-                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy
-                ]
+                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy,
+                ],
             ])
 
             UINavigationBar.appearance().largeTitleTextAttributes = [
                 .font: UIFont(
                     descriptor: descriptor,
                     size: descriptor.pointSize
-                )
+                ),
             ]
         }
 
         // Navigation subtitles -> rounded fonts.
         if var descriptor =
             UIFontDescriptor
-            .preferredFontDescriptor(withTextStyle: .headline)
-            .withDesign(.rounded)
+                .preferredFontDescriptor(withTextStyle: .headline)
+                .withDesign(.rounded)
         {
             descriptor = descriptor.addingAttributes([
                 .traits: [
-                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy
-                ]
+                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy,
+                ],
             ])
 
             UINavigationBar.appearance().titleTextAttributes = [
                 .font: UIFont(
                     descriptor: descriptor,
                     size: descriptor.pointSize
-                )
+                ),
             ]
         }
     }
@@ -68,7 +68,7 @@ struct RootTabView: View {
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
-            .oneMonth
+        .oneMonth
 
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var modelContext
@@ -96,6 +96,7 @@ struct RootTabView: View {
         ZStack {
             if let settings {
                 // MARK: Standard App Navigation
+
                 TabView {
                     Tab(
                         "",
@@ -136,6 +137,7 @@ struct RootTabView: View {
                 .opacity(plannerCoverStore.isPresentingDefault ? 0 : 1)
 
                 // MARK: Default App Landing. Today Planner.
+
                 PlannerLoaderView(
                     datestamp: plannerCoverStore.todaystampAtInit,
                     settings: settings
@@ -158,6 +160,7 @@ struct RootTabView: View {
         }
 
         // MARK: Planner Cover
+
         .fullScreenCover(item: $plannerCoverStore.context) { context in
             if let settings {
                 PlannerLoaderView(
@@ -185,6 +188,7 @@ struct RootTabView: View {
         }
 
         // MARK: Refresh external data when the app focuses.
+
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 calendarStore.refreshCalendarsAndAccess()
@@ -197,6 +201,7 @@ struct RootTabView: View {
         }
 
         // MARK: Refresh weather data when the device's location changes.
+
         .onChange(
             of: locationService.deviceClLocation?.coordinate.key
         ) {

@@ -16,7 +16,7 @@ func deletePlannerEventConfig(
 ) -> ConfirmationConfig {
     ConfirmationConfig(
         title:
-            "Delete\(inForm ? " this" : "") event\(inForm ? "" : " \"\(event.title)\"")?",
+        "Delete\(inForm ? " this" : "") event\(inForm ? "" : " \"\(event.title)\"")?",
         message: {
             if event.calendarEvent == nil {
                 return GENERIC_DELETE_WARNING
@@ -28,7 +28,7 @@ func deletePlannerEventConfig(
             ConfirmationAction(
                 title: "Delete Event",
                 handler: delete
-            )
+            ),
         ]
     )
 }
@@ -64,9 +64,9 @@ func bulkDeletePlannerEventConfig(
         actions: [
             ConfirmationAction(
                 title:
-                    "Delete \(count) Events",
+                "Delete \(count) Events",
                 handler: delete
-            )
+            ),
         ]
     )
 }
@@ -81,14 +81,14 @@ func bulkDeleteCompletedPlannerEventConfig(
 ) -> ConfirmationConfig {
     ConfirmationConfig(
         title:
-            "Delete completed events from \(dateLabel)?",
+        "Delete completed events from \(dateLabel)?",
         message: deleteCategoryMessage(hasCalendarAccess: hasCalendarAccess),
         actions: [
             ConfirmationAction(
                 title:
-                    "Delete ^[\(completedEventCount) Event](inflect: true)",
+                "Delete ^[\(completedEventCount) Event](inflect: true)",
                 handler: delete
-            )
+            ),
         ]
     )
 }
@@ -103,14 +103,14 @@ func deleteCanceledEventsConfig(
 ) -> ConfirmationConfig {
     ConfirmationConfig(
         title:
-            "Delete canceled events from \(dateLabel)?",
+        "Delete canceled events from \(dateLabel)?",
         message: deleteCategoryMessage(hasCalendarAccess: hasCalendarAccess),
         actions: [
             ConfirmationAction(
                 title:
-                    "Delete ^[\(canceledEventCount) Event](inflect: true)",
+                "Delete ^[\(canceledEventCount) Event](inflect: true)",
                 handler: delete
-            )
+            ),
         ]
     )
 }

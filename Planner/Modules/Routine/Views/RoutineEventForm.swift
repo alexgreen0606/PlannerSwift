@@ -254,7 +254,7 @@ struct RoutineEventFormView: View {
     // MARK: - Functions
 
     private func saveRoutineEvent() {
-        let affectedWeekdays = (Set(sourceRoutineEvent?.weekdays ?? [])).union(
+        let affectedWeekdays = Set(sourceRoutineEvent?.weekdays ?? []).union(
             draftRoutineEvent.daysOfWeek
         )
 

@@ -12,8 +12,8 @@ struct CreateLowerItemButtonView: View {
 
     init(tint: Color? = nil, createItem: @escaping () -> Void) {
         self.createItem = createItem
-        
-        self.customTint = tint
+
+        customTint = tint
     }
 
     private let customTint: Color?

@@ -27,10 +27,10 @@ struct FormLabelView: View {
         self.value = value
         self.detail = detail
         self.onTap = onTap
-        
-        self.customColor = color
+
+        customColor = color
     }
-    
+
     private let customColor: Color?
 
     // MARK: - Body

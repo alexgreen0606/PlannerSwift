@@ -53,15 +53,15 @@ enum DateFormat {
         var formatted = text
 
         if !formatted.contains(","),
-            let dayString = formatted.split(separator: " ").last,
-            let dayInt = Int(dayString),
-            let ordinalDay = Self.ordinalFormatter.string(
-                from: NSNumber(value: dayInt)
-            ),
-            let range = formatted.range(
-                of: dayString,
-                options: .backwards
-            )
+           let dayString = formatted.split(separator: " ").last,
+           let dayInt = Int(dayString),
+           let ordinalDay = Self.ordinalFormatter.string(
+               from: NSNumber(value: dayInt)
+           ),
+           let range = formatted.range(
+               of: dayString,
+               options: .backwards
+           )
         {
             formatted.replaceSubrange(range, with: ordinalDay)
         }

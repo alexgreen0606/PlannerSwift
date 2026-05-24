@@ -19,9 +19,9 @@ extension Date {
     var datestamp: String { // Ex: 2025-12-31
         Self.datestampFormatter.string(from: self)
     }
-    
+
     func datestamp(in region: Region = .current) -> String {
-        let dateInRegion = self.convertTo(region: region)
+        let dateInRegion = convertTo(region: region)
 
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"

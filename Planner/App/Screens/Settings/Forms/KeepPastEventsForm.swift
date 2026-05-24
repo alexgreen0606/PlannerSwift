@@ -13,8 +13,8 @@ struct KeepPastEventsFormView: View {
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
-            .oneMonth
-    
+        .oneMonth
+
     // MARK: - Body
 
     var body: some View {

@@ -15,14 +15,14 @@ struct FormSaveButtonView: ToolbarContent {
         self.canSave = canSave
         self.save = save
 
-        self.customTint = tint
+        customTint = tint
     }
 
     private let customTint: Color?
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
-    
+
     // MARK: - Body
 
     var body: some ToolbarContent {

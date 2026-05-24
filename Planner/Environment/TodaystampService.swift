@@ -21,22 +21,22 @@ class TodaystampService: ObservableObject {
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
-            .oneMonth
+        .oneMonth
 
     @Published private(set) var todaystamp: String =
         TodaystampService.buildTodaystamp()
 
     @Published private(set) var next7Datestamps: [String] =
         TodaystampService.buildNext7Datestamps()
-    
+
     var datePickerBounds: ClosedRange<Date> {
-        keepPastEventsDuration.cutoffDate...maxCalendarDate
+        keepPastEventsDuration.cutoffDate ... maxCalendarDate
     }
 
     var multiDatePickerBounds: Range<Date> {
-        keepPastEventsDuration.cutoffDate..<maxCalendarDate
+        keepPastEventsDuration.cutoffDate ..< maxCalendarDate
     }
-    
+
     private var maxCalendarDate: Date =
         TodaystampService.buildMaxCalendarDate()
 
@@ -58,7 +58,7 @@ class TodaystampService: ObservableObject {
     private static func buildNext7Datestamps() -> [String] {
         let today = DateInRegion(region: .local)
 
-        return (0..<7).map { index in
+        return (0 ..< 7).map { index in
             today
                 .dateByAdding(index, .day)
                 .toFormat("yyyy-MM-dd")

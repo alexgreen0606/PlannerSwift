@@ -36,16 +36,16 @@ struct PlannerRootView: View {
     private var sortedPendingPlannerEvents: [PlannerEvent] {
         sortedPlannerEvents.filter { event in
             (!event.isCompleted
-                && !plannerEngine.newlyUncheckedIds.contains(event.stableId))
-                || plannerEngine.newlyCheckedIds.contains(event.stableId)
+                && !plannerEngine.newlyPendingIds.contains(event.stableId))
+                || plannerEngine.newlyCompletedIds.contains(event.stableId)
         }
     }
 
     private var sortedCompletePlannerEvents: [PlannerEvent] {
         sortedPlannerEvents.filter { event in
             (event.isCompleted
-                && !plannerEngine.newlyCheckedIds.contains(event.stableId))
-                || plannerEngine.newlyUncheckedIds.contains(event.stableId)
+                && !plannerEngine.newlyCompletedIds.contains(event.stableId))
+                || plannerEngine.newlyPendingIds.contains(event.stableId)
         }
     }
 
@@ -78,9 +78,9 @@ struct PlannerRootView: View {
                         plannerLocation: plannerLocation,
                         sortedPlannerEvents: sortedPlannerEvents,
                         sortedPendingPlannerEvents:
-                            sortedPendingPlannerEvents,
+                        sortedPendingPlannerEvents,
                         sortedCompletePlannerEvents:
-                            sortedCompletePlannerEvents,
+                        sortedCompletePlannerEvents,
                         calendarDayData: calendarDayData,
                         showCompleted: planner.showChecked,
                         scrollProxy: scrollProxy,
@@ -94,12 +94,12 @@ struct PlannerRootView: View {
                         topTrailingToolbar
                         bottomToolbar(scrollProxy: scrollProxy)
                     }
-                    .animateSynchronousAction(from: plannerEngine.isSelectMode)
                     .navigationBarTitleDisplayMode(.inline)
                 }
             }
 
             // MARK: Event Form
+
             .sheet(item: $eventSheetContext) { context in
                 EventFormView(
                     sourcePlanner: planner,
@@ -119,6 +119,7 @@ struct PlannerRootView: View {
             }
 
             // MARK: Transfer Events Form
+
             .sheet(isPresented: $showTransferSheet) {
                 TransferEventsFormView(
                     sourceStartOfDay: plannerDay,
@@ -220,7 +221,7 @@ struct PlannerRootView: View {
     private func createEvent(at index: Int) {
         plannerEngine.pendingFocusId = modelContext.createPlannerEvent(
             at: index,
-            in: sortedPendingPlannerEvents,
+            in: sortedPlannerEvents,
             startOfDay: plannerDay
         )
     }

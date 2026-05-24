@@ -17,7 +17,7 @@ func deleteChecklistItemConfig(
 ) -> ConfirmationConfig {
     ConfirmationConfig(
         title:
-            "Delete\(inForm ? " this" : "") \(item.type.rawValue)\(inForm ? "" : " \"\(item.title)\"")?",
+        "Delete\(inForm ? " this" : "") \(item.type.rawValue)\(inForm ? "" : " \"\(item.title)\"")?",
         message: {
             if item.safeItems.isEmpty {
                 return GENERIC_DELETE_WARNING
@@ -30,7 +30,7 @@ func deleteChecklistItemConfig(
             ConfirmationAction(
                 title: "Delete \(item.type.rawValue.capitalized)",
                 handler: delete
-            )
+            ),
         ]
     )
 }
@@ -64,9 +64,9 @@ func bulkDeleteChecklistItemConfig(
         actions: [
             ConfirmationAction(
                 title:
-                    "Delete \(count) \(childType.capitalized)s",
+                "Delete \(count) \(childType.capitalized)s",
                 handler: delete
-            )
+            ),
         ]
     )
 }
@@ -81,14 +81,14 @@ func bulkDeleteCompletedChecklistItemConfig(
 ) -> ConfirmationConfig {
     ConfirmationConfig(
         title:
-            "Delete completed items from \"\(item.title)\"?",
+        "Delete completed items from \"\(item.title)\"?",
         message: GENERIC_DELETE_WARNING,
         actions: [
             ConfirmationAction(
                 title:
-                    "Delete ^[\(completedItems.count) Item](inflect: true)",
+                "Delete ^[\(completedItems.count) Item](inflect: true)",
                 handler: delete
-            )
+            ),
         ]
     )
 }

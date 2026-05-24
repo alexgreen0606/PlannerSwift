@@ -35,6 +35,7 @@ struct RoutineActionMenuView: View {
         }
 
         // MARK: Delete Routine Confirmation
+
         .withConfirmation(
             deleteConfig,
             isPresented: $showDeleteRoutineConfirmation

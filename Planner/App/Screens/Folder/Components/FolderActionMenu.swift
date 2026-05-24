@@ -35,6 +35,7 @@ struct FolderActionMenuView: View {
         }
 
         // MARK: Delete Folder Confirmation
+
         .withConfirmation(
             deleteFolderConfig,
             isPresented: $showDeleteConfirmation

@@ -12,7 +12,7 @@ struct DayOfWeekPickerView: View {
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
-    
+
     // MARK: - Body
 
     var body: some View {

@@ -5,15 +5,16 @@
 //  Created by Alex Green on 4/6/26.
 //
 
-import EventKit
 import Foundation
 import SwiftData
 
 @available(iOS 26.0, *)
 @Model
 class EventListItem: ListItem {
+    var time: Date?
+
     /// Controlled by drag-and-drop.
-    /// May go out of sync with the date.
+    /// No relation to the event's time..
     var sortDate: Date = Date()
 
     init(sortDate: Date) {

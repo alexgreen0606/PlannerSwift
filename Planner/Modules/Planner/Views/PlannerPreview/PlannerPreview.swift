@@ -66,7 +66,7 @@ struct PlannerPreviewView: View {
     }
 
     // MARK: Separated Time Events
-    
+
     // TODO: prioritize calendar events
 
     private var timedPlannerEvents: [PlannerEvent] {

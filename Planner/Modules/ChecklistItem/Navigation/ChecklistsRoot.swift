@@ -15,7 +15,6 @@ struct ChecklistsRootView: View {
         filter: #Predicate<ChecklistItem> { $0.parent == nil }
     ) var rootFolderList: [ChecklistItem]
 
-    @StateObject private var checklistsManager = ListEngine<ChecklistItem>()
     @State private var folderPath = NavigationPath()
     @State private var checklistCoverId: ChecklistCoverContext?
 
@@ -31,12 +30,11 @@ struct ChecklistsRootView: View {
                 ChecklistItemLoaderView(
                     rootFolder: rootFolder,
                     stableId: rootFolder.stableId,
-                    listEngine: checklistsManager,
                     openItem: openItem
-                ) { rootFolder, sortedItems, _ in
+                ) { context in
                     FolderRootView(
-                        folder: rootFolder,
-                        sortedItems: sortedItems,
+                        folder: context.item,
+                        sortedItems: context.sortedItems,
                         rootFolder: rootFolder,
                         namespace: namespace,
                         openItem: openItem
@@ -47,12 +45,11 @@ struct ChecklistsRootView: View {
                         ChecklistItemLoaderView(
                             rootFolder: rootFolder,
                             stableId: item.stableId,
-                            listEngine: checklistsManager,
                             openItem: openItem
-                        ) { folder, sortedItems, _ in
+                        ) { context in
                             FolderRootView(
-                                folder: folder,
-                                sortedItems: sortedItems,
+                                folder: context.item,
+                                sortedItems: context.sortedItems,
                                 rootFolder: rootFolder,
                                 namespace: namespace,
                                 openItem: openItem
@@ -62,20 +59,20 @@ struct ChecklistsRootView: View {
                 }
             }
 
-            // MARK: Checklist Cover
+            // MARK: Checklist Root
 
             .fullScreenCover(item: $checklistCoverId) { checklistId in
                 ChecklistItemLoaderView(
                     rootFolder: rootFolder,
                     stableId: checklistId.id,
-                    listEngine: checklistsManager,
                     openItem: openItem
-                ) { checklist, sortedPendingItems, sortedCheckedItems in
+                ) { context in
                     ChecklistRootView(
-                        checklist: checklist,
+                        checklist: context.item,
+                        sortedItems: context.sortedItems,
+                        sortedPendingItems: context.sortedPendingItems,
+                        sortedCheckedItems: context.sortedCompletedItems,
                         rootFolder: rootFolder,
-                        sortedPendingItems: sortedPendingItems,
-                        sortedCheckedItems: sortedCheckedItems,
                         openItem: openItem
                     )
                 }
@@ -86,7 +83,6 @@ struct ChecklistsRootView: View {
                     )
                 )
                 .id(checklistId.id)
-                .environmentObject(checklistsManager)
                 .interactiveDismissDisabled(true)
             }
         }

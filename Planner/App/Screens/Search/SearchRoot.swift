@@ -24,7 +24,7 @@ struct SearchRootView: View {
         self.settings = settings
         self.namespace = namespace
 
-        self._draftQuery = State(
+        _draftQuery = State(
             initialValue: PlannerSearchQuery(
                 text: "",
                 calendarIds: [],
@@ -129,6 +129,7 @@ struct SearchRootView: View {
                     }
 
                     // MARK: Scroll to top whenever the search results change.
+
                     .withScrollTrigger(
                         scrollProxy: scrollProxy,
                         trigger: plannerSearchStore.results.datestampMap,
@@ -145,11 +146,13 @@ struct SearchRootView: View {
         .searchPresentationToolbarBehavior(.avoidHidingContent)
 
         // MARK: Re-search when the planners re-sync.
+
         .onChange(of: plannerSyncService.rebuildTrigger) { _, _ in
             search()
         }
 
         // MARK: Re-search when today's date changes.
+
         .onChange(of: todaystampService.todaystamp) {
             _,
             _ in
@@ -157,6 +160,7 @@ struct SearchRootView: View {
         }
 
         // MARK: Schedule a search each time the draft query changes.
+
         .onChange(of: draftQuery) { _, _ in
             scheduleSearch()
         }

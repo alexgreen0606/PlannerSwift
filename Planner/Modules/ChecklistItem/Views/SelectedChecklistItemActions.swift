@@ -58,7 +58,6 @@ struct SelectedChecklistItemActionsView: ToolbarContent {
         )
     }
 
-    @ViewBuilder
     private var transferSelectedButton: some View {
         TransferSelectedButtonView<ChecklistItem>(
             showTransferSheet: $showTransferSheet,

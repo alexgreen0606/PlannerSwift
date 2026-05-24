@@ -168,7 +168,8 @@ extension ModelContext {
                 }
 
             for routineEvent in reverseSortedEvents
-            where !variantIds.contains(routineEvent.stableId) {
+                where !variantIds.contains(routineEvent.stableId)
+            {
                 // Find a position for the event closest to its routine siblings.
                 // Defaults to top of list otherwise.
                 let targetIndex = generateTargetIndex(

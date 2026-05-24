@@ -42,6 +42,7 @@ struct FolderContentsListView: View {
                     ? FolderLayout.TOGGLE_SPACING : 0
             ) {
                 // MARK: Toggle
+
                 ListItemToggleView(
                     item: item,
                     opacity: itemSelectEngine.isSelectMode ? 1 : 0
@@ -53,6 +54,7 @@ struct FolderContentsListView: View {
                 .allowsHitTesting(itemSelectEngine.isSelectMode)
 
                 // MARK: Icon
+
                 Image(
                     systemName: item.type.systemImageName
                 )
@@ -66,6 +68,7 @@ struct FolderContentsListView: View {
             .frame(height: FolderLayout.ADORNMENT_HEIGHT)
 
             // MARK: Title
+
             Text(item.title)
                 .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)
@@ -73,6 +76,7 @@ struct FolderContentsListView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             // MARK: End Adornment
+
             Group {
                 if item.type == .checklist {
                     Text("\(item.safeItems.filter { !$0.isCompleted }.count)")
@@ -105,9 +109,10 @@ struct FolderContentsListView: View {
         guard let from = sources.first else { return }
 
         modelContext.moveChecklistItem(
-            in: sortedItems,
             from: from,
-            to: destination
+            to: destination,
+            sortedPendingItems: sortedItems,
+            sortedItems: sortedItems
         )
     }
 

@@ -22,7 +22,7 @@ struct WeekdaySpreadView: View {
         self.selected = selected
         self.scale = scale
         self.spacing = spacing
-        self.customAccentColor = accentColor
+        customAccentColor = accentColor
     }
 
     @AppStorage("accentColor") var accentColor: AccentColor =

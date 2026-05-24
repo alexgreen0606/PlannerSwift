@@ -19,14 +19,14 @@ struct TransferSelectedButtonView<Item: ListItem>: View {
         disabled: Bool = false,
         namespace: Namespace.ID
     ) {
-        self._showTransferSheet = showTransferSheet
+        _showTransferSheet = showTransferSheet
         self.systemImage = systemImage
         self.disabled = disabled
         self.namespace = namespace
     }
 
     @EnvironmentObject private var listEngine: ListEngine<Item>
-    
+
     // MARK: - Body
 
     var body: some View {

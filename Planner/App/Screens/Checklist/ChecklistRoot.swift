@@ -10,25 +10,28 @@ import SwiftUI
 
 struct ChecklistRootView: View {
     private let checklist: ChecklistItem
-    private let rootFolder: ChecklistItem
+    private let sortedItems: [ChecklistItem]
     private let sortedPendingItems: [ChecklistItem]
     private let sortedCheckedItems: [ChecklistItem]
+    private let rootFolder: ChecklistItem
     private let openItem: (ChecklistItem, ChecklistItem) -> Void
 
     init(
         checklist: ChecklistItem,
-        rootFolder: ChecklistItem,
+        sortedItems: [ChecklistItem],
         sortedPendingItems: [ChecklistItem],
         sortedCheckedItems: [ChecklistItem],
+        rootFolder: ChecklistItem,
         openItem: @escaping (ChecklistItem, ChecklistItem) -> Void
     ) {
         self.checklist = checklist
-        self.rootFolder = rootFolder
+        self.sortedItems = sortedItems
         self.sortedPendingItems = sortedPendingItems
         self.sortedCheckedItems = sortedCheckedItems
+        self.rootFolder = rootFolder
         self.openItem = openItem
 
-        self.canTransferSelectedItems =
+        canTransferSelectedItems =
             rootFolder.hasChildType(
                 .checklist,
                 excluding: Set([checklist.stableId])
@@ -70,6 +73,7 @@ struct ChecklistRootView: View {
                     >(
                         uncheckedItems: sortedPendingItems,
                         checkedItems: sortedCheckedItems,
+                        sortedItems: sortedItems,
                         showChecked: checklist.showCompleted,
                         checkedHeader: "Completed items",
                         emptyUncheckedLabel: "No items",
@@ -84,12 +88,12 @@ struct ChecklistRootView: View {
                         topTrailingToolbar
                         bottomToolbar(scrollProxy: scrollProxy)
                     }
-                    .animateSynchronousAction(from: listEngine.isSelectMode)
                     .navigationTitle(checklist.title)
                 }
             }
 
             // MARK: Edit Checklist Form
+
             .sheet(isPresented: $showEditSheet) {
                 if let parent = checklist.parent {
                     ChecklistItemFormView(
@@ -103,6 +107,7 @@ struct ChecklistRootView: View {
             }
 
             // MARK: Transfer Selected Items Form
+
             .sheet(isPresented: $showTransferSheet) {
                 TransferChecklistItemsFormView(
                     source: checklist,
@@ -174,17 +179,17 @@ struct ChecklistRootView: View {
     private func createItem(at index: Int) {
         listEngine.pendingFocusId = modelContext.createChecklistItem(
             at: index,
-            // TODO: cant 2 items have the same sort ID (one unchecked, one checked) DESIGN FLAW
-            in: sortedPendingItems,
+            in: sortedItems,
             parent: checklist
         )
     }
 
     private func moveItem(from: Int, to: Int) {
         modelContext.moveChecklistItem(
-            in: sortedPendingItems,
             from: from,
-            to: to
+            to: to,
+            sortedPendingItems: sortedPendingItems,
+            sortedItems: sortedItems
         )
     }
 
@@ -192,5 +197,4 @@ struct ChecklistRootView: View {
         createItem(at: sortedPendingItems.count)
         scrollProxy.scrollToListBottom()
     }
-    
 }

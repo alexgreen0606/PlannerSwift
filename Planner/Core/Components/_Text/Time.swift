@@ -23,7 +23,7 @@ struct Time: View {
         self.scale = scale
         self.onTap = onTap
 
-        self.customColor = color
+        customColor = color
     }
 
     private let customColor: Color?

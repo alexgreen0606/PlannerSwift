@@ -47,6 +47,7 @@ struct BirthdayChipView: View {
             )
 
             // MARK: Contact Form
+
             .sheet(isPresented: $showContactSheet) {
                 ContactFormView(contact: birthday.contact)
                     .ignoresSafeArea()

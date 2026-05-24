@@ -10,7 +10,7 @@ import SwiftUI
 struct CompletedVisibilityToggleView: View {
     let showCompleted: Bool
     let toggle: () -> Void
-    
+
     // MARK: - Body
 
     var body: some View {

@@ -35,7 +35,7 @@ struct PlannerLoaderView<Content: View>: View {
     @EnvironmentObject private var locationService: LocationService
 
     @Query private var planners: [Planner]
-    
+
     @StateObject private var plannerManager = ListEngine<PlannerEvent>()
 
     private var planner: Planner? {

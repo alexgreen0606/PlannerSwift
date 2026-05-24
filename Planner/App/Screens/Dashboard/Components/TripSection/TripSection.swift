@@ -23,8 +23,8 @@ struct TripSectionView: View {
         settings: PlannerSettings,
         namespace: Namespace.ID
     ) {
-        self._tripSheetContext = tripSheetContext
-        self._expandedTripIds = expandedTripIds
+        _tripSheetContext = tripSheetContext
+        _expandedTripIds = expandedTripIds
         self.scrollProxy = scrollProxy
         self.settings = settings
         self.namespace = namespace

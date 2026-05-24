@@ -44,18 +44,21 @@ struct DashboardRootView: View {
                 ScrollViewReader { scrollProxy in
                     List {
                         // MARK: THIS WEEK
+
                         ThisWeekSectionView(
                             settings: settings,
                             namespace: namespace
                         )
 
                         // MARK: ROUTINES
+
                         RoutineSectionView(
                             routineCoverContext: $routineCoverContext,
                             namespace: namespace
                         )
 
                         // MARK: Trips
+
                         TripSectionView(
                             tripSheetContext: $tripSheetContext,
                             expandedTripIds: $expandedTripIds,
@@ -80,6 +83,7 @@ struct DashboardRootView: View {
                     }
 
                     // MARK: Scroll to expanded trips.
+
                     .onChange(of: expandedTripIds) { oldIds, newIds in
                         scrollProxy.scrollToNewItem(
                             oldItems: oldIds,
@@ -91,6 +95,7 @@ struct DashboardRootView: View {
             }
 
             // MARK: New Event Form
+
             .sheet(isPresented: $showNewEventSheet) {
                 EventFormView(
                     plannerEvent: nil,
@@ -100,6 +105,7 @@ struct DashboardRootView: View {
             }
 
             // MARK: New Routine Event Form
+
             .sheet(isPresented: $showNewRoutineEventSheet) {
                 RoutineEventFormView(
                     openRoutine: { weekday in
@@ -109,6 +115,7 @@ struct DashboardRootView: View {
             }
 
             // MARK: Trip Form
+
             .sheet(item: $tripSheetContext) { context in
                 let form = TripFormView(
                     sourceTrip: context.trip,
@@ -131,6 +138,7 @@ struct DashboardRootView: View {
             }
 
             // MARK: Routine Root
+
             .fullScreenCover(
                 item: $routineCoverContext,
                 onDismiss: plannerSyncService.beginRebuild
@@ -211,7 +219,7 @@ struct DashboardRootView: View {
 
     private func handlePlannerDateSelect(selectedDates: Set<DateComponents>) {
         guard let clickedDate = selectedDates.first,
-            let datestamp = clickedDate.datestamp
+              let datestamp = clickedDate.datestamp
         else { return }
 
         showCalendarPicker = false

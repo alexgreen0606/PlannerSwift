@@ -9,11 +9,11 @@ import SwiftUI
 
 struct DeleteSelectedButtonView<Item: ListItem>: View {
     let confirmationConfig: ConfirmationConfig
-    
+
     @EnvironmentObject private var listEngine: ListEngine<Item>
 
     @State private var showConfirmation = false
-    
+
     // MARK: - Body
 
     var body: some View {

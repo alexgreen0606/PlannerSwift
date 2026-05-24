@@ -7,7 +7,7 @@
 
 struct TripSheetContext: Identifiable {
     var trip: Trip?
-    
+
     init(trip: Trip? = nil) {
         self.trip = trip
     }

@@ -9,69 +9,74 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
+struct ChecklistItemContext {
+    let item: ChecklistItem
+    let sortedItems: [ChecklistItem]
+    let sortedPendingItems: [ChecklistItem]
+    let sortedCompletedItems: [ChecklistItem]
+}
+
 struct ChecklistItemLoaderView<Content: View>: View {
     private let rootFolder: ChecklistItem
     private let openItem: (ChecklistItem, ChecklistItem) -> Void
-    private let content:
-        (ChecklistItem, [ChecklistItem], [ChecklistItem]) -> Content
+    private let content: (ChecklistItemContext) -> Content
 
     init(
         rootFolder: ChecklistItem,
         stableId: UUID,
-        listEngine: ListEngine<ChecklistItem>,
         openItem: @escaping (ChecklistItem, ChecklistItem) -> Void,
-        @ViewBuilder content:
-            @escaping (ChecklistItem, [ChecklistItem], [ChecklistItem]) ->
-            Content
+        @ViewBuilder content: @escaping (ChecklistItemContext) -> Content
     ) {
         self.rootFolder = rootFolder
         self.openItem = openItem
         self.content = content
 
-        // MARK: Load the parent item.
         _items = Query(
             filter: #Predicate<ChecklistItem> {
                 $0.stableId == stableId
             }
         )
 
-        let newlyCheckedIds = listEngine.newlyCheckedIds
-        let newlyUncheckedIds = listEngine.newlyUncheckedIds
-
-        // MARK: Load the unchecked child items.
-        _sortedUncheckedChildItems = Query(
+        _sortedItems = Query(
             filter: #Predicate<ChecklistItem> { item in
                 item.parent?.stableId == stableId
-                    && ((!item.isCompleted
-                        && !newlyUncheckedIds.contains(item.stableId))
-                        || newlyCheckedIds.contains(item.stableId))
-            },
-            sort: \.sortIndex
-        )
-
-        // MARK: Load the checked child items.
-        _sortedCheckedChildItems = Query(
-            filter: #Predicate<ChecklistItem> { item in
-                item.parent?.stableId == stableId
-                    && ((item.isCompleted
-                        && !newlyCheckedIds.contains(item.stableId))
-                        || newlyUncheckedIds.contains(item.stableId))
             },
             sort: \.sortIndex
         )
     }
 
+    @StateObject private var checklistItemEngine = ListEngine<ChecklistItem>()
+
     @Query private var items: [ChecklistItem]
-    @Query private var sortedUncheckedChildItems: [ChecklistItem]
-    @Query private var sortedCheckedChildItems: [ChecklistItem]
+    @Query private var sortedItems: [ChecklistItem]
 
     private var item: ChecklistItem? {
         items.first
     }
 
+    private var sortedPendingItems: [ChecklistItem] {
+        sortedItems.filter {
+            checklistItemEngine.isItemInPendingList($0)
+        }
+    }
+
+    private var sortedCompletedItems: [ChecklistItem] {
+        sortedItems.filter {
+            checklistItemEngine.isItemInCompletedList($0)
+        }
+    }
+
     var body: some View {
         if let item {
-            content(item, sortedUncheckedChildItems, sortedCheckedChildItems)
+            content(
+                ChecklistItemContext(
+                    item: item,
+                    sortedItems: sortedItems,
+                    sortedPendingItems: sortedPendingItems,
+                    sortedCompletedItems: sortedCompletedItems
+                )
+            )
+            .environmentObject(checklistItemEngine)
         }
     }
 }

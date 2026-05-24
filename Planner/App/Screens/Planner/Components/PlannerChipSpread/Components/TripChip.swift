@@ -66,6 +66,7 @@ struct TripChipView: View {
         }
 
         // MARK: Trip Sheet
+
         .sheet(isPresented: $showTripSheet) {
             TripFormView(
                 sourceTrip: trip,

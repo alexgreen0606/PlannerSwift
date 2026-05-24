@@ -13,8 +13,6 @@ import SwiftDate
 @available(iOS 26.0, *)
 @Model
 class PlannerEvent: EventListItem {
-    var time: Date?
-
     /// Must be set when an event doesn't have a time.
     var datestamp: String?
 
@@ -41,10 +39,9 @@ class PlannerEvent: EventListItem {
         routineEvent: RoutineEvent? = nil,
         plannerDay: DateInRegion? = nil
     ) {
-        self.time = time
         self.datestamp = datestamp
-
         super.init(sortDate: sortDate)
+        self.time = time
 
         // Calendar event synchronization.
         if let calendarEvent {

@@ -11,9 +11,8 @@ struct ToggleTransitionFormView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @AppStorage("toggleTransitionDuration") private
-        var toggleTransitionDuration: ToggleTransitionDuration =
-            .threeSeconds
+    @AppStorage("toggleTransitionDuration") private var toggleTransitionDuration: ToggleTransitionDuration =
+        .threeSeconds
 
     // MARK: - Body
 

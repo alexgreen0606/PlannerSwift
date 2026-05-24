@@ -51,7 +51,7 @@ struct RoutineRootView: View {
                         moveItem: moveEvent,
                         namespace: namespace,
                         toolbarSystemImageNames: [
-                            "rectangle.and.pencil.and.ellipsis"
+                            "rectangle.and.pencil.and.ellipsis",
                         ],
                         onToolbarTap: { _, event in
                             openRoutineEventSheet(for: event)
@@ -67,7 +67,6 @@ struct RoutineRootView: View {
                         topTrailingToolbar
                         bottomToolbar(scrollProxy: scrollProxy)
                     }
-                    .animateSynchronousAction(from: routineEngine.isSelectMode)
                     .navigationTitle("\(weekday.label) Routine")
                     .navigationSubtitle("Recurring Events")
                     .navigationBarTitleDisplayMode(.inline)
@@ -75,6 +74,7 @@ struct RoutineRootView: View {
             }
 
             // MARK: Transfer Routine Events Form
+
             .sheet(isPresented: $showTransferSheet) {
                 TransferRoutineEventsFormView(
                     sourceDayOfWeek: weekday,
@@ -91,6 +91,7 @@ struct RoutineRootView: View {
             .environmentObject(routineEngine)
 
             // MARK: Routine Event Form
+
             .sheet(item: $routineEventSheetContext) { context in
                 RoutineEventFormView(
                     sourceRoutineEvent: context.routineEvent,
@@ -215,7 +216,7 @@ struct RoutineRootView: View {
             from: from,
             to: to,
             on: weekday,
-            sortedEvents: sortedRoutineEvents
+            sortedRoutineEvents: sortedRoutineEvents
         )
         plannerSyncService.invalidateRoutineDays([weekday])
     }

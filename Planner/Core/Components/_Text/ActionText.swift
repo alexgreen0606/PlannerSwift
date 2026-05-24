@@ -13,7 +13,7 @@ struct ActionText: View {
     init(_ text: String, color: Color? = nil) {
         self.text = text
 
-        self.customColor = color
+        customColor = color
     }
 
     private let customColor: Color?

@@ -10,7 +10,6 @@ import SwiftUI
 
 @main
 struct PlannerApp: App {
-
     init() {
         let LocationService = LocationService()
 

@@ -24,7 +24,7 @@ struct TransferRoutineEventsFormView: View {
         self.sortedSourceRoutineEvents = sortedSourceRoutineEvents
         self.openRoutine = openRoutine
 
-        self._destinationWeekdays = State(initialValue: [sourceDayOfWeek])
+        _destinationWeekdays = State(initialValue: [sourceDayOfWeek])
     }
 
     @Environment(\.showToast) private var showToast
@@ -66,7 +66,7 @@ struct TransferRoutineEventsFormView: View {
     private func handleTransfer() {
         let affectedWeekdays: Set<Weekday> =
             Set(routineEngine.selectedItems.flatMap { $0.weekdays })
-            .union(destinationWeekdays)
+                .union(destinationWeekdays)
 
         plannerSyncService.invalidateRoutineDays(affectedWeekdays)
 

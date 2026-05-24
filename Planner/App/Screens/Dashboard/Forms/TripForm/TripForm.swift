@@ -30,7 +30,7 @@ struct TripFormView: View {
             draftTrip.excludeRoutines = sourceTrip.excludeRoutines
         }
 
-        self._draftTrip = State(initialValue: draftTrip)
+        _draftTrip = State(initialValue: draftTrip)
     }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -65,7 +65,7 @@ struct TripFormView: View {
         let sortedDatestamps = draftTrip.datestamps.sorted()
 
         guard let firstDatestamp = sortedDatestamps.first,
-            let lastDatestamp = sortedDatestamps.last
+              let lastDatestamp = sortedDatestamps.last
         else {
             return "Select Dates"
         }
@@ -147,7 +147,7 @@ struct TripFormView: View {
     @ToolbarContentBuilder
     private var cancelButton: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            CancelButtonView() {
+            CancelButtonView {
                 dismiss()
             }
         }
@@ -177,6 +177,7 @@ struct TripFormView: View {
     // MARK: - View Builders
 
     // MARK: Title
+
     private var titleSection: some View {
         FormTitleFieldView(
             text: $draftTrip.title,
@@ -262,6 +263,7 @@ struct TripFormView: View {
     }
 
     // MARK: Routines
+
     private var routineSection: some View {
         Section {
             Toggle(isOn: $draftTrip.excludeRoutines) {

@@ -34,7 +34,7 @@ struct TripPreviewView: View {
 
     private var countdownLabel: String {
         if trip.firstDatestamp <= todaystampService.todaystamp,
-            trip.lastDatestamp >= todaystampService.todaystamp
+           trip.lastDatestamp >= todaystampService.todaystamp
         {
             return ""
         }

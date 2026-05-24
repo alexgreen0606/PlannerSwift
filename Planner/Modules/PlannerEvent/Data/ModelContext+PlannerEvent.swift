@@ -16,13 +16,13 @@ extension ModelContext {
     @MainActor
     func createPlannerEvent(
         at index: Int,
-        in events: [PlannerEvent],
+        in sortedPlannerEvents: [PlannerEvent],
         startOfDay: DateInRegion
     ) -> UUID? // The ID of the new event.
     {
         let sortDate = generateSortDate(
             at: index,
-            in: events,
+            in: sortedPlannerEvents,
             plannerDay: startOfDay
         )
 
@@ -254,14 +254,13 @@ extension ModelContext {
         from: Int,
         to: Int,
         plannerDay: DateInRegion,
-        sortedEvents: [PlannerEvent]
+        sortedPendingPlannerEvents: [PlannerEvent],
+        sortedPlannerEvents: [PlannerEvent]
     ) {
-        guard from != to else { return }
-
-        let movedEvent = sortedEvents[from]
+        let movedEvent = sortedPendingPlannerEvents[from]
         movedEvent.sortDate = generateSortDate(
             at: to,
-            in: sortedEvents,
+            in: sortedPlannerEvents,
             plannerDay: plannerDay
         )
 

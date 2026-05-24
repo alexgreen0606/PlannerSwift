@@ -16,7 +16,7 @@ struct SearchResultPlannerPreviewView: View {
 
     @EnvironmentObject private var todaystampService: TodaystampService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
-    
+
     // MARK: - Body
 
     var body: some View {
@@ -28,25 +28,25 @@ struct SearchResultPlannerPreviewView: View {
                     PlannerHeaderView(
                         datestamp: datestamp,
                         title:
-                            datestamp.proximityFormat(
-                                using: [
-                                    ProximityRule(
-                                        proximity:
-                                            .next7Days,
-                                        format: .weekday
-                                    ),
-                                    ProximityRule(
-                                        proximity:
-                                            .fallback,
-                                        // Note: Never show the year. Shown in section header.
-                                        format:
-                                            .dateWithoutYear
-                                    ),
-                                ],
-                                todaystamp:
-                                    todaystampService
-                                    .todaystamp
-                            )
+                        datestamp.proximityFormat(
+                            using: [
+                                ProximityRule(
+                                    proximity:
+                                    .next7Days,
+                                    format: .weekday
+                                ),
+                                ProximityRule(
+                                    proximity:
+                                    .fallback,
+                                    // Note: Never show the year. Shown in section header.
+                                    format:
+                                    .dateWithoutYear
+                                ),
+                            ],
+                            todaystamp:
+                            todaystampService
+                                .todaystamp
+                        )
                     )
 
                     Spacer()

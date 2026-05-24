@@ -77,6 +77,7 @@ struct PlannerActionMenuView: View {
         }
 
         // MARK: Delete Completed Confirmation
+
         .withConfirmation(
             deleteCompletedConfig,
             isPresented: $showDeleteCompletedConfirmation

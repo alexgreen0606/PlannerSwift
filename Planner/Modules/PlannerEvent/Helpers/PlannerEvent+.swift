@@ -16,7 +16,7 @@ extension PlannerEvent {
     var transitionId: String {
         stableId.uuidString
     }
-    
+
     var isRoutineVariant: Bool {
         routineEventVariant != nil && routineEvent != nil
     }

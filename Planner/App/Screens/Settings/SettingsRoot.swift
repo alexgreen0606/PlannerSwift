@@ -21,13 +21,12 @@ struct SettingsRootView: View {
     @AppStorage("showListDividers") private var showListDividers: Bool =
         true
 
-    @AppStorage("toggleTransitionDuration") private
-        var toggleTransitionDuration: ToggleTransitionDuration =
-            .threeSeconds
+    @AppStorage("toggleTransitionDuration") private var toggleTransitionDuration: ToggleTransitionDuration =
+        .threeSeconds
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
-            .oneMonth
+        .oneMonth
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var systemColorScheme
@@ -48,6 +47,7 @@ struct SettingsRootView: View {
             Form {
                 Section {
                     // MARK: App Theme
+
                     Picker("Theme", selection: $appColorScheme) {
                         ForEach(AppColorScheme.allCases, id: \.rawValue) {
                             colorScheme in
@@ -57,6 +57,7 @@ struct SettingsRootView: View {
                     }
 
                     // MARK: Accent Color
+
                     HStack {
                         Text(AccentColor.title)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -85,10 +86,12 @@ struct SettingsRootView: View {
                     }
 
                     // MARK: List Dividers
+
                     Toggle("Show List Dividers", isOn: $showListDividers)
                         .tint(accentColor.color)
 
                     // MARK: Toggle Transition Duration
+
                     NavigationLink {
                         ToggleTransitionFormView()
                     } label: {
@@ -106,6 +109,7 @@ struct SettingsRootView: View {
 
                 Section("Planner") {
                     // MARK: Home Location
+
                     NavigationLink {
                         LocationSearchFormView(
                             title: "Home Location",
@@ -132,6 +136,7 @@ struct SettingsRootView: View {
                     }
 
                     // MARK: Calendars
+
                     NavigationLink {
                         CalendarsFormView(settings: settings)
                     } label: {
@@ -149,6 +154,7 @@ struct SettingsRootView: View {
                     .disabled(calendarStore.accessDenied != false)
 
                     // MARK: Keep Past Events Duration
+
                     NavigationLink {
                         KeepPastEventsFormView()
                     } label: {
@@ -168,6 +174,7 @@ struct SettingsRootView: View {
         }
 
         // MARK: Update app icon when accent color changes.
+
         .onChange(of: accentColor) { _, _ in
             syncAppIconWithSettings(
                 accentColor: accentColor,
@@ -176,6 +183,7 @@ struct SettingsRootView: View {
         }
 
         // MARK: Update app icon when color scheme changes.
+
         .onChange(of: systemColorScheme) { _, _ in
             syncAppIconWithSettings(
                 accentColor: accentColor,

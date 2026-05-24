@@ -42,7 +42,7 @@ struct CalendarsFormView: View {
     @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
     @State private var calendarStoreRefreshTask: Task<Void, Never>?
-    
+
     // MARK: - Body
 
     var body: some View {
@@ -64,6 +64,7 @@ struct CalendarsFormView: View {
         .navigationBarTitleDisplayMode(.inline)
 
         // MARK: Refresh the calendar store when the hidden calendars change.
+
         .onChange(of: settings.hiddenCalendarIds) { _, _ in
             scheduleCalendarStoreRefresh()
         }

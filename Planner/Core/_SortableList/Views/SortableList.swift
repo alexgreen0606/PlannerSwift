@@ -9,8 +9,6 @@ import Combine
 import SwiftData
 import SwiftUI
 
-// Clean
-
 struct SortableListView<
     Item: ListItem,
     LeftAdornment: View,
@@ -20,6 +18,7 @@ struct SortableListView<
 >: View {
     private let uncheckedItems: [Item]
     private let checkedItems: [Item]
+    private let sortedItems: [Item]
     private let rowId: (_ item: Item) -> String
     private let showChecked: Bool
     private let floatingInfo: FloatingInfo?
@@ -44,6 +43,7 @@ struct SortableListView<
     init(
         uncheckedItems: [Item],
         checkedItems: [Item] = [],
+        sortedItems: [Item]? = nil,
         rowId: @escaping (_ item: Item) -> String = { $0.stableId.uuidString },
         showChecked: Bool = false,
         checkedHeader: String = "",
@@ -73,6 +73,7 @@ struct SortableListView<
     ) {
         self.uncheckedItems = uncheckedItems
         self.checkedItems = checkedItems
+        self.sortedItems = sortedItems ?? uncheckedItems
         self.rowId = rowId
         self.showChecked = showChecked
         self.floatingInfo = floatingInfo
@@ -131,7 +132,7 @@ struct SortableListView<
                 .withScrollTrigger(
                     scrollProxy: scrollProxy,
                     trigger: showChecked,
-                    id: ListIds.CHECKED_ITEMS,
+                    id: ListIds.COMPLETED_ITEMS,
                     disabled: !showChecked
                 )
         } else {
@@ -149,8 +150,7 @@ struct SortableListView<
             .discreetListItem()
             .listRowInsets(EdgeInsets())
 
-            ForEach(Array(uncheckedItems.enumerated()), id: \.element.stableId)
-            { index, item in
+            ForEach(Array(uncheckedItems.enumerated()), id: \.element.stableId) { index, item in
                 RowView(
                     item: item,
                     index: index,
@@ -178,7 +178,7 @@ struct SortableListView<
             }
             .discreetListItem()
             .listRowInsets(EdgeInsets())
-            .id(ListIds.UNCHECKED_ITEMS)
+            .id(ListIds.PENDING_ITEMS)
 
             if uncheckedItems.isEmpty && showChecked {
                 EmptyLabel(emptyUncheckedLabel)
@@ -234,7 +234,7 @@ struct SortableListView<
                 }
             }
             .discreetListItem()
-            .id(ListIds.CHECKED_ITEMS)
+            .id(ListIds.COMPLETED_ITEMS)
         }
     }
 
@@ -244,15 +244,28 @@ struct SortableListView<
         from sources: IndexSet,
         to destination: Int
     ) {
-        for source in sources {
-            moveItem(source, destination)
-        }
+        guard let source = sources.first, source != destination else { return }
+
+        let insertionIndex = getInsertionIndex(
+            pendingIndex: destination,
+            sortedPendingItems: uncheckedItems,
+            sortedItems: sortedItems
+        )
+
+        moveItem(source, insertionIndex)
     }
 
     private func attemptCreateItem(at index: Int) {
         guard canCreateItem(at: index, in: uncheckedItems) else {
             return
         }
-        createItem(index)
+
+        let insertionIndex = getInsertionIndex(
+            pendingIndex: index,
+            sortedPendingItems: uncheckedItems,
+            sortedItems: sortedItems
+        )
+
+        createItem(insertionIndex)
     }
 }

@@ -85,7 +85,8 @@ struct RowView<
         if listEngine.isSelectMode {
             return listEngine.selectedItemIds.contains(item.stableId)
         }
-        return listEngine.isItemChecked(item)
+
+        return item.isCompleted
     }
 
     private var opacity: Double {
@@ -157,7 +158,7 @@ struct RowView<
                 leftAdornment
                     .opacity(opacity)
                     .frame(
-                        height: ListLayout.HORIZONTAL_ADORNMENT_HEIGHT,
+                        height: ListLayout.ADORNMENT_HEIGHT,
                         alignment: .center
                     )
 
@@ -171,11 +172,11 @@ struct RowView<
                 rightAdornment
                     .opacity(opacity)
                     .frame(
-                        height: ListLayout.HORIZONTAL_ADORNMENT_HEIGHT,
+                        height: ListLayout.ADORNMENT_HEIGHT,
                         alignment: .center
                     )
             }
-            .frame(minHeight: ListLayout.HORIZONTAL_ADORNMENT_HEIGHT)
+            .frame(minHeight: ListLayout.ADORNMENT_HEIGHT)
 
             bottomAdornment
                 .opacity(opacity)

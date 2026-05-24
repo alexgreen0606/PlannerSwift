@@ -6,7 +6,7 @@
 //
 
 enum ListIds {
-    static let UNCHECKED_ITEMS: String = "UNCHECKED_ITEMS"
-    static let CHECKED_ITEMS: String = "CHECKED_ITEMS"
+    static let PENDING_ITEMS: String = "PENDING_ITEMS"
+    static let COMPLETED_ITEMS: String = "COMPLETED_ITEMS"
     static let TRANSFER_BUTTON: String = "TRANSFER_BUTTON"
 }
