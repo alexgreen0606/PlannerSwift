@@ -14,7 +14,7 @@ func generateSortIndex(
     /// May or may not contain the item being placed.
     sortedItems: [ChecklistItem]
 ) -> Double {
-    if sortedItems.isEmpty {
+    guard !sortedItems.isEmpty else {
         return SORT_INDEX_SPACING
     }
 

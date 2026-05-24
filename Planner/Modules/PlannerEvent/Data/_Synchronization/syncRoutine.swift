@@ -123,7 +123,7 @@ extension ModelContext {
             }
 
             // Find a position for the event closest to its routine siblings.
-            let targetIndex = generateTargetIndex(
+            let targetIndex = generateRoutineEventIndex(
                 near: routineEvent.stableId,
                 from: routineEvents,
                 to: finalPlannerEvents,
@@ -172,7 +172,7 @@ extension ModelContext {
             {
                 // Find a position for the event closest to its routine siblings.
                 // Defaults to top of list otherwise.
-                let targetIndex = generateTargetIndex(
+                let targetIndex = generateRoutineEventIndex(
                     near: routineEvent.stableId,
                     from: routineEvents,
                     to: finalPlannerEvents,

@@ -9,14 +9,12 @@ import SwiftData
 import SwiftUI
 import UIKit
 
-// Clean
-
 struct TextfieldView: UIViewRepresentable {
-    @Binding var focusedId: UUID?
     @Binding var text: String
     @Binding var height: CGFloat
-    let itemId: UUID
-    var accentColor: Color
+    @Binding var focusedId: UUID?
+    let stableId: UUID
+    var tint: Color
     var toolbarSystemImageNames: [String]
     var onTapToolbar: (String) -> Void
     var onEnter: () -> Void
@@ -29,11 +27,13 @@ struct TextfieldView: UIViewRepresentable {
         context.coordinator.configureKeyboardToolbar(for: textField)
 
         textField.isEditable = true
-        textField.font = UIFont.systemFont(ofSize: ListLayout.FONT_SIZE)
         textField.isSelectable = true
-        textField.backgroundColor = .clear
-        textField.isUserInteractionEnabled = true
         textField.isScrollEnabled = false
+        textField.isUserInteractionEnabled = true
+
+        textField.font = UIFont.systemFont(ofSize: ListLayout.FONT_SIZE)
+        textField.backgroundColor = .clear
+
         textField.textContainerInset = .zero
         textField.textContainer.lineFragmentPadding = 0
         textField.setContentCompressionResistancePriority(
@@ -42,23 +42,6 @@ struct TextfieldView: UIViewRepresentable {
         )
 
         return textField
-    }
-
-    private func calculateHeight(
-        view: UIView
-    ) {
-        let size = view.sizeThatFits(
-            CGSize(
-                width: view.frame.size.width,
-                height: CGFloat.greatestFiniteMagnitude
-            )
-        )
-
-        guard height != size.height else { return }
-
-        DispatchQueue.main.async {
-            height = size.height
-        }
     }
 
     func updateUIView(_ uiView: UITextView, context: Context) {
@@ -70,17 +53,31 @@ struct TextfieldView: UIViewRepresentable {
 
         calculateHeight(view: uiView)
 
-        if focusedId == itemId, !uiView.isFirstResponder {
-            // Focus textfield when clicked.
+        if focusedId == stableId, !uiView.isFirstResponder {
+            // Item has requested focus. Make it the first responder.
             uiView.becomeFirstResponder()
         } else if focusedId == nil, uiView.isFirstResponder {
-            // Blur textfield when no items should be focused.
+            // List has requested blur. Resign the first responder.
             uiView.resignFirstResponder()
         }
     }
 
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
+    }
+
+    /// Dynamically update the height as text grows/lines increase.
+    private func calculateHeight(view: UIView) {
+        let size = view.sizeThatFits(
+            CGSize(
+                width: view.frame.size.width,
+                height: CGFloat.greatestFiniteMagnitude
+            )
+        )
+
+        guard height != size.height else { return }
+
+        height = size.height
     }
 
     final class Coordinator: NSObject, UITextViewDelegate {
@@ -94,14 +91,15 @@ struct TextfieldView: UIViewRepresentable {
         private var toolbarKey: UInt8 = 0
 
         func textViewDidChange(_ textView: UITextView) {
-            parent.text = textView.text ?? ""
+            parent.text = textView.text
         }
 
+        /// Inform the list when this textfield has claimed focus.
         func textViewDidBeginEditing(_: UITextView) {
-            guard parent.focusedId != parent.itemId else { return }
+            guard parent.focusedId != parent.stableId else { return }
 
             Task { @MainActor in
-                parent.focusedId = parent.itemId
+                parent.focusedId = parent.stableId
             }
         }
 
@@ -118,13 +116,12 @@ struct TextfieldView: UIViewRepresentable {
             return true
         }
 
+        /// Build the toolbar accessory.
         func configureKeyboardToolbar(for textView: UITextView) {
-            let toolbarHeight: CGFloat = 44
-            let toolbarBottomPadding: CGFloat = 8
-
             let container = UIView()
             container.translatesAutoresizingMaskIntoConstraints = false
-            container.frame.size.height = toolbarHeight + toolbarBottomPadding
+            container.frame.size.height =
+                ListLayout.TOOLBAR_HEIGHT + ListLayout.TOOLBAR_BOTTOM_SPACING
 
             let toolbar = UIToolbar()
             toolbar.translatesAutoresizingMaskIntoConstraints = false
@@ -135,7 +132,7 @@ struct TextfieldView: UIViewRepresentable {
                 action: nil
             )
 
-            // Custom Buttons.
+            // Custom Buttons
             let iconButtons: [UIBarButtonItem] = parent.toolbarSystemImageNames
                 .map {
                     systemImageName in
@@ -157,15 +154,15 @@ struct TextfieldView: UIViewRepresentable {
                     return button
                 }
 
-            // Done Button.
+            // Done Button
             let done = UIBarButtonItem(
                 barButtonSystemItem: .done,
                 target: self,
                 action: #selector(doneButtonTapped)
             )
-            toolbar.tintColor = UIColor(parent.accentColor)
+            toolbar.tintColor = UIColor(parent.tint)
 
-            // Build the toolbar.
+            // Assemble the toolbar.
             toolbar.items = iconButtons + [flexibleSpace] + [done]
             container.addSubview(toolbar)
             NSLayoutConstraint.activate([
@@ -176,7 +173,9 @@ struct TextfieldView: UIViewRepresentable {
                     equalTo: container.trailingAnchor
                 ),
                 toolbar.topAnchor.constraint(equalTo: container.topAnchor),
-                toolbar.heightAnchor.constraint(equalToConstant: toolbarHeight),
+                toolbar.heightAnchor.constraint(
+                    equalToConstant: ListLayout.TOOLBAR_HEIGHT
+                ),
             ])
             textView.inputAccessoryView = container
         }

@@ -10,8 +10,13 @@ import SwiftUI
 enum ListLayout {
     static let DIVIDER_HEIGHT: CGFloat = 10
     static let EMPTY_LABEL_HEIGHT: CGFloat = 140
+    
+    // MARK: Keyboard Toolbar
+    
+    static let TOOLBAR_HEIGHT: CGFloat = 44
+    static let TOOLBAR_BOTTOM_SPACING: CGFloat = 8
 
-    // MARK: Row Contents
+    // MARK: Row
 
     static let TOGGLE_HEIGHT: CGFloat = 54
     static let ADORNMENT_HEIGHT: CGFloat = 32

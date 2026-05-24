@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-// Clean
-
 struct SeparatorView: View {
     private let showLowerDivider: Bool
     private let showUpperDivider: Bool
@@ -29,6 +27,8 @@ struct SeparatorView: View {
 
     @AppStorage("showListDividers") private var showListDividers: Bool =
         true
+    
+    // MARK: - Body
 
     var body: some View {
         Rectangle()
@@ -40,6 +40,8 @@ struct SeparatorView: View {
             .contentShape(Rectangle())
             .onTapGesture(perform: onTap)
     }
+    
+    // MARK: - View Builders
 
     @ViewBuilder
     private var divider: some View {

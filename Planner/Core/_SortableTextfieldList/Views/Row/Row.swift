@@ -218,17 +218,17 @@ struct RowView<
 
     private var textfield: some View {
         TextfieldView(
-            focusedId: $listEngine.focusedId,
             text: $item.title,
             height: $height,
-            itemId: item.stableId,
-            accentColor: tint,
+            focusedId: $listEngine.focusedId,
+            stableId: item.stableId,
+            tint: tint,
             toolbarSystemImageNames: toolbarSystemImageNames,
             onTapToolbar: { iconName in
                 onToolbarTap?(iconName, item)
             },
             onEnter: {
-                if !item.title.isEmpty {
+                if !item.title.trimmed.isEmpty {
                     createItem?(index + 1)
                 } else {
                     // Triggers a deletion of the item in the below handler.

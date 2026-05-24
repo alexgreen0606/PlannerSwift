@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-/// Finds a new position for an item that places it close as possible to its previous siblings.
-func generateTargetIndex<Destination: EventListItem>(
+/// Finds a position for a recurring event that places it close as possible to its siblings.
+func generateRoutineEventIndex<Destination: EventListItem>(
     near sourceId: UUID,
     from sortedSourceEvents: [RoutineEvent],
     to sortedDestinationEvents: [Destination],

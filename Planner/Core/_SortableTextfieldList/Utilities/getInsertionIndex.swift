@@ -14,27 +14,28 @@ func getInsertionIndex<Item: ListItem>(
         return 0
     }
 
-    // Insert below upper pending item.
     if pendingIndex > 0 {
         let upperItem = sortedPendingItems[pendingIndex - 1]
 
         if let index = sortedItems.firstIndex(where: {
             $0.stableId == upperItem.stableId
         }) {
+            // Insert below upper pending item.
             return index + 1
         }
     }
 
-    // Insert above lower pending item.
     if pendingIndex < sortedPendingItems.count {
         let lowerItem = sortedPendingItems[pendingIndex]
 
         if let index = sortedItems.firstIndex(where: {
             $0.stableId == lowerItem.stableId
         }) {
+            // Insert above lower pending item.
             return index
         }
     }
 
+    // Fallback to placing the item at the bottom of the list.
     return sortedItems.count
 }

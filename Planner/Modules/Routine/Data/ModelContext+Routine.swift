@@ -317,7 +317,7 @@ extension ModelContext {
     ) -> Date {
         let sortedDestinationEvents = loadSortedRoutineEvents(for: weekday)
 
-        let targetIndex = generateTargetIndex(
+        let targetIndex = generateRoutineEventIndex(
             near: event.stableId,
             from: sortedSourceEvents,
             to: sortedDestinationEvents
