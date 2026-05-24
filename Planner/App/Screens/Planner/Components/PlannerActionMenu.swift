@@ -26,7 +26,6 @@ struct PlannerActionMenuView: View {
         plannerEvents.filter { $0.isCompleted }
     }
 
-    // TODO: ordinal broken
     private var dateLabel: String {
         planner.datestamp.proximityFormat(
             using: [
@@ -62,7 +61,7 @@ struct PlannerActionMenuView: View {
 
     var body: some View {
         Menu("", systemImage: "ellipsis") {
-            ToggleCompletedVisibilityView(
+            CompletedVisibilityToggleView(
                 showCompleted: planner.showChecked,
                 toggle: { planner.showChecked.toggle() }
             )

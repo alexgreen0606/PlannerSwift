@@ -42,6 +42,8 @@ struct CalendarsFormView: View {
     @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
     @State private var calendarStoreRefreshTask: Task<Void, Never>?
+    
+    // MARK: - Body
 
     var body: some View {
         List {
@@ -71,7 +73,7 @@ struct CalendarsFormView: View {
 
     private func row(for calendar: EKCalendar) -> some View {
         HStack {
-            IconSelectorView(
+            IconPickerView(
                 selectedIconConfig: IconConfig(
                     name: calendar.systemImageName(settings: settings),
                     primaryColor: calendar.color,
@@ -97,7 +99,7 @@ struct CalendarsFormView: View {
             )
 
             Text(calendar.title)
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             Toggle(
                 "",

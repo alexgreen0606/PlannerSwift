@@ -105,13 +105,13 @@ struct PlannerChipSpreadView: View {
     @ViewBuilder
     private func eventChip(_ event: EKEvent) -> some View {
         let calendarColor = event.calendar.color
-        AdornedValueView(
+        AdornedValue(
             event.title,
-            color: calendarColor,
             iconConfig: IconConfig(
                 name: event.calendar.systemImageName(settings: settings),
                 primaryColor: calendarColor
-            )
+            ),
+            color: calendarColor,
         )
         .glassChip(height: PlannerLayout.CHIP_HEIGHT) {
             openCalendarEventSheet(event)

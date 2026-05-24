@@ -23,6 +23,10 @@ struct SearchResultWeatherView: View {
         guard planner.searchQueryScore(activeQuery) != nil else {
             return false
         }
+        
+        if activeQuery.isSearching {
+            return true
+        }
 
         let homeLocationLabel = settings.homeLocationLabel(
             deviceLocation: locationService.deviceLocation
@@ -32,8 +36,6 @@ struct SearchResultWeatherView: View {
             settings: settings,
             deviceLocation: locationService.deviceLocation
         )
-
-        // TODO: still show if it matches the home location AND matches the query
 
         if locationLabel != homeLocationLabel {
             return true

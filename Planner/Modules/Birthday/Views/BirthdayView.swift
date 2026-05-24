@@ -33,18 +33,18 @@ struct BirthdayView: View {
                     .frame(width: 24, height: 24)
                     .clipShape(Circle())
 
-                ValueView(birthday.event.title)
+                Value(birthday.event.title)
             }
         } else {
-            AdornedValueView(
+            AdornedValue(
                 birthday.event.title,
-                color: calendarColor,
                 iconConfig: IconConfig(
                     name: birthday.event.calendar.systemImageName(
                         settings: settings
                     ),
                     primaryColor: calendarColor
-                )
+                ),
+                color: calendarColor
             )
         }
     }

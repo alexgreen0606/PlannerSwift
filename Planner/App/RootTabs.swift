@@ -93,7 +93,7 @@ struct RootTabView: View {
     // MARK: - Body
 
     var body: some View {
-        Group {
+        ZStack {
             if let settings {
                 // MARK: Standard App Navigation
                 TabView {

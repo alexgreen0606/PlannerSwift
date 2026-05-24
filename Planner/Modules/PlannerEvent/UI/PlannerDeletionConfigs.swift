@@ -16,19 +16,19 @@ func deletePlannerEventConfig(
 ) -> ConfirmationConfig {
     ConfirmationConfig(
         title:
-        "Delete\(inForm ? " this" : "") event\(inForm ? "" : " \"\(event.title)\"")?",
+            "Delete\(inForm ? " this" : "") event\(inForm ? "" : " \"\(event.title)\"")?",
         message: {
             if event.calendarEvent == nil {
-                return genericDeleteWarning
+                return GENERIC_DELETE_WARNING
             }
             return
-                "Event will be removed from your calendar. \(genericDeleteWarning)"
+                "Event will be removed from your calendar. \(GENERIC_DELETE_WARNING)"
         }(),
         actions: [
             ConfirmationAction(
                 title: "Delete Event",
                 handler: delete
-            ),
+            )
         ]
     )
 }
@@ -56,17 +56,17 @@ func bulkDeletePlannerEventConfig(
 
             if hasCalendarEvent {
                 return
-                    "Associated calendar events will also be deleted. \(genericDeleteWarning)"
+                    "Associated calendar events will also be deleted. \(GENERIC_DELETE_WARNING)"
             }
 
-            return genericDeleteWarning
+            return GENERIC_DELETE_WARNING
         }(),
         actions: [
             ConfirmationAction(
                 title:
-                "Delete \(count) Events",
+                    "Delete \(count) Events",
                 handler: delete
-            ),
+            )
         ]
     )
 }
@@ -81,14 +81,14 @@ func bulkDeleteCompletedPlannerEventConfig(
 ) -> ConfirmationConfig {
     ConfirmationConfig(
         title:
-        "Delete completed events from \(dateLabel)?",
+            "Delete completed events from \(dateLabel)?",
         message: deleteCategoryMessage(hasCalendarAccess: hasCalendarAccess),
         actions: [
             ConfirmationAction(
                 title:
-                "Delete \("Event".inflected(for: completedEventCount))",
+                    "Delete ^[\(completedEventCount) Event](inflect: true)",
                 handler: delete
-            ),
+            )
         ]
     )
 }
@@ -103,14 +103,14 @@ func deleteCanceledEventsConfig(
 ) -> ConfirmationConfig {
     ConfirmationConfig(
         title:
-        "Delete canceled events from \(dateLabel)?",
+            "Delete canceled events from \(dateLabel)?",
         message: deleteCategoryMessage(hasCalendarAccess: hasCalendarAccess),
         actions: [
             ConfirmationAction(
                 title:
-                "Delete \("Event".inflected(for: canceledEventCount))",
+                    "Delete ^[\(canceledEventCount) Event](inflect: true)",
                 handler: delete
-            ),
+            )
         ]
     )
 }
@@ -121,9 +121,9 @@ private func deleteCategoryMessage(
     hasCalendarAccess: Bool
 ) -> String {
     guard hasCalendarAccess else {
-        return genericDeleteWarning
+        return GENERIC_DELETE_WARNING
     }
 
     return
-        "Associated calendar events will not be deleted. \(genericDeleteWarning)"
+        "Associated calendar events will not be deleted. \(GENERIC_DELETE_WARNING)"
 }

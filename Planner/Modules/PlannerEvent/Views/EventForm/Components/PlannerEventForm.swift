@@ -249,7 +249,7 @@ struct PlannerEventFormView: View {
                     Text("")
                     Spacer()
                     VStack(alignment: .trailing) {
-                        TimeView(timeInRegion: timeAndDay)
+                        Time(timeInRegion: timeAndDay)
                         Text(timeZoneAbbreviation)
                             .font(
                                 .system(

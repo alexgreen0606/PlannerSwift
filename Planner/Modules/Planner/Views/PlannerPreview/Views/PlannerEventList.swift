@@ -32,7 +32,7 @@ struct PlannerEventListView: View {
                     }
                     .frame(height: 17)
 
-                    ValueView(event.title)
+                    Value(event.title)
 
                     Spacer()
 

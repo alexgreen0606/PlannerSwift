@@ -118,7 +118,7 @@ struct LocationSearchHeaderView: View {
             plannerLocationIndicator(plannerLocation)
 
         } else if let selectedLocation {
-            AdornedValueView(
+            AdornedValue(
                 selectedLocation.name,
                 iconConfig: IconConfig(
                     name: "mappin.and.ellipse",

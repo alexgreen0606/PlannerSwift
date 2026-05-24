@@ -32,7 +32,7 @@ struct LocationChipView: View {
     // MARK: - Body
 
     var body: some View {
-        AdornedValueView(
+        AdornedValue(
             locationLabel,
             iconConfig: locationIconConfig
         )

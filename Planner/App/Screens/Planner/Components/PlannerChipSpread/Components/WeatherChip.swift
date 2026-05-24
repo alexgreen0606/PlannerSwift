@@ -40,7 +40,7 @@ struct WeatherChipView: View {
                     )
                     .frame(width: ICON_SIZE, height: ICON_SIZE)
 
-                ValueView(weatherData.condition.description)
+                Value(weatherData.condition.description)
             }
 
             TemperatureView(weatherData: weatherData)

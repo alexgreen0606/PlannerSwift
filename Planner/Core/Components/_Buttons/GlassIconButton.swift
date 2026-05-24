@@ -8,18 +8,23 @@
 import SwiftUI
 
 struct GlassIconButtonView: View {
-    let systemImage: String
-    let color: Color?
-    let onTap: () -> Void
+    private let systemImage: String
+    private let onTap: () -> Void
 
-    init(systemImage: String, color: Color? = nil, onTap: @escaping () -> Void) {
+    init(systemImage: String, color: Color? = nil, onTap: @escaping () -> Void)
+    {
         self.systemImage = systemImage
-        self.color = color
         self.onTap = onTap
+
+        self.customColor = color
     }
+
+    private let customColor: Color?
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
+
+    // MARK: - Body
 
     var body: some View {
         Button {
@@ -31,7 +36,6 @@ struct GlassIconButtonView: View {
         }
         .buttonStyle(.glass)
         .buttonBorderShape(.circle)
-        .foregroundStyle(color ?? accentColor.color)
-        .tint(color ?? accentColor.color)
+        .tint(customColor ?? accentColor.color)
     }
 }

@@ -36,7 +36,7 @@ struct FolderRootView: View {
             )
             .overlay {
                 if folder.safeItems.isEmpty {
-                    EmptyLabelView("No items")
+                    EmptyLabel("No items")
                 }
             }
             .toolbar {

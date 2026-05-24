@@ -7,29 +7,31 @@
 
 import SwiftUI
 
-// Clean
-
-struct ActionTextView: View {
+struct ActionText: View {
     private let text: String
-    private let color: Color?
 
     init(_ text: String, color: Color? = nil) {
         self.text = text
-        self.color = color
+
+        self.customColor = color
     }
+
+    private let customColor: Color?
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
+    // MARK: - Body
+
     var body: some View {
         Text(text)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
             .font(
                 .system(size: 14, weight: .black, design: .rounded)
             )
             .foregroundStyle(
-                color ?? accentColor.color
+                customColor ?? accentColor.color
             )
-            .lineLimit(1)
-            .minimumScaleFactor(0.7)
     }
 }

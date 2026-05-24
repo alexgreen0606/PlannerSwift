@@ -7,48 +7,43 @@
 
 import SwiftUI
 
-// Clean
-
-struct AdornedValueView: View {
-    private let title: String
-    private let color: Color?
+struct AdornedValue: View {
+    private let text: String
     private let iconConfig: IconConfig?
+    private let color: Color?
     private let scale: Double
 
     init(
-        _ title: String,
-        color: Color? = nil,
+        _ text: String,
         iconConfig: IconConfig? = nil,
-        scale: Double? = nil
+        color: Color? = nil,
+        scale: Double = 1
     ) {
-        self.title = title
+        self.text = text
         self.iconConfig = iconConfig
         self.color = color
-        self.scale = scale ?? 1
+        self.scale = scale
     }
 
+    // TODO: make this a constant
     private var iconSize: CGFloat {
         14 * scale
     }
 
-    private var spacing: CGFloat {
-        6 * scale
-    }
+    // MARK: - Body
 
     var body: some View {
-        HStack(spacing: spacing) {
+        HStack(spacing: 6 * scale) {
             if let iconConfig {
                 Image(systemName: iconConfig.name)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: iconSize, height: iconSize)
                     .foregroundStyle(
                         iconConfig.primaryColor,
                         iconConfig.secondaryColor
                     )
             }
 
-            ValueView(title, color: color, scale: scale)
+            Value(text, color: color, scale: scale)
         }
+        .font(.system(size: iconSize, weight: .regular))
     }
 }

@@ -165,23 +165,25 @@ struct TransferChecklistItemsFormView: View {
     }
 
     private var sourceChip: some View {
-        TransferSourceIndicatorView(
+        TransferSelectionIndicatorView(
             title: source.title,
             subtitle: transferCount,
             iconConfig: IconConfig(
                 name: source.type.systemImageName,
-                primaryColor: source.color.swiftUIColor.opacity(0.8)
+                primaryColor: source.color.swiftUIColor,
+                secondaryColor: source.color.swiftUIColor
             )
         )
-        .glassChip(height: 36)
+        .glassChip(height: 46)
     }
 
     private func destinationChip(_ selectedItem: ChecklistItem) -> some View {
-        TransferDestinationIndicatorView(
+        TransferSelectionIndicatorView(
             title: selectedItem.title,
             iconConfig: IconConfig(
                 name: selectedItem.type.systemImageName,
-                primaryColor: selectedItem.color.swiftUIColor
+                primaryColor: selectedItem.color.swiftUIColor,
+                secondaryColor: selectedItem.color.swiftUIColor
             )
         )
         .glassChip(height: 40)
@@ -216,7 +218,7 @@ struct TransferChecklistItemsFormView: View {
         showToast(
             Toast(
                 title:
-                "Successfully transferred \(selectedType.inflected(for: itemCount))!",
+                "Successfully transferred ^[\(itemCount) \(selectedType)](inflect: true)!",
                 subtitle: LocalizedStringKey(selectedItem.title),
                 iconConfig: IconConfig(
                     name: icon,

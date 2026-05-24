@@ -7,14 +7,11 @@
 
 import SwiftUI
 
-// Clean
-
 struct FormLabelView: View {
     private let systemImageName: String
     private let label: String
     private let value: String
     private let detail: LocalizedStringKey?
-    private let color: Color?
     private let onTap: (() -> Void)?
 
     init(
@@ -28,21 +25,23 @@ struct FormLabelView: View {
         self.systemImageName = systemImageName
         self.label = label
         self.value = value
-        self.color = color
         self.detail = detail
         self.onTap = onTap
+        
+        self.customColor = color
     }
+    
+    private let customColor: Color?
 
-    @AppStorage("accentColor") var accentColor: AccentColor =
-        .blue
+    // MARK: - Body
 
     var body: some View {
         let row = HStack {
             Image(systemName: systemImageName)
             Text(label)
-            Spacer()
+                .frame(maxWidth: .infinity, alignment: .leading)
             VStack(alignment: .trailing) {
-                ActionTextView(value, color: color)
+                ActionText(value, color: customColor)
                 if let detail {
                     Text(detail)
                         .font(

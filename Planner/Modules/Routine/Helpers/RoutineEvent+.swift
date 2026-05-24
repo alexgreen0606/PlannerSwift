@@ -70,10 +70,10 @@ extension RoutineEvent {
         openEventSheet: (() -> Void)?
     ) -> some View {
         if let time = time {
-            TimeView(
+            Time(
                 timeInRegion: DateInRegion(time, region: .UTC),
                 color: accentColor.color,
-                openEventSheet: openEventSheet
+                onTap: openEventSheet
             )
         }
     }

@@ -48,7 +48,7 @@ struct ChecklistActionMenuView: View {
 
     var body: some View {
         Menu("Checklist Action Menu", systemImage: "ellipsis") {
-            ToggleCompletedVisibilityView(
+            CompletedVisibilityToggleView(
                 showCompleted: checklist.showCompleted,
                 toggle: { checklist.showCompleted.toggle() }
             )

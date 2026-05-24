@@ -176,7 +176,7 @@ struct PlannerPreviewView: View {
     @ViewBuilder
     private var tripInfo: some View {
         if let tripLabel {
-            AdornedValueView(
+            AdornedValue(
                 tripLabel,
                 iconConfig: IconConfig(name: "suitcase")
             )
@@ -201,15 +201,15 @@ struct PlannerPreviewView: View {
             id: \.eventIdentifier
         ) { event in
             let calendarColor = event.calendar.color
-            AdornedValueView(
+            AdornedValue(
                 event.title,
-                color: calendarColor,
                 iconConfig: IconConfig(
                     name: event.calendar.systemImageName(
                         settings: settings
                     ),
                     primaryColor: calendarColor
-                )
+                ),
+                color: calendarColor
             )
         }
     }
@@ -217,7 +217,7 @@ struct PlannerPreviewView: View {
     @ViewBuilder
     private var remainingPlansIndicator: some View {
         if hasEvents && !isSearching {
-            EmptyLabelView(remainingPlansLabel, scale: 0.8)
+            EmptyLabel(remainingPlansLabel, scale: 0.8)
         }
     }
 
@@ -226,7 +226,7 @@ struct PlannerPreviewView: View {
         if type != .search {
             ZStack {
                 if !hasEvents {
-                    EmptyLabelView(remainingPlansLabel, scale: 0.8)
+                    EmptyLabel(remainingPlansLabel, scale: 0.8)
                 }
             }
             .frame(

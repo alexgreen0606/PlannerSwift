@@ -28,8 +28,8 @@ struct FolderActionMenuView: View {
     // MARK: - Body
 
     var body: some View {
-        Menu("Folder Action Menu", systemImage: "ellipsis") {
-            SelectItemsButtonView(hasVisibleItem: !items.isEmpty)
+        Menu("", systemImage: "ellipsis") {
+            SelectItemsButtonView<ChecklistItem>(hasVisibleItem: !items.isEmpty)
             editFolderButton
             deleteFolderButton
         }

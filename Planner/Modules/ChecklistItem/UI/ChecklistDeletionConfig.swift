@@ -17,20 +17,20 @@ func deleteChecklistItemConfig(
 ) -> ConfirmationConfig {
     ConfirmationConfig(
         title:
-        "Delete\(inForm ? " this" : "") \(item.type.rawValue)\(inForm ? "" : " \"\(item.title)\"")?",
+            "Delete\(inForm ? " this" : "") \(item.type.rawValue)\(inForm ? "" : " \"\(item.title)\"")?",
         message: {
             if item.safeItems.isEmpty {
-                return genericDeleteWarning
+                return GENERIC_DELETE_WARNING
             }
 
             return
-                "Contents within this \(item.type.rawValue) will also be deleted. \(genericDeleteWarning)"
+                "Contents within this \(item.type.rawValue) will also be deleted. \(GENERIC_DELETE_WARNING)"
         }(),
         actions: [
             ConfirmationAction(
                 title: "Delete \(item.type.rawValue.capitalized)",
                 handler: delete
-            ),
+            )
         ]
     )
 }
@@ -55,18 +55,18 @@ func bulkDeleteChecklistItemConfig(
         title: "Delete \(count) \(childType.capitalized)s?",
         message: {
             guard items.contains(where: { !$0.safeItems.isEmpty }) else {
-                return genericDeleteWarning
+                return GENERIC_DELETE_WARNING
             }
 
             return
-                "Contents within these \(childType)s will also be deleted. \(genericDeleteWarning)"
+                "Contents within these \(childType)s will also be deleted. \(GENERIC_DELETE_WARNING)"
         }(),
         actions: [
             ConfirmationAction(
                 title:
-                "Delete \(count) \(childType.capitalized)s",
+                    "Delete \(count) \(childType.capitalized)s",
                 handler: delete
-            ),
+            )
         ]
     )
 }
@@ -81,14 +81,14 @@ func bulkDeleteCompletedChecklistItemConfig(
 ) -> ConfirmationConfig {
     ConfirmationConfig(
         title:
-        "Delete completed items from \"\(item.title)\"?",
-        message: genericDeleteWarning,
+            "Delete completed items from \"\(item.title)\"?",
+        message: GENERIC_DELETE_WARNING,
         actions: [
             ConfirmationAction(
                 title:
-                "Delete \("Item".inflected(for: completedItems.count))",
+                    "Delete ^[\(completedItems.count) Item](inflect: true)",
                 handler: delete
-            ),
+            )
         ]
     )
 }

@@ -8,128 +8,104 @@
 import SwiftData
 import SwiftUI
 
-// Clean
-
-struct ToggleConfig {
-    let iconConfig: IconConfig
-    let uncheckedIconConfig: IconConfig
-    let confirmation: ConfirmationConfig?
-    let onClick: (() -> Void)?
-
-    init(
-        iconConfig: IconConfig,
-        uncheckedIconConfig: IconConfig = IconConfig(name: "circle"),
-        confirmation: ConfirmationConfig? = nil,
-        onClick: (() -> Void)? = nil
-    ) {
-        self.iconConfig = iconConfig
-        self.uncheckedIconConfig = uncheckedIconConfig
-        self.confirmation = confirmation
-        self.onClick = onClick
-    }
-}
-
-struct ConfirmationConfig {
-    let title: String?
-    let message: String?
-    let needsConfirmation: Bool
-    let actions: [ConfirmationAction]
-
-    init(
-        title: String?,
-        message: String? = nil,
-        needsConfirmation: Bool = true,
-        actions: [ConfirmationAction]
-    ) {
-        self.title = title
-        self.message = message
-        self.needsConfirmation = needsConfirmation
-        self.actions = actions
-    }
-}
-
 struct ListItemToggleView<Item: ListItem>: View {
-    let item: Item
-    let tint: Color
-    let isChecked: Bool
-    let opacity: Double
-    let customToggleConfig: ToggleConfig?
+    private let item: Item
+    private let opacity: Double
+    private let customToggleConfig: ToggleConfig?
 
     init(
         item: Item,
-        tint: Color,
-        isChecked: Bool,
+        color: Color? = nil,
         opacity: Double,
         customToggleConfig: ToggleConfig? = nil
     ) {
         self.item = item
-        self.tint = tint
-        self.isChecked = isChecked
         self.opacity = opacity
         self.customToggleConfig = customToggleConfig
+
+        self.customColor = color
     }
+
+    private let customColor: Color?
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @EnvironmentObject private var ListEngine: ListEngine<Item>
+    @EnvironmentObject private var listEngine: ListEngine<Item>
 
-    /// Only used by custom toggles that require confirmation.
     @State private var isConfirmationOpen: Bool = false
 
-    private var activeTint: Color {
-        ListEngine.isSelectMode ? accentColor.color : tint
+    private var isChecked: Bool {
+        if listEngine.isSelectMode {
+            return listEngine.selectedItemIds.contains(item.stableId)
+        }
+
+        return item.isCompleted
     }
 
     private var toggleConfig: ToggleConfig {
         if let customConfig = customToggleConfig,
-           !ListEngine.isSelectMode
+            !listEngine.isSelectMode
         {
             return customConfig
         }
 
         return ToggleConfig(
-            iconConfig: IconConfig(
+            completedIconConfig: IconConfig(
                 name: "circle.inset.filled",
-                primaryColor: activeTint
+                primaryColor: color
             )
         )
     }
 
+    private var color: Color {
+        guard let customColor else {
+            return accentColor.color
+        }
+
+        return listEngine.isSelectMode ? accentColor.color : customColor
+    }
+
     private var systemImageName: String {
         isChecked
-            ? toggleConfig.iconConfig.name
-            : toggleConfig.uncheckedIconConfig.name
+            ? toggleConfig.completedIconConfig.name
+            : toggleConfig.pendingIconConfig.name
     }
 
     private var primaryColor: Color {
         isChecked
-            ? toggleConfig.iconConfig.primaryColor
-            : toggleConfig.uncheckedIconConfig.primaryColor
+            ? toggleConfig.completedIconConfig.primaryColor
+            : toggleConfig.pendingIconConfig.primaryColor
     }
 
     private var secondaryColor: Color {
         isChecked
-            ? toggleConfig.iconConfig.secondaryColor
-            : toggleConfig.uncheckedIconConfig.secondaryColor
+            ? toggleConfig.completedIconConfig.secondaryColor
+            : toggleConfig.pendingIconConfig.secondaryColor
     }
 
     private var needsConfirmation: Bool {
-        toggleConfig.confirmation?.needsConfirmation == true
+        toggleConfig.confirmation != nil
     }
+
+    // MARK: - Body
 
     var body: some View {
         Image(systemName: systemImageName)
-            .opacity(opacity)
             .imageScale(.large)
-            .foregroundStyle(
-                primaryColor,
-                secondaryColor
-            )
             .contentTransition(
                 .symbolEffect(
                     .replace.downUp
                 )
+            )
+            .foregroundStyle(
+                primaryColor,
+                secondaryColor
+            )
+            .opacity(opacity)
+            .withConfirmation(
+                toggleConfig.confirmation,
+                isPresented: $isConfirmationOpen
             )
             .contentShape(Rectangle())
             .onTapGesture {
@@ -138,12 +114,8 @@ struct ListItemToggleView<Item: ListItem>: View {
                 if needsConfirmation {
                     isConfirmationOpen = true
                 } else {
-                    ListEngine.toggleItem(item)
+                    listEngine.toggleItem(item)
                 }
             }
-            .withConfirmation(
-                toggleConfig.confirmation,
-                isPresented: $isConfirmationOpen
-            )
     }
 }

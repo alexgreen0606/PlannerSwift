@@ -90,7 +90,7 @@ struct SearchRootView: View {
                                     .listRowBackground(Color.clear)
                                 }
                             } header: {
-                                YearSectionHeaderView(year)
+                                YearSectionHeader(year)
                             }
                             .listSectionMargins(.top, 0)
                         }
@@ -167,7 +167,7 @@ struct SearchRootView: View {
     @ViewBuilder
     private var noResultsLabelView: some View {
         if plannerSearchStore.results.sortedYears.isEmpty {
-            EmptyLabelView(noResultsLabel)
+            EmptyLabel(noResultsLabel)
                 .padding(.horizontal)
         }
     }

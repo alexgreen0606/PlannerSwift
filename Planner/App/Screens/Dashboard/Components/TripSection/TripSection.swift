@@ -54,7 +54,7 @@ struct TripSectionView: View {
     var body: some View {
         if sortedUpcomingTrips.isEmpty {
             Section("Trips") {
-                EmptyLabelView("No upcoming trips")
+                EmptyLabel("No upcoming trips")
                     .frame(
                         maxWidth: .infinity,
                         minHeight: 40
@@ -89,7 +89,7 @@ struct TripSectionView: View {
                     if index == 0 {
                         Text("Trips")
                     } else {
-                        YearSectionHeaderView(year)
+                        YearSectionHeader(year)
                     }
                 }
                 .padding([.horizontal, .bottom])

@@ -46,7 +46,7 @@ struct CurrentFolderListView: View {
         .transition(folderSlideTransition)
         .overlay {
             if selectableItems.isEmpty {
-                EmptyLabelView(
+                EmptyLabel(
                     "No available \(destinationType.rawValue)s"
                 )
             }

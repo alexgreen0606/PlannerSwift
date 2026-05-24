@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import SwiftUIIntrospect
 
 struct FormSaveButtonView: ToolbarContent {
     private let canSave: Bool
@@ -23,16 +22,18 @@ struct FormSaveButtonView: ToolbarContent {
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
+    
+    // MARK: - Body
 
     var body: some ToolbarContent {
         ToolbarItem(placement: .confirmationAction) {
             Button(
-                "FormSaveButton",
+                "",
                 systemImage: "checkmark",
                 action: save
             )
-            .tint(customTint ?? accentColor.color)
             .disabled(!canSave)
+            .tint(customTint ?? accentColor.color)
         }
     }
 }

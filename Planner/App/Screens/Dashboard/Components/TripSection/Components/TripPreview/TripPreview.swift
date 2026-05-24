@@ -70,13 +70,13 @@ struct TripPreviewView: View {
                     )
 
                 if let locationLabel {
-                    AdornedValueView(
+                    AdornedValue(
                         locationLabel,
-                        color: Color.secondary,
                         iconConfig: IconConfig(
                             name: "mappin.and.ellipse",
                             primaryColor: accentColor.color
                         ),
+                        color: Color.secondary,
                         scale: 0.8
                     )
                 }

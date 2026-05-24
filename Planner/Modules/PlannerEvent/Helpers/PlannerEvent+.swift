@@ -161,11 +161,11 @@ extension PlannerEvent {
         openEventSheet: (() -> Void)?
     ) -> some View {
         if let time = time {
-            TimeView(
+            Time(
                 timeInRegion: DateInRegion(time, region: plannerRegion),
                 color: tint(accentColor: accentColor),
                 scale: scale,
-                openEventSheet: openEventSheet
+                onTap: openEventSheet
             )
         }
     }

@@ -178,12 +178,12 @@ struct RoutineRootView: View {
 
     private func eventToggleConfig(_ event: RoutineEvent) -> ToggleConfig? {
         ToggleConfig(
-            iconConfig: IconConfig(name: ""),
-            uncheckedIconConfig: IconConfig(
+            pendingIconConfig: IconConfig(
                 name: "minus.circle",
                 primaryColor: Color.red,
                 secondaryColor: Color.tertiary
             ),
+            completedIconConfig: IconConfig(name: ""),
             confirmation: removeRoutineEventFromWeekdayConfig(
                 event: event,
                 weekday: weekday,

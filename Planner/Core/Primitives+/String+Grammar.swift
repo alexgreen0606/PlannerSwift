@@ -9,15 +9,6 @@ import SwiftDate
 import SwiftUI
 
 extension String {
-    /// Returns a grammatically correct pluralized string for the given count.
-    ///
-    /// Example:
-    /// - "1 event"
-    /// - "2 events"
-    func inflected(for count: Int) -> LocalizedStringKey {
-        "^[\(count) \(self)](inflect: true)"
-    }
-    
     var trimmed: String {
         trimmingCharacters(in: .whitespacesAndNewlines)
     }

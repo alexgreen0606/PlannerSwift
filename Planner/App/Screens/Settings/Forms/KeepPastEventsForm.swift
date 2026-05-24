@@ -42,7 +42,7 @@ struct KeepPastEventsFormView: View {
     {
         HStack {
             Text(pastPlansDuration.label)
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             if pastPlansDuration == keepPastEventsDuration {
                 Image(systemName: "checkmark")

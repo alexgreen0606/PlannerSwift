@@ -42,7 +42,7 @@ struct ToggleTransitionFormView: View {
     {
         HStack {
             Text(transitionDuration.label)
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             if transitionDuration == toggleTransitionDuration {
                 Image(systemName: "checkmark")

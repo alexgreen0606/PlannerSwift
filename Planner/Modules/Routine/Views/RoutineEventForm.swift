@@ -208,7 +208,7 @@ struct RoutineEventFormView: View {
                     Image(systemName: "clock")
                     Text("")
                     Spacer()
-                    TimeView(timeInRegion: timeAndDay)
+                    Time(timeInRegion: timeAndDay)
                 }
                 .contentShape(Rectangle())
                 .onTapGesture(perform: togglePicker)

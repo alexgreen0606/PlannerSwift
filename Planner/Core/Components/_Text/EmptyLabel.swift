@@ -7,9 +7,7 @@
 
 import SwiftUI
 
-// Clean
-
-struct EmptyLabelView: View {
+struct EmptyLabel: View {
     private let text: String
     private let scale: Double
 
@@ -18,10 +16,12 @@ struct EmptyLabelView: View {
         self.scale = scale
     }
 
+    // MARK: - Body
+
     var body: some View {
         Text(text)
             .multilineTextAlignment(.center)
             .font(.system(size: 16 * scale, weight: .heavy, design: .rounded))
-            .foregroundStyle(Color(uiColor: .tertiaryLabel))
+            .foregroundStyle(.tertiary)
     }
 }

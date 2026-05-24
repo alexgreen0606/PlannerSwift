@@ -44,10 +44,6 @@ struct FolderContentsListView: View {
                 // MARK: Toggle
                 ListItemToggleView(
                     item: item,
-                    tint: accentColor.color,
-                    isChecked: itemSelectEngine.selectedItemIds.contains(
-                        item.stableId
-                    ),
                     opacity: itemSelectEngine.isSelectMode ? 1 : 0
                 )
                 .frame(

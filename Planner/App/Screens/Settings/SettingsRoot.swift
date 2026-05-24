@@ -59,12 +59,13 @@ struct SettingsRootView: View {
                     // MARK: Accent Color
                     HStack {
                         Text(AccentColor.title)
-                            .frame(maxWidth: .infinity)
-                        IconSelectorView(
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        IconPickerView(
                             selectedIconConfig: IconConfig(
                                 name: "square.fill",
                                 primaryColor: accentColor.color
                             ),
+                            largeIcon: true,
                             options: AccentColor.allCases.map { colorConfig in
                                 IconConfig(
                                     name: colorConfig == accentColor
@@ -73,7 +74,6 @@ struct SettingsRootView: View {
                                 )
                             },
                             numColumns: 3,
-                            isLargeIcon: true,
                             onTap: { config in
                                 if let selected = AccentColor.allCases.first(
                                     where: { $0.color == config.primaryColor }
@@ -94,7 +94,7 @@ struct SettingsRootView: View {
                     } label: {
                         HStack {
                             Text(ToggleTransitionDuration.title)
-                                .frame(maxWidth: .infinity)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             Text(
                                 toggleTransitionDuration.label
                             )
@@ -121,7 +121,7 @@ struct SettingsRootView: View {
                     } label: {
                         HStack {
                             Text("Home Location")
-                                .frame(maxWidth: .infinity)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             Text(
                                 settings.homeLocation?.name
                                     ?? "Current Location"
@@ -137,7 +137,7 @@ struct SettingsRootView: View {
                     } label: {
                         HStack {
                             Text("Calendars")
-                                .frame(maxWidth: .infinity)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             Text(
                                 calendarStore.accessDenied != false
                                     ? "No Access" : activeCalendarCount
@@ -154,7 +154,7 @@ struct SettingsRootView: View {
                     } label: {
                         HStack {
                             Text(KeepPastEventsDuration.title)
-                                .frame(maxWidth: .infinity)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             Text(
                                 keepPastEventsDuration.label
                             )

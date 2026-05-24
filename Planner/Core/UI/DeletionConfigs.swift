@@ -5,7 +5,7 @@
 //  Created by Alex Green on 4/17/26.
 //
 
-let genericDeleteWarning: String = "This can't be undone."
+let GENERIC_DELETE_WARNING: String = "This can't be undone."
 
 // MARK: - Confirmation Rules:
 

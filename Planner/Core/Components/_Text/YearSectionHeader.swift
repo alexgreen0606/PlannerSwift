@@ -7,12 +7,14 @@
 
 import SwiftUI
 
-struct YearSectionHeaderView: View {
+struct YearSectionHeader: View {
     private let year: String
 
     init(_ year: String) {
         self.year = year
     }
+
+    // MARK: - Body
 
     var body: some View {
         Text(year)
