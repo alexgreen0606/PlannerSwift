@@ -39,14 +39,17 @@ final class PlannerSearchStore: ObservableObject {
     func search(
         with query: PlannerSearchQuery,
         modelContainer: ModelContainer,
+        modelContext: ModelContext,
+        plannerSyncService: PlannerSyncService,
+        todaystamp: String,
         settings: PlannerSettings,
         ekEventStore: EKEventStore
     ) {
         plannerSearchService =
             plannerSearchService
-                ?? PlannerSearchService(
-                    modelContainer: modelContainer
-                )
+            ?? PlannerSearchService(
+                modelContainer: modelContainer
+            )
 
         Task {
             let datestampMap = await plannerSearchService!.search(
@@ -57,6 +60,26 @@ final class PlannerSearchStore: ObservableObject {
 
             guard !Task.isCancelled else { return }
 
+            let fullPlannerContexts = modelContext.getBulkPlannerContexts(
+                for: Set(datestampMap.values.flatMap { $0 }),
+                settings: settings
+            )
+
+            // MARK: Eager-build all results before displaying them in the UI.
+            for context in fullPlannerContexts {
+                let _ = plannerSyncService.syncPlanner(
+                    context.planner,
+                    weekday: context.weekday,
+                    plannerDay: context.plannerDay,
+                    sortedPlannerEvents: context.sortedPlannerEvents,
+                    settings: settings,
+                    ekEventStore: ekEventStore,
+                    todaystamp: todaystamp,
+                    modelContext: modelContext
+                )
+            }
+
+            // MARK: Return results so the UI can display them.
             await MainActor.run {
                 let sortedKeys = datestampMap.keys.sorted {
                     query.past ? $0 > $1 : $0 < $1

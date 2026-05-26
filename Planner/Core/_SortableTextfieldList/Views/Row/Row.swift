@@ -234,11 +234,11 @@ struct RowView<
                 }
             }
         )
-        .fixedSize(horizontal: false, vertical: true)
         .tint(tint)
         .opacity(isFocused ? 1 : 0)
         .frame(height: height)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .fixedSize(horizontal: false, vertical: true)
 
         // MARK: Debounce the title change handler (1 second delay).
 

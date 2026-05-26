@@ -183,6 +183,9 @@ struct SearchRootView: View {
         plannerSearchStore.search(
             with: draftQuery,
             modelContainer: modelContext.container,
+            modelContext: modelContext,
+            plannerSyncService: plannerSyncService,
+            todaystamp: todaystampService.todaystamp,
             settings: settings,
             ekEventStore: calendarStore.ekEventStore
         )

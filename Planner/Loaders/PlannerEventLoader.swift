@@ -125,9 +125,8 @@ struct PlannerEventContextLoaderView<Content: View>: View {
 
         withAnimation {
             calendarDayData = calendarData
+            hydrateCalendarEvents(calendarDayData: calendarData)
         }
-
-        hydrateCalendarEvents(calendarDayData: calendarData)
     }
 
     private func loadWeather() {

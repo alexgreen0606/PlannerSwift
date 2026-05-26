@@ -10,7 +10,12 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-// Clean
+struct FullPlannerContext {
+    let planner: Planner
+    let plannerDay: DateInRegion
+    let weekday: Weekday
+    let sortedPlannerEvents: [PlannerEvent]
+}
 
 extension ModelContext {
     // MARK: - ENSURE
@@ -56,6 +61,50 @@ extension ModelContext {
             return planners.first ?? createPlanner(for: datestamp)
         } catch {
             return createPlanner(for: datestamp)
+        }
+    }
+
+    @MainActor
+    func getBulkPlannerContexts(
+        for datestamps: Set<String>,
+        settings: PlannerSettings
+    ) -> [FullPlannerContext] {
+        do {
+            let planners = try fetch(
+                FetchDescriptor<Planner>(
+                    predicate: #Predicate<Planner> { planner in
+                        datestamps.contains(planner.datestamp)
+                    }
+                )
+            )
+
+            var fullPlannerContexts: [FullPlannerContext] = []
+
+            for planner in planners {
+                guard
+                    let weekday = Weekday.forDatestamp(planner.datestamp),
+                    let plannerDay = planner.datestamp.startOfDay(
+                        in: planner.region(settings: settings)
+                    )
+                else {
+                    continue
+                }
+
+                let sortedEvents = getSortedStorageEvents(for: plannerDay)
+
+                fullPlannerContexts.append(
+                    FullPlannerContext(
+                        planner: planner,
+                        plannerDay: plannerDay,
+                        weekday: weekday,
+                        sortedPlannerEvents: sortedEvents
+                    )
+                )
+            }
+
+            return fullPlannerContexts
+        } catch {
+            return []
         }
     }
 
@@ -134,7 +183,7 @@ extension ModelContext {
         planner.excludeRoutine = !planner.safeExcludeRoutine
 
         if let trip = planner.trip,
-           trip.excludeRoutines == planner.excludeRoutine
+            trip.excludeRoutines == planner.excludeRoutine
         {
             // Revert flag back to nil so it inherits from the trip.
             planner.excludeRoutine = nil
