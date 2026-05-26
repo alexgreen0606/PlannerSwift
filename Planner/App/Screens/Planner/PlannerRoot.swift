@@ -78,9 +78,9 @@ struct PlannerRootView: View {
                         plannerLocation: plannerLocation,
                         sortedPlannerEvents: sortedPlannerEvents,
                         sortedPendingPlannerEvents:
-                        sortedPendingPlannerEvents,
+                            sortedPendingPlannerEvents,
                         sortedCompletePlannerEvents:
-                        sortedCompletePlannerEvents,
+                            sortedCompletePlannerEvents,
                         calendarDayData: calendarDayData,
                         showCompleted: planner.showCompleted,
                         scrollProxy: scrollProxy,
@@ -227,7 +227,13 @@ struct PlannerRootView: View {
     }
 
     private func createLowerEvent(scrollProxy: ScrollViewProxy) {
-        createEvent(at: sortedPendingPlannerEvents.count)
+        let targetIndex = getInsertionIndex(
+            pendingIndex: sortedPendingPlannerEvents.count,
+            sortedPendingItems: sortedPendingPlannerEvents,
+            sortedItems: sortedPlannerEvents
+        )
+
+        createEvent(at: targetIndex)
         scrollProxy.scrollToBottomOfList()
     }
 }

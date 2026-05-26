@@ -34,11 +34,16 @@ extension ModelContext {
 
     // MARK: - CREATE
 
-    private func createPlanner(for datestamp: String) -> Planner {
+    private func createPlanner(for datestamp: String, skipSave: Bool = false)
+        -> Planner
+    {
         let planner = Planner(datestamp: datestamp, location: nil)
 
         insert(planner)
-        safeSave("planner.createPlanner")
+
+        if !skipSave {
+            safeSave("planner.createPlanner")
+        }
 
         return planner
     }
@@ -70,7 +75,7 @@ extension ModelContext {
         settings: PlannerSettings
     ) -> [FullPlannerContext] {
         do {
-            let planners = try fetch(
+            let existingPlanners = try fetch(
                 FetchDescriptor<Planner>(
                     predicate: #Predicate<Planner> { planner in
                         datestamps.contains(planner.datestamp)
@@ -78,9 +83,18 @@ extension ModelContext {
                 )
             )
 
+            var allPlanners = existingPlanners
+
+            for datestamp in datestamps
+            where !allPlanners.contains(where: { $0.datestamp == datestamp }) {
+                allPlanners.append(
+                    createPlanner(for: datestamp, skipSave: true)
+                )
+            }
+
             var fullPlannerContexts: [FullPlannerContext] = []
 
-            for planner in planners {
+            for planner in allPlanners {
                 guard
                     let weekday = Weekday.forDatestamp(planner.datestamp),
                     let plannerDay = planner.datestamp.startOfDay(

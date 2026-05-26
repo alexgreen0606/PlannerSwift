@@ -25,13 +25,13 @@ struct RoutineActionMenuView: View {
     // MARK: - Body
 
     var body: some View {
-        Menu("Routine Action Menu", systemImage: "ellipsis") {
+        Menu("", systemImage: "ellipsis") {
             SelectItemsButtonView<RoutineEvent>(
                 itemsLabel: "Events",
                 hasVisibleItem: !routineEvents.isEmpty
             )
 
-            deleteRoutineButton
+            deleteActionMenu
         }
 
         // MARK: Delete Routine Confirmation
@@ -44,14 +44,22 @@ struct RoutineActionMenuView: View {
 
     // MARK: - View Builders
 
+    private var deleteActionMenu: some View {
+        Menu {
+            deleteRoutineButton
+        } label: {
+            Label(
+                "Delete Options",
+                systemImage: "trash"
+            )
+        }
+    }
+
     private var deleteRoutineButton: some View {
         Button(role: .destructive) {
             showDeleteRoutineConfirmation = true
         } label: {
-            Label(
-                "Delete Routine",
-                systemImage: "trash"
-            )
+            Text("Delete Routine")
         }
         .disabled(routineEvents.isEmpty)
     }

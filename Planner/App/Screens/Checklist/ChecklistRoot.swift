@@ -81,10 +81,13 @@ struct ChecklistRootView: View {
                     )
                     .toolbar {
                         topLeadingToolbar
+                        
+                        ChecklistItemHeaderView(item: checklist)
+                        
                         topTrailingToolbar
                         bottomToolbar(scrollProxy: scrollProxy)
                     }
-                    .navigationTitle(checklist.title)
+                    .navigationBarTitleDisplayMode(.inline)
                 }
             }
 
@@ -190,7 +193,13 @@ struct ChecklistRootView: View {
     }
 
     private func createLowerItem(scrollProxy: ScrollViewProxy) {
-        createItem(at: sortedPendingItems.count)
+        let targetIndex = getInsertionIndex(
+            pendingIndex: sortedPendingItems.count,
+            sortedPendingItems: sortedPendingItems,
+            sortedItems: sortedItems
+        )
+        
+        createItem(at: targetIndex)
         scrollProxy.scrollToBottomOfList()
     }
 }

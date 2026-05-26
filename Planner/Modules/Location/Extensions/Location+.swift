@@ -30,6 +30,10 @@ extension Location {
             longitude: longitude
         ).key
     }
+    
+    var nameKey: String {
+        "\(name)-\(String(describing: subtitle))"
+    }
 
     var region: Region {
         let timeZone =

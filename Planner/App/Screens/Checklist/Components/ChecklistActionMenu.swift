@@ -40,14 +40,10 @@ struct ChecklistActionMenuView: View {
         )
     }
 
-    private var completedItemExists: Bool {
-        !completedItems.isEmpty
-    }
-
     // MARK: - Body
 
     var body: some View {
-        Menu("Checklist Action Menu", systemImage: "ellipsis") {
+        Menu("", systemImage: "ellipsis") {
             CompletedVisibilityToggleView(
                 showCompleted: checklist.showCompleted,
                 toggle: { checklist.showCompleted.toggle() }
@@ -111,7 +107,7 @@ struct ChecklistActionMenuView: View {
         } label: {
             Text("Delete Completed")
         }
-        .disabled(!completedItemExists)
+        .disabled(completedItems.isEmpty)
     }
 
     private var deleteListButton: some View {

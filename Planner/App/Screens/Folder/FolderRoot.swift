@@ -41,9 +41,12 @@ struct FolderRootView: View {
             }
             .toolbar {
                 topLeadingToolbar
+                
+                ChecklistItemHeaderView(item: folder)
+                
                 topTrailingToolbar
             }
-            .navigationTitle(folder.title)
+            .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
 
             // MARK: Scroll to new items.

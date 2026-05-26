@@ -304,7 +304,7 @@ struct LocationSearchFormView: View {
         var added: Set<String> = []
 
         for location in combinedLocations {
-            let key = location.coordinateKey
+            let key = location.nameKey
 
             if !added.contains(key) {
                 added.insert(key)
