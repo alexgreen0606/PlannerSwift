@@ -8,8 +8,6 @@
 import SwiftData
 import SwiftUI
 
-// Clean
-
 struct RowView<
     Item: ListItem,
     LeftAdornment: View,
@@ -18,15 +16,15 @@ struct RowView<
 >: View {
     @Bindable private var item: Item
     private let index: Int
-    private let showChecked: Bool
-    private let isUpperItem: Bool
+    private let editable: Bool
     private let tint: Color
+    private let customToggleConfig: ToggleConfig?
     private let leftAdornment: LeftAdornment
     private let rightAdornment: RightAdornment
     private let bottomAdornment: BottomAdornment
-    private let toggleOnlyMode: Bool
+
+    private let showCompleted: Bool
     private let toolbarSystemImageNames: [String]
-    private let customToggleConfig: ToggleConfig?
     private let namespace: Namespace.ID?
     private let createItem: ((_: Int) -> Void)?
     private let deleteItem: ((_: Item) -> Void)?
@@ -36,15 +34,14 @@ struct RowView<
     init(
         item: Item,
         index: Int,
-        showChecked: Bool,
-        isUpperItem: Bool,
+        editable: Bool = false,
         tint: Color,
+        customToggleConfig: ToggleConfig? = nil,
         leftAdornment: LeftAdornment,
         rightAdornment: RightAdornment,
         bottomAdornment: BottomAdornment,
-        toggleOnlyMode: Bool = false,
+        showCompleted: Bool,
         toolbarSystemImageNames: [String]? = [],
-        customToggleConfig: ToggleConfig? = nil,
         namespace: Namespace.ID? = nil,
         createItem: ((_: Int) -> Void)? = nil,
         deleteItem: ((_: Item) -> Void)? = nil,
@@ -53,18 +50,17 @@ struct RowView<
     ) {
         self.item = item
         self.index = index
-        self.showChecked = showChecked
-        self.isUpperItem = isUpperItem
+        self.editable = editable
         self.tint = tint
+        self.customToggleConfig = customToggleConfig
         self.leftAdornment = leftAdornment
         self.rightAdornment = rightAdornment
         self.bottomAdornment = bottomAdornment
-        self.toggleOnlyMode = toggleOnlyMode
+        self.showCompleted = showCompleted
         self.toolbarSystemImageNames = toolbarSystemImageNames ?? []
+        self.namespace = namespace
         self.createItem = createItem
         self.deleteItem = deleteItem
-        self.customToggleConfig = customToggleConfig
-        self.namespace = namespace
         self.onToolbarTap = onToolbarTap
         self.onTitleChange = onTitleChange
     }
@@ -72,7 +68,7 @@ struct RowView<
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var listEngine: ListEngine<Item>
 
-    /// Will be updated dynamically within the TextfieldView.
+    /// Will be updated dynamically as the number of lines of text changes.
     @State private var height: CGFloat = 0
 
     @State private var titleChangeHandlerTask: Task<Void, Never>? = nil
@@ -90,44 +86,54 @@ struct RowView<
     }
 
     private var opacity: Double {
-        if !showChecked, listEngine.fadingItemIds.contains(item.stableId) {
-            return listEngine.fadingOpacity
+        guard listEngine.fadingItemIds.contains(item.stableId), !showCompleted
+        else {
+            return 1
         }
-        return 1
+
+        return listEngine.fadingOpacity
     }
+
+    // MARK: - Body
 
     var body: some View {
         let row =
-            row
-                .frame(maxWidth: .infinity, alignment: .top)
-                .listRowInsets(EdgeInsets())
-                .discreetListItem()
-                .padding(.horizontal)
-                // Trigger focus for new items.
-                .onAppear {
-                    if listEngine.pendingFocusId == item.stableId {
-                        listEngine.pendingFocusId = nil
-                        listEngine.focusedId = item.stableId
-                    }
+            HStack(alignment: .top, spacing: 12) {
+                toggle
+                content
+            }
+            .listRowInsets(EdgeInsets())
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal)
+            .discreetListItem()
+            .allowsHitTesting(!editable)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                guard editable else { return }
+                listEngine.toggleItem(item)
+            }
+
+            // MARK: Trigger focus for new items.
+
+            .onAppear {
+                if listEngine.pendingFocusId == item.stableId {
+                    listEngine.pendingFocusId = nil
+                    listEngine.focusedId = item.stableId
                 }
+            }
 
         if let namespace {
             row
-                .matchedTransitionSource(id: item.stableId.uuidString, in: namespace)
+                .matchedTransitionSource(
+                    id: item.stableId.uuidString,
+                    in: namespace
+                )
         } else {
             row
         }
     }
 
     // MARK: - View Builders
-
-    private var row: some View {
-        HStack(alignment: .top, spacing: 12) {
-            toggle
-            content
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
 
     private var toggle: some View {
         ListItemToggleView(
@@ -136,16 +142,16 @@ struct RowView<
             opacity: opacity,
             customToggleConfig: customToggleConfig
         )
-        .frame(height: ListLayout.TOGGLE_HEIGHT, alignment: .center)
+        .frame(height: ListLayout.TOGGLE_HEIGHT)
     }
 
     private var content: some View {
         VStack(spacing: 0) {
             SeparatorView(
-                showUpperDivider: isUpperItem,
+                showUpperDivider: index == 0,
                 opacity: opacity,
                 onTap: {
-                    if listEngine.isSelectMode || toggleOnlyMode {
+                    if listEngine.isSelectMode || editable {
                         listEngine.toggleItem(item)
                         return
                     }
@@ -156,11 +162,8 @@ struct RowView<
 
             HStack(alignment: .top, spacing: 4) {
                 leftAdornment
+                    .frame(height: ListLayout.ADORNMENT_HEIGHT)
                     .opacity(opacity)
-                    .frame(
-                        height: ListLayout.ADORNMENT_HEIGHT,
-                        alignment: .center
-                    )
 
                 ZStack(alignment: .leading) {
                     text
@@ -170,11 +173,8 @@ struct RowView<
                 .opacity(opacity)
 
                 rightAdornment
+                    .frame(height: ListLayout.ADORNMENT_HEIGHT)
                     .opacity(opacity)
-                    .frame(
-                        height: ListLayout.ADORNMENT_HEIGHT,
-                        alignment: .center
-                    )
             }
             .frame(minHeight: ListLayout.ADORNMENT_HEIGHT)
 
@@ -185,7 +185,7 @@ struct RowView<
                 showLowerDivider: true,
                 opacity: opacity,
                 onTap: {
-                    if listEngine.isSelectMode || toggleOnlyMode {
+                    if listEngine.isSelectMode || editable {
                         listEngine.toggleItem(item)
                         return
                     }
@@ -198,21 +198,19 @@ struct RowView<
 
     private var text: some View {
         Text(item.title)
-            .opacity(isFocused ? 0 : 1)
-            .font(.system(size: ListLayout.FONT_SIZE))
             .lineLimit(nil)
             .fixedSize(horizontal: false, vertical: true)
+            .font(.system(size: ListLayout.FONT_SIZE))
+            .opacity(isFocused ? 0 : 1)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
             .onTapGesture {
-                if listEngine.isSelectMode || toggleOnlyMode {
+                if editable || listEngine.isSelectMode || isChecked {
                     listEngine.toggleItem(item)
                     return
                 }
 
-                if !isChecked {
-                    listEngine.focusedId = item.stableId
-                }
+                listEngine.focusedId = item.stableId
             }
     }
 
@@ -231,40 +229,42 @@ struct RowView<
                 if !item.title.trimmed.isEmpty {
                     createItem?(index + 1)
                 } else {
-                    // Triggers a deletion of the item in the below handler.
+                    // Trigger a deletion of the item in the below handler.
                     listEngine.focusedId = nil
                 }
             }
         )
-        .tint(tint)
-        .frame(height: height)
-        .opacity(isFocused ? 1 : 0)
-        .frame(maxWidth: .infinity, alignment: .leading)
         .fixedSize(horizontal: false, vertical: true)
-        // Debounce the external save each time the text changes.
+        .tint(tint)
+        .opacity(isFocused ? 1 : 0)
+        .frame(height: height)
+        .frame(maxWidth: .infinity, alignment: .leading)
+
+        // MARK: Debounce the title change handler (1 second delay).
+
         .onChange(of: item.title) { _, _ in
             guard let onTitleChange else { return }
 
             titleChangeHandlerTask?.cancel()
 
             titleChangeHandlerTask = Task {
-                try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
                 guard !Task.isCancelled else { return }
 
                 onTitleChange(item)
             }
         }
 
-        // Handle focus side effects.
+        // MARK: Focus change handler.
+
         .onChange(of: isFocused) { wasFocused, isFocused in
             if wasFocused, !isFocused {
                 titleChangeHandlerTask?.cancel()
 
-                let trimmed = item.title.trimmingCharacters(
-                    in: .whitespacesAndNewlines
-                )
+                let trimmedTitle = item.title.trimmed
 
-                if trimmed.isEmpty {
+                if trimmedTitle.isEmpty {
+                    // Item is blurred and has an empty title. Delete it.
                     if listEngine.protectedId != item.stableId {
                         if let deleteItem {
                             deleteItem(item)
@@ -273,7 +273,7 @@ struct RowView<
                         }
                     }
                 } else {
-                    item.title = trimmed
+                    item.title = trimmedTitle
                     onTitleChange?(item)
                 }
             }

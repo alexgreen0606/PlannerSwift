@@ -95,7 +95,7 @@ struct SearchRootView: View {
                             .listSectionMargins(.top, 0)
                         }
                     }
-                    .animateAsynchronousAction(
+                    .animateLazyAction(
                         from: todaystampService.todaystamp
                     )
                     .listStyle(.plain)

@@ -10,14 +10,14 @@ func canCreateItem<Item: ListItem>(
     in sortedItems: [Item]
 ) -> Bool {
     if index > 0,
-        sortedItems[index - 1].title.isEmpty
+       sortedItems[index - 1].title.isEmpty
     {
         // Upper neighbor is empty. Don't create it.
         return false
     }
 
     if index < sortedItems.count,
-        sortedItems[index].title.isEmpty
+       sortedItems[index].title.isEmpty
     {
         // Lower neighbor is empty. Don't create it.
         return false

@@ -26,7 +26,7 @@ struct SelectAllToggleView<Item: ListItem>: View {
             Text(isAllSelected ? "Deselect All" : "Select All")
                 .fontWeight(.semibold)
         }
-        .animateSynchronousAction(from: isAllSelected)
+        .animateUserAction(from: isAllSelected)
         .disabled(visibleItems.isEmpty)
     }
 }

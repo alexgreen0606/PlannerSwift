@@ -39,7 +39,7 @@ struct ThisWeekSectionView: View {
         .listSectionMargins(.top, 0)
         .listRowInsets(EdgeInsets())
         .discreetListItem()
-        .animateAsynchronousAction(
+        .animateLazyAction(
             from: todaystampService.next7Datestamps
         )
     }

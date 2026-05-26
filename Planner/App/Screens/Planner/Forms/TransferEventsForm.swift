@@ -42,7 +42,10 @@ struct TransferEventsFormView: View {
     }
 
     private var destinationDatestamp: String {
-        destinationDate.datestamp(in: sourceRegion)
+        DatestampFormatter.datestamp(
+            from: destinationDate,
+            region: sourceRegion
+        )
     }
 
     private var transferCount: LocalizedStringKey {
@@ -99,7 +102,7 @@ struct TransferEventsFormView: View {
                 destinationChip
             }
         }
-        .animateSynchronousAction(from: destinationDate)
+        .animateUserAction(from: destinationDate)
         .frame(maxWidth: .infinity)
         .padding(.horizontal)
     }
@@ -133,7 +136,7 @@ struct TransferEventsFormView: View {
 
     private func transferEvents() {
         guard let dayOffset = sourceDatestamp.daysUntil(destinationDatestamp),
-              dayOffset != 0
+            dayOffset != 0
         else {
             return
         }
@@ -164,7 +167,7 @@ struct TransferEventsFormView: View {
         showToast(
             Toast(
                 title:
-                "Successfully transferred ^[\(eventCount) event](inflect: true)!",
+                    "Successfully transferred ^[\(eventCount) event](inflect: true)!",
                 subtitle: LocalizedStringKey(
                     destinationDatestamp.dateLabel(
                         todaystamp: todaystampService.todaystamp

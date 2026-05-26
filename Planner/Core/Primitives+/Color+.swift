@@ -21,43 +21,35 @@ extension Color {
     }
 
     static var appBackground: Color {
-        let light = UIColor.secondarySystemBackground
-        let dark = UIColor.black
-
-        return Color(
-            UIColor { traitCollection in
-                traitCollection.userInterfaceStyle == .dark ? dark : light
-            }
+        themedColor(
+            light: UIColor.secondarySystemBackground,
+            dark: UIColor.black
         )
     }
 
     static var sheetBackground: Color {
-        let light = UIColor.secondarySystemBackground
-        let dark = UIColor.systemBackground
-
-        return Color(
-            UIColor { traitCollection in
-                traitCollection.userInterfaceStyle == .dark ? dark : light
-            }
+        themedColor(
+            light: UIColor.secondarySystemBackground,
+            dark: UIColor.systemBackground
         )
     }
 
     static var cardBackground: Color {
-        let light = UIColor.systemBackground
-        let dark = UIColor.secondarySystemBackground
-
-        return Color(
-            UIColor { traitCollection in
-                traitCollection.userInterfaceStyle == .dark ? dark : light
-            }
+        themedColor(
+            light: UIColor.systemBackground,
+            dark: UIColor.secondarySystemBackground
         )
     }
 
     static var inverseLabel: Color {
-        let light = UIColor.white
-        let dark = UIColor.black
+        themedColor(
+            light: UIColor.white,
+            dark: UIColor.black
+        )
+    }
 
-        return Color(
+    private static func themedColor(light: UIColor, dark: UIColor) -> Color {
+        Color(
             UIColor { traitCollection in
                 traitCollection.userInterfaceStyle == .dark ? dark : light
             }

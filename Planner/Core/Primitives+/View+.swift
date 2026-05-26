@@ -14,16 +14,7 @@ extension View {
             .listRowBackground(Color.clear)
     }
 
-    /// Same style as default section headers.
-    func sectionLabel() -> some View {
-        font(.headline)
-            .foregroundStyle(Color.secondary)
-            .listRowInsets(.bottom, 0)
-            .padding(.horizontal)
-            .discreetListItem()
-    }
-
-    /// Pill-shaped, glass chip.
+    /// Pill-shaped glass chip.
     func glassChip(
         color: Color? = nil,
         height: Double,
@@ -34,19 +25,19 @@ extension View {
         padding(.horizontal, height / 3)
             .padding(.vertical, 4)
             .frame(height: height)
+            .glassEffect(
+                color != nil
+                    ? .regular
+                        .tint(color!.opacity(0.05))
+                        .interactive(onTap != nil)
+                    : .regular
+                        .interactive(onTap != nil),
+                in: .capsule
+            )
             .contentShape(Rectangle())
             .onTapGesture {
                 onTap?()
             }
-            .glassEffect(
-                color != nil
-                    ? .regular
-                    .tint(color!.opacity(0.05))
-                    .interactive(onTap != nil)
-                    : .regular
-                    .interactive(onTap != nil),
-                in: .capsule
-            )
     }
 
     /// Initiates a scroll whenever the trigger changes.
@@ -68,7 +59,7 @@ extension View {
     }
 
     /// Jumpy, fast animation caused by user action (such as a click).
-    func animateSynchronousAction<Trigger: Equatable>(from trigger: Trigger)
+    func animateUserAction<Trigger: Equatable>(from trigger: Trigger)
         -> some View
     {
         animation(
@@ -81,12 +72,12 @@ extension View {
     }
 
     /// Smooth, slick animation caused by asynchronous response (such as weather response).
-    func animateAsynchronousAction<Trigger: Equatable>(from trigger: Trigger)
+    func animateLazyAction<Trigger: Equatable>(from trigger: Trigger)
         -> some View
     {
         animation(
             .spring(
-                response: 1,
+                response: 1.6,
                 dampingFraction: 0.4
             ),
             value: trigger

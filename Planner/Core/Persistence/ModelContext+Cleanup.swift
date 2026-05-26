@@ -11,9 +11,7 @@ import SwiftUI
 
 extension ModelContext {
     @MainActor
-    func deleteStaleData(
-        cutoffDate: Date
-    ) {
+    func deleteStaleData(cutoffDate: Date) {
         let cutoffDatestamp = DateInRegion(cutoffDate, region: .local).datestamp
 
         do {
@@ -55,7 +53,7 @@ extension ModelContext {
                 FetchDescriptor<PlannerEvent>(
                     predicate: #Predicate<PlannerEvent> { event in
                         if let time = event.time {
-                            return time < cutoffDate // TODO: what if it's a calendar event and the end date still hasnt happened yet?
+                            return time < cutoffDate  // TODO: what if it's a calendar event and the end date still hasn't happened yet?
                         } else if let datestamp = event.datestamp {
                             return datestamp < cutoffDatestamp
                         } else {
@@ -86,13 +84,7 @@ extension ModelContext {
             // MARK: Delete trips that ended before the cutoff date.
 
             let expiredTrips = try fetch(FetchDescriptor<Trip>()).filter {
-                guard
-                    let last = $0.sortedPlanners.last
-                else {
-                    return true
-                }
-
-                return last.datestamp < cutoffDatestamp
+                $0.lastDatestamp < cutoffDatestamp
             }
 
             for trip in expiredTrips {
@@ -100,7 +92,7 @@ extension ModelContext {
             }
 
         } catch {
-            assertionFailure("CleanupModelContext.deleteStaleData: \(error)")
+            assertionFailure("ModelContext+Cleanup.deleteStaleData: \(error)")
         }
 
         // Note: DO NOT save the context here.

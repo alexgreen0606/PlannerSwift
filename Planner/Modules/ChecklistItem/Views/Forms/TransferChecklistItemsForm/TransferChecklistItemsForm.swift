@@ -161,7 +161,7 @@ struct TransferChecklistItemsFormView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal)
-        .animateSynchronousAction(from: selectedItem?.stableId)
+        .animateUserAction(from: selectedItem?.stableId)
     }
 
     private var sourceChip: some View {
@@ -213,7 +213,7 @@ struct TransferChecklistItemsFormView: View {
             source.type == .checklist
                 ? "arrow.left.arrow.right" : "arrow.forward.folder"
 
-        let variant: ToastVariant = source.type == .folder ? .tab : .sheet
+        let variant: ToastVariant = source.type == .folder ? .tab : .cover
 
         showToast(
             Toast(

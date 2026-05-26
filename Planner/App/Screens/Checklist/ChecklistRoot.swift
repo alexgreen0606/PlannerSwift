@@ -50,13 +50,9 @@ struct ChecklistRootView: View {
 
     @Namespace private var namespace
 
-    private var allItems: [ChecklistItem] {
-        sortedPendingItems + sortedCheckedItems
-    }
-
     private var visibleItems: [ChecklistItem] {
         if checklist.showCompleted {
-            return allItems
+            return sortedItems
         }
         return sortedPendingItems
     }
@@ -67,21 +63,21 @@ struct ChecklistRootView: View {
         ToastRootView(listEngine: listEngine) {
             NavigationStack {
                 ScrollViewReader { scrollProxy in
-                    SortableListView<
-                        ChecklistItem, EmptyView, EmptyView, EmptyView,
-                        EmptyView
-                    >(
-                        uncheckedItems: sortedPendingItems,
-                        checkedItems: sortedCheckedItems,
+                    SortableTextfieldListView(
                         sortedItems: sortedItems,
-                        showChecked: checklist.showCompleted,
-                        checkedHeader: "Completed items",
-                        emptyUncheckedLabel: "No items",
-                        emptyCheckedLabel: "No completed items",
-                        tint: { _ in checklist.color.swiftUIColor },
-                        scrollProxy: scrollProxy,
                         createItem: createItem,
-                        moveItem: moveItem
+                        moveItem: moveItem,
+                        sortedPendingItems: sortedPendingItems,
+                        emptyPendingLabel: "No items",
+                        sortedCompletedItems: sortedCheckedItems,
+                        showCompleted: checklist.showCompleted,
+                        completedHeader: "Completed items",
+                        emptyCompletedLabel: "No completed items",
+                        tint: { _ in checklist.color.swiftUIColor },
+                        leftAdornment: { _ in EmptyView() },
+                        rightAdornment: { _ in EmptyView() },
+                        bottomAdornment: { _ in EmptyView() },
+                        scrollProxy: scrollProxy
                     )
                     .toolbar {
                         topLeadingToolbar
@@ -144,7 +140,7 @@ struct ChecklistRootView: View {
                 ChecklistActionMenuView(
                     showEditSheet: $showEditSheet,
                     checklist: checklist,
-                    items: allItems,
+                    items: sortedItems,
                     visibleItems: visibleItems
                 )
             } else {
@@ -195,6 +191,6 @@ struct ChecklistRootView: View {
 
     private func createLowerItem(scrollProxy: ScrollViewProxy) {
         createItem(at: sortedPendingItems.count)
-        scrollProxy.scrollToListBottom()
+        scrollProxy.scrollToBottomOfList()
     }
 }

@@ -7,40 +7,39 @@
 
 import SwiftUI
 
-struct ToastView<ListItemType: ListItem>: View {
-    let config: Toast
-    let listEngine: ListEngine<ListItemType>?
+struct ToastView<Item: ListItem>: View {
+    let toast: Toast
+    let listEngine: ListEngine<Item>?
 
-    @AppStorage("accentColor") var accentColor: AccentColor =
-        .blue
+    // MARK: - Body
 
     var body: some View {
-        HStack {
-            Image(systemName: config.iconConfig.name)
+        HStack(spacing: 8) {
+            Image(systemName: toast.iconConfig.name)
                 .foregroundStyle(
-                    config.iconConfig.primaryColor,
-                    config.iconConfig.secondaryColor
+                    toast.iconConfig.primaryColor,
+                    toast.iconConfig.secondaryColor
                 )
 
             VStack(alignment: .leading) {
-                Text(config.title)
-                    .font(.system(size: 16))
+                Text(toast.title)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
+                    .font(.system(size: 16))
+                    .foregroundStyle(Color.label)
 
-                if let customSubtitle = config.customSubtitle {
+                if let customSubtitle = toast.customSubtitle {
                     customSubtitle
-                } else if let subtitle = config.subtitle as LocalizedStringKey? {
+                } else if let subtitle = toast.subtitle {
                     Text(subtitle)
-                        .font(.system(size: 12))
                         .lineLimit(1)
+                        .font(.system(size: 12))
                         .foregroundStyle(Color.secondary)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
-            Spacer()
-
-            if let action = config.action {
+            if let action = toast.action {
                 ActionButtonView(
                     label: "View",
                     systemImage: "chevron.right",
@@ -51,19 +50,17 @@ struct ToastView<ListItemType: ListItem>: View {
                         listEngine?.focusedId = nil
                     }
                 )
-                .padding(.leading, 6)
             }
         }
-        .padding(.horizontal)
         .frame(height: 50)
         .clipShape(.capsule)
         .contentShape(.capsule)
+        .padding(.horizontal)
         .glassEffect(.regular, in: .capsule)
         .padding(.horizontal)
-        .padding(.trailing, config.variant.trailingPadding)
-        .offset(y: -config.variant.verticalOffset)
+        .offset(y: -toast.variant.verticalOffset)
         .transition(
-            .offset(y: config.variant.verticalOffset + 30).combined(
+            .offset(y: toast.variant.verticalOffset).combined(
                 with: .opacity
             )
         )

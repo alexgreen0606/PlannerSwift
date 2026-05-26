@@ -23,6 +23,6 @@ struct IconConfig: Identifiable {
     }
 
     var id: String {
-        "\(name)-\(primaryColor.description)"
+        "\(name)-\(primaryColor.description)-\(secondaryColor.description)"
     }
 }

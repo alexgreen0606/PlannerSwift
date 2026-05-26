@@ -27,20 +27,20 @@ struct SeparatorView: View {
 
     @AppStorage("showListDividers") private var showListDividers: Bool =
         true
-    
+
     // MARK: - Body
 
     var body: some View {
         Rectangle()
             .fill(.clear)
-            .frame(height: ListLayout.DIVIDER_HEIGHT)
+            .frame(height: ListLayout.SEPARATOR_HEIGHT)
             .overlay(
                 divider
             )
             .contentShape(Rectangle())
             .onTapGesture(perform: onTap)
     }
-    
+
     // MARK: - View Builders
 
     @ViewBuilder

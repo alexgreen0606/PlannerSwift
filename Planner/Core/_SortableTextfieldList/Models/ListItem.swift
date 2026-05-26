@@ -12,9 +12,9 @@ import SwiftUI
 @Model
 class ListItem {
     var stableId = UUID()
-    
+
     var title: String = ""
     var isCompleted: Bool = false
-    
+
     init() {}
 }

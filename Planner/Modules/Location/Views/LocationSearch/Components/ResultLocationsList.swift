@@ -70,7 +70,7 @@ struct ResultLocationsListView: View {
             }
         }
         .id(result.id)
-        .animateSynchronousAction(from: hasNoTimeZone)
+        .animateUserAction(from: hasNoTimeZone)
         .discreetListItem()
         .contentShape(Rectangle())
         .onTapGesture {

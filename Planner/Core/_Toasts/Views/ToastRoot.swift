@@ -7,16 +7,12 @@
 
 import SwiftUI
 
-extension EnvironmentValues {
-    @Entry var showToast: (Toast) -> Void = { _ in }
-}
-
-struct ToastRootView<Content: View, ListItemType: ListItem>: View {
-    private let listEngine: ListEngine<ListItemType>?
+struct ToastRootView<Content: View, Item: ListItem>: View {
+    private let listEngine: ListEngine<Item>?
     private var content: Content
 
     init(
-        listEngine: ListEngine<ListItemType>? = nil,
+        listEngine: ListEngine<Item>? = nil,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.listEngine = listEngine
@@ -37,12 +33,14 @@ struct ToastRootView<Content: View, ListItemType: ListItem>: View {
         listEngine?.focusedId != nil ? -40 : 0
     }
 
+    // MARK: - Body
+
     var body: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .overlay(alignment: .bottom) {
                 if let activeToast {
-                    ToastView(config: activeToast, listEngine: listEngine)
+                    ToastView(toast: activeToast, listEngine: listEngine)
                         .padding(.bottom, keyboardPadding)
                 }
             }
@@ -75,7 +73,7 @@ struct ToastRootView<Content: View, ListItemType: ListItem>: View {
             }
     }
 
-    // MARK: - Functions
+    // MARK: - Function
 
     private func dismiss() {
         withAnimation(animation) {

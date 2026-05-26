@@ -36,31 +36,24 @@ struct RoutineRootView: View {
         ToastRootView(listEngine: routineEngine) {
             NavigationStack {
                 ScrollViewReader { scrollProxy in
-                    SortableListView(
-                        uncheckedItems: sortedRoutineEvents,
-                        emptyUncheckedLabel: "No \(weekday.label) routine",
-                        tint: { _ in accentColor.color },
-                        createItem: createEvent,
-                        deleteItem: { event in
-                            modelContext.deleteRoutineEvent(
-                                event,
-                                ekEventStore: calendarStore.ekEventStore,
-                                PlannerSyncStore: plannerSyncService
-                            )
-                        },
-                        moveItem: moveEvent,
-                        namespace: namespace,
+                    SortableTextfieldListView(
+                        sortedItems: sortedRoutineEvents,
                         toolbarSystemImageNames: [
-                            "rectangle.and.pencil.and.ellipsis",
+                            "rectangle.and.pencil.and.ellipsis"
                         ],
-                        onToolbarTap: { _, event in
-                            openRoutineEventSheet(for: event)
-                        },
+                        onToolbarTap: handleToolbarTap,
+                        createItem: createEvent,
+                        moveItem: moveEvent,
+                        deleteItem: deleteEvent,
+                        handleTitleChange: handleTitleChange,
+                        emptyPendingLabel: "No \(weekday.label) routine",
+                        tint: { _ in accentColor.color },
                         toggleConfig: eventToggleConfig,
                         leftAdornment: { _ in EmptyView() },
                         rightAdornment: timeAdornment,
                         bottomAdornment: weekdaysAdornment,
-                        handleTitleChange: handleTitleChange
+                        scrollProxy: scrollProxy,
+                        namespace: namespace
                     )
                     .toolbar {
                         topLeadingToolbar
@@ -177,6 +170,47 @@ struct RoutineRootView: View {
 
     // MARK: - Functions
 
+    private func handleToolbarTap(icon _: String, event: RoutineEvent) {
+        openRoutineEventSheet(for: event)
+    }
+
+    private func createEvent(at index: Int) {
+        routineEngine.pendingFocusId = modelContext.createRoutineEvent(
+            at: index,
+            in: sortedRoutineEvents,
+            weekday: weekday
+        )
+    }
+
+    private func moveEvent(from: Int, to: Int) {
+        modelContext.moveRoutineEvent(
+            from: from,
+            to: to,
+            on: weekday,
+            sortedRoutineEvents: sortedRoutineEvents
+        )
+        plannerSyncService.invalidateRoutineDays([weekday])
+    }
+
+    private func deleteEvent(_ event: RoutineEvent) {
+        modelContext.deleteRoutineEvent(
+            event,
+            ekEventStore: calendarStore.ekEventStore,
+            PlannerSyncStore: plannerSyncService
+        )
+    }
+
+    private func handleTitleChange(event: RoutineEvent) {
+        modelContext.handleRoutineEventTitleChange(event)
+        if !invalidatedEventIds.contains(event.stableId) {
+            // Mark this event's weekdays for refresh in the planner.
+            plannerSyncService.invalidateRoutineDays(
+                event.weekdays
+            )
+            invalidatedEventIds.insert(event.stableId)
+        }
+    }
+
     private func eventToggleConfig(_ event: RoutineEvent) -> ToggleConfig? {
         ToggleConfig(
             pendingIconConfig: IconConfig(
@@ -203,33 +237,13 @@ struct RoutineRootView: View {
         )
     }
 
-    private func createEvent(at index: Int) {
-        routineEngine.pendingFocusId = modelContext.createRoutineEvent(
-            at: index,
-            in: sortedRoutineEvents,
-            weekday: weekday
-        )
+    private func createLowerEvent(scrollProxy: ScrollViewProxy) {
+        createEvent(at: sortedRoutineEvents.count)
+        scrollProxy.scrollToBottomOfList()
     }
 
-    private func moveEvent(from: Int, to: Int) {
-        modelContext.moveRoutineEvent(
-            from: from,
-            to: to,
-            on: weekday,
-            sortedRoutineEvents: sortedRoutineEvents
-        )
-        plannerSyncService.invalidateRoutineDays([weekday])
-    }
-
-    private func handleTitleChange(event: RoutineEvent) {
-        modelContext.handleRoutineEventTitleChange(event)
-        if !invalidatedEventIds.contains(event.stableId) {
-            // Mark this event's weekdays for refresh in the planner.
-            plannerSyncService.invalidateRoutineDays(
-                event.weekdays
-            )
-            invalidatedEventIds.insert(event.stableId)
-        }
+    private func openRoutine(for weekday: Weekday) {
+        routineCoverContext = weekday
     }
 
     private func openRoutineEventSheet(for event: RoutineEvent) {
@@ -243,15 +257,6 @@ struct RoutineRootView: View {
         routineEventSheetContext = RoutineEventSheetContext(
             routineEvent: event
         )
-    }
-
-    private func createLowerEvent(scrollProxy: ScrollViewProxy) {
-        createEvent(at: sortedRoutineEvents.count)
-        scrollProxy.scrollToListBottom()
-    }
-
-    private func openRoutine(for weekday: Weekday) {
-        routineCoverContext = weekday
     }
 
     private func removeEventFromWeekday(_ event: RoutineEvent) {

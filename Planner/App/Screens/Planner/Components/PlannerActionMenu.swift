@@ -62,8 +62,8 @@ struct PlannerActionMenuView: View {
     var body: some View {
         Menu("", systemImage: "ellipsis") {
             CompletedVisibilityToggleView(
-                showCompleted: planner.showChecked,
-                toggle: { planner.showChecked.toggle() }
+                showCompleted: planner.showCompleted,
+                toggle: { planner.showCompleted.toggle() }
             )
 
             SelectItemsButtonView<PlannerEvent>(

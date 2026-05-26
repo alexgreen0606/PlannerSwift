@@ -42,34 +42,28 @@ struct PlannerContentsListView: View {
     // MARK: - Body
 
     var body: some View {
-        SortableListView(
-            uncheckedItems: sortedPendingPlannerEvents,
-            checkedItems: sortedCompletePlannerEvents,
+        SortableTextfieldListView(
             sortedItems: sortedPlannerEvents,
-            rowId: eventId,
-            showChecked: showCompleted,
-            checkedHeader: "Completed Events",
-            emptyUncheckedLabel: emptyPendingEventsLabel,
-            emptyCheckedLabel: "No completed events",
-            tint: eventTint,
-            scrollProxy: scrollProxy,
-            createItem: createEvent,
-            deleteItem: { event in
-                modelContext.deletePlannerEvents(
-                    [event],
-                    in: planner,
-                    ekEventStore: calendarStore.ekEventStore
-                )
-            },
-            moveItem: moveUncheckedEvent,
-            floatingInfo: chipSpread,
-            namespace: namespace,
             toolbarSystemImageNames: ["rectangle.and.pencil.and.ellipsis"],
             onToolbarTap: handleToolbarTap,
+            createItem: createEvent,
+            moveItem: moveUncheckedEvent,
+            deleteItem: deleteEvent,
+            handleTitleChange: handleEventTitleChange,
+            sortedPendingItems: sortedPendingPlannerEvents,
+            floatingInfo: chipSpread,
+            emptyPendingLabel: emptyPendingEventsLabel,
+            sortedCompletedItems: sortedCompletePlannerEvents,
+            showCompleted: showCompleted,
+            completedHeader: "Completed Events",
+            emptyCompletedLabel: "No completed events",
+            rowId: eventId,
+            tint: eventTint,
             leftAdornment: calendarAdornment,
             rightAdornment: timeAdornment,
             bottomAdornment: locationAdornment,
-            handleTitleChange: handleEventTitleChange
+            scrollProxy: scrollProxy,
+            namespace: namespace
         )
     }
 
@@ -136,19 +130,8 @@ struct PlannerContentsListView: View {
 
     // MARK: - Functions
 
-    private func openPlannerEventSheet(_ event: PlannerEvent) {
-        if plannerEngine.isSelectMode || event.isCompleted {
-            plannerEngine.toggleItem(event)
-            return
-        }
-
-        plannerEngine.protectedId = event.stableId
-        plannerEngine.focusedId = nil
-        eventSheetContext =
-            EventSheetContext(
-                plannerEvent: event,
-                calendarEvent: nil
-            )
+    private func handleToolbarTap(icon _: String, event: PlannerEvent) {
+        openPlannerEventSheet(event)
     }
 
     private func moveUncheckedEvent(from: Int, to: Int) {
@@ -158,6 +141,14 @@ struct PlannerContentsListView: View {
             plannerDay: plannerDay,
             sortedPendingPlannerEvents: sortedPendingPlannerEvents,
             sortedPlannerEvents: sortedPlannerEvents
+        )
+    }
+
+    private func deleteEvent(_ event: PlannerEvent) {
+        modelContext.deletePlannerEvent(
+            event,
+            in: planner,
+            ekEventStore: calendarStore.ekEventStore
         )
     }
 
@@ -171,15 +162,26 @@ struct PlannerContentsListView: View {
         )
     }
 
-    private func handleToolbarTap(icon _: String, event: PlannerEvent) {
-        openPlannerEventSheet(event)
+    private func eventId(event: PlannerEvent) -> String {
+        "\(event.stableId)_\(event.location?.name ?? "NO_LOCATION")"
     }
 
     private func eventTint(event: PlannerEvent) -> Color {
         event.tint(accentColor: accentColor)
     }
 
-    private func eventId(event: PlannerEvent) -> String {
-        "\(event.stableId)_\(event.location?.name ?? "NO_LOCATION")"
+    private func openPlannerEventSheet(_ event: PlannerEvent) {
+        if plannerEngine.isSelectMode || event.isCompleted {
+            plannerEngine.toggleItem(event)
+            return
+        }
+
+        plannerEngine.protectedId = event.stableId
+        plannerEngine.focusedId = nil
+        eventSheetContext =
+            EventSheetContext(
+                plannerEvent: event,
+                calendarEvent: nil
+            )
     }
 }

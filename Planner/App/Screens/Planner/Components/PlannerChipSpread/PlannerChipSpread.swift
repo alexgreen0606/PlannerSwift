@@ -56,11 +56,11 @@ struct PlannerChipSpreadView: View {
                 content: eventChip
             )
         }
-        .animateAsynchronousAction(from: weatherData)
-        .animateAsynchronousAction(
+        .animateLazyAction(from: weatherData)
+        .animateLazyAction(
             from: calendarDayData?.plannerChipEvents.map(\.title)
         )
-        .animateAsynchronousAction(from: locationLabel)
+        .animateLazyAction(from: locationLabel)
     }
 
     // MARK: - View Builders

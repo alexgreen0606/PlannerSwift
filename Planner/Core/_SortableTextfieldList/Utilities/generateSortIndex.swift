@@ -10,8 +10,8 @@ private let MINIMUM_SORT_INDEX_GAP = 0.0001
 
 func generateSortIndex(
     index: Int,
-    
-    /// May or may not contain the item being placed.
+
+    // May or may not contain the item being placed.
     sortedItems: [ChecklistItem]
 ) -> Double {
     guard !sortedItems.isEmpty else {

@@ -160,7 +160,7 @@ struct LocationSearchFormView: View {
             .overlay {
                 emptyOptionsLabel
             }
-            .animateSynchronousAction(from: selectedLocation)
+            .animateUserAction(from: selectedLocation)
             // Build the suggestions once the device location loads.
             .task(id: locationService.deviceLocation) {
                 buildSuggestedLocations()

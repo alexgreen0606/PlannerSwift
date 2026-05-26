@@ -36,6 +36,6 @@ struct LabelValueChipView: View {
             }
         }
         .glassChip(height: 40)
-        .animateAsynchronousAction(from: value)
+        .animateLazyAction(from: value)
     }
 }

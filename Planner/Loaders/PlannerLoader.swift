@@ -33,6 +33,7 @@ struct PlannerLoaderView<Content: View>: View {
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var locationService: LocationService
+    @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
     @Query private var planners: [Planner]
 
@@ -68,6 +69,7 @@ struct PlannerLoaderView<Content: View>: View {
                         plannerDay: plannerDay,
                         plannerLocation: plannerLocation
                     ),
+                    plannerSyncService: plannerSyncService,
                     settings: settings
                 ) { plannerContext, eventContext in
                     content(plannerContext, eventContext)

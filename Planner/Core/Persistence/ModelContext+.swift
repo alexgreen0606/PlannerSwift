@@ -13,14 +13,14 @@ extension ModelContext {
         do {
             try save()
         } catch {
-            assertionFailure("ERROR \(source)_safeSave: \(error)")
+            assertionFailure("ERROR ModelContext+.safeSave_\(source): \(error)")
         }
     }
 
     @MainActor
     func safeDelete<Item: PersistentModel>(_ item: Item) {
         delete(item)
-        safeSave("_general.safeDelete")
+        safeSave("ModelContext+.safeDelete")
     }
 
     @MainActor
@@ -28,7 +28,7 @@ extension ModelContext {
         for item in items {
             delete(item)
         }
-        safeSave("_general.safeBulkDelete")
+        safeSave("ModelContext+.safeBulkDelete")
     }
 
     @MainActor

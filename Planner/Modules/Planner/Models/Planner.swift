@@ -15,7 +15,7 @@ class Planner {
     /// Converts to the start of day (Date) based on the planner's location (TimeZone).
     var datestamp: String = ""
 
-    var showChecked: Bool = false
+    var showCompleted: Bool = false
 
     /// When nil, it inherits from trip.
     /// If trip is nil, defaults to false.

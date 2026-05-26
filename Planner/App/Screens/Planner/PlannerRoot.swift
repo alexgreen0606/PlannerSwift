@@ -50,7 +50,7 @@ struct PlannerRootView: View {
     }
 
     private var visibleEvents: [PlannerEvent] {
-        if planner.showChecked {
+        if planner.showCompleted {
             return sortedPlannerEvents
         }
 
@@ -82,7 +82,7 @@ struct PlannerRootView: View {
                         sortedCompletePlannerEvents:
                         sortedCompletePlannerEvents,
                         calendarDayData: calendarDayData,
-                        showCompleted: planner.showChecked,
+                        showCompleted: planner.showCompleted,
                         scrollProxy: scrollProxy,
                         settings: settings,
                         namespace: namespace,
@@ -228,6 +228,6 @@ struct PlannerRootView: View {
 
     private func createLowerEvent(scrollProxy: ScrollViewProxy) {
         createEvent(at: sortedPendingPlannerEvents.count)
-        scrollProxy.scrollToListBottom()
+        scrollProxy.scrollToBottomOfList()
     }
 }

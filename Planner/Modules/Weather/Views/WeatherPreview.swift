@@ -127,7 +127,7 @@ struct WeatherPreviewView: View {
             }
         }
         .frame(height: 30)
-        .animateAsynchronousAction(from: weatherData)
+        .animateLazyAction(from: weatherData)
         //        HStack(alignment: .bottom) {
         //            if let weatherData {
         //                Image(systemName: weatherData.symbolName)

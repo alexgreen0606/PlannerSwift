@@ -7,6 +7,8 @@
 
 let GENERIC_DELETE_WARNING: String = "This can't be undone."
 
+// TODO: move this to a readme type file along with design.
+
 // MARK: - Confirmation Rules:
 
 // MARK: Titles

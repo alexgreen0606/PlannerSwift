@@ -19,9 +19,10 @@ struct PlannerEventContextLoaderView<Content: View>: View {
 
     init(
         plannerContext: PlannerContext,
+        plannerSyncService: PlannerSyncService,
         settings: PlannerSettings,
         @ViewBuilder content:
-        @escaping (PlannerContext, PlannerEventContext) -> Content
+            @escaping (PlannerContext, PlannerEventContext) -> Content
     ) {
         self.plannerContext = plannerContext
         self.settings = settings
@@ -43,6 +44,12 @@ struct PlannerEventContextLoaderView<Content: View>: View {
                 }
             },
             sort: \.sortDate
+        )
+
+        _calendarDayData = State(
+            initialValue: plannerSyncService.freshCalendarMap[
+                plannerContext.planner.key
+            ]
         )
     }
 
