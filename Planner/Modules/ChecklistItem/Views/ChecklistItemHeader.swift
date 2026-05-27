@@ -11,29 +11,26 @@ struct ChecklistItemHeaderView: ToolbarContent {
     let item: ChecklistItem
 
     @EnvironmentObject private var listEngine: ListEngine<ChecklistItem>
-
-    private var placement: ToolbarItemPlacement {
-        if item.type == .folder, item.parent == nil {
-            return .topBarLeading
-        }
-        return .principal
+    
+    private var isRootFolder: Bool {
+        item.parent == nil
     }
 
     private var width: CGFloat {
         if item.type == .folder {
-            if item.parent == nil {
+            if isRootFolder {
                 return 250
             }
-            return 210
+            return 200
         }
-        return 260
+        return 250
     }
 
     // MARK: - Body
 
     var body: some ToolbarContent {
         if !listEngine.isSelectMode {
-            ToolbarItem(placement: placement) {
+            ToolbarItem(placement: .topBarLeading) {
                 HStack {
                     Image(systemName: item.type.systemImageName)
                         .foregroundStyle(item.color.swiftUIColor)
@@ -45,6 +42,7 @@ struct ChecklistItemHeaderView: ToolbarContent {
                 }
                 .font(.system(size: 20, weight: .bold, design: .rounded))
                 .frame(width: width, alignment: .leading)
+                .padding(.leading, isRootFolder ? 0 : -8)
             }
             .sharedBackgroundVisibility(.hidden)
         }

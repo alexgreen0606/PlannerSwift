@@ -175,6 +175,7 @@ struct PlannerRootView: View {
                     iconDetailOffset: showHeaderDateIcon ? 3 : 18
                 )
                 .frame(width: 250, alignment: .leading)
+                .padding(.leading, -8)
             }
             .sharedBackgroundVisibility(.hidden)
         }

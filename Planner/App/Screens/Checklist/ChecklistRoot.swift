@@ -127,7 +127,7 @@ struct ChecklistRootView: View {
     // MARK: - Toolbars
 
     private var topLeadingToolbar: some ToolbarContent {
-        ToolbarItem(placement: .cancellationAction) {
+        ToolbarItem(placement: .topBarLeading) {
             if !listEngine.isSelectMode {
                 BackButtonView()
             } else {

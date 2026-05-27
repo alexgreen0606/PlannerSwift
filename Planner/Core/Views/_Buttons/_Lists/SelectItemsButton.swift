@@ -26,7 +26,7 @@ struct SelectItemsButtonView<Item: ListItem>: View {
         } label: {
             Label(
                 "Select \(itemsLabel)",
-                systemImage: "checkmark.circle"
+                systemImage: "checklist"
             )
         }
         .disabled(!hasVisibleItem)

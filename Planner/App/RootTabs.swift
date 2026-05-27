@@ -109,7 +109,7 @@ struct RootTabView: View {
                         )
                     }
 
-                    Tab("", systemImage: "checklist") {
+                    Tab("", systemImage: "list.bullet") {
                         ChecklistsRootView()
                     }
 

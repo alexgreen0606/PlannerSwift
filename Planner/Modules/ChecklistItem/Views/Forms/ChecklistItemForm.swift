@@ -56,6 +56,10 @@ struct ChecklistItemFormView: View {
             in: .whitespacesAndNewlines
         ).isEmpty
     }
+    
+    private var isRootFolder: Bool {
+        sourceItem != nil && sourceItem!.parent == nil
+    }
 
     var body: some View {
         NavigationStack {
@@ -116,7 +120,7 @@ struct ChecklistItemFormView: View {
                 deleteButton
             }
         }
-        .presentationDetents([.height(260)])
+        .presentationDetents([.height(isRootFolder ? 210 : 260)])
         .presentationBackground(.clear)
     }
 
@@ -135,7 +139,7 @@ struct ChecklistItemFormView: View {
 
     @ToolbarContentBuilder
     private var deleteButton: some ToolbarContent {
-        if let sourceItem {
+        if let sourceItem, !isRootFolder {
             ToolbarItem(placement: .bottomBar) {
                 ActionButtonView(
                     label: "Delete \(sourceItem.type.rawValue.capitalized)",

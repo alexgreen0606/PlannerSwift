@@ -24,12 +24,15 @@ struct FolderContentsListView: View {
 
     var body: some View {
         List {
-            ForEach(
-                sortedItems,
-                id: \.stableId,
-                content: row
-            )
-            .onMove(perform: moveItem)
+            Section {
+                ForEach(
+                    sortedItems,
+                    id: \.stableId,
+                    content: row
+                )
+                .onMove(perform: moveItem)
+            }
+            .listSectionMargins(.top, 0)
         }
     }
 
