@@ -11,14 +11,16 @@ import SwiftUI
 
 @MainActor
 final class PlannerCoverStore: ObservableObject {
-    @Published var context: PlannerCoverContext?
-    @Published var isPresentingDefault: Bool = true
-    @Published var todaystampAtInit: String
-
     init() {
         todaystampAtInit = DateInRegion(region: .local).toFormat(
             "yyyy-MM-dd",
             locale: Locale.current
         )
     }
+
+    @Published var context: PlannerCoverContext?
+    @Published var showTodayDefault: Bool = true
+
+    /// Unlike the TodayService, this todaystamp will NOT change at midnight.
+    @Published var todaystampAtInit: String
 }

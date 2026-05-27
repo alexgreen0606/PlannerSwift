@@ -69,13 +69,12 @@ final class PlannerSearchStore: ObservableObject {
             for context in fullPlannerContexts {
                 let _ = plannerSyncService.syncPlanner(
                     context.planner,
-                    weekday: context.weekday,
                     plannerDay: context.plannerDay,
                     sortedPlannerEvents: context.sortedPlannerEvents,
-                    settings: settings,
-                    ekEventStore: ekEventStore,
                     todaystamp: todaystamp,
-                    modelContext: modelContext
+                    ekEventStore: ekEventStore,
+                    modelContext: modelContext,
+                    settings: settings
                 )
             }
 

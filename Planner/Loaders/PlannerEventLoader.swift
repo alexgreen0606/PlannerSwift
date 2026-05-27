@@ -54,10 +54,10 @@ struct PlannerEventContextLoaderView<Content: View>: View {
     }
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var calendarStore: CalendarStore
-    @EnvironmentObject private var weatherStore: WeatherStore
+    @EnvironmentObject private var calendarStore: CalendarService
+    @EnvironmentObject private var weatherStore: WeatherCacheService
     @EnvironmentObject private var plannerSyncStore: PlannerSyncService
-    @EnvironmentObject private var todaystampService: TodaystampService
+    @EnvironmentObject private var todaystampService: TodayService
     @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
 
     @Query private var sortedPlannerEvents: [PlannerEvent]
@@ -74,7 +74,7 @@ struct PlannerEventContextLoaderView<Content: View>: View {
                 )
             )
         }
-        .task(id: plannerSyncStore.rebuildTrigger) {
+        .task(id: plannerSyncStore.syncTrigger) {
             await buildPlanner()
         }
         .task(id: weatherStore.reloadTrigger) {
@@ -106,22 +106,15 @@ struct PlannerEventContextLoaderView<Content: View>: View {
 
     @MainActor
     private func buildPlanner() async {
-        guard
-            let weekday = Weekday.forDatestamp(plannerContext.planner.datestamp)
-        else {
-            return
-        }
-
-        let calendarData = await plannerSyncStore.syncPlanner(
+        guard let calendarData = await plannerSyncStore.syncPlanner(
             plannerContext.planner,
-            weekday: weekday,
             plannerDay: plannerContext.plannerDay,
             sortedPlannerEvents: sortedPlannerEvents,
-            settings: settings,
-            ekEventStore: calendarStore.ekEventStore,
             todaystamp: todaystampService.todaystamp,
-            modelContext: modelContext
-        ).value
+            ekEventStore: calendarStore.ekEventStore,
+            modelContext: modelContext,
+            settings: settings
+        ).value else { return }
 
         withAnimation {
             calendarDayData = calendarData

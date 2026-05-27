@@ -30,8 +30,8 @@ struct PlannerEventFormView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var calendarStore: CalendarStore
-    @EnvironmentObject private var todaystampService: TodaystampService
+    @EnvironmentObject private var calendarStore: CalendarService
+    @EnvironmentObject private var todaystampService: TodayService
     @EnvironmentObject private var PlannerCoverStore: PlannerCoverStore
     @EnvironmentObject private var PlannerSyncStore: PlannerSyncService
     @EnvironmentObject private var LocationService: LocationService
@@ -70,7 +70,7 @@ struct PlannerEventFormView: View {
     }
 
     private var showCalendarButton: Bool {
-        calendarStore.accessDenied == false
+        calendarStore.hasAccess == true
     }
 
     private var bottomBarPadding: CGFloat {
@@ -357,7 +357,7 @@ struct PlannerEventFormView: View {
 
         // Refresh calendar in case of recurring/all-day events.
         DispatchQueue.main.async(
-            execute: PlannerSyncStore.rebuildCalendarData
+            execute: PlannerSyncStore.syncCalendar
         )
 
         dismiss()

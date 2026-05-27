@@ -13,7 +13,6 @@ import SwiftUI
 struct FullPlannerContext {
     let planner: Planner
     let plannerDay: DateInRegion
-    let weekday: Weekday
     let sortedPlannerEvents: [PlannerEvent]
 }
 
@@ -96,7 +95,6 @@ extension ModelContext {
 
             for planner in allPlanners {
                 guard
-                    let weekday = Weekday.forDatestamp(planner.datestamp),
                     let plannerDay = planner.datestamp.startOfDay(
                         in: planner.region(settings: settings)
                     )
@@ -110,7 +108,6 @@ extension ModelContext {
                     FullPlannerContext(
                         planner: planner,
                         plannerDay: plannerDay,
-                        weekday: weekday,
                         sortedPlannerEvents: sortedEvents
                     )
                 )
@@ -206,8 +203,8 @@ extension ModelContext {
         safeSave("planner.togglePlannerRoutineExclusion")
 
         // Re-sync the planner's routine events.
-        PlannerSyncStore.rebuildDatestampRoutine(
-            planner.datestamp
+        PlannerSyncStore.syncPlannerRoutine(
+            datestamp: planner.datestamp
         )
     }
 }

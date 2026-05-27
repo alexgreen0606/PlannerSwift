@@ -11,20 +11,20 @@ import SwiftUI
 @main
 struct PlannerApp: App {
     init() {
-        let LocationService = LocationService()
+        let locationService = LocationService()
 
         _locationService = StateObject(
-            wrappedValue: LocationService
+            wrappedValue: locationService
         )
 
         _weatherStore = StateObject(
-            wrappedValue: WeatherStore(
-                LocationService: LocationService
+            wrappedValue: WeatherCacheService(
+                locationService: locationService
             )
         )
     }
 
-    @StateObject private var weatherStore: WeatherStore
+    @StateObject private var weatherStore: WeatherCacheService
     @StateObject private var locationService: LocationService
 
     private let modelContainer: ModelContainer = {
@@ -52,8 +52,8 @@ struct PlannerApp: App {
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
         .dark
 
-    @StateObject private var calendarStore = CalendarStore()
-    @StateObject private var todaystampService = TodaystampService()
+    @StateObject private var calendarStore = CalendarService()
+    @StateObject private var todaystampService = TodayService()
     @StateObject private var plannerCoverStore = PlannerCoverStore()
     @StateObject private var plannerSyncService = PlannerSyncService()
 

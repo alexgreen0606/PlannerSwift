@@ -15,7 +15,7 @@ struct RoutineSectionView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @EnvironmentObject private var todaystampService: TodaystampService
+    @EnvironmentObject private var todaystampService: TodayService
 
     @Query private var routineEventWeekdayInstances: [RoutineEventWeekdayInstance]
 

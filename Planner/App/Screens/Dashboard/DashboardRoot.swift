@@ -18,9 +18,9 @@ struct DashboardRootView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @EnvironmentObject private var calendarStore: CalendarStore
-    @EnvironmentObject private var todaystampService: TodaystampService
-    @EnvironmentObject private var weatherStore: WeatherStore
+    @EnvironmentObject private var calendarStore: CalendarService
+    @EnvironmentObject private var todaystampService: TodayService
+    @EnvironmentObject private var weatherStore: WeatherCacheService
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
     @EnvironmentObject private var plannerSyncService: PlannerSyncService
@@ -74,7 +74,7 @@ struct DashboardRootView: View {
                         weatherStore.beginFreshReload()
                         calendarStore.refreshCalendarsAndAccess()
                         locationService.loadDeviceLocation()
-                        plannerSyncService.rebuildAllData()
+                        plannerSyncService.syncAllPlanners()
                     }
                     .background(Color.appBackground)
                     .toolbar {
@@ -141,7 +141,7 @@ struct DashboardRootView: View {
 
             .fullScreenCover(
                 item: $routineCoverContext,
-                onDismiss: plannerSyncService.beginRebuild
+                onDismiss: plannerSyncService.beginSync
             ) { weekday in
                 RoutineEventLoaderView(weekday: weekday) {
                     events in

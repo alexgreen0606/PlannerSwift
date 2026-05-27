@@ -68,7 +68,7 @@ struct TransferRoutineEventsFormView: View {
             Set(routineEngine.selectedItems.flatMap { $0.weekdays })
                 .union(destinationWeekdays)
 
-        plannerSyncService.invalidateRoutineDays(affectedWeekdays)
+        plannerSyncService.invalidateRoutines(weekdays: affectedWeekdays)
 
         modelContext.transferRoutineEvents(
             routineEngine.selectedItems,

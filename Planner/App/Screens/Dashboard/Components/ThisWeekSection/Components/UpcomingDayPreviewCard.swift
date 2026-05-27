@@ -12,7 +12,7 @@ struct UpcomingDayPreviewCardView: View {
     let settings: PlannerSettings
     let namespace: Namespace.ID
 
-    @EnvironmentObject private var todaystampService: TodaystampService
+    @EnvironmentObject private var todaystampService: TodayService
 
     var body: some View {
         PlannerPreviewCardView(

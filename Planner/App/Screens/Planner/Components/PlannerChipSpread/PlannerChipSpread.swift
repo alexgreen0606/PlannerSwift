@@ -22,7 +22,7 @@ struct PlannerChipSpreadView: View {
     let openCalendarEventSheet: (EKEvent) -> Void
 
     @EnvironmentObject private var locationService: LocationService
-    @EnvironmentObject private var weatherStore: WeatherStore
+    @EnvironmentObject private var weatherStore: WeatherCacheService
 
     private var weatherData: DayWeather? {
         weatherStore.getWeather(for: plannerDay, at: plannerLocation)

@@ -15,7 +15,7 @@ struct PlannerCardWeatherView: View {
     let plannerLocation: Location?
     let settings: PlannerSettings
 
-    @EnvironmentObject private var weatherStore: WeatherStore
+    @EnvironmentObject private var weatherStore: WeatherCacheService
     @EnvironmentObject private var LocationService: LocationService
 
     private var homeLocationLabel: String? {

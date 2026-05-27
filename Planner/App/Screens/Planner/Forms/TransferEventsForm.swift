@@ -30,8 +30,8 @@ struct TransferEventsFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.showToast) private var showToast
-    @EnvironmentObject private var todaystampService: TodaystampService
-    @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var todaystampService: TodayService
+    @EnvironmentObject private var calendarStore: CalendarService
     @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 

@@ -48,8 +48,8 @@ extension ModelContext {
         // Add any new planners to this trip.
         for datestamp in draftTrip.datestamps {
             // Invalidate the planner routine.
-            PlannerSyncStore.invalidateDatestampRoutine(
-                datestamp
+            PlannerSyncStore.invalidatePlannerRoutine(
+                datestamp: datestamp
             )
 
             if let sourcePlanner = sourcePlanners[datestamp] {
@@ -82,8 +82,8 @@ extension ModelContext {
         // Remove any stale planners from this trip.
         for (_, stalePlanner) in sourcePlanners {
             // Re-sync the planner routine.
-            PlannerSyncStore.invalidateDatestampRoutine(
-                stalePlanner.datestamp
+            PlannerSyncStore.invalidatePlannerRoutine(
+                datestamp: stalePlanner.datestamp
             )
 
             if let index = trip.safePlanners.firstIndex(where: {
@@ -101,7 +101,7 @@ extension ModelContext {
         insertIfNeeded(trip)
         safeSave("trip.updateTrip")
 
-        PlannerSyncStore.beginRebuild()
+        PlannerSyncStore.beginSync()
 
         return trip
     }

@@ -12,7 +12,7 @@ struct SearchFilterToolbarView: ToolbarContent {
     @Binding var draftQuery: PlannerSearchQuery
     let settings: PlannerSettings
 
-    @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var calendarStore: CalendarService
 
     private var sortedCalendars: [EKCalendar] {
         calendarStore.sortedCalendars.filter {
@@ -28,7 +28,7 @@ struct SearchFilterToolbarView: ToolbarContent {
         ToolbarItemGroup(placement: .topBarLeading) {
             Menu("", systemImage: "line.3.horizontal.decrease") {
                 timeFrameSection
-                if calendarStore.accessDenied == false {
+                if calendarStore.hasAccess == true {
                     calendarSection
                 }
             }

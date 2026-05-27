@@ -105,11 +105,11 @@ struct EventFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.showToast) private var showToast
-    @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var calendarStore: CalendarService
     @EnvironmentObject private var PlannerSyncStore: PlannerSyncService
     @EnvironmentObject private var LocationService: LocationService
     @EnvironmentObject private var PlannerCoverStore: PlannerCoverStore
-    @EnvironmentObject private var TodaystampService: TodaystampService
+    @EnvironmentObject private var TodaystampService: TodayService
 
     @State private var draftPlannerEvent: DraftPlannerEvent
 
@@ -213,7 +213,7 @@ struct EventFormView: View {
 
         // Refresh calendar in case of recurring/all-day events.
         DispatchQueue.main.async(
-            execute: PlannerSyncStore.rebuildCalendarData
+            execute: PlannerSyncStore.syncCalendar
         )
 
         dismiss()

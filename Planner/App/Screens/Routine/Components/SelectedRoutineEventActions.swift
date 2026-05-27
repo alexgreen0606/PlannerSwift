@@ -15,7 +15,7 @@ struct SelectedRoutineEventActionsView: ToolbarContent {
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var routineEngine: ListEngine<RoutineEvent>
-    @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var calendarStore: CalendarService
     @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
     @State private var showDeleteConfirmation = false

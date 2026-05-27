@@ -258,7 +258,7 @@ struct RoutineEventFormView: View {
             draftRoutineEvent.daysOfWeek
         )
 
-        PlannerSyncStore.invalidateRoutineDays(affectedWeekdays)
+        PlannerSyncStore.invalidateRoutines(weekdays: affectedWeekdays)
 
         modelContext.updateRoutineEvent(
             with: draftRoutineEvent,

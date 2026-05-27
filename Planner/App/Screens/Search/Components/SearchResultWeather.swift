@@ -16,7 +16,7 @@ struct SearchResultWeatherView: View {
     let plannerLocation: Location?
     let settings: PlannerSettings
 
-    @EnvironmentObject private var weatherStore: WeatherStore
+    @EnvironmentObject private var weatherStore: WeatherCacheService
     @EnvironmentObject private var locationService: LocationService
 
     private var showLocationLabel: Bool {

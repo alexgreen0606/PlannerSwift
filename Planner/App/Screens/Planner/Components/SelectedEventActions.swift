@@ -14,7 +14,7 @@ struct SelectedEventActionsView: ToolbarContent {
     let namespace: Namespace.ID
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var calendarStore: CalendarService
     @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
 
     private var deleteConfig: ConfirmationConfig {

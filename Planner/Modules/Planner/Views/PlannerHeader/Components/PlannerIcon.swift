@@ -39,7 +39,7 @@ struct PlannerIconView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @EnvironmentObject private var todaystampManager: TodaystampService
+    @EnvironmentObject private var todaystampManager: TodayService
 
     // MARK: Icon
 

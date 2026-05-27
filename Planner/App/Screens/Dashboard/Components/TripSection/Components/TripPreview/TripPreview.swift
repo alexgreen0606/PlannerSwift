@@ -18,7 +18,7 @@ struct TripPreviewView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @EnvironmentObject private var todaystampService: TodaystampService
+    @EnvironmentObject private var todaystampService: TodayService
 
     private var isExpanded: Bool {
         expandedTripIds.contains(trip.id)

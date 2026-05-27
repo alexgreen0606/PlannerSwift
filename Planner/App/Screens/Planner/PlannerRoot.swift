@@ -24,7 +24,7 @@ struct PlannerRootView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
-    @EnvironmentObject private var todaystampService: TodaystampService
+    @EnvironmentObject private var todaystampService: TodayService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
     @State private var eventSheetContext: EventSheetContext?
@@ -142,14 +142,14 @@ struct PlannerRootView: View {
         ToolbarItem(placement: .topBarLeading) {
             if !plannerEngine.isSelectMode {
                 BackButtonView {
-                    if plannerCoverStore.isPresentingDefault {
+                    if plannerCoverStore.showTodayDefault {
                         if plannerCoverStore.todaystampAtInit
                             != planner.datestamp
                         {
-                            plannerCoverStore.isPresentingDefault = false
+                            plannerCoverStore.showTodayDefault = false
                         } else {
                             withAnimation(.linear) {
-                                plannerCoverStore.isPresentingDefault = false
+                                plannerCoverStore.showTodayDefault = false
                             }
                         }
                     }

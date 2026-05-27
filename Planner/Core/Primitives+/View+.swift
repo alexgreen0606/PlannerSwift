@@ -77,7 +77,7 @@ extension View {
     {
         animation(
             .spring(
-                response: 1.6,
+                response: 0.6,
                 dampingFraction: 0.4
             ),
             value: trigger

@@ -9,34 +9,43 @@ import Combine
 import EventKit
 import SwiftData
 import SwiftDate
-import SwiftUI
 
 @MainActor
 class PlannerSyncService: ObservableObject {
-    @Published private(set) var rebuildTrigger: UUID? = nil
+    private var inFlightCalendarSync: [String: Task<CalendarDayData?, Never>] =
+        [:]
+    
+    @Published private(set) var syncTrigger: UUID?
 
-    @Published var freshCalendarMap: [String: CalendarDayData] = [:]
+    /// Planner keys mapped to their calendar data.
+    @Published var freshCalendarMap: [String: CalendarDayData] =
+        [:]
 
-    /// Datestamps that have loaded for each weekday.
+    /// Weekdays mapped to all planner datestamps that have synced with their routines.
     @Published private(set) var freshRoutineMap: [Weekday: Set<String>] =
-        PlannerSyncService.makeDefaultRoutineMap()
+        [:]
 
-    private var inFlight: [String: Task<CalendarDayData, Never>] = [:]
-
-    func beginRebuild() {
-        rebuildTrigger = UUID()
+    func beginSync() {
+        syncTrigger = UUID()
     }
 
     func syncPlanner(
         _ planner: Planner,
-        weekday: Weekday,
         plannerDay: DateInRegion,
         sortedPlannerEvents: [PlannerEvent],
-        settings: PlannerSettings,
-        ekEventStore: EKEventStore,
         todaystamp: String,
-        modelContext: ModelContext
-    ) -> Task<CalendarDayData, Never> {
+        ekEventStore: EKEventStore,
+        modelContext: ModelContext,
+        settings: PlannerSettings
+    ) -> Task<CalendarDayData?, Never> {
+        guard
+            let weekday = Weekday.forDatestamp(planner.datestamp)
+        else {
+            return Task { nil }
+        }
+
+        // MARK: Sync Routine
+
         let syncRoutine = !(freshRoutineMap[weekday] ?? []).contains(
             planner.datestamp
         )
@@ -51,19 +60,21 @@ class PlannerSyncService: ObservableObject {
                 todaystamp: todaystamp
             )
 
-            freshRoutineMap[weekday]?.insert(planner.datestamp)
+            freshRoutineMap[weekday, default: []].insert(planner.datestamp)
         }
+
+        // MARK: Sync Calendar
 
         if let cachedCalendarData = freshCalendarMap[planner.key] {
             return Task { cachedCalendarData }
         }
 
-        if let inFlight = inFlight[planner.key] {
+        if let inFlight = inFlightCalendarSync[planner.key] {
             return inFlight
         }
 
-        let task = Task {
-            let calendarData = modelContext.syncCalendar(
+        let task: Task<CalendarDayData?, Never> = Task {
+            let calendarDayData = modelContext.syncCalendar(
                 for: planner,
                 storageEvents: sortedPlannerEvents,
                 plannerDay: plannerDay,
@@ -72,34 +83,43 @@ class PlannerSyncService: ObservableObject {
             )
 
             await MainActor.run {
-                freshCalendarMap[planner.key] = calendarData
-                inFlight.removeValue(forKey: planner.key)
+                freshCalendarMap[planner.key] = calendarDayData
+                inFlightCalendarSync.removeValue(forKey: planner.key)
             }
 
-            return calendarData
+            return calendarDayData
         }
 
-        inFlight[planner.key] = task
+        inFlightCalendarSync[planner.key] = task
+
         return task
     }
 
-    func invalidateRoutineDays(_ weekdays: Set<Weekday>) {
-        for weekday in weekdays {
-            freshRoutineMap[weekday]?.removeAll()
-        }
+    // MARK: - Manual Sync Functions
+
+    func syncCalendar() {
+        invalidateCalendar()
+        beginSync()
     }
 
-    func invalidateCalendarDays(_ keys: Set<String>) {
-        for key in keys {
-            freshCalendarMap.removeValue(forKey: key)
-        }
+    func syncPlannerRoutine(datestamp: String) {
+        invalidatePlannerRoutine(datestamp: datestamp)
+        beginSync()
     }
+
+    func syncAllPlanners() {
+        freshCalendarMap.removeAll()
+        freshRoutineMap.removeAll()
+        beginSync()
+    }
+
+    // MARK: - Invalidation Functions
 
     func invalidateCalendar() {
         freshCalendarMap.removeAll()
     }
 
-    func invalidateDatestampRoutine(_ datestamp: String) {
+    func invalidatePlannerRoutine(datestamp: String) {
         guard let weekday = Weekday.forDatestamp(datestamp) else {
             return
         }
@@ -107,34 +127,9 @@ class PlannerSyncService: ObservableObject {
         freshRoutineMap[weekday]?.remove(datestamp)
     }
 
-    /// Re-syncs a single datestamp's routine.
-    func rebuildDatestampRoutine(_ datestamp: String) {
-        invalidateDatestampRoutine(datestamp)
-        beginRebuild()
-    }
-
-    func rebuildCalendarData() {
-        invalidateCalendar()
-        beginRebuild()
-    }
-
-    func rebuildAllData() {
-        freshCalendarMap.removeAll()
-        freshRoutineMap = Self.makeDefaultRoutineMap()
-        beginRebuild()
-    }
-
-    // MARK: - Helpers
-
-    static func makeDefaultRoutineMap() -> [Weekday: Set<String>] {
-        [
-            .Friday: [],
-            .Saturday: [],
-            .Sunday: [],
-            .Monday: [],
-            .Tuesday: [],
-            .Wednesday: [],
-            .Thursday: [],
-        ]
+    func invalidateRoutines(weekdays: Set<Weekday>) {
+        for weekday in weekdays {
+            freshRoutineMap[weekday]?.removeAll()
+        }
     }
 }

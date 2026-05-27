@@ -11,7 +11,7 @@ struct ThisWeekSectionView: View {
     let settings: PlannerSettings
     let namespace: Namespace.ID
 
-    @EnvironmentObject private var todaystampService: TodaystampService
+    @EnvironmentObject private var todaystampService: TodayService
 
     // MARK: - Body
 

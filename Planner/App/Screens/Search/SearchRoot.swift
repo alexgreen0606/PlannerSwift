@@ -37,9 +37,9 @@ struct SearchRootView: View {
 
     @Environment(\.isSearching) private var isSearching
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var calendarStore: CalendarStore
-    @EnvironmentObject private var todaystampService: TodaystampService
-    @EnvironmentObject private var weatherStore: WeatherStore
+    @EnvironmentObject private var calendarStore: CalendarService
+    @EnvironmentObject private var todaystampService: TodayService
+    @EnvironmentObject private var weatherStore: WeatherCacheService
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var plannerSearchStore: PlannerSearchStore
     @EnvironmentObject private var plannerSyncService: PlannerSyncService
@@ -103,7 +103,7 @@ struct SearchRootView: View {
                         weatherStore.beginFreshReload()
                         calendarStore.refreshCalendarsAndAccess()
                         locationService.loadDeviceLocation()
-                        plannerSyncService.rebuildAllData()
+                        plannerSyncService.syncAllPlanners()
                     }
                     .background(Color.appBackground)
                     .safeAreaInset(edge: .top) {
@@ -147,7 +147,7 @@ struct SearchRootView: View {
 
         // MARK: Re-search when the planners re-sync.
 
-        .onChange(of: plannerSyncService.rebuildTrigger) { _, _ in
+        .onChange(of: plannerSyncService.syncTrigger) { _, _ in
             search()
         }
 

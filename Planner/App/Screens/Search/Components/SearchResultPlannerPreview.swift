@@ -14,7 +14,7 @@ struct SearchResultPlannerPreviewView: View {
     let settings: PlannerSettings
     let namespace: Namespace.ID
 
-    @EnvironmentObject private var todaystampService: TodaystampService
+    @EnvironmentObject private var todaystampService: TodayService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
     // MARK: - Body

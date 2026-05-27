@@ -73,10 +73,10 @@ struct RootTabView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var systemColorScheme
-    @EnvironmentObject private var todaystampService: TodaystampService
-    @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var todaystampService: TodayService
+    @EnvironmentObject private var calendarStore: CalendarService
     @EnvironmentObject private var locationService: LocationService
-    @EnvironmentObject private var weatherStore: WeatherStore
+    @EnvironmentObject private var weatherStore: WeatherCacheService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
     @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
@@ -134,7 +134,7 @@ struct RootTabView: View {
                 }
                 .tabBarMinimizeBehavior(.onScrollDown)
                 .accentColor(accentColor.color)
-                .opacity(plannerCoverStore.isPresentingDefault ? 0 : 1)
+                .opacity(plannerCoverStore.showTodayDefault ? 0 : 1)
 
                 // MARK: Default App Landing. Today Planner.
 
@@ -151,7 +151,7 @@ struct RootTabView: View {
                         settings: settings
                     )
                 }
-                .opacity(plannerCoverStore.isPresentingDefault ? 1 : 0)
+                .opacity(plannerCoverStore.showTodayDefault ? 1 : 0)
             }
         }
         .task {
@@ -196,7 +196,7 @@ struct RootTabView: View {
                     accentColor: accentColor,
                     systemColorScheme: systemColorScheme
                 )
-                plannerSyncService.rebuildCalendarData()
+                plannerSyncService.syncCalendar()
             }
         }
 

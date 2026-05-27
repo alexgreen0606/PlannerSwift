@@ -1,5 +1,5 @@
 //
-//  CalendarStore.swift
+//  CalendarService.swift
 //  Planner
 //
 //  Created by Alex Green on 12/16/25.
@@ -7,23 +7,21 @@
 
 import Combine
 import EventKit
-import SwiftData
-import SwiftDate
-import SwiftUI
 
 @MainActor
-class CalendarStore: ObservableObject {
-    @Published private(set) var accessDenied: Bool? = nil
-
+final class CalendarService: ObservableObject {
     private let eventStore = EKEventStore()
+
     private var calendarsById: [String: EKCalendar] = [:]
+    
+    @Published private(set) var hasAccess: Bool? = nil
 
     var ekEventStore: EKEventStore {
         eventStore
     }
 
     var sortedCalendars: [EKCalendar] {
-        Array(calendarsById.values)
+        calendarsById.values
             .sorted {
                 $0.title.localizedCaseInsensitiveCompare($1.title)
                     == .orderedAscending
@@ -33,12 +31,13 @@ class CalendarStore: ObservableObject {
     func refreshCalendarsAndAccess() {
         switch EKEventStore.authorizationStatus(for: .event) {
         case .authorized:
-            accessDenied = false
+            hasAccess = true
             loadCalendars()
         case .notDetermined:
             requestAccess()
         case .denied:
-            accessDenied = true
+            hasAccess = false
+            calendarsById = [:]
         default:
             break
         }
@@ -50,10 +49,11 @@ class CalendarStore: ObservableObject {
         eventStore.requestFullAccessToEvents { granted, _ in
             Task { @MainActor in
                 if granted {
-                    self.accessDenied = false
+                    self.hasAccess = true
                     self.loadCalendars()
                 } else {
-                    self.accessDenied = true
+                    self.hasAccess = false
+                    self.calendarsById = [:]
                 }
             }
         }

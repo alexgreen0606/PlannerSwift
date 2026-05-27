@@ -1,5 +1,5 @@
 //
-//  WeatherStore.swift
+//  WeatherCacheService.swift
 //  Planner
 //
 //  Created by Alex Green on 12/16/25.
@@ -12,20 +12,20 @@ import SwiftUI
 import WeatherKit
 
 @MainActor
-final class WeatherStore: ObservableObject {
-    private let LocationService: LocationService
-
-    init(LocationService: LocationService) {
-        self.LocationService = LocationService
+final class WeatherCacheService: ObservableObject {
+    init(locationService: LocationService) {
+        self.locationService = locationService
     }
+    
+    private let locationService: LocationService
+    
+    private let weatherService = WeatherService()
 
     /// Location Key -> Planner Start of Day -> Weather
     @Published var weatherCache: [String: [Date: DayWeather]] = [:]
 
     @Published var reloadTrigger: UUID? = nil
     @Published var loadedLocationKeys: Set<String> = []
-
-    private let weatherService = WeatherService()
 
     func beginFreshReload() {
         loadedLocationKeys = []
@@ -67,7 +67,7 @@ final class WeatherStore: ObservableObject {
                 latitude: location.latitude,
                 longitude: location.longitude
             )
-        } else if let deviceLocation = LocationService.deviceClLocation {
+        } else if let deviceLocation = locationService.deviceClLocation {
             weatherLocation = deviceLocation
         } else {
             print(
@@ -100,6 +100,6 @@ final class WeatherStore: ObservableObject {
 
     private func getLocationKey(for location: Location?) -> String? {
         location?.coordinateKey
-            ?? LocationService.deviceClLocation?.coordinate.key
+            ?? locationService.deviceClLocation?.coordinate.key
     }
 }

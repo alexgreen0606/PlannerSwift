@@ -10,7 +10,7 @@ import SwiftUI
 struct DateRangePickerView: View {
     @Binding var selectedDates: Set<DateComponents>
 
-    @EnvironmentObject private var todaystampService: TodaystampService
+    @EnvironmentObject private var todaystampService: TodayService
 
     // MARK: - Body
 

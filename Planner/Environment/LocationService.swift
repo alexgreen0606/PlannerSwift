@@ -9,7 +9,9 @@ import Combine
 import MapKit
 
 @MainActor
-final class LocationService: NSObject, ObservableObject,
+final class LocationService:
+    NSObject,
+    ObservableObject,
     CLLocationManagerDelegate
 {
     override init() {
@@ -17,18 +19,18 @@ final class LocationService: NSObject, ObservableObject,
 
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest
-        manager.requestWhenInUseAuthorization()
     }
 
     deinit {
         refreshTask?.cancel()
     }
+    
+    private let manager = CLLocationManager()
+
+    private var refreshTask: Task<Void, Never>?
 
     @Published var deviceClLocation: CLLocation?
     @Published var deviceLocation: Location?
-
-    private let manager = CLLocationManager()
-    private var refreshTask: Task<Void, Never>?
 
     func loadDeviceLocation() {
         manager.requestLocation()
@@ -38,10 +40,11 @@ final class LocationService: NSObject, ObservableObject,
         switch manager.authorizationStatus {
         case .authorizedWhenInUse, .authorizedAlways:
             loadDeviceLocation()
-            startPeriodicRefresh()
-        case .denied, .restricted:
-            print("Location access denied or restricted.")
+            scheduleRefresh()
         case .notDetermined:
+            manager.requestWhenInUseAuthorization()
+            break
+        case .denied, .restricted:
             break
         @unknown default:
             break
@@ -70,7 +73,10 @@ final class LocationService: NSObject, ObservableObject,
         deviceClLocation = roundedLocation
 
         Task {
-            await buildDeviceLocation(clLocation: roundedLocation, coordinate: roundedCoordinate)
+            await buildDeviceLocation(
+                clLocation: roundedLocation,
+                coordinate: roundedCoordinate
+            )
         }
     }
 
@@ -84,7 +90,7 @@ final class LocationService: NSObject, ObservableObject,
     // MARK: - Helper Functions
 
     /// Runs every 10 minutes.
-    private func startPeriodicRefresh() {
+    private func scheduleRefresh() {
         refreshTask = Task { @MainActor in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(600))
@@ -101,8 +107,8 @@ final class LocationService: NSObject, ObservableObject,
             do {
                 let mapItems = try await request.mapItems
                 if let item = mapItems.first,
-                   let addressInfo = item.addressRepresentations,
-                   let city = addressInfo.cityWithContext
+                    let addressInfo = item.addressRepresentations,
+                    let city = addressInfo.cityWithContext
                 {
                     deviceLocation = Location(
                         name: city,

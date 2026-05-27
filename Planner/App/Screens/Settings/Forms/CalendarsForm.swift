@@ -38,7 +38,7 @@ struct CalendarsFormView: View {
         .blue
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var calendarStore: CalendarStore
+    @EnvironmentObject private var calendarStore: CalendarService
     @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
     @State private var calendarStoreRefreshTask: Task<Void, Never>?
@@ -134,7 +134,7 @@ struct CalendarsFormView: View {
                 guard !Task.isCancelled else { return }
 
                 calendarStore.refreshCalendarsAndAccess()
-                plannerSyncService.rebuildCalendarData()
+                plannerSyncService.syncCalendar()
             } catch {}
         }
     }
