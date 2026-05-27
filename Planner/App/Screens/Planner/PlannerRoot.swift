@@ -12,8 +12,6 @@ import SwiftUI
 
 struct PlannerRootView: View {
     let planner: Planner
-    let plannerDay: DateInRegion
-    let plannerLocation: Location?
     let sortedPlannerEvents: [PlannerEvent]
     let calendarDayData: CalendarDayData?
     let settings: PlannerSettings
@@ -23,15 +21,20 @@ struct PlannerRootView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
-    @EnvironmentObject private var todaystampService: TodayService
+    @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
+    
+    @StateObject private var plannerEngine = ListEngine<PlannerEvent>()
 
     @State private var eventSheetContext: EventSheetContext?
     @State private var showTransferSheet = false
     @State private var showLocationSheet = false
 
     @Namespace private var namespace
+    
+    private var plannerDay: DateInRegion {
+        planner.datestamp.startOfDay(in: planner.region(settings: settings))
+    }
 
     private var sortedPendingPlannerEvents: [PlannerEvent] {
         sortedPlannerEvents.filter { event in
@@ -60,7 +63,7 @@ struct PlannerRootView: View {
     // TODO: this will be moved into the header view
     private var showHeaderDateIcon: Bool {
         planner.datestamp.isNext7Days(
-            todaystamp: todaystampService.todaystamp
+            todaystamp: todayService.todaystamp
         )
     }
 
@@ -75,7 +78,6 @@ struct PlannerRootView: View {
                         eventSheetContext: $eventSheetContext,
                         planner: planner,
                         plannerDay: plannerDay,
-                        plannerLocation: plannerLocation,
                         sortedPlannerEvents: sortedPlannerEvents,
                         sortedPendingPlannerEvents:
                             sortedPendingPlannerEvents,
@@ -97,6 +99,22 @@ struct PlannerRootView: View {
                     .navigationBarTitleDisplayMode(.inline)
                 }
             }
+            
+            // MARK: Transfer Events Form
+
+            .sheet(isPresented: $showTransferSheet) {
+                TransferEventsFormView(
+                    sourceStartOfDay: plannerDay,
+                    settings: settings
+                )
+                .navigationTransition(
+                    .zoom(
+                        sourceID: ListIds.TRANSFER_BUTTON,
+                        in: namespace
+                    )
+                )
+            }
+            .environmentObject(plannerEngine)
 
             // MARK: Event Form
 
@@ -116,21 +134,6 @@ struct PlannerRootView: View {
                 .onDisappear {
                     plannerEngine.protectedId = nil
                 }
-            }
-
-            // MARK: Transfer Events Form
-
-            .sheet(isPresented: $showTransferSheet) {
-                TransferEventsFormView(
-                    sourceStartOfDay: plannerDay,
-                    settings: settings
-                )
-                .navigationTransition(
-                    .zoom(
-                        sourceID: ListIds.TRANSFER_BUTTON,
-                        in: namespace
-                    )
-                )
             }
         }
     }

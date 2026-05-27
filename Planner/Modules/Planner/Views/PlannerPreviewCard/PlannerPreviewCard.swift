@@ -39,19 +39,16 @@ struct PlannerPreviewCardView<Header: View>: View {
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
     var body: some View {
-        PlannerLoaderView(datestamp: datestamp, settings: settings) {
-            plannerContext,
-            eventContext in
+        PlannerContextLoaderView(datestamp: datestamp, settings: settings) {
+            context in
             VStack(alignment: .leading) {
                 header
 
                 PlannerPreviewView(
                     type: type,
-                    planner: plannerContext.planner,
-                    plannerDay: plannerContext.plannerDay,
-                    plannerLocation: plannerContext.plannerLocation,
-                    plannerEvents: eventContext.sortedPlannerEvents, // TODO: is all events needed?
-                    calendarDayData: eventContext.calendarDayData,
+                    planner: context.planner,
+                    plannerEvents: context.eventContext.sortedPlannerEvents,
+                    calendarDayData: context.eventContext.calendarDayData,
                     settings: settings
                 )
                 .frame(
@@ -60,9 +57,7 @@ struct PlannerPreviewCardView<Header: View>: View {
                 )
 
                 PlannerCardWeatherView(
-                    planner: plannerContext.planner,
-                    plannerDay: plannerContext.plannerDay,
-                    plannerLocation: plannerContext.plannerLocation,
+                    planner: context.planner,
                     settings: settings
                 )
             }
@@ -73,8 +68,10 @@ struct PlannerPreviewCardView<Header: View>: View {
                 alignment: .top
             )
             .background(
-                RoundedRectangle(cornerRadius: PlannerPreviewCardLayout.CORNER_RADIUS)
-                    .fill(Color.cardBackground)
+                RoundedRectangle(
+                    cornerRadius: PlannerPreviewCardLayout.CORNER_RADIUS
+                )
+                .fill(Color.cardBackground)
             )
             .matchedTransitionSource(
                 id: transitionId,

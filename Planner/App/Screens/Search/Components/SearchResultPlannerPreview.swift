@@ -14,15 +14,13 @@ struct SearchResultPlannerPreviewView: View {
     let settings: PlannerSettings
     let namespace: Namespace.ID
 
-    @EnvironmentObject private var todaystampService: TodayService
+    @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
     // MARK: - Body
 
     var body: some View {
-        PlannerLoaderView(datestamp: datestamp, settings: settings) {
-            plannerContext,
-            eventContext in
+        PlannerContextLoaderView(datestamp: datestamp, settings: settings) { context in
             VStack(alignment: .leading) {
                 HStack(alignment: .top) {
                     PlannerHeaderView(
@@ -44,7 +42,7 @@ struct SearchResultPlannerPreviewView: View {
                                 ),
                             ],
                             todaystamp:
-                            todaystampService
+                            todayService
                                 .todaystamp
                         )
                     )
@@ -54,9 +52,7 @@ struct SearchResultPlannerPreviewView: View {
                     if let activeQuery {
                         SearchResultWeatherView(
                             activeQuery: activeQuery,
-                            planner: plannerContext.planner,
-                            plannerDay: plannerContext.plannerDay,
-                            plannerLocation: plannerContext.plannerLocation,
+                            planner: context.planner,
                             settings: settings
                         )
                     }
@@ -66,11 +62,9 @@ struct SearchResultPlannerPreviewView: View {
                 PlannerPreviewView(
                     type: .search,
                     searchQuery: activeQuery,
-                    planner: plannerContext.planner,
-                    plannerDay: plannerContext.plannerDay,
-                    plannerLocation: plannerContext.plannerLocation,
-                    plannerEvents: eventContext.sortedPlannerEvents,
-                    calendarDayData: eventContext.calendarDayData,
+                    planner: context.planner,
+                    plannerEvents: context.eventContext.sortedPlannerEvents,
+                    calendarDayData: context.eventContext.calendarDayData,
                     settings: settings
                 )
             }

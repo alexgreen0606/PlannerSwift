@@ -15,8 +15,6 @@ struct PlannerPreviewView: View {
     let type: PlannerPreviewType
     let searchQuery: PlannerSearchQuery?
     let planner: Planner
-    let plannerDay: DateInRegion
-    let plannerLocation: Location?
     let plannerEvents: [PlannerEvent]
     let calendarDayData: CalendarDayData?
     let settings: PlannerSettings
@@ -25,8 +23,6 @@ struct PlannerPreviewView: View {
         type: PlannerPreviewType,
         searchQuery: PlannerSearchQuery? = nil,
         planner: Planner,
-        plannerDay: DateInRegion,
-        plannerLocation: Location?,
         plannerEvents: [PlannerEvent],
         calendarDayData: CalendarDayData? = nil,
         settings: PlannerSettings
@@ -34,16 +30,27 @@ struct PlannerPreviewView: View {
         self.type = type
         self.searchQuery = searchQuery
         self.planner = planner
-        self.plannerDay = plannerDay
-        self.plannerLocation = plannerLocation
         self.plannerEvents = plannerEvents
         self.calendarDayData = calendarDayData
         self.settings = settings
     }
 
     private let maxPreviewEvents = 5
+    
+    @EnvironmentObject private var locationService: LocationService
 
     // MARK: - Computed Variables
+    
+    private var plannerDay: DateInRegion {
+        planner.datestamp.startOfDay(in: planner.region(settings: settings))
+    }
+    
+    private var plannerLocation: Location? {
+        planner.location(
+            settings: settings,
+            deviceLocation: locationService.deviceLocation
+        )
+    }
 
     // MARK: Filtered Search Results
 

@@ -11,16 +11,14 @@ import SwiftDate
 import SwiftUI
 
 struct SearchRootView: View {
-    let todayDay: DateInRegion
     let settings: PlannerSettings
     let namespace: Namespace.ID
 
     init(
-        todayDay: DateInRegion,
+        todayPlanner: Planner,
         settings: PlannerSettings,
         namespace: Namespace.ID
     ) {
-        self.todayDay = todayDay
         self.settings = settings
         self.namespace = namespace
 
@@ -29,7 +27,9 @@ struct SearchRootView: View {
                 text: "",
                 calendarIds: [],
                 past: false,
-                todayStartOfDay: todayDay,
+                todayStartOfDay: todayPlanner.datestamp.startOfDay(
+                    in: todayPlanner.region(settings: settings)
+                ),
                 fuse: Fuse()
             )
         )
@@ -38,8 +38,8 @@ struct SearchRootView: View {
     @Environment(\.isSearching) private var isSearching
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarService
-    @EnvironmentObject private var todaystampService: TodayService
-    @EnvironmentObject private var weatherStore: WeatherCacheService
+    @EnvironmentObject private var todayService: TodayService
+    @EnvironmentObject private var weatherCacheService: WeatherCacheService
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var plannerSearchStore: PlannerSearchStore
     @EnvironmentObject private var plannerSyncService: PlannerSyncService
@@ -96,11 +96,11 @@ struct SearchRootView: View {
                         }
                     }
                     .animateLazyAction(
-                        from: todaystampService.todaystamp
+                        from: todayService.todaystamp
                     )
                     .listStyle(.plain)
                     .refreshable {
-                        weatherStore.beginFreshReload()
+                        weatherCacheService.beginReload()
                         calendarStore.refreshCalendarsAndAccess()
                         locationService.loadDeviceLocation()
                         plannerSyncService.syncAllPlanners()
@@ -153,7 +153,7 @@ struct SearchRootView: View {
 
         // MARK: Re-search when today's date changes.
 
-        .onChange(of: todaystampService.todaystamp) {
+        .onChange(of: todayService.todaystamp) {
             _,
             _ in
             search()
@@ -185,7 +185,7 @@ struct SearchRootView: View {
             modelContainer: modelContext.container,
             modelContext: modelContext,
             plannerSyncService: plannerSyncService,
-            todaystamp: todaystampService.todaystamp,
+            todaystamp: todayService.todaystamp,
             settings: settings,
             ekEventStore: calendarStore.ekEventStore
         )

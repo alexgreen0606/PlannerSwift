@@ -21,40 +21,40 @@ struct RootTabView: View {
         // Navigation titles -> rounded fonts.
         if var descriptor =
             UIFontDescriptor
-                .preferredFontDescriptor(withTextStyle: .largeTitle)
-                .withDesign(.rounded)
+            .preferredFontDescriptor(withTextStyle: .largeTitle)
+            .withDesign(.rounded)
         {
             descriptor = descriptor.addingAttributes([
                 .traits: [
-                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy,
-                ],
+                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy
+                ]
             ])
 
             UINavigationBar.appearance().largeTitleTextAttributes = [
                 .font: UIFont(
                     descriptor: descriptor,
                     size: descriptor.pointSize
-                ),
+                )
             ]
         }
 
         // Navigation subtitles -> rounded fonts.
         if var descriptor =
             UIFontDescriptor
-                .preferredFontDescriptor(withTextStyle: .headline)
-                .withDesign(.rounded)
+            .preferredFontDescriptor(withTextStyle: .headline)
+            .withDesign(.rounded)
         {
             descriptor = descriptor.addingAttributes([
                 .traits: [
-                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy,
-                ],
+                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy
+                ]
             ])
 
             UINavigationBar.appearance().titleTextAttributes = [
                 .font: UIFont(
                     descriptor: descriptor,
                     size: descriptor.pointSize
-                ),
+                )
             ]
         }
     }
@@ -68,15 +68,15 @@ struct RootTabView: View {
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
-        .oneMonth
+            .oneMonth
 
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var systemColorScheme
-    @EnvironmentObject private var todaystampService: TodayService
+    @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var calendarStore: CalendarService
     @EnvironmentObject private var locationService: LocationService
-    @EnvironmentObject private var weatherStore: WeatherCacheService
+    @EnvironmentObject private var weatherCacheService: WeatherCacheService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
     @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
@@ -100,7 +100,7 @@ struct RootTabView: View {
                 TabView {
                     Tab(
                         "",
-                        systemImage: todaystampService.todaystamp
+                        systemImage: todayService.todaystamp
                             .calendarSymbolName
                     ) {
                         DashboardRootView(
@@ -118,13 +118,9 @@ struct RootTabView: View {
                     }
 
                     Tab(role: .search) {
-                        PlannerContextLoaderView(
-                            datestamp: todaystampService.todaystamp,
-                            settings: settings
-                        ) {
-                            context in
+                        PlannerLoaderView(datestamp: todayService.todaystamp) { planner in
                             SearchRootView(
-                                todayDay: context.plannerDay,
+                                todayPlanner: planner,
                                 settings: settings,
                                 namespace: namespace
                             )
@@ -138,16 +134,14 @@ struct RootTabView: View {
 
                 // MARK: Default App Landing. Today Planner.
 
-                PlannerLoaderView(
+                PlannerContextLoaderView(
                     datestamp: plannerCoverStore.todaystampAtInit,
                     settings: settings
-                ) { plannerContext, eventContext in
+                ) { context in
                     PlannerRootView(
-                        planner: plannerContext.planner,
-                        plannerDay: plannerContext.plannerDay,
-                        plannerLocation: plannerContext.plannerLocation,
-                        sortedPlannerEvents: eventContext.sortedPlannerEvents,
-                        calendarDayData: eventContext.calendarDayData,
+                        planner: context.planner,
+                        sortedPlannerEvents: context.eventContext.sortedPlannerEvents,
+                        calendarDayData: context.eventContext.calendarDayData,
                         settings: settings
                     )
                 }
@@ -163,16 +157,14 @@ struct RootTabView: View {
 
         .fullScreenCover(item: $plannerCoverStore.context) { context in
             if let settings {
-                PlannerLoaderView(
+                PlannerContextLoaderView(
                     datestamp: context.datestamp,
                     settings: settings
-                ) { plannerContext, eventContext in
+                ) { plannerContext in
                     PlannerRootView(
                         planner: plannerContext.planner,
-                        plannerDay: plannerContext.plannerDay,
-                        plannerLocation: plannerContext.plannerLocation,
-                        sortedPlannerEvents: eventContext.sortedPlannerEvents,
-                        calendarDayData: eventContext.calendarDayData,
+                        sortedPlannerEvents: plannerContext.eventContext.sortedPlannerEvents,
+                        calendarDayData: plannerContext.eventContext.calendarDayData,
                         settings: settings
                     )
                     .id(context.datestamp)
@@ -207,7 +199,7 @@ struct RootTabView: View {
         ) {
             _,
             _ in
-            weatherStore.beginFreshReload()
+            weatherCacheService.beginReload()
         }
     }
 
@@ -218,16 +210,12 @@ struct RootTabView: View {
         guard let settings else { return }
 
         let todayPlanner = modelContext.getPlanner(
-            for: todaystampService.todaystamp
+            for: todayService.todaystamp
         )
 
-        guard
-            let todayStartOfDay = todayPlanner.datestamp.startOfDay(
-                in: todayPlanner.region(settings: settings)
-            )
-        else {
-            return
-        }
+        let todayStartOfDay = todayPlanner.datestamp.startOfDay(
+            in: todayPlanner.region(settings: settings)
+        )
 
         plannerSearchStore.search(
             with: PlannerSearchQuery(
@@ -240,7 +228,7 @@ struct RootTabView: View {
             modelContainer: modelContext.container,
             modelContext: modelContext,
             plannerSyncService: plannerSyncService,
-            todaystamp: todaystampService.todaystamp,
+            todaystamp: todayService.todaystamp,
             settings: settings,
             ekEventStore: calendarStore.ekEventStore
         )
@@ -272,11 +260,11 @@ struct RootTabView: View {
 
     /// Runs once a day (if app is opened).
     private func cleanseStorage() {
-        guard lastCleansedDatestamp != todaystampService.todaystamp else {
+        guard lastCleansedDatestamp != todayService.todaystamp else {
             return
         }
 
-        lastCleansedDatestamp = todaystampService.todaystamp
+        lastCleansedDatestamp = todayService.todaystamp
 
         if keepPastEventsDuration != .forever {
             modelContext.deleteStaleData(

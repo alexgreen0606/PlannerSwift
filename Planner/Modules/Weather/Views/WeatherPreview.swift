@@ -40,11 +40,11 @@ struct WeatherPreviewView: View {
         .blue
 
     @Environment(\.colorScheme) private var systemColorScheme
-    @EnvironmentObject private var weatherStore: WeatherCacheService
+    @EnvironmentObject private var weatherCacheService: WeatherCacheService
     @EnvironmentObject private var LocationService: LocationService
 
     private var weatherData: DayWeather? {
-        weatherStore.getWeather(
+        weatherCacheService.weather(
             for: plannerDay,
             at: plannerLocation
         )

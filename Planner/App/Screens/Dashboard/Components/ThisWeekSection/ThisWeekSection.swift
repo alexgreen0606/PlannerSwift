@@ -11,7 +11,7 @@ struct ThisWeekSectionView: View {
     let settings: PlannerSettings
     let namespace: Namespace.ID
 
-    @EnvironmentObject private var todaystampService: TodayService
+    @EnvironmentObject private var todayService: TodayService
 
     // MARK: - Body
 
@@ -20,7 +20,7 @@ struct ThisWeekSectionView: View {
             ScrollView(.horizontal) {
                 HStack {
                     ForEach(
-                        todaystampService.next7Datestamps,
+                        todayService.next7Datestamps,
                         id: \.self,
                         content: plannerPreview
                     )
@@ -40,7 +40,7 @@ struct ThisWeekSectionView: View {
         .listRowInsets(EdgeInsets())
         .discreetListItem()
         .animateLazyAction(
-            from: todaystampService.next7Datestamps
+            from: todayService.next7Datestamps
         )
     }
 

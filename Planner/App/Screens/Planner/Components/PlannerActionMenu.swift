@@ -17,7 +17,7 @@ struct PlannerActionMenuView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var plannerManager: ListEngine<PlannerEvent>
     @EnvironmentObject private var calendarStore: CalendarService
-    @EnvironmentObject private var todaystampService: TodayService
+    @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
     @State private var showDeleteCompletedConfirmation = false
@@ -44,7 +44,7 @@ struct PlannerActionMenuView: View {
                     ordinal: true
                 ),
             ],
-            todaystamp: todaystampService.todaystamp
+            todaystamp: todayService.todaystamp
         )
     }
 

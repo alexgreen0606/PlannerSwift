@@ -94,13 +94,9 @@ extension ModelContext {
             var fullPlannerContexts: [FullPlannerContext] = []
 
             for planner in allPlanners {
-                guard
-                    let plannerDay = planner.datestamp.startOfDay(
-                        in: planner.region(settings: settings)
-                    )
-                else {
-                    continue
-                }
+                let plannerDay = planner.datestamp.startOfDay(
+                    in: planner.region(settings: settings)
+                )
 
                 let sortedEvents = getSortedStorageEvents(for: plannerDay)
 
@@ -131,13 +127,9 @@ extension ModelContext {
             }
 
             let planner = getPlanner(for: datestamp)
-            guard
-                let plannerDay = planner.datestamp.startOfDay(
+            let plannerDay = planner.datestamp.startOfDay(
                     in: planner.region(settings: settings)
                 )
-            else {
-                return nil
-            }
 
             // Return the planner day for the untimed event.
             return plannerDay
@@ -148,13 +140,9 @@ extension ModelContext {
 
         for datestamp in sortedPossibleDatestamps {
             let planner = getPlanner(for: datestamp)
-            guard
-                let plannerDay = planner.datestamp.startOfDay(
+            let plannerDay = planner.datestamp.startOfDay(
                     in: planner.region(settings: settings)
                 )
-            else {
-                continue
-            }
 
             if time.belongsTo(plannerDay) {
                 return plannerDay

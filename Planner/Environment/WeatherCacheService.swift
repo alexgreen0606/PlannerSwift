@@ -21,44 +21,45 @@ final class WeatherCacheService: ObservableObject {
     
     private let weatherService = WeatherService()
 
-    /// Location Key -> Planner Start of Day -> Weather
-    @Published var weatherCache: [String: [Date: DayWeather]] = [:]
+    /// Location Key -> [Planner Start of Day -> Weather]
+    private var weatherCache: [String: [Date: DayWeather]] = [:]
+    
+    private var loadedLocationKeys: Set<String> = []
 
-    @Published var reloadTrigger: UUID? = nil
-    @Published var loadedLocationKeys: Set<String> = []
+    @Published private(set) var reloadTrigger: UUID?
 
-    func beginFreshReload() {
-        loadedLocationKeys = []
+    func beginReload() {
+        loadedLocationKeys.removeAll()
         reloadTrigger = UUID()
     }
 
-    func getWeather(for startOfDay: DateInRegion, at location: Location?)
+    func weather(for startOfDay: DateInRegion, at location: Location?)
         -> DayWeather?
     {
-        guard let locationKey = getLocationKey(for: location) else {
+        guard let locationKey = locationKey(for: location) else {
             return nil
         }
 
         return weatherCache[locationKey]?[startOfDay.date]
     }
 
-    func loadWeatherIfNeeded(
+    func ensureWeather(
         location: Location?,
         region: Region
     ) async {
-        guard let locationKey = getLocationKey(for: location) else {
-            print(
-                "ERROR WeatherStore.loadWeatherIfNeeded: Device location does not exist."
-            )
+        guard let locationKey = locationKey(for: location) else {
             return
         }
 
-        // Priority 1: Return cached data for this day/location.
+        // MARK: Priority 1: Return cached weather for this day/location.
+        
         if loadedLocationKeys.contains(locationKey) {
             return
         } else {
             loadedLocationKeys.insert(locationKey)
         }
+        
+        // MARK: Get the location needed for the weather API.
 
         let weatherLocation: CLLocation
 
@@ -70,15 +71,15 @@ final class WeatherCacheService: ObservableObject {
         } else if let deviceLocation = locationService.deviceClLocation {
             weatherLocation = deviceLocation
         } else {
-            print(
-                "ERROR WeatherStore.loadWeatherIfNeeded: Device location does not exist."
-            )
             return
         }
+        
+        // MARK: Load in the weather for this location.
 
         do {
             let weather = try await weatherService.weather(for: weatherLocation)
 
+            // Assemble a map of weather for every available day in this location.
             for dayWeather in weather.dailyForecast {
                 let startOfDay = DateInRegion(
                     dayWeather.date,
@@ -90,15 +91,15 @@ final class WeatherCacheService: ObservableObject {
                     startOfDay.date
                 ] = dayWeather
             }
-
+            
         } catch {
-            print("ERROR WeatherStore.loadWeatherIfNeeded: \(error)")
+            print("ERROR WeatherCacheService.ensureWeather: \(error)")
         }
     }
 
     // MARK: - Helper Function
 
-    private func getLocationKey(for location: Location?) -> String? {
+    private func locationKey(for location: Location?) -> String? {
         location?.coordinateKey
             ?? locationService.deviceClLocation?.coordinate.key
     }

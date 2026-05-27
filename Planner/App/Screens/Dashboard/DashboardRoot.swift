@@ -19,8 +19,8 @@ struct DashboardRootView: View {
         .blue
 
     @EnvironmentObject private var calendarStore: CalendarService
-    @EnvironmentObject private var todaystampService: TodayService
-    @EnvironmentObject private var weatherStore: WeatherCacheService
+    @EnvironmentObject private var todayService: TodayService
+    @EnvironmentObject private var weatherCacheService: WeatherCacheService
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
     @EnvironmentObject private var plannerSyncService: PlannerSyncService
@@ -62,7 +62,7 @@ struct DashboardRootView: View {
                         TripSectionView(
                             tripSheetContext: $tripSheetContext,
                             expandedTripIds: $expandedTripIds,
-                            todaystamp: todaystampService.todaystamp,
+                            todaystamp: todayService.todaystamp,
                             scrollProxy: scrollProxy,
                             settings: settings,
                             namespace: namespace
@@ -71,7 +71,7 @@ struct DashboardRootView: View {
                     .animation(.linear, value: expandedTripIds)
                     .listStyle(.plain)
                     .refreshable {
-                        weatherStore.beginFreshReload()
+                        weatherCacheService.beginReload()
                         calendarStore.refreshCalendarsAndAccess()
                         locationService.loadDeviceLocation()
                         plannerSyncService.syncAllPlanners()
@@ -180,7 +180,7 @@ struct DashboardRootView: View {
                     MultiDatePicker(
                         "Open a planner",
                         selection: $tappedDates,
-                        in: todaystampService.multiDatePickerBounds
+                        in: todayService.multiDatePickerBounds
                     )
                     .tint(accentColor.color)
                     .onChange(of: tappedDates) { _, selectedDates in

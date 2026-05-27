@@ -28,9 +28,7 @@ struct ChecklistsRootView: View {
         if let rootFolder {
             NavigationStack(path: $folderPath) {
                 ChecklistItemLoaderView(
-                    rootFolder: rootFolder,
-                    stableId: rootFolder.stableId,
-                    openItem: openItem
+                    stableId: rootFolder.stableId
                 ) { context in
                     FolderRootView(
                         folder: context.item,
@@ -43,9 +41,7 @@ struct ChecklistsRootView: View {
                 .navigationDestination(for: ChecklistItem.self) { item in
                     if item.type == .folder {
                         ChecklistItemLoaderView(
-                            rootFolder: rootFolder,
                             stableId: item.stableId,
-                            openItem: openItem
                         ) { context in
                             FolderRootView(
                                 folder: context.item,
@@ -63,15 +59,11 @@ struct ChecklistsRootView: View {
 
             .fullScreenCover(item: $checklistCoverId) { checklistId in
                 ChecklistItemLoaderView(
-                    rootFolder: rootFolder,
-                    stableId: checklistId.id,
-                    openItem: openItem
+                    stableId: checklistId.id
                 ) { context in
                     ChecklistRootView(
                         checklist: context.item,
                         sortedItems: context.sortedItems,
-                        sortedPendingItems: context.sortedPendingItems,
-                        sortedCheckedItems: context.sortedCompletedItems,
                         rootFolder: rootFolder,
                         openItem: openItem
                     )

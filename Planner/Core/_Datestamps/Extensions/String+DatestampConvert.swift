@@ -26,14 +26,7 @@ extension String {
         return DateComponents(year: year, month: month, day: day)
     }
 
-    func startOfDay(in region: Region) -> DateInRegion? {
-        guard
-            let result = toDate("yyyy-MM-dd", region: region)?
-                .dateAtStartOf(.day)
-        else {
-            return nil
-        }
-
-        return result
+    func startOfDay(in region: Region) -> DateInRegion {
+        toDate("yyyy-MM-dd", region: region)!.dateAtStartOf(.day)
     }
 }

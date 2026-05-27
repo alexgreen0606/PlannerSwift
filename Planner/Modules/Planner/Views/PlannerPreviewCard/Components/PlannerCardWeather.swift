@@ -11,16 +11,25 @@ import WeatherKit
 
 struct PlannerCardWeatherView: View {
     let planner: Planner
-    let plannerDay: DateInRegion
-    let plannerLocation: Location?
     let settings: PlannerSettings
 
-    @EnvironmentObject private var weatherStore: WeatherCacheService
-    @EnvironmentObject private var LocationService: LocationService
+    @EnvironmentObject private var weatherCacheService: WeatherCacheService
+    @EnvironmentObject private var locationService: LocationService
+    
+    private var plannerDay: DateInRegion {
+        planner.datestamp.startOfDay(in: planner.region(settings: settings))
+    }
+    
+    private var plannerLocation: Location? {
+        planner.location(
+            settings: settings,
+            deviceLocation: locationService.deviceLocation
+        )
+    }
 
     private var homeLocationLabel: String? {
         settings.homeLocationLabel(
-            deviceLocation: LocationService.deviceLocation
+            deviceLocation: locationService.deviceLocation
         )
     }
 
@@ -37,7 +46,7 @@ struct PlannerCardWeatherView: View {
     private var locationLabel: String? {
         planner.locationLabel(
             settings: settings,
-            deviceLocation: LocationService.deviceLocation
+            deviceLocation: locationService.deviceLocation
         )
     }
 

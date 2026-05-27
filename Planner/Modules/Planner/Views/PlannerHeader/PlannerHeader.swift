@@ -40,10 +40,10 @@ struct PlannerHeaderView: View {
         customIconDetailOffset = iconDetailOffset
     }
 
-    @EnvironmentObject private var TodaystampService: TodayService
+    @EnvironmentObject private var todayService: TodayService
 
     private var todaystamp: String {
-        TodaystampService.todaystamp
+        todayService.todaystamp
     }
 
     var title: String {

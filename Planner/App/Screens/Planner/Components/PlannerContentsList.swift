@@ -16,7 +16,6 @@ struct PlannerContentsListView: View {
     @Binding var eventSheetContext: EventSheetContext?
     let planner: Planner
     let plannerDay: DateInRegion
-    let plannerLocation: Location?
     let sortedPlannerEvents: [PlannerEvent]
     let sortedPendingPlannerEvents: [PlannerEvent]
     let sortedCompletePlannerEvents: [PlannerEvent]
@@ -37,6 +36,13 @@ struct PlannerContentsListView: View {
 
     private var emptyPendingEventsLabel: String {
         "No \(!sortedCompletePlannerEvents.isEmpty && showCompleted ? "more " : "")plans"
+    }
+    
+    private var plannerLocation: Location? {
+        planner.location(
+            settings: settings,
+            deviceLocation: locationService.deviceLocation
+        )
     }
 
     // MARK: - Body

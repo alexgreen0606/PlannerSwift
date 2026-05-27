@@ -12,12 +12,21 @@ import WeatherKit
 struct SearchResultWeatherView: View {
     let activeQuery: PlannerSearchQuery
     let planner: Planner
-    let plannerDay: DateInRegion
-    let plannerLocation: Location?
     let settings: PlannerSettings
 
-    @EnvironmentObject private var weatherStore: WeatherCacheService
+    @EnvironmentObject private var weatherCacheService: WeatherCacheService
     @EnvironmentObject private var locationService: LocationService
+    
+    private var plannerDay: DateInRegion {
+        planner.datestamp.startOfDay(in: planner.region(settings: settings))
+    }
+    
+    private var plannerLocation: Location? {
+        planner.location(
+            settings: settings,
+            deviceLocation: locationService.deviceLocation
+        )
+    }
 
     private var showLocationLabel: Bool {
         guard planner.searchQueryScore(activeQuery) != nil else {

@@ -11,23 +11,17 @@ import SwiftUI
 struct ChecklistRootView: View {
     private let checklist: ChecklistItem
     private let sortedItems: [ChecklistItem]
-    private let sortedPendingItems: [ChecklistItem]
-    private let sortedCheckedItems: [ChecklistItem]
     private let rootFolder: ChecklistItem
     private let openItem: (ChecklistItem, ChecklistItem) -> Void
 
     init(
         checklist: ChecklistItem,
         sortedItems: [ChecklistItem],
-        sortedPendingItems: [ChecklistItem],
-        sortedCheckedItems: [ChecklistItem],
         rootFolder: ChecklistItem,
         openItem: @escaping (ChecklistItem, ChecklistItem) -> Void
     ) {
         self.checklist = checklist
         self.sortedItems = sortedItems
-        self.sortedPendingItems = sortedPendingItems
-        self.sortedCheckedItems = sortedCheckedItems
         self.rootFolder = rootFolder
         self.openItem = openItem
 
@@ -43,13 +37,26 @@ struct ChecklistRootView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var listEngine: ListEngine<ChecklistItem>
+    
+    @StateObject private var listEngine = ListEngine<ChecklistItem>()
 
     @State private var showEditSheet = false
     @State private var showTransferSheet = false
 
     @Namespace private var namespace
+    
+    private var sortedPendingItems: [ChecklistItem] {
+        sortedItems.filter {
+            listEngine.isItemInPendingList($0)
+        }
+    }
 
+    private var sortedCompletedItems: [ChecklistItem] {
+        sortedItems.filter {
+            listEngine.isItemInCompletedList($0)
+        }
+    }
+    
     private var visibleItems: [ChecklistItem] {
         if checklist.showCompleted {
             return sortedItems
@@ -69,7 +76,7 @@ struct ChecklistRootView: View {
                         moveItem: moveItem,
                         sortedPendingItems: sortedPendingItems,
                         emptyPendingLabel: "No items",
-                        sortedCompletedItems: sortedCheckedItems,
+                        sortedCompletedItems: sortedCompletedItems,
                         showCompleted: checklist.showCompleted,
                         completedHeader: "Completed items",
                         emptyCompletedLabel: "No completed items",

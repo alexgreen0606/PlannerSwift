@@ -31,7 +31,7 @@ struct PlannerEventFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarService
-    @EnvironmentObject private var todaystampService: TodayService
+    @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var PlannerCoverStore: PlannerCoverStore
     @EnvironmentObject private var PlannerSyncStore: PlannerSyncService
     @EnvironmentObject private var LocationService: LocationService
@@ -219,7 +219,7 @@ struct PlannerEventFormView: View {
         FormLabelView(
             systemImageName: "calendar",
             value: timeAndDay.datestamp.dateLabel(
-                todaystamp: todaystampService.todaystamp
+                todaystamp: todayService.todaystamp
             )
         ) {
             togglePicker(type: .date)
@@ -233,7 +233,7 @@ struct PlannerEventFormView: View {
             DatePicker(
                 "",
                 selection: $draftPlannerEvent.date,
-                in: todaystampService.datePickerBounds,
+                in: todayService.datePickerBounds,
                 displayedComponents: .date
             )
             .datePickerStyle(.graphical)
@@ -286,7 +286,7 @@ struct PlannerEventFormView: View {
                 DatePicker(
                     "",
                     selection: $draftPlannerEvent.date,
-                    in: todaystampService.datePickerBounds,
+                    in: todayService.datePickerBounds,
                     displayedComponents: .hourAndMinute
                 )
                 .labelsHidden()

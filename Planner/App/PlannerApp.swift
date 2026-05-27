@@ -17,14 +17,14 @@ struct PlannerApp: App {
             wrappedValue: locationService
         )
 
-        _weatherStore = StateObject(
+        _weatherCacheService = StateObject(
             wrappedValue: WeatherCacheService(
                 locationService: locationService
             )
         )
     }
 
-    @StateObject private var weatherStore: WeatherCacheService
+    @StateObject private var weatherCacheService: WeatherCacheService
     @StateObject private var locationService: LocationService
 
     private let modelContainer: ModelContainer = {
@@ -53,7 +53,7 @@ struct PlannerApp: App {
         .dark
 
     @StateObject private var calendarStore = CalendarService()
-    @StateObject private var todaystampService = TodayService()
+    @StateObject private var todayService = TodayService()
     @StateObject private var plannerCoverStore = PlannerCoverStore()
     @StateObject private var plannerSyncService = PlannerSyncService()
 
@@ -61,8 +61,8 @@ struct PlannerApp: App {
         WindowGroup {
             RootTabView()
                 .preferredColorScheme(appColorScheme.colorScheme)
-                .environmentObject(todaystampService)
-                .environmentObject(weatherStore)
+                .environmentObject(todayService)
+                .environmentObject(weatherCacheService)
                 .environmentObject(calendarStore)
                 .environmentObject(locationService)
                 .environmentObject(plannerCoverStore)

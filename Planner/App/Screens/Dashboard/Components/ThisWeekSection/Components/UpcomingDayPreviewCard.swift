@@ -12,14 +12,14 @@ struct UpcomingDayPreviewCardView: View {
     let settings: PlannerSettings
     let namespace: Namespace.ID
 
-    @EnvironmentObject private var todaystampService: TodayService
+    @EnvironmentObject private var todayService: TodayService
 
     var body: some View {
         PlannerPreviewCardView(
             type: .planner,
             datestamp: datestamp,
             header: PlannerHeaderView(datestamp: datestamp),
-            width: todaystampService.todaystamp == datestamp
+            width: todayService.todaystamp == datestamp
                 ? PlannerPreviewCardLayout.TODAY_WIDTH
                 : PlannerPreviewCardLayout.DEFAULT_WIDTH,
             settings: settings,

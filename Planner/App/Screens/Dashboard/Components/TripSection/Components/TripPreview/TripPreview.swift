@@ -18,7 +18,7 @@ struct TripPreviewView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @EnvironmentObject private var todaystampService: TodayService
+    @EnvironmentObject private var todayService: TodayService
 
     private var isExpanded: Bool {
         expandedTripIds.contains(trip.id)
@@ -29,18 +29,18 @@ struct TripPreviewView: View {
     }
 
     private var dateRangeLabel: String {
-        trip.dateRangeLabel(todaystamp: todaystampService.todaystamp)
+        trip.dateRangeLabel(todaystamp: todayService.todaystamp)
     }
 
     private var countdownLabel: String {
-        if trip.firstDatestamp <= todaystampService.todaystamp,
-           trip.lastDatestamp >= todaystampService.todaystamp
+        if trip.firstDatestamp <= todayService.todaystamp,
+           trip.lastDatestamp >= todayService.todaystamp
         {
             return ""
         }
 
         return trip.firstDatestamp.countdown(
-            todaystamp: todaystampService.todaystamp
+            todaystamp: todayService.todaystamp
         )
     }
 
@@ -110,7 +110,7 @@ struct TripPreviewView: View {
 
     private var progressBar: some View {
         trip.progressBar(
-            day: trip.day(of: todaystampService.todaystamp),
+            day: trip.day(of: todayService.todaystamp),
             accentColor: accentColor
         )
     }

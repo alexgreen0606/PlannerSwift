@@ -30,6 +30,8 @@ struct RoutineEventLoaderView<Content: View>: View {
     }
 
     @Query private var weekdayInstances: [RoutineEventWeekdayInstance]
+    
+    // MARK: - Body
 
     var body: some View {
         content(weekdayInstances.compactMap(\.routineEvent))

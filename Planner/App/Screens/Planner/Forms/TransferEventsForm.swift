@@ -30,7 +30,7 @@ struct TransferEventsFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.showToast) private var showToast
-    @EnvironmentObject private var todaystampService: TodayService
+    @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var calendarStore: CalendarService
     @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
@@ -61,7 +61,7 @@ struct TransferEventsFormView: View {
                     DatePicker(
                         "",
                         selection: $destinationDate,
-                        in: todaystampService.datePickerBounds,
+                        in: todayService.datePickerBounds,
                         displayedComponents: .date
                     )
                     .environment(\.timeZone, sourceRegion.timeZone)
@@ -110,7 +110,7 @@ struct TransferEventsFormView: View {
     private var sourceChip: some View {
         TransferSelectionIndicatorView(
             title: sourceDatestamp.dateLabel(
-                todaystamp: todaystampService.todaystamp
+                todaystamp: todayService.todaystamp
             ),
             subtitle: transferCount
         )
@@ -119,7 +119,7 @@ struct TransferEventsFormView: View {
     private var destinationChip: some View {
         TransferSelectionIndicatorView(
             title: destinationDatestamp.dateLabel(
-                todaystamp: todaystampService.todaystamp
+                todaystamp: todayService.todaystamp
             )
         )
     }
@@ -170,7 +170,7 @@ struct TransferEventsFormView: View {
                     "Successfully transferred ^[\(eventCount) event](inflect: true)!",
                 subtitle: LocalizedStringKey(
                     destinationDatestamp.dateLabel(
-                        todaystamp: todaystampService.todaystamp
+                        todaystamp: todayService.todaystamp
                     )
                 ),
                 iconConfig: IconConfig(

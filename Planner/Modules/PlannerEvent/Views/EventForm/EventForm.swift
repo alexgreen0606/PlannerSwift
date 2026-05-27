@@ -109,7 +109,7 @@ struct EventFormView: View {
     @EnvironmentObject private var PlannerSyncStore: PlannerSyncService
     @EnvironmentObject private var LocationService: LocationService
     @EnvironmentObject private var PlannerCoverStore: PlannerCoverStore
-    @EnvironmentObject private var TodaystampService: TodayService
+    @EnvironmentObject private var todayService: TodayService
 
     @State private var draftPlannerEvent: DraftPlannerEvent
 

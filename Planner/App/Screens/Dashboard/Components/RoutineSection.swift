@@ -15,7 +15,7 @@ struct RoutineSectionView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @EnvironmentObject private var todaystampService: TodayService
+    @EnvironmentObject private var todayService: TodayService
 
     @Query private var routineEventWeekdayInstances: [RoutineEventWeekdayInstance]
 
@@ -67,7 +67,7 @@ struct RoutineSectionView: View {
             Capsule()
                 .fill(accentColor.color)
                 .opacity(
-                    todaystampService.todaystamp.weekday
+                    todayService.todaystamp.weekday
                         == weekday.label ? 1 : 0
                 )
                 .frame(width: 18, height: 2)

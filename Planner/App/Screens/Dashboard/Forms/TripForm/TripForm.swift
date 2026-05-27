@@ -38,7 +38,7 @@ struct TripFormView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var todaystampService: TodayService
+    @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
     @State private var draftTrip: DraftTrip
@@ -73,7 +73,7 @@ struct TripFormView: View {
         return buildDateRangeLabel(
             firstDatestamp: firstDatestamp,
             lastDatestamp: lastDatestamp,
-            todaystamp: todaystampService.todaystamp
+            todaystamp: todayService.todaystamp
         )
     }
 
@@ -91,7 +91,7 @@ struct TripFormView: View {
         }
 
         return
-            "\(dateConflict.dateLabel(todaystamp: todaystampService.todaystamp)) is linked to a different trip."
+            "\(dateConflict.dateLabel(todaystamp: todayService.todaystamp)) is linked to a different trip."
     }
 
     // MARK: - Body
