@@ -17,6 +17,7 @@ struct SortableTextfieldListView<
     BottomAdornment: View
 >: View {
     private let sortedItems: [Item]
+    private let floatingInfo: FloatingInfo?
     private let toolbarSystemImageNames: [String]
     private let onToolbarTap: ((String, Item) -> Void)?
     private let createItem: (_ at: Int) -> Void
@@ -25,7 +26,6 @@ struct SortableTextfieldListView<
     private let handleTitleChange: ((_ item: Item) -> Void)?
 
     private let sortedPendingItems: [Item]
-    private let floatingInfo: FloatingInfo?
     private let emptyPendingLabel: String
 
     private let sortedCompletedItems: [Item]
@@ -46,6 +46,7 @@ struct SortableTextfieldListView<
 
     init(
         sortedItems: [Item],
+        floatingInfo: FloatingInfo? = EmptyView(),
         toolbarSystemImageNames: [String] = [],
         onToolbarTap: ((String, Item) -> Void)? = nil,
         createItem: @escaping (_: Int) -> Void,
@@ -53,7 +54,6 @@ struct SortableTextfieldListView<
         deleteItem: ((_: Item) -> Void)? = nil,
         handleTitleChange: ((_: Item) -> Void)? = nil,
         sortedPendingItems: [Item]? = nil,
-        floatingInfo: FloatingInfo? = EmptyView(),
         emptyPendingLabel: String,
         sortedCompletedItems: [Item] = [],
         showCompleted: Bool = false,
@@ -70,6 +70,7 @@ struct SortableTextfieldListView<
         namespace: Namespace.ID? = nil
     ) {
         self.sortedItems = sortedItems
+        self.floatingInfo = floatingInfo
         self.toolbarSystemImageNames = toolbarSystemImageNames
         self.onToolbarTap = onToolbarTap
         self.createItem = createItem
@@ -77,7 +78,6 @@ struct SortableTextfieldListView<
         self.deleteItem = deleteItem
         self.handleTitleChange = handleTitleChange
         self.sortedPendingItems = sortedPendingItems ?? sortedItems
-        self.floatingInfo = floatingInfo
         self.emptyPendingLabel = emptyPendingLabel
         self.sortedCompletedItems = sortedCompletedItems
         self.showCompleted = showCompleted
@@ -108,6 +108,10 @@ struct SortableTextfieldListView<
         .listStyle(.plain)
         .environment(\.defaultMinListRowHeight, 0)
         .background(Color.appBackground.edgesIgnoringSafeArea(.all))
+        .safeAreaInset(edge: .top) {
+            floatingInfo
+                .padding(.horizontal)
+        }
         .overlay {
             if sortedPendingItems.isEmpty, !showCompleted {
                 EmptyLabel(emptyPendingLabel)
@@ -187,9 +191,6 @@ struct SortableTextfieldListView<
                     .frame(height: ListLayout.EMPTY_LABEL_HEIGHT)
                     .discreetListItem()
             }
-        } header: {
-            floatingInfo
-                .listRowInsets(.vertical, 0)
         }
         .listSectionSeparator(.hidden)
         .listSectionMargins(.top, 0)

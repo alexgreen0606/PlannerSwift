@@ -153,6 +153,7 @@ struct TransferChecklistItemsFormView: View {
     private var customHeader: some View {
         VStack(spacing: 20) {
             Text("Transfer Items")
+                // Mock the default modal navigation title style.
                 .font(.system(size: 16, weight: .heavy, design: .rounded))
             transferIndicator
         }

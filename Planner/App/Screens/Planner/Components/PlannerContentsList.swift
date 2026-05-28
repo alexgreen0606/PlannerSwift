@@ -44,29 +44,20 @@ struct PlannerContentsListView: View {
             deviceLocation: locationService.deviceLocation
         )
     }
-    
-    // TODO: this doesnt work.
-    private var chipsKey: String {
-        guard let calendarDayData else {
-            return "LOADING"
-        }
-        
-        return calendarDayData.plannerChipEvents.map { $0.title }.joined(separator: ",")
-    }
 
     // MARK: - Body
 
     var body: some View {
         SortableTextfieldListView(
             sortedItems: sortedPlannerEvents,
-            toolbarSystemImageNames: ["rectangle.and.pencil.and.ellipsis"],
+            floatingInfo: chipSpread,
+            toolbarSystemImageNames: ["info"],
             onToolbarTap: handleToolbarTap,
             createItem: createEvent,
             moveItem: moveUncheckedEvent,
             deleteItem: deleteEvent,
             handleTitleChange: handleEventTitleChange,
             sortedPendingItems: sortedPendingPlannerEvents,
-            floatingInfo: chipSpread,
             emptyPendingLabel: emptyPendingEventsLabel,
             sortedCompletedItems: sortedCompletePlannerEvents,
             showCompleted: showCompleted,
@@ -106,11 +97,11 @@ struct PlannerContentsListView: View {
     @ViewBuilder
     private func calendarAdornment(event: PlannerEvent) -> some View {
         if let calendarEvent = event.calendarEvent,
-           let calendar = calendarEvent.calendar
+            let calendar = calendarEvent.calendar
         {
             Image(
                 systemName:
-                calendar.systemImageName(settings: settings)
+                    calendar.systemImageName(settings: settings)
             )
             .foregroundStyle(calendar.color)
             .padding(.trailing, 4)
@@ -191,12 +182,17 @@ struct PlannerContentsListView: View {
             return
         }
 
+        handleEventTitleChange(event: event)
+
         plannerEngine.protectedId = event.stableId
         plannerEngine.focusedId = nil
-        eventSheetContext =
-            EventSheetContext(
-                plannerEvent: event,
-                calendarEvent: nil
-            )
+
+        DispatchQueue.main.async {
+            eventSheetContext =
+                EventSheetContext(
+                    plannerEvent: event,
+                    calendarEvent: nil
+                )
+        }
     }
 }

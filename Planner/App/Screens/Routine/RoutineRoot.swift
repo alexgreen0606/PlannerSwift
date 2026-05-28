@@ -38,14 +38,12 @@ struct RoutineRootView: View {
                 ScrollViewReader { scrollProxy in
                     SortableTextfieldListView(
                         sortedItems: sortedRoutineEvents,
-                        toolbarSystemImageNames: [
-                            "rectangle.and.pencil.and.ellipsis",
-                        ],
+                        toolbarSystemImageNames: ["info"],
                         onToolbarTap: handleToolbarTap,
                         createItem: createEvent,
                         moveItem: moveEvent,
                         deleteItem: deleteEvent,
-                        handleTitleChange: handleTitleChange,
+                        handleTitleChange: handleEventTitleChange,
                         emptyPendingLabel: "No \(weekday.label) routine",
                         tint: { _ in accentColor.color },
                         toggleConfig: eventToggleConfig,
@@ -200,7 +198,7 @@ struct RoutineRootView: View {
         )
     }
 
-    private func handleTitleChange(event: RoutineEvent) {
+    private func handleEventTitleChange(event: RoutineEvent) {
         modelContext.handleRoutineEventTitleChange(event)
         if !invalidatedEventIds.contains(event.stableId) {
             // Mark this event's weekdays for refresh in the planner.
@@ -251,12 +249,17 @@ struct RoutineRootView: View {
             routineEngine.toggleItem(event)
             return
         }
+        
+        handleEventTitleChange(event: event)
 
         routineEngine.protectedId = event.stableId
         routineEngine.focusedId = nil
-        routineEventSheetContext = RoutineEventSheetContext(
-            routineEvent: event
-        )
+        
+        DispatchQueue.main.async {
+            routineEventSheetContext = RoutineEventSheetContext(
+                routineEvent: event
+            )
+        }
     }
 
     private func removeEventFromWeekday(_ event: RoutineEvent) {
