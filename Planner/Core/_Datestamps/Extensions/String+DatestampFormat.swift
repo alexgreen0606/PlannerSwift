@@ -16,7 +16,7 @@ extension String {
 
         return
             DatestampFormatter
-            .formatter(format: format)
+                .formatter(format: format)
                 .string(from: date)
     }
 

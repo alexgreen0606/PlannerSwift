@@ -32,7 +32,7 @@ struct BirthdayChipView: View {
     // MARK: - Body
 
     var body: some View {
-        BirthdayView(birthday: birthday, settings: settings)
+        BirthdayLabelView(birthday: birthday, settings: settings)
             .padding(.leading, leadingPadding)
             .glassChip(
                 color: contactPhotoExists ? nil : birthday.event.calendar.color,

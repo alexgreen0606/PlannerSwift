@@ -13,14 +13,13 @@ extension CNContactStore {
     func loadBirthdays(for birthdayEventMap: [String: EKEvent]) -> [Birthday] {
         var birthdays: [Birthday] = []
 
-        let store = CNContactStore()
         do {
-            let contacts = try store.unifiedContacts(
+            let contacts = try unifiedContacts(
                 matching: CNContact.predicateForContacts(
                     withIdentifiers: Array(birthdayEventMap.keys)
                 ),
                 keysToFetch: [
-                    CNContactViewController.descriptorForRequiredKeys(),
+                    CNContactViewController.descriptorForRequiredKeys()
                 ] as [CNKeyDescriptor]
             )
 
@@ -30,11 +29,15 @@ extension CNContactStore {
 
                 birthdays.append(Birthday(contact: contact, event: event))
             }
-
         } catch {
-            assertionFailure("ERROR CNContactStore.loadBirthdays: \(error)")
+            assertionFailure(
+                "ERROR CNContactStore+Birthdays.loadBirthdays: \(error)"
+            )
         }
 
-        return birthdays.sorted { $0.event.title < $1.event.title }
+        return birthdays.sorted {
+            $0.event.title.localizedCaseInsensitiveCompare($1.event.title)
+                == .orderedAscending
+        }
     }
 }

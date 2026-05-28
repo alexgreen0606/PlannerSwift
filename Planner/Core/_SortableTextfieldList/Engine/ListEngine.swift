@@ -36,7 +36,7 @@ final class ListEngine<Item: ListItem>: ObservableObject {
     @Published private(set) var selectedItemIds: Set<UUID> = []
 
     private let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
-    
+
     private var toggleTransitionTask: Task<Void, Never>?
 
     func isItemInPendingList(_ item: Item) -> Bool {
@@ -53,7 +53,7 @@ final class ListEngine<Item: ListItem>: ObservableObject {
 
     func toggleItem(_ item: Item) {
         feedbackGenerator.impactOccurred()
-        
+
         if isSelectMode {
             toggleSelection(item)
         } else {

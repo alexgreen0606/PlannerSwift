@@ -37,12 +37,21 @@ struct PlannerContentsListView: View {
     private var emptyPendingEventsLabel: String {
         "No \(!sortedCompletePlannerEvents.isEmpty && showCompleted ? "more " : "")plans"
     }
-    
+
     private var plannerLocation: Location? {
         planner.location(
             settings: settings,
             deviceLocation: locationService.deviceLocation
         )
+    }
+    
+    // TODO: this doesnt work.
+    private var chipsKey: String {
+        guard let calendarDayData else {
+            return "LOADING"
+        }
+        
+        return calendarDayData.plannerChipEvents.map { $0.title }.joined(separator: ",")
     }
 
     // MARK: - Body

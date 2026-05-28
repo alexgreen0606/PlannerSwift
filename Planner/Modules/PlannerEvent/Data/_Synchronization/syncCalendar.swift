@@ -24,6 +24,7 @@ extension ModelContext {
 
         // ------------------------------------------------------------------
         // MARK: Load in the day's existing calendar events.
+
         // ------------------------------------------------------------------
 
         let nextDay = plannerDay + 1.days
@@ -43,6 +44,7 @@ extension ModelContext {
 
         // ------------------------------------------------------------------
         // MARK: Sync/Delete Existing Planner Events.
+
         // ------------------------------------------------------------------
 
         var birthdayEvents: [String: EKEvent] = [:]

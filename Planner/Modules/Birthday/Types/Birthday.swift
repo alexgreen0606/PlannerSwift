@@ -8,8 +8,6 @@
 import Contacts
 import EventKit
 
-// Clean
-
 struct Birthday: Identifiable {
     let contact: CNContact
     let event: EKEvent

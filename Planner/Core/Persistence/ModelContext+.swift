@@ -25,9 +25,19 @@ extension ModelContext {
 
     @MainActor
     func safeBulkDelete<Item: PersistentModel>(_ items: [Item]) {
-        for item in items {
-            delete(item)
+        do {
+            try transaction {
+                for item in items {
+                    delete(item)
+                }
+            }
+        } catch {
+            assertionFailure(
+                "ERROR ModelContext+.safeBulkDelete.transaction: \(error)"
+            )
+            return
         }
+
         safeSave("ModelContext+.safeBulkDelete")
     }
 

@@ -85,7 +85,8 @@ extension ModelContext {
             var allPlanners = existingPlanners
 
             for datestamp in datestamps
-            where !allPlanners.contains(where: { $0.datestamp == datestamp }) {
+                where !allPlanners.contains(where: { $0.datestamp == datestamp })
+            {
                 allPlanners.append(
                     createPlanner(for: datestamp, skipSave: true)
                 )
@@ -127,12 +128,11 @@ extension ModelContext {
             }
 
             let planner = getPlanner(for: datestamp)
-            let plannerDay = planner.datestamp.startOfDay(
-                    in: planner.region(settings: settings)
-                )
+            return planner.datestamp.startOfDay(
+                in: planner.region(settings: settings)
+            )
 
             // Return the planner day for the untimed event.
-            return plannerDay
         }
 
         let sortedPossibleDatestamps =
@@ -141,8 +141,8 @@ extension ModelContext {
         for datestamp in sortedPossibleDatestamps {
             let planner = getPlanner(for: datestamp)
             let plannerDay = planner.datestamp.startOfDay(
-                    in: planner.region(settings: settings)
-                )
+                in: planner.region(settings: settings)
+            )
 
             if time.belongsTo(plannerDay) {
                 return plannerDay
@@ -182,7 +182,7 @@ extension ModelContext {
         planner.excludeRoutine = !planner.safeExcludeRoutine
 
         if let trip = planner.trip,
-            trip.excludeRoutines == planner.excludeRoutine
+           trip.excludeRoutines == planner.excludeRoutine
         {
             // Revert flag back to nil so it inherits from the trip.
             planner.excludeRoutine = nil

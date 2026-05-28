@@ -39,7 +39,7 @@ struct RoutineRootView: View {
                     SortableTextfieldListView(
                         sortedItems: sortedRoutineEvents,
                         toolbarSystemImageNames: [
-                            "rectangle.and.pencil.and.ellipsis"
+                            "rectangle.and.pencil.and.ellipsis",
                         ],
                         onToolbarTap: handleToolbarTap,
                         createItem: createEvent,

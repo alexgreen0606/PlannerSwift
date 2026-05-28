@@ -1,5 +1,5 @@
 //
-//  BirthdayView.swift
+//  BirthdayLabel.swift
 //  Planner
 //
 //  Created by Alex Green on 4/1/26.
@@ -9,7 +9,7 @@ import Contacts
 import EventKit
 import SwiftUI
 
-struct BirthdayView: View {
+struct BirthdayLabelView: View {
     let birthday: Birthday
     let settings: PlannerSettings
 
@@ -17,12 +17,15 @@ struct BirthdayView: View {
         guard let imageData = birthday.contact.thumbnailImageData else {
             return nil
         }
+        
         return UIImage(data: imageData)
     }
 
     private var calendarColor: Color {
         birthday.event.calendar.color
     }
+
+    // MARK: - Body
 
     var body: some View {
         if let contactPhoto {
@@ -42,7 +45,8 @@ struct BirthdayView: View {
                     name: birthday.event.calendar.systemImageName(
                         settings: settings
                     ),
-                    primaryColor: calendarColor
+                    primaryColor: calendarColor,
+                    secondaryColor: calendarColor
                 ),
                 color: calendarColor
             )

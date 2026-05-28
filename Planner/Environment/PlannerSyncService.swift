@@ -14,7 +14,7 @@ import SwiftDate
 class PlannerSyncService: ObservableObject {
     private var inFlightCalendarSync: [String: Task<CalendarDayData?, Never>] =
         [:]
-    
+
     @Published private(set) var syncTrigger: UUID?
 
     /// Planner keys mapped to their calendar data.

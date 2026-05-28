@@ -19,7 +19,7 @@ struct PlannerEventContextLoaderView<Content: View>: View {
         plannerSyncService: PlannerSyncService,
         settings: PlannerSettings,
         @ViewBuilder content:
-            @escaping (PlannerEventContext) -> Content
+        @escaping (PlannerEventContext) -> Content
     ) {
         self.planner = planner
         self.settings = settings
@@ -97,7 +97,6 @@ struct PlannerEventContextLoaderView<Content: View>: View {
         .onChange(of: plannerLocation) {
             oldLocation,
             newLocation in
-
             loadWeather()
 
             let deviceTimeZoneIdentifier = TimeZone.current.identifier

@@ -14,7 +14,7 @@ enum ChecklistItemType: String, Codable {
         switch self {
         case .folder: return "folder.fill"
         case .checklist: return "list.bullet"
-        case .item: return "exclamationmark"
+        case .item: return "inset.filled.circle"
         }
     }
 }

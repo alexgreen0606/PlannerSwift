@@ -11,7 +11,7 @@ struct ChecklistItemHeaderView: ToolbarContent {
     let item: ChecklistItem
 
     @EnvironmentObject private var listEngine: ListEngine<ChecklistItem>
-    
+
     private var isRootFolder: Bool {
         item.parent == nil
     }

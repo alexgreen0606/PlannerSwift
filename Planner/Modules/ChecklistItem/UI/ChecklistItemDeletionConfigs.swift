@@ -1,5 +1,5 @@
 //
-//  ChecklistDeletionConfig.swift
+//  ChecklistItemDeletionConfigs.swift
 //  Planner
 //
 //  Created by Alex Green on 4/17/26.
@@ -9,36 +9,37 @@ import SwiftUI
 
 // MARK: - Single Delete
 
-@MainActor
 func deleteChecklistItemConfig(
     item: ChecklistItem,
     inForm: Bool = false,
     delete: @escaping () -> Void
 ) -> ConfirmationConfig {
     ConfirmationConfig(
-        title:
-        "Delete\(inForm ? " this" : "") \(item.type.rawValue)\(inForm ? "" : " \"\(item.title)\"")?",
+        title: deleteSingleItemMessage(
+            title: item.title,
+            type: item.type.rawValue,
+            inForm: inForm
+        ),
         message: {
             if item.safeItems.isEmpty {
-                return GENERIC_DELETE_WARNING
+                return UI.GENERIC_DELETE_WARNING
             }
 
             return
-                "Contents within this \(item.type.rawValue) will also be deleted. \(GENERIC_DELETE_WARNING)"
+                "Contents within this \(item.type.rawValue) will also be deleted. \(UI.GENERIC_DELETE_WARNING)"
         }(),
         actions: [
             ConfirmationAction(
                 title: "Delete \(item.type.rawValue.capitalized)",
                 handler: delete
-            ),
+            )
         ]
     )
 }
 
 // MARK: - Bulk Delete Selections
 
-@MainActor
-func bulkDeleteChecklistItemConfig(
+func bulkDeleteChecklistItemsConfig(
     items: [ChecklistItem],
     delete: @escaping () -> Void
 ) -> ConfirmationConfig {
@@ -50,45 +51,44 @@ func bulkDeleteChecklistItemConfig(
         )
     }
 
-    let childType = checklistItemsType(items)
+    let itemsTypeLabel = checklistItemsTypeLabel(items)
     return ConfirmationConfig(
-        title: "Delete \(count) \(childType.capitalized)s?",
+        title: "Delete \(count) \(itemsTypeLabel.capitalized)s?",
         message: {
             guard items.contains(where: { !$0.safeItems.isEmpty }) else {
-                return GENERIC_DELETE_WARNING
+                return UI.GENERIC_DELETE_WARNING
             }
 
             return
-                "Contents within these \(childType)s will also be deleted. \(GENERIC_DELETE_WARNING)"
+                "Contents within these \(itemsTypeLabel)s will also be deleted. \(UI.GENERIC_DELETE_WARNING)"
         }(),
         actions: [
             ConfirmationAction(
                 title:
-                "Delete \(count) \(childType.capitalized)s",
+                    "Delete \(count) \(itemsTypeLabel.capitalized)s",
                 handler: delete
-            ),
+            )
         ]
     )
 }
 
 // MARK: - Bulk Delete Category: Completed
 
-@MainActor
-func bulkDeleteCompletedChecklistItemConfig(
+func bulkDeleteCompletedChecklistItemsConfig(
     completedItems: [ChecklistItem],
-    item: ChecklistItem,
+    parent: ChecklistItem,
     delete: @escaping () -> Void
 ) -> ConfirmationConfig {
     ConfirmationConfig(
         title:
-        "Delete completed items from \"\(item.title)\"?",
-        message: GENERIC_DELETE_WARNING,
+            "Delete completed items from \"\(parent.title)\"?",
+        message: UI.GENERIC_DELETE_WARNING,
         actions: [
             ConfirmationAction(
                 title:
-                "Delete ^[\(completedItems.count) Item](inflect: true)",
+                    "Delete ^[\(completedItems.count) Item](inflect: true)",
                 handler: delete
-            ),
+            )
         ]
     )
 }

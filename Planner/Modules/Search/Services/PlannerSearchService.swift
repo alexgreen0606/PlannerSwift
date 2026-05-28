@@ -262,8 +262,8 @@ actor PlannerSearchService {
                 planners.first?.region(settings: settings) ?? homeRegion
 
             let plannerDay = datestamp.startOfDay(
-                    in: plannerRegion
-                )
+                in: plannerRegion
+            )
             plannerCache[datestamp] = plannerDay
 
             if range(

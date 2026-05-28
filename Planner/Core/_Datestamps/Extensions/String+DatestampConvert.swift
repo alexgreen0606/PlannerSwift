@@ -16,9 +16,9 @@ extension String {
     var dateComponents: DateComponents? {
         let parts = split(separator: "-")
         guard parts.count == 3,
-            let year = Int(parts[0]),
-            let month = Int(parts[1]),
-            let day = Int(parts[2])
+              let year = Int(parts[0]),
+              let month = Int(parts[1]),
+              let day = Int(parts[2])
         else {
             return nil
         }

@@ -16,14 +16,14 @@ final class WeatherCacheService: ObservableObject {
     init(locationService: LocationService) {
         self.locationService = locationService
     }
-    
+
     private let locationService: LocationService
-    
+
     private let weatherService = WeatherService()
 
     /// Location Key -> [Planner Start of Day -> Weather]
     private var weatherCache: [String: [Date: DayWeather]] = [:]
-    
+
     private var loadedLocationKeys: Set<String> = []
 
     @Published private(set) var reloadTrigger: UUID?
@@ -52,13 +52,13 @@ final class WeatherCacheService: ObservableObject {
         }
 
         // MARK: Priority 1: Return cached weather for this day/location.
-        
+
         if loadedLocationKeys.contains(locationKey) {
             return
         } else {
             loadedLocationKeys.insert(locationKey)
         }
-        
+
         // MARK: Get the location needed for the weather API.
 
         let weatherLocation: CLLocation
@@ -73,7 +73,7 @@ final class WeatherCacheService: ObservableObject {
         } else {
             return
         }
-        
+
         // MARK: Load in the weather for this location.
 
         do {
@@ -91,7 +91,7 @@ final class WeatherCacheService: ObservableObject {
                     startOfDay.date
                 ] = dayWeather
             }
-            
+
         } catch {
             print("ERROR WeatherCacheService.ensureWeather: \(error)")
         }

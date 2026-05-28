@@ -18,7 +18,7 @@ func deleteRoutineEventConfig(
         title:
         "Delete\(inForm ? " this" : "") recurring event\(inForm ? "" : " \"\(event.title)\"")?",
         message:
-        "Associated planner and calendar events will be deleted. \(GENERIC_DELETE_WARNING)",
+        "Associated planner and calendar events will be deleted. \(UI.GENERIC_DELETE_WARNING)",
         actions: [
             ConfirmationAction(
                 title: "Delete Recurring Event",
@@ -44,7 +44,7 @@ func removeRoutineEventFromWeekdayConfig(
         title:
         "Remove \"\(event.title)\" from \(weekday.label)s?",
         message:
-        "Associated planner and calendar events will be deleted. \(GENERIC_DELETE_WARNING)",
+        "Associated planner and calendar events will be deleted. \(UI.GENERIC_DELETE_WARNING)",
         actions: [
             ConfirmationAction(
                 title: "Remove From \(weekday.label)s",
@@ -80,7 +80,7 @@ func bulkRemoveRoutineEventFromWeekdayConfig(
     return ConfirmationConfig(
         title: "Remove \(count) events from \(weekday.label)s?",
         message:
-        "Associated planner and calendar events will be deleted. \(GENERIC_DELETE_WARNING)",
+        "Associated planner and calendar events will be deleted. \(UI.GENERIC_DELETE_WARNING)",
         actions: [
             ConfirmationAction(
                 title:
@@ -106,7 +106,7 @@ func deleteRoutineConfig(
         title:
         "Delete \(weekday.label) routine?",
         message:
-        "Associated planner and calendar events will be deleted. \(GENERIC_DELETE_WARNING)",
+        "Associated planner and calendar events will be deleted. \(UI.GENERIC_DELETE_WARNING)",
         actions: [
             ConfirmationAction(
                 title: "Delete \(weekday.label) Routine",

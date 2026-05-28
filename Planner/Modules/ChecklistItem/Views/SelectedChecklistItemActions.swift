@@ -18,7 +18,7 @@ struct SelectedChecklistItemActionsView: ToolbarContent {
     @EnvironmentObject private var listEngine: ListEngine<ChecklistItem>
 
     private var deleteConfirmation: ConfirmationConfig {
-        bulkDeleteChecklistItemConfig(
+        bulkDeleteChecklistItemsConfig(
             items: listEngine.selectedItems,
             delete: deleteSelectedItems
         )
@@ -76,7 +76,7 @@ struct SelectedChecklistItemActionsView: ToolbarContent {
         listEngine.clearSelections()
 
         DispatchQueue.main.async {
-            modelContext.deleteChecklistItems(
+            modelContext.safeBulkDelete(
                 selections
             )
 

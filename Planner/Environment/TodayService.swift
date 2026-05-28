@@ -18,7 +18,7 @@ final class TodayService: ObservableObject {
     deinit {
         timer?.invalidate()
     }
-    
+
     private var maxCalendarDate: Date =
         TodayService.makeMaxCalendarDate()
 
@@ -26,7 +26,7 @@ final class TodayService: ObservableObject {
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
-            .oneMonth
+        .oneMonth
 
     @Published private(set) var todaystamp: String =
         TodayService.makeTodaystamp()
@@ -35,11 +35,11 @@ final class TodayService: ObservableObject {
         TodayService.makeNext7Datestamps()
 
     var datePickerBounds: ClosedRange<Date> {
-        keepPastEventsDuration.cutoffDate...maxCalendarDate
+        keepPastEventsDuration.cutoffDate ... maxCalendarDate
     }
 
     var multiDatePickerBounds: Range<Date> {
-        keepPastEventsDuration.cutoffDate..<maxCalendarDate
+        keepPastEventsDuration.cutoffDate ..< maxCalendarDate
     }
 
     // MARK: - Builder Functions
@@ -60,7 +60,7 @@ final class TodayService: ObservableObject {
     private static func makeNext7Datestamps() -> [String] {
         let today = DateInRegion(region: .local)
 
-        return (0..<7).map { offset in
+        return (0 ..< 7).map { offset in
             today
                 .dateByAdding(offset, .day)
                 .toFormat("yyyy-MM-dd")

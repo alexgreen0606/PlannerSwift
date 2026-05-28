@@ -136,7 +136,7 @@ struct TransferEventsFormView: View {
 
     private func transferEvents() {
         guard let dayOffset = sourceDatestamp.daysUntil(destinationDatestamp),
-            dayOffset != 0
+              dayOffset != 0
         else {
             return
         }
@@ -167,7 +167,7 @@ struct TransferEventsFormView: View {
         showToast(
             Toast(
                 title:
-                    "Successfully transferred ^[\(eventCount) event](inflect: true)!",
+                "Successfully transferred ^[\(eventCount) event](inflect: true)!",
                 subtitle: LocalizedStringKey(
                     destinationDatestamp.dateLabel(
                         todaystamp: todayService.todaystamp

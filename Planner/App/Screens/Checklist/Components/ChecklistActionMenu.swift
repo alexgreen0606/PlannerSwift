@@ -26,9 +26,9 @@ struct ChecklistActionMenuView: View {
     }
 
     private var deleteCompletedConfig: ConfirmationConfig {
-        bulkDeleteCompletedChecklistItemConfig(
+        bulkDeleteCompletedChecklistItemsConfig(
             completedItems: completedItems,
-            item: checklist,
+            parent: checklist,
             delete: deleteCompletedItems
         )
     }
@@ -121,7 +121,7 @@ struct ChecklistActionMenuView: View {
     // MARK: - Functions
 
     private func deleteCompletedItems() {
-        modelContext.deleteChecklistItems(completedItems)
+        modelContext.safeBulkDelete(completedItems)
     }
 
     private func deleteEntireChecklist() {

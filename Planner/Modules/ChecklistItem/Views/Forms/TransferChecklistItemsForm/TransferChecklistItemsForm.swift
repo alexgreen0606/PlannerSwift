@@ -31,12 +31,11 @@ struct TransferChecklistItemsFormView: View {
                 ? source
                 : source.parent!
 
-        let excludedOptions = Set(selectedIds + [source.stableId])
-
         // Step backwards through folders until you find one with a selectable item.
-        while !folderPointer.hasChildType(
+        while !folderPointer.containsType(
             source.type,
-            excluding: excludedOptions
+            excluding: selectedIds,
+            skipId: source.stableId
         ),
             let parent = folderPointer.parent
         {
@@ -48,7 +47,8 @@ struct TransferChecklistItemsFormView: View {
 
         if destinationType == .folder {
             let selectableFolders = rootFolder.folders(
-                excluding: excludedOptions
+                excluding: selectedIds,
+                skipId: source.stableId
             )
 
             if selectableFolders.count == 1 {
@@ -197,7 +197,7 @@ struct TransferChecklistItemsFormView: View {
             return
         }
 
-        let selectedType = checklistItemsType(ListEngine.selectedItems)
+        let selectedType = checklistItemsTypeLabel(ListEngine.selectedItems)
         let itemCount = ListEngine.selectedItemIds.count
 
         modelContext.transferChecklistItems(

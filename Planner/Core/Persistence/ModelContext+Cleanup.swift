@@ -53,7 +53,7 @@ extension ModelContext {
                 FetchDescriptor<PlannerEvent>(
                     predicate: #Predicate<PlannerEvent> { event in
                         if let time = event.time {
-                            return time < cutoffDate  // TODO: what if it's a calendar event and the end date still hasn't happened yet?
+                            return time < cutoffDate // TODO: what if it's a calendar event and the end date still hasn't happened yet?
                         } else if let datestamp = event.datestamp {
                             return datestamp < cutoffDatestamp
                         } else {

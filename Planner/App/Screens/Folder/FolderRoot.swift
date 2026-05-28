@@ -41,9 +41,9 @@ struct FolderRootView: View {
             }
             .toolbar {
                 topLeadingToolbar
-                
+
                 ChecklistItemHeaderView(item: folder)
-                
+
                 topTrailingToolbar
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -146,11 +146,10 @@ struct FolderRootView: View {
 
     private func updateTransferability() {
         canTransferSelectedItems =
-            rootFolder.hasChildType(
+            rootFolder.containsType(
                 .folder,
-                excluding: itemSelectEngine.selectedItemIds.union([
-                    folder.stableId,
-                ])
-            ) == true
+                excluding: itemSelectEngine.selectedItemIds,
+                skipId: folder.stableId
+            )
     }
 }

@@ -24,7 +24,7 @@ final class LocationService:
     deinit {
         refreshTask?.cancel()
     }
-    
+
     private let manager = CLLocationManager()
 
     private var refreshTask: Task<Void, Never>?
@@ -43,7 +43,6 @@ final class LocationService:
             scheduleRefresh()
         case .notDetermined:
             manager.requestWhenInUseAuthorization()
-            break
         case .denied, .restricted:
             break
         @unknown default:
@@ -107,8 +106,8 @@ final class LocationService:
             do {
                 let mapItems = try await request.mapItems
                 if let item = mapItems.first,
-                    let addressInfo = item.addressRepresentations,
-                    let city = addressInfo.cityWithContext
+                   let addressInfo = item.addressRepresentations,
+                   let city = addressInfo.cityWithContext
                 {
                     deviceLocation = Location(
                         name: city,

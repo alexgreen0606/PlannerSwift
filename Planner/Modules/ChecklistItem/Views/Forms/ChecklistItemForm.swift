@@ -26,8 +26,8 @@ struct ChecklistItemFormView: View {
         if let item {
             _draftChecklistItem = State(
                 initialValue: ChecklistItem(
-                    type: item.type,
                     title: item.title,
+                    type: item.type,
                     color: item.color,
                     sortIndex: 0
                 )
@@ -56,7 +56,7 @@ struct ChecklistItemFormView: View {
             in: .whitespacesAndNewlines
         ).isEmpty
     }
-    
+
     private var isRootFolder: Bool {
         sourceItem != nil && sourceItem!.parent == nil
     }

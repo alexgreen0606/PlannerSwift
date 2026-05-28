@@ -36,15 +36,15 @@ struct PlannerPreviewView: View {
     }
 
     private let maxPreviewEvents = 5
-    
+
     @EnvironmentObject private var locationService: LocationService
 
     // MARK: - Computed Variables
-    
+
     private var plannerDay: DateInRegion {
         planner.datestamp.startOfDay(in: planner.region(settings: settings))
     }
-    
+
     private var plannerLocation: Location? {
         planner.location(
             settings: settings,
@@ -195,7 +195,7 @@ struct PlannerPreviewView: View {
             filteredBirthdays,
             id: \.event.eventIdentifier
         ) {
-            BirthdayView(
+            BirthdayLabelView(
                 birthday: $0,
                 settings: settings
             )

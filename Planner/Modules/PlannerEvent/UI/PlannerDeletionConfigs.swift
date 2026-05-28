@@ -15,14 +15,17 @@ func deletePlannerEventConfig(
     delete: @escaping () -> Void
 ) -> ConfirmationConfig {
     ConfirmationConfig(
-        title:
-        "Delete\(inForm ? " this" : "") event\(inForm ? "" : " \"\(event.title)\"")?",
+        title: deleteSingleItemMessage(
+            title: event.title,
+            type: "event",
+            inForm: inForm
+        ),
         message: {
             if event.calendarEvent == nil {
-                return GENERIC_DELETE_WARNING
+                return UI.GENERIC_DELETE_WARNING
             }
             return
-                "Event will be removed from your calendar. \(GENERIC_DELETE_WARNING)"
+                "Event will be removed from your calendar. \(UI.GENERIC_DELETE_WARNING)"
         }(),
         actions: [
             ConfirmationAction(
@@ -56,10 +59,10 @@ func bulkDeletePlannerEventConfig(
 
             if hasCalendarEvent {
                 return
-                    "Associated calendar events will also be deleted. \(GENERIC_DELETE_WARNING)"
+                    "Associated calendar events will also be deleted. \(UI.GENERIC_DELETE_WARNING)"
             }
 
-            return GENERIC_DELETE_WARNING
+            return UI.GENERIC_DELETE_WARNING
         }(),
         actions: [
             ConfirmationAction(
@@ -121,9 +124,9 @@ private func deleteCategoryMessage(
     hasCalendarAccess: Bool
 ) -> String {
     guard hasCalendarAccess else {
-        return GENERIC_DELETE_WARNING
+        return UI.GENERIC_DELETE_WARNING
     }
 
     return
-        "Associated calendar events will not be deleted. \(GENERIC_DELETE_WARNING)"
+        "Associated calendar events will not be deleted. \(UI.GENERIC_DELETE_WARNING)"
 }

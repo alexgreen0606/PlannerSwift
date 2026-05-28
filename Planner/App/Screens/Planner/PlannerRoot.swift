@@ -23,7 +23,7 @@ struct PlannerRootView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
-    
+
     @StateObject private var plannerEngine = ListEngine<PlannerEvent>()
 
     @State private var eventSheetContext: EventSheetContext?
@@ -31,7 +31,7 @@ struct PlannerRootView: View {
     @State private var showLocationSheet = false
 
     @Namespace private var namespace
-    
+
     private var plannerDay: DateInRegion {
         planner.datestamp.startOfDay(in: planner.region(settings: settings))
     }
@@ -80,9 +80,9 @@ struct PlannerRootView: View {
                         plannerDay: plannerDay,
                         sortedPlannerEvents: sortedPlannerEvents,
                         sortedPendingPlannerEvents:
-                            sortedPendingPlannerEvents,
+                        sortedPendingPlannerEvents,
                         sortedCompletePlannerEvents:
-                            sortedCompletePlannerEvents,
+                        sortedCompletePlannerEvents,
                         calendarDayData: calendarDayData,
                         showCompleted: planner.showCompleted,
                         scrollProxy: scrollProxy,
@@ -99,7 +99,7 @@ struct PlannerRootView: View {
                     .navigationBarTitleDisplayMode(.inline)
                 }
             }
-            
+
             // MARK: Transfer Events Form
 
             .sheet(isPresented: $showTransferSheet) {

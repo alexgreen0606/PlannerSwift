@@ -1,32 +1,36 @@
 //
-//  ChecklistsRoot.swift
+//  ChecklistNavigation.swift
 //  Planner
 //
 //  Created by Alex Green on 12/14/25.
 //
 
 import SwiftData
-import SwiftDate
 import SwiftUI
 
-struct ChecklistsRootView: View {
+struct ChecklistNavigationView: View {
     /// Only one item should exist without a parent.
     @Query(
         filter: #Predicate<ChecklistItem> { $0.parent == nil }
-    ) var rootFolderList: [ChecklistItem]
+    ) var rootFolders: [ChecklistItem]
 
     @State private var folderPath = NavigationPath()
-    @State private var checklistCoverId: ChecklistCoverContext?
+    @State private var checklistCoverContext: ChecklistCoverContext?
 
     @Namespace private var namespace
 
     private var rootFolder: ChecklistItem? {
-        rootFolderList.first
+        rootFolders.first
     }
+
+    // MARK: - Body
 
     var body: some View {
         if let rootFolder {
             NavigationStack(path: $folderPath) {
+
+                // MARK: Root Folder Root
+
                 ChecklistItemLoaderView(
                     stableId: rootFolder.stableId
                 ) { context in
@@ -41,8 +45,11 @@ struct ChecklistsRootView: View {
                 .navigationDestination(for: ChecklistItem.self) { item in
                     if item.type == .folder {
                         ChecklistItemLoaderView(
-                            stableId: item.stableId,
+                            stableId: item.stableId
                         ) { context in
+
+                            // MARK: Folder Root
+
                             FolderRootView(
                                 folder: context.item,
                                 sortedItems: context.sortedItems,
@@ -57,9 +64,9 @@ struct ChecklistsRootView: View {
 
             // MARK: Checklist Root
 
-            .fullScreenCover(item: $checklistCoverId) { checklistId in
+            .fullScreenCover(item: $checklistCoverContext) { context in
                 ChecklistItemLoaderView(
-                    stableId: checklistId.id
+                    stableId: context.id
                 ) { context in
                     ChecklistRootView(
                         checklist: context.item,
@@ -68,17 +75,19 @@ struct ChecklistsRootView: View {
                         openItem: openItem
                     )
                 }
+                .id(context.id)
                 .navigationTransition(
                     .zoom(
-                        sourceID: checklistId.id,
+                        sourceID: context.id,
                         in: namespace
                     )
                 )
-                .id(checklistId.id)
                 .interactiveDismissDisabled(true)
             }
         }
     }
+
+    // MARK: - Functions
 
     private func openItem(_ item: ChecklistItem, from source: ChecklistItem) {
         let isInCurrentFolder = source.safeItems.contains(where: {
@@ -86,33 +95,29 @@ struct ChecklistsRootView: View {
         })
 
         if !isInCurrentFolder {
-            buildPath(to: item)
+            jumpToParent(of: item)
         }
 
         if item.type == .folder {
             folderPath.append(item)
         } else {
-            checklistCoverId = ChecklistCoverContext(id: item.stableId)
+            checklistCoverContext = ChecklistCoverContext(id: item.stableId)
         }
     }
 
-    private func buildPath(to item: ChecklistItem) {
+    // TODO: test jumping to a folder from notification
+    private func jumpToParent(of item: ChecklistItem) {
         var reversePath: [ChecklistItem] = []
 
-        guard let parent = item.parent else {
-            return
+        // Build the reverse path to the root.
+        var pointer: ChecklistItem? = item.parent
+        while let pointerItem = pointer {
+            reversePath.append(pointerItem)
+
+            pointer = pointerItem.parent
         }
 
-        var pointer = parent
-
-        // Walk up to the root.
-        while true {
-            reversePath.append(pointer)
-
-            guard let parent = pointer.parent else { break }
-            pointer = parent
-        }
-
+        // Build the navigation path to the item.
         var path = NavigationPath()
         for folder in reversePath.reversed() {
             path.append(folder)

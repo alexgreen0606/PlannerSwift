@@ -1,15 +1,14 @@
 //
-//  _ChecklistItem.swift
+//  ChecklistItem+.swift
 //  Planner
 //
 //  Created by Alex Green on 1/24/26.
 //
-import SwiftData
+
 import SwiftUI
 
-// Clean
-
 extension ChecklistItem {
+
     var safeItems: [ChecklistItem] {
         items ?? []
     }
@@ -26,26 +25,27 @@ extension ChecklistItem {
         return reversePath.reversed().joined(separator: " / ")
     }
 
-    /// Recursively determines if the given type exists anywhere in the item's tree.
-    func hasChildType(
+    /// Determines whether this item or any descendant matches the given type.
+    func containsType(
         _ type: ChecklistItemType,
-        excluding excludedIds: Set<UUID>
+        excluding excludedIds: Set<UUID> = [],
+        /// An item that should not count as a direct match, though its descendants may still match.
+        skipId: UUID? = nil
     ) -> Bool {
-        if type == .folder, parent == nil,
-           !excludedIds.contains(stableId)
-        {
-            // Edge case: looking for a folder, and this is the root folder.
+        guard !excludedIds.contains(stableId) else {
+            return false
+        }
+
+        if stableId != skipId, self.type == type {
             return true
         }
 
-        for item in safeItems where !excludedIds.contains(item.stableId) {
-            if item.type == type {
-                return true
-            }
-
-            if item.type == .folder,
-               item.hasChildType(type, excluding: excludedIds)
-            {
+        for item in safeItems {
+            if item.containsType(
+                type,
+                excluding: excludedIds,
+                skipId: skipId
+            ) {
                 return true
             }
         }
@@ -53,21 +53,26 @@ extension ChecklistItem {
         return false
     }
 
-    /// Recursively collects folders throughout the item's tree.
+    /// Collects all folders, including this item and all its descendants.
     func folders(
-        excluding excludedIds: Set<UUID>
+        excluding excludedIds: Set<UUID> = [],
+        /// An item that should not be included, though its descendants can be.
+        skipId: UUID?
     ) -> [ChecklistItem] {
+        guard !excludedIds.contains(stableId) else {
+            return []
+        }
+
         var folders: [ChecklistItem] = []
 
-        if type == .folder, !excludedIds.contains(stableId) {
-            // Edge case: count this item if it is a folder.
+        if stableId != skipId, self.type == .folder {
             folders.append(self)
         }
 
-        for item in safeItems where !excludedIds.contains(item.stableId) {
-            if item.type == .folder {
-                folders.append(contentsOf: item.folders(excluding: excludedIds))
-            }
+        for item in safeItems {
+            folders.append(
+                contentsOf: item.folders(excluding: excludedIds, skipId: skipId)
+            )
         }
 
         return folders

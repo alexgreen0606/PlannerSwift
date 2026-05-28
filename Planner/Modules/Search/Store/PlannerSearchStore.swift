@@ -47,9 +47,9 @@ final class PlannerSearchStore: ObservableObject {
     ) {
         plannerSearchService =
             plannerSearchService
-            ?? PlannerSearchService(
-                modelContainer: modelContainer
-            )
+                ?? PlannerSearchService(
+                    modelContainer: modelContainer
+                )
 
         Task {
             let datestampMap = await plannerSearchService!.search(
@@ -66,6 +66,7 @@ final class PlannerSearchStore: ObservableObject {
             )
 
             // MARK: Eager-build all results before displaying them in the UI.
+
             for context in fullPlannerContexts {
                 let _ = plannerSyncService.syncPlanner(
                     context.planner,
@@ -79,6 +80,7 @@ final class PlannerSearchStore: ObservableObject {
             }
 
             // MARK: Return results so the UI can display them.
+
             await MainActor.run {
                 let sortedKeys = datestampMap.keys.sorted {
                     query.past ? $0 > $1 : $0 < $1

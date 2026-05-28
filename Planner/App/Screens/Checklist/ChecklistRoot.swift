@@ -25,26 +25,24 @@ struct ChecklistRootView: View {
         self.rootFolder = rootFolder
         self.openItem = openItem
 
-        canTransferSelectedItems =
-            rootFolder.hasChildType(
-                .checklist,
-                excluding: Set([checklist.stableId])
-            )
-            == true
+        canTransferSelectedItems = rootFolder.containsType(
+            .checklist,
+            excluding: Set([checklist.stableId])
+        )
     }
 
     private let canTransferSelectedItems: Bool
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    
+
     @StateObject private var listEngine = ListEngine<ChecklistItem>()
 
     @State private var showEditSheet = false
     @State private var showTransferSheet = false
 
     @Namespace private var namespace
-    
+
     private var sortedPendingItems: [ChecklistItem] {
         sortedItems.filter {
             listEngine.isItemInPendingList($0)
@@ -56,7 +54,7 @@ struct ChecklistRootView: View {
             listEngine.isItemInCompletedList($0)
         }
     }
-    
+
     private var visibleItems: [ChecklistItem] {
         if checklist.showCompleted {
             return sortedItems
@@ -88,27 +86,13 @@ struct ChecklistRootView: View {
                     )
                     .toolbar {
                         topLeadingToolbar
-                        
+
                         ChecklistItemHeaderView(item: checklist)
-                        
+
                         topTrailingToolbar
                         bottomToolbar(scrollProxy: scrollProxy)
                     }
                     .navigationBarTitleDisplayMode(.inline)
-                }
-            }
-
-            // MARK: Edit Checklist Form
-
-            .sheet(isPresented: $showEditSheet) {
-                if let parent = checklist.parent {
-                    ChecklistItemFormView(
-                        item: checklist,
-                        parent: parent,
-                        onDelete: {
-                            dismiss()
-                        }
-                    )
                 }
             }
 
@@ -127,6 +111,21 @@ struct ChecklistRootView: View {
                         in: namespace
                     )
                 )
+            }
+            .environmentObject(listEngine)
+
+            // MARK: Edit Checklist Form
+
+            .sheet(isPresented: $showEditSheet) {
+                if let parent = checklist.parent {
+                    ChecklistItemFormView(
+                        item: checklist,
+                        parent: parent,
+                        onDelete: {
+                            dismiss()
+                        }
+                    )
+                }
             }
         }
     }
@@ -192,8 +191,8 @@ struct ChecklistRootView: View {
 
     private func moveItem(from: Int, to: Int) {
         modelContext.moveChecklistItem(
-            from: from,
-            to: to,
+            initialIndex: from,
+            targetIndex: to,
             sortedPendingItems: sortedPendingItems,
             sortedItems: sortedItems
         )
@@ -205,7 +204,7 @@ struct ChecklistRootView: View {
             sortedPendingItems: sortedPendingItems,
             sortedItems: sortedItems
         )
-        
+
         createItem(at: targetIndex)
         scrollProxy.scrollToBottomOfList()
     }

@@ -14,7 +14,7 @@ struct CurrentFolderListView: View {
     let source: ChecklistItem
     let destinationType: ChecklistItemType
 
-    @EnvironmentObject private var ListEngine: ListEngine<ChecklistItem>
+    @EnvironmentObject private var listEngine: ListEngine<ChecklistItem>
 
     @State private var selectableItems: [ChecklistItem] = []
 
@@ -32,6 +32,8 @@ struct CurrentFolderListView: View {
             )
         }
     }
+
+    // MARK: - Body
 
     var body: some View {
         List {
@@ -103,6 +105,13 @@ struct CurrentFolderListView: View {
                 .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
+            
+            if selectedItem == item {
+                Image(systemName: "checkmark")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 18, height: 18)
+            }
 
             if item.type == .folder {
                 HStack(alignment: .center) {
@@ -113,27 +122,21 @@ struct CurrentFolderListView: View {
                 }
                 .frame(height: 19)
             }
-
-            if selectedItem == item {
-                Image(systemName: "checkmark")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 18, height: 18)
-            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .onTapGesture {
-            if item.type == .checklist || destinationType == .folder {
-                selectedItem = item
+            if item.type == .folder {
+                folderNavDirection = .forward
 
-                if item.type == .checklist { return }
+                withAnimation {
+                    // Open the clicked folder.
+                    currentFolder = item
+                }
             }
-
-            folderNavDirection = .forward
-
-            withAnimation {
-                currentFolder = item
+            
+            if item.type == destinationType {
+                selectedItem = item
             }
         }
     }
@@ -141,43 +144,13 @@ struct CurrentFolderListView: View {
     // MARK: - Functions
 
     private func buildSelectableItems() {
-        selectableItems = currentFolder.safeItems
-            .filter { item in
-                if item.stableId == source.stableId {
-                    if destinationType == .folder, item.type == .folder,
-                       item.hasChildType(
-                           .folder,
-                           excluding: ListEngine.selectedItemIds
-                       )
-                    {
-                        // This it the source. BUT we are looking for folders and this source contains a folder. Display it.
-                        return true
-                    }
-                    return false
-                }
-
-                guard
-                    !ListEngine.selectedItemIds
-                    .contains(
-                        item.stableId
-                    )
-                else { return false }
-
-                if destinationType == .folder {
-                    // Onlt show folders when selecting folders.
-                    return item.type == .folder
-                }
-
-                if destinationType == .checklist, item.type == .folder {
-                    // Only show folders when selecting checklists IF the folder contains a checklist.
-                    return item.hasChildType(
-                        .checklist,
-                        excluding: Set([source.stableId])
-                    )
-                }
-
-                return true
-            }
-            .sorted { $0.sortIndex < $1.sortIndex }
+        selectableItems = currentFolder.safeItems.filter {
+            $0.containsType(
+                destinationType,
+                excluding: listEngine.selectedItemIds,
+                skipId: source.stableId
+            )
+        }
+        .sorted { $0.sortIndex < $1.sortIndex }
     }
 }

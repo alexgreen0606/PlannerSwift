@@ -13,7 +13,7 @@ final class CalendarService: ObservableObject {
     private let eventStore = EKEventStore()
 
     private var calendarsById: [String: EKCalendar] = [:]
-    
+
     @Published private(set) var hasAccess: Bool? = nil
 
     var ekEventStore: EKEventStore {

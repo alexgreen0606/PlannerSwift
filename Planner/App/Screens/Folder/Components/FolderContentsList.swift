@@ -112,9 +112,8 @@ struct FolderContentsListView: View {
         guard let from = sources.first else { return }
 
         modelContext.moveChecklistItem(
-            from: from,
-            to: destination,
-            sortedPendingItems: sortedItems,
+            initialIndex: from,
+            targetIndex: destination,
             sortedItems: sortedItems
         )
     }
