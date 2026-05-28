@@ -14,69 +14,70 @@ struct FolderContentsListView: View {
     let namespace: Namespace.ID
     let openItem: (ChecklistItem, ChecklistItem) -> Void
 
+    private let TOGGLE_WIDTH: CGFloat = 22
+    private let TOGGLE_SPACING: CGFloat = 16
+
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var itemSelectEngine: ListEngine<ChecklistItem>
 
+    private var isSelectMode: Bool {
+        itemSelectEngine.isSelectMode
+    }
+
     // MARK: - Body
 
     var body: some View {
         List {
-            Section {
-                ForEach(
-                    sortedItems,
-                    id: \.stableId,
-                    content: row
-                )
-                .onMove(perform: moveItem)
-            }
-            .listSectionMargins(.top, 0)
+            ForEach(
+                sortedItems,
+                id: \.stableId,
+                content: row
+            )
+            .onMove(perform: moveItem)
         }
     }
 
     // MARK: - View Builders
 
     private func row(for item: ChecklistItem) -> some View {
-        HStack(alignment: .top, spacing: FolderLayout.ROW_SPACING) {
-            HStack(
-                spacing: itemSelectEngine.isSelectMode
-                    ? FolderLayout.TOGGLE_SPACING : 0
-            ) {
-                // MARK: Toggle
+        HStack(alignment: .top) {
+            Group {
+                HStack(
+                    spacing: isSelectMode
+                        ? TOGGLE_SPACING : 0
+                ) {
+                    // MARK: Toggle
 
-                ListItemToggleView(
-                    item: item,
-                    opacity: itemSelectEngine.isSelectMode ? 1 : 0
-                )
-                .frame(
-                    width: itemSelectEngine.isSelectMode
-                        ? FolderLayout.TOGGLE_WIDTH : 0
-                )
-                .allowsHitTesting(itemSelectEngine.isSelectMode)
+                    ListItemToggleView(
+                        item: item,
+                        opacity: isSelectMode ? 1 : 0
+                    )
+                    .frame(
+                        width: isSelectMode
+                            ? TOGGLE_WIDTH : 0
+                    )
+                    .allowsHitTesting(isSelectMode)
 
-                // MARK: Icon
+                    // MARK: Icon
 
-                Image(
-                    systemName: item.type.systemImageName
-                )
-                .imageScale(.medium)
-                .foregroundColor(item.color.swiftUIColor)
-                .frame(
-                    width: FolderLayout.ICON_WIDTH,
-                    height: FolderLayout.ICON_CONTAINER_HEIGHT
-                )
+                    Image(
+                        systemName: item.type.systemImageName
+                    )
+                    .foregroundColor(item.color.swiftUIColor)
+                }
+                .frame(height: FolderLayout.TYPE_ICON_CONTAINER_HEIGHT)
+
+                // MARK: Title
+
+                Text(item.title)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(height: FolderLayout.ADORNMENT_HEIGHT)
-
-            // MARK: Title
-
-            Text(item.title)
-                .lineLimit(nil)
-                .fixedSize(horizontal: false, vertical: true)
-                .font(.system(size: ListLayout.FONT_SIZE))
-                .frame(maxWidth: .infinity, alignment: .leading)
+            .font(.system(size: ListLayout.FONT_SIZE))
 
             // MARK: End Adornment
 
@@ -89,13 +90,10 @@ struct FolderContentsListView: View {
             }
             .font(.caption)
             .foregroundStyle(Color.secondary)
-            .frame(height: FolderLayout.ADORNMENT_HEIGHT)
+            .frame(maxHeight: .infinity)
         }
         .id(item.stableId)
-        .alignmentGuide(.listRowSeparatorLeading) { _ in
-            FolderLayout.ICON_WIDTH + FolderLayout.ROW_SPACING
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity)
         .matchedTransitionSource(
             id: item.stableId,
             in: namespace

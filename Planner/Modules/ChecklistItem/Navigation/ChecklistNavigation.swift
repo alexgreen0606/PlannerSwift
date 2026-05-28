@@ -27,62 +27,64 @@ struct ChecklistNavigationView: View {
 
     var body: some View {
         if let rootFolder {
-            NavigationStack(path: $folderPath) {
-
-                // MARK: Root Folder Root
-
-                ChecklistItemLoaderView(
-                    stableId: rootFolder.stableId
-                ) { context in
-                    FolderRootView(
-                        folder: context.item,
-                        sortedItems: context.sortedItems,
-                        rootFolder: rootFolder,
-                        namespace: namespace,
-                        openItem: openItem
-                    )
-                }
-                .navigationDestination(for: ChecklistItem.self) { item in
-                    if item.type == .folder {
-                        ChecklistItemLoaderView(
-                            stableId: item.stableId
-                        ) { context in
-
-                            // MARK: Folder Root
-
-                            FolderRootView(
-                                folder: context.item,
-                                sortedItems: context.sortedItems,
-                                rootFolder: rootFolder,
-                                namespace: namespace,
-                                openItem: openItem
-                            )
+            ToastRootView {
+                NavigationStack(path: $folderPath) {
+                    
+                    // MARK: Root Folder Root
+                    
+                    ChecklistItemLoaderView(
+                        stableId: rootFolder.stableId
+                    ) { context in
+                        FolderRootView(
+                            folder: context.item,
+                            sortedItems: context.sortedItems,
+                            rootFolder: rootFolder,
+                            namespace: namespace,
+                            openItem: openItem
+                        )
+                    }
+                    .navigationDestination(for: ChecklistItem.self) { item in
+                        if item.type == .folder {
+                            ChecklistItemLoaderView(
+                                stableId: item.stableId
+                            ) { context in
+                                
+                                // MARK: Folder Root
+                                
+                                FolderRootView(
+                                    folder: context.item,
+                                    sortedItems: context.sortedItems,
+                                    rootFolder: rootFolder,
+                                    namespace: namespace,
+                                    openItem: openItem
+                                )
+                            }
                         }
                     }
                 }
-            }
-
-            // MARK: Checklist Root
-
-            .fullScreenCover(item: $checklistCoverContext) { context in
-                ChecklistItemLoaderView(
-                    stableId: context.id
-                ) { context in
-                    ChecklistRootView(
-                        checklist: context.item,
-                        sortedItems: context.sortedItems,
-                        rootFolder: rootFolder,
-                        openItem: openItem
+                
+                // MARK: Checklist Root
+                
+                .fullScreenCover(item: $checklistCoverContext) { context in
+                    ChecklistItemLoaderView(
+                        stableId: context.id
+                    ) { context in
+                        ChecklistRootView(
+                            checklist: context.item,
+                            sortedItems: context.sortedItems,
+                            rootFolder: rootFolder,
+                            openItem: openItem
+                        )
+                    }
+                    .id(context.id)
+                    .navigationTransition(
+                        .zoom(
+                            sourceID: context.id,
+                            in: namespace
+                        )
                     )
+                    .interactiveDismissDisabled(true)
                 }
-                .id(context.id)
-                .navigationTransition(
-                    .zoom(
-                        sourceID: context.id,
-                        in: namespace
-                    )
-                )
-                .interactiveDismissDisabled(true)
             }
         }
     }

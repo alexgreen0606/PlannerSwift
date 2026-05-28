@@ -12,7 +12,7 @@ enum ToastVariant {
 
     var verticalOffset: CGFloat {
         switch self {
-        case .cover: return 52
+        case .cover: return Layout.TOOLBAR_HEIGHT
         case .tab: return 8
         }
     }

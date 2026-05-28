@@ -30,7 +30,7 @@ extension ModelContext {
             ChecklistItem(
                 title: "Checklists",
                 type: .folder,
-                color: .label,
+                color: .cyan,
                 sortIndex: 0
             )
         )

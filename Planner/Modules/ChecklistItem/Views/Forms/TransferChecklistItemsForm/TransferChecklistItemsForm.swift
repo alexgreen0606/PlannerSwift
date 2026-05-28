@@ -8,13 +8,9 @@
 import SwiftData
 import SwiftUI
 
-enum FolderNavigationDirection {
-    case forward
-    case backward
-}
-
 struct TransferChecklistItemsFormView: View {
     private let source: ChecklistItem
+    private let rootFolder: ChecklistItem
     private let openItem: (ChecklistItem, ChecklistItem) -> Void
 
     init(
@@ -24,12 +20,13 @@ struct TransferChecklistItemsFormView: View {
         openItem: @escaping (ChecklistItem, ChecklistItem) -> Void
     ) {
         self.source = source
+        self.rootFolder = rootFolder
         self.openItem = openItem
 
         var folderPointer =
             source.type == .folder
-                ? source
-                : source.parent!
+            ? source
+            : source.parent!
 
         // Step backwards through folders until you find one with a selectable item.
         while !folderPointer.containsType(
@@ -59,7 +56,8 @@ struct TransferChecklistItemsFormView: View {
             }
         }
 
-        currentFolder = folderPointer
+        // currentFolder = folderPointer
+        folderPath = NavigationPath([folderPointer])
         self.destinationType = destinationType
     }
 
@@ -73,10 +71,8 @@ struct TransferChecklistItemsFormView: View {
 
     @State private var destinationType: ChecklistItemType
     @State private var selectedItem: ChecklistItem?
-    @State private var currentFolder: ChecklistItem
 
-    /// Controls the animation of the folder navigator.
-    @State private var folderNavDirection: FolderNavigationDirection = .forward
+    @State private var folderPath = NavigationPath()
 
     private var transferCount: LocalizedStringKey {
         let count = ListEngine.selectedItems.count
@@ -91,31 +87,40 @@ struct TransferChecklistItemsFormView: View {
 
         return selectedItem.stableId != source.stableId
     }
+    
+    // MARK: - Body
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                CurrentFolderListView(
-                    selectedItem: $selectedItem,
-                    currentFolder: $currentFolder,
-                    folderNavDirection: $folderNavDirection,
-                    source: source,
-                    destinationType: destinationType
-                )
-            }
-            .navigationTitle(
-                "Transfer Items"
+        NavigationStack(path: $folderPath) {
+            FolderItemOptionsListView(
+                selectedItem: $selectedItem,
+                folderPath: $folderPath,
+                folder: rootFolder,
+                source: source,
+                destinationType: destinationType
             )
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 cancelButton
                 submitButton
             }
-            .safeAreaInset(edge: .top) {
-                transferIndicator
+            .navigationDestination(for: ChecklistItem.self) { folder in
+                FolderItemOptionsListView(
+                    selectedItem: $selectedItem,
+                    folderPath: $folderPath,
+                    folder: folder,
+                    source: source,
+                    destinationType: destinationType
+                )
+                .toolbar {
+                    cancelButton
+                    submitButton
+                }
             }
         }
         .background(Color.sheetBackground.ignoresSafeArea())
+        .safeAreaInset(edge: .top) {
+            customHeader
+        }
     }
 
     // MARK: - Toolbars
@@ -144,6 +149,15 @@ struct TransferChecklistItemsFormView: View {
     }
 
     // MARK: - View Builders
+
+    private var customHeader: some View {
+        VStack(spacing: 20) {
+            Text("Transfer Items")
+                .font(.system(size: 16, weight: .heavy, design: .rounded))
+            transferIndicator
+        }
+        .padding(.top, 32)
+    }
 
     private var transferIndicator: some View {
         HStack(spacing: 16) {
@@ -211,14 +225,14 @@ struct TransferChecklistItemsFormView: View {
 
         let icon =
             source.type == .checklist
-                ? "arrow.left.arrow.right" : "arrow.forward.folder"
+            ? "arrow.left.arrow.right" : "arrow.forward.folder"
 
         let variant: ToastVariant = source.type == .folder ? .tab : .cover
 
         showToast(
             Toast(
                 title:
-                "Successfully transferred ^[\(itemCount) \(selectedType)](inflect: true)!",
+                    "Successfully transferred ^[\(itemCount) \(selectedType)](inflect: true)!",
                 subtitle: LocalizedStringKey(selectedItem.title),
                 iconConfig: IconConfig(
                     name: icon,
