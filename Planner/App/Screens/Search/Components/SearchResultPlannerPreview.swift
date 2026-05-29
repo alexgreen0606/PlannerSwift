@@ -20,31 +20,33 @@ struct SearchResultPlannerPreviewView: View {
     // MARK: - Body
 
     var body: some View {
-        PlannerContextLoaderView(datestamp: datestamp, settings: settings) { context in
+        PlannerContextLoaderView(datestamp: datestamp, settings: settings) {
+            context in
             VStack(alignment: .leading) {
                 HStack(alignment: .top) {
                     PlannerHeaderView(
                         datestamp: datestamp,
                         title:
-                        datestamp.proximityFormat(
-                            using: [
-                                ProximityRule(
-                                    proximity:
-                                    .next7Days,
-                                    format: .weekday
-                                ),
-                                ProximityRule(
-                                    proximity:
-                                    .fallback,
-                                    // Note: Never show the year. Shown in section header.
-                                    format:
-                                    .dateWithoutYear
-                                ),
-                            ],
-                            todaystamp:
-                            todayService
-                                .todaystamp
-                        )
+                            // Note: Same as default, but exclude the year from the date.
+                            // This is show in list section header.
+                            datestamp.proximityFormat(
+                                using: [
+                                    ProximityRule(
+                                        proximity:
+                                            .next7Days,
+                                        format: .weekday
+                                    ),
+                                    ProximityRule(
+                                        proximity:
+                                            .fallback,
+                                        format:
+                                            .dateWithoutYear
+                                    ),
+                                ],
+                                todaystamp:
+                                    todayService
+                                    .todaystamp
+                            )
                     )
 
                     Spacer()

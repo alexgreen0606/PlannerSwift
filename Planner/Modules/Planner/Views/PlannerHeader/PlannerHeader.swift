@@ -8,42 +8,49 @@
 import SwiftDate
 import SwiftUI
 
-// Clean
-
 struct PlannerHeaderView: View {
     private let datestamp: String
-    private let customTextScale: Double?
-    private let customTitle: String?
-    private let customSubtitle: String?
-    private let customIconFormat: DateFormat?
-    private let customIconSize: CGFloat?
-    private let customIconDetailOffset: CGFloat?
-    private let customIconDetailSize: CGFloat?
 
     init(
         datestamp: String,
-        customTextScale: Double? = nil,
-        title: String? = nil,
-        subtitle: String? = nil,
-        iconFormat: DateFormat? = nil,
+        iconType: PlannerIconType? = nil,
         iconSize: CGFloat? = nil,
         iconDetailSize: CGFloat? = nil,
-        iconDetailOffset: CGFloat? = nil
+        iconDetailOffset: CGFloat? = nil,
+        title: String? = nil,
+        subtitle: String? = nil,
     ) {
         self.datestamp = datestamp
-        self.customTextScale = customTextScale
-        customTitle = title
-        customSubtitle = subtitle
-        customIconFormat = iconFormat
+
+        customIconType = iconType
         customIconSize = iconSize
         customIconDetailSize = iconDetailSize
         customIconDetailOffset = iconDetailOffset
+
+        customTitle = title
+        customSubtitle = subtitle
     }
+
+    private let customIconType: PlannerIconType?
+    private let customIconSize: CGFloat?
+    private let customIconDetailSize: CGFloat?
+    private let customIconDetailOffset: CGFloat?
+
+    private let customTitle: String?
+    private let customSubtitle: String?
 
     @EnvironmentObject private var todayService: TodayService
 
-    private var todaystamp: String {
-        todayService.todaystamp
+    var iconType: PlannerIconType {
+        if let customIconType {
+            return customIconType
+        }
+
+        if datestamp.isNext7Days(todaystamp: todayService.todaystamp) {
+            return .date
+        }
+
+        return .weekday
     }
 
     var title: String {
@@ -59,38 +66,22 @@ struct PlannerHeaderView: View {
                         format: .dateLabel
                     ),
                 ],
-                todaystamp: todaystamp
+                todaystamp: todayService.todaystamp
             )
     }
 
     var subtitle: String {
         customSubtitle
-            ?? datestamp.countdown(todaystamp: todaystamp)
+            ?? datestamp.countdown(todaystamp: todayService.todaystamp)
     }
 
-    var iconFormat: DateFormat {
-        if let customIconFormat {
-            return customIconFormat
-        }
-
-        if datestamp.isNext7Days(todaystamp: todaystamp)
-            || datestamp.isWithinADay(todaystamp: todaystamp)
-        {
-            return .conciseMonth
-        }
-
-        return .conciseWeekday
-    }
-
-    var textScale: Double {
-        customTextScale ?? 1
-    }
+    // MARK: - Body
 
     var body: some View {
         HStack {
             PlannerIconView(
+                type: iconType,
                 datestamp: datestamp,
-                format: iconFormat,
                 size: customIconSize,
                 detailSize: customIconDetailSize,
                 detailOffset: customIconDetailOffset
@@ -98,9 +89,11 @@ struct PlannerHeaderView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 Text(title)
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
                     .font(
                         .system(
-                            size: 18 * textScale,
+                            size: 20,
                             weight: .bold,
                             design: .rounded
                         )
@@ -108,7 +101,9 @@ struct PlannerHeaderView: View {
                     .foregroundStyle(Color.label)
 
                 Text(subtitle)
-                    .font(.system(size: 11 * textScale, weight: .regular))
+                    .minimumScaleFactor(0.7)
+                    .lineLimit(1)
+                    .font(.system(size: 12))
                     .foregroundStyle(Color.secondary)
             }
         }

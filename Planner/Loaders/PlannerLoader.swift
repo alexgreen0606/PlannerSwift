@@ -38,7 +38,7 @@ struct PlannerLoaderView<Content: View>: View {
     // MARK: - Body
 
     var body: some View {
-        Group {
+        ZStack {
             if let planner {
                 content(planner)
             }

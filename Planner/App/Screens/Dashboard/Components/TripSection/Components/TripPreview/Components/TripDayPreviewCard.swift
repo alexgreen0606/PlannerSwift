@@ -20,9 +20,9 @@ struct TripDayPreviewCardView: View {
             datestamp: datestamp,
             header: PlannerHeaderView(
                 datestamp: datestamp,
+                iconType: .date,
                 title: "Day \(index + 1)",
-                subtitle: datestamp.weekday,
-                iconFormat: .conciseMonth
+                subtitle: datestamp.weekday
             ),
             settings: settings,
             namespace: namespace,

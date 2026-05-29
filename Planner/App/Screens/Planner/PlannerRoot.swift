@@ -179,23 +179,21 @@ struct PlannerRootView: View {
 
     @ToolbarContentBuilder
     private var headerToolbar: some ToolbarContent {
-        if !plannerEngine.isSelectMode {
-            ToolbarItem(placement: .topBarLeading) {
-                // TODO: change default header to follow planner behavior: date for next 7 days, else weekday
-                PlannerHeaderView(
-                    datestamp: planner.datestamp,
-                    customTextScale: 1.1,
-                    iconFormat: showHeaderDateIcon
-                        ? .conciseMonth : .conciseWeekday,
-                    iconSize: 32,
-                    iconDetailSize: showHeaderDateIcon ? 9 : 11,
-                    iconDetailOffset: showHeaderDateIcon ? 3 : 18
-                )
-                .frame(width: 250, alignment: .leading)
-                .padding(.leading, -8)
-            }
-            .sharedBackgroundVisibility(.hidden)
+        ToolbarItem(placement: .topBarLeading) {
+            PlannerHeaderView(
+                datestamp: planner.datestamp,
+                iconSize: 32,
+                iconDetailSize: showHeaderDateIcon ? 9 : 11,
+                iconDetailOffset: showHeaderDateIcon ? 3 : 18
+            )
+            .animation(nil, value: plannerEngine.isSelectMode)
+            .frame(
+                width: plannerEngine.isSelectMode ? 190 : 250,
+                alignment: .leading
+            )
+            .padding(.leading, -8)
         }
+        .sharedBackgroundVisibility(.hidden)
     }
 
     @ToolbarContentBuilder

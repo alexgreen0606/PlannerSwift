@@ -18,7 +18,7 @@ enum ListLayout {
 
     // MARK: Row
 
-    static let TOGGLE_HEIGHT: CGFloat = 54
+    static let TOGGLE_HEIGHT: CGFloat = 53
     static let ADORNMENT_HEIGHT: CGFloat = 32
     static let VERTICAL_TEXT_PADDING: CGFloat = 6
     static let FONT_SIZE: CGFloat = 17
