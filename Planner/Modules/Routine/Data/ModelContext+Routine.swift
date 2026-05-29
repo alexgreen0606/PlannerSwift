@@ -13,7 +13,7 @@ import SwiftUI
 extension ModelContext {
     static let baseRoutineDay =
         DateInRegion("2000-06-06", region: .UTC)?
-            .dateAtStartOf(.day)
+        .dateAtStartOf(.day)
 
     // MARK: - CREATE
 
@@ -22,7 +22,7 @@ extension ModelContext {
         at index: Int,
         in sortedRoutineEvents: [RoutineEvent],
         weekday: Weekday
-    ) -> UUID? // The ID of the new event.
+    ) -> UUID?  // The ID of the new event.
     {
         let sortDate = generateRoutineEventSortDate(
             at: index,
@@ -40,7 +40,9 @@ extension ModelContext {
         instance.routineEvent = newEvent
 
         insert(newEvent)
-        safeSave("routineEvent.createRoutineEvent")
+
+        // Note: Don't save the context here.
+        // It can cause flickered duplicates in the list.
 
         return newEvent.stableId
     }
@@ -64,7 +66,7 @@ extension ModelContext {
                         SortDescriptor(
                             \RoutineEventWeekdayInstance.sortDate,
                             order: reversed ? .reverse : .forward
-                        ),
+                        )
                     ]
                 )
             )
@@ -152,7 +154,7 @@ extension ModelContext {
 
         let event =
             sourceRoutineEvent
-                ?? RoutineEvent()
+            ?? RoutineEvent()
 
         event.syncWithDraftRoutineEvent(draftRoutineEvent)
 
@@ -227,8 +229,7 @@ extension ModelContext {
 
             // Events will be lazily deleted in this case.
             for instance in event.safeWeekdayInstances
-                where instance.weekdayRawValue == weekday.rawValue
-            {
+            where instance.weekdayRawValue == weekday.rawValue {
                 delete(instance)
             }
         }
@@ -332,7 +333,7 @@ extension ModelContext {
 
     private func generateRoutineEventSortDate(
         at index: Int,
-        in sortedRoutineEvents: [RoutineEvent], // May or may not contain the event being placed.
+        in sortedRoutineEvents: [RoutineEvent],  // May or may not contain the event being placed.
         weekday: Weekday
     ) -> Date {
         guard let baseDay = Self.baseRoutineDay else {
@@ -364,8 +365,7 @@ extension ModelContext {
         for day in daysToRemove {
             // Remove days that no longer exist.
             for instance in event.safeWeekdayInstances
-                where instance.weekdayRawValue == day.rawValue
-            {
+            where instance.weekdayRawValue == day.rawValue {
                 delete(instance)
             }
         }

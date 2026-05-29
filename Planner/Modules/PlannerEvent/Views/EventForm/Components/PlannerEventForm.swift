@@ -145,7 +145,7 @@ struct PlannerEventFormView: View {
     @ViewBuilder
     private var addToCalendarButton: some View {
         if showCalendarButton {
-            GlassIconButtonView(systemImage: "calendar.badge.plus") {
+            GlassIconButtonView(systemImageName: "calendar.badge.plus") {
                 isTitleFocused = false
                 DispatchQueue.main.async(execute: addEventToCalendar)
             }
@@ -180,7 +180,7 @@ struct PlannerEventFormView: View {
                     isPresented: $showDeleteConfirmation
                 )
             } else {
-                GlassIconButtonView(systemImage: "trash", color: Color.red) {
+                GlassIconButtonView(systemImageName: "trash", color: Color.red) {
                     showDeleteConfirmation = true
                 }
                 .withConfirmation(

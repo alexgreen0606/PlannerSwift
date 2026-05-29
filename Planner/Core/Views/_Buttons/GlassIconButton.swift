@@ -8,17 +8,25 @@
 import SwiftUI
 
 struct GlassIconButtonView: View {
-    private let systemImage: String
+    private let systemImageName: String
+    private let prominent: Bool
+    private let disabled: Bool
+    private let color: Color?
     private let onTap: () -> Void
 
-    init(systemImage: String, color: Color? = nil, onTap: @escaping () -> Void) {
-        self.systemImage = systemImage
+    init(
+        systemImageName: String,
+        prominent: Bool = false,
+        disabled: Bool = false,
+        color: Color? = nil,
+        onTap: @escaping () -> Void
+    ) {
+        self.systemImageName = systemImageName
+        self.prominent = prominent
+        self.disabled = disabled
+        self.color = color
         self.onTap = onTap
-
-        customColor = color
     }
-
-    private let customColor: Color?
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
@@ -26,15 +34,24 @@ struct GlassIconButtonView: View {
     // MARK: - Body
 
     var body: some View {
-        Button {
+        let button = Button {
+            guard !disabled else { return }
+            
             onTap()
         } label: {
-            Image(systemName: systemImage)
+            Image(systemName: systemImageName)
                 .imageScale(.large)
-                .padding(4)
+                .fontWeight(.semibold)
+                .fontDesign(.rounded)
+                .frame(width: 32, height: 32)
         }
-        .buttonStyle(.glass)
         .buttonBorderShape(.circle)
-        .tint(customColor ?? accentColor.color)
+        .tint(disabled ? Color.tertiary : color ?? accentColor.color)
+
+        if prominent {
+            button.buttonStyle(.glassProminent)
+        } else {
+            button.buttonStyle(.glass)
+        }
     }
 }

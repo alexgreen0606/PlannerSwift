@@ -8,7 +8,7 @@
 import SwiftData
 import SwiftUI
 
-struct SelectedEventActionsView: ToolbarContent {
+struct SelectedEventActionsView: View {
     @Binding var showTransferSheet: Bool
     let planner: Planner
     let namespace: Namespace.ID
@@ -26,21 +26,20 @@ struct SelectedEventActionsView: ToolbarContent {
 
     // MARK: - Body
 
-    var body: some ToolbarContent {
-        ToolbarItem(placement: .bottomBar) {
+    var body: some View {
+        HStack {
             DeleteSelectedButtonView<PlannerEvent>(
                 confirmationConfig: deleteConfig
             )
-        }
 
-        ToolbarSpacer(placement: .bottomBar)
+            Spacer()
 
-        ToolbarItem(placement: .bottomBar) {
             TransferSelectedButtonView<PlannerEvent>(
                 showTransferSheet: $showTransferSheet,
                 namespace: namespace
             )
         }
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Functions

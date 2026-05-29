@@ -75,7 +75,7 @@ struct EventFormView: View {
                     let startDayInRegion =
                         sourcePlanner.datestamp.startOfDay(
                             in: sourcePlanner.region(settings: settings)
-                        ) ?? now
+                        )
 
                     // This is a planner-specific form.
                     // Use the current hour on the day of the selected planner.

@@ -8,7 +8,7 @@
 import SwiftData
 import SwiftUI
 
-struct SelectedRoutineEventActionsView: ToolbarContent {
+struct SelectedRoutineEventActionsView: View {
     @Binding var showTransferSheet: Bool
     let weekday: Weekday
     let namespace: Namespace.ID
@@ -31,22 +31,21 @@ struct SelectedRoutineEventActionsView: ToolbarContent {
 
     // MARK: - Body
 
-    var body: some ToolbarContent {
-        ToolbarItem(placement: .bottomBar) {
+    var body: some View {
+        HStack {
             DeleteSelectedButtonView<RoutineEvent>(
                 confirmationConfig: deleteConfirmation
             )
-        }
 
-        ToolbarSpacer(placement: .bottomBar)
+            Spacer()
 
-        ToolbarItem(placement: .bottomBar) {
             TransferSelectedButtonView<RoutineEvent>(
                 showTransferSheet: $showTransferSheet,
                 systemImage: "plus.square.on.square",
                 namespace: namespace
             )
         }
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Functions

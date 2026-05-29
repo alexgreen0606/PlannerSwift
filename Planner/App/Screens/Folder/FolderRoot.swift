@@ -21,7 +21,7 @@ struct FolderRootView: View {
     @State private var showTransferSheet = false
     @State private var showNewItemSheet = false
 
-    /// Considers the selected items and whether any other folder exist to house them.
+    /// Considers the selected items and whether any other folder exists to house them.
     @State private var canTransferSelectedItems: Bool = false
 
     // MARK: - Body
@@ -133,10 +133,9 @@ struct FolderRootView: View {
                 }
             }
         } else {
-            SelectedChecklistItemActionsView(
+            SelectedFolderItemActionsView(
                 showTransferSheet: $showTransferSheet,
                 canTransferItems: canTransferSelectedItems,
-                parentType: .folder,
                 namespace: namespace
             )
         }

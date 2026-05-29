@@ -1,5 +1,5 @@
 //
-//  SelectedChecklistItemActions.swift
+//  SelectedFolderItemActions.swift
 //  Planner
 //
 //  Created by Alex Green on 4/16/26.
@@ -8,14 +8,15 @@
 import SwiftData
 import SwiftUI
 
-struct SelectedChecklistItemActionsView: ToolbarContent {
+struct SelectedFolderItemActionsView: ToolbarContent {
     @Binding var showTransferSheet: Bool
     let canTransferItems: Bool
-    let parentType: ChecklistItemType
     let namespace: Namespace.ID
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var listEngine: ListEngine<ChecklistItem>
+
+    @State private var showDeleteConfirmation = false
 
     private var deleteConfirmation: ConfirmationConfig {
         bulkDeleteChecklistItemsConfig(
@@ -27,44 +28,42 @@ struct SelectedChecklistItemActionsView: ToolbarContent {
     // MARK: - Body
 
     var body: some ToolbarContent {
-        if parentType == .checklist {
-            ToolbarItem(placement: .bottomBar) {
-                deleteSelectedButton
-            }
+        ToolbarItem(placement: .topBarTrailing) {
+            deleteSelectedButton
+        }
 
-            ToolbarSpacer(placement: .bottomBar)
+        ToolbarSpacer(.fixed, placement: .topBarTrailing)
 
-            ToolbarItem(placement: .bottomBar) {
-                transferSelectedButton
-            }
-        } else {
-            ToolbarItem(placement: .topBarTrailing) {
-                deleteSelectedButton
-            }
-
-            ToolbarSpacer(.fixed, placement: .topBarTrailing)
-
-            ToolbarItem(placement: .topBarTrailing) {
-                transferSelectedButton
-            }
+        ToolbarItem(placement: .topBarTrailing) {
+            transferSelectedButton
         }
     }
 
     // MARK: - View Builders
 
     private var deleteSelectedButton: some View {
-        DeleteSelectedButtonView<ChecklistItem>(
-            confirmationConfig: deleteConfirmation
+        Button("", systemImage: "trash") {
+            showDeleteConfirmation = true
+        }
+        .disabled(listEngine.selectedItemIds.isEmpty)
+        .tint(Color.label)
+        .withConfirmation(
+            deleteConfirmation,
+            isPresented: $showDeleteConfirmation
         )
     }
 
     private var transferSelectedButton: some View {
-        TransferSelectedButtonView<ChecklistItem>(
-            showTransferSheet: $showTransferSheet,
-            systemImage: parentType == .folder
-                ? "arrow.forward.folder" : "arrow.left.arrow.right",
-            disabled: !canTransferItems,
-            namespace: namespace
+        Button(
+            "",
+            systemImage: "arrow.forward.folder"
+        ) {
+            showTransferSheet = true
+        }
+        .disabled(!canTransferItems || listEngine.selectedItemIds.isEmpty)
+        .matchedTransitionSource(
+            id: ListIds.TRANSFER_BUTTON,
+            in: namespace
         )
     }
 

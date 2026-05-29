@@ -15,8 +15,6 @@ struct TextfieldView: UIViewRepresentable {
     @Binding var focusedId: UUID?
     let stableId: UUID
     var tint: Color
-    var toolbarSystemImageNames: [String]
-    var onTapToolbar: (String) -> Void
     var onEnter: () -> Void
 
     func makeUIView(context: Context) -> UITextView {
@@ -24,7 +22,9 @@ struct TextfieldView: UIViewRepresentable {
 
         textField.delegate = context.coordinator
         context.coordinator.textView = textField
-        context.coordinator.configureKeyboardToolbar(for: textField)
+
+        // Note: deprecated toolbar. Now using safe area inset.
+        // context.coordinator.configureKeyboardToolbar(for: textField)
 
         textField.isEditable = true
         textField.isSelectable = true
@@ -116,81 +116,80 @@ struct TextfieldView: UIViewRepresentable {
             return true
         }
 
-        /// Build the toolbar accessory.
-        func configureKeyboardToolbar(for textView: UITextView) {
-            let container = UIView()
-            container.translatesAutoresizingMaskIntoConstraints = false
-            container.frame.size.height =
-                ListLayout.TOOLBAR_HEIGHT + ListLayout.TOOLBAR_BOTTOM_SPACING
-
-            let toolbar = UIToolbar()
-            toolbar.translatesAutoresizingMaskIntoConstraints = false
-
-            let flexibleSpace = UIBarButtonItem(
-                barButtonSystemItem: .flexibleSpace,
-                target: nil,
-                action: nil
-            )
-
-            // Custom Buttons
-            let iconButtons: [UIBarButtonItem] = parent.toolbarSystemImageNames
-                .map {
-                    systemImageName in
-                    let image = UIImage(systemName: systemImageName)
-                    let button = UIBarButtonItem(
-                        image: image,
-                        style: .plain,
-                        target: self,
-                        action: #selector(toolbarButtonTapped(sender:))
-                    )
-
-                    objc_setAssociatedObject(
-                        button,
-                        &toolbarKey,
-                        systemImageName,
-                        .OBJC_ASSOCIATION_RETAIN_NONATOMIC
-                    )
-
-                    return button
-                }
-
-            // Done Button
-            let done = UIBarButtonItem(
-                barButtonSystemItem: .done,
-                target: self,
-                action: #selector(doneButtonTapped)
-            )
-            toolbar.tintColor = UIColor(parent.tint)
-
-            // Assemble the toolbar.
-            toolbar.items = iconButtons + [flexibleSpace] + [done]
-            container.addSubview(toolbar)
-            NSLayoutConstraint.activate([
-                toolbar.leadingAnchor.constraint(
-                    equalTo: container.leadingAnchor
-                ),
-                toolbar.trailingAnchor.constraint(
-                    equalTo: container.trailingAnchor
-                ),
-                toolbar.topAnchor.constraint(equalTo: container.topAnchor),
-                toolbar.heightAnchor.constraint(
-                    equalToConstant: ListLayout.TOOLBAR_HEIGHT
-                ),
-            ])
-            textView.inputAccessoryView = container
-        }
-
-        @objc private func toolbarButtonTapped(sender: UIButton) {
-            if let systemImageName = objc_getAssociatedObject(
-                sender,
-                &toolbarKey
-            ) as? String {
-                parent.onTapToolbar(systemImageName)
-            }
-        }
-
-        @objc private func doneButtonTapped() {
-            parent.focusedId = nil
-        }
+        // Note: deprecated toolbar. Now using safe area inset.
+        //        func configureKeyboardToolbar(for textView: UITextView) {
+        //            let container = UIView()
+        //            container.translatesAutoresizingMaskIntoConstraints = false
+        //            container.frame.size.height =
+        //                ListLayout.TOOLBAR_HEIGHT + ListLayout.TOOLBAR_BOTTOM_SPACING
+        //
+        //            let toolbar = UIToolbar()
+        //            toolbar.translatesAutoresizingMaskIntoConstraints = false
+        //
+        //            let flexibleSpace = UIBarButtonItem(
+        //                barButtonSystemItem: .flexibleSpace,
+        //                target: nil,
+        //                action: nil
+        //            )
+        //
+        //            // Custom Buttons
+        //            let iconButtons: [UIBarButtonItem] = parent.toolbarSystemImageNames
+        //                .map {
+        //                    systemImageName in
+        //                    let image = UIImage(systemName: systemImageName)
+        //                    let button = UIBarButtonItem(
+        //                        image: image,
+        //                        style: .plain,
+        //                        target: self,
+        //                        action: #selector(toolbarButtonTapped(sender:))
+        //                    )
+        //
+        //                    objc_setAssociatedObject(
+        //                        button,
+        //                        &toolbarKey,
+        //                        systemImageName,
+        //                        .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+        //                    )
+        //
+        //                    return button
+        //                }
+        //
+        //            // Done Button
+        //            let done = UIBarButtonItem(
+        //                barButtonSystemItem: .done,
+        //                target: self,
+        //                action: #selector(doneButtonTapped)
+        //            )
+        //            toolbar.tintColor = UIColor(parent.tint)
+        //
+        //            // Assemble the toolbar.
+        //            toolbar.items = iconButtons + [flexibleSpace] + [done]
+        //            container.addSubview(toolbar)
+        //            NSLayoutConstraint.activate([
+        //                toolbar.leadingAnchor.constraint(
+        //                    equalTo: container.leadingAnchor
+        //                ),
+        //                toolbar.trailingAnchor.constraint(
+        //                    equalTo: container.trailingAnchor
+        //                ),
+        //                toolbar.topAnchor.constraint(equalTo: container.topAnchor),
+        //                toolbar.heightAnchor.constraint(
+        //                    equalToConstant: ListLayout.TOOLBAR_HEIGHT
+        //                ),
+        //            ])
+        //            textView.inputAccessoryView = container
+        //        }
+//        @objc private func toolbarButtonTapped(sender: UIButton) {
+//            if let systemImageName = objc_getAssociatedObject(
+//                sender,
+//                &toolbarKey
+//            ) as? String {
+//                parent.onTapToolbar(systemImageName)
+//            }
+//        }
+//
+//        @objc private func doneButtonTapped() {
+//            parent.focusedId = nil
+//        }
     }
 }

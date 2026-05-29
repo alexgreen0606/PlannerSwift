@@ -22,6 +22,8 @@ struct PlannerRootView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var todayService: TodayService
+    @EnvironmentObject private var calendarStore: CalendarService
+    @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
     @StateObject private var plannerEngine = ListEngine<PlannerEvent>()
@@ -67,6 +69,13 @@ struct PlannerRootView: View {
         )
     }
 
+    private var plannerLocation: Location? {
+        planner.location(
+            settings: settings,
+            deviceLocation: locationService.deviceLocation
+        )
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -78,23 +87,28 @@ struct PlannerRootView: View {
                         eventSheetContext: $eventSheetContext,
                         planner: planner,
                         plannerDay: plannerDay,
+                        plannerLocation: plannerLocation,
                         sortedPlannerEvents: sortedPlannerEvents,
                         sortedPendingPlannerEvents:
-                        sortedPendingPlannerEvents,
+                            sortedPendingPlannerEvents,
                         sortedCompletePlannerEvents:
-                        sortedCompletePlannerEvents,
+                            sortedCompletePlannerEvents,
                         calendarDayData: calendarDayData,
                         showCompleted: planner.showCompleted,
                         scrollProxy: scrollProxy,
                         settings: settings,
                         namespace: namespace,
-                        createEvent: createEvent
+                        createEvent: createEvent,
+                        handleEventTitleChange: handleEventTitleChange,
+                        openPlannerEventSheet: openPlannerEventSheet
                     )
+                    .safeAreaInset(edge: .bottom) {
+                        actionToolbar(scrollProxy: scrollProxy)
+                    }
                     .toolbar {
                         topLeadingToolbar
                         headerToolbar
                         topTrailingToolbar
-                        bottomToolbar(scrollProxy: scrollProxy)
                     }
                     .navigationBarTitleDisplayMode(.inline)
                 }
@@ -200,24 +214,27 @@ struct PlannerRootView: View {
         }
     }
 
-    @ToolbarContentBuilder
-    private func bottomToolbar(scrollProxy: ScrollViewProxy)
-        -> some ToolbarContent
-    {
-        if !plannerEngine.isSelectMode {
-            ToolbarSpacer(placement: .bottomBar)
-            ToolbarItem(placement: .bottomBar) {
-                CreateLowerItemButtonView {
-                    createLowerEvent(scrollProxy: scrollProxy)
-                }
-            }
-        } else {
-            SelectedEventActionsView(
+    // MARK: - View Builder
+
+    private func actionToolbar(scrollProxy: ScrollViewProxy) -> some View {
+        ListActionToolbarView<
+            PlannerEvent,
+            SelectedEventActionsView
+        >(
+            keyboardAccessory: ListKeyboardAccessoryView(
+                items: sortedPendingPlannerEvents,
+                iconImageNames: ["info"],
+                onIconTap: handleToolbarTap
+            ),
+            selectedItemActions: SelectedEventActionsView(
                 showTransferSheet: $showTransferSheet,
                 planner: planner,
                 namespace: namespace
-            )
-        }
+            ),
+            createItem: {
+                createLowerEvent(scrollProxy: scrollProxy)
+            }
+        )
     }
 
     // MARK: - Functions
@@ -230,6 +247,20 @@ struct PlannerRootView: View {
         )
     }
 
+    private func handleToolbarTap(icon _: String, event: PlannerEvent) {
+        openPlannerEventSheet(event)
+    }
+
+    private func handleEventTitleChange(event: PlannerEvent) {
+        modelContext.handlePlannerEventTitleChange(
+            event,
+            in: planner,
+            plannerDay: plannerDay,
+            eventKitStore: calendarStore.ekEventStore,
+            defaultLocation: plannerLocation
+        )
+    }
+
     private func createLowerEvent(scrollProxy: ScrollViewProxy) {
         let targetIndex = getInsertionIndex(
             pendingIndex: sortedPendingPlannerEvents.count,
@@ -239,5 +270,25 @@ struct PlannerRootView: View {
 
         createEvent(at: targetIndex)
         scrollProxy.scrollToBottomOfList()
+    }
+
+    private func openPlannerEventSheet(_ event: PlannerEvent) {
+        if plannerEngine.isSelectMode || event.isCompleted {
+            plannerEngine.toggleItem(event)
+            return
+        }
+
+        handleEventTitleChange(event: event)
+
+        plannerEngine.protectedId = event.stableId
+        plannerEngine.focusedId = nil
+
+        DispatchQueue.main.async {
+            eventSheetContext =
+                EventSheetContext(
+                    plannerEvent: event,
+                    calendarEvent: nil
+                )
+        }
     }
 }

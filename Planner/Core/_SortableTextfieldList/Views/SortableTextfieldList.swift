@@ -18,8 +18,6 @@ struct SortableTextfieldListView<
 >: View {
     private let sortedItems: [Item]
     private let floatingInfo: FloatingInfo?
-    private let toolbarSystemImageNames: [String]
-    private let onToolbarTap: ((String, Item) -> Void)?
     private let createItem: (_ at: Int) -> Void
     private let moveItem: (_ from: Int, _ to: Int) -> Void
     private let deleteItem: ((_: Item) -> Void)?
@@ -47,8 +45,6 @@ struct SortableTextfieldListView<
     init(
         sortedItems: [Item],
         floatingInfo: FloatingInfo? = EmptyView(),
-        toolbarSystemImageNames: [String] = [],
-        onToolbarTap: ((String, Item) -> Void)? = nil,
         createItem: @escaping (_: Int) -> Void,
         moveItem: @escaping (_: Int, _: Int) -> Void,
         deleteItem: ((_: Item) -> Void)? = nil,
@@ -71,8 +67,6 @@ struct SortableTextfieldListView<
     ) {
         self.sortedItems = sortedItems
         self.floatingInfo = floatingInfo
-        self.toolbarSystemImageNames = toolbarSystemImageNames
-        self.onToolbarTap = onToolbarTap
         self.createItem = createItem
         self.moveItem = moveItem
         self.deleteItem = deleteItem
@@ -166,11 +160,9 @@ struct SortableTextfieldListView<
                     rightAdornment: rightAdornment(item),
                     bottomAdornment: bottomAdornment(item),
                     showCompleted: showCompleted,
-                    toolbarSystemImageNames: toolbarSystemImageNames,
                     namespace: namespace,
                     createItem: attemptCreateItem,
                     deleteItem: deleteItem,
-                    onToolbarTap: onToolbarTap,
                     onTitleChange: handleTitleChange
                 )
                 .id(rowId(item))

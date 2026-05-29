@@ -38,8 +38,6 @@ struct RoutineRootView: View {
                 ScrollViewReader { scrollProxy in
                     SortableTextfieldListView(
                         sortedItems: sortedRoutineEvents,
-                        toolbarSystemImageNames: ["info"],
-                        onToolbarTap: handleToolbarTap,
                         createItem: createEvent,
                         moveItem: moveEvent,
                         deleteItem: deleteEvent,
@@ -53,10 +51,12 @@ struct RoutineRootView: View {
                         scrollProxy: scrollProxy,
                         namespace: namespace
                     )
+                    .safeAreaInset(edge: .bottom) {
+                        actionToolbar(scrollProxy: scrollProxy)
+                    }
                     .toolbar {
                         topLeadingToolbar
                         topTrailingToolbar
-                        bottomToolbar(scrollProxy: scrollProxy)
                     }
                     .navigationTitle("\(weekday.label) Routine")
                     .navigationSubtitle("Recurring Events")
@@ -130,26 +130,6 @@ struct RoutineRootView: View {
         }
     }
 
-    @ToolbarContentBuilder
-    private func bottomToolbar(scrollProxy: ScrollViewProxy)
-        -> some ToolbarContent
-    {
-        if !routineEngine.isSelectMode {
-            ToolbarSpacer(placement: .bottomBar)
-            ToolbarItem(placement: .bottomBar) {
-                CreateLowerItemButtonView {
-                    createLowerEvent(scrollProxy: scrollProxy)
-                }
-            }
-        } else {
-            SelectedRoutineEventActionsView(
-                showTransferSheet: $showTransferSheet,
-                weekday: weekday,
-                namespace: namespace
-            )
-        }
-    }
-
     // MARK: - View Builders
 
     private func timeAdornment(event: RoutineEvent) -> some View {
@@ -166,11 +146,28 @@ struct RoutineRootView: View {
         }
     }
 
-    // MARK: - Functions
-
-    private func handleToolbarTap(icon _: String, event: RoutineEvent) {
-        openRoutineEventSheet(for: event)
+    private func actionToolbar(scrollProxy: ScrollViewProxy) -> some View {
+        ListActionToolbarView<
+            RoutineEvent,
+            SelectedRoutineEventActionsView
+        >(
+            keyboardAccessory: ListKeyboardAccessoryView(
+                items: sortedRoutineEvents,
+                iconImageNames: ["info"],
+                onIconTap: handleToolbarTap
+            ),
+            selectedItemActions: SelectedRoutineEventActionsView(
+                showTransferSheet: $showTransferSheet,
+                weekday: weekday,
+                namespace: namespace
+            ),
+            createItem: {
+                createLowerEvent(scrollProxy: scrollProxy)
+            }
+        )
     }
+
+    // MARK: - Functions
 
     private func createEvent(at index: Int) {
         routineEngine.pendingFocusId = modelContext.createRoutineEvent(
@@ -207,6 +204,10 @@ struct RoutineRootView: View {
             )
             invalidatedEventIds.insert(event.stableId)
         }
+    }
+
+    private func handleToolbarTap(icon _: String, event: RoutineEvent) {
+        openRoutineEventSheet(for: event)
     }
 
     private func eventToggleConfig(_ event: RoutineEvent) -> ToggleConfig? {
@@ -249,12 +250,12 @@ struct RoutineRootView: View {
             routineEngine.toggleItem(event)
             return
         }
-        
+
         handleEventTitleChange(event: event)
 
         routineEngine.protectedId = event.stableId
         routineEngine.focusedId = nil
-        
+
         DispatchQueue.main.async {
             routineEventSheetContext = RoutineEventSheetContext(
                 routineEvent: event

@@ -16,6 +16,7 @@ struct PlannerContentsListView: View {
     @Binding var eventSheetContext: EventSheetContext?
     let planner: Planner
     let plannerDay: DateInRegion
+    let plannerLocation: Location?
     let sortedPlannerEvents: [PlannerEvent]
     let sortedPendingPlannerEvents: [PlannerEvent]
     let sortedCompletePlannerEvents: [PlannerEvent]
@@ -25,6 +26,8 @@ struct PlannerContentsListView: View {
     let settings: PlannerSettings
     let namespace: Namespace.ID
     let createEvent: (Int) -> Void
+    let handleEventTitleChange: (PlannerEvent) -> Void
+    let openPlannerEventSheet: (PlannerEvent) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
@@ -38,21 +41,12 @@ struct PlannerContentsListView: View {
         "No \(!sortedCompletePlannerEvents.isEmpty && showCompleted ? "more " : "")plans"
     }
 
-    private var plannerLocation: Location? {
-        planner.location(
-            settings: settings,
-            deviceLocation: locationService.deviceLocation
-        )
-    }
-
     // MARK: - Body
 
     var body: some View {
         SortableTextfieldListView(
             sortedItems: sortedPlannerEvents,
             floatingInfo: chipSpread,
-            toolbarSystemImageNames: ["info"],
-            onToolbarTap: handleToolbarTap,
             createItem: createEvent,
             moveItem: moveUncheckedEvent,
             deleteItem: deleteEvent,
@@ -109,6 +103,13 @@ struct PlannerContentsListView: View {
             .onTapGesture {
                 openPlannerEventSheet(event)
             }
+        } else if event.calendarItemExternalIdentifier != nil {
+            // Temporary icon before the calendar events hydrate.
+            Image(
+                systemName: "calendar"
+            )
+            .foregroundStyle(accentColor.color)
+            .padding(.trailing, 4)
         }
     }
 
@@ -136,10 +137,6 @@ struct PlannerContentsListView: View {
 
     // MARK: - Functions
 
-    private func handleToolbarTap(icon _: String, event: PlannerEvent) {
-        openPlannerEventSheet(event)
-    }
-
     private func moveUncheckedEvent(from: Int, to: Int) {
         modelContext.movePlannerEvent(
             from: from,
@@ -158,41 +155,11 @@ struct PlannerContentsListView: View {
         )
     }
 
-    private func handleEventTitleChange(event: PlannerEvent) {
-        modelContext.handlePlannerEventTitleChange(
-            event,
-            in: planner,
-            plannerDay: plannerDay,
-            eventKitStore: calendarStore.ekEventStore,
-            defaultLocation: plannerLocation
-        )
-    }
-
     private func eventId(event: PlannerEvent) -> String {
         "\(event.stableId)_\(event.location?.name ?? "NO_LOCATION")"
     }
 
     private func eventTint(event: PlannerEvent) -> Color {
         event.tint(accentColor: accentColor)
-    }
-
-    private func openPlannerEventSheet(_ event: PlannerEvent) {
-        if plannerEngine.isSelectMode || event.isCompleted {
-            plannerEngine.toggleItem(event)
-            return
-        }
-
-        handleEventTitleChange(event: event)
-
-        plannerEngine.protectedId = event.stableId
-        plannerEngine.focusedId = nil
-
-        DispatchQueue.main.async {
-            eventSheetContext =
-                EventSheetContext(
-                    plannerEvent: event,
-                    calendarEvent: nil
-                )
-        }
     }
 }

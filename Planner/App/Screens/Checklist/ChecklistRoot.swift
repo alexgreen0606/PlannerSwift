@@ -84,13 +84,15 @@ struct ChecklistRootView: View {
                         bottomAdornment: { _ in EmptyView() },
                         scrollProxy: scrollProxy
                     )
+                    .safeAreaInset(edge: .bottom) {
+                        actionToolbar(scrollProxy: scrollProxy)
+                    }
                     .toolbar {
                         topLeadingToolbar
 
                         ChecklistItemHeaderView(item: checklist)
 
                         topTrailingToolbar
-                        bottomToolbar(scrollProxy: scrollProxy)
                     }
                     .navigationBarTitleDisplayMode(.inline)
                 }
@@ -158,25 +160,22 @@ struct ChecklistRootView: View {
         }
     }
 
-    @ToolbarContentBuilder
-    private func bottomToolbar(
-        scrollProxy: ScrollViewProxy
-    ) -> some ToolbarContent {
-        if !listEngine.isSelectMode {
-            ToolbarSpacer(placement: .bottomBar)
-            ToolbarItem(placement: .bottomBar) {
-                CreateLowerItemButtonView(tint: checklist.color.swiftUIColor) {
-                    createLowerItem(scrollProxy: scrollProxy)
-                }
-            }
-        } else {
-            SelectedChecklistItemActionsView(
+    // MARK: - View Builder
+
+    private func actionToolbar(scrollProxy: ScrollViewProxy) -> some View {
+        ListActionToolbarView<
+            ChecklistItem,
+            SelectedItemActionsView
+        >(
+            selectedItemActions: SelectedItemActionsView(
                 showTransferSheet: $showTransferSheet,
                 canTransferItems: canTransferSelectedItems,
-                parentType: .checklist,
                 namespace: namespace
-            )
-        }
+            ),
+            createItem: {
+                createLowerItem(scrollProxy: scrollProxy)
+            }
+        )
     }
 
     // MARK: - Functions

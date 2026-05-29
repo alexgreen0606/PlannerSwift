@@ -24,11 +24,9 @@ struct RowView<
     private let bottomAdornment: BottomAdornment
 
     private let showCompleted: Bool
-    private let toolbarSystemImageNames: [String]
     private let namespace: Namespace.ID?
     private let createItem: ((_: Int) -> Void)?
     private let deleteItem: ((_: Item) -> Void)?
-    private let onToolbarTap: ((String, Item) -> Void)?
     private let onTitleChange: ((_: Item) -> Void)?
 
     init(
@@ -41,11 +39,9 @@ struct RowView<
         rightAdornment: RightAdornment,
         bottomAdornment: BottomAdornment,
         showCompleted: Bool,
-        toolbarSystemImageNames: [String]? = [],
         namespace: Namespace.ID? = nil,
         createItem: ((_: Int) -> Void)? = nil,
         deleteItem: ((_: Item) -> Void)? = nil,
-        onToolbarTap: ((String, Item) -> Void)? = nil,
         onTitleChange: ((_: Item) -> Void)? = nil
     ) {
         self.item = item
@@ -57,11 +53,9 @@ struct RowView<
         self.rightAdornment = rightAdornment
         self.bottomAdornment = bottomAdornment
         self.showCompleted = showCompleted
-        self.toolbarSystemImageNames = toolbarSystemImageNames ?? []
         self.namespace = namespace
         self.createItem = createItem
         self.deleteItem = deleteItem
-        self.onToolbarTap = onToolbarTap
         self.onTitleChange = onTitleChange
     }
 
@@ -221,10 +215,6 @@ struct RowView<
             focusedId: $listEngine.focusedId,
             stableId: item.stableId,
             tint: tint,
-            toolbarSystemImageNames: toolbarSystemImageNames,
-            onTapToolbar: { iconName in
-                onToolbarTap?(iconName, item)
-            },
             onEnter: {
                 if !item.title.trimmed.isEmpty {
                     createItem?(index + 1)
