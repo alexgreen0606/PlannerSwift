@@ -21,7 +21,7 @@ struct ChecklistItemHeaderView: ToolbarContent {
             if isRootFolder {
                 return 250
             }
-            return 200
+            return 192
         }
         return 250
     }
@@ -40,9 +40,9 @@ struct ChecklistItemHeaderView: ToolbarContent {
                         .minimumScaleFactor(0.6)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .font(.system(size: 22, weight: .bold, design: .rounded))
                 .frame(width: width, alignment: .leading)
-                .padding(.leading, isRootFolder ? 0 : -8)
+                .drawingGroup()
             }
             .sharedBackgroundVisibility(.hidden)
         }
