@@ -119,15 +119,12 @@ struct ChecklistRootView: View {
             // MARK: Edit Checklist Form
 
             .sheet(isPresented: $showEditSheet) {
-                if let parent = checklist.parent {
-                    ChecklistItemFormView(
-                        item: checklist,
-                        parent: parent,
-                        onDelete: {
-                            dismiss()
-                        }
-                    )
-                }
+                ChecklistItemFormView(
+                    sourceItem: checklist,
+                    onDelete: {
+                        dismiss()
+                    }
+                )
             }
         }
     }

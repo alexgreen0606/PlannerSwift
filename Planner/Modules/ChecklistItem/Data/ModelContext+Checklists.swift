@@ -68,24 +68,24 @@ extension ModelContext {
     // MARK: - UPDATE
 
     @MainActor
-    func updateChecklistItem(
+    func saveChecklistItem(
         sourceItem: ChecklistItem?,
-        parent: ChecklistItem?,
-        draftChecklistItem: ChecklistItem
+        parentItem: ChecklistItem?,
+        draftItem: ChecklistItem
     ) {
-        draftChecklistItem.title = draftChecklistItem.title.trimmed
+        draftItem.title = draftItem.title.trimmed
 
         if let sourceItem {
             // Edit existing item.
-            sourceItem.title = draftChecklistItem.title
-            sourceItem.color = draftChecklistItem.color
+            sourceItem.title = draftItem.title
+            sourceItem.color = draftItem.color
 
             // Note: Do not update the type. An item's type will never change.
 
         } else {
             // TODO: pass in this as a param (probably as a context value with the parent)
             let sortedSiblings =
-                parent?.safeItems.sorted {
+                parentItem?.safeItems.sorted {
                     $0.sortIndex < $1.sortIndex
                 } ?? []
 
@@ -97,11 +97,11 @@ extension ModelContext {
             // Create new item.
             insert(
                 ChecklistItem(
-                    title: draftChecklistItem.title,
-                    type: draftChecklistItem.type,
-                    color: draftChecklistItem.color,
+                    title: draftItem.title,
+                    type: draftItem.type,
+                    color: draftItem.color,
                     sortIndex: sortIndex,
-                    parent: parent
+                    parent: parentItem
                 )
             )
         }

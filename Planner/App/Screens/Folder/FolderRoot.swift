@@ -81,13 +81,13 @@ struct FolderRootView: View {
         // MARK: Edit Form
 
         .sheet(isPresented: $showEditSheet) {
-            ChecklistItemFormView(item: folder, parent: folder.parent)
+            ChecklistItemFormView(sourceItem: folder)
         }
 
         // MARK: New Item Form
 
         .sheet(isPresented: $showNewItemSheet) {
-            ChecklistItemFormView(parent: folder)
+            ChecklistItemFormView(parentItem: folder)
         }
 
         // MARK: Update transferability when selected items change.

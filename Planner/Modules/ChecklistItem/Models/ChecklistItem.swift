@@ -13,7 +13,7 @@ class ChecklistItem: ListItem {
     var type: ChecklistItemType = ChecklistItemType.checklist
     var color: ChecklistItemColor = ChecklistItemColor.red
     var sortIndex: Double = ChecklistsData.SORT_INDEX_SPACING
-    
+
     var showCompleted: Bool = false
 
     @Relationship(
@@ -28,7 +28,7 @@ class ChecklistItem: ListItem {
         title: String = "",
         type: ChecklistItemType = .checklist,
         color: ChecklistItemColor = .red,
-        sortIndex: Double,
+        sortIndex: Double = ChecklistsData.SORT_INDEX_SPACING,
         parent: ChecklistItem? = nil
     ) {
         super.init()
