@@ -62,17 +62,16 @@ struct PlannerRootView: View {
         return sortedPendingPlannerEvents
     }
 
-    // TODO: this will be moved into the header view
-    private var showHeaderDateIcon: Bool {
-        planner.datestamp.isNext7Days(
-            todaystamp: todayService.todaystamp
-        )
-    }
-
     private var plannerLocation: Location? {
         planner.location(
             settings: settings,
             deviceLocation: locationService.deviceLocation
+        )
+    }
+    
+    private var showHeaderDateIcon: Bool {
+        planner.datestamp.isNext7Days(
+            todaystamp: todayService.todaystamp
         )
     }
 

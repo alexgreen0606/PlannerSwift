@@ -10,6 +10,7 @@ import SwiftUI
 struct ToastView<Item: ListItem>: View {
     let toast: Toast
     let listEngine: ListEngine<Item>?
+    let dismiss: () -> Void
 
     // MARK: - Body
 
@@ -46,17 +47,26 @@ struct ToastView<Item: ListItem>: View {
                     endAdornment: true,
                     spacing: 0,
                     onTap: {
-                        action()
+                        dismiss()
                         listEngine?.focusedId = nil
+                        action()
                     }
                 )
             }
         }
+        .gesture(
+            DragGesture()
+                .onEnded { event in
+                    if event.translation.height > 30 {
+                        dismiss()
+                    }
+                }
+        )
         .frame(height: 50)
         .clipShape(.capsule)
         .contentShape(.capsule)
         .padding(.horizontal)
-        .glassEffect(.regular, in: .capsule)
+        .glassEffect(.regular.interactive(), in: .capsule)
         .padding(.horizontal)
         .offset(y: -toast.variant.verticalOffset)
         .transition(

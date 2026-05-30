@@ -105,12 +105,22 @@ struct PlannerEventFormView: View {
     @ToolbarContentBuilder
     private var cancelButton: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            Button("Cancel", systemImage: "xmark") {
+            CancelButtonView {
                 isTitleFocused = false
+
+                if let sourcePlannerEvent, let sourcePlanner,
+                    sourcePlannerEvent.title.trimmed.isEmpty
+                {
+                    // The title was empty when this sheet was open. Delete the event.
+                    modelContext.deletePlannerEvent(
+                        sourcePlannerEvent,
+                        in: sourcePlanner,
+                        ekEventStore: calendarStore.ekEventStore
+                    )
+                }
+
                 dismiss()
             }
-            .foregroundStyle(Color.label)
-            .tint(Color.label)
         }
     }
 
@@ -180,7 +190,8 @@ struct PlannerEventFormView: View {
                     isPresented: $showDeleteConfirmation
                 )
             } else {
-                GlassIconButtonView(systemImageName: "trash", color: Color.red) {
+                GlassIconButtonView(systemImageName: "trash", color: Color.red)
+                {
                     showDeleteConfirmation = true
                 }
                 .withConfirmation(
@@ -369,13 +380,13 @@ struct PlannerEventFormView: View {
         // Build a calendar event to represent the form values.
         let event =
             sourceCalendarEvent
-                ?? EKEvent(
-                    eventStore: calendarStore.ekEventStore
-                )
+            ?? EKEvent(
+                eventStore: calendarStore.ekEventStore
+            )
         event.calendar =
             sourceCalendarEvent?.calendar
-                ?? calendarStore.ekEventStore
-                .defaultCalendarForNewEvents
+            ?? calendarStore.ekEventStore
+            .defaultCalendarForNewEvents
 
         if let location = draftPlannerEvent.location ?? defaultLocation {
             // Location display name.

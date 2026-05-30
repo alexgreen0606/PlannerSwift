@@ -31,7 +31,7 @@ struct FolderActionMenuView: View {
         Menu("", systemImage: "ellipsis") {
             SelectItemsButtonView<ChecklistItem>(hasVisibleItem: !items.isEmpty)
             editFolderButton
-            deleteFolderButton
+            deleteActionMenu
         }
 
         // MARK: Delete Folder Confirmation
@@ -49,6 +49,17 @@ struct FolderActionMenuView: View {
             showEditSheet = true
         } label: {
             Label("Edit Folder", systemImage: "pencil")
+        }
+    }
+    
+    private var deleteActionMenu: some View {
+        Menu {
+            deleteFolderButton
+        } label: {
+            Label(
+                "Delete Options",
+                systemImage: "trash"
+            )
         }
     }
 

@@ -1,12 +1,12 @@
 //
-//  ToastVariant.swift
+//  ToastPositionVariant.swift
 //  Planner
 //
 //  Created by Alex Green on 5/25/26.
 //
 import SwiftUI
 
-enum ToastVariant {
+enum ToastPositionVariant {
     case cover
     case tab
 

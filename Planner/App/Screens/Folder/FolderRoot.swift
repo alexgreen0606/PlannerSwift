@@ -64,7 +64,7 @@ struct FolderRootView: View {
 
         .sheet(isPresented: $showTransferSheet) {
             TransferChecklistItemsFormView(
-                source: folder,
+                sourceItem: folder,
                 selectedIds: itemSelectEngine.selectedItemIds,
                 rootFolder: rootFolder,
                 openItem: openItem
@@ -111,10 +111,6 @@ struct FolderRootView: View {
             ToolbarItem(placement: .topBarLeading) {
                 CancelButtonView(cancel: itemSelectEngine.toggleSelectMode)
             }
-            ToolbarSpacer(.fixed, placement: .topBarLeading)
-            ToolbarItem(placement: .topBarLeading) {
-                SelectAllToggleView(visibleItems: sortedItems)
-            }
         }
     }
 
@@ -135,6 +131,7 @@ struct FolderRootView: View {
         } else {
             SelectedFolderItemActionsView(
                 showTransferSheet: $showTransferSheet,
+                items: sortedItems,
                 canTransferItems: canTransferSelectedItems,
                 namespace: namespace
             )

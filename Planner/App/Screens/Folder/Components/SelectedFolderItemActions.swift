@@ -10,6 +10,7 @@ import SwiftUI
 
 struct SelectedFolderItemActionsView: ToolbarContent {
     @Binding var showTransferSheet: Bool
+    let items: [ChecklistItem]
     let canTransferItems: Bool
     let namespace: Namespace.ID
 
@@ -28,6 +29,12 @@ struct SelectedFolderItemActionsView: ToolbarContent {
     // MARK: - Body
 
     var body: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            SelectAllToggleView(visibleItems: items)
+        }
+        
+        ToolbarSpacer(.fixed, placement: .topBarTrailing)
+        
         ToolbarItem(placement: .topBarTrailing) {
             deleteSelectedButton
         }

@@ -102,7 +102,7 @@ struct ChecklistRootView: View {
 
             .sheet(isPresented: $showTransferSheet) {
                 TransferChecklistItemsFormView(
-                    source: checklist,
+                    sourceItem: checklist,
                     selectedIds: listEngine.selectedItemIds,
                     rootFolder: rootFolder,
                     openItem: openItem

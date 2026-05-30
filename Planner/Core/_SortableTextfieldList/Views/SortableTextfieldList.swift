@@ -105,6 +105,7 @@ struct SortableTextfieldListView<
         .safeAreaInset(edge: .top) {
             floatingInfo
                 .padding(.horizontal)
+                .padding(.bottom, -(ListLayout.SEPARATOR_HEIGHT / 2))
         }
         .overlay {
             if sortedPendingItems.isEmpty, !showCompleted {

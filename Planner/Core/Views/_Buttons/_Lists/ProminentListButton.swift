@@ -42,5 +42,10 @@ struct ProminentListButtonView<Item: ListItem>: View {
                 createItem()
             }
         )
+        .contentTransition(
+            .symbolEffect(
+                .replace.upUp
+            )
+        )
     }
 }

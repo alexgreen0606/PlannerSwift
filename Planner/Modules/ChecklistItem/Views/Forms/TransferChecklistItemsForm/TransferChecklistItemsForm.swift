@@ -9,95 +9,91 @@ import SwiftData
 import SwiftUI
 
 struct TransferChecklistItemsFormView: View {
-    private let source: ChecklistItem
+    private let sourceItem: ChecklistItem
     private let rootFolder: ChecklistItem
     private let openItem: (ChecklistItem, ChecklistItem) -> Void
 
     init(
-        source: ChecklistItem,
+        sourceItem: ChecklistItem,
         selectedIds: Set<UUID>,
         rootFolder: ChecklistItem,
         openItem: @escaping (ChecklistItem, ChecklistItem) -> Void
     ) {
-        self.source = source
+        self.sourceItem = sourceItem
         self.rootFolder = rootFolder
         self.openItem = openItem
 
-        var folderPointer =
-            source.type == .folder
-            ? source
-            : source.parent!
+        var destinationItem: ChecklistItem?
+        var folderPath = NavigationPath()
 
-        // Step backwards through folders until you find one with a selectable item.
-        while !folderPointer.containsType(
-            source.type,
+        let selectableItems = rootFolder.items(
+            matching: sourceItem.type,
             excluding: selectedIds,
-            skipId: source.stableId
-        ),
-            let parent = folderPointer.parent
-        {
-            folderPointer = parent
-        }
+            skipId: sourceItem.stableId
+        )
 
-        let destinationType: ChecklistItemType =
-            source.type == .folder ? .folder : .checklist
+        if selectableItems.count == 1 {
 
-        if destinationType == .folder {
-            let selectableFolders = rootFolder.folders(
+            // MARK: Only one option exists. Default select and navigate to it.
+
+            destinationItem = selectableItems.first!
+            folderPath = destinationItem!.path
+
+        } else {
+
+            // MARK: Step backwards until we find an initial folder with a selectable item.
+
+            var folderPointer =
+                sourceItem.type == .folder
+                ? sourceItem
+                : sourceItem.parent!
+
+            while !folderPointer.containsType(
+                sourceItem.type,
                 excluding: selectedIds,
-                skipId: source.stableId
-            )
-
-            if selectableFolders.count == 1 {
-                // Looking for folders and there's only one available. Automatically select it.
-                _selectedItem = State(
-                    initialValue: selectableFolders.first!
-                )
+                skipId: sourceItem.stableId
+            ),
+                let parent = folderPointer.parent
+            {
+                folderPointer = parent
             }
+
+            folderPath = folderPointer.path
         }
 
-        // currentFolder = folderPointer
-        folderPath = NavigationPath([folderPointer])
-        self.destinationType = destinationType
+        _destinationItem = State(initialValue: destinationItem)
+        _folderPath = State(initialValue: folderPath)
     }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @Environment(\.showToast) private var showToast
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var ListEngine: ListEngine<ChecklistItem>
+    @Environment(\.showToast) private var showToast
+    @EnvironmentObject private var listEngine: ListEngine<ChecklistItem>
 
-    @State private var destinationType: ChecklistItemType
-    @State private var selectedItem: ChecklistItem?
+    @State private var destinationItem: ChecklistItem?
 
     @State private var folderPath = NavigationPath()
 
-    private var transferCount: LocalizedStringKey {
-        let count = ListEngine.selectedItems.count
-        return
-            "^[\(count) item](inflect: true)"
-    }
-
     private var canSave: Bool {
-        guard let selectedItem else {
-            return false
-        }
-
-        return selectedItem.stableId != source.stableId
+        destinationItem != nil && destinationItem !== sourceItem
     }
-    
+
+    private var transferCount: LocalizedStringKey {
+        "^[\(listEngine.selectedItems.count) item](inflect: true)"
+    }
+
     // MARK: - Body
 
     var body: some View {
         NavigationStack(path: $folderPath) {
             FolderItemOptionsListView(
-                selectedItem: $selectedItem,
+                destinationItem: $destinationItem,
                 folderPath: $folderPath,
                 folder: rootFolder,
-                source: source,
-                destinationType: destinationType
+                sourceItem: sourceItem
             )
             .toolbar {
                 cancelButton
@@ -105,11 +101,10 @@ struct TransferChecklistItemsFormView: View {
             }
             .navigationDestination(for: ChecklistItem.self) { folder in
                 FolderItemOptionsListView(
-                    selectedItem: $selectedItem,
+                    destinationItem: $destinationItem,
                     folderPath: $folderPath,
                     folder: folder,
-                    source: source,
-                    destinationType: destinationType
+                    sourceItem: sourceItem
                 )
                 .toolbar {
                     cancelButton
@@ -128,7 +123,7 @@ struct TransferChecklistItemsFormView: View {
     @ToolbarContentBuilder
     private var cancelButton: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            Button("Cancel", systemImage: "xmark") {
+            CancelButtonView {
                 dismiss()
             }
         }
@@ -136,16 +131,7 @@ struct TransferChecklistItemsFormView: View {
 
     @ToolbarContentBuilder
     private var submitButton: some ToolbarContent {
-        ToolbarItem(placement: .confirmationAction) {
-            Button(
-                "Submit",
-                systemImage: "checkmark",
-                role: .confirm,
-                action: transferItems
-            )
-            .tint(accentColor.color)
-            .disabled(!canSave)
-        }
+        FormSaveButtonView(canSave: canSave, save: transferItems)
     }
 
     // MARK: - View Builders
@@ -153,7 +139,7 @@ struct TransferChecklistItemsFormView: View {
     private var customHeader: some View {
         VStack(spacing: 20) {
             Text("Transfer Items")
-                // Mock the default modal navigation title style.
+                // Mock the default navigation title style.
                 .font(.system(size: 16, weight: .heavy, design: .rounded))
             transferIndicator
         }
@@ -161,44 +147,43 @@ struct TransferChecklistItemsFormView: View {
     }
 
     private var transferIndicator: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 8) {
             sourceChip
 
-            if let selectedItem, selectedItem != source {
+            if let destinationItem, destinationItem !== sourceItem {
                 Image(systemName: "arrow.right")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 12, height: 12)
+                    .imageScale(.small)
                     .foregroundStyle(Color.secondary)
 
-                destinationChip(selectedItem)
+                destinationChip(destinationItem)
             }
         }
+        .animateUserAction(from: destinationItem)
         .frame(maxWidth: .infinity)
         .padding(.horizontal)
-        .animateUserAction(from: selectedItem?.stableId)
     }
 
     private var sourceChip: some View {
         TransferSelectionIndicatorView(
-            title: source.title,
+            title: sourceItem.title,
             subtitle: transferCount,
             iconConfig: IconConfig(
-                name: source.type.systemImageName,
-                primaryColor: source.color.swiftUIColor,
-                secondaryColor: source.color.swiftUIColor
+                name: sourceItem.type.systemImageName,
+                primaryColor: sourceItem.color.swiftUIColor,
+                secondaryColor: sourceItem.color.swiftUIColor
             )
         )
         .glassChip(height: 46)
     }
 
-    private func destinationChip(_ selectedItem: ChecklistItem) -> some View {
+    private func destinationChip(_ destinationItem: ChecklistItem) -> some View
+    {
         TransferSelectionIndicatorView(
-            title: selectedItem.title,
+            title: destinationItem.title,
             iconConfig: IconConfig(
-                name: selectedItem.type.systemImageName,
-                primaryColor: selectedItem.color.swiftUIColor,
-                secondaryColor: selectedItem.color.swiftUIColor
+                name: destinationItem.type.systemImageName,
+                primaryColor: destinationItem.color.swiftUIColor,
+                secondaryColor: destinationItem.color.swiftUIColor
             )
         )
         .glassChip(height: 40)
@@ -207,34 +192,54 @@ struct TransferChecklistItemsFormView: View {
     // MARK: - Functions
 
     private func transferItems() {
-        guard let selectedItem, selectedItem.stableId != source.stableId
+        guard canSave, let destinationItem
         else {
             return
         }
 
-        let selectedType = checklistItemsTypeLabel(ListEngine.selectedItems)
-        let itemCount = ListEngine.selectedItemIds.count
-
         modelContext.transferChecklistItems(
-            ListEngine.selectedItems,
-            into: selectedItem
+            listEngine.selectedItems,
+            into: destinationItem
         )
-
-        ListEngine.toggleSelectMode()
 
         dismiss()
 
+        DispatchQueue.main.async {
+            let selectedItemsTypeLabel = checklistItemsTypeLabel(
+                listEngine.selectedItems
+            )
+            let itemCount = listEngine.selectedItems.count
+
+            listEngine.toggleSelectMode()
+
+            DispatchQueue.main.async {
+                showNotification(
+                    destinationItem: destinationItem,
+                    itemCount: itemCount,
+                    selectedItemsTypeLabel: selectedItemsTypeLabel
+                )
+            }
+        }
+
+    }
+
+    private func showNotification(
+        destinationItem: ChecklistItem,
+        itemCount: Int,
+        selectedItemsTypeLabel: String
+    ) {
         let icon =
-            source.type == .checklist
+            sourceItem.type == .checklist
             ? "arrow.left.arrow.right" : "arrow.forward.folder"
 
-        let variant: ToastVariant = source.type == .folder ? .tab : .cover
+        let variant: ToastPositionVariant =
+            sourceItem.type == .folder ? .tab : .cover
 
         showToast(
             Toast(
                 title:
-                    "Successfully transferred ^[\(itemCount) \(selectedType)](inflect: true)!",
-                subtitle: LocalizedStringKey(selectedItem.title),
+                    "Successfully transferred ^[\(itemCount) \(selectedItemsTypeLabel)](inflect: true)!",
+                subtitle: LocalizedStringKey(destinationItem.title),
                 iconConfig: IconConfig(
                     name: icon,
                     primaryColor: Color.label,
@@ -243,8 +248,9 @@ struct TransferChecklistItemsFormView: View {
                 variant: variant,
                 action: {
                     openItem(
-                        selectedItem,
-                        destinationType == .folder ? source : source.parent!
+                        destinationItem,
+                        sourceItem.type == .folder
+                            ? sourceItem : sourceItem.parent!
                     )
                 }
             )

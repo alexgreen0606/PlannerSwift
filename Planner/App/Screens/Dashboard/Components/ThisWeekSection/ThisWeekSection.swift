@@ -36,12 +36,11 @@ struct ThisWeekSectionView: View {
             Text("This Week")
                 .padding([.horizontal, .bottom])
         }
-        .listSectionMargins(.top, 0)
-        .listRowInsets(EdgeInsets())
-        .discreetListItem()
         .animateLazyAction(
             from: todayService.next7Datestamps
         )
+        .listRowInsets(EdgeInsets())
+        .discreetListItem()
     }
 
     // MARK: - View Builder

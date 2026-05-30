@@ -30,7 +30,7 @@ struct ToastRootView<Content: View, Item: ListItem>: View {
     @State private var toastDismissWorkItem: DispatchWorkItem?
 
     private var keyboardPadding: CGFloat {
-        listEngine?.focusedId != nil ? -40 : 0
+        listEngine?.focusedId != nil ? 16 : 0
     }
 
     // MARK: - Body
@@ -40,13 +40,17 @@ struct ToastRootView<Content: View, Item: ListItem>: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .overlay(alignment: .bottom) {
                 if let activeToast {
-                    ToastView(toast: activeToast, listEngine: listEngine)
-                        .padding(.bottom, keyboardPadding)
+                    ToastView(
+                        toast: activeToast,
+                        listEngine: listEngine,
+                        dismiss: dismiss
+                    )
+                    .padding(.bottom, keyboardPadding)
                 }
             }
             .environment(\.showToast) { toast in
                 withAnimation(
-                    animation.logicallyComplete(after: 0.17),
+                    animation.logicallyComplete(after: 0.2),
                     completionCriteria: .logicallyComplete
                 ) {
                     if activeToast != nil {
@@ -55,7 +59,7 @@ struct ToastRootView<Content: View, Item: ListItem>: View {
                 } completion: {
                     toastDismissWorkItem?.cancel()
 
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                         withAnimation(animation) {
                             activeToast = toast
                         }

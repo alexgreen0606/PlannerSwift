@@ -107,24 +107,7 @@ struct ChecklistNavigationView: View {
         }
     }
 
-    // TODO: test jumping to a folder from notification
     private func jumpToParent(of item: ChecklistItem) {
-        var reversePath: [ChecklistItem] = []
-
-        // Build the reverse path to the root.
-        var pointer: ChecklistItem? = item.parent
-        while let pointerItem = pointer {
-            reversePath.append(pointerItem)
-
-            pointer = pointerItem.parent
-        }
-
-        // Build the navigation path to the item.
-        var path = NavigationPath()
-        for folder in reversePath.reversed() {
-            path.append(folder)
-        }
-
-        folderPath = path
+        folderPath = item.path
     }
 }

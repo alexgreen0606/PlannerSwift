@@ -8,11 +8,10 @@
 import SwiftUI
 
 struct FolderItemOptionsListView: View {
-    @Binding var selectedItem: ChecklistItem?
+    @Binding var destinationItem: ChecklistItem?
     @Binding var folderPath: NavigationPath
     let folder: ChecklistItem
-    let source: ChecklistItem
-    let destinationType: ChecklistItemType
+    let sourceItem: ChecklistItem
 
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var listEngine: ListEngine<ChecklistItem>
@@ -34,7 +33,7 @@ struct FolderItemOptionsListView: View {
         .overlay {
             if options.isEmpty {
                 EmptyLabel(
-                    "No available \(destinationType.rawValue)s"
+                    "No available \(sourceItem.type.rawValue)s"
                 )
             }
         }
@@ -56,9 +55,9 @@ struct FolderItemOptionsListView: View {
                 ) {
                     dismiss()
 
-                    if destinationType == .folder {
+                    if sourceItem.type == .folder {
                         // Select the folder we are navigating back to.
-                        selectedItem = parent
+                        destinationItem = parent
                     }
                 }
             }
@@ -91,7 +90,7 @@ struct FolderItemOptionsListView: View {
             // MARK: End Adornment
 
             Group {
-                if selectedItem == item {
+                if destinationItem == item {
                     Image(systemName: "checkmark")
                         .foregroundStyle(Color.label)
                 }
@@ -111,8 +110,8 @@ struct FolderItemOptionsListView: View {
                 folderPath.append(item)
             }
 
-            if item.type == destinationType {
-                selectedItem = item
+            if item.type == sourceItem.type {
+                destinationItem = item
             }
         }
     }
@@ -122,9 +121,9 @@ struct FolderItemOptionsListView: View {
     private func buildOptions() {
         options = folder.safeItems.filter {
             $0.containsType(
-                destinationType,
+                sourceItem.type,
                 excluding: listEngine.selectedItemIds,
-                skipId: source.stableId
+                skipId: sourceItem.stableId
             )
         }
         .sorted { $0.sortIndex < $1.sortIndex }

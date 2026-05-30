@@ -14,7 +14,7 @@ struct Toast {
     let subtitle: LocalizedStringKey?
     let customSubtitle: AnyView?
     let iconConfig: IconConfig
-    let variant: ToastVariant
+    let variant: ToastPositionVariant
     let action: (() -> Void)?
 
     init(
@@ -22,7 +22,7 @@ struct Toast {
         subtitle: LocalizedStringKey? = nil,
         customSubtitle: AnyView? = nil,
         iconConfig: IconConfig,
-        variant: ToastVariant = .cover,
+        variant: ToastPositionVariant = .cover,
         action: (() -> Void)? = nil
     ) {
         self.title = title

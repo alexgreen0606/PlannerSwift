@@ -119,9 +119,7 @@ extension ModelContext {
                     sortDate: draftPlannerEvent.date
                 )
 
-        event.title = draftPlannerEvent.title.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        )
+        event.title = draftPlannerEvent.title.trimmed
         event.location = draftPlannerEvent.location
         event.calendarEvent = nil
         event.calendarItemExternalIdentifier = nil
