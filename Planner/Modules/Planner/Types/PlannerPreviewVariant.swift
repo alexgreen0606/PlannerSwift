@@ -1,11 +1,11 @@
 //
-//  PlannerPreviewType.swift
+//  PlannerPreviewVariant.swift
 //  Planner
 //
 //  Created by Alex Green on 3/11/26.
 //
 
-enum PlannerPreviewType {
+enum PlannerPreviewVariant {
     case planner
     case trip
     case search

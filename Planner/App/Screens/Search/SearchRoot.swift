@@ -80,13 +80,24 @@ struct SearchRootView: View {
                                     id: \.self
                                 ) {
                                     datestamp in
-                                    SearchResultPlannerPreviewView(
+                                    PlannerContextLoaderView(
                                         datestamp: datestamp,
-                                        activeQuery: plannerSearchStore
-                                            .results.activeQuery,
-                                        settings: settings,
-                                        namespace: namespace
-                                    )
+                                        settings: settings
+                                    ) {
+                                        context in
+                                        SearchResultPlannerPreviewView(
+                                            activeQuery: plannerSearchStore
+                                                .results.activeQuery,
+                                            planner: context.planner,
+                                            sortedPlannerEvents: context
+                                                .eventContext
+                                                .sortedPlannerEvents,
+                                            calendarDayData: context
+                                                .eventContext.calendarDayData,
+                                            settings: settings,
+                                            namespace: namespace
+                                        )
+                                    }
                                     .listRowBackground(Color.clear)
                                 }
                             } header: {

@@ -10,7 +10,7 @@ import SwiftDate
 import SwiftUI
 
 struct PlannerPreviewCardView<Header: View>: View {
-    private let type: PlannerPreviewType
+    private let type: PlannerPreviewVariant
     let datestamp: String
     let header: Header
     let width: CGFloat
@@ -19,7 +19,7 @@ struct PlannerPreviewCardView<Header: View>: View {
     let transitionId: String
 
     init(
-        type: PlannerPreviewType,
+        type: PlannerPreviewVariant,
         datestamp: String,
         header: Header,
         width: CGFloat = PlannerPreviewCardLayout.DEFAULT_WIDTH,
@@ -45,10 +45,14 @@ struct PlannerPreviewCardView<Header: View>: View {
                 header
 
                 PlannerPreviewView(
-                    type: type,
+                    variant: type,
                     planner: context.planner,
-                    plannerEvents: context.eventContext.sortedPlannerEvents,
-                    calendarDayData: context.eventContext.calendarDayData,
+                    sortedBirthdays: context.eventContext.calendarDayData?
+                        .birthdays ?? [],
+                    sortedChipEvents: context.eventContext.calendarDayData?
+                        .plannerChipEvents ?? [],
+                    sortedPlannerEvents: context.eventContext
+                        .sortedPlannerEvents,
                     settings: settings
                 )
                 .frame(

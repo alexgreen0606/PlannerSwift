@@ -6,32 +6,36 @@
 //
 
 import EventKit
-import SwiftData
 import SwiftDate
 import SwiftUI
-import WrappingHStack
 
 struct PlannerPreviewView: View {
-    let type: PlannerPreviewType
-    let searchQuery: PlannerSearchQuery?
-    let planner: Planner
-    let plannerEvents: [PlannerEvent]
-    let calendarDayData: CalendarDayData?
-    let settings: PlannerSettings
+    private let variant: PlannerPreviewVariant
+    private let isSearchQueryActive: Bool
+    private let planner: Planner
+    private let tripLabel: String?
+    private let sortedBirthdays: [Birthday]
+    private let sortedChipEvents: [EKEvent]
+    private let sortedPlannerEvents: [PlannerEvent]
+    private let settings: PlannerSettings
 
     init(
-        type: PlannerPreviewType,
-        searchQuery: PlannerSearchQuery? = nil,
+        variant: PlannerPreviewVariant,
+        isSearchQueryActive: Bool = false,
         planner: Planner,
-        plannerEvents: [PlannerEvent],
-        calendarDayData: CalendarDayData? = nil,
+        tripLabel: String? = nil,
+        sortedBirthdays: [Birthday],
+        sortedChipEvents: [EKEvent],
+        sortedPlannerEvents: [PlannerEvent],
         settings: PlannerSettings
     ) {
-        self.type = type
-        self.searchQuery = searchQuery
+        self.variant = variant
+        self.isSearchQueryActive = isSearchQueryActive
         self.planner = planner
-        self.plannerEvents = plannerEvents
-        self.calendarDayData = calendarDayData
+        self.tripLabel = tripLabel
+        self.sortedBirthdays = sortedBirthdays
+        self.sortedChipEvents = sortedChipEvents
+        self.sortedPlannerEvents = sortedPlannerEvents
         self.settings = settings
     }
 
@@ -39,7 +43,31 @@ struct PlannerPreviewView: View {
 
     @EnvironmentObject private var locationService: LocationService
 
-    // MARK: - Computed Variables
+    private var hasEvents: Bool {
+        (tripSlotSize
+            + previewBirthdays.count
+            + previewChipEvents.count
+            + sortedPreviewPlannerEvents.count) > 0
+    }
+
+    private var remainingPlansLabel: String {
+        let totalEventCount =
+            sortedChipEvents.count + sortedPlannerEvents.count
+
+        let previewCount =
+            previewChipEvents.count + sortedPreviewPlannerEvents.count
+
+        let remainingCount = totalEventCount - previewCount
+
+        if remainingCount == 0 {
+            if previewCount > 0 {
+                return "No more plans"
+            }
+            return "No plans"
+        }
+
+        return "\(remainingCount) more plan\(remainingCount == 1 ? "" : "s")"
+    }
 
     private var startOfDay: DateInRegion {
         planner.datestamp.startOfDay(in: planner.region(settings: settings))
@@ -52,60 +80,31 @@ struct PlannerPreviewView: View {
         )
     }
 
-    // MARK: Filtered Search Results
-
-    private var filteredPlannerEvents: [PlannerEvent] {
-        plannerEvents.filter {
-            $0.searchQueryScore(searchQuery) != nil
-        }
-    }
-
-    private var filteredChipEvents: [EKEvent] {
-        calendarDayData?.plannerChipEvents.filter {
-            $0.searchQueryScore(searchQuery) != nil
-        } ?? []
-    }
-
-    private var filteredBirthdays: [Birthday] {
-        calendarDayData?.birthdays.filter {
-            $0.event.searchQueryScore(searchQuery) != nil
-        } ?? []
-    }
-
     // MARK: Separated Time Events
 
     // TODO: prioritize calendar events
 
     private var timedPlannerEvents: [PlannerEvent] {
-        filteredPlannerEvents.filter { $0.time != nil }
+        sortedPlannerEvents.filter { $0.time != nil }
     }
 
     private var untimedPlannerEvents: [PlannerEvent] {
-        filteredPlannerEvents.filter { $0.time == nil }
+        sortedPlannerEvents.filter { $0.time == nil }
     }
 
     // MARK: Preview Events
-
-    private var tripLabel: String? {
-        guard type != .trip, let trip = planner.trip,
-              trip.searchQueryScore(searchQuery) != nil
-        else {
-            return nil
-        }
-        return trip.title
-    }
 
     private var tripSlotSize: Int {
         tripLabel == nil ? 0 : 1
     }
 
     private var previewBirthdays: [Birthday] {
-        Array(filteredBirthdays.prefix(maxPreviewEvents - tripSlotSize))
+        Array(sortedBirthdays.prefix(maxPreviewEvents - tripSlotSize))
     }
 
     private var previewChipEvents: [EKEvent] {
         Array(
-            filteredChipEvents.prefix(
+            sortedChipEvents.prefix(
                 maxPreviewEvents - tripSlotSize - previewBirthdays.count
             )
         )
@@ -125,41 +124,6 @@ struct PlannerPreviewView: View {
         return (timed + untimed).sorted { $0.sortDate < $1.sortDate }
     }
 
-    // MARK: Miscellaneous Helpers
-
-    private var remainingPlansLabel: String {
-        let totalEventCount =
-            filteredChipEvents.count + filteredPlannerEvents.count
-
-        let previewCount =
-            previewChipEvents.count + sortedPreviewPlannerEvents.count
-
-        let remainingCount = totalEventCount - previewCount
-
-        if remainingCount == 0 {
-            if previewCount > 0 {
-                return "No more plans"
-            }
-            return "No plans"
-        }
-
-        return "\(remainingCount) more plan\(remainingCount == 1 ? "" : "s")"
-    }
-
-    private var hasEvents: Bool {
-        (previewChipEvents.count
-            + sortedPreviewPlannerEvents.count
-            + tripSlotSize
-            + previewBirthdays.count) > 0
-    }
-
-    private var isSearching: Bool {
-        guard let searchQuery else {
-            return false
-        }
-        return searchQuery.isSearching
-    }
-
     // MARK: - Body
 
     var body: some View {
@@ -170,7 +134,7 @@ struct PlannerPreviewView: View {
             PlannerEventListView(
                 plannerRegion: startOfDay.region,
                 events: sortedPreviewPlannerEvents,
-                isBottomOfCard: isSearching,
+                isBottomOfCard: isSearchQueryActive,
                 settings: settings
             )
             remainingPlansIndicator
@@ -193,7 +157,7 @@ struct PlannerPreviewView: View {
 
     private var birthdayChipList: some View {
         ForEach(
-            filteredBirthdays,
+            sortedBirthdays,
             id: \.event.eventIdentifier
         ) {
             BirthdayLabelView(
@@ -209,13 +173,15 @@ struct PlannerPreviewView: View {
             id: \.eventIdentifier
         ) { event in
             let calendarColor = event.calendar.color
+
             AdornedValue(
                 event.title,
                 iconConfig: IconConfig(
                     name: event.calendar.systemImageName(
                         settings: settings
                     ),
-                    primaryColor: calendarColor
+                    primaryColor: calendarColor,
+                    secondaryColor: calendarColor
                 ),
                 color: calendarColor
             )
@@ -224,14 +190,14 @@ struct PlannerPreviewView: View {
 
     @ViewBuilder
     private var remainingPlansIndicator: some View {
-        if hasEvents && !isSearching {
+        if hasEvents && !isSearchQueryActive {
             EmptyLabel(remainingPlansLabel, scale: 0.8)
         }
     }
 
     @ViewBuilder
     private var emptyPlannerIndicator: some View {
-        if type != .search {
+        if variant != .search {
             ZStack {
                 if !hasEvents {
                     EmptyLabel(remainingPlansLabel, scale: 0.8)
@@ -239,8 +205,7 @@ struct PlannerPreviewView: View {
             }
             .frame(
                 maxWidth: .infinity,
-                maxHeight: .infinity,
-                alignment: .center
+                maxHeight: .infinity
             )
         }
     }
