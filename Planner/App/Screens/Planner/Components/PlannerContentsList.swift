@@ -15,7 +15,7 @@ struct PlannerContentsListView: View {
     @Binding var showLocationSheet: Bool
     @Binding var eventSheetContext: EventSheetContext?
     let planner: Planner
-    let plannerDay: DateInRegion
+    let startOfDay: DateInRegion
     let plannerLocation: Location?
     let sortedPlannerEvents: [PlannerEvent]
     let sortedPendingPlannerEvents: [PlannerEvent]
@@ -73,7 +73,7 @@ struct PlannerContentsListView: View {
         PlannerChipSpreadView(
             showLocationSheet: $showLocationSheet,
             planner: planner,
-            plannerDay: plannerDay,
+            startOfDay: startOfDay,
             plannerLocation: plannerLocation,
             calendarDayData: calendarDayData,
             settings: settings,
@@ -115,7 +115,7 @@ struct PlannerContentsListView: View {
 
     private func timeAdornment(event: PlannerEvent) -> some View {
         event.timeAdornment(
-            in: plannerDay.region,
+            in: startOfDay.region,
             accentColor: accentColor,
             openEventSheet: {
                 openPlannerEventSheet(event)
@@ -141,7 +141,7 @@ struct PlannerContentsListView: View {
         modelContext.movePlannerEvent(
             from: from,
             to: to,
-            plannerDay: plannerDay,
+            startOfDay: startOfDay,
             sortedPendingPlannerEvents: sortedPendingPlannerEvents,
             sortedPlannerEvents: sortedPlannerEvents
         )

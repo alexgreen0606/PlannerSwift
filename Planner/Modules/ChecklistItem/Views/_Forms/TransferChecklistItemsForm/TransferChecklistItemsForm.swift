@@ -164,7 +164,7 @@ struct TransferChecklistItemsFormView: View {
     }
 
     private var sourceChip: some View {
-        TransferSelectionIndicatorView(
+        LabelValueView(
             title: sourceItem.title,
             subtitle: transferCount,
             iconConfig: IconConfig(
@@ -178,7 +178,7 @@ struct TransferChecklistItemsFormView: View {
 
     private func destinationChip(_ destinationItem: ChecklistItem) -> some View
     {
-        TransferSelectionIndicatorView(
+        LabelValueView(
             title: destinationItem.title,
             iconConfig: IconConfig(
                 name: destinationItem.type.systemImageName,

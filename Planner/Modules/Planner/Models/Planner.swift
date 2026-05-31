@@ -6,14 +6,16 @@
 //
 
 import SwiftData
-import SwiftUI
-
-// Clean
 
 @Model
 class Planner {
-    /// Converts to the start of day (Date) based on the planner's location (TimeZone).
+    /// Converts to the start of day (DateInRegion) based on the planner's time zone.
     var datestamp: String = ""
+
+    @Relationship(deleteRule: .nullify, inverse: \Location.planners)
+    var location: Location?
+
+    var trip: Trip?
 
     var showCompleted: Bool = false
 
@@ -23,12 +25,7 @@ class Planner {
 
     var routineEventVariants: [RoutineEventVariant]?
 
-    var trip: Trip?
-
-    @Relationship(deleteRule: .nullify, inverse: \Location.planners)
-    var location: Location?
-
-    init(datestamp: String, location: Location?) {
+    init(datestamp: String, location: Location? = nil) {
         self.datestamp = datestamp
         self.location = location
     }

@@ -16,7 +16,7 @@ extension ModelContext {
     func syncCalendar(
         for planner: Planner,
         storageEvents: [PlannerEvent],
-        plannerDay: DateInRegion,
+        startOfDay: DateInRegion,
         hiddenCalendarIds: Set<String>,
         ekEventStore: EKEventStore
     ) -> CalendarDayData {
@@ -27,10 +27,10 @@ extension ModelContext {
 
         // ------------------------------------------------------------------
 
-        let nextDay = plannerDay + 1.days
+        let nextDay = startOfDay + 1.days
         let calendarEvents = ekEventStore.events(
             matching: ekEventStore.predicateForEvents(
-                withStart: plannerDay.date,
+                withStart: startOfDay.date,
                 end: nextDay.date,
                 calendars: nil
             )
@@ -78,7 +78,7 @@ extension ModelContext {
                         birthdayEvents: &birthdayEvents,
                         calendarDayData: &calendarDayData,
                         hiddenCalendarIds: hiddenCalendarIds,
-                        plannerDay: plannerDay,
+                        startOfDay: startOfDay,
                         ekEventStore: ekEventStore
                     )
                 else {
@@ -110,7 +110,7 @@ extension ModelContext {
                     birthdayEvents: &birthdayEvents,
                     calendarDayData: &calendarDayData,
                     hiddenCalendarIds: hiddenCalendarIds,
-                    plannerDay: plannerDay,
+                    startOfDay: startOfDay,
                     ekEventStore: ekEventStore
                 )
             else {
@@ -119,7 +119,7 @@ extension ModelContext {
 
             createPlannerEvent(
                 for: calendarEvent,
-                in: plannerDay
+                in: startOfDay
             )
         }
 
@@ -149,7 +149,7 @@ extension ModelContext {
         birthdayEvents: inout [String: EKEvent],
         calendarDayData: inout CalendarDayData,
         hiddenCalendarIds: Set<String>,
-        plannerDay: DateInRegion,
+        startOfDay: DateInRegion,
         ekEventStore: EKEventStore
     ) -> Bool {
         if calendarEvent.calendar.type == .birthday,
@@ -189,12 +189,12 @@ extension ModelContext {
         }
 
         if calendarEvent.spansOutsidePlannerDay(
-            plannerDay
+            startOfDay
         ) {
             // Collect events that span outside this day as planner chips.
             calendarDayData.plannerChipEvents.append(calendarEvent)
 
-            if !calendarEvent.startDate.belongsTo(plannerDay) {
+            if !calendarEvent.startDate.belongsTo(startOfDay) {
                 // Only display the event if it starts during this day.
                 deletePlannerEventIfExists(
                     plannerEvent,

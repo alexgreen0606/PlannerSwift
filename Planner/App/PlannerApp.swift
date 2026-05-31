@@ -56,6 +56,7 @@ struct PlannerApp: App {
     @StateObject private var todayService = TodayService()
     @StateObject private var plannerCoverStore = PlannerCoverStore()
     @StateObject private var plannerSyncService = PlannerSyncService()
+    @StateObject private var locationSearchService = LocationSearchService()
 
     var body: some Scene {
         WindowGroup {
@@ -67,6 +68,7 @@ struct PlannerApp: App {
                 .environmentObject(locationService)
                 .environmentObject(plannerCoverStore)
                 .environmentObject(plannerSyncService)
+                .environmentObject(locationSearchService)
         }
         .modelContainer(modelContainer)
     }

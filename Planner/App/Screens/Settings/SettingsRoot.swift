@@ -21,12 +21,13 @@ struct SettingsRootView: View {
     @AppStorage("showListDividers") private var showListDividers: Bool =
         true
 
-    @AppStorage("toggleTransitionDuration") private var toggleTransitionDuration: ToggleTransitionDuration =
-        .threeSeconds
+    @AppStorage("toggleTransitionDuration") private
+        var toggleTransitionDuration: ToggleTransitionDuration =
+            .threeSeconds
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
-        .oneMonth
+            .oneMonth
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var systemColorScheme
@@ -111,17 +112,17 @@ struct SettingsRootView: View {
                     // MARK: Home Location
 
                     NavigationLink {
-                        LocationSearchFormView(
-                            title: "Home Location",
-                            mode: .home,
+                        LocationFormView(
+                            variant: .home,
+                            initialLocation: settings.homeLocation,
                             settings: settings,
-                            initialLocation: settings.homeLocation
-                        ) {
-                            modelContext.updateHomeLocation(
-                                in: settings,
-                                to: $0
-                            )
-                        }
+                            saveSelection: {
+                                modelContext.updateHomeLocation(
+                                    in: settings,
+                                    to: $0
+                                )
+                            }
+                        )
                     } label: {
                         HStack {
                             Text("Home Location")

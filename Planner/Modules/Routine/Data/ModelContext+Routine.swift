@@ -343,7 +343,7 @@ extension ModelContext {
         return generateSortDate(
             at: index,
             in: sortedRoutineEvents,
-            plannerDay: baseDay,
+            startOfDay: baseDay,
             getSortDate: {
                 $0.instance(on: weekday)?.sortDate ?? baseDay.date
             },

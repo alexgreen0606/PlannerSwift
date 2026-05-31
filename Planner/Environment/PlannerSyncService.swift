@@ -31,7 +31,7 @@ class PlannerSyncService: ObservableObject {
 
     func syncPlanner(
         _ planner: Planner,
-        plannerDay: DateInRegion,
+        startOfDay: DateInRegion,
         sortedPlannerEvents: [PlannerEvent],
         todaystamp: String,
         ekEventStore: EKEventStore,
@@ -54,7 +54,7 @@ class PlannerSyncService: ObservableObject {
             modelContext.syncRoutine(
                 for: planner,
                 storageEvents: sortedPlannerEvents,
-                plannerDay: plannerDay,
+                startOfDay: startOfDay,
                 weekday: weekday,
                 ekEventStore: ekEventStore,
                 todaystamp: todaystamp
@@ -65,11 +65,11 @@ class PlannerSyncService: ObservableObject {
 
         // MARK: Sync Calendar
 
-        if let cachedCalendarData = freshCalendarMap[planner.key] {
+        if let cachedCalendarData = freshCalendarMap[planner.plannerLocationId] {
             return Task { cachedCalendarData }
         }
 
-        if let inFlight = inFlightCalendarSync[planner.key] {
+        if let inFlight = inFlightCalendarSync[planner.plannerLocationId] {
             return inFlight
         }
 
@@ -77,20 +77,20 @@ class PlannerSyncService: ObservableObject {
             let calendarDayData = modelContext.syncCalendar(
                 for: planner,
                 storageEvents: sortedPlannerEvents,
-                plannerDay: plannerDay,
+                startOfDay: startOfDay,
                 hiddenCalendarIds: settings.hiddenCalendarIds,
                 ekEventStore: ekEventStore
             )
 
             await MainActor.run {
-                freshCalendarMap[planner.key] = calendarDayData
-                inFlightCalendarSync.removeValue(forKey: planner.key)
+                freshCalendarMap[planner.plannerLocationId] = calendarDayData
+                inFlightCalendarSync.removeValue(forKey: planner.plannerLocationId)
             }
 
             return calendarDayData
         }
 
-        inFlightCalendarSync[planner.key] = task
+        inFlightCalendarSync[planner.plannerLocationId] = task
 
         return task
     }

@@ -10,12 +10,6 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-struct FullPlannerContext {
-    let planner: Planner
-    let plannerDay: DateInRegion
-    let sortedPlannerEvents: [PlannerEvent]
-}
-
 extension ModelContext {
     // MARK: - ENSURE
 
@@ -36,12 +30,12 @@ extension ModelContext {
     private func createPlanner(for datestamp: String, skipSave: Bool = false)
         -> Planner
     {
-        let planner = Planner(datestamp: datestamp, location: nil)
+        let planner = Planner(datestamp: datestamp)
 
         insert(planner)
 
         if !skipSave {
-            safeSave("planner.createPlanner")
+            safeSave("ModelContext+Planner.createPlanner")
         }
 
         return planner
@@ -68,12 +62,17 @@ extension ModelContext {
         }
     }
 
+    // TODO: what if a trip goes so far back that its planners are out of range? I Shouldnt delete the planners then.
+
+    /// Gathers all data needed to eager-build a list of planners.
     @MainActor
-    func getBulkPlannerContexts(
+    func getBulkPlannerBuildContexts(
         for datestamps: Set<String>,
         settings: PlannerSettings
-    ) -> [FullPlannerContext] {
+    ) -> [PlannerBuildContext] {
         do {
+            // Load in planners that already exist in storage.
+
             let existingPlanners = try fetch(
                 FetchDescriptor<Planner>(
                     predicate: #Predicate<Planner> { planner in
@@ -84,40 +83,45 @@ extension ModelContext {
 
             var allPlanners = existingPlanners
 
+            // Create new planners that don't exist yet.
+
             for datestamp in datestamps
-                where !allPlanners.contains(where: { $0.datestamp == datestamp })
-            {
+            where !allPlanners.contains(where: { $0.datestamp == datestamp }) {
                 allPlanners.append(
                     createPlanner(for: datestamp, skipSave: true)
                 )
             }
 
-            var fullPlannerContexts: [FullPlannerContext] = []
+            // Build a list of data needed to build each planner.
+
+            var contexts: [PlannerBuildContext] = []
 
             for planner in allPlanners {
-                let plannerDay = planner.datestamp.startOfDay(
+                let startOfDay = planner.datestamp.startOfDay(
                     in: planner.region(settings: settings)
                 )
 
-                let sortedEvents = getSortedStorageEvents(for: plannerDay)
+                let sortedEvents = getSortedStorageEvents(for: startOfDay)
 
-                fullPlannerContexts.append(
-                    FullPlannerContext(
+                contexts.append(
+                    PlannerBuildContext(
                         planner: planner,
-                        plannerDay: plannerDay,
+                        startOfDay: startOfDay,
                         sortedPlannerEvents: sortedEvents
                     )
                 )
             }
 
-            return fullPlannerContexts
+            return contexts
         } catch {
             return []
         }
     }
 
+    /// Fetches the start of day for the earliest possible planner that can hold an event with the given absolute point in time.
+    /// When no time is given, the datestamp will be used to load that planner and calculate it's start of day.
     @MainActor
-    func getEarliestPlannerDay(
+    func getEarliestPlannerStartOfDay(
         for time: Date?,
         datestamp: String? = nil,
         settings: PlannerSettings
@@ -128,11 +132,11 @@ extension ModelContext {
             }
 
             let planner = getPlanner(for: datestamp)
+
+            // Event has no time. Return the start of day for the event's assigned planner.
             return planner.datestamp.startOfDay(
                 in: planner.region(settings: settings)
             )
-
-            // Return the planner day for the untimed event.
         }
 
         let sortedPossibleDatestamps =
@@ -140,26 +144,28 @@ extension ModelContext {
 
         for datestamp in sortedPossibleDatestamps {
             let planner = getPlanner(for: datestamp)
-            let plannerDay = planner.datestamp.startOfDay(
+
+            let startOfDay = planner.datestamp.startOfDay(
                 in: planner.region(settings: settings)
             )
 
-            if time.belongsTo(plannerDay) {
-                return plannerDay
+            if time.belongsTo(startOfDay) {
+                // Event will display within this planner. Return its start of day.
+                return startOfDay
             }
         }
 
-        // Date does not belong to any planner.
+        // Date does not match any planner.
         return nil
     }
 
     @MainActor
-    func getUpperSortDate(for plannerDay: DateInRegion) -> Date {
-        let storageEvents = getSortedStorageEvents(for: plannerDay)
+    func getUpperSortDate(for startOfDay: DateInRegion) -> Date {
+        let storageEvents = getSortedStorageEvents(for: startOfDay)
         return generateSortDate(
             at: 0,
             in: storageEvents,
-            plannerDay: plannerDay
+            startOfDay: startOfDay
         )
     }
 
@@ -171,27 +177,27 @@ extension ModelContext {
         to newLocation: Location?
     ) {
         planner.location = newLocation
-        safeSave("planner.updatePlannerLocation")
+        safeSave("ModelContext+Planner.updatePlannerLocation")
     }
 
     @MainActor
     func togglePlannerRoutineExclusion(
         for planner: Planner,
-        PlannerSyncStore: PlannerSyncService
+        plannerSyncService: PlannerSyncService
     ) {
         planner.excludeRoutine = !planner.safeExcludeRoutine
 
         if let trip = planner.trip,
-           trip.excludeRoutines == planner.excludeRoutine
+            trip.excludeRoutines == planner.excludeRoutine
         {
-            // Revert flag back to nil so it inherits from the trip.
+            // Revert flag back to nil so it inherits the exclusion state from the trip.
             planner.excludeRoutine = nil
         }
 
-        safeSave("planner.togglePlannerRoutineExclusion")
+        safeSave("ModelContext+Planner.togglePlannerRoutineExclusion")
 
-        // Re-sync the planner's routine events.
-        PlannerSyncStore.syncPlannerRoutine(
+        // Sync the planner's routine events.
+        plannerSyncService.syncPlannerRoutine(
             datestamp: planner.datestamp
         )
     }

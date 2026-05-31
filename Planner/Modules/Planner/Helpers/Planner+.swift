@@ -10,13 +10,7 @@ import Fuse
 import SwiftDate
 import SwiftUI
 
-// Clean
-
 extension Planner {
-    var key: String {
-        let locationKey = location?.coordinateKey ?? "HOME_LOCATION"
-        return "\(datestamp)-\(locationKey)"
-    }
 
     var safeRoutineEventVariants: [RoutineEventVariant] {
         routineEventVariants ?? []
@@ -31,8 +25,15 @@ extension Planner {
 
     // MARK: - Location Variables
 
+    // TODO: maybe this should relate to timezone yeah?
+    var plannerLocationId: String {
+        let locationKey = location?.coordinateId ?? "HOME_LOCATION"
+        return "\(datestamp)-\(locationKey)"
+    }
+
     func location(settings: PlannerSettings, deviceLocation: Location?)
-        -> Location? // nil means the device location is used and hasn't loaded yet
+        /// Note: nil means the device location is used and hasn't loaded yet.
+        -> Location?
     {
         location ?? trip?.location
             ?? settings.homeLocation(deviceLocation: deviceLocation)
@@ -68,32 +69,4 @@ extension Planner {
         return settings.homeLocationIconConfig
     }
 
-    // MARK: - Search Helper
-
-    func searchQueryScore(_ query: PlannerSearchQuery?) -> Double? // nil means the event doesn't match the query
-    {
-        guard let query else {
-            // Include. No query set.
-            return 1.0
-        }
-
-        if !query.containsDatestamp(datestamp) {
-            // Exclude. Doesn't match the time range.
-            return nil
-        }
-
-        if query.text.isEmpty {
-            // Include. No search text.
-            return 1.0
-        }
-
-        if let location = location,
-           let locationScore = query.score(for: location.name)
-        {
-            // Include. Location matches the search text.
-            return locationScore
-        }
-
-        return nil
-    }
 }

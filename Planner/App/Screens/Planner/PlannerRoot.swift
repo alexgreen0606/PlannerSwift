@@ -34,7 +34,7 @@ struct PlannerRootView: View {
 
     @Namespace private var namespace
 
-    private var plannerDay: DateInRegion {
+    private var startOfDay: DateInRegion {
         planner.datestamp.startOfDay(in: planner.region(settings: settings))
     }
 
@@ -85,7 +85,7 @@ struct PlannerRootView: View {
                         showLocationSheet: $showLocationSheet,
                         eventSheetContext: $eventSheetContext,
                         planner: planner,
-                        plannerDay: plannerDay,
+                        startOfDay: startOfDay,
                         plannerLocation: plannerLocation,
                         sortedPlannerEvents: sortedPlannerEvents,
                         sortedPendingPlannerEvents:
@@ -117,7 +117,7 @@ struct PlannerRootView: View {
 
             .sheet(isPresented: $showTransferSheet) {
                 TransferEventsFormView(
-                    sourceStartOfDay: plannerDay,
+                    sourceStartOfDay: startOfDay,
                     settings: settings
                 )
                 .navigationTransition(
@@ -240,7 +240,7 @@ struct PlannerRootView: View {
         plannerEngine.pendingFocusId = modelContext.createPlannerEvent(
             at: index,
             in: sortedPlannerEvents,
-            startOfDay: plannerDay
+            startOfDay: startOfDay
         )
     }
 
@@ -252,7 +252,7 @@ struct PlannerRootView: View {
         modelContext.handlePlannerEventTitleChange(
             event,
             in: planner,
-            plannerDay: plannerDay,
+            startOfDay: startOfDay,
             eventKitStore: calendarStore.ekEventStore,
             defaultLocation: plannerLocation
         )

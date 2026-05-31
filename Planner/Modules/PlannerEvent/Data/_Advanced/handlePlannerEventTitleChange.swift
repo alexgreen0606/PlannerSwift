@@ -15,7 +15,7 @@ extension ModelContext {
     func handlePlannerEventTitleChange(
         _ event: PlannerEvent,
         in planner: Planner,
-        plannerDay: DateInRegion,
+        startOfDay: DateInRegion,
         eventKitStore: EKEventStore,
         defaultLocation: Location?
     ) {
@@ -28,11 +28,11 @@ extension ModelContext {
 
         // Scan the title for a date.
         guard let defaultLocation,
-              let (time, updatedText) = event.title.extractTime(for: plannerDay)
+              let (time, updatedText) = event.title.extractTime(for: startOfDay)
         else {
             updatePlannerEventRoutineVariance(
                 event,
-                in: plannerDay.region.timeZone,
+                in: startOfDay.region.timeZone,
                 sourcePlanner: planner
             )
             return
@@ -43,7 +43,7 @@ extension ModelContext {
         event.time = time
         updatePlannerEventRoutineVariance(
             event,
-            in: plannerDay.region.timeZone,
+            in: startOfDay.region.timeZone,
             sourcePlanner: planner
         )
 

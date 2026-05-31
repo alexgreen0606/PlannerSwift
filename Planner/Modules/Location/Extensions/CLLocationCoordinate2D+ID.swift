@@ -8,7 +8,7 @@
 import MapKit
 
 extension CLLocationCoordinate2D {
-    var key: String {
+    var id: String {
         "\(latitude),\(longitude)"
     }
 }

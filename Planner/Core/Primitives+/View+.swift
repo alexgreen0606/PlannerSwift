@@ -28,10 +28,10 @@ extension View {
             .glassEffect(
                 color != nil
                     ? .regular
-                    .tint(color!.opacity(0.05))
-                    .interactive(onTap != nil)
+                        .tint(color!.opacity(0.05))
+                        .interactive(onTap != nil)
                     : .regular
-                    .interactive(onTap != nil),
+                        .interactive(onTap != nil),
                 in: .capsule
             )
             .contentShape(Rectangle())
@@ -63,10 +63,7 @@ extension View {
         -> some View
     {
         animation(
-            .spring(
-                response: 0.4,
-                dampingFraction: 0.4
-            ),
+            .bouncy(duration: 0.4),
             value: trigger
         )
     }
@@ -76,10 +73,7 @@ extension View {
         -> some View
     {
         animation(
-            .spring(
-                response: 0.6,
-                dampingFraction: 0.4
-            ),
+            .bouncy(duration: 0.6),
             value: trigger
         )
     }

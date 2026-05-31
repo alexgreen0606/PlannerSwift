@@ -261,14 +261,14 @@ actor PlannerSearchService {
             let plannerRegion =
                 planners.first?.region(settings: settings) ?? homeRegion
 
-            let plannerDay = datestamp.startOfDay(
+            let startOfDay = datestamp.startOfDay(
                 in: plannerRegion
             )
-            plannerCache[datestamp] = plannerDay
+            plannerCache[datestamp] = startOfDay
 
             if range(
                 for: startDate,
-                includes: plannerDay,
+                includes: startOfDay,
                 calendarEvent: calendarEvent,
                 calendarDayCache: &calendarDayCache,
                 ekEventStore: ekEventStore,
@@ -341,14 +341,14 @@ actor PlannerSearchService {
 
     private func range(
         for start: Date,
-        includes plannerDay: DateInRegion,
+        includes startOfDay: DateInRegion,
         calendarEvent: EKEvent?,
         calendarDayCache: inout [String: Set<String>],
         ekEventStore: EKEventStore,
         settings: PlannerSettings
     ) -> Bool {
-        let dayStart = plannerDay.date
-        let nextDayStart = (plannerDay + 1.days).date
+        let dayStart = startOfDay.date
+        let nextDayStart = (startOfDay + 1.days).date
 
         // Safe guard.
         // Checks that calendar all-day events truly land within the planner's time frame.
@@ -356,7 +356,7 @@ actor PlannerSearchService {
         // This predicate is planner-specific and guaranteed to be accurate.
         if let calendarEvent, calendarEvent.isAllDay {
             let eventSet = {
-                if let existing = calendarDayCache[plannerDay.datestamp] {
+                if let existing = calendarDayCache[startOfDay.datestamp] {
                     return existing
                 }
 
@@ -377,7 +377,7 @@ actor PlannerSearchService {
                         \.calendarItemExternalIdentifier
                     )
                 )
-                calendarDayCache[plannerDay.datestamp] = eventSet
+                calendarDayCache[startOfDay.datestamp] = eventSet
                 return eventSet
             }()
 

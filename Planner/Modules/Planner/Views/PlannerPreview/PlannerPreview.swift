@@ -41,7 +41,7 @@ struct PlannerPreviewView: View {
 
     // MARK: - Computed Variables
 
-    private var plannerDay: DateInRegion {
+    private var startOfDay: DateInRegion {
         planner.datestamp.startOfDay(in: planner.region(settings: settings))
     }
 
@@ -168,9 +168,10 @@ struct PlannerPreviewView: View {
             birthdayChipList
             eventChipList
             PlannerEventListView(
-                plannerRegion: plannerDay.region,
+                plannerRegion: startOfDay.region,
                 events: sortedPreviewPlannerEvents,
-                isBottomOfCard: isSearching
+                isBottomOfCard: isSearching,
+                settings: settings
             )
             remainingPlansIndicator
             emptyPlannerIndicator

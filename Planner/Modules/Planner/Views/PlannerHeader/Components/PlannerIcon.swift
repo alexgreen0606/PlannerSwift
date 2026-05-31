@@ -5,15 +5,11 @@
 //  Created by Alex Green on 12/21/25.
 //
 
-import SwiftDate
 import SwiftUI
 
 struct PlannerIconView: View {
     private let type: PlannerIconType
     private let datestamp: String
-    private let customSize: CGFloat?
-    private let customDetailSize: CGFloat?
-    private let customDetailOffset: CGFloat?
 
     init(
         type: PlannerIconType,
@@ -24,10 +20,15 @@ struct PlannerIconView: View {
     ) {
         self.type = type
         self.datestamp = datestamp
+        
         customSize = size
         customDetailSize = detailSize
         customDetailOffset = detailOffset
     }
+    
+    private let customSize: CGFloat?
+    private let customDetailSize: CGFloat?
+    private let customDetailOffset: CGFloat?
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue

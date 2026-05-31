@@ -50,7 +50,7 @@ extension EKEvent {
             )
 
             guard let existingLocation = storageEvent?.location,
-                  existingLocation.coordinateKey == newLocation.coordinateKey
+                  existingLocation.coordinateId == newLocation.coordinateId
             else {
                 return newLocation
             }
@@ -62,12 +62,12 @@ extension EKEvent {
         return nil
     }
 
-    func spansOutsidePlannerDay(_ plannerDay: DateInRegion) -> Bool {
-        let startOfNextDay = plannerDay + 1.days
+    func spansOutsidePlannerDay(_ startOfDay: DateInRegion) -> Bool {
+        let startOfNextDay = startOfDay + 1.days
 
         // Note: Ending at the start of the next day should NOT be considered existing in that day.
         // This is how Apple's Calendar app behaves.
-        return startDate < plannerDay.date
+        return startDate < startOfDay.date
             || endDate > startOfNextDay.date
     }
 

@@ -37,7 +37,7 @@ class PlannerEvent: EventListItem {
         sortDate: Date,
         calendarEvent: EKEvent? = nil,
         routineEvent: RoutineEvent? = nil,
-        plannerDay: DateInRegion? = nil
+        startOfDay: DateInRegion? = nil
     ) {
         self.datestamp = datestamp
         super.init(sortDate: sortDate)
@@ -59,8 +59,8 @@ class PlannerEvent: EventListItem {
         if let routineEvent {
             title = routineEvent.title
 
-            if let plannerDay,
-               let time = routineEvent.date(in: plannerDay)
+            if let startOfDay,
+               let time = routineEvent.date(in: startOfDay)
             {
                 self.time = time
             }

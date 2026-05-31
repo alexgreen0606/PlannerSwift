@@ -97,7 +97,7 @@ extension PlannerEvent {
     @MainActor
     func syncWithRoutineEvent(
         _ routineEvent: RoutineEvent,
-        on plannerDay: DateInRegion
+        on startOfDay: DateInRegion
     ) {
         guard !isRoutineVariant else {
             return
@@ -105,7 +105,7 @@ extension PlannerEvent {
 
         title = routineEvent.title
 
-        if let time = routineEvent.date(in: plannerDay) {
+        if let time = routineEvent.date(in: startOfDay) {
             self.time = time
         } else {
             time = nil
@@ -158,7 +158,7 @@ extension PlannerEvent {
         in plannerRegion: Region,
         accentColor: AccentColor,
         scale: Double = 1,
-        openEventSheet: (() -> Void)?
+        openEventSheet: (() -> Void)? = nil
     ) -> some View {
         if let time = time {
             Time(

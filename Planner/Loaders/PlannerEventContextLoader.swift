@@ -25,11 +25,11 @@ struct PlannerEventContextLoaderView<Content: View>: View {
         self.settings = settings
         self.content = content
 
-        let plannerDay = planner.datestamp.startOfDay(
+        let startOfDay = planner.datestamp.startOfDay(
             in: planner.region(settings: settings)
         )
-        let startOfNextDay = (plannerDay + 1.days)
-        let dayStartDate = plannerDay.date
+        let startOfNextDay = (startOfDay + 1.days)
+        let dayStartDate = startOfDay.date
         let nextDayStartDate = startOfNextDay.date
 
         let plannerDatestamp = planner.datestamp
@@ -49,14 +49,14 @@ struct PlannerEventContextLoaderView<Content: View>: View {
 
         _calendarDayData = State(
             initialValue: plannerSyncService.freshCalendarMap[
-                planner.key
+                planner.plannerLocationId
             ]
         )
 
-        self.plannerDay = plannerDay
+        self.startOfDay = startOfDay
     }
 
-    private let plannerDay: DateInRegion
+    private let startOfDay: DateInRegion
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarService: CalendarService
@@ -120,7 +120,7 @@ struct PlannerEventContextLoaderView<Content: View>: View {
             guard
                 let calendarData = await plannerSyncService.syncPlanner(
                     planner,
-                    plannerDay: plannerDay,
+                    startOfDay: startOfDay,
                     sortedPlannerEvents: sortedPlannerEvents,
                     todaystamp: todayService.todaystamp,
                     ekEventStore: calendarService.ekEventStore,
@@ -140,7 +140,7 @@ struct PlannerEventContextLoaderView<Content: View>: View {
         Task {
             await weatherCacheService.ensureWeather(
                 location: plannerLocation,
-                region: plannerDay.region
+                region: startOfDay.region
             )
         }
     }

@@ -7,10 +7,9 @@
 
 import MapKit
 
-// Clean
-
 extension MKLocalSearchCompletion {
-    var id: String {
+    /// Note: This MUST always match the nameId in Location+
+    var nameId: String {
         "\(title)-\(subtitle)"
     }
 }

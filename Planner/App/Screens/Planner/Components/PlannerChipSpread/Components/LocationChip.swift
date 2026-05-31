@@ -50,13 +50,12 @@ struct LocationChipView: View {
         // MARK: Location Search Form
 
         .sheet(isPresented: $showLocationSheet) {
-            LocationSearchFormView(
-                title: "Planner Location",
+            LocationFormView(
+                variant: .planner,
                 subtitle: planner.datestamp.dateWithYear,
-                mode: .planner,
-                settings: settings,
                 initialLocation: planner.location,
                 sourcePlanner: planner,
+                settings: settings,
                 saveSelection: { location in
                     modelContext.updatePlannerLocation(
                         for: planner,

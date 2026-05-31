@@ -16,7 +16,7 @@ struct PlannerCardWeatherView: View {
     @EnvironmentObject private var weatherCacheService: WeatherCacheService
     @EnvironmentObject private var locationService: LocationService
 
-    private var plannerDay: DateInRegion {
+    private var startOfDay: DateInRegion {
         planner.datestamp.startOfDay(in: planner.region(settings: settings))
     }
 
@@ -55,7 +55,7 @@ struct PlannerCardWeatherView: View {
             planner: planner,
             startAdorned: false,
             showLocationLabel: showLocationLabel,
-            plannerDay: plannerDay,
+            startOfDay: startOfDay,
             plannerLocation: plannerLocation,
             settings: settings
         )

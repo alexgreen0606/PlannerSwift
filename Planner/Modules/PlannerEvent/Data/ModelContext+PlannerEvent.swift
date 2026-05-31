@@ -23,7 +23,7 @@ extension ModelContext {
         let sortDate = generateSortDate(
             at: index,
             in: sortedPlannerEvents,
-            plannerDay: startOfDay
+            startOfDay: startOfDay
         )
 
         let newEvent = PlannerEvent(
@@ -40,14 +40,14 @@ extension ModelContext {
     @MainActor
     func createPlannerEvent(
         for calendarEvent: EKEvent,
-        in plannerDay: DateInRegion?
+        in startOfDay: DateInRegion?
     ) {
         if calendarEvent.isAllDay { return }
 
         let sortDate = {
-            if let plannerDay {
+            if let startOfDay {
                 // Event has a target planner. Add it to the top of the list.
-                return self.getUpperSortDate(for: plannerDay)
+                return self.getUpperSortDate(for: startOfDay)
             }
             return calendarEvent.startDate
         }()
@@ -55,7 +55,7 @@ extension ModelContext {
         insert(
             PlannerEvent(
                 time: calendarEvent.startDate,
-                datestamp: plannerDay?.datestamp,
+                datestamp: startOfDay?.datestamp,
                 sortDate: sortDate,
                 calendarEvent: calendarEvent
             )
@@ -68,18 +68,18 @@ extension ModelContext {
     // MARK: - READ
 
     @MainActor
-    func getSortedStorageEvents(for plannerDay: DateInRegion)
+    func getSortedStorageEvents(for startOfDay: DateInRegion)
         -> [PlannerEvent]
     {
-        let nextDay = plannerDay + 1.days
-        let datestamp = plannerDay.datestamp
+        let nextDay = startOfDay + 1.days
+        let datestamp = startOfDay.datestamp
 
         do {
             return try fetch(
                 FetchDescriptor<PlannerEvent>(
                     predicate: #Predicate {
                         if let time = $0.time {
-                            return time >= plannerDay.date
+                            return time >= startOfDay.date
                                 && time < nextDay.date
                         } else {
                             return $0.datestamp == datestamp
@@ -215,7 +215,7 @@ extension ModelContext {
     ) -> String? // The destination datestamp the event is now in.
     {
         guard
-            let plannerDay = getEarliestPlannerDay(
+            let startOfDay = getEarliestPlannerStartOfDay(
                 for: event.time,
                 datestamp: event.datestamp,
                 settings: settings
@@ -227,31 +227,31 @@ extension ModelContext {
         }
 
         if let sourceDatestamp,
-           plannerDay.datestamp == sourceDatestamp
+           startOfDay.datestamp == sourceDatestamp
         {
             // The event has not moved planners. Reuse the event's existing position.
             return sourceDatestamp
         }
 
         let sortedStorageEvents = getSortedStorageEvents(
-            for: plannerDay
+            for: startOfDay
         )
 
         // Place the event at the start of its new planner.
         event.sortDate = generateSortDate(
             at: 0,
             in: sortedStorageEvents,
-            plannerDay: plannerDay
+            startOfDay: startOfDay
         )
 
-        return plannerDay.datestamp
+        return startOfDay.datestamp
     }
 
     @MainActor
     func movePlannerEvent(
         from: Int,
         to: Int,
-        plannerDay: DateInRegion,
+        startOfDay: DateInRegion,
         sortedPendingPlannerEvents: [PlannerEvent],
         sortedPlannerEvents: [PlannerEvent]
     ) {
@@ -259,7 +259,7 @@ extension ModelContext {
         movedEvent.sortDate = generateSortDate(
             at: to,
             in: sortedPlannerEvents,
-            plannerDay: plannerDay
+            startOfDay: startOfDay
         )
 
         safeSave("_plannerEventCRUD.movePlannerEvent")

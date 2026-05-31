@@ -318,15 +318,15 @@ struct PlannerEventFormView: View {
 
     private var locationField: some View {
         NavigationLink {
-            LocationSearchFormView(
-                title: "Edit Event Location",
-                mode: .event,
-                settings: settings,
+            LocationFormView(
+                variant: .event,
                 initialLocation: draftPlannerEvent.location,
-                sourcePlanner: sourcePlanner
-            ) { location in
-                draftPlannerEvent.location = location
-            }
+                sourcePlanner: sourcePlanner,
+                settings: settings,
+                saveSelection: { location in
+                    draftPlannerEvent.location = location
+                }
+            )
         } label: {
             HStack {
                 Image(systemName: "mappin.and.ellipse")

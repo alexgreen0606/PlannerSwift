@@ -20,9 +20,9 @@ extension String {
     /// - "Dinner 7 PM"
     /// - "Meeting 9:30 am"
     ///
-    /// Returns the resolved date relative to `plannerDay` and the
+    /// Returns the resolved date relative to `startOfDay` and the
     /// remaining text with the matched time removed.
-    func extractTime(for plannerDay: DateInRegion) -> (
+    func extractTime(for startOfDay: DateInRegion) -> (
         date: Date, updatedText: String
     )? {
         // MARK: Search for a time value.
@@ -50,14 +50,14 @@ extension String {
 
         let hour = (hourPart % 12) + (periodPart == "PM" ? 12 : 0)
 
-        // MARK: Build the final date relative to plannerDay.
+        // MARK: Build the final date relative to startOfDay.
 
-        var components = plannerDay.dateComponents
+        var components = startOfDay.dateComponents
         components.hour = hour
         components.minute = minute
         components.second = 0
 
-        guard let finalDate = plannerDay.calendar.date(from: components)
+        guard let finalDate = startOfDay.calendar.date(from: components)
         else {
             return nil
         }

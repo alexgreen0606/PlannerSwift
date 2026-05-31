@@ -13,7 +13,7 @@ struct WeatherPreviewView: View {
     let planner: Planner
     let startAdorned: Bool
     let showLocationLabel: Bool
-    let plannerDay: DateInRegion
+    let startOfDay: DateInRegion
     let plannerLocation: Location?
     let settings: PlannerSettings
 
@@ -21,14 +21,14 @@ struct WeatherPreviewView: View {
         planner: Planner,
         startAdorned: Bool = true,
         showLocationLabel: Bool,
-        plannerDay: DateInRegion,
+        startOfDay: DateInRegion,
         plannerLocation: Location?,
         settings: PlannerSettings
     ) {
         self.planner = planner
         self.startAdorned = startAdorned
         self.showLocationLabel = showLocationLabel
-        self.plannerDay = plannerDay
+        self.startOfDay = startOfDay
         self.plannerLocation = plannerLocation
         self.settings = settings
     }
@@ -45,7 +45,7 @@ struct WeatherPreviewView: View {
 
     private var weatherData: DayWeather? {
         weatherCacheService.weather(
-            for: plannerDay,
+            for: startOfDay,
             at: plannerLocation
         )
     }

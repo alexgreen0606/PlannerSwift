@@ -100,7 +100,7 @@ final class WeatherCacheService: ObservableObject {
     // MARK: - Helper Function
 
     private func locationKey(for location: Location?) -> String? {
-        location?.coordinateKey
-            ?? locationService.deviceClLocation?.coordinate.key
+        location?.coordinateId
+            ?? locationService.deviceClLocation?.coordinate.id
     }
 }

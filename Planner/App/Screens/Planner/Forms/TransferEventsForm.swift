@@ -108,7 +108,7 @@ struct TransferEventsFormView: View {
     }
 
     private var sourceChip: some View {
-        TransferSelectionIndicatorView(
+        LabelValueView(
             title: sourceDatestamp.dateLabel(
                 todaystamp: todayService.todaystamp
             ),
@@ -117,7 +117,7 @@ struct TransferEventsFormView: View {
     }
 
     private var destinationChip: some View {
-        TransferSelectionIndicatorView(
+        LabelValueView(
             title: destinationDatestamp.dateLabel(
                 todaystamp: todayService.todaystamp
             )

@@ -7,6 +7,7 @@
 
 import EventKit
 
+/// All calendar data that lands within a 24 hour time window.
 struct CalendarDayData {
     var plannerChipEvents: [EKEvent] = []
     var birthdays: [Birthday] = []

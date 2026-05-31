@@ -50,7 +50,7 @@ extension ModelContext {
 
                 if let startDate = calendarEvent?.startDate {
                     // Return the new destination of all-day events.
-                    return getEarliestPlannerDay(
+                    return getEarliestPlannerStartOfDay(
                         for: startDate,
                         settings: settings
                     )?.datestamp
@@ -68,7 +68,7 @@ extension ModelContext {
             )
 
         } else if let calendarEvent {
-            let destinationDay = getEarliestPlannerDay(
+            let destinationDay = getEarliestPlannerStartOfDay(
                 for: calendarEvent.startDate,
                 settings: settings
             )

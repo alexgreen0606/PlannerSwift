@@ -60,7 +60,7 @@ final class PlannerSearchStore: ObservableObject {
 
             guard !Task.isCancelled else { return }
 
-            let fullPlannerContexts = modelContext.getBulkPlannerContexts(
+            let fullPlannerContexts = modelContext.getBulkPlannerBuildContexts(
                 for: Set(datestampMap.values.flatMap { $0 }),
                 settings: settings
             )
@@ -70,7 +70,7 @@ final class PlannerSearchStore: ObservableObject {
             for context in fullPlannerContexts {
                 let _ = plannerSyncService.syncPlanner(
                     context.planner,
-                    plannerDay: context.plannerDay,
+                    startOfDay: context.startOfDay,
                     sortedPlannerEvents: context.sortedPlannerEvents,
                     todaystamp: todaystamp,
                     ekEventStore: ekEventStore,

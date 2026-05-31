@@ -10,9 +10,13 @@ import SwiftUI
 struct BackButtonView: View {
     let handleSideEffects: (() -> Void)?
 
-    init(handleSideEffects: (() -> Void)? = nil) {
+    init(dismiss: (() -> Void)? = nil, handleSideEffects: (() -> Void)? = nil) {
         self.handleSideEffects = handleSideEffects
+
+        self.customDismiss = dismiss
     }
+
+    private let customDismiss: (() -> Void)?
 
     @Environment(\.dismiss) private var dismiss
 
@@ -24,7 +28,12 @@ struct BackButtonView: View {
             systemImage: "chevron.left"
         ) {
             handleSideEffects?()
-            dismiss()
+
+            if let customDismiss {
+                customDismiss()
+            } else {
+                dismiss()
+            }
         }
         .tint(Color.label)
     }

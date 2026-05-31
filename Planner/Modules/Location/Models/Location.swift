@@ -17,12 +17,12 @@ class Location {
     var timeZoneIdentifier: String = ""
 
     /// Used for displaying recents in LocationSearchForm.
-    var selectedOn: Date = Date()
+    var selectedOn: Date = Date.now
 
+    var plannerSettings: PlannerSettings?
     var trips: [Trip]?
     var planners: [Planner]?
     var events: [PlannerEvent]?
-    var plannerSettings: PlannerSettings?
 
     init(
         name: String,
@@ -36,6 +36,5 @@ class Location {
         self.latitude = latitude
         self.longitude = longitude
         self.timeZoneIdentifier = timeZoneIdentifier
-        selectedOn = .now
     }
 }

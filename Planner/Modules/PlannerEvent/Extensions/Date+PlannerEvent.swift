@@ -15,9 +15,9 @@ extension Date {
         return Date(timeIntervalSince1970: rounded)
     }
 
-    func belongsTo(_ plannerDay: DateInRegion) -> Bool {
-        let startOfNextDay = plannerDay + 1.days
-        let selfInRegion = convertTo(region: plannerDay.region)
-        return selfInRegion >= plannerDay && selfInRegion < startOfNextDay
+    func belongsTo(_ startOfDay: DateInRegion) -> Bool {
+        let startOfNextDay = startOfDay + 1.days
+        let selfInRegion = convertTo(region: startOfDay.region)
+        return selfInRegion >= startOfDay && selfInRegion < startOfNextDay
     }
 }

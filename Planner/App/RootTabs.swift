@@ -195,7 +195,7 @@ struct RootTabView: View {
         // MARK: Refresh weather data when the device's location changes.
 
         .onChange(
-            of: locationService.deviceClLocation?.coordinate.key
+            of: locationService.deviceClLocation?.coordinate.id
         ) {
             _,
             _ in

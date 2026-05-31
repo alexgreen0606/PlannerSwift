@@ -236,14 +236,14 @@ struct TripFormView: View {
 
     private var locationField: some View {
         NavigationLink {
-            LocationSearchFormView(
-                title: "Trip Location",
-                mode: .trip,
+            LocationFormView(
+                variant: .trip,
+                initialLocation: draftTrip.location,
                 settings: settings,
-                initialLocation: draftTrip.location
-            ) { location in
-                draftTrip.location = location
-            }
+                saveSelection: {location in
+                    draftTrip.location = location
+                }
+            )
         } label: {
             HStack {
                 Image(systemName: "mappin.and.ellipse")

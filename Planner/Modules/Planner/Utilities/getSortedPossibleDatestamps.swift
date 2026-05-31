@@ -8,10 +8,8 @@
 import Foundation
 import SwiftDate
 
-// Clean
-
-// Gets all possible datestamps an event can land in.
-// Example: An event could be nighttime in Los Angeles and morning the next day in Rome.
+/// Gets all possible datestamps an event can land in.
+/// Example: An event could be nighttime in Los Angeles and morning the next day in Rome.
 func getSortedPossibleDatestamps(for date: Date, ending: Date? = nil)
     -> [String]
 {
@@ -28,7 +26,7 @@ func getSortedPossibleDatestamps(for date: Date, ending: Date? = nil)
     return datestamps.sorted()
 }
 
-// MARK: - Helpers
+// MARK: - Helpers Variables
 
 private let earliestRegion = Region(
     calendar: Calendars.gregorian,

@@ -16,7 +16,7 @@ extension ModelContext {
     func syncRoutine(
         for planner: Planner,
         storageEvents: [PlannerEvent],
-        plannerDay: DateInRegion,
+        startOfDay: DateInRegion,
         weekday: Weekday,
         ekEventStore: EKEventStore,
         todaystamp: String
@@ -95,7 +95,7 @@ extension ModelContext {
                     // Event is not a variant. Sync the event with the routine.
                     plannerEvent.syncWithRoutineEvent(
                         routineEvent,
-                        on: plannerDay
+                        on: startOfDay
                     )
                 }
 
@@ -133,7 +133,7 @@ extension ModelContext {
             plannerEvent.sortDate = generateSortDate(
                 at: targetIndex,
                 in: finalPlannerEvents,
-                plannerDay: plannerDay
+                startOfDay: startOfDay
             )
 
             finalPlannerEvents.insert(plannerEvent, at: targetIndex)
@@ -182,7 +182,7 @@ extension ModelContext {
                 let sortDate = generateSortDate(
                     at: targetIndex,
                     in: finalPlannerEvents,
-                    plannerDay: plannerDay
+                    startOfDay: startOfDay
                 )
 
                 let newEvent =
@@ -190,7 +190,7 @@ extension ModelContext {
                         datestamp: planner.datestamp,
                         sortDate: sortDate,
                         routineEvent: routineEvent,
-                        plannerDay: plannerDay
+                        startOfDay: startOfDay
                     )
 
                 insert(newEvent)

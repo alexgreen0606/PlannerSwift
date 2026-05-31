@@ -11,7 +11,7 @@ struct FormSaveButtonView: ToolbarContent {
     private let canSave: Bool
     private let save: () -> Void
 
-    init(canSave: Bool, tint: Color? = nil, save: @escaping () -> Void) {
+    init(canSave: Bool = true, tint: Color? = nil, save: @escaping () -> Void) {
         self.canSave = canSave
         self.save = save
 

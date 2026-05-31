@@ -9,39 +9,52 @@ import EventKit
 import SwiftDate
 import SwiftUI
 
-// Clean
-
 struct PlannerEventListView: View {
     let plannerRegion: Region
     let events: [PlannerEvent]
     let isBottomOfCard: Bool
+    let settings: PlannerSettings
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
     @Environment(\.displayScale) private var displayScale
 
+    // MARK: - Body
+
     var body: some View {
         if !events.isEmpty {
             ForEach(events, id: \.stableId) { event in
                 HStack(alignment: .top) {
-                    ZStack {
+                    Group {
                         if event.isCompleted {
-                            Image(systemName: "checkmark").imageScale(.small)
+                            Image(systemName: "checkmark")
+                        }
+
+                        if let calendar = event.calendarEvent?.calendar {
+                            Image(
+                                systemName: calendar.systemImageName(
+                                    settings: settings
+                                )
+                            )
+                            .foregroundStyle(calendar.color)
+                        } else if event.calendarItemExternalIdentifier != nil {
+                            Image(systemName: "calendar")
+                                .foregroundStyle(accentColor.color)
                         }
                     }
+                    .imageScale(.small)
                     .frame(height: 17)
 
                     Value(event.title)
-
-                    Spacer()
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
                     event.timeAdornment(
                         in: plannerRegion,
                         accentColor: accentColor,
-                        scale: 0.8,
-                        openEventSheet: nil
+                        scale: 0.8
                     )
+                    .frame(height: 17)
                 }
 
                 if !isBottomOfCard

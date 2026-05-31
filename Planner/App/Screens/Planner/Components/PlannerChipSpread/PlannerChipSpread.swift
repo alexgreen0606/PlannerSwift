@@ -14,7 +14,7 @@ import WrappingHStack
 struct PlannerChipSpreadView: View {
     @Binding var showLocationSheet: Bool
     let planner: Planner
-    let plannerDay: DateInRegion
+    let startOfDay: DateInRegion
     let plannerLocation: Location?
     let calendarDayData: CalendarDayData?
     let settings: PlannerSettings
@@ -25,7 +25,7 @@ struct PlannerChipSpreadView: View {
     @EnvironmentObject private var weatherCacheService: WeatherCacheService
 
     private var weatherData: DayWeather? {
-        weatherCacheService.weather(for: plannerDay, at: plannerLocation)
+        weatherCacheService.weather(for: startOfDay, at: plannerLocation)
     }
 
     private var locationLabel: String {

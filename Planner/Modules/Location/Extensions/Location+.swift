@@ -5,13 +5,11 @@
 //  Created by Alex Green on 2/13/26.
 //
 
-import Foundation
 import MapKit
 import SwiftDate
 
-// Clean
-
 extension Location {
+
     var safeTrips: [Trip] {
         trips ?? []
     }
@@ -24,26 +22,26 @@ extension Location {
         events ?? []
     }
 
-    var coordinateKey: String {
+    var coordinateId: String {
         CLLocationCoordinate2D(
             latitude: latitude,
             longitude: longitude
-        ).key
+        ).id
     }
 
-    var nameKey: String {
-        "\(name)-\(String(describing: subtitle))"
+    var nameId: String {
+        "\(name)-\(subtitle ?? "")"
     }
 
     var region: Region {
         let timeZone =
             TimeZone(identifier: timeZoneIdentifier)
-                ?? {
-                    assertionFailure(
-                        "ERROR LocationExtension.region: Could not create a TimeZone from \(timeZoneIdentifier)"
-                    )
-                    return TimeZone.current
-                }()
+            ?? {
+                assertionFailure(
+                    "ERROR Location+.region: Could not create a TimeZone from identifier \(timeZoneIdentifier)"
+                )
+                return TimeZone.current
+            }()
 
         return Region(
             calendar: Calendar.current,

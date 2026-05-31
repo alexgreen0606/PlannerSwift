@@ -16,14 +16,14 @@ func generateSortDate<Event: EventListItem>(
     // May or may not contain the event being placed.
     in sortedEvents: [Event],
 
-    plannerDay: DateInRegion,
+    startOfDay: DateInRegion,
     getSortDate: (Event) -> Date = { $0.sortDate },
     setSortDate: (Event, Date) -> Void = { event, sortDate in
         event.sortDate = sortDate
     }
 ) -> Date {
-    let dayStart = plannerDay.date
-    let dayEnd = (plannerDay + 1.days).date
+    let dayStart = startOfDay.date
+    let dayEnd = (startOfDay + 1.days).date
 
     if sortedEvents.isEmpty {
         // No events for the day. Place at noon.
@@ -40,7 +40,7 @@ func generateSortDate<Event: EventListItem>(
         // Interval too small. Normalize all events.
         normalizeSortDates(
             for: sortedEvents,
-            startOfDay: plannerDay,
+            startOfDay: startOfDay,
             setSortDate: setSortDate
         )
 

@@ -145,7 +145,7 @@ struct PlannerActionMenuView: View {
     private func toggleRoutineExclusion() {
         modelContext.togglePlannerRoutineExclusion(
             for: planner,
-            PlannerSyncStore: plannerSyncService
+            plannerSyncService: plannerSyncService
         )
     }
 }

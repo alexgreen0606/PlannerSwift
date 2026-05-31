@@ -11,6 +11,7 @@
 // View-specific
 // Style(Style, Font, Color, Opacity),
 // Layout(Frame, Padding),
+// Safe Area
 // Overlay
 // Toolbar
 // Other(Custom),
