@@ -20,15 +20,13 @@ extension EKCalendar {
             return customSystemImage
         }
 
-        let lowercaseTitle = title.lowercased()
-
-        // Default birthday icon.
-        if lowercaseTitle.contains("birthday") {
+        if type == .birthday {
+            // Default birthday icon.
             return "birthday.cake.fill"
         }
 
-        // Default holiday icon.
-        if lowercaseTitle.contains("holiday") {
+        if title.localizedCaseInsensitiveContains("holiday") {
+            // Default holiday icon.
             return "globe.americas.fill"
         }
 
@@ -36,7 +34,7 @@ extension EKCalendar {
     }
 
     func isHidden(filteredCalendarIds: Set<String>?) -> Bool {
-        guard let filteredCalendarIds, !filteredCalendarIds.isEmpty else {
+        guard let filteredCalendarIds else {
             return false
         }
 

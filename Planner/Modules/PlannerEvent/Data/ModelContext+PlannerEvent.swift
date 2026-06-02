@@ -18,7 +18,8 @@ extension ModelContext {
         at index: Int,
         in sortedPlannerEvents: [PlannerEvent],
         startOfDay: DateInRegion
-    ) -> UUID? // The ID of the new event.
+    ) ->  // The ID of the new event.
+        UUID?
     {
         let sortDate = generateSortDate(
             at: index,
@@ -32,7 +33,8 @@ extension ModelContext {
         )
 
         insert(newEvent)
-        safeSave("_plannerEventCRUD.createPlannerEvent")
+
+        safeSave("ModelContext+PlannerEvent.createPlannerEvent")
 
         return newEvent.stableId
     }
@@ -40,15 +42,16 @@ extension ModelContext {
     @MainActor
     func createPlannerEvent(
         for calendarEvent: EKEvent,
-        in startOfDay: DateInRegion?
+        on startOfDay: DateInRegion?
     ) {
         if calendarEvent.isAllDay { return }
 
         let sortDate = {
             if let startOfDay {
                 // Event has a target planner. Add it to the top of the list.
-                return self.getUpperSortDate(for: startOfDay)
+                return getUpperSortDate(for: startOfDay)
             }
+
             return calendarEvent.startDate
         }()
 
@@ -67,11 +70,10 @@ extension ModelContext {
 
     // MARK: - READ
 
-    @MainActor
-    func getSortedStorageEvents(for startOfDay: DateInRegion)
+    func getSortedPlannerEvents(on startOfDay: DateInRegion)
         -> [PlannerEvent]
     {
-        let nextDay = startOfDay + 1.days
+        let startOfNextDay = startOfDay + 1.days
         let datestamp = startOfDay.datestamp
 
         do {
@@ -80,19 +82,19 @@ extension ModelContext {
                     predicate: #Predicate {
                         if let time = $0.time {
                             return time >= startOfDay.date
-                                && time < nextDay.date
+                                && time < startOfNextDay.date
                         } else {
                             return $0.datestamp == datestamp
                         }
                     },
                     sortBy: [
-                        SortDescriptor(\PlannerEvent.sortDate),
+                        SortDescriptor(\PlannerEvent.sortDate)
                     ]
                 )
             )
         } catch {
             assertionFailure(
-                "ERROR _plannerEventCRUD.getSortedStorageEvents: \(error)"
+                "ERROR ModelContext+PlannerEvent.getSortedPlannerEvents: \(error)"
             )
         }
 
@@ -101,108 +103,75 @@ extension ModelContext {
 
     // MARK: - UPDATE
 
-    @MainActor
-    func updatePlannerEvent(
-        with draftPlannerEvent: DraftPlannerEvent,
-        sourcePlanner: Planner?,
-        targetDatestamp: String,
-        settings: PlannerSettings,
-        ekEventStore: EKEventStore,
-        timeZone: TimeZone,
-        sourcePlannerEvent: PlannerEvent?,
-        sourceCalendarEvent: EKEvent?
-    ) -> String? // The datestamp the event is now in.
-    {
-        let event =
-            sourcePlannerEvent
-                ?? PlannerEvent(
-                    sortDate: draftPlannerEvent.date
-                )
-
-        event.title = draftPlannerEvent.title.trimmed
-        event.location = draftPlannerEvent.location
-        event.calendarEvent = nil
-        event.calendarItemExternalIdentifier = nil
-        event.datestamp = targetDatestamp
-        event.time = draftPlannerEvent.hasTime ? draftPlannerEvent.date : nil
-
-        let destinationDatestamp = ensureValidSortDate(
-            for: event,
-            settings: settings,
-            sourceDatestamp: sourcePlanner?.datestamp
-        )
-
-        if let sourcePlanner {
-            updatePlannerEventRoutineVariance(
-                event,
-                sourceCalendarEvent: sourceCalendarEvent,
-                in: timeZone,
-                sourcePlanner: sourcePlanner
-            )
-        }
-
-        insertIfNeeded(event)
-
-        // Delete the old calendar event.
-        if let sourceCalendarEvent {
-            _ = ekEventStore.attemptDeleteEvent(sourceCalendarEvent)
-        }
-
-        // Note: Saving the context here will delete the location.
-        // Allow the context to auto-save when ready.
-
-        return destinationDatestamp
-    }
-
     /// Note: This function will only be called if no calendar event exists.
     @MainActor
     func updatePlannerEventRoutineVariance(
         _ plannerEvent: PlannerEvent,
-        sourceCalendarEvent: EKEvent? = nil,
         in timeZone: TimeZone,
-        sourcePlanner: Planner
+        sourcePlanner: Planner,
+        staleCalendarItemExternalIdentifier: String? = nil,
+        settings: PlannerSettings
     ) {
-        let routineEvent: RoutineEvent? = {
-            if let existing = plannerEvent.routineEvent {
+        let existingVariant: RoutineEventVariant? = {
+            if let existing = plannerEvent.routineEventVariant {
+                // Event is already a variant.
                 return existing
             }
-            if let sourceCalendarEventId = sourceCalendarEvent?
-                .calendarItemExternalIdentifier
-            {
-                return loadRoutineEvent(for: sourceCalendarEventId)
+
+            if let staleCalendarItemExternalIdentifier {
+                // Event was previously a calendar event. Check if a variant record exists for that calendar event.
+                return loadRoutineEventVariant(
+                    for: staleCalendarItemExternalIdentifier
+                )
             }
+
             return nil
         }()
 
-        if let routineEvent {
-            let isRoutineEventVariant = !plannerEvent.matches(
-                routineEvent,
-                in: timeZone
-            )
+        guard
+            let routineEvent: RoutineEvent = plannerEvent.routineEvent
+                ?? existingVariant?.routineEvent
+        else {
+            return
+        }
 
-            if isRoutineEventVariant {
-                if let existingVariant = plannerEvent.routineEventVariant {
-                    existingVariant.calendarItemExternalIdentifier = nil
-                } else {
-                    let routineEventVariant = RoutineEventVariant(
-                        routineEvent: routineEvent,
-                        planner: sourcePlanner,
-                        plannerEvent: plannerEvent
-                    )
+        // MARK: Check if the event differs from the routine event.
 
-                    routineEvent.variants?.append(routineEventVariant)
-                    sourcePlanner.routineEventVariants?.append(
-                        routineEventVariant
-                    )
-                    plannerEvent.routineEventVariant = routineEventVariant
+        let isRoutineEventVariant = !plannerEvent.matches(
+            routineEvent,
+            in: timeZone,
+            originPlanner: existingVariant?.planner ?? sourcePlanner,
+            settings: settings
+        )
 
-                    insert(routineEventVariant)
-                }
+        if isRoutineEventVariant {
+            if let existingVariant {
+                // MARK: Clear any link to a stale calendar event.
+
+                existingVariant.calendarItemExternalIdentifier = nil
+
             } else {
-                if let existingVariant = plannerEvent.routineEventVariant {
-                    delete(existingVariant)
-                }
+                // MARK: Create a new variance record so this even is not synced with the routine event.
+
+                let routineEventVariant = RoutineEventVariant(
+                    routineEvent: routineEvent,
+                    planner: sourcePlanner,
+                    plannerEvent: plannerEvent
+                )
+
+                routineEvent.variants?.append(routineEventVariant)
+                sourcePlanner.routineEventVariants?.append(
+                    routineEventVariant
+                )
+                plannerEvent.routineEventVariant = routineEventVariant
+
+                insert(routineEventVariant)
             }
+        } else if let existingVariant {
+            // MARK: Event is no longer a variant. Delete the variance record.
+
+            delete(existingVariant)
+
         }
     }
 
@@ -212,104 +181,89 @@ extension ModelContext {
         for event: PlannerEvent,
         settings: PlannerSettings,
         sourceDatestamp: String? = nil
-    ) -> String? // The destination datestamp the event is now in.
+    ) -> /// The datestamps the event is now in.
+        Set<String>
     {
-        guard
-            let startOfDay = getEarliestPlannerStartOfDay(
-                for: event.time,
-                datestamp: event.datestamp,
-                settings: settings
-            )
+        let sortedStartsOfDays = getSortedPlannerStartOfDays(
+            for: event.time,
+            endTime: event.calendarEvent?.endDate,
+            datestamp: event.datestamp,
+            settings: settings
+        )
+
+        guard !sortedStartsOfDays.isEmpty
         else {
             // Event does not belong to any planners. Use its actual time as the sortDate.
-            event.sortDate = event.time ?? Date()
-            return nil
+            event.sortDate = event.time ?? sourceDatestamp?.date ?? Date()
+            return []
         }
+
+        let startsOfDaysSet = Set(sortedStartsOfDays.map(\.datestamp))
 
         if let sourceDatestamp,
-           startOfDay.datestamp == sourceDatestamp
+            startsOfDaysSet.contains(sourceDatestamp)
         {
             // The event has not moved planners. Reuse the event's existing position.
-            return sourceDatestamp
+            return startsOfDaysSet
         }
 
-        let sortedStorageEvents = getSortedStorageEvents(
-            for: startOfDay
+        let earliestStartOfDay = sortedStartsOfDays.first!
+
+        let sortedPlannerEvents = getSortedPlannerEvents(
+            on: earliestStartOfDay
         )
 
-        // Place the event at the start of its new planner.
+        // Place the event at the start of its earliest planner.
         event.sortDate = generateSortDate(
             at: 0,
-            in: sortedStorageEvents,
-            startOfDay: startOfDay
+            in: sortedPlannerEvents,
+            startOfDay: earliestStartOfDay
         )
 
-        return startOfDay.datestamp
+        return startsOfDaysSet
     }
 
     @MainActor
     func movePlannerEvent(
-        from: Int,
-        to: Int,
-        startOfDay: DateInRegion,
+        /// The initial index within sortedPendingPlannerEvents.
+        initialIndex: Int,
+        /// The target index within sortedPlannerEvents.
+        targetIndex: Int,
         sortedPendingPlannerEvents: [PlannerEvent],
-        sortedPlannerEvents: [PlannerEvent]
+        sortedPlannerEvents: [PlannerEvent],
+        startOfDay: DateInRegion
     ) {
-        let movedEvent = sortedPendingPlannerEvents[from]
+        let movedEvent = sortedPendingPlannerEvents[initialIndex]
         movedEvent.sortDate = generateSortDate(
-            at: to,
+            at: targetIndex,
             in: sortedPlannerEvents,
             startOfDay: startOfDay
         )
 
-        safeSave("_plannerEventCRUD.movePlannerEvent")
+        safeSave("ModelContext+PlannerEvent.movePlannerEvent")
     }
 
     // MARK: - DELETE
 
     @MainActor
-    func deletePlannerEvents(
-        _ events: [PlannerEvent],
-        in planner: Planner,
-
-        // Deletes calendar events if defined, otherwise they are preserved.
-        ekEventStore: EKEventStore? = nil
-    ) {
-        for event in events {
-            deletePlannerEvent(
-                event,
-                in: planner,
-                ekEventStore: ekEventStore,
-                skipSave: true
-            )
-        }
-
-        safeSave("_plannerEventCRUD.deletePlannerEvents")
-    }
-
-    @MainActor
     func deletePlannerEvent(
         _ event: PlannerEvent,
-
-        // Marks routine events as variants so they are not synced.
+        /// Marks routine events as variants so they are not synced.
         in planner: Planner,
-
-        // Deletes calendar events, otherwise they are preserved.
+        /// Deletes calendar events, otherwise they are preserved.
         ekEventStore: EKEventStore? = nil,
-
         skipSave: Bool = false
     ) {
         if let calendarEvent = event.calendarEvent, let ekEventStore,
-           !ekEventStore.attemptDeleteEvent(calendarEvent)
+            !ekEventStore.attemptDeleteEvent(calendarEvent)
         {
             return
         }
 
         if let routineEvent = event.routineEvent,
-           event.routineEventVariant == nil,
-
-           // Variants do not need to be created when routine is excluded.
-           !planner.safeExcludeRoutine
+            event.routineEventVariant == nil,
+            // Note: Variants should not be created when routine is excluded.
+            !planner.safeExcludeRoutine
         {
             // Mark this routine event as a variant so it is not synced after deletion.
             let routineEventVariant = RoutineEventVariant(
@@ -326,7 +280,40 @@ extension ModelContext {
         delete(event)
 
         if !skipSave {
-            safeSave("_plannerEventCRUD.deletePlannerEvent")
+            safeSave("ModelContext+PlannerEvent.deletePlannerEvent")
+        }
+    }
+
+    func deletePlannerEvents(
+        _ events: [PlannerEvent],
+        in planner: Planner,
+        /// Deletes calendar events if defined, otherwise they are preserved.
+        ekEventStore: EKEventStore? = nil
+    ) {
+        for event in events {
+            deletePlannerEvent(
+                event,
+                in: planner,
+                ekEventStore: ekEventStore,
+                skipSave: true
+            )
+        }
+
+        safeSave("ModelContext+PlannerEvent.deletePlannerEvents")
+    }
+
+    func deletePlannerEventIfExists(
+        _ event: PlannerEvent?,
+        in planner: Planner,
+        ekEventStore: EKEventStore
+    ) {
+        if let event {
+            deletePlannerEvent(
+                event,
+                in: planner,
+                ekEventStore: ekEventStore,
+                skipSave: true
+            )
         }
     }
 }

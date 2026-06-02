@@ -10,33 +10,35 @@ import SwiftDate
 import SwiftUI
 
 struct PlannerPreviewCardView<Header: View>: View {
-    private let type: PlannerPreviewVariant
-    let datestamp: String
-    let header: Header
-    let width: CGFloat
-    let settings: PlannerSettings
-    let namespace: Namespace.ID
-    let transitionId: String
+    private let variant: PlannerPreviewVariant
+    private let datestamp: String
+    private let header: Header
+    private let width: CGFloat
+    private let transitionId: String
+    private let settings: PlannerSettings
+    private let namespace: Namespace.ID
 
     init(
-        type: PlannerPreviewVariant,
+        variant: PlannerPreviewVariant,
         datestamp: String,
         header: Header,
         width: CGFloat = PlannerPreviewCardLayout.DEFAULT_WIDTH,
+        transitionId: String,
         settings: PlannerSettings,
-        namespace: Namespace.ID,
-        transitionId: String
+        namespace: Namespace.ID
     ) {
-        self.type = type
+        self.variant = variant
         self.datestamp = datestamp
         self.header = header
         self.width = width
+        self.transitionId = transitionId
         self.settings = settings
         self.namespace = namespace
-        self.transitionId = transitionId
     }
 
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
+
+    // MARK: - Body
 
     var body: some View {
         PlannerContextLoaderView(datestamp: datestamp, settings: settings) {
@@ -45,8 +47,9 @@ struct PlannerPreviewCardView<Header: View>: View {
                 header
 
                 PlannerPreviewView(
-                    variant: type,
+                    variant: variant,
                     planner: context.planner,
+                    tripLabel: tripLabel(for: context.planner),
                     sortedBirthdays: context.eventContext.calendarDayData?
                         .birthdays ?? [],
                     sortedChipEvents: context.eventContext.calendarDayData?
@@ -68,20 +71,18 @@ struct PlannerPreviewCardView<Header: View>: View {
             .padding()
             .frame(
                 width: width,
-                height: PlannerPreviewCardLayout.HEIGHT,
-                alignment: .top
+                height: PlannerPreviewCardLayout.HEIGHT
             )
             .background(
-                RoundedRectangle(
+                Color.cardBackground,
+                in: RoundedRectangle(
                     cornerRadius: PlannerPreviewCardLayout.CORNER_RADIUS
                 )
-                .fill(Color.cardBackground)
             )
             .matchedTransitionSource(
                 id: transitionId,
                 in: namespace
             )
-            .contentShape(Rectangle())
             .onTapGesture {
                 plannerCoverStore.context = PlannerCoverContext(
                     datestamp: datestamp,
@@ -89,5 +90,15 @@ struct PlannerPreviewCardView<Header: View>: View {
                 )
             }
         }
+    }
+
+    // MARK: - Functions
+
+    private func tripLabel(for planner: Planner) -> String? {
+        if variant == .trip {
+            return nil
+        }
+
+        return planner.trip?.title
     }
 }

@@ -9,6 +9,8 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
+// TODO: do I delete variants even if they have a calendar item attached? Should I delete these? I should check if the events still exist. Talking about ModelContext+Cleanup
+
 extension ModelContext {
     @MainActor
     func deleteStaleData(cutoffDate: Date) {

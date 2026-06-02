@@ -18,7 +18,7 @@ struct PlannerHeaderView: View {
         iconDetailSize: CGFloat? = nil,
         iconDetailOffset: CGFloat? = nil,
         title: String? = nil,
-        subtitle: String? = nil,
+        subtitle: String? = nil
     ) {
         self.datestamp = datestamp
 

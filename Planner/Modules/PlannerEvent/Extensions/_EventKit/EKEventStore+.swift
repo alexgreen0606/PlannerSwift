@@ -8,8 +8,10 @@
 import EventKit
 
 extension EKEventStore {
-    /// Returns the success of the update attempt.
-    func attemptUpdateEvent(_ event: EKEvent) -> Bool {
+    func attemptUpdateEvent(_ event: EKEvent)
+        -> /// Returns the success of the update attempt.
+        Bool
+    {
         guard event.calendar.allowsContentModifications else {
             return false
         }
@@ -21,7 +23,7 @@ extension EKEventStore {
             )
         } catch {
             assertionFailure(
-                "ERROR EKEventStoreExtension.attemptUpdateEvent: \(error)"
+                "ERROR EKEventStore+.attemptUpdateEvent: \(error)"
             )
             return false
         }
@@ -29,8 +31,10 @@ extension EKEventStore {
         return true
     }
 
-    /// Returns the success of the deletion attempt.
-    func attemptDeleteEvent(_ event: EKEvent) -> Bool {
+    func attemptDeleteEvent(_ event: EKEvent)
+        -> /// Returns the success of the deletion attempt.
+        Bool
+    {
         guard event.calendar.allowsContentModifications else {
             return false
         }
@@ -41,15 +45,14 @@ extension EKEventStore {
                 span: .thisEvent,
                 commit: true
             )
-
-            return true
         } catch {
             assertionFailure(
-                "ERROR EKEventStoreExtension.attemptDeleteEvent: \(error)"
+                "ERROR EKEventStore+.attemptDeleteEvent: \(error)"
             )
+            return false
         }
 
-        return false
+        return true
     }
 
     // TODO: what if this deletes every occurrence of a recurring event?
@@ -61,7 +64,7 @@ extension EKEventStore {
                 try remove(event, span: .thisEvent, commit: true)
             } catch {
                 assertionFailure(
-                    "ERROR EKEventStoreExtension.deleteEvent: \(error)"
+                    "ERROR EKEventStore+.deleteEvent: \(error)"
                 )
             }
         }

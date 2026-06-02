@@ -21,13 +21,12 @@ struct SettingsRootView: View {
     @AppStorage("showListDividers") private var showListDividers: Bool =
         true
 
-    @AppStorage("toggleTransitionDuration") private
-        var toggleTransitionDuration: ToggleTransitionDuration =
-            .threeSeconds
+    @AppStorage("toggleTransitionDuration") private var toggleTransitionDuration: ToggleTransitionDuration =
+        .threeSeconds
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
-            .oneMonth
+        .oneMonth
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var systemColorScheme

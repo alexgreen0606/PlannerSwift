@@ -59,8 +59,8 @@ struct LocationOptionView: View {
                             } else if isDeviceLocation {
                                 Image(systemName: "location")
                             } else if isPlannerLocation,
-                                let plannerIcon = sourcePlanner?.datestamp
-                                    .calendarSymbolName
+                                      let plannerIcon = sourcePlanner?.datestamp
+                                      .calendarSymbolName
                             {
                                 Image(systemName: plannerIcon)
                             }

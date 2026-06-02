@@ -27,9 +27,7 @@ struct SearchRootView: View {
                 text: "",
                 calendarIds: [],
                 past: false,
-                todayStartOfDay: todayPlanner.datestamp.startOfDay(
-                    in: todayPlanner.region(settings: settings)
-                ),
+                todayStartOfDay: todayPlanner.startOfDay(settings: settings),
                 fuse: Fuse()
             )
         )
@@ -48,7 +46,7 @@ struct SearchRootView: View {
 
     @State private var searchTask: Task<Void, Never>?
 
-    private var noResultsLabel: String {
+    private var noResultsLabel: LocalizedStringKey {
         guard let activeQuery = plannerSearchStore.results.activeQuery else {
             return ""
         }

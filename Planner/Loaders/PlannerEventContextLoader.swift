@@ -25,9 +25,7 @@ struct PlannerEventContextLoaderView<Content: View>: View {
         self.settings = settings
         self.content = content
 
-        let startOfDay = planner.datestamp.startOfDay(
-            in: planner.region(settings: settings)
-        )
+        let startOfDay = planner.startOfDay(settings: settings)
         let startOfNextDay = (startOfDay + 1.days)
         let dayStartDate = startOfDay.date
         let nextDayStartDate = startOfNextDay.date

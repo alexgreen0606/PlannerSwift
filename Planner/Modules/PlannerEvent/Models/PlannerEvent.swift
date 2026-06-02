@@ -24,12 +24,12 @@ class PlannerEvent: EventListItem {
 
     var calendarItemExternalIdentifier: String?
 
+    /// Uniquely identifies recurring event occurrences (calendar events only).
+    var occurrenceId: String?
+
     var routineEvent: RoutineEvent?
 
     var routineEventVariant: RoutineEventVariant?
-
-    /// Uniquely identifies recurring event occurrences (calendar events only).
-    var occurrenceId: String?
 
     init(
         time: Date? = nil,
@@ -40,32 +40,35 @@ class PlannerEvent: EventListItem {
         startOfDay: DateInRegion? = nil
     ) {
         self.datestamp = datestamp
-        super.init(sortDate: sortDate)
-        self.time = time
+        super.init(sortDate: sortDate, time: time)
 
-        // Calendar event synchronization.
+        // MARK: Calendar event synchronization.
         if let calendarEvent {
             title = calendarEvent.title
             self.time = calendarEvent.startDate
-            self.calendarEvent = calendarEvent
+            location = calendarEvent.location()
+
             calendarItemExternalIdentifier =
                 calendarEvent.calendarItemExternalIdentifier
             occurrenceId = calendarEvent.occurrenceId
-            location = calendarEvent.location(storageEvent: nil)
+
+            self.calendarEvent = calendarEvent
+
             return
         }
 
-        // Routine event synchronization.
+        // MARK: Routine event synchronization.
         if let routineEvent {
             title = routineEvent.title
 
             if let startOfDay,
-               let time = routineEvent.date(in: startOfDay)
+                let time = routineEvent.date(in: startOfDay)
             {
                 self.time = time
             }
 
             self.routineEvent = routineEvent
+
             routineEvent.syncedSortDatePlannerEventIds.insert(stableId)
         }
     }

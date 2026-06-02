@@ -1,5 +1,5 @@
 //
-//  PlannerDeletionConfigs.swift
+//  PlannerEventDeletionConfigs.swift
 //  Planner
 //
 //  Created by Alex Green on 4/17/26.
@@ -24,6 +24,7 @@ func deletePlannerEventConfig(
             if event.calendarEvent == nil {
                 return UI.GENERIC_DELETE_WARNING
             }
+            
             return
                 "Event will be removed from your calendar. \(UI.GENERIC_DELETE_WARNING)"
         }(),
@@ -43,6 +44,7 @@ func bulkDeletePlannerEventConfig(
     delete: @escaping () -> Void
 ) -> ConfirmationConfig {
     let count = events.count
+    
     if count == 1 {
         return deletePlannerEventConfig(
             event: events.first!,

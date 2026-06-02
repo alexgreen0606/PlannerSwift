@@ -19,7 +19,7 @@ extension CNContactStore {
                     withIdentifiers: Array(birthdayEventMap.keys)
                 ),
                 keysToFetch: [
-                    CNContactViewController.descriptorForRequiredKeys()
+                    CNContactViewController.descriptorForRequiredKeys(),
                 ] as [CNKeyDescriptor]
             )
 

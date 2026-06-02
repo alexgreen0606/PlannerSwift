@@ -8,10 +8,10 @@
 import SwiftUI
 
 struct EmptyLabel: View {
-    private let text: String
+    private let text: LocalizedStringKey
     private let scale: Double
 
-    init(_ text: String, scale: Double = 1) {
+    init(_ text: LocalizedStringKey, scale: Double = 1) {
         self.text = text
         self.scale = scale
     }

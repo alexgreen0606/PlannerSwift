@@ -37,7 +37,7 @@ struct PlannerContentsListView: View {
     @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
     @EnvironmentObject private var locationService: LocationService
 
-    private var emptyPendingEventsLabel: String {
+    private var emptyPendingEventsLabel: LocalizedStringKey {
         "No \(!sortedCompletePlannerEvents.isEmpty && showCompleted ? "more " : "")plans"
     }
 
@@ -88,35 +88,20 @@ struct PlannerContentsListView: View {
         )
     }
 
-    @ViewBuilder
     private func calendarAdornment(event: PlannerEvent) -> some View {
-        if let calendarEvent = event.calendarEvent,
-            let calendar = calendarEvent.calendar
-        {
-            Image(
-                systemName:
-                    calendar.systemImageName(settings: settings)
-            )
-            .foregroundStyle(calendar.color)
-            .padding(.trailing, 4)
-            .contentShape(Rectangle())
-            .onTapGesture {
+        PlannerEventCalendarAdornmentView(
+            plannerEvent: event,
+            settings: settings,
+            openEventSheet: {
                 openPlannerEventSheet(event)
             }
-        } else if event.calendarItemExternalIdentifier != nil {
-            // Temporary icon before the calendar events hydrate.
-            Image(
-                systemName: "calendar"
-            )
-            .foregroundStyle(accentColor.color)
-            .padding(.trailing, 4)
-        }
+        )
     }
 
     private func timeAdornment(event: PlannerEvent) -> some View {
-        event.timeAdornment(
-            in: startOfDay.region,
-            accentColor: accentColor,
+        PlannerEventTimeAdornmentView(
+            plannerEvent: event,
+            plannerRegion: startOfDay.region,
             openEventSheet: {
                 openPlannerEventSheet(event)
             }
@@ -124,11 +109,10 @@ struct PlannerContentsListView: View {
     }
 
     private func locationAdornment(event: PlannerEvent) -> some View {
-        event.locationAdornment(
-            in: planner,
+        PlannerEventLocationAdornmentView(
+            plannerEvent: event,
+            planner: planner,
             settings: settings,
-            deviceLocation: locationService.deviceLocation,
-            accentColor: accentColor,
             openEventSheet: {
                 openPlannerEventSheet(event)
             }
@@ -139,11 +123,11 @@ struct PlannerContentsListView: View {
 
     private func moveUncheckedEvent(from: Int, to: Int) {
         modelContext.movePlannerEvent(
-            from: from,
-            to: to,
-            startOfDay: startOfDay,
+            initialIndex: from,
+            targetIndex: to,
             sortedPendingPlannerEvents: sortedPendingPlannerEvents,
-            sortedPlannerEvents: sortedPlannerEvents
+            sortedPlannerEvents: sortedPlannerEvents,
+            startOfDay: startOfDay
         )
     }
 

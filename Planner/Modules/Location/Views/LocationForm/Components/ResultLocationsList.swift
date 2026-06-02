@@ -31,6 +31,7 @@ struct ResultLocationsListView: View {
             .background(Color.sheetBackground.ignoresSafeArea())
 
             // MARK: Scroll to the top of the list when the results change.
+
             .withScrollTrigger(
                 scrollProxy: scrollProxy,
                 trigger: locationSearchService.results,
@@ -72,9 +73,9 @@ struct ResultLocationsListView: View {
         Task {
             guard
                 let location =
-                    await locationSearchService.locationInfo(
-                        for: result
-                    )
+                await locationSearchService.locationInfo(
+                    for: result
+                )
             else {
                 return
             }

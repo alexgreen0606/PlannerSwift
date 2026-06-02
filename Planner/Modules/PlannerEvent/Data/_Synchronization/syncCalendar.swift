@@ -6,33 +6,31 @@
 //
 
 import Contacts
-import ContactsUI
 import EventKit
 import SwiftData
 import SwiftDate
 
 extension ModelContext {
+    private static let contactStore = CNContactStore()
+
     @MainActor
     func syncCalendar(
         for planner: Planner,
-        storageEvents: [PlannerEvent],
         startOfDay: DateInRegion,
-        hiddenCalendarIds: Set<String>,
-        ekEventStore: EKEventStore
+        plannerEvents: [PlannerEvent],
+        ekEventStore: EKEventStore,
+        settings: PlannerSettings
     ) -> CalendarDayData {
         var calendarDayData = CalendarDayData()
 
-        // ------------------------------------------------------------------
         // MARK: Load in the day's existing calendar events.
-
-        // ------------------------------------------------------------------
 
         let nextDay = startOfDay + 1.days
         let calendarEvents = ekEventStore.events(
             matching: ekEventStore.predicateForEvents(
                 withStart: startOfDay.date,
                 end: nextDay.date,
-                calendars: nil
+                calendars: nil // Match all calendars.
             )
         )
 
@@ -42,22 +40,21 @@ extension ModelContext {
             }
         )
 
-        // ------------------------------------------------------------------
         // MARK: Sync/Delete Existing Planner Events.
 
-        // ------------------------------------------------------------------
-
-        var birthdayEvents: [String: EKEvent] = [:]
         var validEvents: [PlannerEvent] = []
+        var birthdayEvents: [String: EKEvent] = [:]
 
-        for plannerEvent in storageEvents {
-            if let calendarEventId = plannerEvent
+        for plannerEvent in plannerEvents {
+            if let calendarItemExternalIdentifier = plannerEvent
                 .calendarItemExternalIdentifier
             {
                 // MARK: Calendar Event
 
                 guard
-                    let calendarEvent = existingCalendarEvents[calendarEventId]
+                    let calendarEvent = existingCalendarEvents[
+                        calendarItemExternalIdentifier
+                    ]
                 else {
                     // Calendar event is deleted. Remove this record and continue.
                     deletePlannerEvent(
@@ -68,18 +65,20 @@ extension ModelContext {
                     continue
                 }
 
-                existingCalendarEvents.removeValue(forKey: calendarEventId)
+                existingCalendarEvents.removeValue(
+                    forKey: calendarItemExternalIdentifier
+                )
 
                 guard
                     validateCalendarEventSynchronization(
                         calendarEvent,
                         plannerEvent: plannerEvent,
                         planner: planner,
+                        startOfDay: startOfDay,
                         birthdayEvents: &birthdayEvents,
                         calendarDayData: &calendarDayData,
-                        hiddenCalendarIds: hiddenCalendarIds,
-                        startOfDay: startOfDay,
-                        ekEventStore: ekEventStore
+                        ekEventStore: ekEventStore,
+                        settings: settings
                     )
                 else {
                     continue
@@ -88,14 +87,11 @@ extension ModelContext {
                 plannerEvent.syncWithCalendarEvent(calendarEvent)
             }
 
-            // Track the events that still exist in the planner.
+            // Event is still valid. Collect it.
             validEvents.append(plannerEvent)
         }
 
-        // ------------------------------------------------------------------
         // MARK: Create New Calendar Events.
-
-        // ------------------------------------------------------------------
 
         let reverseSortedNewCalendarEvents = existingCalendarEvents.values
             .sorted {
@@ -107,11 +103,11 @@ extension ModelContext {
                 validateCalendarEventSynchronization(
                     calendarEvent,
                     planner: planner,
+                    startOfDay: startOfDay,
                     birthdayEvents: &birthdayEvents,
                     calendarDayData: &calendarDayData,
-                    hiddenCalendarIds: hiddenCalendarIds,
-                    startOfDay: startOfDay,
-                    ekEventStore: ekEventStore
+                    ekEventStore: ekEventStore,
+                    settings: settings
                 )
             else {
                 continue
@@ -119,19 +115,17 @@ extension ModelContext {
 
             createPlannerEvent(
                 for: calendarEvent,
-                in: startOfDay
+                on: startOfDay
             )
         }
 
-        // ------------------------------------------------------------------
         // MARK: Load In Contacts For Birthdays.
 
-        // ------------------------------------------------------------------
-
-        let contactStore = CNContactStore()
-        calendarDayData.birthdays = contactStore.loadBirthdays(
+        calendarDayData.birthdays = Self.contactStore.loadBirthdays(
             for: birthdayEvents
         )
+
+        // MARK: Sort Planner Chips Alphabetically.
 
         calendarDayData.plannerChipEvents = calendarDayData.plannerChipEvents
             .sorted { $0.title < $1.title }
@@ -146,16 +140,33 @@ extension ModelContext {
         _ calendarEvent: EKEvent,
         plannerEvent: PlannerEvent? = nil,
         planner: Planner,
+        startOfDay: DateInRegion,
         birthdayEvents: inout [String: EKEvent],
         calendarDayData: inout CalendarDayData,
-        hiddenCalendarIds: Set<String>,
-        startOfDay: DateInRegion,
-        ekEventStore: EKEventStore
-    ) -> Bool {
+        ekEventStore: EKEventStore,
+        settings: PlannerSettings
+    )
+        -> // True if the event should sync/align with the calendar event, else false.
+        Bool
+    {
+        // MARK: Delete/exclude events from hidden calendars.
+
+        if settings.hiddenCalendarIds.contains(
+            calendarEvent.calendar.calendarIdentifier
+        ) {
+            deletePlannerEventIfExists(
+                plannerEvent,
+                in: planner,
+                ekEventStore: ekEventStore
+            )
+            return false
+        }
+
+        // MARK: Collect birthday events.
+
         if calendarEvent.calendar.type == .birthday,
            let contactId = calendarEvent.birthdayContactIdentifier
         {
-            // Collect birthday events.
             birthdayEvents[contactId] = calendarEvent
             deletePlannerEventIfExists(
                 plannerEvent,
@@ -165,20 +176,9 @@ extension ModelContext {
             return false
         }
 
-        if hiddenCalendarIds.contains(
-            calendarEvent.calendar.calendarIdentifier
-        ) {
-            // Calendar is hidden in settings. Remove this record and continue.
-            deletePlannerEventIfExists(
-                plannerEvent,
-                in: planner,
-                ekEventStore: ekEventStore
-            )
-            return false
-        }
+        // MARK: Collect all-day events as planner chips.
 
         if calendarEvent.isAllDay {
-            // Collect all-day events as planner chips.
             calendarDayData.plannerChipEvents.append(calendarEvent)
             deletePlannerEventIfExists(
                 plannerEvent,
@@ -188,14 +188,15 @@ extension ModelContext {
             return false
         }
 
-        if calendarEvent.spansOutsidePlannerDay(
-            startOfDay
+        // MARK: Collect events that span outside this day as planner chips.
+
+        if calendarEvent.spansOutsidePlanner(
+            startOfDay: startOfDay
         ) {
-            // Collect events that span outside this day as planner chips.
             calendarDayData.plannerChipEvents.append(calendarEvent)
 
-            if !calendarEvent.startDate.belongsTo(startOfDay) {
-                // Only display the event if it starts during this day.
+            if !calendarEvent.startDate.belongsToPlanner(startOfDay: startOfDay) {
+                // Event does not start on this day. Don't display it as a planner event.
                 deletePlannerEventIfExists(
                     plannerEvent,
                     in: planner,
@@ -206,32 +207,20 @@ extension ModelContext {
         }
 
         if let occurrenceId = calendarEvent.occurrenceId {
-            // Collect recurring events.
+            // MARK: Collect recurring event occurrences.
+
             calendarDayData.occurrenceEvents[occurrenceId] = calendarEvent
+
         } else {
-            // Collect regular timed events.
+            // MARK: Collect regular timed events.
+
             calendarDayData.regularEvents[
                 calendarEvent.calendarItemExternalIdentifier
             ] =
                 calendarEvent
         }
 
+        // Calendar event is valid and should be synced into a planner event.
         return true
-    }
-
-    @MainActor
-    private func deletePlannerEventIfExists(
-        _ event: PlannerEvent?,
-        in planner: Planner,
-        ekEventStore: EKEventStore
-    ) {
-        if let event {
-            deletePlannerEvent(
-                event,
-                in: planner,
-                ekEventStore: ekEventStore,
-                skipSave: true
-            )
-        }
     }
 }

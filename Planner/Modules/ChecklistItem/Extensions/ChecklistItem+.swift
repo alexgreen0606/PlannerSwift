@@ -8,7 +8,6 @@
 import SwiftUI
 
 extension ChecklistItem {
-
     var safeItems: [ChecklistItem] {
         items ?? []
     }
@@ -37,7 +36,7 @@ extension ChecklistItem {
     func containsType(
         _ type: ChecklistItemType,
         excluding excludedIds: Set<UUID> = [],
-        /// An item that should not count as a direct match, though its descendants may still match.
+        // An item that should not count as a direct match, though its descendants may still match.
         skipId: UUID? = nil
     ) -> Bool {
         guard !excludedIds.contains(stableId) else {
@@ -65,7 +64,7 @@ extension ChecklistItem {
     func items(
         matching type: ChecklistItemType,
         excluding excludedIds: Set<UUID> = [],
-        /// An item that should not be included, though its descendants can be.
+        // An item that should not be included, though its descendants can be.
         skipId: UUID?
     ) -> [ChecklistItem] {
         guard !excludedIds.contains(stableId) else {

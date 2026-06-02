@@ -33,20 +33,18 @@ struct TransferChecklistItemsFormView: View {
         )
 
         if selectableItems.count == 1 {
-
             // MARK: Only one option exists. Default select and navigate to it.
 
             destinationItem = selectableItems.first!
             folderPath = destinationItem!.path
 
         } else {
-
             // MARK: Step backwards until we find an initial folder with a selectable item.
 
             var folderPointer =
                 sourceItem.type == .folder
-                ? sourceItem
-                : sourceItem.parent!
+                    ? sourceItem
+                    : sourceItem.parent!
 
             while !folderPointer.containsType(
                 sourceItem.type,
@@ -176,8 +174,7 @@ struct TransferChecklistItemsFormView: View {
         .glassChip(height: 46)
     }
 
-    private func destinationChip(_ destinationItem: ChecklistItem) -> some View
-    {
+    private func destinationChip(_ destinationItem: ChecklistItem) -> some View {
         LabelValueView(
             title: destinationItem.title,
             iconConfig: IconConfig(
@@ -220,7 +217,6 @@ struct TransferChecklistItemsFormView: View {
                 )
             }
         }
-
     }
 
     private func showNotification(
@@ -230,7 +226,7 @@ struct TransferChecklistItemsFormView: View {
     ) {
         let icon =
             sourceItem.type == .checklist
-            ? "arrow.left.arrow.right" : "arrow.forward.folder"
+                ? "arrow.left.arrow.right" : "arrow.forward.folder"
 
         let variant: ToastPositionVariant =
             sourceItem.type == .folder ? .tab : .cover
@@ -238,7 +234,7 @@ struct TransferChecklistItemsFormView: View {
         showToast(
             Toast(
                 title:
-                    "Successfully transferred ^[\(itemCount) \(selectedItemsTypeLabel)](inflect: true)!",
+                "Successfully transferred ^[\(itemCount) \(selectedItemsTypeLabel)](inflect: true)!",
                 subtitle: LocalizedStringKey(destinationItem.title),
                 iconConfig: IconConfig(
                     name: icon,

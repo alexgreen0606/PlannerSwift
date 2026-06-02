@@ -69,7 +69,6 @@ struct FolderItemOptionsListView: View {
     private func row(for item: ChecklistItem) -> some View {
         HStack(alignment: .top) {
             Group {
-
                 // MARK: Icon
 
                 Image(

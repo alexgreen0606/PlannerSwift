@@ -154,7 +154,7 @@ struct RowView<
                 }
             )
 
-            HStack(alignment: .top, spacing: 4) {
+            HStack(alignment: .top, spacing: 8) {
                 leftAdornment
                     .frame(height: ListLayout.ADORNMENT_HEIGHT)
                     .opacity(opacity)

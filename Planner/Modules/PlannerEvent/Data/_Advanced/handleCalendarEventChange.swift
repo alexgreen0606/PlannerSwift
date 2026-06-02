@@ -16,16 +16,16 @@ extension ModelContext {
         sourcePlanner: Planner?,
         sourcePlannerEvent: PlannerEvent?,
         settings: PlannerSettings
-    ) -> // The datestamp the event is now in.
-        String?
+    ) -> // The datestamps the event is now in.
+        Set<String>
     {
-        var destinationDatestamp: String?
-
         if let sourcePlannerEvent {
             if let routineEvent = sourcePlannerEvent.routineEvent,
                let sourcePlanner,
                sourcePlannerEvent.routineEventVariant == nil
             {
+                // MARK: The initial event is a routine event. Mark it as a variant.
+
                 let newRoutineEventVariant = RoutineEventVariant(
                     routineEvent: routineEvent,
                     planner: sourcePlanner,
@@ -40,50 +40,59 @@ extension ModelContext {
                 )
                 sourcePlannerEvent.routineEventVariant = newRoutineEventVariant
 
-                // The initial event is a routine event. Mark it as a variant.
                 insert(newRoutineEventVariant)
             }
 
             guard let calendarEvent, !calendarEvent.isAllDay else {
-                // The calendar event is deleted or all-day. Remove the storage record.
+                // MARK: The calendar event is deleted or all-day. Remove the storage record.
+
                 delete(sourcePlannerEvent)
 
                 if let startDate = calendarEvent?.startDate {
-                    // Return the new destination of all-day events.
-                    return getEarliestPlannerStartOfDay(
-                        for: startDate,
-                        settings: settings
-                    )?.datestamp
+                    // MARK: Event is all-day. Return a set of all datestamps the event exists in.
+
+                    return Set(
+                        getSortedPlannerStartOfDays(
+                            for: startDate,
+                            endTime: calendarEvent?.endDate,
+                            settings: settings
+                        ).map(\.datestamp)
+                    )
                 }
 
-                return nil
+                return []
             }
 
-            // The calendar event is timed. Sync the storage record with the calendar event.
+            // MARK: The calendar event is timed. Sync the storage record with the calendar event.
+
             sourcePlannerEvent.syncWithCalendarEvent(calendarEvent)
-            destinationDatestamp = ensureValidSortDate(
+
+            return ensureValidSortDate(
                 for: sourcePlannerEvent,
                 settings: settings,
                 sourceDatestamp: sourcePlanner?.datestamp
             )
 
         } else if let calendarEvent {
-            let destinationDay = getEarliestPlannerStartOfDay(
+            let sortedStartsOfDays = getSortedPlannerStartOfDays(
                 for: calendarEvent.startDate,
+                endTime: calendarEvent.endDate,
                 settings: settings
             )
 
-            createPlannerEvent(
-                for: calendarEvent,
-                in: destinationDay
-            )
+            if let destinationStartOfDay = sortedStartsOfDays.first {
+                createPlannerEvent(
+                    for: calendarEvent,
+                    on: destinationStartOfDay
+                )
+            }
 
-            destinationDatestamp = destinationDay?.datestamp
+            return Set(sortedStartsOfDays.map(\.datestamp))
         }
 
         // Note: Saving the context here will delete the location.
         // Allow the context to auto-save when ready.
 
-        return destinationDatestamp
+        return []
     }
 }

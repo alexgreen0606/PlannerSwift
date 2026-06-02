@@ -9,7 +9,6 @@ import MapKit
 import SwiftDate
 
 extension Location {
-
     var safeTrips: [Trip] {
         trips ?? []
     }
@@ -36,12 +35,12 @@ extension Location {
     var region: Region {
         let timeZone =
             TimeZone(identifier: timeZoneIdentifier)
-            ?? {
-                assertionFailure(
-                    "ERROR Location+.region: Could not create a TimeZone from identifier \(timeZoneIdentifier)"
-                )
-                return TimeZone.current
-            }()
+                ?? {
+                    assertionFailure(
+                        "ERROR Location+.region: Could not create a TimeZone from identifier \(timeZoneIdentifier)"
+                    )
+                    return TimeZone.current
+                }()
 
         return Region(
             calendar: Calendar.current,

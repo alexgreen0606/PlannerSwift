@@ -240,7 +240,7 @@ struct TripFormView: View {
                 variant: .trip,
                 initialLocation: draftTrip.location,
                 settings: settings,
-                saveSelection: {location in
+                saveSelection: { location in
                     draftTrip.location = location
                 }
             )

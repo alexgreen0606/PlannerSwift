@@ -9,14 +9,14 @@ import SwiftUI
 
 struct ActionButtonView: View {
     private let label: String
-    private let systemImage: String
+    private let systemImage: String?
     private let endAdornment: Bool
     private let spacing: CGFloat
     private let onTap: () -> Void
 
     init(
         label: String,
-        systemImage: String,
+        systemImage: String? = nil,
         endAdornment: Bool = false,
         color: Color? = nil,
         spacing: CGFloat = 6,
@@ -59,11 +59,14 @@ struct ActionButtonView: View {
 
     // MARK: - View Builder
 
+    @ViewBuilder
     private var adornment: some View {
-        Image(systemName: systemImage)
-            .font(
-                // TODO: make a shared constant for this size
-                .system(size: 14, weight: .semibold, design: .rounded)
-            )
+        if let systemImage {
+            Image(systemName: systemImage)
+                .font(
+                    // TODO: make a shared constant for this size
+                    .system(size: 14, weight: .semibold, design: .rounded)
+                )
+        }
     }
 }

@@ -22,7 +22,7 @@ struct SearchResultPlannerPreviewView: View {
 
     private var tripLabel: String? {
         guard let trip = planner.trip,
-            trip.searchQueryScore(activeQuery) != nil
+              trip.searchQueryScore(activeQuery) != nil
         else {
             return nil
         }
@@ -56,26 +56,26 @@ struct SearchResultPlannerPreviewView: View {
                 PlannerHeaderView(
                     datestamp: planner.datestamp,
                     title:
-                        // Note: Same as default, but exclude the year from the date.
-                        // This is show in list section header.
-                        planner.datestamp.proximityFormat(
-                            using: [
-                                ProximityRule(
-                                    proximity:
-                                        .next7Days,
-                                    format: .weekday
-                                ),
-                                ProximityRule(
-                                    proximity:
-                                        .fallback,
-                                    format:
-                                        .dateWithoutYear
-                                ),
-                            ],
-                            todaystamp:
-                                todayService
-                                .todaystamp
-                        )
+                    // Note: Same as default, but exclude the year from the date.
+                    // This is show in list section header.
+                    planner.datestamp.proximityFormat(
+                        using: [
+                            ProximityRule(
+                                proximity:
+                                .next7Days,
+                                format: .weekday
+                            ),
+                            ProximityRule(
+                                proximity:
+                                .fallback,
+                                format:
+                                .dateWithoutYear
+                            ),
+                        ],
+                        todaystamp:
+                        todayService
+                            .todaystamp
+                    )
                 )
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -91,6 +91,7 @@ struct SearchResultPlannerPreviewView: View {
 
             PlannerPreviewView(
                 variant: .search,
+                isSearchQueryActive: activeQuery?.isSearching == true,
                 planner: planner,
                 tripLabel: tripLabel,
                 sortedBirthdays: filteredBirthdays,

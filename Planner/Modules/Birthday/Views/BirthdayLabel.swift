@@ -17,7 +17,7 @@ struct BirthdayLabelView: View {
         guard let imageData = birthday.contact.thumbnailImageData else {
             return nil
         }
-        
+
         return UIImage(data: imageData)
     }
 

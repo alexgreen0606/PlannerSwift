@@ -31,17 +31,10 @@ struct PlannerEventListView: View {
                             Image(systemName: "checkmark")
                         }
 
-                        if let calendar = event.calendarEvent?.calendar {
-                            Image(
-                                systemName: calendar.systemImageName(
-                                    settings: settings
-                                )
-                            )
-                            .foregroundStyle(calendar.color)
-                        } else if event.calendarItemExternalIdentifier != nil {
-                            Image(systemName: "calendar")
-                                .foregroundStyle(accentColor.color)
-                        }
+                        PlannerEventCalendarAdornmentView(
+                            plannerEvent: event,
+                            settings: settings
+                        )
                     }
                     .imageScale(.small)
                     .frame(height: 17)
@@ -49,9 +42,9 @@ struct PlannerEventListView: View {
                     Value(event.title)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
-                    event.timeAdornment(
-                        in: plannerRegion,
-                        accentColor: accentColor,
+                    PlannerEventTimeAdornmentView(
+                        plannerEvent: event,
+                        plannerRegion: plannerRegion,
                         scale: 0.8
                     )
                     .frame(height: 17)

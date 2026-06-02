@@ -51,7 +51,7 @@ struct FolderActionMenuView: View {
             Label("Edit Folder", systemImage: "pencil")
         }
     }
-    
+
     private var deleteActionMenu: some View {
         Menu {
             deleteFolderButton

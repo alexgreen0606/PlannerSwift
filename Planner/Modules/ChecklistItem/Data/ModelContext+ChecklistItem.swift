@@ -13,17 +13,22 @@ extension ModelContext {
 
     @MainActor
     func ensureRootFolder() {
-        let existingRoots =
-            (try? fetch(
+        do {
+            let existingRoots = try fetch(
                 FetchDescriptor<ChecklistItem>(
                     predicate: #Predicate<ChecklistItem> { item in
                         item.parent == nil
                     }
                 )
-            )) ?? []
+            )
 
-        if existingRoots.first != nil {
-            return
+            if existingRoots.first != nil {
+                return
+            }
+        } catch {
+            assertionFailure(
+                "ERROR ModelContext+ChecklistItem.ensureRootFolder: \(error)"
+            )
         }
 
         insert(
@@ -35,7 +40,7 @@ extension ModelContext {
             )
         )
 
-        safeSave("ModelContext+Checklists.ensureRootFolder")
+        safeSave("ModelContext+ChecklistItem.ensureRootFolder")
     }
 
     // MARK: - CREATE
@@ -106,7 +111,7 @@ extension ModelContext {
             )
         }
 
-        safeSave("ModelContext+Checklists.updateChecklistItem")
+        safeSave("ModelContext+ChecklistItem.updateChecklistItem")
     }
 
     @MainActor
@@ -128,7 +133,7 @@ extension ModelContext {
             sortedItems: sortedItems
         )
 
-        safeSave("ModelContext+Checklists.moveChecklistItem")
+        safeSave("ModelContext+ChecklistItem.moveChecklistItem")
     }
 
     @MainActor
@@ -164,11 +169,11 @@ extension ModelContext {
             }
         } catch {
             assertionFailure(
-                "ERROR ModelContext+Checklists.transferChecklistItems.transaction: \(error)"
+                "ERROR ModelContext+ChecklistItem.transferChecklistItems.transaction: \(error)"
             )
             return
         }
 
-        safeSave("ModelContext+Checklists.transferChecklistItems")
+        safeSave("ModelContext+ChecklistItem.transferChecklistItems")
     }
 }

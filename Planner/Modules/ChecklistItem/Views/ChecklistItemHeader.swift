@@ -27,7 +27,7 @@ struct ChecklistItemHeaderView: ToolbarContent {
             }
             return 192
         }
-        
+
         return 250
     }
 

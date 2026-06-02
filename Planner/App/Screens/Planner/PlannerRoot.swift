@@ -35,7 +35,7 @@ struct PlannerRootView: View {
     @Namespace private var namespace
 
     private var startOfDay: DateInRegion {
-        planner.datestamp.startOfDay(in: planner.region(settings: settings))
+        planner.startOfDay(settings: settings)
     }
 
     private var sortedPendingPlannerEvents: [PlannerEvent] {
@@ -68,7 +68,7 @@ struct PlannerRootView: View {
             deviceLocation: locationService.deviceLocation
         )
     }
-    
+
     private var showHeaderDateIcon: Bool {
         planner.datestamp.isNext7Days(
             todaystamp: todayService.todaystamp
@@ -89,9 +89,9 @@ struct PlannerRootView: View {
                         plannerLocation: plannerLocation,
                         sortedPlannerEvents: sortedPlannerEvents,
                         sortedPendingPlannerEvents:
-                            sortedPendingPlannerEvents,
+                        sortedPendingPlannerEvents,
                         sortedCompletePlannerEvents:
-                            sortedCompletePlannerEvents,
+                        sortedCompletePlannerEvents,
                         calendarDayData: calendarDayData,
                         showCompleted: planner.showCompleted,
                         scrollProxy: scrollProxy,
@@ -253,8 +253,9 @@ struct PlannerRootView: View {
             event,
             in: planner,
             startOfDay: startOfDay,
+            plannerLocation: plannerLocation,
             eventKitStore: calendarStore.ekEventStore,
-            defaultLocation: plannerLocation
+            settings: settings
         )
     }
 

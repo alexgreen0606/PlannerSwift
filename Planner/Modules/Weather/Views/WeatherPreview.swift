@@ -13,23 +13,17 @@ struct WeatherPreviewView: View {
     let planner: Planner
     let startAdorned: Bool
     let showLocationLabel: Bool
-    let startOfDay: DateInRegion
-    let plannerLocation: Location?
     let settings: PlannerSettings
 
     init(
         planner: Planner,
         startAdorned: Bool = true,
         showLocationLabel: Bool,
-        startOfDay: DateInRegion,
-        plannerLocation: Location?,
         settings: PlannerSettings
     ) {
         self.planner = planner
         self.startAdorned = startAdorned
         self.showLocationLabel = showLocationLabel
-        self.startOfDay = startOfDay
-        self.plannerLocation = plannerLocation
         self.settings = settings
     }
 
@@ -41,7 +35,18 @@ struct WeatherPreviewView: View {
 
     @Environment(\.colorScheme) private var systemColorScheme
     @EnvironmentObject private var weatherCacheService: WeatherCacheService
-    @EnvironmentObject private var LocationService: LocationService
+    @EnvironmentObject private var locationService: LocationService
+
+    private var startOfDay: DateInRegion {
+        planner.startOfDay(settings: settings)
+    }
+
+    private var plannerLocation: Location? {
+        planner.location(
+            settings: settings,
+            deviceLocation: locationService.deviceLocation
+        )
+    }
 
     private var weatherData: DayWeather? {
         weatherCacheService.weather(
@@ -53,7 +58,7 @@ struct WeatherPreviewView: View {
     private var locationLabel: String {
         planner.locationLabel(
             settings: settings,
-            deviceLocation: LocationService.deviceLocation
+            deviceLocation: locationService.deviceLocation
         )
     }
 
@@ -128,43 +133,5 @@ struct WeatherPreviewView: View {
         }
         .frame(height: 30)
         .animateLazyAction(from: weatherData)
-        //        HStack(alignment: .bottom) {
-        //            if let weatherData {
-        //                Image(systemName: weatherData.symbolName)
-        //                    .symbolVariant(isDarkMode ? .fill : .none)
-        //                    .symbolRenderingMode(
-        //                        isDarkMode ? .multicolor : .monochrome
-        //                    )
-        //                    .imageScale(.medium)
-        //                    .frame(maxHeight: .infinity)
-        //            }
-        //
-        //            VStack(alignment: .leading, spacing: 0) {
-        //
-        //                if let weatherData {
-        //                    Text(weatherData.condition.description)
-        //                        .font(.system(size: 12, design: .rounded))
-        //                }
-        //
-        //                HStack {
-        //
-        //                    AdornedValueView(
-        //                        locationLabel,
-        //                        color: Color.secondary,
-        //                        iconConfig: locationIconConfig,
-        //                        scale: 0.7
-        //                    )
-        //
-        //                    Spacer()
-        //
-        //                    if let weatherData {
-        //                        TemperatureView(weatherData: weatherData)
-        //                    }
-        //                }
-        //                .frame(maxHeight: .infinity, alignment: .bottom)
-        //            }
-        //        }
-        //        .frame(height: 30)
-        //        .animateAsynchronousAction(from: weatherData)
     }
 }

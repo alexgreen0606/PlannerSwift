@@ -20,12 +20,12 @@ struct PlannerIconView: View {
     ) {
         self.type = type
         self.datestamp = datestamp
-        
+
         customSize = size
         customDetailSize = detailSize
         customDetailOffset = detailOffset
     }
-    
+
     private let customSize: CGFloat?
     private let customDetailSize: CGFloat?
     private let customDetailOffset: CGFloat?

@@ -44,7 +44,7 @@ struct EventFormView: View {
             draftPlannerEvent.date = calEvent.startDate
             draftPlannerEvent.hasTime = true
             draftPlannerEvent.location = calEvent.location(
-                storageEvent: sourcePlannerEvent
+                existingPlannerEvent: sourcePlannerEvent
             )
             draftPlannerEvent.calendarEvent = calEvent
 
@@ -73,9 +73,7 @@ struct EventFormView: View {
             let startDayInRegion = {
                 if let sourcePlanner {
                     let startDayInRegion =
-                        sourcePlanner.datestamp.startOfDay(
-                            in: sourcePlanner.region(settings: settings)
-                        )
+                        sourcePlanner.startOfDay(settings: settings)
 
                     // This is a planner-specific form.
                     // Use the current hour on the day of the selected planner.
@@ -148,6 +146,7 @@ struct EventFormView: View {
                 .allowsContentModifications == false
                 ? [.height(300)] : [.large]
         )
+        .interactiveDismissDisabled(true)
 
         // Ensure event location exists when hasTime is set to true.
         .onChange(of: draftPlannerEvent.hasTime) { _, _ in
@@ -160,41 +159,41 @@ struct EventFormView: View {
     @ViewBuilder
     private func calendarEventForm(for event: EKEvent) -> some View {
         if event.calendar.allowsContentModifications {
-            EditCalendarEventFormView(
-                event: event,
-                ekEventStore: calendarStore.ekEventStore
-            ) { action, event in
-                guard action != .canceled else {
-                    if let sourcePlannerEvent, let sourcePlanner,
-                       sourcePlannerEvent.title.trimmingCharacters(
-                           in: .whitespacesAndNewlines
-                       ).isEmpty
-                    {
-                        // The source event had an empty title. Delete it.
-                        modelContext.deletePlannerEvent(
-                            sourcePlannerEvent,
-                            in: sourcePlanner
+                EditCalendarEventFormView(
+                    event: event,
+                    ekEventStore: calendarStore.ekEventStore
+                ) { action, event in
+                    guard action != .canceled else {
+                        if let sourcePlannerEvent, let sourcePlanner,
+                           sourcePlannerEvent.title.trimmingCharacters(
+                            in: .whitespacesAndNewlines
+                           ).isEmpty
+                        {
+                            // The source event had an empty title. Delete it.
+                            modelContext.deletePlannerEvent(
+                                sourcePlannerEvent,
+                                in: sourcePlanner
+                            )
+                        }
+                        dismiss()
+                        return
+                    }
+                    
+                    saveCalendarEvent(event)
+                }
+                .tint(accentColor.color)
+                .ignoresSafeArea()
+                .overlay {
+                    VStack {
+                        Spacer()
+                        ActionButtonView(
+                            label: "Remove From Calendar",
+                            systemImage: "calendar.badge.minus",
+                            onTap: removeEventFromCalendar
                         )
                     }
-                    dismiss()
-                    return
                 }
-
-                saveCalendarEvent(event)
-            }
-            .tint(accentColor.color)
-            .ignoresSafeArea()
-            .overlay {
-                VStack {
-                    Spacer()
-                    ActionButtonView(
-                        label: "Remove From Calendar",
-                        systemImage: "calendar.badge.minus",
-                        onTap: removeEventFromCalendar
-                    )
-                }
-            }
-            .transition(.opacity)
+                .transition(.opacity)
         } else {
             ViewCalendarEventFormView(event: event)
                 .ignoresSafeArea()
@@ -204,7 +203,7 @@ struct EventFormView: View {
     // MARK: - Functions
 
     private func saveCalendarEvent(_ event: EKEvent?) {
-        let destinationDatestamp = modelContext.handleCalendarEventChange(
+        let destinationDatestamps = modelContext.handleCalendarEventChange(
             event,
             sourcePlanner: sourcePlanner,
             sourcePlannerEvent: sourcePlannerEvent,
@@ -220,51 +219,54 @@ struct EventFormView: View {
 
         showNotification(
             sourceDatestamp: sourcePlanner?.datestamp,
-            destinationDatestamp: destinationDatestamp,
+            destinationDatestamps: destinationDatestamps,
             finalEkEvent: event
         )
     }
 
     private func showNotification(
         sourceDatestamp: String?,
-        destinationDatestamp: String?,
+        destinationDatestamps: Set<String>,
         finalEkEvent _: EKEvent? = nil
     ) {
+        guard !destinationDatestamps.isEmpty else { return }
+
         var config: Toast?
 
         if sourcePlanner == nil {
-            if let destinationDatestamp {
-                config = Toast(
-                    title:
-                    "Successfully created event!",
-                    subtitle:
-                    "\(destinationDatestamp.dateWithYear) | \(destinationDatestamp.weekday)",
-                    iconConfig: IconConfig(
-                        name: "calendar.day.timeline.leading",
-                        primaryColor: Color.label,
-                        secondaryColor: Color.secondary
-                    ),
-                    variant: .tab,
-                    action: {
-                        PlannerCoverStore.context = PlannerCoverContext(
-                            datestamp: destinationDatestamp
-                        )
-                    }
-                )
-            }
-        } else if let destinationDatestamp {
-            if destinationDatestamp != sourceDatestamp {
+            let earliestDatestamp = destinationDatestamps.sorted().first!
+            config = Toast(
+                title:
+                "Successfully created event!",
+                subtitle:
+                "\(earliestDatestamp.dateWithYear) | \(earliestDatestamp.weekday)",
+                iconConfig: IconConfig(
+                    name: "calendar.day.timeline.leading",
+                    primaryColor: Color.label,
+                    secondaryColor: Color.secondary
+                ),
+                variant: .tab,
+                action: {
+                    PlannerCoverStore.context = PlannerCoverContext(
+                        datestamp: earliestDatestamp
+                    )
+                }
+            )
+        } else if let sourceDatestamp {
+            if !destinationDatestamps.contains(sourceDatestamp) {
+                let earliestDatestamp = destinationDatestamps.sorted().first!
+
                 let primaryColor =
-                    destinationDatestamp > sourceDatestamp!
+                    earliestDatestamp > sourceDatestamp
                         ? Color.secondary : Color.label
                 let secondaryColor =
-                    destinationDatestamp > sourceDatestamp!
+                    earliestDatestamp > sourceDatestamp
                         ? Color.label : Color.secondary
 
                 config = Toast(
                     title: "Successfully moved event!",
                     subtitle:
-                    "\(destinationDatestamp.dateWithYear) | \(destinationDatestamp.weekday)",
+                    "\(earliestDatestamp.dateWithYear) | \(earliestDatestamp.weekday)",
                     iconConfig: IconConfig(
                         name: "arrow.left.arrow.right",
                         primaryColor: primaryColor,
@@ -272,7 +274,7 @@ struct EventFormView: View {
                     ),
                     action: {
                         PlannerCoverStore.context = PlannerCoverContext(
-                            datestamp: destinationDatestamp
+                            datestamp: earliestDatestamp
                         )
                     }
                 )

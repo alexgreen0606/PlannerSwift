@@ -16,7 +16,7 @@ struct TripDayPreviewCardView: View {
 
     var body: some View {
         PlannerPreviewCardView(
-            type: .trip,
+            variant: .trip,
             datestamp: datestamp,
             header: PlannerHeaderView(
                 datestamp: datestamp,
@@ -24,11 +24,11 @@ struct TripDayPreviewCardView: View {
                 title: "Day \(index + 1)",
                 subtitle: datestamp.weekday
             ),
-            settings: settings,
-            namespace: namespace,
             transitionId: trip.transitionId(
                 for: datestamp
-            )
+            ),
+            settings: settings,
+            namespace: namespace
         )
     }
 }

@@ -70,7 +70,7 @@ struct LocationFormView: View {
                     selectedLocation: $selectedLocation,
                     formVariant: variant,
                     homeLocation: settings.homeLocation,
-                    sourcePlanner: sourcePlanner,
+                    sourcePlanner: sourcePlanner
                 )
             }
             .animateUserAction(from: selectedLocation)
@@ -88,6 +88,7 @@ struct LocationFormView: View {
             .interactiveDismissDisabled(true)
 
             // MARK: Build the suggestions on mount and if the device location changes.
+
             .task(id: locationService.deviceLocation) {
                 buildSuggestedLocations()
             }

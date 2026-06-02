@@ -26,9 +26,9 @@ struct ListKeyboardAccessoryView<Item: ListItem>: View {
                         .contentShape(Rectangle())
                         .onTapGesture {
                             guard let focusedId = listEngine.focusedId,
-                                let item = items.first(where: {
-                                    $0.stableId == focusedId
-                                })
+                                  let item = items.first(where: {
+                                      $0.stableId == focusedId
+                                  })
                             else { return }
 
                             onIconTap?(systemImageName, item)

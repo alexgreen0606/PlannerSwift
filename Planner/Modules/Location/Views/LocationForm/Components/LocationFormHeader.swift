@@ -18,7 +18,7 @@ struct LocationFormHeaderView: View {
 
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var locationSearchService: LocationSearchService
-    
+
     @FocusState private var isSearchFocused
 
     private var tripLocation: Location? {
@@ -246,7 +246,6 @@ struct LocationFormHeaderView: View {
         .tint(accentColor.color)
         .padding()
         .glassEffect(.regular.interactive())
-
         // Increase the focusable area of the field.
         .contentShape(Rectangle())
         .onTapGesture {

@@ -9,7 +9,8 @@ import SwiftDate
 import SwiftUI
 
 extension DateInRegion {
-    var timeWithTimezone: String? { // EX: 3PM CST, 3:59AM GMT
+    /// Example: 3PM CST, 3:59AM GMT
+    var timeWithTimezone: String? {
         guard let timeZoneAbbreviation = region.timeZone.abbreviation() else {
             return nil
         }

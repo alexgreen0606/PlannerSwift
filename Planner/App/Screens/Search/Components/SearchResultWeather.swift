@@ -17,15 +17,8 @@ struct SearchResultWeatherView: View {
     @EnvironmentObject private var weatherCacheService: WeatherCacheService
     @EnvironmentObject private var locationService: LocationService
 
-    private var startOfDay: DateInRegion {
-        planner.datestamp.startOfDay(in: planner.region(settings: settings))
-    }
-
-    private var plannerLocation: Location? {
-        planner.location(
-            settings: settings,
-            deviceLocation: locationService.deviceLocation
-        )
+    private var isSearching: Bool {
+        activeQuery.isSearching
     }
 
     private var showLocationLabel: Bool {
@@ -33,7 +26,7 @@ struct SearchResultWeatherView: View {
             return false
         }
 
-        if activeQuery.isSearching {
+        if isSearching {
             return true
         }
 
@@ -56,13 +49,13 @@ struct SearchResultWeatherView: View {
     // MARK: - Body
 
     var body: some View {
-        WeatherPreviewView(
-            planner: planner,
-            startAdorned: false,
-            showLocationLabel: showLocationLabel,
-            startOfDay: startOfDay,
-            plannerLocation: plannerLocation,
-            settings: settings
-        )
+        if !isSearching || showLocationLabel {
+            WeatherPreviewView(
+                planner: planner,
+                startAdorned: false,
+                showLocationLabel: showLocationLabel,
+                settings: settings
+            )
+        }
     }
 }

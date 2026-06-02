@@ -10,12 +10,6 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-enum VisiblePicker {
-    case date
-    case time
-    case none
-}
-
 struct PlannerEventFormView: View {
     @Binding var draftPlannerEvent: DraftPlannerEvent
     let settings: PlannerSettings
@@ -23,7 +17,7 @@ struct PlannerEventFormView: View {
     let sourceCalendarEvent: EKEvent?
     let sourcePlannerEvent: PlannerEvent?
     let sourcePlanner: Planner?
-    let showNotification: (String?, String?, EKEvent?) -> Void
+    let showNotification: (String?, Set<String>, EKEvent?) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
@@ -37,10 +31,20 @@ struct PlannerEventFormView: View {
     @EnvironmentObject private var LocationService: LocationService
 
     @State private var showDeleteConfirmation = false
-    @State private var visiblePicker: VisiblePicker = .none
+    @State private var visiblePicker: VisibleEventFormPicker = .none
     @State private var hasTitleAutoFocused = false
 
     @FocusState private var isTitleFocused
+
+    private var isCreateForm: Bool {
+        sourcePlannerEvent == nil && sourceCalendarEvent == nil
+    }
+
+    private var canSave: Bool {
+        !draftPlannerEvent.title.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        ).isEmpty
+    }
 
     private var eventRegion: Region {
         draftPlannerEvent
@@ -59,26 +63,11 @@ struct PlannerEventFormView: View {
         eventRegion.timeZone.abbreviation() ?? "Unknown Time Zone"
     }
 
-    private var isCreateForm: Bool {
-        sourcePlannerEvent == nil && sourceCalendarEvent == nil
-    }
-
-    private var canSave: Bool {
-        !draftPlannerEvent.title.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        ).isEmpty
-    }
-
     private var showCalendarButton: Bool {
         calendarStore.hasAccess == true
     }
 
-    private var bottomBarPadding: CGFloat {
-        if isTitleFocused {
-            return 4
-        }
-        return 0
-    }
+    // MARK: - Body
 
     var body: some View {
         NavigationStack {
@@ -87,15 +76,13 @@ struct PlannerEventFormView: View {
                 detailsSection
             }
             .animation(.linear, value: visiblePicker)
-            .navigationTitle(isCreateForm ? "Create Event" : "Edit Event")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 cancelButton
-                saveButton
-            }
-            .safeAreaInset(edge: .bottom) {
+                FormSaveButtonView(canSave: canSave, save: savePlannerEvent)
                 bottomToolbar
             }
+            .navigationTitle(isCreateForm ? "Create Event" : "Edit Event")
+            .navigationBarTitleDisplayMode(.inline)
         }
         .transition(.opacity)
     }
@@ -125,86 +112,37 @@ struct PlannerEventFormView: View {
     }
 
     @ToolbarContentBuilder
-    private var saveButton: some ToolbarContent {
-        ToolbarItem(placement: .confirmationAction) {
-            Button("Save", systemImage: "checkmark", action: savePlannerEvent)
-                .buttonStyle(.glassProminent)
-                .tint(canSave ? accentColor.color : .tertiary)
-                .disabled(!canSave)
+    private var bottomToolbar: some ToolbarContent {
+        if let sourcePlannerEvent {
+            ToolbarItem(placement: .bottomBar) {
+                Button("", systemImage: "trash") {
+                    showDeleteConfirmation = true
+                }
+                .tint(Color.red)
+                .withConfirmation(
+                    deletePlannerEventConfig(
+                        event: sourcePlannerEvent,
+                        inForm: true,
+                        delete: deleteEvent
+                    ),
+                    isPresented: $showDeleteConfirmation
+                )
+            }
+
+            ToolbarSpacer(placement: .bottomBar)
+
+            ToolbarItem(placement: .bottomBar) {
+                Button("Add to Calendar") {
+                    addEventToCalendar()
+                }
+                .fontWeight(.semibold)
+                .fontDesign(.rounded)
+                .tint(accentColor.color)
+            }
         }
     }
 
     // MARK: - View Builders
-
-    private var bottomToolbar: some View {
-        HStack {
-            deleteButton
-
-            // When both buttons visible, space them apart.
-            if showCalendarButton, !isCreateForm {
-                Spacer()
-            }
-
-            addToCalendarButton
-        }
-        .padding(.horizontal)
-        .padding(.top)
-        .padding(.bottom, bottomBarPadding)
-    }
-
-    @ViewBuilder
-    private var addToCalendarButton: some View {
-        if showCalendarButton {
-            GlassIconButtonView(systemImageName: "calendar.badge.plus") {
-                isTitleFocused = false
-                DispatchQueue.main.async(execute: addEventToCalendar)
-            }
-            // TODO: pick a design.
-            //            ActionButtonView(
-            //                label: "Add To Calendar",
-            //                systemImage: "calendar.badge.plus",
-            //                endAdornment: !isCreateForm,
-            //                onTap: addEventToCalendar
-            //            )
-        }
-    }
-
-    @ViewBuilder
-    private var deleteButton: some View {
-        if let sourcePlannerEvent {
-            if !showCalendarButton {
-                ActionButtonView(
-                    label: "Delete Event",
-                    systemImage: "trash",
-                    color: Color.red,
-                    onTap: {
-                        showDeleteConfirmation = true
-                    }
-                )
-                .withConfirmation(
-                    deletePlannerEventConfig(
-                        event: sourcePlannerEvent,
-                        inForm: true,
-                        delete: deleteEvent
-                    ),
-                    isPresented: $showDeleteConfirmation
-                )
-            } else {
-                GlassIconButtonView(systemImageName: "trash", color: Color.red)
-                {
-                    showDeleteConfirmation = true
-                }
-                .withConfirmation(
-                    deletePlannerEventConfig(
-                        event: sourcePlannerEvent,
-                        inForm: true,
-                        delete: deleteEvent
-                    ),
-                    isPresented: $showDeleteConfirmation
-                )
-            }
-        }
-    }
 
     private var titleSection: some View {
         FormTitleFieldView(
@@ -353,17 +291,17 @@ struct PlannerEventFormView: View {
 
     private func savePlannerEvent() {
         let destinationDatestamp = modelContext.updatePlannerEvent(
+            sourcePlannerEvent,
             with: draftPlannerEvent,
-            sourcePlanner: sourcePlanner,
-            targetDatestamp: DateInRegion(
+            destinationDatestamp: DateInRegion(
                 draftPlannerEvent.date,
                 region: eventRegion
             ).datestamp,
-            settings: settings,
-            ekEventStore: calendarStore.ekEventStore,
+            sourceCalendarEvent: sourceCalendarEvent,
+            sourcePlanner: sourcePlanner,
             timeZone: eventRegion.timeZone,
-            sourcePlannerEvent: sourcePlannerEvent,
-            sourceCalendarEvent: sourceCalendarEvent
+            ekEventStore: calendarStore.ekEventStore,
+            settings: settings
         )
 
         // Refresh calendar in case of recurring/all-day events.
@@ -373,7 +311,15 @@ struct PlannerEventFormView: View {
 
         dismiss()
 
-        showNotification(sourcePlanner?.datestamp, destinationDatestamp, nil)
+        let destinationDatestamps: Set<String> = {
+            guard let sourcePlanner else {
+                return []
+            }
+
+            return [sourcePlanner.datestamp]
+        }()
+
+        showNotification(sourcePlanner?.datestamp, destinationDatestamps, nil)
     }
 
     private func addEventToCalendar() {
@@ -436,7 +382,7 @@ struct PlannerEventFormView: View {
         }
     }
 
-    private func togglePicker(type: VisiblePicker) {
+    private func togglePicker(type: VisibleEventFormPicker) {
         ensureTextfieldBlurred()
 
         if visiblePicker == type {

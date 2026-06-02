@@ -13,19 +13,23 @@ import SwiftUI
 extension ModelContext {
     @MainActor
     func shiftPlannerEvents(
-        _ events: [PlannerEvent],
+        _ plannerEvents: [PlannerEvent],
         days: DateComponents,
         sourceDatestamp: String,
-        targetDatestamp: String,
-        settings: PlannerSettings,
-        eventStore: EKEventStore
+        destinationDatestamp: String,
+        eventStore: EKEventStore,
+        settings: PlannerSettings
     ) {
         // Assemble the events in reverse-chronological ordering so they
         // are inserted correctly.
-        let reverseSortedEvents = events.sorted { $0.sortDate > $1.sortDate }
+        let reverseSortedEvents = plannerEvents.sorted {
+            $0.sortDate > $1.sortDate
+        }
 
         for event in reverseSortedEvents {
             if let calEvent = event.calendarEvent {
+                // MARK: Event is a calendar event. Update the calendar record.
+
                 guard calEvent.calendar.allowsContentModifications else {
                     continue
                 }
@@ -35,6 +39,7 @@ extension ModelContext {
                 calEvent.endDate = calEvent.endDate + days
 
                 if !eventStore.attemptUpdateEvent(calEvent) {
+                    // The update failed. Skip this event.
                     continue
                 }
             }
@@ -43,8 +48,9 @@ extension ModelContext {
                 event.time = time + days
             }
 
-            event.datestamp = targetDatestamp
+            event.datestamp = destinationDatestamp
 
+            // Place the event at the top of its new planner.
             _ = ensureValidSortDate(
                 for: event,
                 settings: settings,

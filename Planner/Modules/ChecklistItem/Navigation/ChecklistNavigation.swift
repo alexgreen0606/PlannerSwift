@@ -29,9 +29,8 @@ struct ChecklistNavigationView: View {
         if let rootFolder {
             ToastRootView {
                 NavigationStack(path: $folderPath) {
-                    
                     // MARK: Root Folder Root
-                    
+
                     ChecklistItemLoaderView(
                         stableId: rootFolder.stableId
                     ) { context in
@@ -48,9 +47,8 @@ struct ChecklistNavigationView: View {
                             ChecklistItemLoaderView(
                                 stableId: item.stableId
                             ) { context in
-                                
                                 // MARK: Folder Root
-                                
+
                                 FolderRootView(
                                     folder: context.item,
                                     sortedItems: context.sortedItems,
@@ -62,9 +60,9 @@ struct ChecklistNavigationView: View {
                         }
                     }
                 }
-                
+
                 // MARK: Checklist Root
-                
+
                 .fullScreenCover(item: $checklistCoverContext) { context in
                     ChecklistItemLoaderView(
                         stableId: context.id

@@ -11,7 +11,6 @@ import SwiftDate
 import SwiftUI
 
 extension Planner {
-
     var safeRoutineEventVariants: [RoutineEventVariant] {
         routineEventVariants ?? []
     }
@@ -23,6 +22,10 @@ extension Planner {
         return trip?.excludeRoutines ?? false
     }
 
+    func startOfDay(settings: PlannerSettings) -> DateInRegion {
+        datestamp.startOfDay(in: region(settings: settings))
+    }
+
     // MARK: - Location Variables
 
     // TODO: maybe this should relate to timezone yeah?
@@ -32,7 +35,7 @@ extension Planner {
     }
 
     func location(settings: PlannerSettings, deviceLocation: Location?)
-        /// Note: nil means the device location is used and hasn't loaded yet.
+        // Note: nil means the device location is used and hasn't loaded yet.
         -> Location?
     {
         location ?? trip?.location
@@ -68,5 +71,4 @@ extension Planner {
 
         return settings.homeLocationIconConfig
     }
-
 }

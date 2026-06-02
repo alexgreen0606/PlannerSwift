@@ -14,14 +14,14 @@ struct EventSheetContext: Identifiable {
     var calendarEvent: EKEvent?
 
     var id: String {
-        if let calEvent = calendarEvent {
-            return calEvent.transitionId
+        if let calendarEvent {
+            return calendarEvent.transitionId
         }
 
-        if let plannerEvent = plannerEvent {
+        if let plannerEvent {
             return plannerEvent.transitionId
         }
 
-        return "FALLBACK_NO_EVENT"
+        return "NO_EVENT"
     }
 }

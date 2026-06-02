@@ -86,7 +86,8 @@ extension ModelContext {
             // Create new planners that don't exist yet.
 
             for datestamp in datestamps
-            where !allPlanners.contains(where: { $0.datestamp == datestamp }) {
+                where !allPlanners.contains(where: { $0.datestamp == datestamp })
+            {
                 allPlanners.append(
                     createPlanner(for: datestamp, skipSave: true)
                 )
@@ -97,11 +98,9 @@ extension ModelContext {
             var contexts: [PlannerBuildContext] = []
 
             for planner in allPlanners {
-                let startOfDay = planner.datestamp.startOfDay(
-                    in: planner.region(settings: settings)
-                )
+                let startOfDay = planner.startOfDay(settings: settings)
 
-                let sortedEvents = getSortedStorageEvents(for: startOfDay)
+                let sortedEvents = getSortedPlannerEvents(on: startOfDay)
 
                 contexts.append(
                     PlannerBuildContext(
@@ -118,50 +117,64 @@ extension ModelContext {
         }
     }
 
-    /// Fetches the start of day for the earliest possible planner that can hold an event with the given absolute point in time.
+    /// Fetches the start of days for all planners that can hold an event with the given absolute point in time.
     /// When no time is given, the datestamp will be used to load that planner and calculate it's start of day.
     @MainActor
-    func getEarliestPlannerStartOfDay(
+    func getSortedPlannerStartOfDays(
         for time: Date?,
+        endTime: Date? = nil,
         datestamp: String? = nil,
         settings: PlannerSettings
-    ) -> DateInRegion? {
+    ) -> [DateInRegion] {
         guard let time else {
             guard let datestamp else {
-                return nil
+                return []
             }
 
             let planner = getPlanner(for: datestamp)
 
             // Event has no time. Return the start of day for the event's assigned planner.
-            return planner.datestamp.startOfDay(
-                in: planner.region(settings: settings)
-            )
+            return [
+                planner.startOfDay(settings: settings),
+            ]
         }
 
         let sortedPossibleDatestamps =
-            getSortedPossibleDatestamps(for: time)
+            getSortedPossibleDatestamps(for: time, ending: endTime)
 
+        var sortedStartOfDays: [DateInRegion] = []
+
+        // Gather all planner start of days that contain the event.
         for datestamp in sortedPossibleDatestamps {
             let planner = getPlanner(for: datestamp)
 
-            let startOfDay = planner.datestamp.startOfDay(
-                in: planner.region(settings: settings)
-            )
+            let startOfDay = planner.startOfDay(settings: settings)
 
-            if time.belongsTo(startOfDay) {
-                // Event will display within this planner. Return its start of day.
-                return startOfDay
+            let eventExistsInPlanner = {
+                if let endTime,
+                   dateRangeIncludes(
+                       startTime: time,
+                       endTime: endTime,
+                       startOfDay: startOfDay
+                   )
+                {
+                    return true
+                }
+
+                return time.belongsToPlanner(startOfDay: startOfDay)
+            }()
+
+            if eventExistsInPlanner {
+                sortedStartOfDays.append(startOfDay)
             }
         }
 
-        // Date does not match any planner.
-        return nil
+        return sortedStartOfDays
     }
 
     @MainActor
     func getUpperSortDate(for startOfDay: DateInRegion) -> Date {
-        let storageEvents = getSortedStorageEvents(for: startOfDay)
+        let storageEvents = getSortedPlannerEvents(on: startOfDay)
         return generateSortDate(
             at: 0,
             in: storageEvents,
@@ -188,7 +201,7 @@ extension ModelContext {
         planner.excludeRoutine = !planner.safeExcludeRoutine
 
         if let trip = planner.trip,
-            trip.excludeRoutines == planner.excludeRoutine
+           trip.excludeRoutines == planner.excludeRoutine
         {
             // Revert flag back to nil so it inherits the exclusion state from the trip.
             planner.excludeRoutine = nil

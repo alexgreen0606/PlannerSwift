@@ -7,8 +7,8 @@
 
 extension Planner {
     func searchQueryScore(_ query: PlannerSearchQuery?) ->
-    /// Note: nil means the event doesn't match the query.
-    Double?
+        /// Note: nil means the event doesn't match the query.
+        Double?
     {
         guard let query else {
             // Include. No query set.
@@ -26,7 +26,7 @@ extension Planner {
         }
 
         if let location = location,
-            let locationScore = query.score(for: location.name)
+           let locationScore = query.score(for: location.name)
         {
             // Include. Location matches the search text.
             return locationScore

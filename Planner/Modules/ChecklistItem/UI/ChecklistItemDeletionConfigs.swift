@@ -32,7 +32,7 @@ func deleteChecklistItemConfig(
             ConfirmationAction(
                 title: "Delete \(item.type.rawValue.capitalized)",
                 handler: delete
-            )
+            ),
         ]
     )
 }
@@ -44,6 +44,7 @@ func bulkDeleteChecklistItemsConfig(
     delete: @escaping () -> Void
 ) -> ConfirmationConfig {
     let count = items.count
+    
     if count == 1 {
         return deleteChecklistItemConfig(
             item: items.first!,
@@ -65,9 +66,9 @@ func bulkDeleteChecklistItemsConfig(
         actions: [
             ConfirmationAction(
                 title:
-                    "Delete \(count) \(itemsTypeLabel.capitalized)s",
+                "Delete \(count) \(itemsTypeLabel.capitalized)s",
                 handler: delete
-            )
+            ),
         ]
     )
 }
@@ -81,14 +82,14 @@ func bulkDeleteCompletedChecklistItemsConfig(
 ) -> ConfirmationConfig {
     ConfirmationConfig(
         title:
-            "Delete completed items from \"\(parent.title)\"?",
+        "Delete completed items from \"\(parent.title)\"?",
         message: UI.GENERIC_DELETE_WARNING,
         actions: [
             ConfirmationAction(
                 title:
-                    "Delete ^[\(completedItems.count) Item](inflect: true)",
+                "Delete ^[\(completedItems.count) Item](inflect: true)",
                 handler: delete
-            )
+            ),
         ]
     )
 }

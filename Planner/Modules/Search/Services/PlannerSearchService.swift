@@ -53,8 +53,7 @@ actor PlannerSearchService {
                 // Find the first day in the trip that matches the timeframe.
                 let firstValidPlanner = trip.sortedPlanners.first(where: {
                     planner in
-                    plannerCache[planner.datestamp] = planner.datestamp
-                        .startOfDay(in: planner.region(settings: settings))
+                    plannerCache[planner.datestamp] = planner.startOfDay(settings: settings)
 
                     if query.past,
                        planner.datestamp < query.todayStartOfDay.datestamp
@@ -388,6 +387,7 @@ actor PlannerSearchService {
 
         let end = calendarEvent?.endDate ?? start
 
+        // TODO: make a generic func for this.
         return start < nextDayStart && end >= dayStart
     }
 }

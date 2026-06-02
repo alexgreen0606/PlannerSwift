@@ -16,15 +16,15 @@ struct UpcomingDayPreviewCardView: View {
 
     var body: some View {
         PlannerPreviewCardView(
-            type: .planner,
+            variant: .planner,
             datestamp: datestamp,
             header: PlannerHeaderView(datestamp: datestamp),
             width: todayService.todaystamp == datestamp
                 ? PlannerPreviewCardLayout.TODAY_WIDTH
                 : PlannerPreviewCardLayout.DEFAULT_WIDTH,
+            transitionId: datestamp,
             settings: settings,
-            namespace: namespace,
-            transitionId: datestamp
+            namespace: namespace
         )
     }
 }

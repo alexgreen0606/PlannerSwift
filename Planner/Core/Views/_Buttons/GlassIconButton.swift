@@ -36,7 +36,7 @@ struct GlassIconButtonView: View {
     var body: some View {
         let button = Button {
             guard !disabled else { return }
-            
+
             onTap()
         } label: {
             Image(systemName: systemImageName)

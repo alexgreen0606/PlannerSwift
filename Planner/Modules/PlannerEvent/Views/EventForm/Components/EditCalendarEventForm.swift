@@ -9,8 +9,6 @@ import EventKit
 import EventKitUI
 import SwiftUI
 
-// Clean
-
 struct EditCalendarEventFormView: UIViewControllerRepresentable {
     let event: EKEvent
     let ekEventStore: EKEventStore
@@ -26,6 +24,7 @@ struct EditCalendarEventFormView: UIViewControllerRepresentable {
         vc.eventStore = ekEventStore
         vc.event = event
         vc.editViewDelegate = context.coordinator
+
         vc.additionalSafeAreaInsets.bottom = 30
 
         return vc

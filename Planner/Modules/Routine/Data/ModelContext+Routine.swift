@@ -13,7 +13,7 @@ import SwiftUI
 extension ModelContext {
     static let baseRoutineDay =
         DateInRegion("2000-06-06", region: .UTC)?
-        .dateAtStartOf(.day)
+            .dateAtStartOf(.day)
 
     // MARK: - CREATE
 
@@ -22,7 +22,7 @@ extension ModelContext {
         at index: Int,
         in sortedRoutineEvents: [RoutineEvent],
         weekday: Weekday
-    ) -> UUID?  // The ID of the new event.
+    ) -> UUID? // The ID of the new event.
     {
         let sortDate = generateRoutineEventSortDate(
             at: index,
@@ -66,7 +66,7 @@ extension ModelContext {
                         SortDescriptor(
                             \RoutineEventWeekdayInstance.sortDate,
                             order: reversed ? .reverse : .forward
-                        )
+                        ),
                     ]
                 )
             )
@@ -81,9 +81,9 @@ extension ModelContext {
     }
 
     @MainActor
-    func loadRoutineEvent(
+    func loadRoutineEventVariant(
         for calendarItemExternalIdentifier: String
-    ) -> RoutineEvent? {
+    ) -> RoutineEventVariant? {
         do {
             let matchingRoutineVariants = try fetch(
                 FetchDescriptor<RoutineEventVariant>(
@@ -94,8 +94,7 @@ extension ModelContext {
                 )
             )
 
-            return matchingRoutineVariants.first?.routineEvent
-
+            return matchingRoutineVariants.first
         } catch {
             assertionFailure("ERROR loadRoutineEvent: \(error)")
         }
@@ -154,7 +153,7 @@ extension ModelContext {
 
         let event =
             sourceRoutineEvent
-            ?? RoutineEvent()
+                ?? RoutineEvent()
 
         event.syncWithDraftRoutineEvent(draftRoutineEvent)
 
@@ -229,7 +228,8 @@ extension ModelContext {
 
             // Events will be lazily deleted in this case.
             for instance in event.safeWeekdayInstances
-            where instance.weekdayRawValue == weekday.rawValue {
+                where instance.weekdayRawValue == weekday.rawValue
+            {
                 delete(instance)
             }
         }
@@ -333,7 +333,7 @@ extension ModelContext {
 
     private func generateRoutineEventSortDate(
         at index: Int,
-        in sortedRoutineEvents: [RoutineEvent],  // May or may not contain the event being placed.
+        in sortedRoutineEvents: [RoutineEvent], // May or may not contain the event being placed.
         weekday: Weekday
     ) -> Date {
         guard let baseDay = Self.baseRoutineDay else {
@@ -365,7 +365,8 @@ extension ModelContext {
         for day in daysToRemove {
             // Remove days that no longer exist.
             for instance in event.safeWeekdayInstances
-            where instance.weekdayRawValue == day.rawValue {
+                where instance.weekdayRawValue == day.rawValue
+            {
                 delete(instance)
             }
         }

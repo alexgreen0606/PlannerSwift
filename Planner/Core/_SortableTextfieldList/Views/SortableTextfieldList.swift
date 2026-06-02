@@ -24,13 +24,13 @@ struct SortableTextfieldListView<
     private let handleTitleChange: ((_ item: Item) -> Void)?
 
     private let sortedPendingItems: [Item]
-    private let emptyPendingLabel: String
+    private let emptyPendingLabel: LocalizedStringKey
 
     private let sortedCompletedItems: [Item]
     private let showCompleted: Bool
     private let completedHeader: String
     private let completedFooter: String?
-    private let emptyCompletedLabel: String
+    private let emptyCompletedLabel: LocalizedStringKey
 
     private let rowId: (_ item: Item) -> String
     private let tint: (_ item: Item) -> Color
@@ -50,12 +50,12 @@ struct SortableTextfieldListView<
         deleteItem: ((_: Item) -> Void)? = nil,
         handleTitleChange: ((_: Item) -> Void)? = nil,
         sortedPendingItems: [Item]? = nil,
-        emptyPendingLabel: String,
+        emptyPendingLabel: LocalizedStringKey,
         sortedCompletedItems: [Item] = [],
         showCompleted: Bool = false,
         completedHeader: String = "",
         completedFooter: String? = nil,
-        emptyCompletedLabel: String = "",
+        emptyCompletedLabel: LocalizedStringKey = "",
         rowId: @escaping (_ item: Item) -> String = { $0.stableId.uuidString },
         tint: @escaping (_: Item) -> Color,
         toggleConfig: @escaping (_: Item) -> ToggleConfig? = { _ in nil },

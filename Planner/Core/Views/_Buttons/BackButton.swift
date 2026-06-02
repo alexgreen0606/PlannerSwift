@@ -13,7 +13,7 @@ struct BackButtonView: View {
     init(dismiss: (() -> Void)? = nil, handleSideEffects: (() -> Void)? = nil) {
         self.handleSideEffects = handleSideEffects
 
-        self.customDismiss = dismiss
+        customDismiss = dismiss
     }
 
     private let customDismiss: (() -> Void)?

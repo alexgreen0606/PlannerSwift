@@ -32,9 +32,9 @@ struct SelectedFolderItemActionsView: ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             SelectAllToggleView(visibleItems: items)
         }
-        
+
         ToolbarSpacer(.fixed, placement: .topBarTrailing)
-        
+
         ToolbarItem(placement: .topBarTrailing) {
             deleteSelectedButton
         }

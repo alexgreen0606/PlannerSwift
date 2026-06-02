@@ -80,7 +80,7 @@ final class ListEngine<Item: ListItem>: ObservableObject {
 
     func toggleSelectAll(visibleItems: [Item]) {
         feedbackGenerator.impactOccurred()
-        
+
         if selectedItemIds.count == visibleItems.count {
             selectedItemIds = []
             selectedItems = []

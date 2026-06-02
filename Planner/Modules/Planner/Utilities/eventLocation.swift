@@ -11,7 +11,7 @@ func eventLocation(
     planner: Planner?,
     settings: PlannerSettings,
     deviceLocation: Location?
-) -> /// Note: Only nil if the device location has not loaded in.
+) -> // Note: Only nil if the device location has not loaded in.
     Location?
 {
     location

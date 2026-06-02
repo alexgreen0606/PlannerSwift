@@ -145,9 +145,9 @@ struct TransferEventsFormView: View {
             plannerEngine.selectedItems,
             days: dayOffset.days,
             sourceDatestamp: sourceDatestamp,
-            targetDatestamp: destinationDatestamp,
-            settings: settings,
-            eventStore: calendarStore.ekEventStore
+            destinationDatestamp: destinationDatestamp,
+            eventStore: calendarStore.ekEventStore,
+            settings: settings
         )
 
         dismiss()

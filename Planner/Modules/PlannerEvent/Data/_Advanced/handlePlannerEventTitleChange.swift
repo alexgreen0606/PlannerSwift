@@ -8,43 +8,42 @@
 import EventKit
 import SwiftData
 import SwiftDate
-import SwiftUI
 
 extension ModelContext {
     @MainActor
     func handlePlannerEventTitleChange(
-        _ event: PlannerEvent,
+        _ plannerEvent: PlannerEvent,
         in planner: Planner,
         startOfDay: DateInRegion,
+        plannerLocation: Location?,
         eventKitStore: EKEventStore,
-        defaultLocation: Location?
+        settings: PlannerSettings
     ) {
-        if let calendarEvent = event.calendarEvent {
-            // Event is a calendar event. Update its title in the calendar.
-            calendarEvent.title = event.title
+        if let calendarEvent = plannerEvent.calendarEvent {
+            // MARK: Event is a calendar event. Update its title in the calendar.
+
+            calendarEvent.title = plannerEvent.title
             _ = eventKitStore.attemptUpdateEvent(calendarEvent)
             return
         }
 
-        // Scan the title for a date.
-        guard let defaultLocation,
-              let (time, updatedText) = event.title.extractTime(for: startOfDay)
-        else {
-            updatePlannerEventRoutineVariance(
-                event,
-                in: startOfDay.region.timeZone,
-                sourcePlanner: planner
-            )
-            return
+        if let plannerLocation,
+           let (time, updatedText) = plannerEvent.title.extractTime(for: startOfDay)
+        {
+            // MARK: Title has a time value. Re-configure the event.
+
+            plannerEvent.title = updatedText
+            plannerEvent.location = plannerLocation
+            plannerEvent.time = time
         }
 
-        event.title = updatedText
-        event.location = defaultLocation
-        event.time = time
+        // MARK: Update the event's routine state if needed.
+
         updatePlannerEventRoutineVariance(
-            event,
+            plannerEvent,
             in: startOfDay.region.timeZone,
-            sourcePlanner: planner
+            sourcePlanner: planner,
+            settings: settings
         )
 
         safeSave("handlePlannerEventTitleChange")

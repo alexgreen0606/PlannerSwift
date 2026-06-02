@@ -213,16 +213,12 @@ struct RootTabView: View {
             for: todayService.todaystamp
         )
 
-        let todayStartOfDay = todayPlanner.datestamp.startOfDay(
-            in: todayPlanner.region(settings: settings)
-        )
-
         plannerSearchStore.search(
             with: PlannerSearchQuery(
                 text: "",
                 calendarIds: [],
                 past: false,
-                todayStartOfDay: todayStartOfDay,
+                todayStartOfDay: todayPlanner.startOfDay(settings: settings),
                 fuse: Fuse()
             ),
             modelContainer: modelContext.container,

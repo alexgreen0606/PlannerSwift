@@ -53,11 +53,11 @@ class PlannerSyncService: ObservableObject {
         if syncRoutine {
             modelContext.syncRoutine(
                 for: planner,
-                storageEvents: sortedPlannerEvents,
                 startOfDay: startOfDay,
                 weekday: weekday,
-                ekEventStore: ekEventStore,
-                todaystamp: todaystamp
+                plannerEvents: sortedPlannerEvents,
+                todaystamp: todaystamp,
+                ekEventStore: ekEventStore
             )
 
             freshRoutineMap[weekday, default: []].insert(planner.datestamp)
@@ -76,10 +76,10 @@ class PlannerSyncService: ObservableObject {
         let task: Task<CalendarDayData?, Never> = Task {
             let calendarDayData = modelContext.syncCalendar(
                 for: planner,
-                storageEvents: sortedPlannerEvents,
                 startOfDay: startOfDay,
-                hiddenCalendarIds: settings.hiddenCalendarIds,
-                ekEventStore: ekEventStore
+                plannerEvents: sortedPlannerEvents,
+                ekEventStore: ekEventStore,
+                settings: settings
             )
 
             await MainActor.run {

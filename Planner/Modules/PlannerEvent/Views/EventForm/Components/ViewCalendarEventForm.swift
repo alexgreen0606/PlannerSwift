@@ -9,8 +9,6 @@ import EventKit
 import EventKitUI
 import SwiftUI
 
-// Clean
-
 struct ViewCalendarEventFormView: UIViewControllerRepresentable {
     let event: EKEvent
 
@@ -18,6 +16,7 @@ struct ViewCalendarEventFormView: UIViewControllerRepresentable {
         let vc = EKEventViewController()
 
         vc.event = event
+        
         vc.additionalSafeAreaInsets.top = 16
 
         let nav = UINavigationController(rootViewController: vc)
