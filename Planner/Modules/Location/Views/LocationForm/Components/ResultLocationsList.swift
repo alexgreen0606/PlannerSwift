@@ -66,7 +66,9 @@ struct ResultLocationsListView: View {
         isSelected: Bool
     ) {
         if isSelected {
-            selectedLocation = nil
+            withAnimation {
+                selectedLocation = nil
+            }
             return
         }
 
@@ -80,7 +82,9 @@ struct ResultLocationsListView: View {
                 return
             }
 
-            selectedLocation = location
+            withAnimation {
+                selectedLocation = location
+            }
         }
     }
 

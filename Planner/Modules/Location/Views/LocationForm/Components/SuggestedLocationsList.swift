@@ -35,11 +35,15 @@ struct SuggestedLocationsListView: View {
             sourcePlanner: sourcePlanner,
             selectOption: {
                 if selectedLocation === location {
-                    selectedLocation = nil
+                    withAnimation {
+                        selectedLocation = nil
+                    }
                     return
                 }
 
-                selectedLocation = location
+                withAnimation {
+                    selectedLocation = location
+                }
             }
         )
     }

@@ -73,7 +73,6 @@ struct LocationFormView: View {
                     sourcePlanner: sourcePlanner
                 )
             }
-            .animateUserAction(from: selectedLocation)
             .overlay {
                 emptyOptionsLabel
             }

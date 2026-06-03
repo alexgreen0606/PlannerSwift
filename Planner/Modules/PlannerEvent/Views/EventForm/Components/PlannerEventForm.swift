@@ -30,9 +30,9 @@ struct PlannerEventFormView: View {
     @EnvironmentObject private var PlannerSyncStore: PlannerSyncService
     @EnvironmentObject private var LocationService: LocationService
 
-    @State private var showDeleteConfirmation = false
     @State private var visiblePicker: VisibleEventFormPicker = .none
     @State private var hasTitleAutoFocused = false
+    @State private var showDeleteConfirmation = false
 
     @FocusState private var isTitleFocused
 
@@ -70,21 +70,17 @@ struct PlannerEventFormView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationStack {
-            Form {
-                titleSection
-                detailsSection
-            }
-            .animation(.linear, value: visiblePicker)
-            .toolbar {
-                cancelButton
-                FormSaveButtonView(canSave: canSave, save: savePlannerEvent)
-                bottomToolbar
-            }
-            .navigationTitle(isCreateForm ? "Create Event" : "Edit Event")
-            .navigationBarTitleDisplayMode(.inline)
+        Form {
+            titleSection
+            detailsSection
         }
-        .transition(.opacity)
+        .animation(.linear, value: visiblePicker)
+        .toolbar {
+            cancelButton
+            FormSaveButtonView(canSave: canSave, save: savePlannerEvent)
+        }
+        .navigationTitle(isCreateForm ? "Create Event" : "Edit Event")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     // MARK: - Toolbars
@@ -107,37 +103,6 @@ struct PlannerEventFormView: View {
                 }
 
                 dismiss()
-            }
-        }
-    }
-
-    @ToolbarContentBuilder
-    private var bottomToolbar: some ToolbarContent {
-        if let sourcePlannerEvent {
-            ToolbarItem(placement: .bottomBar) {
-                Button("", systemImage: "trash") {
-                    showDeleteConfirmation = true
-                }
-                .tint(Color.red)
-                .withConfirmation(
-                    deletePlannerEventConfig(
-                        event: sourcePlannerEvent,
-                        inForm: true,
-                        delete: deleteEvent
-                    ),
-                    isPresented: $showDeleteConfirmation
-                )
-            }
-
-            ToolbarSpacer(placement: .bottomBar)
-
-            ToolbarItem(placement: .bottomBar) {
-                Button("Add to Calendar") {
-                    addEventToCalendar()
-                }
-                .fontWeight(.semibold)
-                .fontDesign(.rounded)
-                .tint(accentColor.color)
             }
         }
     }
@@ -320,60 +285,6 @@ struct PlannerEventFormView: View {
         }()
 
         showNotification(sourcePlanner?.datestamp, destinationDatestamps, nil)
-    }
-
-    private func addEventToCalendar() {
-        // Build a calendar event to represent the form values.
-        let event =
-            sourceCalendarEvent
-            ?? EKEvent(
-                eventStore: calendarStore.ekEventStore
-            )
-        event.calendar =
-            sourceCalendarEvent?.calendar
-            ?? calendarStore.ekEventStore
-            .defaultCalendarForNewEvents
-
-        if let location = draftPlannerEvent.location ?? defaultLocation {
-            // Location display name.
-            event.location = location.name
-
-            // Location coordinates.
-            let structuredLocation = EKStructuredLocation(
-                title: location.name
-            )
-            structuredLocation.geoLocation = CLLocation(
-                latitude: location.latitude,
-                longitude: location.longitude
-            )
-            event.structuredLocation = structuredLocation
-
-            // Location time zone.
-            event.timeZone = TimeZone(
-                identifier: location.timeZoneIdentifier
-            )
-        }
-
-        event.title = draftPlannerEvent.title
-        event.startDate = draftPlannerEvent.date
-        event.endDate = Calendar.current.date(
-            byAdding: .hour,
-            value: 1,
-            to: draftPlannerEvent.date
-        )
-
-        withAnimation {
-            visiblePicker = .none
-            draftPlannerEvent.calendarEvent = event
-        }
-    }
-
-    private func deleteEvent() {
-        dismiss()
-
-        if let sourcePlannerEvent {
-            modelContext.safeDelete(sourcePlannerEvent)
-        }
     }
 
     private func ensureTextfieldBlurred() {

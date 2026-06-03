@@ -90,8 +90,8 @@ struct EventFormView: View {
             // Round the time down to the start of the hour.
             draftPlannerEvent.date =
                 startDayInRegion
-                    .dateAtStartOf(.hour)
-                    .date
+                .dateAtStartOf(.hour)
+                .date
         }
 
         self.draftPlannerEvent = draftPlannerEvent
@@ -111,6 +111,12 @@ struct EventFormView: View {
 
     @State private var draftPlannerEvent: DraftPlannerEvent
 
+    @State private var showDeleteConfirmation = false
+
+    private var isCreateForm: Bool {
+        sourcePlannerEvent == nil && sourceCalendarEvent == nil
+    }
+
     private var defaultLocation: Location? {
         sourcePlanner?.location(
             settings: settings,
@@ -121,37 +127,102 @@ struct EventFormView: View {
             )
     }
 
-    var body: some View {
-        ZStack {
-            if let draftCalendarEvent = draftPlannerEvent.calendarEvent {
-                calendarEventForm(for: draftCalendarEvent)
-            } else {
-                PlannerEventFormView(
-                    draftPlannerEvent: $draftPlannerEvent,
-                    settings: settings,
-                    defaultLocation: defaultLocation,
-                    sourceCalendarEvent: sourceCalendarEvent,
-                    sourcePlannerEvent: sourcePlannerEvent,
-                    sourcePlanner: sourcePlanner,
-                    showNotification: showNotification
-                )
+    private var showCalendarEventSheet: Binding<Bool> {
+        Binding(
+            get: {
+                draftPlannerEvent.calendarEvent != nil
+            },
+            set: { newValue in
+                if !newValue {
+                    draftPlannerEvent.calendarEvent = nil
+                }
             }
+        )
+    }
+
+    // MARK: - Body
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                if draftPlannerEvent.calendarEvent == nil {
+                    PlannerEventFormView(
+                        draftPlannerEvent: $draftPlannerEvent,
+                        settings: settings,
+                        defaultLocation: defaultLocation,
+                        sourceCalendarEvent: sourceCalendarEvent,
+                        sourcePlannerEvent: sourcePlannerEvent,
+                        sourcePlanner: sourcePlanner,
+                        showNotification: showNotification
+                    )
+                    .toolbar {
+                        if !isCreateForm {
+                            ToolbarItem(placement: .bottomBar) {
+                                let button = Button("", systemImage: "trash") {
+                                    showDeleteConfirmation = true
+                                }
+                                .tint(Color.red)
+
+                                if let sourceCalendarEvent {
+                                    button
+                                    // TODO: add confirmation for calendar event
+                                } else if let sourcePlannerEvent {
+                                    button
+                                        .withConfirmation(
+                                            deletePlannerEventConfig(
+                                                event: sourcePlannerEvent,
+                                                inForm: true,
+                                                delete: deleteSourceEvent
+                                            ),
+                                            isPresented: $showDeleteConfirmation
+                                        )
+                                }
+                            }
+                        }
+
+                        ToolbarSpacer(placement: .bottomBar)
+
+                        ToolbarItem(placement: .bottomBar) {
+                            Button(
+                                "Add to Calendar",
+                                action: addEventToCalendar
+                            )
+                            .fontWeight(.medium)
+                        }
+                    }
+                }
+            }
+            .animateUserAction(from: draftPlannerEvent.calendarEvent == nil)
+
+            // TODO: move to planner form Ensure event location exists when hasTime is set to true.
+            .onChange(of: draftPlannerEvent.hasTime) { _, _ in
+                ensureLocationWhenTimed()
+            }
+
         }
-        .tint(accentColor.color)
-        .presentationBackground(.clear)
-        .background(Color.clear)
+        .sheet(isPresented: showCalendarEventSheet) {
+            calendarEventForm(for: draftPlannerEvent.calendarEvent!)
+                .toolbar {
+                    ToolbarSpacer(placement: .bottomBar)
+
+                    ToolbarItem(placement: .bottomBar) {
+                        Button(
+                            "Remove from Calendar",
+                            action: removeEventFromCalendar
+                        )
+                        .fontWeight(.medium)
+                    }
+                }
+        }
+
+        .presentationBackground(Color.sheetBackground)
         .presentationDetents(
             draftPlannerEvent.calendarEvent != nil
                 && draftPlannerEvent.calendarEvent?.calendar
-                .allowsContentModifications == false
+                    .allowsContentModifications == false
                 ? [.height(300)] : [.large]
         )
         .interactiveDismissDisabled(true)
-
-        // Ensure event location exists when hasTime is set to true.
-        .onChange(of: draftPlannerEvent.hasTime) { _, _ in
-            ensureLocationWhenTimed()
-        }
     }
 
     // MARK: - View Builders
@@ -159,41 +230,31 @@ struct EventFormView: View {
     @ViewBuilder
     private func calendarEventForm(for event: EKEvent) -> some View {
         if event.calendar.allowsContentModifications {
-                EditCalendarEventFormView(
-                    event: event,
-                    ekEventStore: calendarStore.ekEventStore
-                ) { action, event in
-                    guard action != .canceled else {
-                        if let sourcePlannerEvent, let sourcePlanner,
-                           sourcePlannerEvent.title.trimmingCharacters(
+            EditCalendarEventFormView(
+                event: event,
+                ekEventStore: calendarStore.ekEventStore
+            ) { action, event in
+                guard action != .canceled else {
+                    if let sourcePlannerEvent, let sourcePlanner,
+                        sourcePlannerEvent.title.trimmingCharacters(
                             in: .whitespacesAndNewlines
-                           ).isEmpty
-                        {
-                            // The source event had an empty title. Delete it.
-                            modelContext.deletePlannerEvent(
-                                sourcePlannerEvent,
-                                in: sourcePlanner
-                            )
-                        }
-                        dismiss()
-                        return
-                    }
-                    
-                    saveCalendarEvent(event)
-                }
-                .tint(accentColor.color)
-                .ignoresSafeArea()
-                .overlay {
-                    VStack {
-                        Spacer()
-                        ActionButtonView(
-                            label: "Remove From Calendar",
-                            systemImage: "calendar.badge.minus",
-                            onTap: removeEventFromCalendar
+                        ).isEmpty
+                    {
+                        // The source event had an empty title. Delete it.
+                        modelContext.deletePlannerEvent(
+                            sourcePlannerEvent,
+                            in: sourcePlanner
                         )
                     }
+                    dismiss()
+                    return
                 }
-                .transition(.opacity)
+
+                saveCalendarEvent(event)
+            }
+            .tint(accentColor.color)
+            .ignoresSafeArea()
+            .navigationBarBackButtonHidden(true)
         } else {
             ViewCalendarEventFormView(event: event)
                 .ignoresSafeArea()
@@ -237,9 +298,9 @@ struct EventFormView: View {
             let earliestDatestamp = destinationDatestamps.sorted().first!
             config = Toast(
                 title:
-                "Successfully created event!",
+                    "Successfully created event!",
                 subtitle:
-                "\(earliestDatestamp.dateWithYear) | \(earliestDatestamp.weekday)",
+                    "\(earliestDatestamp.dateWithYear) | \(earliestDatestamp.weekday)",
                 iconConfig: IconConfig(
                     name: "calendar.day.timeline.leading",
                     primaryColor: Color.label,
@@ -258,15 +319,15 @@ struct EventFormView: View {
 
                 let primaryColor =
                     earliestDatestamp > sourceDatestamp
-                        ? Color.secondary : Color.label
+                    ? Color.secondary : Color.label
                 let secondaryColor =
                     earliestDatestamp > sourceDatestamp
-                        ? Color.label : Color.secondary
+                    ? Color.label : Color.secondary
 
                 config = Toast(
                     title: "Successfully moved event!",
                     subtitle:
-                    "\(earliestDatestamp.dateWithYear) | \(earliestDatestamp.weekday)",
+                        "\(earliestDatestamp.dateWithYear) | \(earliestDatestamp.weekday)",
                     iconConfig: IconConfig(
                         name: "arrow.left.arrow.right",
                         primaryColor: primaryColor,
@@ -288,10 +349,70 @@ struct EventFormView: View {
 
     private func removeEventFromCalendar() {
         // Note: EventKit does not give access to the updated EKEvent.
-        withAnimation {
-            draftPlannerEvent.date =
-                draftPlannerEvent.date.roundedDownNearest5Minutes
-            draftPlannerEvent.calendarEvent = nil
+        draftPlannerEvent.date =
+            draftPlannerEvent.date.roundedDownNearest5Minutes
+        draftPlannerEvent.calendarEvent = nil
+    }
+
+    private func addEventToCalendar() {
+        // Build a calendar event to represent the form values.
+        let event =
+            sourceCalendarEvent
+            ?? EKEvent(
+                eventStore: calendarStore.ekEventStore
+            )
+        event.calendar =
+            sourceCalendarEvent?.calendar
+            ?? calendarStore.ekEventStore
+            .defaultCalendarForNewEvents
+
+        if let location = draftPlannerEvent.location ?? defaultLocation {
+            // Location display name.
+            event.location = location.name
+
+            // Location coordinates.
+            let structuredLocation = EKStructuredLocation(
+                title: location.name
+            )
+            structuredLocation.geoLocation = CLLocation(
+                latitude: location.latitude,
+                longitude: location.longitude
+            )
+            event.structuredLocation = structuredLocation
+
+            // Location time zone.
+            event.timeZone = TimeZone(
+                identifier: location.timeZoneIdentifier
+            )
+        }
+
+        event.title = draftPlannerEvent.title
+        event.startDate = draftPlannerEvent.date
+        event.endDate = Calendar.current.date(
+            byAdding: .hour,
+            value: 1,
+            to: draftPlannerEvent.date
+        )
+
+        draftPlannerEvent.calendarEvent = event
+    }
+
+    private func deleteSourceEvent() {
+        dismiss()
+
+        if let sourceCalendarEvent {
+            guard
+                calendarStore.ekEventStore.attemptDeleteEvent(
+                    sourceCalendarEvent
+                )
+            else {
+                return
+            }
+        }
+
+        if let sourcePlannerEvent {
+            // TODO: should i do the official deletion here?
+            modelContext.safeDelete(sourcePlannerEvent)
         }
     }
 
