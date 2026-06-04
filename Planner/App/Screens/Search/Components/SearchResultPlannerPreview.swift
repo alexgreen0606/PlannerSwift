@@ -90,13 +90,13 @@ struct SearchResultPlannerPreviewView: View {
             .frame(maxWidth: .infinity)
 
             PlannerPreviewView(
-                variant: .search,
-                isSearchQueryActive: activeQuery?.isSearching == true,
                 planner: planner,
                 tripLabel: tripLabel,
                 sortedBirthdays: filteredBirthdays,
                 sortedChipEvents: filteredChipEvents,
                 sortedPlannerEvents: filteredPlannerEvents,
+                hideRemainingPlans: activeQuery?.isSearching == true,
+                hideEmptyLabel: true,
                 settings: settings
             )
         }

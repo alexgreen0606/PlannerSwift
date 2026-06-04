@@ -181,7 +181,7 @@ struct SearchRootView: View {
     private var noResultsLabelView: some View {
         if plannerSearchStore.results.sortedYears.isEmpty {
             EmptyLabel(noResultsLabel)
-                .padding(.horizontal)
+                .padding(.horizontal, 64)
         }
     }
 

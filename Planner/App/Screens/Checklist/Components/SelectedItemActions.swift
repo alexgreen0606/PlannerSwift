@@ -26,11 +26,14 @@ struct SelectedItemActionsView: View {
     // MARK: - Body
 
     var body: some View {
-        deleteSelectedButton
-
-        Spacer()
-
-        transferSelectedButton
+        HStack {
+            deleteSelectedButton
+            
+            Spacer()
+            
+            transferSelectedButton
+        }
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - View Builders

@@ -164,6 +164,7 @@ struct ChecklistRootView: View {
             ChecklistItem,
             SelectedItemActionsView
         >(
+            accentColor: checklist.color.swiftUIColor,
             selectedItemActions: SelectedItemActionsView(
                 showTransferSheet: $showTransferSheet,
                 canTransferItems: canTransferSelectedItems,

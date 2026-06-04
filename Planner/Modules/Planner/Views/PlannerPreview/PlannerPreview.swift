@@ -10,32 +10,32 @@ import SwiftDate
 import SwiftUI
 
 struct PlannerPreviewView: View {
-    private let variant: PlannerPreviewVariant
-    private let isSearchQueryActive: Bool
     private let planner: Planner
     private let tripLabel: String?
     private let sortedBirthdays: [Birthday]
     private let sortedChipEvents: [EKEvent]
     private let sortedPlannerEvents: [PlannerEvent]
+    private let hideRemainingPlans: Bool
+    private let hideEmptyLabel: Bool
     private let settings: PlannerSettings
 
     init(
-        variant: PlannerPreviewVariant,
-        isSearchQueryActive: Bool = false,
         planner: Planner,
         tripLabel: String? = nil,
         sortedBirthdays: [Birthday],
         sortedChipEvents: [EKEvent],
         sortedPlannerEvents: [PlannerEvent],
+        hideRemainingPlans: Bool = false,
+        hideEmptyLabel: Bool = false,
         settings: PlannerSettings
     ) {
-        self.variant = variant
-        self.isSearchQueryActive = isSearchQueryActive
         self.planner = planner
         self.tripLabel = tripLabel
         self.sortedBirthdays = sortedBirthdays
         self.sortedChipEvents = sortedChipEvents
         self.sortedPlannerEvents = sortedPlannerEvents
+        self.hideRemainingPlans = hideRemainingPlans
+        self.hideEmptyLabel = hideEmptyLabel
         self.settings = settings
     }
 
@@ -57,9 +57,9 @@ struct PlannerPreviewView: View {
     private var remainingPlansLabel: LocalizedStringKey {
         let previewCount =
             tripSlotSize
-                + previewContext.birthdays.count
-                + previewContext.chipEvents.count
-                + previewContext.plannerEvents.count
+            + previewContext.birthdays.count
+            + previewContext.chipEvents.count
+            + previewContext.plannerEvents.count
 
         let remainingCount = totalItemCount - previewCount
 
@@ -158,7 +158,7 @@ struct PlannerPreviewView: View {
             PlannerEventListView(
                 plannerRegion: startOfDay.region,
                 events: previewContext.plannerEvents,
-                isBottomOfCard: isSearchQueryActive,
+                hideLowerDivider: hideRemainingPlans,
                 settings: settings
             )
             remainingPlansIndicator
@@ -214,14 +214,14 @@ struct PlannerPreviewView: View {
 
     @ViewBuilder
     private var remainingPlansIndicator: some View {
-        if hasItems && !isSearchQueryActive {
+        if hasItems && !hideRemainingPlans {
             EmptyLabel(remainingPlansLabel, scale: 0.8)
         }
     }
 
     @ViewBuilder
     private var emptyPlannerIndicator: some View {
-        if variant != .search {
+        if !hideEmptyLabel {
             ZStack {
                 if !hasItems {
                     EmptyLabel(remainingPlansLabel, scale: 0.8)

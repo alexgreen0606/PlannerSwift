@@ -10,8 +10,10 @@ import SwiftDate
 import SwiftUI
 
 struct PlannerPreviewCardView<Header: View>: View {
-    private let variant: PlannerPreviewVariant
-    private let datestamp: String
+    private let planner: Planner
+    private let tripLabel: String?
+    private let sortedPlannerEvents: [PlannerEvent]
+    private let calendarDayData: CalendarDayData?
     private let header: Header
     private let width: CGFloat
     private let transitionId: String
@@ -19,16 +21,20 @@ struct PlannerPreviewCardView<Header: View>: View {
     private let namespace: Namespace.ID
 
     init(
-        variant: PlannerPreviewVariant,
-        datestamp: String,
+        planner: Planner,
+        tripLabel: String? = nil,
+        sortedPlannerEvents: [PlannerEvent],
+        calendarDayData: CalendarDayData?,
         header: Header,
         width: CGFloat = PlannerPreviewCardLayout.DEFAULT_WIDTH,
         transitionId: String,
         settings: PlannerSettings,
         namespace: Namespace.ID
     ) {
-        self.variant = variant
-        self.datestamp = datestamp
+        self.planner = planner
+        self.tripLabel = tripLabel
+        self.sortedPlannerEvents = sortedPlannerEvents
+        self.calendarDayData = calendarDayData
         self.header = header
         self.width = width
         self.transitionId = transitionId
@@ -38,67 +44,56 @@ struct PlannerPreviewCardView<Header: View>: View {
 
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
-    // MARK: - Body
-
-    var body: some View {
-        PlannerContextLoaderView(datestamp: datestamp, settings: settings) {
-            context in
-            VStack(alignment: .leading) {
-                header
-
-                PlannerPreviewView(
-                    variant: variant,
-                    planner: context.planner,
-                    tripLabel: tripLabel(for: context.planner),
-                    sortedBirthdays: context.eventContext.calendarDayData?
-                        .birthdays ?? [],
-                    sortedChipEvents: context.eventContext.calendarDayData?
-                        .plannerChipEvents ?? [],
-                    sortedPlannerEvents: context.eventContext
-                        .sortedPlannerEvents,
-                    settings: settings
-                )
-                .frame(
-                    maxWidth: .infinity,
-                    maxHeight: .infinity
-                )
-
-                PlannerCardWeatherView(
-                    planner: context.planner,
-                    settings: settings
-                )
-            }
-            .padding()
-            .frame(
-                width: width,
-                height: PlannerPreviewCardLayout.HEIGHT
-            )
-            .background(
-                Color.cardBackground,
-                in: RoundedRectangle(
-                    cornerRadius: PlannerPreviewCardLayout.CORNER_RADIUS
-                )
-            )
-            .matchedTransitionSource(
-                id: transitionId,
-                in: namespace
-            )
-            .onTapGesture {
-                plannerCoverStore.context = PlannerCoverContext(
-                    datestamp: datestamp,
-                    transitionId: transitionId
-                )
-            }
+    private var filteredPlannerEvents: [PlannerEvent] {
+        sortedPlannerEvents.filter {
+            !$0.isCompleted
         }
     }
 
-    // MARK: - Functions
+    // MARK: - Body
 
-    private func tripLabel(for planner: Planner) -> String? {
-        if variant == .trip {
-            return nil
+    var body: some View {
+        VStack(alignment: .leading) {
+            header
+
+            PlannerPreviewView(
+                planner: planner,
+                tripLabel: tripLabel,
+                sortedBirthdays: calendarDayData?.birthdays ?? [],
+                sortedChipEvents: calendarDayData?.plannerChipEvents ?? [],
+                sortedPlannerEvents: filteredPlannerEvents,
+                settings: settings
+            )
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity
+            )
+
+            PlannerCardWeatherView(
+                planner: planner,
+                settings: settings
+            )
         }
-
-        return planner.trip?.title
+        .padding()
+        .frame(
+            width: width,
+            height: PlannerPreviewCardLayout.HEIGHT
+        )
+        .background(
+            Color.cardBackground,
+            in: RoundedRectangle(
+                cornerRadius: PlannerPreviewCardLayout.CORNER_RADIUS
+            )
+        )
+        .matchedTransitionSource(
+            id: transitionId,
+            in: namespace
+        )
+        .onTapGesture {
+            plannerCoverStore.context = PlannerCoverContext(
+                datestamp: planner.datestamp,
+                transitionId: transitionId
+            )
+        }
     }
 }

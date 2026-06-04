@@ -12,7 +12,7 @@ import SwiftUI
 struct PlannerEventListView: View {
     let plannerRegion: Region
     let events: [PlannerEvent]
-    let isBottomOfCard: Bool
+    let hideLowerDivider: Bool
     let settings: PlannerSettings
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -50,7 +50,7 @@ struct PlannerEventListView: View {
                     .frame(height: 17)
                 }
 
-                if !isBottomOfCard
+                if !hideLowerDivider
                     || event.stableId != events.last!.stableId
                 {
                     dashedDivider

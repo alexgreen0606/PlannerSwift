@@ -215,6 +215,7 @@ struct EventFormView: View {
                 }
         }
 
+        // TODO: change detents. Maybe separate form for view calendar events.
         .presentationBackground(Color.sheetBackground)
         .presentationDetents(
             draftPlannerEvent.calendarEvent != nil

@@ -14,21 +14,27 @@ struct TripDayPreviewCardView: View {
     let settings: PlannerSettings
     let namespace: Namespace.ID
 
+    // MARK: - Body
+
     var body: some View {
-        PlannerPreviewCardView(
-            variant: .trip,
-            datestamp: datestamp,
-            header: PlannerHeaderView(
-                datestamp: datestamp,
-                iconType: .date,
-                title: "Day \(index + 1)",
-                subtitle: datestamp.weekday
-            ),
-            transitionId: trip.transitionId(
-                for: datestamp
-            ),
-            settings: settings,
-            namespace: namespace
-        )
+        PlannerContextLoaderView(datestamp: datestamp, settings: settings) {
+            context in
+            PlannerPreviewCardView(
+                planner: context.planner,
+                sortedPlannerEvents: context.eventContext.sortedPlannerEvents,
+                calendarDayData: context.eventContext.calendarDayData,
+                header: PlannerHeaderView(
+                    datestamp: datestamp,
+                    iconType: .date,
+                    title: "Day \(index + 1)",
+                    subtitle: datestamp.weekday
+                ),
+                transitionId: trip.transitionId(
+                    for: datestamp
+                ),
+                settings: settings,
+                namespace: namespace
+            )
+        }
     }
 }
