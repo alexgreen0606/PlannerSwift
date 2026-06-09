@@ -16,7 +16,7 @@ struct RowView<
 >: View {
     @Bindable private var item: Item
     private let index: Int
-    private let editable: Bool
+    private let toggleOnly: Bool
     private let tint: Color
     private let customToggleConfig: ToggleConfig?
     private let leftAdornment: LeftAdornment
@@ -32,7 +32,7 @@ struct RowView<
     init(
         item: Item,
         index: Int,
-        editable: Bool = false,
+        toggleOnly: Bool = false,
         tint: Color,
         customToggleConfig: ToggleConfig? = nil,
         leftAdornment: LeftAdornment,
@@ -46,7 +46,7 @@ struct RowView<
     ) {
         self.item = item
         self.index = index
-        self.editable = editable
+        self.toggleOnly = toggleOnly
         self.tint = tint
         self.customToggleConfig = customToggleConfig
         self.leftAdornment = leftAdornment
@@ -100,10 +100,10 @@ struct RowView<
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal)
             .discreetListItem()
-            .allowsHitTesting(!editable)
+            .allowsHitTesting(!toggleOnly && !listEngine.isSelectMode)
             .contentShape(Rectangle())
             .onTapGesture {
-                guard editable else { return }
+                guard toggleOnly || listEngine.isSelectMode else { return }
                 listEngine.toggleItem(item)
             }
 
@@ -145,7 +145,7 @@ struct RowView<
                 showUpperDivider: index == 0,
                 opacity: opacity,
                 onTap: {
-                    if listEngine.isSelectMode || editable {
+                    if listEngine.isSelectMode || toggleOnly {
                         listEngine.toggleItem(item)
                         return
                     }
@@ -159,12 +159,9 @@ struct RowView<
                     .frame(height: ListLayout.ADORNMENT_HEIGHT)
                     .opacity(opacity)
 
-                ZStack(alignment: .leading) {
-                    text
-                    textfield
-                }
-                .padding(.vertical, ListLayout.VERTICAL_TEXT_PADDING)
-                .opacity(opacity)
+                textfield
+                    .padding(.vertical, ListLayout.VERTICAL_TEXT_PADDING)
+                    .opacity(opacity)
 
                 rightAdornment
                     .frame(height: ListLayout.ADORNMENT_HEIGHT)
@@ -179,7 +176,7 @@ struct RowView<
                 showLowerDivider: true,
                 opacity: opacity,
                 onTap: {
-                    if listEngine.isSelectMode || editable {
+                    if listEngine.isSelectMode || toggleOnly {
                         listEngine.toggleItem(item)
                         return
                     }
@@ -188,24 +185,6 @@ struct RowView<
                 }
             )
         }
-    }
-
-    private var text: some View {
-        Text(item.title)
-            .lineLimit(nil)
-            .fixedSize(horizontal: false, vertical: true)
-            .font(.system(size: ListLayout.FONT_SIZE))
-            .opacity(isFocused ? 0 : 1)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                if editable || listEngine.isSelectMode || isChecked {
-                    listEngine.toggleItem(item)
-                    return
-                }
-
-                listEngine.focusedId = item.stableId
-            }
     }
 
     private var textfield: some View {
@@ -224,8 +203,8 @@ struct RowView<
                 }
             }
         )
+        // .allowsHitTesting(!listEngine.isSelectMode)
         .tint(tint)
-        .opacity(isFocused ? 1 : 0)
         .frame(height: height)
         .frame(maxWidth: .infinity, alignment: .leading)
         .fixedSize(horizontal: false, vertical: true)
@@ -256,10 +235,13 @@ struct RowView<
                 if trimmedTitle.isEmpty {
                     // Item is blurred and has an empty title. Delete it.
                     if listEngine.protectedId != item.stableId {
-                        if let deleteItem {
-                            deleteItem(item)
-                        } else {
-                            modelContext.safeDelete(item)
+                        // Note: Delay this so that the keyboard has time to animate closed before deletion.
+                        DispatchQueue.main.async {
+                            if let deleteItem {
+                                deleteItem(item)
+                            } else {
+                                modelContext.safeDelete(item)
+                            }
                         }
                     }
                 } else {

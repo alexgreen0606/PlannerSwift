@@ -200,7 +200,7 @@ struct SortableTextfieldListView<
                     RowView(
                         item: item,
                         index: index,
-                        editable: true,
+                        toggleOnly: true,
                         tint: tint(item),
                         customToggleConfig: toggleConfig(item),
                         leftAdornment: leftAdornment(item),
