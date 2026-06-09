@@ -47,7 +47,9 @@ class LocationSearchService:
         let nsError = error as NSError
 
         if nsError.domain == NSURLErrorDomain {
-            hasNetworkError = true
+            withAnimation {
+                hasNetworkError = true
+            }
         } else if nsError.domain == MKError.errorDomain {
             print("ERROR: LocationSearchService.completer: \(error)")
         }
@@ -72,7 +74,9 @@ class LocationSearchService:
             // Skip locations that do not have a TimeZone.
             guard let timeZone = item.timeZone
             else {
-                noTimeZoneIds.insert(result.nameId)
+                withAnimation {
+                    _ = noTimeZoneIds.insert(result.nameId)
+                }
                 return nil
             }
 

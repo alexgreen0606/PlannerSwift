@@ -57,9 +57,9 @@ struct CalendarsFormView: View {
                 Text(
                     "Turn off a calendar to hide its events throughout the app."
                 )
-                .padding(.bottom, 16)
             }
         }
+        .safeAreaPadding(.bottom, 32)
         .navigationTitle("Calendars")
         .navigationBarTitleDisplayMode(.inline)
 

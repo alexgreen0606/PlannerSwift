@@ -192,7 +192,6 @@ struct EventFormView: View {
                     }
                 }
             }
-            .animateUserAction(from: draftPlannerEvent.calendarEvent == nil)
 
             // TODO: move to planner form Ensure event location exists when hasTime is set to true.
             .onChange(of: draftPlannerEvent.hasTime) { _, _ in

@@ -106,6 +106,6 @@ struct ChecklistNavigationView: View {
     }
 
     private func jumpToParent(of item: ChecklistItem) {
-        folderPath = item.path
+        folderPath = item.pathToParent
     }
 }

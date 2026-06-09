@@ -26,7 +26,6 @@ struct ResultLocationsListView: View {
             List {
                 ForEach(locationSearchService.results, id: \.self, content: row)
             }
-            .animateUserAction(from: locationSearchService.noTimeZoneIds)
             .listStyle(.plain)
             .background(Color.sheetBackground.ignoresSafeArea())
 

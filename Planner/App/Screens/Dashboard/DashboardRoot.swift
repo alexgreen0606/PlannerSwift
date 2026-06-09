@@ -77,6 +77,7 @@ struct DashboardRootView: View {
                         plannerSyncService.syncAllPlanners()
                     }
                     .background(Color.appBackground)
+                    .safeAreaPadding(.bottom, 32)
                     .toolbar {
                         datePickerToolbarPopover
                         createMenu

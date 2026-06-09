@@ -57,7 +57,9 @@ struct FolderItemOptionsListView: View {
 
                     if sourceItem.type == .folder {
                         // Select the folder we are navigating back to.
-                        destinationItem = parent
+                        withAnimation {
+                            destinationItem = parent
+                        }
                     }
                 }
             }
@@ -110,7 +112,9 @@ struct FolderItemOptionsListView: View {
             }
 
             if item.type == sourceItem.type {
-                destinationItem = item
+                withAnimation {
+                    destinationItem = item
+                }
             }
         }
     }

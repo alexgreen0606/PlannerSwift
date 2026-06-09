@@ -33,7 +33,6 @@ struct SearchRootView: View {
         )
     }
 
-    @Environment(\.isSearching) private var isSearching
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarService
     @EnvironmentObject private var todayService: TodayService
@@ -67,9 +66,9 @@ struct SearchRootView: View {
                 ScrollViewReader { scrollProxy in
                     List {
                         ForEach(
-                            plannerSearchStore.results.sortedYears,
-                            id: \.self
-                        ) { year in
+                            plannerSearchStore.results.sortedYears.enumerated(),
+                            id: \.element
+                        ) { index, year in
                             Section {
                                 ForEach(
                                     plannerSearchStore.results.datestampMap[
@@ -101,7 +100,7 @@ struct SearchRootView: View {
                             } header: {
                                 YearSectionHeader(year)
                             }
-                            .listSectionMargins(.top, 0)
+                            .listSectionMargins(.top, index == 0 ? 0 : 32)
                         }
                     }
                     .animateLazyAction(
@@ -116,15 +115,17 @@ struct SearchRootView: View {
                     }
                     .background(Color.appBackground)
                     .safeAreaInset(edge: .top) {
-                        Color.clear.frame(
-                            height: geo.safeAreaInsets.top
+                        SearchInsetView(
+                            focused: Layout.TOOLBAR_HEIGHT,
+                            blurred: geo.safeAreaInsets.top
                                 - geo.safeAreaInsets.bottom + 32
                         )
                     }
                     .ignoresSafeArea(edges: .top)
                     .safeAreaInset(edge: .bottom) {
-                        Color.clear.frame(
-                            height: isSearching ? geo.safeAreaInsets.bottom : 0
+                        SearchInsetView(
+                            focused: Layout.TOOLBAR_HEIGHT,
+                            blurred: 0
                         )
                     }
                     .overlay {

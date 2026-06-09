@@ -12,7 +12,7 @@ extension ChecklistItem {
         items ?? []
     }
 
-    var path: NavigationPath {
+    var pathToParent: NavigationPath {
         var reversePath: [ChecklistItem] = []
 
         // Build the reverse path to the root.
