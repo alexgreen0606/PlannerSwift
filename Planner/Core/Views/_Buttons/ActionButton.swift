@@ -64,8 +64,11 @@ struct ActionButtonView: View {
         if let systemImage {
             Image(systemName: systemImage)
                 .font(
-                    // TODO: make a shared constant for this size
-                    .system(size: 14, weight: .semibold, design: .rounded)
+                    .system(
+                        size: Layout.TEXT,
+                        weight: .semibold,
+                        design: .rounded
+                    )
                 )
         }
     }

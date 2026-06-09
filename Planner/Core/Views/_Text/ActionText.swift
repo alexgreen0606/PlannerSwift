@@ -28,7 +28,11 @@ struct ActionText: View {
             .lineLimit(1)
             .minimumScaleFactor(0.7)
             .font(
-                .system(size: 14, weight: .black, design: .rounded)
+                .system(
+                    size: Layout.TEXT,
+                    weight: .black,
+                    design: .rounded
+                )
             )
             .foregroundStyle(
                 customColor ?? accentColor.color

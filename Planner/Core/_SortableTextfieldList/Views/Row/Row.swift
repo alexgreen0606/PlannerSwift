@@ -63,7 +63,7 @@ struct RowView<
     @EnvironmentObject private var listEngine: ListEngine<Item>
 
     /// Will be updated dynamically as the number of lines of text changes.
-    @State private var height: CGFloat = 0
+    // @State private var height: CGFloat = 0
 
     @State private var titleChangeHandlerTask: Task<Void, Never>? = nil
 
@@ -190,7 +190,7 @@ struct RowView<
     private var textfield: some View {
         TextfieldView(
             text: $item.title,
-            height: $height,
+            height: $item.height,
             focusedId: $listEngine.focusedId,
             stableId: item.stableId,
             tint: tint,
@@ -203,9 +203,8 @@ struct RowView<
                 }
             }
         )
-        // .allowsHitTesting(!listEngine.isSelectMode)
         .tint(tint)
-        .frame(height: height)
+        .frame(height: item.height)
         .frame(maxWidth: .infinity, alignment: .leading)
         .fixedSize(horizontal: false, vertical: true)
 

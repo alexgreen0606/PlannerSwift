@@ -9,4 +9,5 @@ import SwiftUI
 
 enum Layout {
     static let TOOLBAR_HEIGHT: CGFloat = 65
+    static let TEXT: CGFloat = 14
 }

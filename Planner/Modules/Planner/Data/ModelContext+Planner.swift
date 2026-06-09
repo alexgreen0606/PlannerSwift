@@ -86,8 +86,7 @@ extension ModelContext {
             // Create new planners that don't exist yet.
 
             for datestamp in datestamps
-                where !allPlanners.contains(where: { $0.datestamp == datestamp })
-            {
+            where !allPlanners.contains(where: { $0.datestamp == datestamp }) {
                 allPlanners.append(
                     createPlanner(for: datestamp, skipSave: true)
                 )
@@ -135,7 +134,7 @@ extension ModelContext {
 
             // Event has no time. Return the start of day for the event's assigned planner.
             return [
-                planner.startOfDay(settings: settings),
+                planner.startOfDay(settings: settings)
             ]
         }
 
@@ -152,11 +151,7 @@ extension ModelContext {
 
             let eventExistsInPlanner = {
                 if let endTime,
-                   dateRangeIncludes(
-                       startTime: time,
-                       endTime: endTime,
-                       startOfDay: startOfDay
-                   )
+                    startOfDay.includes(startTime: time, endTime: endTime)
                 {
                     return true
                 }
@@ -201,7 +196,7 @@ extension ModelContext {
         planner.excludeRoutine = !planner.safeExcludeRoutine
 
         if let trip = planner.trip,
-           trip.excludeRoutines == planner.excludeRoutine
+            trip.excludeRoutines == planner.excludeRoutine
         {
             // Revert flag back to nil so it inherits the exclusion state from the trip.
             planner.excludeRoutine = nil

@@ -25,9 +25,8 @@ struct AdornedValue: View {
         self.scale = scale
     }
 
-    // TODO: make this a constant
     private var iconSize: CGFloat {
-        14 * scale
+        Layout.TEXT * scale
     }
 
     // MARK: - Body

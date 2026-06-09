@@ -148,12 +148,9 @@ struct TransferChecklistItemsFormView: View {
 
     private var customHeader: some View {
         VStack(spacing: 20) {
-            Text("Transfer Items")
-                // Mock the default navigation title style.
-                .font(.system(size: 16, weight: .heavy, design: .rounded))
+            SheetTitle("Transfer Items")
             transferIndicator
         }
-        .padding(.top, 32)
     }
 
     private var transferIndicator: some View {

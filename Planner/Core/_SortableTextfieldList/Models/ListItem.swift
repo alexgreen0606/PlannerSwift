@@ -15,6 +15,8 @@ class ListItem {
 
     var title: String = ""
     var isCompleted: Bool = false
+    
+    var height: CGFloat = 0
 
     init() {}
 }
