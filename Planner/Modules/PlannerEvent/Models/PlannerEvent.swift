@@ -19,13 +19,11 @@ class PlannerEvent: EventListItem {
     @Relationship(deleteRule: .nullify, inverse: \Location.events)
     var location: Location?
 
-    @Transient
-    var calendarEvent: EKEvent?
-
-    var calendarItemExternalIdentifier: String?
-
-    /// Uniquely identifies recurring event occurrences (calendar events only).
-    var occurrenceId: String?
+    @Relationship(
+        deleteRule: .cascade,
+        inverse: \CalendarEventContext.plannerEvent
+    )
+    var calendarContext: CalendarEventContext?
 
     var routineEvent: RoutineEvent?
 
@@ -45,15 +43,8 @@ class PlannerEvent: EventListItem {
         // MARK: Calendar event synchronization.
         if let calendarEvent {
             title = calendarEvent.title
-            self.time = calendarEvent.startDate
             location = calendarEvent.location()
-
-            calendarItemExternalIdentifier =
-                calendarEvent.calendarItemExternalIdentifier
-            occurrenceId = calendarEvent.occurrenceId
-
-            self.calendarEvent = calendarEvent
-
+            calendarContext = CalendarEventContext(ekEvent: calendarEvent)
             return
         }
 
