@@ -19,16 +19,22 @@ extension PlannerEvent {
             }
         }
 
-        if let calendarEvent = calendarEvent,
-            calendarEvent.calendar.isHidden(
-                filteredCalendarIds: query.calendarIds
-            )
+        if let calendarId = calendarContext?.calendarId,
+            query.isCalendarHidden(calendarId: calendarId)
         {
             // Exclude. Calendar is hidden.
             return nil
         }
 
-        if let time {
+        if let calendarContext {
+            if !query.containsDateRange(
+                startDate: calendarContext.startDate,
+                endDate: calendarContext.endDate
+            ) {
+                // Exclude. Doesn't match the time range.
+                return nil
+            }
+        } else if let time {
             if !query.containsDate(time) {
                 // Exclude. Doesn't match the time range.
                 return nil

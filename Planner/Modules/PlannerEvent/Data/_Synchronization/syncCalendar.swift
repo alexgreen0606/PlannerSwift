@@ -121,7 +121,7 @@ extension ModelContext {
             return
         }
 
-        var listEvents = getSortedPlannerEventListItems(on: startOfDay)
+        var listEvents = getSortedListEvents(on: startOfDay)
 
         let reverseSortedEkEvents = ekEvents.sorted {
             $0.startDate > $1.startDate

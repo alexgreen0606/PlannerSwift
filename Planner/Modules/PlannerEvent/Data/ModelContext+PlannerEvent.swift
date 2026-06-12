@@ -41,26 +41,24 @@ extension ModelContext {
 
     @MainActor
     func createPlannerEvent(
-        for calendarEvent: EKEvent,
+        for ekEvent: EKEvent,
         on startOfDay: DateInRegion?
     ) {
-        if calendarEvent.isAllDay { return }
-
         let sortDate = {
-            if let startOfDay {
-                // Event has a target planner. Add it to the top of the list.
-                return getUpperSortDate(for: startOfDay)
+            guard !ekEvent.isAllDay, let startOfDay else {
+                return ekEvent.startDate ?? Date.now
             }
 
-            return calendarEvent.startDate
+            // Event has a target planner. Add it to the top of the list.
+            return getUpperSortDate(for: startOfDay)
         }()
 
         insert(
             PlannerEvent(
-                time: calendarEvent.startDate,
+                time: ekEvent.startDate,
                 datestamp: startOfDay?.datestamp,
                 sortDate: sortDate,
-                calendarEvent: calendarEvent
+                calendarEvent: ekEvent
             )
         )
 
@@ -70,23 +68,13 @@ extension ModelContext {
 
     // MARK: - READ
 
-    func getSortedPlannerEvents(on startOfDay: DateInRegion)
+    func getSortedListEvents(on startOfDay: DateInRegion)
         -> [PlannerEvent]
     {
-        let startOfNextDay = startOfDay + 1.days
-        let datestamp = startOfDay.datestamp
-
         do {
             return try fetch(
                 FetchDescriptor<PlannerEvent>(
-                    predicate: #Predicate {
-                        if let time = $0.time {
-                            return time >= startOfDay.date
-                                && time < startOfNextDay.date
-                        } else {
-                            return $0.datestamp == datestamp
-                        }
-                    },
+                    predicate: PlannerEvent.listEvents(on: startOfDay),
                     sortBy: [
                         SortDescriptor(\PlannerEvent.sortDate)
                     ]
@@ -94,7 +82,25 @@ extension ModelContext {
             )
         } catch {
             assertionFailure(
-                "ERROR ModelContext+PlannerEvent.getSortedPlannerEvents: \(error)"
+                "ERROR ModelContext+PlannerEvent.getSortedListEvents: \(error)"
+            )
+        }
+
+        return []
+    }
+
+    func getCalendarEvents(on startOfDay: DateInRegion)
+        -> [PlannerEvent]
+    {
+        do {
+            return try fetch(
+                FetchDescriptor<PlannerEvent>(
+                    predicate: PlannerEvent.calendarRecords(on: startOfDay)
+                )
+            )
+        } catch {
+            assertionFailure(
+                "ERROR ModelContext+PlannerEvent.getCalendarEvents: \(error)"
             )
         }
 
@@ -186,7 +192,7 @@ extension ModelContext {
     {
         let sortedStartsOfDays = getSortedPlannerStartOfDays(
             for: event.time,
-            endTime: event.calendarEvent?.endDate,
+            endTime: event.calendarContext?.endDate,
             datestamp: event.datestamp,
             settings: settings
         )
@@ -209,14 +215,14 @@ extension ModelContext {
 
         let earliestStartOfDay = sortedStartsOfDays.first!
 
-        let sortedPlannerEvents = getSortedPlannerEvents(
+        let sortedListEvents = getSortedListEvents(
             on: earliestStartOfDay
         )
 
         // Place the event at the start of its earliest planner.
         event.sortDate = generateSortDate(
             at: 0,
-            in: sortedPlannerEvents,
+            in: sortedListEvents,
             startOfDay: earliestStartOfDay
         )
 
@@ -254,8 +260,12 @@ extension ModelContext {
         ekEventStore: EKEventStore? = nil,
         skipSave: Bool = false
     ) {
-        if let calendarEvent = event.calendarEvent, let ekEventStore,
-            !ekEventStore.attemptDeleteEvent(calendarEvent)
+        if let calendarItemExternalIdentifier = event.calendarContext?
+            .calendarItemExternalIdentifier,
+            let ekEventStore,
+            !ekEventStore.attemptDeleteEvent(
+                identifier: calendarItemExternalIdentifier
+            )
         {
             return
         }

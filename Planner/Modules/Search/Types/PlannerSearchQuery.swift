@@ -102,14 +102,24 @@ struct PlannerSearchQuery: Equatable {
         return true
     }
 
-    func score(for text: String) -> Double? // nil means the search text doesn't match the text
+    func score(for text: String) -> Double?  // nil means the search text doesn't match the text
     {
         if let results = fuse.search(self.text, in: text),
-           results.score <= Self.fuzzyThreshold
+            results.score <= Self.fuzzyThreshold
         {
             return 1 - results.score
         }
 
         return nil
+    }
+
+    func isCalendarHidden(calendarId: String) -> Bool {
+        guard !calendarIds.isEmpty else {
+            return false
+        }
+
+        return !calendarIds.contains(
+            calendarId
+        )
     }
 }

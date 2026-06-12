@@ -14,9 +14,7 @@ extension EKEvent {
             return 1.0
         }
 
-        if calendar.isHidden(
-            filteredCalendarIds: query.calendarIds
-        ) {
+        if query.isCalendarHidden(calendarId: calendar.calendarIdentifier) {
             // Calendar is hidden. Exclude.
             return nil
         }
@@ -42,9 +40,9 @@ extension EKEvent {
         }
 
         // Scan the location for a match.
-        if let location = location,
-           self.location(existingPlannerEvent: nil) != nil,
-           let locationScore = query.score(for: location)
+        if let location,
+            self.location() != nil,
+            let locationScore = query.score(for: location)
         {
             score += locationScore
         }
