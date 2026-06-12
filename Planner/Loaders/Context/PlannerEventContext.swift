@@ -7,5 +7,6 @@
 
 struct PlannerEventContext {
     let sortedPlannerEvents: [PlannerEvent]
-    let calendarDayData: CalendarDayData?
+    let sortedEventChips: [PlannerEvent]
+    let sortedBirthdayChips: [PlannerEvent]
 }

@@ -16,12 +16,17 @@ struct PlannerChipSpreadView: View {
     let planner: Planner
     let startOfDay: DateInRegion
     let plannerLocation: Location?
-    let calendarDayData: CalendarDayData?
+    let sortedEventChips: [PlannerEvent]
+    let sortedBirthdayChips: [PlannerEvent]
     let settings: PlannerSettings
     var namespace: Namespace.ID
-    let openCalendarEventSheet: (EKEvent) -> Void
+    let openEventSheet: (PlannerEvent) -> Void
+
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        .blue
 
     @EnvironmentObject private var locationService: LocationService
+    @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var weatherCacheService: WeatherCacheService
 
     private var weatherData: DayWeather? {
@@ -46,19 +51,19 @@ struct PlannerChipSpreadView: View {
             }
             tripChip
             ForEach(
-                calendarDayData?.birthdays ?? [],
-                id: \.event.eventIdentifier,
+                sortedBirthdayChips,
+                id: \.stableId,
                 content: birthdayChip
             )
             ForEach(
-                calendarDayData?.plannerChipEvents ?? [],
-                id: \.eventIdentifier,
+                sortedEventChips,
+                id: \.stableId,
                 content: eventChip
             )
         }
         .animateLazyAction(from: weatherData)
         .animateLazyAction(
-            from: calendarDayData?.plannerChipEvents.map(\.title)
+            from: sortedEventChips.map(\.title)
         )
         .animateLazyAction(from: locationLabel)
     }
@@ -94,30 +99,30 @@ struct PlannerChipSpreadView: View {
         }
     }
 
-    private func birthdayChip(_ birthday: Birthday) -> some View {
+    private func birthdayChip(_ plannerEvent: PlannerEvent) -> some View {
         BirthdayChipView(
-            birthday: birthday,
+            plannerEvent: plannerEvent,
             settings: settings,
             namespace: namespace
         )
     }
 
     @ViewBuilder
-    private func eventChip(_ event: EKEvent) -> some View {
-        let calendarColor = event.calendar.color
+    private func eventChip(_ plannerEvent: PlannerEvent) -> some View {
+        let calendarColor = plannerEvent.tint(accentColor: accentColor)
         AdornedValue(
-            event.title,
+            plannerEvent.title,
             iconConfig: IconConfig(
-                name: event.calendar.systemImageName(settings: settings),
+                name: plannerEvent.calendarSystemImageName(settings: settings),
                 primaryColor: calendarColor
             ),
             color: calendarColor
         )
         .glassChip(height: PlannerLayout.CHIP_HEIGHT) {
-            openCalendarEventSheet(event)
+            openEventSheet(plannerEvent)
         }
         .matchedTransitionSource(
-            id: event.transitionId,
+            id: plannerEvent.transitionId,
             in: namespace
         )
     }

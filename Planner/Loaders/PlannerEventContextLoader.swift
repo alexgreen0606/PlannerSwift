@@ -5,6 +5,7 @@
 //  Created by Alex Green on 5/13/26.
 //
 
+import Contacts
 import SwiftData
 import SwiftDate
 import SwiftUI
@@ -19,7 +20,7 @@ struct PlannerEventContextLoaderView<Content: View>: View {
         plannerSyncService: PlannerSyncService,
         settings: PlannerSettings,
         @ViewBuilder content:
-        @escaping (PlannerEventContext) -> Content
+            @escaping (PlannerEventContext) -> Content
     ) {
         self.planner = planner
         self.settings = settings
@@ -34,7 +35,9 @@ struct PlannerEventContextLoaderView<Content: View>: View {
 
         _sortedPlannerEvents = Query(
             filter: #Predicate<PlannerEvent> { event in
-                if let time = event.time {
+                if event.calendarContext != nil {
+                    return false
+                } else if let time = event.time {
                     return time >= dayStartDate && time < nextDayStartDate
                 } else if let datestamp = event.datestamp {
                     return datestamp == plannerDatestamp
@@ -45,9 +48,40 @@ struct PlannerEventContextLoaderView<Content: View>: View {
             sort: \.sortDate
         )
 
-        _calendarDayData = State(
-            initialValue: plannerSyncService.freshCalendarMap[
-                planner.plannerLocationId
+        _sortedEventChips = Query(
+            filter: #Predicate<PlannerEvent> { event in
+                if let calendarContext = event.calendarContext {
+                    return calendarContext.birthdayContactIdentifier == nil
+                        && calendarContext.isAllDay
+                        && calendarContext.startDate < nextDayStartDate
+                        && calendarContext.endDate >= dayStartDate
+                } else {
+                    return false
+                }
+            },
+            sort: [
+                SortDescriptor(
+                    \PlannerEvent.title,
+                    comparator: .localizedStandard
+                )
+            ]
+        )
+
+        _sortedBirthdayChips = Query(
+            filter: #Predicate<PlannerEvent> { event in
+                if let calendarContext = event.calendarContext {
+                    return calendarContext.birthdayContactIdentifier != nil
+                        && calendarContext.startDate < nextDayStartDate
+                        && calendarContext.endDate >= dayStartDate
+                } else {
+                    return false
+                }
+            },
+            sort: [
+                SortDescriptor(
+                    \PlannerEvent.title,
+                    comparator: .localizedStandard
+                )
             ]
         )
 
@@ -64,8 +98,8 @@ struct PlannerEventContextLoaderView<Content: View>: View {
     @EnvironmentObject private var locationService: LocationService
 
     @Query private var sortedPlannerEvents: [PlannerEvent]
-
-    @State private var calendarDayData: CalendarDayData?
+    @Query private var sortedEventChips: [PlannerEvent]
+    @Query private var sortedBirthdayChips: [PlannerEvent]
 
     private var plannerLocation: Location? {
         planner.location(
@@ -80,7 +114,8 @@ struct PlannerEventContextLoaderView<Content: View>: View {
         content(
             PlannerEventContext(
                 sortedPlannerEvents: sortedPlannerEvents,
-                calendarDayData: calendarDayData
+                sortedEventChips: sortedEventChips,
+                sortedBirthdayChips: sortedBirthdayChips
             )
         )
         .task(id: plannerSyncService.syncTrigger) {
@@ -114,24 +149,14 @@ struct PlannerEventContextLoaderView<Content: View>: View {
 
     @MainActor
     private func syncPlanner() {
-        Task {
-            guard
-                let calendarData = await plannerSyncService.syncPlanner(
-                    planner,
-                    startOfDay: startOfDay,
-                    sortedPlannerEvents: sortedPlannerEvents,
-                    todaystamp: todayService.todaystamp,
-                    ekEventStore: calendarService.ekEventStore,
-                    modelContext: modelContext,
-                    settings: settings
-                ).value
-            else { return }
-
-            withAnimation {
-                calendarDayData = calendarData
-                hydrateCalendarEvents(calendarDayData: calendarData)
-            }
-        }
+        plannerSyncService.syncPlanner(
+            planner,
+            startOfDay: startOfDay,
+            todaystamp: todayService.todaystamp,
+            ekEventStore: calendarService.ekEventStore,
+            modelContext: modelContext,
+            settings: settings
+        )
     }
 
     private func loadWeather() {
@@ -140,25 +165,6 @@ struct PlannerEventContextLoaderView<Content: View>: View {
                 location: plannerLocation,
                 region: startOfDay.region
             )
-        }
-    }
-
-    /// Links calendar events to their accompanying planner event.
-    private func hydrateCalendarEvents(calendarDayData: CalendarDayData) {
-        for event in sortedPlannerEvents {
-            if let calendarItemExternalIdentifier = event
-                .calendarItemExternalIdentifier
-            {
-                if let occurrenceId = event.occurrenceId {
-                    event.calendarEvent =
-                        calendarDayData.occurrenceEvents[occurrenceId]
-                } else {
-                    event.calendarEvent =
-                        calendarDayData.regularEvents[
-                            calendarItemExternalIdentifier
-                        ]
-                }
-            }
         }
     }
 }
