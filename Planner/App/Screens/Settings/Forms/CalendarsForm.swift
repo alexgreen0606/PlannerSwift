@@ -19,7 +19,7 @@ struct CalendarsFormView: View {
         "suitcase",
         "popcorn",
         "globe.americas.fill",
-        "birthday.cake",
+        "birthday.cake.fill",
         "calendar",
         "dollarsign",
         "mountain.2",
@@ -72,21 +72,24 @@ struct CalendarsFormView: View {
 
     // MARK: - View Builders
 
+    @ViewBuilder
     private func row(for calendar: EKCalendar) -> some View {
+        let systemImageName = calendar.systemImageName(settings: settings)
+
         HStack {
             IconPickerView(
                 selectedIconConfig: IconConfig(
-                    name: calendar.systemImageName(settings: settings),
+                    name: systemImageName,
                     primaryColor: calendar.color,
                     secondaryColor: calendar.color
                 ),
                 options: systemImageNameOptions.map { option in
                     IconConfig(
                         name: option,
-                        primaryColor: option
-                            == calendar.systemImageName(settings: settings)
+                        primaryColor: option == systemImageName
                             ? calendar.color : .label,
-                        secondaryColor: .label
+                        secondaryColor: option == systemImageName
+                            ? calendar.color : .label,
                     )
                 },
                 numColumns: 4,

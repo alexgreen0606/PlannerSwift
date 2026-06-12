@@ -10,11 +10,16 @@ import EventKit
 import SwiftUI
 
 struct BirthdayLabelView: View {
-    let birthday: Birthday
+    let plannerEvent: PlannerEvent
     let settings: PlannerSettings
 
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        .blue
+
     private var contactPhoto: UIImage? {
-        guard let imageData = birthday.contact.thumbnailImageData else {
+        guard
+            let imageData = plannerEvent.calendarContext?.birthdayThumbnailData
+        else {
             return nil
         }
 
@@ -22,7 +27,7 @@ struct BirthdayLabelView: View {
     }
 
     private var calendarColor: Color {
-        birthday.event.calendar.color
+        plannerEvent.tint(accentColor: accentColor)
     }
 
     // MARK: - Body
@@ -36,13 +41,13 @@ struct BirthdayLabelView: View {
                     .frame(width: 24, height: 24)
                     .clipShape(Circle())
 
-                Value(birthday.event.title)
+                Value(plannerEvent.title)
             }
         } else {
             AdornedValue(
-                birthday.event.title,
+                plannerEvent.title,
                 iconConfig: IconConfig(
-                    name: birthday.event.calendar.systemImageName(
+                    name: plannerEvent.calendarSystemImageName(
                         settings: settings
                     ),
                     primaryColor: calendarColor,

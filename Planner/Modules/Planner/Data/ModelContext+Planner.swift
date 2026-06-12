@@ -97,15 +97,10 @@ extension ModelContext {
             var contexts: [PlannerBuildContext] = []
 
             for planner in allPlanners {
-                let startOfDay = planner.startOfDay(settings: settings)
-
-                let sortedEvents = getSortedPlannerEvents(on: startOfDay)
-
                 contexts.append(
                     PlannerBuildContext(
                         planner: planner,
-                        startOfDay: startOfDay,
-                        sortedPlannerEvents: sortedEvents
+                        startOfDay: planner.startOfDay(settings: settings)
                     )
                 )
             }

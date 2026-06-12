@@ -11,5 +11,4 @@ import SwiftDate
 struct PlannerBuildContext {
     let planner: Planner
     let startOfDay: DateInRegion
-    let sortedPlannerEvents: [PlannerEvent]
 }

@@ -63,7 +63,7 @@ struct PlannerPreviewCardView<Header: View>: View {
                 planner: planner,
                 tripLabel: tripLabel,
                 sortedBirthdayEvents: sortedBirthdayChips,
-                sortedChipEvents: sortedEventChips,
+                sortedEventChips: sortedEventChips,
                 sortedPlannerEvents: filteredPlannerEvents,
                 settings: settings
             )

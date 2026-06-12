@@ -12,7 +12,7 @@ extension EKCalendar {
     var color: Color {
         Color(cgColor: cgColor)
     }
-
+    
     func systemImageName(settings: PlannerSettings) -> String {
         if let customSystemImage = settings.iconMap[
             calendarIdentifier

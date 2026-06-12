@@ -29,24 +29,15 @@ struct PlannerEventCalendarAdornmentView: View {
     // MARK: - Body
 
     var body: some View {
-        if let calendarEvent = plannerEvent.calendarEvent,
-            let calendar = calendarEvent.calendar
-        {
+        if plannerEvent.calendarContext != nil {
             Image(
-                systemName:
-                    calendar.systemImageName(settings: settings)
+                systemName: plannerEvent.calendarSystemImageName(settings: settings)
             )
-            .foregroundStyle(calendar.color)
+            .foregroundStyle(plannerEvent.tint(accentColor: accentColor))
             .contentShape(Rectangle())
             .onTapGesture {
                 openEventSheet?()
             }
-        } else if plannerEvent.calendarItemExternalIdentifier != nil {
-            // Temporary icon before the calendar event hydrates.
-            Image(
-                systemName: "calendar"
-            )
-            .foregroundStyle(accentColor.color)
         }
     }
 }
