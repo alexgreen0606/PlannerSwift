@@ -8,7 +8,7 @@
 import EventKit
 
 struct PreviewContext {
-    let birthdays: [Birthday]
-    let chipEvents: [EKEvent]
+    let birthdayEvents: [PlannerEvent]
+    let chipEvents: [PlannerEvent]
     let plannerEvents: [PlannerEvent]
 }

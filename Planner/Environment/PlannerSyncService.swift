@@ -12,14 +12,10 @@ import SwiftDate
 
 @MainActor
 class PlannerSyncService: ObservableObject {
-    private var inFlightCalendarSync: [String: Task<CalendarDayData?, Never>] =
-        [:]
-
     @Published private(set) var syncTrigger: UUID?
 
-    /// Planner keys mapped to their calendar data.
-    @Published var freshCalendarMap: [String: CalendarDayData] =
-        [:]
+    /// Planner keys that have up-to-date calendar data.
+    @Published var freshCalendarPlannerKeys: Set<String> = []
 
     /// Weekdays mapped to all planner datestamps that have synced with their routines.
     @Published private(set) var freshRoutineMap: [Weekday: Set<String>] =
@@ -32,16 +28,15 @@ class PlannerSyncService: ObservableObject {
     func syncPlanner(
         _ planner: Planner,
         startOfDay: DateInRegion,
-        sortedPlannerEvents: [PlannerEvent],
         todaystamp: String,
         ekEventStore: EKEventStore,
         modelContext: ModelContext,
         settings: PlannerSettings
-    ) -> Task<CalendarDayData?, Never> {
+    ) {
         guard
             let weekday = Weekday.forDatestamp(planner.datestamp)
         else {
-            return Task { nil }
+            return
         }
 
         // MARK: Sync Routine
@@ -55,7 +50,6 @@ class PlannerSyncService: ObservableObject {
                 for: planner,
                 startOfDay: startOfDay,
                 weekday: weekday,
-                plannerEvents: sortedPlannerEvents,
                 todaystamp: todaystamp,
                 ekEventStore: ekEventStore
             )
@@ -65,34 +59,18 @@ class PlannerSyncService: ObservableObject {
 
         // MARK: Sync Calendar
 
-        if let cachedCalendarData = freshCalendarMap[planner.plannerLocationId] {
-            return Task { cachedCalendarData }
+        if freshCalendarPlannerKeys.contains(planner.plannerLocationId) {
+            return
         }
 
-        if let inFlight = inFlightCalendarSync[planner.plannerLocationId] {
-            return inFlight
-        }
+        freshCalendarPlannerKeys.insert(planner.plannerLocationId)
 
-        let task: Task<CalendarDayData?, Never> = Task {
-            let calendarDayData = modelContext.syncCalendar(
-                for: planner,
-                startOfDay: startOfDay,
-                plannerEvents: sortedPlannerEvents,
-                ekEventStore: ekEventStore,
-                settings: settings
-            )
-
-            await MainActor.run {
-                freshCalendarMap[planner.plannerLocationId] = calendarDayData
-                inFlightCalendarSync.removeValue(forKey: planner.plannerLocationId)
-            }
-
-            return calendarDayData
-        }
-
-        inFlightCalendarSync[planner.plannerLocationId] = task
-
-        return task
+        modelContext.syncCalendar(
+            for: planner,
+            startOfDay: startOfDay,
+            ekEventStore: ekEventStore,
+            settings: settings
+        )
     }
 
     // MARK: - Manual Sync Functions
@@ -108,7 +86,7 @@ class PlannerSyncService: ObservableObject {
     }
 
     func syncAllPlanners() {
-        freshCalendarMap.removeAll()
+        invalidateCalendar()
         freshRoutineMap.removeAll()
         beginSync()
     }
@@ -116,7 +94,7 @@ class PlannerSyncService: ObservableObject {
     // MARK: - Invalidation Functions
 
     func invalidateCalendar() {
-        freshCalendarMap.removeAll()
+        freshCalendarPlannerKeys.removeAll()
     }
 
     func invalidatePlannerRoutine(datestamp: String) {

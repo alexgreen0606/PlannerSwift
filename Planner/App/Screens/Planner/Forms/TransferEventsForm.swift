@@ -44,7 +44,7 @@ struct TransferEventsFormView: View {
     private var destinationDatestamp: String {
         DatestampFormatter.datestamp(
             from: destinationDate,
-            region: sourceRegion
+            timeZone: sourceRegion.timeZone
         )
     }
 

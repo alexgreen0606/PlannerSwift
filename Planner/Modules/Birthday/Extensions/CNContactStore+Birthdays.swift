@@ -10,34 +10,33 @@ import ContactsUI
 import EventKit
 
 extension CNContactStore {
-    func loadBirthdays(for birthdayEventMap: [String: EKEvent]) -> [Birthday] {
-        var birthdays: [Birthday] = []
-
+    func syncBirthdayContacts(
+        /// Maps contact IDs to planner events for birthdays.
+        for plannerEventMap: [String: PlannerEvent]
+    ) {
         do {
             let contacts = try unifiedContacts(
                 matching: CNContact.predicateForContacts(
-                    withIdentifiers: Array(birthdayEventMap.keys)
+                    withIdentifiers: Array(plannerEventMap.keys)
                 ),
                 keysToFetch: [
-                    CNContactViewController.descriptorForRequiredKeys(),
+                    CNContactViewController.descriptorForRequiredKeys()
                 ] as [CNKeyDescriptor]
             )
 
             for contact in contacts {
-                guard let event = birthdayEventMap[contact.identifier]
+                guard let event = plannerEventMap[contact.identifier],
+                    let calendarContext = event.calendarContext
                 else { continue }
 
-                birthdays.append(Birthday(contact: contact, event: event))
+                calendarContext.birthdayContactIdentifier = contact.identifier
+                calendarContext.birthdayThumbnailData =
+                    contact.thumbnailImageData
             }
         } catch {
             assertionFailure(
-                "ERROR CNContactStore+Birthdays.loadBirthdays: \(error)"
+                "ERROR CNContactStore+Birthdays.syncBirthdayContacts: \(error)"
             )
-        }
-
-        return birthdays.sorted {
-            $0.event.title.localizedCaseInsensitiveCompare($1.event.title)
-                == .orderedAscending
         }
     }
 }

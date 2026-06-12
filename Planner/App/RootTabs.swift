@@ -141,7 +141,8 @@ struct RootTabView: View {
                     PlannerRootView(
                         planner: context.planner,
                         sortedPlannerEvents: context.eventContext.sortedPlannerEvents,
-                        calendarDayData: context.eventContext.calendarDayData,
+                        sortedEventChips: context.eventContext.sortedEventChips,
+                        sortedBirthdayChips: context.eventContext.sortedBirthdayChips,
                         settings: settings
                     )
                 }
@@ -164,7 +165,8 @@ struct RootTabView: View {
                     PlannerRootView(
                         planner: plannerContext.planner,
                         sortedPlannerEvents: plannerContext.eventContext.sortedPlannerEvents,
-                        calendarDayData: plannerContext.eventContext.calendarDayData,
+                        sortedEventChips: plannerContext.eventContext.sortedEventChips,
+                        sortedBirthdayChips: plannerContext.eventContext.sortedBirthdayChips,
                         settings: settings
                     )
                     .id(context.datestamp)

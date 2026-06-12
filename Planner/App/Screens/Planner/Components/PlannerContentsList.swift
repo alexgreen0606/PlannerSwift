@@ -20,7 +20,8 @@ struct PlannerContentsListView: View {
     let sortedPlannerEvents: [PlannerEvent]
     let sortedPendingPlannerEvents: [PlannerEvent]
     let sortedCompletePlannerEvents: [PlannerEvent]
-    let calendarDayData: CalendarDayData?
+    let sortedEventChips: [PlannerEvent]
+    let sortedBirthdayChips: [PlannerEvent]
     let showCompleted: Bool
     let scrollProxy: ScrollViewProxy
     let settings: PlannerSettings
@@ -75,16 +76,11 @@ struct PlannerContentsListView: View {
             planner: planner,
             startOfDay: startOfDay,
             plannerLocation: plannerLocation,
-            calendarDayData: calendarDayData,
+            sortedEventChips: sortedEventChips,
+            sortedBirthdayChips: sortedBirthdayChips,
             settings: settings,
             namespace: namespace,
-            openCalendarEventSheet: { calEvent in
-                eventSheetContext =
-                    EventSheetContext(
-                        plannerEvent: nil,
-                        calendarEvent: calEvent
-                    )
-            }
+            openEventSheet: openPlannerEventSheet
         )
     }
 

@@ -89,8 +89,11 @@ struct SearchRootView: View {
                                             sortedPlannerEvents: context
                                                 .eventContext
                                                 .sortedPlannerEvents,
-                                            calendarDayData: context
-                                                .eventContext.calendarDayData,
+                                            sortedEventChips: context
+                                                .eventContext.sortedEventChips,
+                                            sortedBirthdayChips: context
+                                                .eventContext
+                                                .sortedBirthdayChips,
                                             settings: settings,
                                             namespace: namespace
                                         )

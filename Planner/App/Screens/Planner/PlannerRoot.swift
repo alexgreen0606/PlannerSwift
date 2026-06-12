@@ -13,7 +13,8 @@ import SwiftUI
 struct PlannerRootView: View {
     let planner: Planner
     let sortedPlannerEvents: [PlannerEvent]
-    let calendarDayData: CalendarDayData?
+    let sortedEventChips: [PlannerEvent]
+    let sortedBirthdayChips: [PlannerEvent]
     let settings: PlannerSettings
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -22,7 +23,7 @@ struct PlannerRootView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var todayService: TodayService
-    @EnvironmentObject private var calendarStore: CalendarService
+    @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
@@ -92,7 +93,8 @@ struct PlannerRootView: View {
                         sortedPendingPlannerEvents,
                         sortedCompletePlannerEvents:
                         sortedCompletePlannerEvents,
-                        calendarDayData: calendarDayData,
+                        sortedEventChips: sortedEventChips,
+                        sortedBirthdayChips: sortedBirthdayChips,
                         showCompleted: planner.showCompleted,
                         scrollProxy: scrollProxy,
                         settings: settings,
@@ -135,7 +137,7 @@ struct PlannerRootView: View {
                 EventFormView(
                     sourcePlanner: planner,
                     plannerEvent: context.plannerEvent,
-                    calendarEvent: context.calendarEvent,
+                    ekEventStore: calendarService.ekEventStore,
                     settings: settings
                 )
                 .navigationTransition(
@@ -254,7 +256,7 @@ struct PlannerRootView: View {
             in: planner,
             startOfDay: startOfDay,
             plannerLocation: plannerLocation,
-            eventKitStore: calendarStore.ekEventStore,
+            eventKitStore: calendarService.ekEventStore,
             settings: settings
         )
     }

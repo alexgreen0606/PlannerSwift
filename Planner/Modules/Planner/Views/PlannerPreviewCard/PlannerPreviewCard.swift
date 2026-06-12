@@ -13,7 +13,8 @@ struct PlannerPreviewCardView<Header: View>: View {
     private let planner: Planner
     private let tripLabel: String?
     private let sortedPlannerEvents: [PlannerEvent]
-    private let calendarDayData: CalendarDayData?
+    private let sortedEventChips: [PlannerEvent]
+    private let sortedBirthdayChips: [PlannerEvent]
     private let header: Header
     private let width: CGFloat
     private let transitionId: String
@@ -24,7 +25,8 @@ struct PlannerPreviewCardView<Header: View>: View {
         planner: Planner,
         tripLabel: String? = nil,
         sortedPlannerEvents: [PlannerEvent],
-        calendarDayData: CalendarDayData?,
+        sortedEventChips: [PlannerEvent],
+        sortedBirthdayChips: [PlannerEvent],
         header: Header,
         width: CGFloat = PlannerPreviewCardLayout.DEFAULT_WIDTH,
         transitionId: String,
@@ -34,7 +36,8 @@ struct PlannerPreviewCardView<Header: View>: View {
         self.planner = planner
         self.tripLabel = tripLabel
         self.sortedPlannerEvents = sortedPlannerEvents
-        self.calendarDayData = calendarDayData
+        self.sortedEventChips = sortedEventChips
+        self.sortedBirthdayChips = sortedBirthdayChips
         self.header = header
         self.width = width
         self.transitionId = transitionId
@@ -59,8 +62,8 @@ struct PlannerPreviewCardView<Header: View>: View {
             PlannerPreviewView(
                 planner: planner,
                 tripLabel: tripLabel,
-                sortedBirthdays: calendarDayData?.birthdays ?? [],
-                sortedChipEvents: calendarDayData?.plannerChipEvents ?? [],
+                sortedBirthdayEvents: sortedBirthdayChips,
+                sortedChipEvents: sortedEventChips,
                 sortedPlannerEvents: filteredPlannerEvents,
                 settings: settings
             )

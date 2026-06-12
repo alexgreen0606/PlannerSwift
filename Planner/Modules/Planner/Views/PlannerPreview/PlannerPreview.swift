@@ -12,8 +12,8 @@ import SwiftUI
 struct PlannerPreviewView: View {
     private let planner: Planner
     private let tripLabel: String?
-    private let sortedBirthdays: [Birthday]
-    private let sortedChipEvents: [EKEvent]
+    private let sortedBirthdayEvents: [PlannerEvent]
+    private let sortedEventChips: [PlannerEvent]
     private let sortedPlannerEvents: [PlannerEvent]
     private let hideRemainingPlans: Bool
     private let hideEmptyLabel: Bool
@@ -22,8 +22,8 @@ struct PlannerPreviewView: View {
     init(
         planner: Planner,
         tripLabel: String? = nil,
-        sortedBirthdays: [Birthday],
-        sortedChipEvents: [EKEvent],
+        sortedBirthdayEvents: [PlannerEvent],
+        sortedEventChips: [PlannerEvent],
         sortedPlannerEvents: [PlannerEvent],
         hideRemainingPlans: Bool = false,
         hideEmptyLabel: Bool = false,
@@ -31,8 +31,8 @@ struct PlannerPreviewView: View {
     ) {
         self.planner = planner
         self.tripLabel = tripLabel
-        self.sortedBirthdays = sortedBirthdays
-        self.sortedChipEvents = sortedChipEvents
+        self.sortedBirthdayEvents = sortedBirthdayEvents
+        self.sortedEventChips = sortedEventChips
         self.sortedPlannerEvents = sortedPlannerEvents
         self.hideRemainingPlans = hideRemainingPlans
         self.hideEmptyLabel = hideEmptyLabel
@@ -41,12 +41,15 @@ struct PlannerPreviewView: View {
 
     private let MAX_PREVIEW_SLOTS = 5
 
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        .blue
+
     @EnvironmentObject private var locationService: LocationService
 
     private var totalItemCount: Int {
         tripSlotSize
-            + sortedBirthdays.count
-            + sortedChipEvents.count
+            + sortedBirthdayEvents.count
+            + sortedEventChips.count
             + sortedPlannerEvents.count
     }
 
@@ -57,7 +60,7 @@ struct PlannerPreviewView: View {
     private var remainingPlansLabel: LocalizedStringKey {
         let previewCount =
             tripSlotSize
-            + previewContext.birthdays.count
+            + previewContext.birthdayEvents.count
             + previewContext.chipEvents.count
             + previewContext.plannerEvents.count
 
@@ -91,17 +94,19 @@ struct PlannerPreviewView: View {
     // MARK: Separate Events By Importance
 
     private var calendarEvents: [PlannerEvent] {
-        sortedPlannerEvents.filter { $0.calendarItemExternalIdentifier != nil }
+        sortedPlannerEvents.filter { $0.calendarContext != nil }
     }
 
     private var timedPlannerEvents: [PlannerEvent] {
         sortedPlannerEvents.filter {
-            $0.time != nil && $0.calendarItemExternalIdentifier == nil
+            $0.time != nil && $0.calendarContext == nil
         }
     }
 
     private var untimedPlannerEvents: [PlannerEvent] {
-        sortedPlannerEvents.filter { $0.time == nil }
+        sortedPlannerEvents.filter {
+            $0.time == nil && $0.calendarContext == nil
+        }
     }
 
     // MARK: Preview Events
@@ -110,20 +115,20 @@ struct PlannerPreviewView: View {
         // MARK: Birthdays
 
         var remainingSlots = MAX_PREVIEW_SLOTS - tripSlotSize
-        let birthdays: [Birthday] = Array(
-            sortedBirthdays.prefix(remainingSlots)
+        let birthdays = Array(
+            sortedBirthdayEvents.prefix(remainingSlots)
         )
 
         // MARK: Chips
 
         remainingSlots = max(0, remainingSlots - birthdays.count)
-        let chipEvents: [EKEvent] = Array(
-            sortedChipEvents.prefix(remainingSlots)
+        let chips = Array(
+            sortedEventChips.prefix(remainingSlots)
         )
 
         // MARK: Calendar Events
 
-        remainingSlots = max(0, remainingSlots - chipEvents.count)
+        remainingSlots = max(0, remainingSlots - chips.count)
         let calendarEvents = calendarEvents.prefix(remainingSlots)
 
         // MARK: Timed Events
@@ -142,8 +147,8 @@ struct PlannerPreviewView: View {
             }
 
         return PreviewContext(
-            birthdays: birthdays,
-            chipEvents: chipEvents,
+            birthdayEvents: birthdays,
+            chipEvents: chips,
             plannerEvents: plannerEvents
         )
     }
@@ -181,11 +186,10 @@ struct PlannerPreviewView: View {
 
     private var birthdayChipList: some View {
         ForEach(
-            previewContext.birthdays,
-            id: \.event.eventIdentifier
+            previewContext.birthdayEvents
         ) {
             BirthdayLabelView(
-                birthday: $0,
+                plannerEvent: $0,
                 settings: settings
             )
         }
@@ -193,17 +197,13 @@ struct PlannerPreviewView: View {
 
     private var eventChipList: some View {
         ForEach(
-            previewContext.chipEvents,
-            id: \.eventIdentifier
+            previewContext.chipEvents
         ) { event in
-            let calendarColor = event.calendar.color
-
+            let calendarColor = event.tint(accentColor: accentColor)
             AdornedValue(
                 event.title,
                 iconConfig: IconConfig(
-                    name: event.calendar.systemImageName(
-                        settings: settings
-                    ),
+                    name: event.calendarSystemImageName(settings: settings),
                     primaryColor: calendarColor,
                     secondaryColor: calendarColor
                 ),

@@ -49,10 +49,10 @@ enum DatestampFormatter {
 
     static func datestamp(
         from date: Date,
-        region: Region = .current
+        timeZone: TimeZone = .current
     ) -> String {
         formatter(
-            timeZone: region.timeZone
+            timeZone: timeZone
         ).string(from: date)
     }
 

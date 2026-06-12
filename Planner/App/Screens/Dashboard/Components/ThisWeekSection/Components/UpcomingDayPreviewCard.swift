@@ -23,7 +23,8 @@ struct UpcomingDayPreviewCardView: View {
                 planner: context.planner,
                 tripLabel: context.planner.trip?.title,
                 sortedPlannerEvents: context.eventContext.sortedPlannerEvents,
-                calendarDayData: context.eventContext.calendarDayData,
+                sortedEventChips: context.eventContext.sortedEventChips,
+                sortedBirthdayChips: context.eventContext.sortedBirthdayChips,
                 header: PlannerHeaderView(datestamp: datestamp),
                 width: todayService.todaystamp == datestamp
                     ? PlannerPreviewCardLayout.TODAY_WIDTH

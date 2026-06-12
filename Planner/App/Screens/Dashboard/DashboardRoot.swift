@@ -18,7 +18,7 @@ struct DashboardRootView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @EnvironmentObject private var calendarStore: CalendarService
+    @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var weatherCacheService: WeatherCacheService
     @EnvironmentObject private var locationService: LocationService
@@ -72,7 +72,7 @@ struct DashboardRootView: View {
                     .listStyle(.plain)
                     .refreshable {
                         weatherCacheService.beginReload()
-                        calendarStore.refreshCalendarsAndAccess()
+                        calendarService.refreshCalendarsAndAccess()
                         locationService.loadDeviceLocation()
                         plannerSyncService.syncAllPlanners()
                     }
@@ -98,11 +98,7 @@ struct DashboardRootView: View {
             // MARK: New Event Form
 
             .sheet(isPresented: $showNewEventSheet) {
-                EventFormView(
-                    plannerEvent: nil,
-                    calendarEvent: nil,
-                    settings: settings
-                )
+                EventFormView(settings: settings)
             }
 
             // MARK: New Routine Event Form

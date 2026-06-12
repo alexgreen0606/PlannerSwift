@@ -22,7 +22,7 @@ struct TripDayPreviewCardView: View {
             PlannerPreviewCardView(
                 planner: context.planner,
                 sortedPlannerEvents: context.eventContext.sortedPlannerEvents,
-                calendarDayData: context.eventContext.calendarDayData,
+                sortedEventChips: context.eventContext.sortedEventChips,
                 header: PlannerHeaderView(
                     datestamp: datestamp,
                     iconType: .date,
