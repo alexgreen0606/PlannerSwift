@@ -27,38 +27,14 @@ struct PlannerEventContextLoaderView<Content: View>: View {
         self.content = content
 
         let startOfDay = planner.startOfDay(settings: settings)
-        let startOfNextDay = (startOfDay + 1.days)
-        let dayStartDate = startOfDay.date
-        let nextDayStartDate = startOfNextDay.date
-
-        let plannerDatestamp = planner.datestamp
 
         _sortedPlannerEvents = Query(
-            filter: #Predicate<PlannerEvent> { event in
-                if event.calendarContext != nil {
-                    return false
-                } else if let time = event.time {
-                    return time >= dayStartDate && time < nextDayStartDate
-                } else if let datestamp = event.datestamp {
-                    return datestamp == plannerDatestamp
-                } else {
-                    return false
-                }
-            },
+            filter: PlannerEvent.listEvents(on: startOfDay),
             sort: \.sortDate
         )
 
         _sortedEventChips = Query(
-            filter: #Predicate<PlannerEvent> { event in
-                if let calendarContext = event.calendarContext {
-                    return calendarContext.birthdayContactIdentifier == nil
-                        && calendarContext.isAllDay
-                        && calendarContext.startDate < nextDayStartDate
-                        && calendarContext.endDate >= dayStartDate
-                } else {
-                    return false
-                }
-            },
+            filter: PlannerEvent.eventChips(on: startOfDay),
             sort: [
                 SortDescriptor(
                     \PlannerEvent.title,
@@ -68,15 +44,7 @@ struct PlannerEventContextLoaderView<Content: View>: View {
         )
 
         _sortedBirthdayChips = Query(
-            filter: #Predicate<PlannerEvent> { event in
-                if let calendarContext = event.calendarContext {
-                    return calendarContext.birthdayContactIdentifier != nil
-                        && calendarContext.startDate < nextDayStartDate
-                        && calendarContext.endDate >= dayStartDate
-                } else {
-                    return false
-                }
-            },
+            filter: PlannerEvent.birthdayChips(on: startOfDay),
             sort: [
                 SortDescriptor(
                     \PlannerEvent.title,

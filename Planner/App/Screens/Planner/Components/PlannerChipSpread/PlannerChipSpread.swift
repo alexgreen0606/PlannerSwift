@@ -114,7 +114,8 @@ struct PlannerChipSpreadView: View {
             plannerEvent.title,
             iconConfig: IconConfig(
                 name: plannerEvent.calendarSystemImageName(settings: settings),
-                primaryColor: calendarColor
+                primaryColor: calendarColor,
+                secondaryColor: calendarColor
             ),
             color: calendarColor
         )
