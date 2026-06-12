@@ -10,14 +10,17 @@ import EventKit
 import SwiftUI
 
 struct BirthdayChipView: View {
-    let birthday: Birthday
+    let plannerEvent: PlannerEvent
     let settings: PlannerSettings
     let namespace: Namespace.ID
+
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        .blue
 
     @State private var showContactSheet: Bool = false
 
     private var contactPhotoExists: Bool {
-        birthday.contact.thumbnailImageData != nil
+        plannerEvent.calendarContext?.birthdayThumbnailData != nil
     }
 
     /// Shifts the icon to align with the chip border.
@@ -32,28 +35,29 @@ struct BirthdayChipView: View {
     // MARK: - Body
 
     var body: some View {
-        BirthdayLabelView(birthday: birthday, settings: settings)
+        BirthdayLabelView(plannerEvent: plannerEvent, settings: settings)
             .padding(.leading, leadingPadding)
             .glassChip(
-                color: contactPhotoExists ? nil : birthday.event.calendar.color,
+                color: contactPhotoExists
+                    ? nil : plannerEvent.tint(accentColor: accentColor),
                 height: PlannerLayout.CHIP_HEIGHT,
                 onTap: {
                     showContactSheet = true
                 }
             )
             .matchedTransitionSource(
-                id: birthday.event.transitionId,
+                id: plannerEvent.transitionId,
                 in: namespace
             )
 
             // MARK: Contact Form
 
             .sheet(isPresented: $showContactSheet) {
-                ContactFormView(contact: birthday.contact)
+                ContactFormView(plannerEvent: plannerEvent)
                     .ignoresSafeArea()
                     .navigationTransition(
                         .zoom(
-                            sourceID: birthday.event.transitionId,
+                            sourceID: plannerEvent.transitionId,
                             in: namespace
                         )
                     )
