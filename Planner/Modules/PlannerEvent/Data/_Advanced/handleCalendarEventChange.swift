@@ -7,7 +7,6 @@
 
 import EventKit
 import SwiftData
-import SwiftDate
 
 extension ModelContext {
     @MainActor
@@ -16,15 +15,17 @@ extension ModelContext {
         sourcePlanner: Planner?,
         sourcePlannerEvent: PlannerEvent?,
         settings: PlannerSettings
-    ) -> // The datestamps the event is now in.
+    ) -> /// The datestamps the event is now in.
         Set<String>
     {
         if let sourcePlannerEvent {
+            // MARK: A planner event already exists. Sync it with the updated calendar event.
+
             if let routineEvent = sourcePlannerEvent.routineEvent,
-               let sourcePlanner,
-               sourcePlannerEvent.routineEventVariant == nil
+                let sourcePlanner,
+                sourcePlannerEvent.routineEventVariant == nil
             {
-                // MARK: The initial event is a routine event. Mark it as a variant.
+                // MARK: The planner event is a routine event. Mark it as a variant.
 
                 let newRoutineEventVariant = RoutineEventVariant(
                     routineEvent: routineEvent,
@@ -43,27 +44,14 @@ extension ModelContext {
                 insert(newRoutineEventVariant)
             }
 
-            guard let calendarEvent, !calendarEvent.isAllDay else {
-                // MARK: The calendar event is deleted or all-day. Remove the storage record.
+            guard let calendarEvent else {
+                // MARK: The calendar event was deleted. Remove the storage record.
 
                 delete(sourcePlannerEvent)
-
-                if let startDate = calendarEvent?.startDate {
-                    // MARK: Event is all-day. Return a set of all datestamps the event exists in.
-
-                    return Set(
-                        getSortedPlannerStartOfDays(
-                            for: startDate,
-                            endTime: calendarEvent?.endDate,
-                            settings: settings
-                        ).map(\.datestamp)
-                    )
-                }
-
                 return []
             }
 
-            // MARK: The calendar event is timed. Sync the storage record with the calendar event.
+            // MARK: Sync the storage record with the calendar event.
 
             sourcePlannerEvent.syncWithCalendarEvent(calendarEvent)
 
@@ -74,6 +62,8 @@ extension ModelContext {
             )
 
         } else if let calendarEvent {
+            // MARK: A planner event doesn't exist. Create one for the calendar event.
+
             let sortedStartsOfDays = getSortedPlannerStartOfDays(
                 for: calendarEvent.startDate,
                 endTime: calendarEvent.endDate,
