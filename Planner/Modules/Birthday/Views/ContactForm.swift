@@ -10,11 +10,21 @@ import ContactsUI
 import SwiftUI
 
 struct ContactFormView: UIViewControllerRepresentable {
-    let contact: CNContact
+    let plannerEvent: PlannerEvent
 
     @Environment(\.dismiss) private var dismiss
 
     func makeUIViewController(context: Context) -> UINavigationController {
+        guard
+            let contact = ContactService.shared.store.loadContact(
+                for: plannerEvent
+            )
+        else {
+            // Show empty view in case of load error.
+            let vc = UIViewController()
+            return UINavigationController(rootViewController: vc)
+        }
+
         let contactVC = CNContactViewController(for: contact)
 
         contactVC.allowsEditing = true
