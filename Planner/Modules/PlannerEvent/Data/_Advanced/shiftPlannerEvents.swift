@@ -17,7 +17,7 @@ extension ModelContext {
         days: DateComponents,
         sourceDatestamp: String,
         destinationDatestamp: String,
-        eventStore: EKEventStore,
+        ekEventStore: EKEventStore,
         settings: PlannerSettings
     ) {
         // Assemble the events in reverse-chronological ordering so they
@@ -27,18 +27,23 @@ extension ModelContext {
         }
 
         for event in reverseSortedEvents {
-            if let calEvent = event.calendarEvent {
+            if let calendarContext = event.calendarContext,
+                let ekEvent = ekEventStore.getEkEvent(for: event)
+            {
                 // MARK: Event is a calendar event. Update the calendar record.
 
-                guard calEvent.calendar.allowsContentModifications else {
+                guard ekEvent.calendar.allowsContentModifications else {
                     continue
                 }
 
                 // Shift the start and end dates and save.
-                calEvent.startDate = calEvent.startDate + days
-                calEvent.endDate = calEvent.endDate + days
+                ekEvent.startDate = ekEvent.startDate + days
+                ekEvent.endDate = ekEvent.endDate + days
 
-                if !eventStore.attemptUpdateEvent(calEvent) {
+                calendarContext.startDate = ekEvent.startDate
+                calendarContext.endDate = ekEvent.endDate
+
+                if !ekEventStore.attemptUpdateEvent(ekEvent) {
                     // The update failed. Skip this event.
                     continue
                 }

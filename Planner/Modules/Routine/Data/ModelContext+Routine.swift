@@ -249,10 +249,10 @@ extension ModelContext {
                 continue
             }
 
-            if let calendarItemExternalIdentifier = plannerEvent
+            if let calendarItemExternalIdentifier = plannerEvent.calendarContext?
                 .calendarItemExternalIdentifier
             {
-                ekEventStore.deleteEvent(
+                _ = ekEventStore.attemptDeleteEvent(
                     identifier: calendarItemExternalIdentifier
                 )
             }
@@ -265,7 +265,7 @@ extension ModelContext {
             if let calendarItemExternalIdentifier = variant
                 .calendarItemExternalIdentifier
             {
-                ekEventStore.deleteEvent(
+                _ = ekEventStore.attemptDeleteEvent(
                     identifier: calendarItemExternalIdentifier
                 )
                 needsCalendarRefresh = true

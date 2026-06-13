@@ -28,6 +28,10 @@ extension ModelContext {
                 return
             }
 
+            guard ekEvent.calendar.allowsContentModifications else {
+                return
+            }
+
             ekEvent.title = plannerEvent.title
             _ = ekEventStore.attemptUpdateEvent(ekEvent)
 

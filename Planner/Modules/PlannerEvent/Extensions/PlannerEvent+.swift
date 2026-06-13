@@ -26,6 +26,26 @@ extension PlannerEvent {
         routineEventVariant != nil && routineEvent != nil
     }
 
+    func isEventChip(on startOfDay: DateInRegion) -> Bool {
+        guard let calendarContext else {
+            return false
+        }
+
+        let startOfNextDay = startOfDay + 1.days
+        let plannerStart = startOfDay.date
+        let plannerEnd = startOfNextDay.date
+
+        if calendarContext.isAllDay {
+            return calendarContext.startDate < plannerEnd
+                && calendarContext.endDate >= plannerStart
+        }
+
+        return calendarContext.startDate < plannerStart
+            && calendarContext.endDate >= plannerStart
+            || calendarContext.endDate >= plannerEnd
+                && calendarContext.startDate < plannerEnd
+    }
+
     // MARK: - Location
 
     private func location(
@@ -68,33 +88,67 @@ extension PlannerEvent {
         )?.name ?? "Current Location"
     }
 
-    // MARK: - Style
+    // MARK: - UI
 
     func tint(accentColor: AccentColor) -> Color {
-        if let calendar = calendarEvent?.calendar {
-            return calendar.color
+        if let calendarColor = calendarContext?.calendarColorHex.color {
+            return calendarColor
         }
 
         return accentColor.color
     }
 
+    func calendarSystemImageName(settings: PlannerSettings) -> String {
+        if let calendar = calendarContext?.ekEvent?.calendar {
+            return calendar.systemImageName(settings: settings)
+        }
+
+        if let calendarContext,
+            let existing = settings.iconMap[calendarContext.calendarId]
+        {
+            return existing
+        }
+
+        if title.localizedCaseInsensitiveContains("birthday") {
+            return "birthday.cake.fill"
+        }
+
+        return "calendar"
+    }
+
     // MARK: - Synchronization
 
     @MainActor
-    func syncWithCalendarEvent(_ calendarEvent: EKEvent) {
-        title = calendarEvent.title
-        time = calendarEvent.startDate
-        location = calendarEvent.location(
+    func syncWithCalendarEvent(
+        _ ekEvent: EKEvent
+    ) {
+        // Sync common data between planner and calendar events.
+        title = ekEvent.title
+        location = ekEvent.location(
             existingPlannerEvent: self
         )
+        time = ekEvent.startDate
 
-        calendarItemExternalIdentifier =
-            calendarEvent.calendarItemExternalIdentifier
-        occurrenceId = calendarEvent.occurrenceId
+        // Sync calendar-specific data.
+        if let existingContext = calendarContext {
+            existingContext.startDate = ekEvent.startDate
+            existingContext.endDate = ekEvent.endDate
+            existingContext.isAllDay = ekEvent.isAllDay
 
-        // TODO: should I make routine variants here??
+            existingContext.calendarItemExternalIdentifier =
+                ekEvent.calendarItemExternalIdentifier
+            existingContext.calendarId =
+                ekEvent.calendar.calendarIdentifier
+            existingContext.calendarColorHex =
+                ekEvent.calendar.cgColor.hexString
 
-        self.calendarEvent = calendarEvent
+            existingContext.birthdayContactIdentifier =
+                ekEvent.birthdayContactIdentifier
+
+            existingContext.ekEvent = ekEvent
+        } else {
+            calendarContext = CalendarEventContext(ekEvent: ekEvent)
+        }
     }
 
     @MainActor
@@ -118,7 +172,7 @@ extension PlannerEvent {
         originPlanner: Planner,
         settings: PlannerSettings
     ) -> Bool {
-        guard calendarItemExternalIdentifier == nil, location == nil else {
+        guard calendarContext == nil, location == nil else {
             return false
         }
 
