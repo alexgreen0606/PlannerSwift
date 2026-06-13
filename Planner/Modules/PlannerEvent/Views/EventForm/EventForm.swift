@@ -19,14 +19,23 @@ struct EventFormView: View {
 
     init(
         sourcePlanner: Planner? = nil,
-        plannerEvent: PlannerEvent?,
-        calendarEvent: EKEvent?,
+        plannerEvent: PlannerEvent? = nil,
+        ekEventStore: EKEventStore? = nil,
         settings: PlannerSettings
     ) {
         sourcePlannerEvent = plannerEvent
         self.sourcePlanner = sourcePlanner
-        sourceCalendarEvent = plannerEvent?.calendarEvent ?? calendarEvent
         self.settings = settings
+        
+        let calendarEvent: EKEvent? = {
+            guard let plannerEvent, let ekEventStore else {
+                return nil
+            }
+            
+            return ekEventStore.getEkEvent(for: plannerEvent)
+        }()
+        
+        sourceCalendarEvent = calendarEvent
 
         // ------------------------------------------------------------------
         // Build the draft event from the initial data.
@@ -34,7 +43,7 @@ struct EventFormView: View {
 
         var draftPlannerEvent = DraftPlannerEvent()
 
-        if let calEvent = plannerEvent?.calendarEvent ?? calendarEvent {
+        if let calEvent = sourceCalendarEvent {
             // ----------------------------------------------------------
             // Initialize the calendar event form.
             // Carry calendar event data over to the draft planner event.
@@ -271,7 +280,8 @@ struct EventFormView: View {
             settings: settings
         )
 
-        // Refresh calendar in case of recurring/all-day events.
+        // TODO: only do this if the event was recurring or is recurring.
+        // Refresh calendar in case of recurring events.
         DispatchQueue.main.async(
             execute: PlannerSyncStore.syncCalendar
         )
