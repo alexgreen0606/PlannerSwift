@@ -89,7 +89,25 @@ extension ModelContext {
         return []
     }
 
-    func getCalendarEvents(on startOfDay: DateInRegion)
+    func getPlannerEvents(on startOfDay: DateInRegion)
+        -> [PlannerEvent]
+    {
+        do {
+            return try fetch(
+                FetchDescriptor<PlannerEvent>(
+                    predicate: PlannerEvent.plannerEvents(on: startOfDay)
+                )
+            )
+        } catch {
+            assertionFailure(
+                "ERROR ModelContext+PlannerEvent.getPlannerEvents: \(error)"
+            )
+        }
+
+        return []
+    }
+
+    func getCalendarRecords(on startOfDay: DateInRegion)
         -> [PlannerEvent]
     {
         do {
@@ -100,7 +118,7 @@ extension ModelContext {
             )
         } catch {
             assertionFailure(
-                "ERROR ModelContext+PlannerEvent.getCalendarEvents: \(error)"
+                "ERROR ModelContext+PlannerEvent.getCalendarRecords: \(error)"
             )
         }
 

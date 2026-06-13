@@ -42,9 +42,9 @@ extension ModelContext {
 
         var birthdayEvents: [String: PlannerEvent] = [:]
 
-        let calendarPlannerEvents = getCalendarEvents(on: startOfDay)
+        let calendarRecords = getCalendarRecords(on: startOfDay)
 
-        for plannerEvent in calendarPlannerEvents {
+        for plannerEvent in calendarRecords {
             guard
                 let calendarItemExternalIdentifier = plannerEvent
                     .calendarContext?
