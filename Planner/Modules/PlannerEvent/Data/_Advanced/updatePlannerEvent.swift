@@ -34,8 +34,8 @@ extension ModelContext {
         event.time = draftPlannerEvent.hasTime ? draftPlannerEvent.date : nil
         event.datestamp = destinationDatestamp
 
-        event.calendarEvent = nil
-        event.calendarItemExternalIdentifier = nil
+        safeDelete(event.calendarContext, skipSave: true)
+        event.calendarContext = nil
 
         // MARK: Place the event at the top of its planner if it has moved days.
         let destinationDatestamps = ensureValidSortDate(
@@ -61,10 +61,10 @@ extension ModelContext {
             _ = ekEventStore.attemptDeleteEvent(sourceCalendarEvent)
         }
 
+        insertIfNeeded(event)
+        
         // Note: Saving the context here will delete the location.
         // Allow the context to auto-save when ready.
-
-        insertIfNeeded(event)
 
         return destinationDatestamps
     }

@@ -190,6 +190,20 @@ extension ModelContext {
     ) -> /// The datestamps the event is now in.
         Set<String>
     {
+        if let calendarContext = event.calendarContext, calendarContext.isAllDay
+        {
+            // Event is all-day. Use its actual time as the sortDate.
+            event.sortDate = calendarContext.startDate
+            return Set(
+                getSortedPlannerStartOfDays(
+                    for: event.time,
+                    endTime: event.calendarContext?.endDate,
+                    datestamp: event.datestamp,
+                    settings: settings
+                ).map(\.datestamp)
+            )
+        }
+
         let sortedStartsOfDays = getSortedPlannerStartOfDays(
             for: event.time,
             endTime: event.calendarContext?.endDate,

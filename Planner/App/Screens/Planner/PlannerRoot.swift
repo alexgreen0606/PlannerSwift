@@ -256,7 +256,7 @@ struct PlannerRootView: View {
             in: planner,
             startOfDay: startOfDay,
             plannerLocation: plannerLocation,
-            eventKitStore: calendarService.ekEventStore,
+            ekEventStore: calendarService.ekEventStore,
             settings: settings
         )
     }

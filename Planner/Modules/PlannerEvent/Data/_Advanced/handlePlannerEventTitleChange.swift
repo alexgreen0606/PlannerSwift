@@ -16,19 +16,28 @@ extension ModelContext {
         in planner: Planner,
         startOfDay: DateInRegion,
         plannerLocation: Location?,
-        eventKitStore: EKEventStore,
+        ekEventStore: EKEventStore,
         settings: PlannerSettings
     ) {
-        if let calendarEvent = plannerEvent.calendarEvent {
+        if plannerEvent.calendarContext != nil {
             // MARK: Event is a calendar event. Update its title in the calendar.
 
-            calendarEvent.title = plannerEvent.title
-            _ = eventKitStore.attemptUpdateEvent(calendarEvent)
+            guard
+                var ekEvent = ekEventStore.getEkEvent(for: plannerEvent)
+            else {
+                return
+            }
+
+            ekEvent.title = plannerEvent.title
+            _ = ekEventStore.attemptUpdateEvent(ekEvent)
+
             return
         }
 
         if let plannerLocation,
-           let (time, updatedText) = plannerEvent.title.extractTime(for: startOfDay)
+            let (time, updatedText) = plannerEvent.title.extractTime(
+                for: startOfDay
+            )
         {
             // MARK: Title has a time value. Re-configure the event.
 

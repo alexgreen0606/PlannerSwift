@@ -8,7 +8,7 @@
 import EventKit
 
 extension EKEventStore {
-    func loadCalendarEvent(for plannerEvent: PlannerEvent) -> EKEvent? {
+    func getEkEvent(for plannerEvent: PlannerEvent) -> EKEvent? {
         if let existing = plannerEvent.calendarContext?.ekEvent {
             return existing
         }

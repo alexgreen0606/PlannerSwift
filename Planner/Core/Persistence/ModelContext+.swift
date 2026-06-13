@@ -18,9 +18,16 @@ extension ModelContext {
     }
 
     @MainActor
-    func safeDelete<Item: PersistentModel>(_ item: Item) {
+    func safeDelete<Item: PersistentModel>(_ item: Item?, skipSave: Bool = false) {
+        guard let item else {
+            return
+        }
+        
         delete(item)
-        safeSave("ModelContext+.safeDelete")
+        
+        if !skipSave {
+            safeSave("ModelContext+.safeDelete")
+        }
     }
 
     @MainActor
