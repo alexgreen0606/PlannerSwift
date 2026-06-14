@@ -141,6 +141,7 @@ extension PlannerEvent {
                 ekEvent.calendar.calendarIdentifier
             existingContext.calendarColorHex =
                 ekEvent.calendar.cgColor.hexString
+            existingContext.editable = ekEvent.calendar.allowsContentModifications
 
             existingContext.birthdayContactIdentifier =
                 ekEvent.birthdayContactIdentifier

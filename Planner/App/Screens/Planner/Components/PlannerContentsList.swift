@@ -13,7 +13,7 @@ import WeatherKit
 
 struct PlannerContentsListView: View {
     @Binding var showLocationSheet: Bool
-    @Binding var eventSheetContext: EventSheetContext?
+    @Binding var eventSheetContext: PlannerEventSheetContext?
     let planner: Planner
     let startOfDay: DateInRegion
     let plannerLocation: Location?

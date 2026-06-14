@@ -26,15 +26,15 @@ struct EventFormView: View {
         sourcePlannerEvent = plannerEvent
         self.sourcePlanner = sourcePlanner
         self.settings = settings
-        
+
         let calendarEvent: EKEvent? = {
             guard let plannerEvent, let ekEventStore else {
                 return nil
             }
-            
+
             return ekEventStore.getEkEvent(for: plannerEvent)
         }()
-        
+
         sourceCalendarEvent = calendarEvent
 
         // ------------------------------------------------------------------
@@ -221,16 +221,9 @@ struct EventFormView: View {
                         .fontWeight(.medium)
                     }
                 }
+                .interactiveDismissDisabled(true)
         }
-
-        // TODO: change detents. Maybe separate form for view calendar events.
         .presentationBackground(Color.sheetBackground)
-        .presentationDetents(
-            draftPlannerEvent.calendarEvent != nil
-                && draftPlannerEvent.calendarEvent?.calendar
-                    .allowsContentModifications == false
-                ? [.height(300)] : [.large]
-        )
         .interactiveDismissDisabled(true)
     }
 
@@ -238,36 +231,31 @@ struct EventFormView: View {
 
     @ViewBuilder
     private func calendarEventForm(for event: EKEvent) -> some View {
-        if event.calendar.allowsContentModifications {
-            EditCalendarEventFormView(
-                event: event,
-                ekEventStore: calendarStore.ekEventStore
-            ) { action, event in
-                guard action != .canceled else {
-                    if let sourcePlannerEvent, let sourcePlanner,
-                        sourcePlannerEvent.title.trimmingCharacters(
-                            in: .whitespacesAndNewlines
-                        ).isEmpty
-                    {
-                        // The source event had an empty title. Delete it.
-                        modelContext.deletePlannerEvent(
-                            sourcePlannerEvent,
-                            in: sourcePlanner
-                        )
-                    }
-                    dismiss()
-                    return
+        EditCalendarEventFormView(
+            event: event,
+            ekEventStore: calendarStore.ekEventStore
+        ) { action, event in
+            guard action != .canceled else {
+                if let sourcePlannerEvent, let sourcePlanner,
+                    sourcePlannerEvent.title.trimmingCharacters(
+                        in: .whitespacesAndNewlines
+                    ).isEmpty
+                {
+                    // The source event had an empty title. Delete it.
+                    modelContext.deletePlannerEvent(
+                        sourcePlannerEvent,
+                        in: sourcePlanner
+                    )
                 }
-
-                saveCalendarEvent(event)
+                dismiss()
+                return
             }
-            .tint(accentColor.color)
-            .ignoresSafeArea()
-            .navigationBarBackButtonHidden(true)
-        } else {
-            ViewCalendarEventFormView(event: event)
-                .ignoresSafeArea()
+
+            saveCalendarEvent(event)
         }
+        .tint(accentColor.color)
+        .ignoresSafeArea()
+        .navigationBarBackButtonHidden(true)
     }
 
     // MARK: - Functions

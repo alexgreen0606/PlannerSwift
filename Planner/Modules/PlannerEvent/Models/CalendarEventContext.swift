@@ -10,7 +10,6 @@ import EventKit
 import SwiftData
 import SwiftUI
 
-@available(iOS 26.0, *)
 @Model
 class CalendarEventContext {
     var startDate: Date = Date.now
@@ -20,6 +19,7 @@ class CalendarEventContext {
     var calendarItemExternalIdentifier: String = ""
     var calendarId: String = ""
     var calendarColorHex: String = UIColor.blue.cgColor.hexString
+    var editable: Bool = true
 
     var birthdayContactIdentifier: String?
     var birthdayThumbnailData: Data?
@@ -41,6 +41,7 @@ class CalendarEventContext {
             ekEvent.calendarItemExternalIdentifier
         self.calendarId = ekEvent.calendar.calendarIdentifier
         self.calendarColorHex = ekEvent.calendar.cgColor.hexString
+        self.editable = ekEvent.calendar.allowsContentModifications
         
         self.birthdayContactIdentifier = ekEvent.birthdayContactIdentifier
         

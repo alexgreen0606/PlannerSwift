@@ -10,13 +10,20 @@ import EventKitUI
 import SwiftUI
 
 struct ViewCalendarEventFormView: UIViewControllerRepresentable {
-    let event: EKEvent
+    let plannerEvent: PlannerEvent
+    let ekEventStore: EKEventStore
 
     func makeUIViewController(context _: Context) -> UINavigationController {
+        guard let event = ekEventStore.getEkEvent(for: plannerEvent)
+        else {
+            // Show empty view in case of load error.
+            let vc = UIViewController()
+            return UINavigationController(rootViewController: vc)
+        }
+
         let vc = EKEventViewController()
 
         vc.event = event
-        
         vc.additionalSafeAreaInsets.top = 16
 
         let nav = UINavigationController(rootViewController: vc)

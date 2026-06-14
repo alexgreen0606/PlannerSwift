@@ -29,7 +29,7 @@ struct PlannerRootView: View {
 
     @StateObject private var plannerEngine = ListEngine<PlannerEvent>()
 
-    @State private var eventSheetContext: EventSheetContext?
+    @State private var eventSheetContext: PlannerEventSheetContext?
     @State private var showTransferSheet = false
     @State private var showLocationSheet = false
 
@@ -90,9 +90,9 @@ struct PlannerRootView: View {
                         plannerLocation: plannerLocation,
                         sortedPlannerEvents: sortedPlannerEvents,
                         sortedPendingPlannerEvents:
-                        sortedPendingPlannerEvents,
+                            sortedPendingPlannerEvents,
                         sortedCompletePlannerEvents:
-                        sortedCompletePlannerEvents,
+                            sortedCompletePlannerEvents,
                         sortedEventChips: sortedEventChips,
                         sortedBirthdayChips: sortedBirthdayChips,
                         showCompleted: planner.showCompleted,
@@ -134,12 +134,23 @@ struct PlannerRootView: View {
             // MARK: Event Form
 
             .sheet(item: $eventSheetContext) { context in
-                EventFormView(
-                    sourcePlanner: planner,
-                    plannerEvent: context.plannerEvent,
-                    ekEventStore: calendarService.ekEventStore,
-                    settings: settings
-                )
+                Group {
+                    if context.plannerEvent.calendarContext?.editable == false {
+                        ViewCalendarEventFormView(
+                            plannerEvent: context.plannerEvent,
+                            ekEventStore: calendarService.ekEventStore
+                        )
+                        .ignoresSafeArea()
+                        .presentationDetents([.height(300)])
+                    } else {
+                        EventFormView(
+                            sourcePlanner: planner,
+                            plannerEvent: context.plannerEvent,
+                            ekEventStore: calendarService.ekEventStore,
+                            settings: settings
+                        )
+                    }
+                }
                 .navigationTransition(
                     .zoom(
                         sourceID: context.id,
@@ -159,7 +170,7 @@ struct PlannerRootView: View {
     private var topLeadingToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             if !plannerEngine.isSelectMode {
-                BackButtonView {
+                BackButtonView(handleSideEffects: {
                     if plannerCoverStore.showTodayDefault {
                         if plannerCoverStore.todaystampAtInit
                             != planner.datestamp
@@ -171,7 +182,7 @@ struct PlannerRootView: View {
                             }
                         }
                     }
-                }
+                })
             } else {
                 CancelButtonView(cancel: plannerEngine.toggleSelectMode)
             }
@@ -285,9 +296,8 @@ struct PlannerRootView: View {
 
         DispatchQueue.main.async {
             eventSheetContext =
-                EventSheetContext(
-                    plannerEvent: event,
-                    calendarEvent: nil
+                PlannerEventSheetContext(
+                    plannerEvent: event
                 )
         }
     }
