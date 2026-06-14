@@ -5,6 +5,7 @@
 //  Created by Alex Green on 5/24/26.
 //
 
+@MainActor
 func getInsertionIndex<Item: ListItem>(
     pendingIndex: Int,
     sortedPendingItems: [Item],

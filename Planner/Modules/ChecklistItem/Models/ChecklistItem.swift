@@ -6,15 +6,22 @@
 //
 
 import SwiftData
+import SwiftUI
 
-@available(iOS 26.0, *)
 @Model
 class ChecklistItem: ListItem {
+
+    var stableId: UUID = UUID()
+
+    var title: String = ""
     var type: ChecklistItemType = ChecklistItemType.checklist
     var color: ChecklistItemColor = ChecklistItemColor.red
     var sortIndex: Double = ChecklistsData.SORT_INDEX_SPACING
 
+    var isCompleted: Bool = false
     var showCompleted: Bool = false
+    
+    var height: CGFloat = 0
 
     @Relationship(
         deleteRule: .cascade,
@@ -31,7 +38,6 @@ class ChecklistItem: ListItem {
         sortIndex: Double = ChecklistsData.SORT_INDEX_SPACING,
         parent: ChecklistItem? = nil
     ) {
-        super.init()
         self.title = title
         self.type = type
         self.color = color

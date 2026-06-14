@@ -8,11 +8,12 @@
 import SwiftUI
 
 /// Finds a position for a recurring event that places it close as possible to its siblings.
+@MainActor
 func generateRoutineEventIndex<Destination: EventListItem>(
     near sourceId: UUID,
     from sortedSourceEvents: [RoutineEvent],
     to sortedDestinationEvents: [Destination],
-    destinationComparatorId: (Destination) -> UUID? = { $0.stableId }
+    destinationComparatorId: @MainActor (Destination) -> UUID? = { $0.stableId }
 ) -> Int {
     // MARK: Find current index in source.
 

@@ -14,7 +14,7 @@ struct RowView<
     RightAdornment: View,
     BottomAdornment: View
 >: View {
-    @Bindable private var item: Item
+    private let item: Item
     private let index: Int
     private let toggleOnly: Bool
     private let tint: Color
@@ -86,6 +86,20 @@ struct RowView<
         }
 
         return listEngine.fadingOpacity
+    }
+
+    private var titleBinding: Binding<String> {
+        Binding(
+            get: { item.title },
+            set: { item.title = $0 }
+        )
+    }
+
+    private var heightBinding: Binding<CGFloat> {
+        Binding(
+            get: { item.height },
+            set: { item.height = $0 }
+        )
     }
 
     // MARK: - Body
@@ -189,8 +203,8 @@ struct RowView<
 
     private var textfield: some View {
         TextfieldView(
-            text: $item.title,
-            height: $item.height,
+            text: titleBinding,
+            height: heightBinding,
             focusedId: $listEngine.focusedId,
             stableId: item.stableId,
             tint: tint,

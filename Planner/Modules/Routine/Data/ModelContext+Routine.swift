@@ -311,6 +311,7 @@ extension ModelContext {
 
     // MARK: - Helper Functions
 
+    @MainActor
     private func generateNewSortDateNearSiblings(
         for event: RoutineEvent,
         in weekday: Weekday,
@@ -331,6 +332,7 @@ extension ModelContext {
         )
     }
 
+    @MainActor
     private func generateRoutineEventSortDate(
         at index: Int,
         in sortedRoutineEvents: [RoutineEvent], // May or may not contain the event being placed.

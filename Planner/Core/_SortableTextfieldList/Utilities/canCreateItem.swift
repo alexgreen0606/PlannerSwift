@@ -5,6 +5,7 @@
 //  Created by Alex Green on 2/24/26.
 //
 
+@MainActor
 func canCreateItem<Item: ListItem>(
     at index: Int,
     in sortedItems: [Item]

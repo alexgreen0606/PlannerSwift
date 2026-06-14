@@ -10,6 +10,7 @@ import SwiftUI
 
 private let MINIMUM_SECONDS_GAP = 0.0001
 
+@MainActor
 func generateSortDate<Event: EventListItem>(
     at index: Int,
 
@@ -17,8 +18,8 @@ func generateSortDate<Event: EventListItem>(
     in sortedEvents: [Event],
 
     startOfDay: DateInRegion,
-    getSortDate: (Event) -> Date = { $0.sortDate },
-    setSortDate: (Event, Date) -> Void = { event, sortDate in
+    getSortDate: @MainActor (Event) -> Date = { $0.sortDate },
+    setSortDate: @MainActor (Event, Date) -> Void = { event, sortDate in
         event.sortDate = sortDate
     }
 ) -> Date {
@@ -64,7 +65,7 @@ private func midpoint(between a: Date, and b: Date) -> Date {
 private func normalizeSortDates<Event: EventListItem>(
     for events: [Event],
     startOfDay: DateInRegion,
-    setSortDate: (Event, Date) -> Void = { event, sortDate in
+    setSortDate: @MainActor (Event, Date) -> Void = { event, sortDate in
         event.sortDate = sortDate
     }
 ) {

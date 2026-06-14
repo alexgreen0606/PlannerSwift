@@ -9,9 +9,22 @@ import EventKit
 import Foundation
 import SwiftData
 
-@available(iOS 26.0, *)
 @Model
 class RoutineEvent: EventListItem {
+
+    var stableId: UUID = UUID()
+
+    var title: String = ""
+    var time: Date?
+
+    var isCompleted: Bool = false
+
+    /// Controlled by drag-and-drop.
+    /// No relation to the event's time.
+    var sortDate: Date = Date.now
+
+    var height: CGFloat = 0
+
     /// When a planner event's ID does not exist here, it will re-sync its sortDate with this event
     /// and add itself to this set.
     var syncedSortDatePlannerEventIds: Set<UUID> = []
@@ -31,7 +44,5 @@ class RoutineEvent: EventListItem {
     @Relationship(deleteRule: .cascade, inverse: \PlannerEvent.routineEvent)
     var plannerEvents: [PlannerEvent]?
 
-    init() {
-        super.init(sortDate: Date())
-    }
+    init() {}
 }

@@ -10,14 +10,27 @@ import Foundation
 import SwiftData
 import SwiftDate
 
-@available(iOS 26.0, *)
 @Model
 class PlannerEvent: EventListItem {
-    /// Must be set when an event doesn't have a time.
-    var datestamp: String?
+
+    var stableId: UUID = UUID()
+
+    var title: String = ""
+    var time: Date?
 
     @Relationship(deleteRule: .nullify, inverse: \Location.events)
     var location: Location?
+
+    /// Must be set when an event doesn't have a time.
+    var datestamp: String?
+
+    /// Controlled by drag-and-drop.
+    /// No relation to the event's time.
+    var sortDate: Date = Date.now
+
+    var isCompleted: Bool = false
+
+    var height: CGFloat = 0
 
     @Relationship(
         deleteRule: .cascade,
@@ -26,41 +39,36 @@ class PlannerEvent: EventListItem {
     var calendarContext: CalendarEventContext?
 
     var routineEvent: RoutineEvent?
-
     var routineEventVariant: RoutineEventVariant?
 
-    init(
-        time: Date? = nil,
-        datestamp: String? = nil,
-        sortDate: Date,
-        calendarEvent: EKEvent? = nil,
-        routineEvent: RoutineEvent? = nil,
-        startOfDay: DateInRegion? = nil
-    ) {
+    // MARK: Calendar Event
+    init(ekEvent: EKEvent, sortDate: Date) {
+        title = ekEvent.title
+        time = ekEvent.startDate
+        location = ekEvent.location()
+        self.sortDate = sortDate
+        calendarContext = CalendarEventContext(ekEvent: ekEvent)
+    }
+
+    // MARK: Routine Event
+    init(routineEvent: RoutineEvent, startOfDay: DateInRegion, sortDate: Date) {
+        title = routineEvent.title
+
+        if let time = routineEvent.date(in: startOfDay) {
+            self.time = time
+        } else {
+            datestamp = startOfDay.datestamp
+        }
+
+        self.sortDate = sortDate
+        self.routineEvent = routineEvent
+
+        routineEvent.syncedSortDatePlannerEventIds.insert(stableId)
+    }
+
+    // MARK: Untimed Event
+    init(datestamp: String, sortDate: Date) {
         self.datestamp = datestamp
-        super.init(sortDate: sortDate, time: time)
-
-        // MARK: Calendar event synchronization.
-        if let calendarEvent {
-            title = calendarEvent.title
-            location = calendarEvent.location()
-            calendarContext = CalendarEventContext(ekEvent: calendarEvent)
-            return
-        }
-
-        // MARK: Routine event synchronization.
-        if let routineEvent {
-            title = routineEvent.title
-
-            if let startOfDay,
-                let time = routineEvent.date(in: startOfDay)
-            {
-                self.time = time
-            }
-
-            self.routineEvent = routineEvent
-
-            routineEvent.syncedSortDatePlannerEventIds.insert(stableId)
-        }
+        self.sortDate = sortDate
     }
 }

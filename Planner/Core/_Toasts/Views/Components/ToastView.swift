@@ -7,9 +7,10 @@
 
 import SwiftUI
 
-struct ToastView<Item: ListItem>: View {
+@MainActor
+struct ToastView: View {
     let toast: Toast
-    let listEngine: ListEngine<Item>?
+    let blurFocusedItem: () -> Void
     let dismiss: () -> Void
 
     // MARK: - Body
@@ -48,7 +49,7 @@ struct ToastView<Item: ListItem>: View {
                     spacing: 0,
                     onTap: {
                         dismiss()
-                        listEngine?.focusedId = nil
+                        blurFocusedItem()
                         action()
                     }
                 )
