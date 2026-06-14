@@ -7,15 +7,28 @@
 
 import SwiftUI
 
-struct ToastRootView<Content: View, Item: ListItem>: View {
-    private let listEngine: ListEngine<Item>?
+@MainActor
+struct ToastRootView<Content: View>: View {
+    private let isKeyboardFocused: Bool
+    private let blurFocusedItem: () -> Void
     private var content: Content
 
+    // MARK: Tab Page (Dashboard)
     init(
-        listEngine: ListEngine<Item>? = nil,
         @ViewBuilder content: @escaping () -> Content
     ) {
-        self.listEngine = listEngine
+        self.isKeyboardFocused = false
+        self.blurFocusedItem = {}
+        self.content = content()
+    }
+
+    // MARK: List Page (Planner, Checklist, Routine)
+    init<Item: ListItem>(
+        listEngine: ListEngine<Item>,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.isKeyboardFocused = listEngine.focusedId != nil
+        self.blurFocusedItem = { listEngine.focusedId = nil }
         self.content = content()
     }
 
@@ -30,7 +43,7 @@ struct ToastRootView<Content: View, Item: ListItem>: View {
     @State private var toastDismissWorkItem: DispatchWorkItem?
 
     private var keyboardPadding: CGFloat {
-        listEngine?.focusedId != nil ? 16 : 0
+        isKeyboardFocused ? 16 : 0
     }
 
     // MARK: - Body
@@ -42,7 +55,7 @@ struct ToastRootView<Content: View, Item: ListItem>: View {
                 if let activeToast {
                     ToastView(
                         toast: activeToast,
-                        listEngine: listEngine,
+                        blurFocusedItem: blurFocusedItem,
                         dismiss: dismiss
                     )
                     .padding(.bottom, keyboardPadding)

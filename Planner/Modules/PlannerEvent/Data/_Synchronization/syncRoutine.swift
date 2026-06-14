@@ -181,10 +181,9 @@ extension ModelContext {
 
             let newEvent =
                 PlannerEvent(
-                    datestamp: planner.datestamp,
-                    sortDate: sortDate,
                     routineEvent: routineEvent,
-                    startOfDay: startOfDay
+                    startOfDay: startOfDay,
+                    sortDate: sortDate,
                 )
 
             insert(newEvent)

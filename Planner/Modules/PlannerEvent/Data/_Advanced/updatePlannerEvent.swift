@@ -25,14 +25,25 @@ extension ModelContext {
         let event =
             sourcePlannerEvent
             ?? PlannerEvent(
+                datestamp: destinationDatestamp,
                 sortDate: draftPlannerEvent.date
             )
 
+        // MARK: Save draft to planner event.
+
         event.title = draftPlannerEvent.title.trimmed
+
+        if draftPlannerEvent.hasTime {
+            event.time = draftPlannerEvent.date
+            event.datestamp = nil
+        } else {
+            event.datestamp = destinationDatestamp
+            event.time = nil
+        }
+
         event.location = draftPlannerEvent.location
 
-        event.time = draftPlannerEvent.hasTime ? draftPlannerEvent.date : nil
-        event.datestamp = destinationDatestamp
+        // MARK: Delete stale calendar context if one exists.
 
         safeDelete(event.calendarContext, skipSave: true)
         event.calendarContext = nil
@@ -62,7 +73,7 @@ extension ModelContext {
         }
 
         insertIfNeeded(event)
-        
+
         // Note: Saving the context here will delete the location.
         // Allow the context to auto-save when ready.
 
