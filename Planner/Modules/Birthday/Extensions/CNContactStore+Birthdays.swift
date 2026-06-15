@@ -10,6 +10,40 @@ import ContactsUI
 import EventKit
 
 extension CNContactStore {
+    func loadContact(
+        for plannerEvent: PlannerEvent
+    ) -> CNContact? {
+        if let existing = plannerEvent.calendarContext?.birthdayContact {
+            return existing
+        }
+
+        guard
+            let contactId = plannerEvent.calendarContext?
+                .birthdayContactIdentifier
+        else {
+            return nil
+        }
+
+        do {
+            let contact = try unifiedContact(
+                withIdentifier: contactId,
+                keysToFetch: [
+                    CNContactViewController.descriptorForRequiredKeys()
+                ] as [CNKeyDescriptor]
+            )
+            
+            plannerEvent.calendarContext?.birthdayContact = contact
+            
+            return contact
+        } catch {
+            assertionFailure(
+                "ERROR CNContactStore+Birthdays.loadContact: \(error)"
+            )
+        }
+
+        return nil
+    }
+    
     func syncBirthdayContacts(
         /// Maps contact IDs to planner events for birthdays.
         for plannerEventMap: [String: PlannerEvent]
@@ -39,35 +73,5 @@ extension CNContactStore {
                 "ERROR CNContactStore+Birthdays.syncBirthdayContacts: \(error)"
             )
         }
-    }
-
-    func loadContact(
-        for plannerEvent: PlannerEvent
-    ) -> CNContact? {
-        if let existing = plannerEvent.calendarContext?.birthdayContact {
-            return existing
-        }
-
-        guard
-            let contactId = plannerEvent.calendarContext?
-                .birthdayContactIdentifier
-        else {
-            return nil
-        }
-
-        do {
-            return try unifiedContact(
-                withIdentifier: contactId,
-                keysToFetch: [
-                    CNContactViewController.descriptorForRequiredKeys()
-                ] as [CNKeyDescriptor]
-            )
-        } catch {
-            assertionFailure(
-                "ERROR CNContactStore+Birthdays.loadContact: \(error)"
-            )
-        }
-
-        return nil
     }
 }

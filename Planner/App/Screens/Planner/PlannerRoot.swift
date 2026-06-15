@@ -144,8 +144,8 @@ struct PlannerRootView: View {
                         .presentationDetents([.height(300)])
                     } else {
                         EventFormView(
-                            sourcePlanner: planner,
                             plannerEvent: context.plannerEvent,
+                            sourcePlanner: planner,
                             ekEventStore: calendarService.ekEventStore,
                             settings: settings
                         )

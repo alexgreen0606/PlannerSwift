@@ -7,13 +7,15 @@
 
 import SwiftUI
 
-struct FormLabelView: View {
+struct FormLabelView<CustomValue: View>: View {
     private let systemImageName: String
     private let label: String
-    private let value: String
+    private let value: String?
+    private let customValue: CustomValue?
     private let detail: LocalizedStringKey?
     private let onTap: (() -> Void)?
 
+    // MARK: Standard
     init(
         systemImageName: String,
         label: String = "",
@@ -21,10 +23,32 @@ struct FormLabelView: View {
         detail: LocalizedStringKey? = nil,
         color: Color? = nil,
         onTap: (() -> Void)? = nil
-    ) {
+    ) where CustomValue == EmptyView {
+        self.customValue = nil
+
         self.systemImageName = systemImageName
         self.label = label
         self.value = value
+        self.detail = detail
+        self.onTap = onTap
+
+        customColor = color
+    }
+
+    // MARK: Custom Value View
+    init(
+        systemImageName: String,
+        label: String = "",
+        value: CustomValue,
+        detail: LocalizedStringKey? = nil,
+        color: Color? = nil,
+        onTap: (() -> Void)? = nil
+    ) {
+        self.value = nil
+
+        self.systemImageName = systemImageName
+        self.label = label
+        self.customValue = value
         self.detail = detail
         self.onTap = onTap
 
@@ -41,7 +65,11 @@ struct FormLabelView: View {
             Text(label)
                 .frame(maxWidth: .infinity, alignment: .leading)
             VStack(alignment: .trailing) {
-                ActionText(value, color: customColor)
+                if let customValue {
+                    customValue
+                } else if let value {
+                    ActionText(value, color: customColor)
+                }
                 if let detail {
                     Text(detail)
                         .font(

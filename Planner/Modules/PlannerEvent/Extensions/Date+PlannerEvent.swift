@@ -9,12 +9,6 @@ import SwiftDate
 import SwiftUI
 
 extension Date {
-    var roundedDownNearest5Minutes: Date {
-        let interval: TimeInterval = 5 * 60
-        let rounded = floor(timeIntervalSince1970 / interval) * interval
-        return Date(timeIntervalSince1970: rounded)
-    }
-
     /// Note: This date can be assumed to be an event start time. Do not use this function for end times.
     func belongsToPlanner(startOfDay: DateInRegion) -> Bool {
         let startOfNextDay = startOfDay + 1.days

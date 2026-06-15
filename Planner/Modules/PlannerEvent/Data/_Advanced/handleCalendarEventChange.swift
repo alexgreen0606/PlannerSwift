@@ -12,12 +12,18 @@ extension ModelContext {
     @MainActor
     func handleCalendarEventChange(
         _ calendarEvent: EKEvent?,
-        sourcePlanner: Planner?,
         sourcePlannerEvent: PlannerEvent?,
+        sourcePlanner: Planner?,
+        plannerSyncService: PlannerSyncService,
         settings: PlannerSettings
     ) -> /// The datestamps the event is now in.
         Set<String>
     {
+        let sourceWasRecurringEvent =
+            sourcePlannerEvent?.calendarContext?.ekEvent?.hasRecurrenceRules
+            == true
+        let finalIsRecurringEvent = calendarEvent?.hasRecurrenceRules == true
+
         if let sourcePlannerEvent {
             // MARK: A planner event already exists. Sync it with the updated calendar event.
 
@@ -78,6 +84,13 @@ extension ModelContext {
             }
 
             return Set(sortedStartsOfDays.map(\.datestamp))
+        }
+
+        // MARK: Re-sync calendar events if source or final event is recurring.
+        if sourceWasRecurringEvent || finalIsRecurringEvent {
+            DispatchQueue.main.async(
+                execute: plannerSyncService.syncCalendar
+            )
         }
 
         // Note: Saving the context here will delete the location.

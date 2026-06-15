@@ -12,23 +12,20 @@ import SwiftUI
 
 struct PlannerEventFormView: View {
     @Binding var draftPlannerEvent: DraftPlannerEvent
-    let settings: PlannerSettings
-    let defaultLocation: Location?
-    let sourceCalendarEvent: EKEvent?
     let sourcePlannerEvent: PlannerEvent?
     let sourcePlanner: Planner?
-    let showNotification: (String?, Set<String>, EKEvent?) -> Void
+    let settings: PlannerSettings
+    let showNotification: (Set<String>) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var calendarStore: CalendarService
+    @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var todayService: TodayService
-    @EnvironmentObject private var PlannerCoverStore: PlannerCoverStore
-    @EnvironmentObject private var PlannerSyncStore: PlannerSyncService
-    @EnvironmentObject private var LocationService: LocationService
+    @EnvironmentObject private var plannerSyncService: PlannerSyncService
+    @EnvironmentObject private var locationService: LocationService
 
     @State private var visiblePicker: VisibleEventFormPicker = .none
     @State private var hasTitleAutoFocused = false
@@ -37,47 +34,62 @@ struct PlannerEventFormView: View {
     @FocusState private var isTitleFocused
 
     private var isCreateForm: Bool {
-        sourcePlannerEvent == nil && sourceCalendarEvent == nil
+        sourcePlannerEvent == nil
     }
 
     private var canSave: Bool {
-        !draftPlannerEvent.title.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        ).isEmpty
+        !draftPlannerEvent.title.trimmed.isEmpty
     }
 
-    private var eventRegion: Region {
+    private var sourceEkEvent: EKEvent? {
+        sourcePlannerEvent?.calendarContext?.ekEvent
+    }
+    
+    private var dateInRegion: DateInRegion {
+        DateInRegion(draftPlannerEvent.date, region: region)
+    }
+
+    private var region: Region {
         draftPlannerEvent
             .region(
                 planner: sourcePlanner,
                 settings: settings,
-                deviceLocation: LocationService.deviceLocation
+                deviceLocation: locationService.deviceLocation
             )
     }
-
-    private var timeAndDay: DateInRegion {
-        DateInRegion(draftPlannerEvent.date, region: eventRegion)
-    }
-
-    private var timeZoneAbbreviation: String {
-        eventRegion.timeZone.abbreviation() ?? "Unknown Time Zone"
-    }
-
-    private var showCalendarButton: Bool {
-        calendarStore.hasAccess == true
+    
+    private var defaultLocation: Location? {
+        sourcePlanner?.location(
+            settings: settings,
+            deviceLocation: locationService.deviceLocation
+        )
+            ?? settings.homeLocation(
+                deviceLocation: locationService.deviceLocation
+            )
     }
 
     // MARK: - Body
 
     var body: some View {
         Form {
-            titleSection
+            FormTitleFieldView(
+                text: $draftPlannerEvent.title,
+                hasAutoFocused: $hasTitleAutoFocused,
+                isFocused: $isTitleFocused
+            )
+
             detailsSection
         }
-        .animation(.linear, value: visiblePicker)
         .toolbar {
             cancelButton
+
             FormSaveButtonView(canSave: canSave, save: savePlannerEvent)
+
+            deleteButton
+
+            ToolbarSpacer(placement: .bottomBar)
+
+            addToCalendarButton
         }
         .navigationTitle(isCreateForm ? "Create Event" : "Edit Event")
         .navigationBarTitleDisplayMode(.inline)
@@ -94,11 +106,11 @@ struct PlannerEventFormView: View {
                 if let sourcePlannerEvent, let sourcePlanner,
                     sourcePlannerEvent.title.trimmed.isEmpty
                 {
-                    // The title was empty when this sheet was open. Delete the event.
+                    // The title was empty when this sheet was opened. Delete the event.
                     modelContext.deletePlannerEvent(
                         sourcePlannerEvent,
                         in: sourcePlanner,
-                        ekEventStore: calendarStore.ekEventStore
+                        ekEventStore: calendarService.ekEventStore
                     )
                 }
 
@@ -107,15 +119,40 @@ struct PlannerEventFormView: View {
         }
     }
 
-    // MARK: - View Builders
-
-    private var titleSection: some View {
-        FormTitleFieldView(
-            text: $draftPlannerEvent.title,
-            hasAutoFocused: $hasTitleAutoFocused,
-            isFocused: $isTitleFocused
-        )
+    @ToolbarContentBuilder
+    private var deleteButton: some ToolbarContent {
+        if let sourcePlannerEvent {
+            ToolbarItem(placement: .bottomBar) {
+                Button("", systemImage: "trash") {
+                    showDeleteConfirmation = true
+                }
+                .tint(Color.red)
+                .withConfirmation(
+                    deletePlannerEventConfig(
+                        event: sourcePlannerEvent,
+                        inForm: true,
+                        delete: deleteSourceEvent
+                    ),
+                    isPresented: $showDeleteConfirmation
+                )
+            }
+        }
     }
+
+    @ToolbarContentBuilder
+    private var addToCalendarButton: some ToolbarContent {
+        if calendarService.hasAccess == true {
+            ToolbarItem(placement: .bottomBar) {
+                Button(
+                    "Add to Calendar",
+                    action: addEventToCalendar
+                )
+                .fontWeight(.medium)
+            }
+        }
+    }
+
+    // MARK: - View Builders
 
     private var detailsSection: some View {
         Section {
@@ -126,15 +163,16 @@ struct PlannerEventFormView: View {
             locationField
         }
         .listSectionSeparator(.hidden)
-        .environment(\.timeZone, eventRegion.timeZone)
+        .environment(\.timeZone, region.timeZone)
     }
 
     private var dateField: some View {
         FormLabelView(
             systemImageName: "calendar",
-            value: timeAndDay.datestamp.dateLabel(
+            value: dateInRegion.datestamp.dateLabel(
                 todaystamp: todayService.todaystamp
-            )
+            ),
+            detail: LocalizedStringKey(dateInRegion.datestamp.weekday)
         ) {
             togglePicker(type: .date)
         }
@@ -158,25 +196,13 @@ struct PlannerEventFormView: View {
     private var timeField: some View {
         Group {
             if draftPlannerEvent.hasTime {
-                HStack {
-                    Image(systemName: "clock")
-                    Text("")
-                    Spacer()
-                    VStack(alignment: .trailing) {
-                        Time(timeInRegion: timeAndDay)
-                        Text(timeZoneAbbreviation)
-                            .font(
-                                .system(
-                                    size: 11,
-                                    weight: .bold,
-                                    design: .rounded
-                                )
-                            )
-                            .foregroundStyle(Color.secondary)
-                    }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
+                FormLabelView(
+                    systemImageName: "clock",
+                    value: Time(timeInRegion: dateInRegion),
+                    detail: LocalizedStringKey(
+                        region.timeZone.abbreviation() ?? "Unknown Time Zone"
+                    )
+                ) {
                     togglePicker(type: .time)
                 }
             } else {
@@ -184,9 +210,19 @@ struct PlannerEventFormView: View {
                     systemImageName: "clock",
                     value: "Add Time"
                 ) {
-                    ensureTextfieldBlurred()
-                    draftPlannerEvent.hasTime = true
-                    visiblePicker = .time
+                    withAnimation {
+                        isTitleFocused = false
+                        visiblePicker = .time
+
+                        draftPlannerEvent.hasTime = true
+
+                        // Set a location for the event so absolute point in time is clear to user.
+                        if draftPlannerEvent.hasTime,
+                            draftPlannerEvent.location == nil
+                        {
+                            draftPlannerEvent.location = defaultLocation
+                        }
+                    }
                 }
             }
         }
@@ -203,15 +239,18 @@ struct PlannerEventFormView: View {
                     in: todayService.datePickerBounds,
                     displayedComponents: .hourAndMinute
                 )
-                .labelsHidden()
                 .datePickerStyle(.wheel)
+                .labelsHidden()
 
                 ActionButtonView(
                     label: "Remove Time",
                     systemImage: "xmark"
                 ) {
-                    draftPlannerEvent.hasTime = false
-                    visiblePicker = .none
+                    withAnimation {
+                        isTitleFocused = false
+                        draftPlannerEvent.hasTime = false
+                        visiblePicker = .none
+                    }
                 }
             }
             .alignmentGuide(.listRowSeparatorLeading) { _ in 32 }
@@ -231,75 +270,112 @@ struct PlannerEventFormView: View {
                 }
             )
         } label: {
-            HStack {
-                Image(systemName: "mappin.and.ellipse")
-                    .imageScale(.medium)
-                    .foregroundStyle(
-                        draftPlannerEvent.location == nil
-                            ? Color.secondary : accentColor.color,
-                        Color.label
-                    )
-                Text("")
-                Spacer()
-                Text(
-                    draftPlannerEvent.location?.name
-                        ?? (sourcePlanner != nil
-                            ? "Planner Location" : "Home Location")
-                )
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            }
+            FormNavigationLinkView(
+                iconConfig: IconConfig(
+                    name: "mappin.and.ellipse",
+                    primaryColor: draftPlannerEvent.location == nil
+                        ? Color.secondary : accentColor.color,
+                    secondaryColor: Color.label
+                ),
+                label: draftPlannerEvent.location?.name
+                    ?? (sourcePlanner != nil
+                        ? "Planner Location" : "Home Location")
+            )
         }
     }
 
     // MARK: - Functions
 
     private func savePlannerEvent() {
-        let destinationDatestamp = modelContext.updatePlannerEvent(
+        let destinationDatestamps = modelContext.updatePlannerEvent(
             sourcePlannerEvent,
             with: draftPlannerEvent,
             destinationDatestamp: DateInRegion(
                 draftPlannerEvent.date,
-                region: eventRegion
+                region: region
             ).datestamp,
-            sourceCalendarEvent: sourceCalendarEvent,
             sourcePlanner: sourcePlanner,
-            timeZone: eventRegion.timeZone,
-            ekEventStore: calendarStore.ekEventStore,
+            timeZone: region.timeZone,
+            plannerSyncService: plannerSyncService,
+            ekEventStore: calendarService.ekEventStore,
             settings: settings
-        )
-
-        // Refresh calendar in case of recurring/all-day events.
-        DispatchQueue.main.async(
-            execute: PlannerSyncStore.syncCalendar
         )
 
         dismiss()
 
-        let destinationDatestamps: Set<String> = {
-            guard let sourcePlanner else {
-                return []
-            }
-
-            return [sourcePlanner.datestamp]
-        }()
-
-        showNotification(sourcePlanner?.datestamp, destinationDatestamps, nil)
+        showNotification(destinationDatestamps)
     }
 
-    private func ensureTextfieldBlurred() {
-        if isTitleFocused {
-            isTitleFocused = false
+    private func deleteSourceEvent() {
+        dismiss()
+
+        if let sourceEkEvent {
+            guard
+                calendarService.ekEventStore.attemptDeleteEvent(
+                    sourceEkEvent
+                )
+            else {
+                return
+            }
+        }
+
+        if let sourcePlannerEvent, let sourcePlanner {
+            modelContext.deletePlannerEvent(
+                sourcePlannerEvent,
+                in: sourcePlanner,
+                ekEventStore: calendarService.ekEventStore
+            )
         }
     }
 
-    private func togglePicker(type: VisibleEventFormPicker) {
-        ensureTextfieldBlurred()
+    private func addEventToCalendar() {
+        let ekEvent =
+            sourceEkEvent
+            ?? EKEvent(
+                eventStore: calendarService.ekEventStore
+            )
 
-        if visiblePicker == type {
-            visiblePicker = .none
-        } else {
-            visiblePicker = type
+        ekEvent.calendar =
+            sourceEkEvent?.calendar
+            ?? calendarService.ekEventStore
+            .defaultCalendarForNewEvents
+
+        // Migrate event location into the calendar event.
+        if let location = draftPlannerEvent.location {
+            ekEvent.location = location.name
+
+            ekEvent.structuredLocation = EKStructuredLocation(
+                title: location.name,
+            )
+
+            ekEvent.structuredLocation?.geoLocation = CLLocation(
+                latitude: location.latitude,
+                longitude: location.longitude
+            )
+
+        }
+
+        ekEvent.title = draftPlannerEvent.title
+        ekEvent.startDate = draftPlannerEvent.date
+        ekEvent.endDate = Calendar.current.date(
+            byAdding: .hour,
+            value: 1,
+            to: draftPlannerEvent.date
+        )
+        ekEvent.timeZone = region.timeZone
+
+        draftPlannerEvent.ekEvent = ekEvent
+    }
+
+    private func togglePicker(type: VisibleEventFormPicker) {
+        withAnimation {
+            isTitleFocused = false
+
+            if visiblePicker == type {
+                visiblePicker = .none
+            } else {
+                visiblePicker = type
+            }
         }
     }
 }

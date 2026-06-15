@@ -14,9 +14,9 @@ extension ModelContext {
         _ sourcePlannerEvent: PlannerEvent?,
         with draftPlannerEvent: DraftPlannerEvent,
         destinationDatestamp: String,
-        sourceCalendarEvent: EKEvent?,
         sourcePlanner: Planner?,
         timeZone: TimeZone,
+        plannerSyncService: PlannerSyncService,
         ekEventStore: EKEventStore,
         settings: PlannerSettings,
     ) -> /// The datestamps the event is now in.
@@ -28,6 +28,9 @@ extension ModelContext {
                 datestamp: destinationDatestamp,
                 sortDate: draftPlannerEvent.date
             )
+
+        let staleEkEvent = sourcePlannerEvent?.calendarContext?.ekEvent
+        let eventWasRecurring = staleEkEvent?.hasRecurrenceRules == true
 
         // MARK: Save draft to planner event.
 
@@ -61,18 +64,26 @@ extension ModelContext {
                 event,
                 in: timeZone,
                 sourcePlanner: sourcePlanner,
-                staleCalendarItemExternalIdentifier: sourceCalendarEvent?
+                staleCalendarItemExternalIdentifier: staleEkEvent?
                     .calendarItemExternalIdentifier,
                 settings: settings
             )
         }
 
         // MARK: Delete the old calendar event if one exists.
-        if let sourceCalendarEvent {
-            _ = ekEventStore.attemptDeleteEvent(sourceCalendarEvent)
+        if let staleEkEvent {
+            _ = ekEventStore.attemptDeleteEvent(staleEkEvent)
         }
-
+        
+        // MARK: Persist changes into the model context.
         insertIfNeeded(event)
+
+        // MARK: Re-sync calendar events if this event was recurring.
+        if eventWasRecurring {
+            DispatchQueue.main.async(
+                execute: plannerSyncService.syncCalendar
+            )
+        }
 
         // Note: Saving the context here will delete the location.
         // Allow the context to auto-save when ready.

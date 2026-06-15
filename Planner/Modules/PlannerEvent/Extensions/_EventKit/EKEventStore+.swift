@@ -12,23 +12,29 @@ extension EKEventStore {
         if let existing = plannerEvent.calendarContext?.ekEvent {
             return existing
         }
-        
-        guard let startDate = plannerEvent.calendarContext?.startDate else {
+
+        guard let calendarContext = plannerEvent.calendarContext
+        else {
             return nil
         }
 
-        let predicate = predicateForEvents(
-            withStart: startDate,
-            end: startDate.addingTimeInterval(60),
-            calendars: nil
-        )
-
-        let calendarItemExternalIdentifier = plannerEvent.calendarContext?
+        let startDate = calendarContext.startDate
+        let calendarItemExternalIdentifier = calendarContext
             .calendarItemExternalIdentifier
 
-        return events(matching: predicate).first {
+        let ekEvent = events(
+            matching: predicateForEvents(
+                withStart: startDate,
+                end: startDate.addingTimeInterval(60),
+                calendars: nil
+            )
+        ).first {
             $0.calendarItemExternalIdentifier == calendarItemExternalIdentifier
         }
+
+        calendarContext.ekEvent = ekEvent
+
+        return ekEvent
     }
 
     func attemptUpdateEvent(_ event: EKEvent)

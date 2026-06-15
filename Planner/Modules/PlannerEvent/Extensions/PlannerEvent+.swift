@@ -9,7 +9,7 @@ import EventKit
 import SwiftDate
 import SwiftUI
 
-extension PlannerEvent {
+extension PlannerEvent: PlannerEventLocationHelpers {
     static let gregorianCalendar = Calendar(identifier: .gregorian)
 
     static let utcCalendar: Calendar = {
@@ -44,48 +44,6 @@ extension PlannerEvent {
             && calendarContext.endDate >= plannerStart
             || calendarContext.endDate >= plannerEnd
                 && calendarContext.startDate < plannerEnd
-    }
-
-    // MARK: - Location
-
-    private func location(
-        planner: Planner?,
-        deviceLocation: Location?,
-        settings: PlannerSettings
-    )
-        /// nil means the current device location is used and hasn't loaded yet.
-        -> Location?
-    {
-        eventLocation(
-            location: location,
-            planner: planner,
-            settings: settings,
-            deviceLocation: deviceLocation
-        )
-    }
-
-    func region(
-        planner: Planner?,
-        settings: PlannerSettings,
-        deviceLocation: Location?
-    ) -> Region {
-        location(
-            planner: planner,
-            deviceLocation: deviceLocation,
-            settings: settings,
-        )?.region ?? .local
-    }
-
-    func locationLabel(
-        planner: Planner?,
-        settings: PlannerSettings,
-        deviceLocation: Location?
-    ) -> String {
-        location(
-            planner: planner,
-            deviceLocation: deviceLocation,
-            settings: settings
-        )?.name ?? "Current Location"
     }
 
     // MARK: - UI
@@ -141,7 +99,8 @@ extension PlannerEvent {
                 ekEvent.calendar.calendarIdentifier
             existingContext.calendarColorHex =
                 ekEvent.calendar.cgColor.hexString
-            existingContext.editable = ekEvent.calendar.allowsContentModifications
+            existingContext.editable =
+                ekEvent.calendar.allowsContentModifications
 
             existingContext.birthdayContactIdentifier =
                 ekEvent.birthdayContactIdentifier

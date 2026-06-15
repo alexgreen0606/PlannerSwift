@@ -14,6 +14,180 @@
   ],
   "groups" : [
     {
+      "blend-mode" : "normal",
+      "blur-material" : null,
+      "layers" : [
+        {
+          "blend-mode" : "darken",
+          "fill-specializations" : [
+            {
+              "value" : {
+                "linear-gradient" : [
+                  "display-p3:0.22466,0.23188,0.22293,1.00000",
+                  "extended-gray:0.00000,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.5,
+                    "y" : 0
+                  },
+                  "stop" : {
+                    "x" : 0.5,
+                    "y" : 0.7
+                  }
+                }
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "linear-gradient" : [
+                  "display-p3:0.22466,0.23188,0.22293,1.00000",
+                  "extended-gray:0.00000,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.5,
+                    "y" : 0
+                  },
+                  "stop" : {
+                    "x" : 0.5,
+                    "y" : 0.7
+                  }
+                }
+              }
+            }
+          ],
+          "glass" : true,
+          "image-name" : "Rectangle 14.png",
+          "name" : "Rectangle 14",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -417,
+              0
+            ]
+          }
+        },
+        {
+          "blend-mode" : "darken",
+          "fill-specializations" : [
+            {
+              "value" : {
+                "linear-gradient" : [
+                  "display-p3:0.22466,0.23188,0.22293,1.00000",
+                  "extended-gray:0.00000,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.5,
+                    "y" : 0
+                  },
+                  "stop" : {
+                    "x" : 0.5,
+                    "y" : 0.7
+                  }
+                }
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "linear-gradient" : [
+                  "display-p3:0.22466,0.23188,0.22293,1.00000",
+                  "extended-gray:0.00000,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.5,
+                    "y" : 0
+                  },
+                  "stop" : {
+                    "x" : 0.5,
+                    "y" : 0.7
+                  }
+                }
+              }
+            }
+          ],
+          "glass" : true,
+          "image-name" : "Rectangle 15.png",
+          "name" : "Rectangle 15",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -417,
+              241.47666930594426
+            ]
+          }
+        },
+        {
+          "blend-mode" : "darken",
+          "fill-specializations" : [
+            {
+              "value" : {
+                "linear-gradient" : [
+                  "display-p3:0.22466,0.23188,0.22293,1.00000",
+                  "extended-gray:0.00000,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.5,
+                    "y" : 0
+                  },
+                  "stop" : {
+                    "x" : 0.5,
+                    "y" : 0.7
+                  }
+                }
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "linear-gradient" : [
+                  "display-p3:0.22466,0.23188,0.22293,1.00000",
+                  "extended-gray:0.00000,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.5,
+                    "y" : 0
+                  },
+                  "stop" : {
+                    "x" : 0.5,
+                    "y" : 0.7
+                  }
+                }
+              }
+            }
+          ],
+          "glass" : true,
+          "image-name" : "Rectangle 16 2.png",
+          "name" : "Rectangle 16 2",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -417,
+              -240.40430318478968
+            ]
+          }
+        }
+      ],
+      "lighting" : "combined",
+      "shadow" : {
+        "kind" : "layer-color",
+        "opacity" : 1
+      },
+      "specular" : false,
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "blur-material" : 0.5,
+      "hidden" : false,
       "layers" : [
         {
           "fill-specializations" : [
@@ -214,168 +388,33 @@
               -135.92496372149492
             ]
           }
-        },
+        }
+      ],
+      "lighting" : "individual",
+      "shadow" : {
+        "kind" : "none",
+        "opacity" : 0.75
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    },
+    {
+      "blur-material" : null,
+      "layers" : [
         {
           "fill-specializations" : [
             {
               "value" : {
-                "linear-gradient" : [
-                  "display-p3:0.22466,0.23188,0.22293,1.00000",
-                  "extended-gray:0.00000,1.00000"
-                ],
-                "orientation" : {
-                  "start" : {
-                    "x" : 0.5,
-                    "y" : 0
-                  },
-                  "stop" : {
-                    "x" : 0.5,
-                    "y" : 0.7
-                  }
-                }
+                "solid" : "srgb:0.71373,0.26275,0.84706,1.00000"
               }
             },
             {
               "appearance" : "dark",
               "value" : {
-                "linear-gradient" : [
-                  "display-p3:0.22466,0.23188,0.22293,1.00000",
-                  "extended-gray:0.00000,1.00000"
-                ],
-                "orientation" : {
-                  "start" : {
-                    "x" : 0.5,
-                    "y" : 0
-                  },
-                  "stop" : {
-                    "x" : 0.5,
-                    "y" : 0.7
-                  }
-                }
-              }
-            }
-          ],
-          "image-name" : "Rectangle 14.png",
-          "name" : "Rectangle 14",
-          "position" : {
-            "scale" : 1,
-            "translation-in-points" : [
-              -417,
-              0
-            ]
-          }
-        },
-        {
-          "fill-specializations" : [
-            {
-              "value" : {
-                "linear-gradient" : [
-                  "display-p3:0.22466,0.23188,0.22293,1.00000",
-                  "extended-gray:0.00000,1.00000"
-                ],
-                "orientation" : {
-                  "start" : {
-                    "x" : 0.5,
-                    "y" : 0
-                  },
-                  "stop" : {
-                    "x" : 0.5,
-                    "y" : 0.7
-                  }
-                }
-              }
-            },
-            {
-              "appearance" : "dark",
-              "value" : {
-                "linear-gradient" : [
-                  "display-p3:0.22466,0.23188,0.22293,1.00000",
-                  "extended-gray:0.00000,1.00000"
-                ],
-                "orientation" : {
-                  "start" : {
-                    "x" : 0.5,
-                    "y" : 0
-                  },
-                  "stop" : {
-                    "x" : 0.5,
-                    "y" : 0.7
-                  }
-                }
-              }
-            }
-          ],
-          "image-name" : "Rectangle 15.png",
-          "name" : "Rectangle 15",
-          "position" : {
-            "scale" : 1,
-            "translation-in-points" : [
-              -417,
-              241.47666930594426
-            ]
-          }
-        },
-        {
-          "fill-specializations" : [
-            {
-              "value" : {
-                "linear-gradient" : [
-                  "display-p3:0.22466,0.23188,0.22293,1.00000",
-                  "extended-gray:0.00000,1.00000"
-                ],
-                "orientation" : {
-                  "start" : {
-                    "x" : 0.5,
-                    "y" : 0
-                  },
-                  "stop" : {
-                    "x" : 0.5,
-                    "y" : 0.7
-                  }
-                }
-              }
-            },
-            {
-              "appearance" : "dark",
-              "value" : {
-                "linear-gradient" : [
-                  "display-p3:0.22466,0.23188,0.22293,1.00000",
-                  "extended-gray:0.00000,1.00000"
-                ],
-                "orientation" : {
-                  "start" : {
-                    "x" : 0.5,
-                    "y" : 0
-                  },
-                  "stop" : {
-                    "x" : 0.5,
-                    "y" : 0.7
-                  }
-                }
-              }
-            }
-          ],
-          "image-name" : "Rectangle 16 2.png",
-          "name" : "Rectangle 16 2",
-          "position" : {
-            "scale" : 1,
-            "translation-in-points" : [
-              -417,
-              -240.40430318478968
-            ]
-          }
-        },
-        {
-          "fill-specializations" : [
-            {
-              "value" : {
-                "solid" : "extended-srgb:0.79608,0.18824,0.87843,1.00000"
-              }
-            },
-            {
-              "appearance" : "dark",
-              "value" : {
-                "solid" : "extended-srgb:0.79608,0.18824,0.87843,1.00000"
+                "solid" : "srgb:0.71373,0.26275,0.84706,1.00000"
               }
             }
           ],
@@ -389,7 +428,21 @@
               0
             ]
           }
-        },
+        }
+      ],
+      "lighting" : "individual",
+      "shadow" : {
+        "kind" : "none",
+        "opacity" : 1
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
         {
           "fill" : {
             "solid" : "extended-gray:0.00000,1.00000"
@@ -407,8 +460,8 @@
         }
       ],
       "shadow" : {
-        "kind" : "neutral",
-        "opacity" : 0.5
+        "kind" : "layer-color",
+        "opacity" : 0.75
       },
       "translucency" : {
         "enabled" : true,
