@@ -18,24 +18,24 @@ extension PlannerEvent {
         let plannerEnd = startOfNextDay.date
         
         return #Predicate<PlannerEvent> { event in
-            if let calendarEventContext = event.calendarContext {
+            if let eKEventContext = event.eKEventContext {
 
                 // MARK: Non-birthday calendar events that:
 
-                return calendarEventContext.birthdayContactIdentifier == nil
-                    && calendarEventContext.isAllDay
+                return eKEventContext.birthdayContactIdentifier == nil
+                    && eKEventContext.isAllDay
 
                     // MARK: Are all-day and exist on this day.
 
-                    ? (calendarEventContext.startDate < plannerEnd
-                        && calendarEventContext.endDate >= plannerStart)
+                    ? (eKEventContext.startDate < plannerEnd
+                        && eKEventContext.endDate >= plannerStart)
 
                     // MARK: Are timed, exist on this day, and span outside of this day.
 
-                    : (calendarEventContext.startDate < plannerStart
-                        && calendarEventContext.endDate >= plannerStart
-                        || calendarEventContext.endDate >= plannerEnd
-                            && calendarEventContext.startDate < plannerEnd)
+                    : (eKEventContext.startDate < plannerStart
+                        && eKEventContext.endDate >= plannerStart
+                        || eKEventContext.endDate >= plannerEnd
+                            && eKEventContext.startDate < plannerEnd)
             } else {
                 return false
             }

@@ -11,10 +11,17 @@ import SwiftData
 
 @Model
 class RoutineEventWeekdayInstance {
+    
     /// Note: This is required by SwiftData limitations. Query by enums is currently not supported.
     var weekdayRawValue: String = ""
 
     var sortDate: Date = Date()
+
+    @Relationship(
+        deleteRule: .cascade,
+        inverse: \PlannerEvent.routineEventWeekdayInstance
+    )
+    var plannerEvents: [PlannerEvent]?
 
     var routineEvent: RoutineEvent?
 

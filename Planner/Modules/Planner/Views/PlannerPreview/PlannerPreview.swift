@@ -94,18 +94,18 @@ struct PlannerPreviewView: View {
     // MARK: Separate Events By Importance
 
     private var calendarEvents: [PlannerEvent] {
-        sortedPlannerEvents.filter { $0.calendarContext != nil }
+        sortedPlannerEvents.filter { $0.eKEventContext != nil }
     }
 
     private var timedPlannerEvents: [PlannerEvent] {
         sortedPlannerEvents.filter {
-            $0.time != nil && $0.calendarContext == nil
+            $0.time != nil && $0.eKEventContext == nil
         }
     }
 
     private var untimedPlannerEvents: [PlannerEvent] {
         sortedPlannerEvents.filter {
-            $0.time == nil && $0.calendarContext == nil
+            $0.time == nil && $0.eKEventContext == nil
         }
     }
 

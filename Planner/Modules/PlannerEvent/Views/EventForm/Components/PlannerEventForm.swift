@@ -42,7 +42,7 @@ struct PlannerEventFormView: View {
     }
 
     private var sourceEkEvent: EKEvent? {
-        sourcePlannerEvent?.calendarContext?.ekEvent
+        sourcePlannerEvent?.eKEventContext?.ekEvent
     }
     
     private var dateInRegion: DateInRegion {

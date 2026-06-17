@@ -31,6 +31,7 @@ struct TransferRoutineEventsFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var plannerSyncService: PlannerSyncService
+    @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var routineEngine: ListEngine<RoutineEvent>
 
     @State private var destinationWeekdays: Set<Weekday> = []
@@ -70,11 +71,12 @@ struct TransferRoutineEventsFormView: View {
 
         plannerSyncService.invalidateRoutines(weekdays: affectedWeekdays)
 
-        modelContext.transferRoutineEvents(
+        modelContext.bulkUpdateRoutineEventWeekdays(
             routineEngine.selectedItems,
             to: destinationWeekdays,
-            sortedSourceEvents: sortedSourceRoutineEvents,
-            sourceDayOfWeek: sourceDayOfWeek
+            sourceWeekday: sourceDayOfWeek,
+            sourceSortedRoutineEvents: sortedSourceRoutineEvents,
+            ekEventStore: calendarService.ekEventStore
         )
 
         dismiss()

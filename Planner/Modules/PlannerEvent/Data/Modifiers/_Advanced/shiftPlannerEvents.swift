@@ -27,7 +27,7 @@ extension ModelContext {
         }
 
         for event in reverseSortedEvents {
-            if let calendarContext = event.calendarContext,
+            if let eKEventContext = event.eKEventContext,
                 let ekEvent = ekEventStore.getEkEvent(for: event)
             {
                 // MARK: Event is a calendar event. Update the calendar record.
@@ -40,8 +40,8 @@ extension ModelContext {
                 ekEvent.startDate = ekEvent.startDate + days
                 ekEvent.endDate = ekEvent.endDate + days
 
-                calendarContext.startDate = ekEvent.startDate
-                calendarContext.endDate = ekEvent.endDate
+                eKEventContext.startDate = ekEvent.startDate
+                eKEventContext.endDate = ekEvent.endDate
 
                 if !ekEventStore.attemptUpdateEvent(ekEvent) {
                     // The update failed. Skip this event.

@@ -13,12 +13,12 @@ extension CNContactStore {
     func loadContact(
         for plannerEvent: PlannerEvent
     ) -> CNContact? {
-        if let existing = plannerEvent.calendarContext?.birthdayContact {
+        if let existing = plannerEvent.eKEventContext?.birthdayContact {
             return existing
         }
 
         guard
-            let contactId = plannerEvent.calendarContext?
+            let contactId = plannerEvent.eKEventContext?
                 .birthdayContactIdentifier
         else {
             return nil
@@ -32,7 +32,7 @@ extension CNContactStore {
                 ] as [CNKeyDescriptor]
             )
             
-            plannerEvent.calendarContext?.birthdayContact = contact
+            plannerEvent.eKEventContext?.birthdayContact = contact
             
             return contact
         } catch {
@@ -60,13 +60,13 @@ extension CNContactStore {
 
             for contact in contacts {
                 guard let event = plannerEventMap[contact.identifier],
-                    let calendarContext = event.calendarContext
+                    let eKEventContext = event.eKEventContext
                 else { continue }
 
-                calendarContext.birthdayContactIdentifier = contact.identifier
-                calendarContext.birthdayThumbnailData =
+                eKEventContext.birthdayContactIdentifier = contact.identifier
+                eKEventContext.birthdayThumbnailData =
                     contact.thumbnailImageData
-                calendarContext.birthdayContact = contact
+                eKEventContext.birthdayContact = contact
             }
         } catch {
             assertionFailure(

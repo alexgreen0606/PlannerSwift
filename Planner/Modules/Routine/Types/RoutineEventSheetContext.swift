@@ -11,6 +11,6 @@ struct RoutineEventSheetContext: Identifiable {
     var routineEvent: RoutineEvent
 
     var id: String {
-        routineEvent.stableId.uuidString
+        routineEvent.transitionId
     }
 }

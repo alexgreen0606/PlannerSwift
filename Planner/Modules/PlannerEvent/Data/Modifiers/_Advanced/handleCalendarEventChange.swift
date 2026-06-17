@@ -20,7 +20,7 @@ extension ModelContext {
         Set<String>
     {
         let sourceWasRecurringEvent =
-            sourcePlannerEvent?.calendarContext?.ekEvent?.hasRecurrenceRules
+            sourcePlannerEvent?.eKEventContext?.ekEvent?.hasRecurrenceRules
             == true
         let finalIsRecurringEvent = calendarEvent?.hasRecurrenceRules == true
 
@@ -36,9 +36,7 @@ extension ModelContext {
                 let newRoutineEventVariant = RoutineEventVariant(
                     routineEvent: routineEvent,
                     planner: sourcePlanner,
-                    plannerEvent: sourcePlannerEvent,
-                    calendarItemExternalIdentifier: calendarEvent?
-                        .calendarItemExternalIdentifier
+                    plannerEvent: sourcePlannerEvent
                 )
 
                 routineEvent.variants?.append(newRoutineEventVariant)

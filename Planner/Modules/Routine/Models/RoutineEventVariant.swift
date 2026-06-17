@@ -5,16 +5,14 @@
 //  Created by Alex Green on 4/19/26.
 //
 
-import EventKit
-import Foundation
 import SwiftData
 
 @Model
 class RoutineEventVariant {
+    
     var routineEvent: RoutineEvent?
 
-    var calendarItemExternalIdentifier: String?
-
+    // TODO: should I cascade delete these from the planner?
     @Relationship(deleteRule: .nullify, inverse: \Planner.routineEventVariants)
     var planner: Planner?
 
@@ -24,14 +22,11 @@ class RoutineEventVariant {
     init(
         routineEvent: RoutineEvent,
         planner: Planner,
-
-        // When neither of these exists, the event is hidden in the planner.
-        plannerEvent: PlannerEvent? = nil,
-        calendarItemExternalIdentifier: String? = nil
+        /// When this is nil, the event is hidden in the planner (due to manual deletion from user).
+        plannerEvent: PlannerEvent? = nil
     ) {
         self.routineEvent = routineEvent
         self.planner = planner
         self.plannerEvent = plannerEvent
-        self.calendarItemExternalIdentifier = calendarItemExternalIdentifier
     }
 }

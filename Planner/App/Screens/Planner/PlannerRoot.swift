@@ -135,7 +135,7 @@ struct PlannerRootView: View {
 
             .sheet(item: $eventSheetContext) { context in
                 Group {
-                    if context.plannerEvent.calendarContext?.editable == false {
+                    if context.plannerEvent.eKEventContext?.calendarAllowsContentModifications == false {
                         ViewCalendarEventFormView(
                             plannerEvent: context.plannerEvent,
                             ekEventStore: calendarService.ekEventStore

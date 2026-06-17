@@ -47,7 +47,7 @@ extension ModelContext {
         for plannerEvent in calendarRecords {
             guard
                 let calendarItemExternalIdentifier = plannerEvent
-                    .calendarContext?
+                    .eKEventContext?
                     .calendarItemExternalIdentifier
             else {
                 continue

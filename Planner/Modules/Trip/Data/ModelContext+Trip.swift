@@ -29,7 +29,7 @@ extension ModelContext {
     func updateTrip(
         from draftTrip: DraftTrip,
         to sourceTrip: Trip?,
-        PlannerSyncStore: PlannerSyncService
+        plannerSyncService: PlannerSyncService
     ) -> Trip {
         var sourcePlanners: [String: Planner] = Dictionary(
             uniqueKeysWithValues: (sourceTrip?.planners ?? []).map {
@@ -48,7 +48,7 @@ extension ModelContext {
         // Add any new planners to this trip.
         for datestamp in draftTrip.datestamps {
             // Invalidate the planner routine.
-            PlannerSyncStore.invalidatePlannerRoutine(
+            plannerSyncService.invalidatePlannerRoutine(
                 datestamp: datestamp
             )
 
@@ -82,7 +82,7 @@ extension ModelContext {
         // Remove any stale planners from this trip.
         for (_, stalePlanner) in sourcePlanners {
             // Re-sync the planner routine.
-            PlannerSyncStore.invalidatePlannerRoutine(
+            plannerSyncService.invalidatePlannerRoutine(
                 datestamp: stalePlanner.datestamp
             )
 
@@ -101,7 +101,7 @@ extension ModelContext {
         insertIfNeeded(trip)
         safeSave("trip.updateTrip")
 
-        PlannerSyncStore.beginSync()
+        plannerSyncService.beginSync()
 
         return trip
     }

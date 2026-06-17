@@ -18,13 +18,13 @@ extension PlannerEvent {
         let plannerEnd = startOfNextDay.date
 
         return #Predicate<PlannerEvent> { event in
-            if let calendarContext = event.calendarContext {
+            if let eKEventContext = event.eKEventContext {
 
                 // MARK: Birthday calendar events that exist on this day.
 
-                return calendarContext.birthdayContactIdentifier != nil
-                    && calendarContext.startDate < plannerEnd
-                    && calendarContext.endDate >= plannerStart
+                return eKEventContext.birthdayContactIdentifier != nil
+                    && eKEventContext.startDate < plannerEnd
+                    && eKEventContext.endDate >= plannerStart
 
             } else {
                 return false

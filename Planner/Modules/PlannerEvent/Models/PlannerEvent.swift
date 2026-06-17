@@ -34,12 +34,13 @@ class PlannerEvent: EventListItem {
 
     @Relationship(
         deleteRule: .cascade,
-        inverse: \CalendarEventContext.plannerEvent
+        inverse: \EKEventContext.plannerEvent
     )
-    var calendarContext: CalendarEventContext?
+    var eKEventContext: EKEventContext?
 
     var routineEvent: RoutineEvent?
     var routineEventVariant: RoutineEventVariant?
+    var routineEventWeekdayInstance: RoutineEventWeekdayInstance?
 
     // MARK: Calendar Event
     init(ekEvent: EKEvent, sortDate: Date) {
@@ -47,14 +48,14 @@ class PlannerEvent: EventListItem {
         time = ekEvent.startDate
         location = ekEvent.location()
         self.sortDate = sortDate
-        calendarContext = CalendarEventContext(ekEvent: ekEvent)
+        eKEventContext = EKEventContext(ekEvent: ekEvent)
     }
 
     // MARK: Routine Event
     init(routineEvent: RoutineEvent, startOfDay: DateInRegion, sortDate: Date) {
         title = routineEvent.title
 
-        if let time = routineEvent.date(in: startOfDay) {
+        if let time = routineEvent.date(on: startOfDay) {
             self.time = time
         } else {
             datestamp = startOfDay.datestamp

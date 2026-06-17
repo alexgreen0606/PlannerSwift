@@ -19,20 +19,18 @@ extension ModelContext {
         ekEventStore: EKEventStore,
         settings: PlannerSettings
     ) {
-        if plannerEvent.calendarContext != nil {
+        if plannerEvent.eKEventContext != nil {
             // MARK: Event is a calendar event. Update its title in the calendar.
 
             guard
-                var ekEvent = ekEventStore.getEkEvent(for: plannerEvent)
+                let ekEvent = ekEventStore.getEkEvent(for: plannerEvent),
+                ekEvent.calendar.allowsContentModifications
             else {
                 return
             }
 
-            guard ekEvent.calendar.allowsContentModifications else {
-                return
-            }
-
             ekEvent.title = plannerEvent.title
+            
             _ = ekEventStore.attemptUpdateEvent(ekEvent)
 
             return

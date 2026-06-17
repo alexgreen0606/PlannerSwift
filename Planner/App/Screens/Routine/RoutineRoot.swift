@@ -6,6 +6,7 @@
 //
 
 import SwiftData
+import SwiftDate
 import SwiftUI
 
 struct RoutineRootView: View {
@@ -132,17 +133,29 @@ struct RoutineRootView: View {
 
     // MARK: - View Builders
 
+    @ViewBuilder
     private func timeAdornment(event: RoutineEvent) -> some View {
-        event.timeAdornment(
-            accentColor: accentColor
-        ) {
-            openRoutineEventSheet(for: event)
+        if let time = event.time {
+            Time(
+                timeInRegion: DateInRegion(time, region: .UTC),
+                onTap: {
+                    openRoutineEventSheet(for: event)
+                }
+            )
         }
     }
 
+    @ViewBuilder
     private func weekdaysAdornment(event: RoutineEvent) -> some View {
-        event.weekdaysAdornment {
-            openRoutineEventSheet(for: event)
+        if event.weekdays.count > 1 {
+            WeekdaySpreadView(
+                selected: event.weekdays
+            )
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                openRoutineEventSheet(for: event)
+            }
         }
     }
 
@@ -188,10 +201,9 @@ struct RoutineRootView: View {
     }
 
     private func deleteEvent(_ event: RoutineEvent) {
-        modelContext.deleteRoutineEvent(
+        _ = modelContext.deleteRoutineEvent(
             event,
-            ekEventStore: calendarStore.ekEventStore,
-            PlannerSyncStore: plannerSyncService
+            ekEventStore: calendarStore.ekEventStore
         )
     }
 
@@ -264,19 +276,19 @@ struct RoutineRootView: View {
     }
 
     private func removeEventFromWeekday(_ event: RoutineEvent) {
-        modelContext.deleteRoutineEvents(
-            [event],
-            from: weekday,
-            ekEventStore: calendarStore.ekEventStore,
-            PlannerSyncStore: plannerSyncService
-        )
+        // TODO: how do I just remove it from this one weekday
+//        modelContext.deleteRoutineEvents(
+//            [event],
+//            from: weekday,
+//            ekEventStore: calendarStore.ekEventStore,
+//            plannerSyncService: plannerSyncService
+//        )
     }
 
     private func deleteEventEverywhere(_ event: RoutineEvent) {
-        modelContext.deleteRoutineEvent(
+        _ = modelContext.deleteRoutineEvent(
             event,
-            ekEventStore: calendarStore.ekEventStore,
-            PlannerSyncStore: plannerSyncService
+            ekEventStore: calendarStore.ekEventStore
         )
     }
 }

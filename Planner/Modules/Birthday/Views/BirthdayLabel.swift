@@ -18,7 +18,7 @@ struct BirthdayLabelView: View {
 
     private var contactPhoto: UIImage? {
         guard
-            let imageData = plannerEvent.calendarContext?.birthdayThumbnailData
+            let imageData = plannerEvent.eKEventContext?.birthdayThumbnailData
         else {
             return nil
         }

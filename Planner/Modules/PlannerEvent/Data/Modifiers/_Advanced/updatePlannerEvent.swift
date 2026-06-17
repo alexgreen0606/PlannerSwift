@@ -29,7 +29,7 @@ extension ModelContext {
                 sortDate: draftPlannerEvent.date
             )
 
-        let staleEkEvent = sourcePlannerEvent?.calendarContext?.ekEvent
+        let staleEkEvent = sourcePlannerEvent?.eKEventContext?.ekEvent
         let eventWasRecurring = staleEkEvent?.hasRecurrenceRules == true
 
         // MARK: Save draft to planner event.
@@ -48,8 +48,8 @@ extension ModelContext {
 
         // MARK: Delete stale calendar context if one exists.
 
-        safeDelete(event.calendarContext, skipSave: true)
-        event.calendarContext = nil
+        safeDelete(event.eKEventContext, skipSave: true)
+        event.eKEventContext = nil
 
         // MARK: Place the event at the top of its planner if it has moved days.
         let destinationDatestamps = ensureValidSortDate(

@@ -106,7 +106,7 @@ actor PlannerSearchService {
                 filteredPlannerEvents = try modelContext.fetch(
                     FetchDescriptor<PlannerEvent>(
                         predicate: #Predicate<PlannerEvent> { event in
-                            event.calendarContext == nil
+                            event.eKEventContext == nil
                         }
                     )
                 )

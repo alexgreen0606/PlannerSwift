@@ -29,9 +29,11 @@ struct PlannerEventCalendarAdornmentView: View {
     // MARK: - Body
 
     var body: some View {
-        if plannerEvent.calendarContext != nil {
+        if plannerEvent.eKEventContext != nil {
             Image(
-                systemName: plannerEvent.calendarSystemImageName(settings: settings)
+                systemName: plannerEvent.calendarSystemImageName(
+                    settings: settings
+                )
             )
             .foregroundStyle(plannerEvent.tint(accentColor: accentColor))
             .contentShape(Rectangle())

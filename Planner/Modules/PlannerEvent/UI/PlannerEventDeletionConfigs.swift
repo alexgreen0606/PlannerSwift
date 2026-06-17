@@ -21,7 +21,7 @@ func deletePlannerEventConfig(
             inForm: inForm
         ),
         message: {
-            if event.calendarContext == nil {
+            if event.eKEventContext == nil {
                 return UI.GENERIC_DELETE_WARNING
             }
             
@@ -56,7 +56,7 @@ func bulkDeletePlannerEventConfig(
         title: "Delete \(count) events?",
         message: {
             let hasCalendarEvent = events.contains(where: {
-                $0.calendarContext != nil
+                $0.eKEventContext != nil
             })
 
             if hasCalendarEvent {

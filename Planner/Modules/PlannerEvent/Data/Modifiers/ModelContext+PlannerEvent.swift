@@ -18,7 +18,7 @@ extension ModelContext {
         at index: Int,
         in sortedPlannerEvents: [PlannerEvent],
         startOfDay: DateInRegion
-    ) ->  // The ID of the new event.
+    ) -> /// The ID of the new event.
         UUID?
     {
         let sortDate = generateSortDate(
@@ -116,7 +116,27 @@ extension ModelContext {
             )
         } catch {
             assertionFailure(
-                "ERROR ModelContext+PlannerEvent.getCalendarRecords: \(error)"
+                "ERROR ModelContext+PlannerEvent getCalendarRecords[date]: \(error)"
+            )
+        }
+
+        return []
+    }
+
+    func getCalendarRecords(for calendarItemExternalIdentifiers: Set<String>)
+        -> [PlannerEvent]
+    {
+        do {
+            return try fetch(
+                FetchDescriptor<PlannerEvent>(
+                    predicate: PlannerEvent.calendarRecords(
+                        for: calendarItemExternalIdentifiers
+                    )
+                )
+            )
+        } catch {
+            assertionFailure(
+                "ERROR ModelContext+PlannerEvent getCalendarRecords[id]: \(error)"
             )
         }
 
@@ -142,7 +162,7 @@ extension ModelContext {
 
             if let staleCalendarItemExternalIdentifier {
                 // Event was previously a calendar event. Check if a variant record exists for that calendar event.
-                return loadRoutineEventVariant(
+                return getRoutineEventVariant(
                     for: staleCalendarItemExternalIdentifier
                 )
             }
@@ -167,12 +187,7 @@ extension ModelContext {
         )
 
         if isRoutineEventVariant {
-            if let existingVariant {
-                // MARK: Clear any link to a stale calendar event.
-
-                existingVariant.calendarItemExternalIdentifier = nil
-
-            } else {
+            if existingVariant == nil {
                 // MARK: Create a new variance record so this even is not synced with the routine event.
 
                 let routineEventVariant = RoutineEventVariant(
@@ -206,14 +221,14 @@ extension ModelContext {
     ) -> /// The datestamps the event is now in.
         Set<String>
     {
-        if let calendarContext = event.calendarContext, calendarContext.isAllDay
+        if let eKEventContext = event.eKEventContext, eKEventContext.isAllDay
         {
             // Event is all-day. Use its actual time as the sortDate.
-            event.sortDate = calendarContext.startDate
+            event.sortDate = eKEventContext.startDate
             return Set(
                 getSortedPlannerStartOfDays(
                     for: event.time,
-                    endTime: event.calendarContext?.endDate,
+                    endTime: event.eKEventContext?.endDate,
                     datestamp: event.datestamp,
                     settings: settings
                 ).map(\.datestamp)
@@ -222,7 +237,7 @@ extension ModelContext {
 
         let sortedStartsOfDays = getSortedPlannerStartOfDays(
             for: event.time,
-            endTime: event.calendarContext?.endDate,
+            endTime: event.eKEventContext?.endDate,
             datestamp: event.datestamp,
             settings: settings
         )
@@ -281,49 +296,6 @@ extension ModelContext {
 
     // MARK: - DELETE
 
-    @MainActor
-    func deletePlannerEvent(
-        _ event: PlannerEvent,
-        /// Marks routine events as variants so they are not synced.
-        in planner: Planner,
-        /// Deletes calendar events, otherwise they are preserved.
-        ekEventStore: EKEventStore? = nil,
-        skipSave: Bool = false
-    ) {
-        if let calendarItemExternalIdentifier = event.calendarContext?
-            .calendarItemExternalIdentifier,
-            let ekEventStore,
-            !ekEventStore.attemptDeleteEvent(
-                identifier: calendarItemExternalIdentifier
-            )
-        {
-            return
-        }
-
-        if let routineEvent = event.routineEvent,
-            event.routineEventVariant == nil,
-            // Note: Variants should not be created when routine is excluded.
-            !planner.safeExcludeRoutine
-        {
-            // Mark this routine event as a variant so it is not synced after deletion.
-            let routineEventVariant = RoutineEventVariant(
-                routineEvent: routineEvent,
-                planner: planner
-            )
-
-            routineEvent.variants?.append(routineEventVariant)
-            planner.routineEventVariants?.append(routineEventVariant)
-
-            insert(routineEventVariant)
-        }
-
-        delete(event)
-
-        if !skipSave {
-            safeSave("ModelContext+PlannerEvent.deletePlannerEvent")
-        }
-    }
-
     func deletePlannerEvents(
         _ events: [PlannerEvent],
         in planner: Planner,
@@ -354,6 +326,19 @@ extension ModelContext {
                 ekEventStore: ekEventStore,
                 skipSave: true
             )
+        }
+    }
+    
+    @MainActor
+    func deleteCalendarRecords(
+        calendarItemExternalIdentifiers: Set<String>
+    ) {
+        let calendarRecords = getCalendarRecords(
+            for: calendarItemExternalIdentifiers
+        )
+        
+        for calendarRecord in calendarRecords {
+            delete(calendarRecord)
         }
     }
 }

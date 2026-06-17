@@ -1,5 +1,5 @@
 //
-//  calendarRecords.swift
+//  calendarRecords[date].swift
 //  Planner
 //
 //  Created by Alex Green on 6/12/26.
@@ -18,12 +18,12 @@ extension PlannerEvent {
         let plannerEnd = startOfNextDay.date
 
         return #Predicate<PlannerEvent> { event in
-            if let calendarContext = event.calendarContext {
+            if let eKEventContext = event.eKEventContext {
 
                 // MARK: Calendar events that exist on this day.
 
-                return calendarContext.startDate < plannerEnd
-                    && calendarContext.endDate > plannerStart
+                return eKEventContext.startDate < plannerEnd
+                    && eKEventContext.endDate > plannerStart
 
             } else {
                 return false

@@ -36,7 +36,7 @@ extension ModelContext {
 
         // MARK: - Load In Routine For This Weekday
 
-        let routineEvents: [RoutineEvent] = loadSortedRoutineEvents(
+        let routineEvents: [RoutineEvent] = getSortedRoutineEvents(
             for: weekday
         )
 
@@ -178,6 +178,9 @@ extension ModelContext {
                 in: sortedListEvents!,
                 startOfDay: startOfDay
             )
+            
+            // TODO: do I add the event to the routine event planner events as well? And
+            // also add it to the weekday instance?
 
             let newEvent =
                 PlannerEvent(

@@ -18,16 +18,12 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         return calendar
     }()
 
-    var transitionId: String {
-        stableId.uuidString
-    }
-
     var isRoutineVariant: Bool {
         routineEventVariant != nil && routineEvent != nil
     }
 
     func isEventChip(on startOfDay: DateInRegion) -> Bool {
-        guard let calendarContext else {
+        guard let eKEventContext else {
             return false
         }
 
@@ -35,21 +31,21 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         let plannerStart = startOfDay.date
         let plannerEnd = startOfNextDay.date
 
-        if calendarContext.isAllDay {
-            return calendarContext.startDate < plannerEnd
-                && calendarContext.endDate >= plannerStart
+        if eKEventContext.isAllDay {
+            return eKEventContext.startDate < plannerEnd
+                && eKEventContext.endDate >= plannerStart
         }
 
-        return calendarContext.startDate < plannerStart
-            && calendarContext.endDate >= plannerStart
-            || calendarContext.endDate >= plannerEnd
-                && calendarContext.startDate < plannerEnd
+        return eKEventContext.startDate < plannerStart
+            && eKEventContext.endDate >= plannerStart
+            || eKEventContext.endDate >= plannerEnd
+                && eKEventContext.startDate < plannerEnd
     }
 
     // MARK: - UI
 
     func tint(accentColor: AccentColor) -> Color {
-        if let calendarColor = calendarContext?.calendarColorHex.color {
+        if let calendarColor = eKEventContext?.calendarColorHex.color {
             return calendarColor
         }
 
@@ -57,12 +53,12 @@ extension PlannerEvent: PlannerEventLocationHelpers {
     }
 
     func calendarSystemImageName(settings: PlannerSettings) -> String {
-        if let calendar = calendarContext?.ekEvent?.calendar {
+        if let calendar = eKEventContext?.ekEvent?.calendar {
             return calendar.systemImageName(settings: settings)
         }
 
-        if let calendarContext,
-            let existing = settings.iconMap[calendarContext.calendarId]
+        if let eKEventContext,
+            let existing = settings.iconMap[eKEventContext.calendarIdentifier]
         {
             return existing
         }
@@ -88,18 +84,18 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         time = ekEvent.startDate
 
         // Sync calendar-specific data.
-        if let existingContext = calendarContext {
+        if let existingContext = eKEventContext {
             existingContext.startDate = ekEvent.startDate
             existingContext.endDate = ekEvent.endDate
             existingContext.isAllDay = ekEvent.isAllDay
 
             existingContext.calendarItemExternalIdentifier =
                 ekEvent.calendarItemExternalIdentifier
-            existingContext.calendarId =
+            existingContext.calendarIdentifier =
                 ekEvent.calendar.calendarIdentifier
             existingContext.calendarColorHex =
                 ekEvent.calendar.cgColor.hexString
-            existingContext.editable =
+            existingContext.calendarAllowsContentModifications =
                 ekEvent.calendar.allowsContentModifications
 
             existingContext.birthdayContactIdentifier =
@@ -107,7 +103,7 @@ extension PlannerEvent: PlannerEventLocationHelpers {
 
             existingContext.ekEvent = ekEvent
         } else {
-            calendarContext = CalendarEventContext(ekEvent: ekEvent)
+            eKEventContext = EKEventContext(ekEvent: ekEvent)
         }
     }
 
@@ -121,7 +117,7 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         }
 
         title = routineEvent.title
-        time = routineEvent.date(in: startOfDay)
+        time = routineEvent.date(on: startOfDay)
 
         self.routineEvent = routineEvent
     }
@@ -132,7 +128,7 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         originPlanner: Planner,
         settings: PlannerSettings
     ) -> Bool {
-        guard calendarContext == nil, location == nil else {
+        guard eKEventContext == nil, location == nil else {
             return false
         }
 

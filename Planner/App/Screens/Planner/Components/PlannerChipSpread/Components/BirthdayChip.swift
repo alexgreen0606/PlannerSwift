@@ -20,7 +20,7 @@ struct BirthdayChipView: View {
     @State private var showContactSheet: Bool = false
 
     private var contactPhotoExists: Bool {
-        plannerEvent.calendarContext?.birthdayThumbnailData != nil
+        plannerEvent.eKEventContext?.birthdayThumbnailData != nil
     }
 
     /// Shifts the icon to align with the chip border.

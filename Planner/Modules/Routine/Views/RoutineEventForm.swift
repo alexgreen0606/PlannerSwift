@@ -74,7 +74,7 @@ struct RoutineEventFormView: View {
     @Environment(\.showToast) private var showToast
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var PlannerSyncStore: PlannerSyncService
+    @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
     @State private var draftRoutineEvent: DraftRoutineEvent
 
@@ -258,12 +258,12 @@ struct RoutineEventFormView: View {
             draftRoutineEvent.daysOfWeek
         )
 
-        PlannerSyncStore.invalidateRoutines(weekdays: affectedWeekdays)
+        plannerSyncService.invalidateRoutines(weekdays: affectedWeekdays)
 
         modelContext.updateRoutineEvent(
+            sourceRoutineEvent,
             with: draftRoutineEvent,
-            sourceRoutineEvent: sourceRoutineEvent,
-            sortedSourceEvents: sortedSourceEvents
+            sourceSortedRoutineEvents: sortedSourceEvents
         )
 
         dismiss()

@@ -9,17 +9,17 @@ import EventKit
 
 extension EKEventStore {
     func getEkEvent(for plannerEvent: PlannerEvent) -> EKEvent? {
-        if let existing = plannerEvent.calendarContext?.ekEvent {
+        if let existing = plannerEvent.eKEventContext?.ekEvent {
             return existing
         }
 
-        guard let calendarContext = plannerEvent.calendarContext
+        guard let eKEventContext = plannerEvent.eKEventContext
         else {
             return nil
         }
 
-        let startDate = calendarContext.startDate
-        let calendarItemExternalIdentifier = calendarContext
+        let startDate = eKEventContext.startDate
+        let calendarItemExternalIdentifier = eKEventContext
             .calendarItemExternalIdentifier
 
         let ekEvent = events(
@@ -32,7 +32,7 @@ extension EKEventStore {
             $0.calendarItemExternalIdentifier == calendarItemExternalIdentifier
         }
 
-        calendarContext.ekEvent = ekEvent
+        eKEventContext.ekEvent = ekEvent
 
         return ekEvent
     }

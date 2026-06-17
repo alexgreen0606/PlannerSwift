@@ -13,10 +13,8 @@ private let MINIMUM_SECONDS_GAP = 0.0001
 @MainActor
 func generateSortDate<Event: EventListItem>(
     at index: Int,
-
-    // May or may not contain the event being placed.
+    /// May or may not contain the event being placed.
     in sortedEvents: [Event],
-
     startOfDay: DateInRegion,
     getSortDate: @MainActor (Event) -> Date = { $0.sortDate },
     setSortDate: @MainActor (Event, Date) -> Void = { event, sortDate in

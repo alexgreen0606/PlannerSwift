@@ -280,7 +280,7 @@ struct TripFormView: View {
         let savedTrip = modelContext.updateTrip(
             from: draftTrip,
             to: sourceTrip,
-            PlannerSyncStore: plannerSyncService
+            plannerSyncService: plannerSyncService
         )
 
         dismiss()
