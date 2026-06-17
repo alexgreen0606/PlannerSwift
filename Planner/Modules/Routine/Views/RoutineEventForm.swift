@@ -75,6 +75,7 @@ struct RoutineEventFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var plannerSyncService: PlannerSyncService
+    @EnvironmentObject private var calendarService: CalendarService
 
     @State private var draftRoutineEvent: DraftRoutineEvent
 
@@ -263,7 +264,8 @@ struct RoutineEventFormView: View {
         modelContext.updateRoutineEvent(
             sourceRoutineEvent,
             with: draftRoutineEvent,
-            sourceSortedRoutineEvents: sortedSourceEvents
+            sourceSortedRoutineEvents: sortedSourceEvents,
+            ekEventStore: calendarService.ekEventStore
         )
 
         dismiss()

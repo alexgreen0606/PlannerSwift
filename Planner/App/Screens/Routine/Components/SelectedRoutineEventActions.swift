@@ -55,9 +55,9 @@ struct SelectedRoutineEventActionsView: View {
         routineEngine.clearSelections()
 
         DispatchQueue.main.async {
-            modelContext.deleteRoutineEventWeekdayInstances(
-                for: selections,
-                on: weekday,
+            modelContext.removeRoutineEventsFromWeekday(
+                routineEvents: selections,
+                weekday: weekday,
                 ekEventStore: calendarStore.ekEventStore
             )
 

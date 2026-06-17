@@ -67,9 +67,9 @@ struct RoutineActionMenuView: View {
     // MARK: - Functions
 
     private func deleteRoutine() {
-        modelContext.deleteRoutineEventWeekdayInstances(
-            for: routineEvents,
-            on: weekday,
+        modelContext.removeRoutineEventsFromWeekday(
+            routineEvents: routineEvents,
+            weekday: weekday,
             ekEventStore: calendarStore.ekEventStore,
         )
     }

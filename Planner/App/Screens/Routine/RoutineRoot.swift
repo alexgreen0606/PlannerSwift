@@ -186,7 +186,7 @@ struct RoutineRootView: View {
         routineEngine.pendingFocusId = modelContext.createRoutineEvent(
             at: index,
             in: sortedRoutineEvents,
-            weekday: weekday
+            on: weekday
         )
     }
 
