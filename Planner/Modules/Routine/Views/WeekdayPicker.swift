@@ -1,5 +1,5 @@
 //
-//  DayOfWeekPicker.swift
+//  WeekdayPicker.swift
 //  Planner
 //
 //  Created by Alex Green on 4/6/26.
@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct DayOfWeekPickerView: View {
-    @Binding var daysOfWeek: Set<Weekday>
+struct WeekdayPickerView: View {
+    @Binding var selectedWeekdays: Set<Weekday>
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
@@ -26,10 +26,6 @@ struct DayOfWeekPickerView: View {
                 }
 
                 Text(weekday.initial)
-                    .foregroundStyle(
-                        daysOfWeek.contains(weekday)
-                            ? Color.inverseLabel : Color.label
-                    )
                     .font(
                         .system(
                             size: 20,
@@ -37,29 +33,38 @@ struct DayOfWeekPickerView: View {
                             design: .rounded
                         )
                     )
+                    .foregroundStyle(
+                        selectedWeekdays.contains(weekday)
+                            ? Color.inverseLabel : Color.label
+                    )
                     .background(
-                        daysOfWeek.contains(weekday)
-                            ? Circle()
-                            .fill(accentColor.color)
-                            .frame(width: 36, height: 36)
-                            : nil
+                        selectedWeekdays.contains(weekday)
+                            ? selectionIndicator : nil
                     )
                     .contentShape(Circle())
                     .onTapGesture {
-                        toggleDay(weekday)
+                        toggleWeekday(weekday)
                     }
             }
         }
         .frame(maxWidth: .infinity)
     }
 
+    // MARK: - View Builders
+
+    private var selectionIndicator: some View {
+        Circle()
+            .fill(accentColor.color)
+            .frame(width: 36, height: 36)
+    }
+
     // MARK: - Functions
 
-    private func toggleDay(_ day: Weekday) {
-        if daysOfWeek.contains(day) {
-            daysOfWeek.remove(day)
+    private func toggleWeekday(_ weekday: Weekday) {
+        if selectedWeekdays.contains(weekday) {
+            selectedWeekdays.remove(weekday)
         } else {
-            daysOfWeek.insert(day)
+            selectedWeekdays.insert(weekday)
         }
     }
 }

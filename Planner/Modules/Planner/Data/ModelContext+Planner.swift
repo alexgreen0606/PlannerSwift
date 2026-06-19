@@ -62,8 +62,6 @@ extension ModelContext {
         }
     }
 
-    // TODO: what if a trip goes so far back that its planners are out of range? I Shouldnt delete the planners then.
-
     /// Gathers all data needed to eager-build a list of planners.
     @MainActor
     func getBulkPlannerBuildContexts(

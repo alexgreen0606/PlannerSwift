@@ -9,8 +9,6 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-// TODO: do I delete variants even if they have a calendar item attached? Should I delete these? I should check if the events still exist. Talking about ModelContext+Cleanup
-
 extension ModelContext {
     @MainActor
     func deleteStaleData(cutoffDate: Date) {
@@ -54,8 +52,10 @@ extension ModelContext {
             let expiredEvents = try fetch(
                 FetchDescriptor<PlannerEvent>(
                     predicate: #Predicate<PlannerEvent> { event in
-                        if let time = event.time {
-                            return time < cutoffDate // TODO: what if it's a calendar event and the end date still hasn't happened yet?
+                        if let ekEventContext = event.eKEventContext {
+                            return ekEventContext.endDate < cutoffDate
+                        } else if let time = event.time {
+                            return time < cutoffDate
                         } else if let datestamp = event.datestamp {
                             return datestamp < cutoffDatestamp
                         } else {
@@ -74,7 +74,7 @@ extension ModelContext {
             let expiredPlanners = try fetch(
                 FetchDescriptor<Planner>(
                     predicate: #Predicate<Planner> {
-                        $0.datestamp < cutoffDatestamp
+                        $0.datestamp < cutoffDatestamp && $0.trip == nil
                     }
                 )
             )

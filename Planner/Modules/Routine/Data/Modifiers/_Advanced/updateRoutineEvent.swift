@@ -14,9 +14,14 @@ extension ModelContext {
         _ sourceRoutineEvent: RoutineEvent?,
         with draftRoutineEvent: DraftRoutineEvent,
         sourceSortedRoutineEvents: [RoutineEvent]?,
+        plannerSyncService: PlannerSyncService,
         ekEventStore: EKEventStore
     ) {
-        guard !draftRoutineEvent.daysOfWeek.isEmpty else { return }
+        guard !draftRoutineEvent.weekdays.isEmpty else { return }
+
+        let affectedWeekdays = Set(sourceRoutineEvent?.weekdays ?? []).union(
+            draftRoutineEvent.weekdays
+        )
 
         let routineEvent =
             sourceRoutineEvent
@@ -26,7 +31,7 @@ extension ModelContext {
 
         updateRoutineEventWeekdays(
             routineEvent,
-            with: draftRoutineEvent.daysOfWeek,
+            with: draftRoutineEvent.weekdays,
             sourceSortedRoutineEvents: sourceSortedRoutineEvents,
             ekEventStore: ekEventStore
         )
@@ -34,5 +39,8 @@ extension ModelContext {
         insertIfNeeded(routineEvent)
 
         safeSave("updateRoutineEvent")
+
+        // TODO: should I just update planner events directly? is this too wasteful/slow?
+        plannerSyncService.invalidateRoutines(weekdays: affectedWeekdays)
     }
 }

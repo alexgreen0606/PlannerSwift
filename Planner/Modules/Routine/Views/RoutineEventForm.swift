@@ -9,62 +9,38 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-// Clean
-
-struct DraftRoutineEvent {
-    var date: Date
-    var hasTime: Bool
-    var title: String
-    var daysOfWeek: Set<Weekday>
-}
-
 struct RoutineEventFormView: View {
     private let sourceRoutineEvent: RoutineEvent?
-    private let sourceDayOfWeek: Weekday?
-    private let sortedSourceEvents: [RoutineEvent]?
+    private let sourceWeekday: Weekday?
+    private let sourceSortedRoutineEvents: [RoutineEvent]?
     private let openRoutine: (Weekday) -> Void
 
+    // MARK: Create Routine Event (Dashboard)
+    init(openRoutine: @escaping (Weekday) -> Void) {
+        self.sourceRoutineEvent = nil
+        self.sourceWeekday = nil
+        self.sourceSortedRoutineEvents = nil
+        self.openRoutine = openRoutine
+
+        self._draftRoutineEvent = State(
+            initialValue: DraftRoutineEvent()
+        )
+    }
+
+    // MARK: Edit Routine Event (Routine)
     init(
-        sourceRoutineEvent: RoutineEvent? = nil,
-        sourceDayOfWeek: Weekday? = nil,
-        sortedSourceEvents: [RoutineEvent]? = nil,
+        sourceRoutineEvent: RoutineEvent,
+        sourceWeekday: Weekday,
+        sourceSortedRoutineEvents: [RoutineEvent],
         openRoutine: @escaping (Weekday) -> Void
     ) {
         self.sourceRoutineEvent = sourceRoutineEvent
-        self.sourceDayOfWeek = sourceDayOfWeek
-        self.sortedSourceEvents = sortedSourceEvents
+        self.sourceWeekday = sourceWeekday
+        self.sourceSortedRoutineEvents = sourceSortedRoutineEvents
         self.openRoutine = openRoutine
 
-        let daysOfWeek: Set<Weekday> = Set(sourceRoutineEvent?.weekdays ?? [])
-
-        let time = {
-            if let existingTime = sourceRoutineEvent?.time {
-                return existingTime
-            }
-
-            let now = Date()
-            let hour = Calendar.current.component(.hour, from: now)
-
-            var components = DateComponents()
-            components.year = 2000
-            components.month = 6
-            components.day = 6
-            components.hour = hour
-
-            var utcCalendar = Calendar(identifier: .gregorian)
-            utcCalendar.timeZone = TimeZone(identifier: "UTC")!
-
-            // Default to now, rounded down to the start of the hour.
-            return utcCalendar.date(from: components)!
-        }()
-
         _draftRoutineEvent = State(
-            initialValue: DraftRoutineEvent(
-                date: time,
-                hasTime: sourceRoutineEvent?.time != nil,
-                title: sourceRoutineEvent?.title ?? "",
-                daysOfWeek: daysOfWeek
-            )
+            initialValue: DraftRoutineEvent(routineEvent: sourceRoutineEvent)
         )
     }
 
@@ -90,39 +66,48 @@ struct RoutineEventFormView: View {
     }
 
     private var canSave: Bool {
-        !draftRoutineEvent.title.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        ).isEmpty
-            && !draftRoutineEvent.daysOfWeek.isEmpty
+        !draftRoutineEvent.title.trimmed.isEmpty
+            && !draftRoutineEvent.weekdays.isEmpty
     }
 
-    private var timeAndDay: DateInRegion? {
+    private var dateInUtc: DateInRegion? {
         guard draftRoutineEvent.hasTime else {
             return nil
         }
+
         return DateInRegion(draftRoutineEvent.date, region: .UTC)
     }
+
+    // MARK: - Body
 
     var body: some View {
         NavigationStack {
             Form {
-                titleSection
+                FormTitleFieldView(
+                    text: $draftRoutineEvent.title,
+                    hasAutoFocused: $hasTitleAutoFocused,
+                    isFocused: $isTitleFocused
+                )
+
                 daysSection
                 detailsSection
             }
-            .animation(.linear, value: showTimePicker)
+            .toolbar {
+                cancelButton
+
+                FormSaveButtonView(canSave: canSave, save: saveRoutineEvent)
+
+                deleteButton
+            }
             .navigationTitle(
                 isCreateForm ? "Create Recurring Event" : "Edit Recurring Event"
             )
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                cancelButton
-                saveButton
-                deleteButton
-            }
         }
-        .onChange(of: draftRoutineEvent.daysOfWeek) { _, _ in
-            ensureTextfieldBlurred()
+
+        // MARK: Blur the title field whenever the weekdays change.
+        .onChange(of: draftRoutineEvent.weekdays) { _, _ in
+            isTitleFocused = false
         }
     }
 
@@ -131,22 +116,10 @@ struct RoutineEventFormView: View {
     @ToolbarContentBuilder
     private var cancelButton: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            Button("Cancel", systemImage: "xmark") {
+            CancelButtonView(cancel: {
                 isTitleFocused = false
                 dismiss()
-            }
-            .foregroundStyle(Color.label)
-            .tint(Color.label)
-        }
-    }
-
-    @ToolbarContentBuilder
-    private var saveButton: some ToolbarContent {
-        ToolbarItem(placement: .confirmationAction) {
-            Button("Save", systemImage: "checkmark", action: saveRoutineEvent)
-                .buttonStyle(.glassProminent)
-                .tint(canSave ? accentColor.color : .tertiary)
-                .disabled(!canSave)
+            })
         }
     }
 
@@ -164,7 +137,7 @@ struct RoutineEventFormView: View {
                 )
                 .withConfirmation(
                     deleteRoutineEventConfig(
-                        event: sourceRoutineEvent!,
+                        routineEvent: sourceRoutineEvent!,
                         inForm: true,
                         delete: deleteEvent
                     ),
@@ -177,48 +150,35 @@ struct RoutineEventFormView: View {
 
     // MARK: - View Builders
 
-    private var titleSection: some View {
-        FormTitleFieldView(
-            text: $draftRoutineEvent.title,
-            hasAutoFocused: $hasTitleAutoFocused,
-            isFocused: $isTitleFocused
-        )
-    }
-
     private var detailsSection: some View {
         Section {
             timeField
             timePicker
         }
         .listSectionSeparator(.hidden)
-        .environment(\.timeZone, .gmt)
     }
 
     private var daysSection: some View {
         Section {
-            DayOfWeekPickerView(daysOfWeek: $draftRoutineEvent.daysOfWeek)
+            WeekdayPickerView(selectedWeekdays: $draftRoutineEvent.weekdays)
         }
-        .discreetListItem()
         .listSectionMargins(.vertical, 0)
+        .discreetListItem()
     }
 
     private var timeField: some View {
         Group {
-            if let timeAndDay {
-                HStack {
-                    Image(systemName: "clock")
-                    Text("")
-                    Spacer()
-                    Time(timeInRegion: timeAndDay)
-                }
-                .contentShape(Rectangle())
-                .onTapGesture(perform: togglePicker)
+            if let dateInUtc {
+                FormLabelView(
+                    systemImageName: "clock",
+                    value: Time(timeInRegion: dateInUtc),
+                    onTap: togglePicker
+                )
             } else {
                 FormLabelView(
                     systemImageName: "clock",
                     value: "Add Time"
                 ) {
-                    ensureTextfieldBlurred()
                     draftRoutineEvent.hasTime = true
                     togglePicker()
                 }
@@ -236,8 +196,8 @@ struct RoutineEventFormView: View {
                     selection: $draftRoutineEvent.date,
                     displayedComponents: .hourAndMinute
                 )
-                .labelsHidden()
                 .datePickerStyle(.wheel)
+                .environment(\.timeZone, .gmt)
 
                 ActionButtonView(
                     label: "Remove Time",
@@ -247,7 +207,6 @@ struct RoutineEventFormView: View {
                     togglePicker()
                 }
             }
-            .alignmentGuide(.listRowSeparatorLeading) { _ in 32 }
             .listRowInsets(.top, 0)
         }
     }
@@ -255,94 +214,19 @@ struct RoutineEventFormView: View {
     // MARK: - Functions
 
     private func saveRoutineEvent() {
-        let affectedWeekdays = Set(sourceRoutineEvent?.weekdays ?? []).union(
-            draftRoutineEvent.daysOfWeek
-        )
-
-        plannerSyncService.invalidateRoutines(weekdays: affectedWeekdays)
-
         modelContext.updateRoutineEvent(
             sourceRoutineEvent,
             with: draftRoutineEvent,
-            sourceSortedRoutineEvents: sortedSourceEvents,
+            sourceSortedRoutineEvents: sourceSortedRoutineEvents,
+            plannerSyncService: plannerSyncService,
             ekEventStore: calendarService.ekEventStore
         )
 
         dismiss()
 
-        if sourceDayOfWeek == nil
-            || !draftRoutineEvent.daysOfWeek.contains(sourceDayOfWeek!)
-        {
-            let selectedDays = draftRoutineEvent.daysOfWeek
-
-            let subtitle: LocalizedStringKey? = {
-                if selectedDays.count > 1 {
-                    return nil
-                }
-
-                if let destinationDay = selectedDays.first?.rawValue
-                    .capitalized
-                {
-                    return "\(destinationDay)s"
-                }
-
-                return ""
-            }()
-
-            let customSubtitle: AnyView? = {
-                if selectedDays.count == 1 {
-                    return nil
-                }
-                return AnyView(WeekdaySpreadView(
-                    selected: selectedDays,
-                    accentColor: Color.label
-                ))
-            }()
-
-            let canOpenDestinationRoutine = {
-                guard selectedDays.count == 1 else { return false }
-
-                return selectedDays.first! != sourceDayOfWeek
-            }()
-
-            let onClick =
-                canOpenDestinationRoutine
-                    ? {
-                        openRoutine(selectedDays.first!)
-                    } : nil
-
-            if sourceRoutineEvent != nil {
-                showToast(
-                    Toast(
-                        title: "Successfully moved recurring event!",
-                        subtitle: subtitle,
-                        customSubtitle: customSubtitle,
-                        iconConfig: IconConfig(
-                            name: "arrow.left.arrow.right",
-                            primaryColor: Color.label,
-                            secondaryColor: Color.label
-                        ),
-                        action: onClick
-                    )
-                )
-            } else {
-                showToast(
-                    Toast(
-                        title: "Successfully created recurring event!",
-                        subtitle: subtitle,
-                        customSubtitle: customSubtitle,
-                        iconConfig: IconConfig(
-                            name: "repeat",
-                            primaryColor: Color.label
-                        ),
-                        variant: .tab,
-                        action: onClick
-                    )
-                )
-            }
-        }
+        showNotification()
     }
-
+    
     private func deleteEvent() {
         dismiss()
 
@@ -351,14 +235,87 @@ struct RoutineEventFormView: View {
         }
     }
 
-    private func ensureTextfieldBlurred() {
-        if isTitleFocused {
-            isTitleFocused = false
+    private func showNotification() {
+        guard
+            isCreateForm
+                || !draftRoutineEvent.weekdays.contains(sourceWeekday!)
+        else {
+            return
+        }
+
+        let selectedWeekdays = draftRoutineEvent.weekdays
+
+        let subtitle: LocalizedStringKey? = {
+            guard selectedWeekdays.count < 2,
+                let weekday = selectedWeekdays.first
+            else { return nil }
+
+            return LocalizedStringKey(weekday.label)
+        }()
+
+        let customSubtitle: AnyView? = {
+            if selectedWeekdays.count < 2 {
+                return nil
+            }
+
+            return AnyView(
+                WeekdaySpreadView(
+                    selected: selectedWeekdays,
+                    accentColor: Color.label
+                )
+            )
+        }()
+
+        let canOpenDestinationRoutine = {
+            guard selectedWeekdays.count == 1,
+                let weekday = selectedWeekdays.first
+            else { return false }
+
+            return weekday != sourceWeekday
+        }()
+
+        let onClick =
+            canOpenDestinationRoutine
+            ? {
+                openRoutine(selectedWeekdays.first!)
+            } : nil
+
+        if sourceRoutineEvent != nil {
+            showToast(
+                Toast(
+                    title: "Successfully moved recurring event!",
+                    subtitle: subtitle,
+                    customSubtitle: customSubtitle,
+                    iconConfig: IconConfig(
+                        name: "arrow.left.arrow.right",
+                        primaryColor: Color.label,
+                        secondaryColor: Color.label
+                    ),
+                    action: onClick
+                )
+            )
+        } else {
+            showToast(
+                Toast(
+                    title: "Successfully created recurring event!",
+                    subtitle: subtitle,
+                    customSubtitle: customSubtitle,
+                    iconConfig: IconConfig(
+                        name: "repeat",
+                        primaryColor: Color.label
+                    ),
+                    variant: .tab,
+                    action: onClick
+                )
+            )
         }
     }
 
     private func togglePicker() {
-        ensureTextfieldBlurred()
-        showTimePicker.toggle()
+        isTitleFocused = false
+
+        withAnimation {
+            showTimePicker.toggle()
+        }
     }
 }

@@ -21,7 +21,7 @@ struct SelectedRoutineEventActionsView: View {
 
     private var deleteConfirmation: ConfirmationConfig {
         bulkRemoveRoutineEventFromWeekdayConfig(
-            events: routineEngine.selectedItems,
+            routineEvents: routineEngine.selectedItems,
             weekday: weekday,
             remove: deleteSelectedEventsFromWeekday,
             delete: deleteSelectedEventsEverywhere

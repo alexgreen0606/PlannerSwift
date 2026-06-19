@@ -210,10 +210,10 @@ struct PlannerEventFormView: View {
                     systemImageName: "clock",
                     value: "Add Time"
                 ) {
+                    isTitleFocused = false
+                    
                     withAnimation {
-                        isTitleFocused = false
                         visiblePicker = .time
-
                         draftPlannerEvent.hasTime = true
 
                         // Set a location for the event so absolute point in time is clear to user.
@@ -246,8 +246,9 @@ struct PlannerEventFormView: View {
                     label: "Remove Time",
                     systemImage: "xmark"
                 ) {
+                    isTitleFocused = false
+                    
                     withAnimation {
-                        isTitleFocused = false
                         draftPlannerEvent.hasTime = false
                         visiblePicker = .none
                     }
@@ -368,9 +369,9 @@ struct PlannerEventFormView: View {
     }
 
     private func togglePicker(type: VisibleEventFormPicker) {
+        isTitleFocused = false
+        
         withAnimation {
-            isTitleFocused = false
-
             if visiblePicker == type {
                 visiblePicker = .none
             } else {

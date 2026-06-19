@@ -9,7 +9,7 @@
 // View
 // Important (ID, animation)
 // View-specific
-// Style(Style, Font, Color, Opacity),
+// Style(Style, Font, Color, Opacity, Background),
 // Layout(Frame, Padding),
 // Safe Area
 // Overlay

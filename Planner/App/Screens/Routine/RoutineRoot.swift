@@ -87,8 +87,8 @@ struct RoutineRootView: View {
             .sheet(item: $routineEventSheetContext) { context in
                 RoutineEventFormView(
                     sourceRoutineEvent: context.routineEvent,
-                    sourceDayOfWeek: weekday,
-                    sortedSourceEvents: sortedRoutineEvents,
+                    sourceWeekday: weekday,
+                    sourceSortedRoutineEvents: sortedRoutineEvents,
                     openRoutine: openRoutine
                 )
                 .navigationTransition(
@@ -231,7 +231,7 @@ struct RoutineRootView: View {
             ),
             completedIconConfig: IconConfig(name: ""),
             confirmation: removeRoutineEventFromWeekdayConfig(
-                event: event,
+                routineEvent: event,
                 weekday: weekday,
                 remove: {
                     removeEventFromWeekday(event)

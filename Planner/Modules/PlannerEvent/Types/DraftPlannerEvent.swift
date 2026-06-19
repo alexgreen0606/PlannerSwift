@@ -9,6 +9,7 @@ import EventKit
 import SwiftDate
 import SwiftUI
 
+// TODO: Create init functions for this new vs edit
 struct DraftPlannerEvent: PlannerEventLocationHelpers {
     var title: String = ""
     var date: Date = .init()

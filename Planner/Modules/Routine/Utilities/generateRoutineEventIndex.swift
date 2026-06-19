@@ -1,5 +1,5 @@
 //
-//  generateTargetIndex.swift
+//  generateRoutineEventIndex.swift
 //  Planner
 //
 //  Created by Alex Green on 4/8/26.
@@ -9,16 +9,17 @@ import SwiftUI
 
 /// Finds a position for a recurring event that places it close as possible to its siblings.
 @MainActor
-func generateRoutineEventIndex<Destination: EventListItem>(
+func generateRoutineEventIndex<DestinationEvent: EventListItem>(
     near sourceId: UUID,
-    from sortedSourceEvents: [RoutineEvent],
-    to sortedDestinationEvents: [Destination],
-    destinationComparatorId: @MainActor (Destination) -> UUID? = { $0.stableId }
+    /// These are the events in the routine where the routine event exists.
+    from sourceSortedRoutineEvents: [RoutineEvent],
+    /// These are the events in the routine or planner where the event is being placed.
+    to destinationSortedRoutineEvents: [DestinationEvent],
+    destinationComparatorId: @MainActor (DestinationEvent) -> UUID? = { $0.stableId }
 ) -> Int {
     // MARK: Find current index in source.
-
     guard
-        let sourceIndex = sortedSourceEvents.firstIndex(where: {
+        let sourceIndex = sourceSortedRoutineEvents.firstIndex(where: {
             $0.stableId == sourceId
         })
     else {
@@ -26,7 +27,7 @@ func generateRoutineEventIndex<Destination: EventListItem>(
         return 0
     }
 
-    let maxDistance = sortedSourceEvents.count
+    let maxDistance = sourceSortedRoutineEvents.count
 
     // MARK: Expand outward to find a neighbor that exists in the new destination.
 
@@ -34,35 +35,34 @@ func generateRoutineEventIndex<Destination: EventListItem>(
         // Check if upper neighbor exists in the destination.
         let upperIndex = sourceIndex - distance
         if upperIndex >= 0 {
-            let upperId = sortedSourceEvents[upperIndex].stableId
+            let upperId = sourceSortedRoutineEvents[upperIndex].stableId
 
-            if let destIndex = sortedDestinationEvents.firstIndex(
+            if let destIndex = destinationSortedRoutineEvents.firstIndex(
                 where: {
                     destinationComparatorId($0) == upperId
                 }
             ) {
                 // MARK: Place below the upper neighbor.
-
                 return destIndex + 1
             }
         }
 
         // Check if lower neighbor exists in the destination.
         let lowerIndex = sourceIndex + distance
-        if lowerIndex < sortedSourceEvents.count {
-            let lowerId = sortedSourceEvents[lowerIndex].stableId
+        if lowerIndex < sourceSortedRoutineEvents.count {
+            let lowerId = sourceSortedRoutineEvents[lowerIndex].stableId
 
-            if let destIndex = sortedDestinationEvents.firstIndex(
+            if let destIndex = destinationSortedRoutineEvents.firstIndex(
                 where: {
                     destinationComparatorId($0) == lowerId
                 }
             ) {
                 // MARK: Place above the lower neighbor.
-
                 return destIndex
             }
         }
     }
 
+    // No sibling was found. Place at the top of the list.
     return 0
 }

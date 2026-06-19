@@ -46,7 +46,7 @@ struct TransferRoutineEventsFormView: View {
         NavigationStack {
             Form {
                 Section {
-                    DayOfWeekPickerView(daysOfWeek: $destinationWeekdays)
+                    WeekdayPickerView(selectedWeekdays: $destinationWeekdays)
                         .listRowInsets(.top, 0)
                 }
                 .listSectionMargins(.top, 0)

@@ -23,7 +23,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
-				Modules/PlannerEvent/Data/Predicates/Untitled.swift,
 			);
 			target = 07BB27D42EDDFB9400593DD0 /* Planner */;
 		};

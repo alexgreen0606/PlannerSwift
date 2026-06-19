@@ -45,7 +45,7 @@ func bulkDeletePlannerEventConfig(
 ) -> ConfirmationConfig {
     let count = events.count
     
-    if count == 1 {
+    if count < 2 {
         return deletePlannerEventConfig(
             event: events.first!,
             delete: delete
