@@ -23,7 +23,7 @@ struct ToastRootView<Content: View>: View {
     }
 
     // MARK: List Page (Planner, Checklist, Routine)
-    init<Item: ListItem>(
+    init<Item: ListItemDetails>(
         listEngine: ListEngine<Item>,
         @ViewBuilder content: @escaping () -> Content
     ) {

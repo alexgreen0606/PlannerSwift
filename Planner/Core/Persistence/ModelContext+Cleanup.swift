@@ -15,20 +15,6 @@ extension ModelContext {
         let cutoffDatestamp = DateInRegion(cutoffDate, region: .local).datestamp
 
         do {
-            // MARK: Delete routine event variants that have no relationships.
-
-            let orphanedRoutineEventVariants = try fetch(
-                FetchDescriptor<RoutineEventVariant>()
-            ).filter {
-                $0.routineEvent == nil
-                    && $0.plannerEvent == nil
-                    && $0.planner == nil
-            }
-
-            for variant in orphanedRoutineEventVariants {
-                delete(variant)
-            }
-
             // MARK: Delete locations that have no relationships.
 
             let orphanedLocations = try fetch(

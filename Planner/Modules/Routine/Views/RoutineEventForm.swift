@@ -10,9 +10,9 @@ import SwiftDate
 import SwiftUI
 
 struct RoutineEventFormView: View {
-    private let sourceRoutineEvent: RoutineEvent?
+    private let sourceRoutineEvent: RoutineEventContext?
     private let sourceWeekday: Weekday?
-    private let sourceSortedRoutineEvents: [RoutineEvent]?
+    private let sourceSortedRoutineEvents: [RoutineEventContext]?
     private let openRoutine: (Weekday) -> Void
 
     // MARK: Create Routine Event (Dashboard)
@@ -29,9 +29,9 @@ struct RoutineEventFormView: View {
 
     // MARK: Edit Routine Event (Routine)
     init(
-        sourceRoutineEvent: RoutineEvent,
+        sourceRoutineEvent: RoutineEventContext,
         sourceWeekday: Weekday,
-        sourceSortedRoutineEvents: [RoutineEvent],
+        sourceSortedRoutineEvents: [RoutineEventContext],
         openRoutine: @escaping (Weekday) -> Void
     ) {
         self.sourceRoutineEvent = sourceRoutineEvent

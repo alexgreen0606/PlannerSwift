@@ -17,7 +17,7 @@ struct RoutineSectionView: View {
 
     @EnvironmentObject private var todayService: TodayService
 
-    @Query private var routineEventWeekdayInstances: [RoutineEventWeekdayInstance]
+    @Query private var routineEvents: [RoutineEvent]
 
     // MARK: - Body
 
@@ -49,8 +49,8 @@ struct RoutineSectionView: View {
 
     @ViewBuilder
     private func routinePreview(for weekday: Weekday) -> some View {
-        let eventCount = routineEventWeekdayInstances.count {
-            $0.weekdayRawValue == weekday.rawValue
+        let eventCount = routineEvents.count {
+            $0.routine?.weekdayRawValue == weekday.rawValue
         }
 
         VStack(spacing: 0) {

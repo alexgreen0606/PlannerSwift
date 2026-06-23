@@ -9,10 +9,10 @@ import SwiftUI
 
 /// Finds a position for a recurring event that places it close as possible to its siblings.
 @MainActor
-func generateRoutineEventIndex<DestinationEvent: EventListItem>(
+func generateRoutineEventIndex<DestinationEvent: EventDetails>(
     near sourceId: UUID,
     /// These are the events in the routine where the routine event exists.
-    from sourceSortedRoutineEvents: [RoutineEvent],
+    from sourceSortedRoutineEvents: [RoutineEventContext],
     /// These are the events in the routine or planner where the event is being placed.
     to destinationSortedRoutineEvents: [DestinationEvent],
     destinationComparatorId: @MainActor (DestinationEvent) -> UUID? = { $0.stableId }

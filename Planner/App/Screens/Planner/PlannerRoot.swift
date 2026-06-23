@@ -27,7 +27,12 @@ struct PlannerRootView: View {
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
-    @StateObject private var plannerEngine = ListEngine<PlannerEvent>()
+    @StateObject private var plannerEngine = ListEngine<PlannerEvent>(
+        toggleState: ListItemToggleState(
+            isToggled: { $0.isCompleted },
+            setIsToggled: { $0.isCompleted = $1 }
+        )
+    )
 
     @State private var eventSheetContext: PlannerEventSheetContext?
     @State private var showTransferSheet = false
@@ -41,7 +46,7 @@ struct PlannerRootView: View {
 
     private var sortedPendingPlannerEvents: [PlannerEvent] {
         sortedPlannerEvents.filter { event in
-            (!event.isCompleted
+            (!plannerEngine.isItemToggled(event)
                 && !plannerEngine.newlyPendingIds.contains(event.stableId))
                 || plannerEngine.newlyCompletedIds.contains(event.stableId)
         }
@@ -49,7 +54,7 @@ struct PlannerRootView: View {
 
     private var sortedCompletePlannerEvents: [PlannerEvent] {
         sortedPlannerEvents.filter { event in
-            (event.isCompleted
+            (plannerEngine.isItemToggled(event)
                 && !plannerEngine.newlyCompletedIds.contains(event.stableId))
                 || plannerEngine.newlyPendingIds.contains(event.stableId)
         }
@@ -284,7 +289,7 @@ struct PlannerRootView: View {
     }
 
     private func openPlannerEventSheet(_ event: PlannerEvent) {
-        if plannerEngine.isSelectMode || event.isCompleted {
+        if plannerEngine.isSelectMode || plannerEngine.isItemToggled(event) {
             plannerEngine.toggleItem(event)
             return
         }

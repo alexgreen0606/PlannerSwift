@@ -9,13 +9,16 @@ import SwiftData
 
 @Model
 class Planner {
+    
+    var routine: Routine?
+
+    var trip: Trip?
+
     /// Converts to the start of day (DateInRegion) based on the planner's time zone.
     var datestamp: String = ""
 
     @Relationship(deleteRule: .nullify, inverse: \Location.planners)
     var location: Location?
-
-    var trip: Trip?
 
     var showCompleted: Bool = false
 
@@ -23,6 +26,7 @@ class Planner {
     /// If trip is nil, defaults to false.
     var excludeRoutine: Bool?
 
+    @Relationship(deleteRule: .cascade, inverse: \RoutineEventVariant.planner)
     var routineEventVariants: [RoutineEventVariant]?
 
     init(datestamp: String, location: Location? = nil) {

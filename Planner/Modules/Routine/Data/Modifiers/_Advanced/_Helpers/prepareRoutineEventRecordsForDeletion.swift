@@ -19,7 +19,8 @@ extension ModelContext {
 
             // MARK: Remove completed planner events so they are not cascade-deleted.
             if routineEventRecord.isCompleted {
-                routineEventRecord.routineEvent = nil
+                safeDelete(routineEventRecord.routineEventRecordContext)
+                routineEventRecord.routineEventRecordContext = nil
                 return nil
             }
 

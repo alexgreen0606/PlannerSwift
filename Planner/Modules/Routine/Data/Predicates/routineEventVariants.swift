@@ -1,5 +1,5 @@
 //
-//  routineEventVariant.swift
+//  routineEventVariants.swift
 //  Planner
 //
 //  Created by Alex Green on 6/15/26.
@@ -8,7 +8,7 @@
 import SwiftUI
 
 extension RoutineEventVariant {
-    static func variants(
+    static func routineEventVariants(
         for calendarItemExternalIdentifier: String
     ) -> Predicate<RoutineEventVariant> {
         return #Predicate<RoutineEventVariant> {

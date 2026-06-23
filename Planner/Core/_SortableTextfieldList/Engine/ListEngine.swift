@@ -9,13 +9,23 @@ import Combine
 import SwiftUI
 
 @MainActor
-final class ListEngine<Item: ListItem>: ObservableObject {
+final class ListEngine<Item: ListItemDetails>: ObservableObject {
+    private let toggleState: ListItemToggleState<Item>?
+
+    init(toggleState: ListItemToggleState<Item>? = nil) {
+        self.toggleState = toggleState
+    }
+
     deinit {
         toggleTransitionTask?.cancel()
     }
 
-    @AppStorage("toggleTransitionDuration") private var toggleTransitionDuration: ToggleTransitionDuration =
-        .threeSeconds
+    private let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+    private var toggleTransitionTask: Task<Void, Never>?
+
+    @AppStorage("toggleTransitionDuration") private
+        var toggleTransitionDuration: ToggleTransitionDuration =
+            .threeSeconds
 
     @Published var focusedId: UUID? = nil
     @Published var pendingFocusId: UUID? = nil
@@ -35,18 +45,22 @@ final class ListEngine<Item: ListItem>: ObservableObject {
     @Published private(set) var selectedItems: [Item] = []
     @Published private(set) var selectedItemIds: Set<UUID> = []
 
-    private let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+    var canToggleItems: Bool {
+        toggleState != nil
+    }
 
-    private var toggleTransitionTask: Task<Void, Never>?
+    func isItemToggled(_ item: Item) -> Bool {
+        toggleState?.isToggled(item) ?? false
+    }
 
     func isItemInPendingList(_ item: Item) -> Bool {
-        (!item.isCompleted
+        (!isItemToggled(item)
             && !newlyPendingIds.contains(item.stableId))
             || newlyCompletedIds.contains(item.stableId)
     }
 
     func isItemInCompletedList(_ item: Item) -> Bool {
-        (item.isCompleted
+        (isItemToggled(item)
             && !newlyCompletedIds.contains(item.stableId))
             || newlyPendingIds.contains(item.stableId)
     }
@@ -100,13 +114,15 @@ final class ListEngine<Item: ListItem>: ObservableObject {
     // MARK: Completed Items
 
     private func toggleCompletion(_ item: Item) {
+        guard let toggleState else { return }
+
         if focusedId == item.stableId {
             // Item is focused. Blur it.
             focusedId = nil
         }
 
         if toggleTransitionDuration != .instant {
-            if item.isCompleted {
+            if toggleState.isToggled(item) {
                 if !newlyCompletedIds.contains(item.stableId) {
                     newlyPendingIds.insert(item.stableId)
                 } else {
@@ -128,7 +144,7 @@ final class ListEngine<Item: ListItem>: ObservableObject {
             fadingItemIds = []
         }
 
-        item.isCompleted.toggle()
+        toggleState.setIsToggled(item, !toggleState.isToggled(item))
     }
 
     private func beginFade() {

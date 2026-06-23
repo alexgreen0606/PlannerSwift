@@ -22,6 +22,13 @@
 
 // Animation goes where needed (first modifier on that view)
 
+// Model Variable Order:
+// 1. Parent owner relationships
+// 2. Identifiers
+// 2. User-visible vars
+// 3. Hidden logic vars
+// 4. Relationship children
+
 // TO CHECK:
 // 1. Always say calendarRecord, plannerEvent, ekEvent, etc instead of just event
 // 2. Always put predicates in separate folders
@@ -34,3 +41,11 @@
 // DOCUMENTATION TO ADD:
 // 1. calendarRecords means plannerEvents that represent EKEvents
 // 2. routineEventRecords means plannerEvents that represent RoutineEvent
+
+// Naming conventions:
+// 1. Weekday: for
+// 2. DateInRegion: on
+// 3. Routine: for
+
+// Context = Actual Data (a class or struct)
+// Details = Protocol

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ListKeyboardAccessoryView<Item: ListItem>: View {
+struct ListKeyboardAccessoryView<Item: ListItemDetails>: View {
     let items: [Item]
     let iconImageNames: [String]
     let onIconTap: ((String, Item) -> Void)?

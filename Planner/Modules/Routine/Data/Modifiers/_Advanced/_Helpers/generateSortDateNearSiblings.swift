@@ -12,12 +12,12 @@ import SwiftDate
 extension ModelContext {
     @MainActor
     func generateSortDateNearSiblings(
-        for routineEvent: RoutineEvent,
-        on weekday: Weekday,
+        for routineEvent: RoutineEventContext,
         /// The routine events from the routine where the event was selected.
-        from sourceSortedEvents: [RoutineEvent] = []
+        from sourceSortedEvents: [RoutineEventContext] = [],
+        routine: Routine
     ) -> Date {
-        let destinationSortedEvents = getSortedRoutineEvents(for: weekday)
+        let destinationSortedEvents = getSortedRoutineEvents(for: routine)
 
         let targetIndex = generateRoutineEventIndex(
             near: routineEvent.stableId,
@@ -28,7 +28,7 @@ extension ModelContext {
         return generateRoutineEventSortDate(
             at: targetIndex,
             in: destinationSortedEvents,
-            on: weekday
+            for: routine
         )
     }
 }

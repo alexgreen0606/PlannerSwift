@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct SelectItemsButtonView<Item: ListItem>: View {
+struct SelectItemsButtonView<Item: ListItemDetails>: View {
     private let itemsLabel: String
     private let hasVisibleItem: Bool
 

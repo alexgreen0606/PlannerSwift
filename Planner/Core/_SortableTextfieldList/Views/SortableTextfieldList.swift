@@ -10,7 +10,7 @@ import SwiftData
 import SwiftUI
 
 struct SortableTextfieldListView<
-    Item: ListItem,
+    Item: ListItemDetails,
     FloatingInfo: View,
     LeftAdornment: View,
     RightAdornment: View,

@@ -10,11 +10,12 @@ import SwiftUI
 
 struct SelectedRoutineEventActionsView: View {
     @Binding var showTransferSheet: Bool
+    let routine: Routine
     let weekday: Weekday
     let namespace: Namespace.ID
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var routineEngine: ListEngine<RoutineEvent>
+    @EnvironmentObject private var routineEngine: ListEngine<RoutineEventContext>
     @EnvironmentObject private var calendarStore: CalendarService
 
     @State private var showDeleteConfirmation = false
@@ -32,13 +33,13 @@ struct SelectedRoutineEventActionsView: View {
 
     var body: some View {
         HStack {
-            DeleteSelectedButtonView<RoutineEvent>(
+            DeleteSelectedButtonView<RoutineEventContext>(
                 confirmationConfig: deleteConfirmation
             )
 
             Spacer()
 
-            TransferSelectedButtonView<RoutineEvent>(
+            TransferSelectedButtonView<RoutineEventContext>(
                 showTransferSheet: $showTransferSheet,
                 systemImage: "plus.square.on.square",
                 namespace: namespace
@@ -55,9 +56,9 @@ struct SelectedRoutineEventActionsView: View {
         routineEngine.clearSelections()
 
         DispatchQueue.main.async {
-            modelContext.removeRoutineEventsFromWeekday(
-                routineEvents: selections,
-                weekday: weekday,
+            modelContext.removeRoutineEventsFromRoutine(
+                routineEventContexts: selections,
+                routine: routine,
                 ekEventStore: calendarStore.ekEventStore
             )
 

@@ -13,6 +13,18 @@ import SwiftDate
 @Model
 class PlannerEvent: EventListItem {
 
+    @Relationship(
+        deleteRule: .cascade,
+        inverse: \EKEventContext.plannerEvent
+    )
+    var eKEventContext: EKEventContext?
+
+    @Relationship(
+        deleteRule: .cascade,
+        inverse: \RoutineEventRecordContext.plannerEvent
+    )
+    var routineEventRecordContext: RoutineEventRecordContext?
+
     var stableId: UUID = UUID()
 
     var title: String = ""
@@ -21,6 +33,8 @@ class PlannerEvent: EventListItem {
     @Relationship(deleteRule: .nullify, inverse: \Location.events)
     var location: Location?
 
+    var isCompleted: Bool = false
+
     /// Must be set when an event doesn't have a time.
     var datestamp: String?
 
@@ -28,19 +42,7 @@ class PlannerEvent: EventListItem {
     /// No relation to the event's time.
     var sortDate: Date = Date.now
 
-    var isCompleted: Bool = false
-
     var height: CGFloat = 0
-
-    @Relationship(
-        deleteRule: .cascade,
-        inverse: \EKEventContext.plannerEvent
-    )
-    var eKEventContext: EKEventContext?
-
-    var routineEvent: RoutineEvent?
-    var routineEventVariant: RoutineEventVariant?
-    var routineEventWeekdayInstance: RoutineEventWeekdayInstance?
 
     // MARK: Calendar Event
     init(ekEvent: EKEvent, sortDate: Date) {
@@ -48,23 +50,36 @@ class PlannerEvent: EventListItem {
         time = ekEvent.startDate
         location = ekEvent.location()
         self.sortDate = sortDate
-        eKEventContext = EKEventContext(ekEvent: ekEvent)
+
+        // Note: This initializer automatically attaches the EKEventContext to the PlannerEvent
+        _ = EKEventContext(ekEvent: ekEvent, plannerEvent: self)
     }
 
     // MARK: Routine Event
-    init(routineEvent: RoutineEvent, startOfDay: DateInRegion, sortDate: Date) {
-        title = routineEvent.title
+    init(
+        routineEvent: RoutineEvent,
+        startOfDay: DateInRegion,
+        sortDate: Date
+    ) {
+        guard let routineEventContext = routineEvent.routineEventContext else {
+            return
+        }
 
-        if let time = routineEvent.date(on: startOfDay) {
+        title = routineEventContext.title
+
+        if let time = routineEventContext.date(on: startOfDay) {
             self.time = time
         } else {
             datestamp = startOfDay.datestamp
         }
 
         self.sortDate = sortDate
-        self.routineEvent = routineEvent
 
-        routineEvent.syncedSortDatePlannerEventIds.insert(stableId)
+        // Note: This initializer automatically attaches the RoutineEventRecordContext to the PlannerEvent
+        _ = RoutineEventRecordContext(
+            routineEvent: routineEvent,
+            plannerEvent: self
+        )
     }
 
     // MARK: Untimed Event

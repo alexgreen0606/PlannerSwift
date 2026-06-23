@@ -9,8 +9,9 @@ import SwiftData
 import SwiftUI
 
 struct RoutineActionMenuView: View {
+    let routine: Routine
+    let routineEvents: [RoutineEventContext]
     let weekday: Weekday
-    let routineEvents: [RoutineEvent]
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarService
@@ -26,7 +27,7 @@ struct RoutineActionMenuView: View {
 
     var body: some View {
         Menu("", systemImage: "ellipsis") {
-            SelectItemsButtonView<RoutineEvent>(
+            SelectItemsButtonView<RoutineEventContext>(
                 itemsLabel: "Events",
                 hasVisibleItem: !routineEvents.isEmpty
             )
@@ -67,9 +68,9 @@ struct RoutineActionMenuView: View {
     // MARK: - Functions
 
     private func deleteRoutine() {
-        modelContext.removeRoutineEventsFromWeekday(
-            routineEvents: routineEvents,
-            weekday: weekday,
+        modelContext.removeRoutineEventsFromRoutine(
+            routineEventContexts: routineEvents,
+            routine: routine,
             ekEventStore: calendarStore.ekEventStore,
         )
     }

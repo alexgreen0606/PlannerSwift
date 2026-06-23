@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct DeleteSelectedButtonView<Item: ListItem>: View {
+struct DeleteSelectedButtonView<Item: ListItemDetails>: View {
     let confirmationConfig: ConfirmationConfig
 
     @EnvironmentObject private var listEngine: ListEngine<Item>

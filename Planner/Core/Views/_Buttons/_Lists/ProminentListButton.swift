@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ProminentListButtonView<Item: ListItem>: View {
+struct ProminentListButtonView<Item: ListItemDetails>: View {
     private let color: Color?
     private let createItem: () -> Void
 

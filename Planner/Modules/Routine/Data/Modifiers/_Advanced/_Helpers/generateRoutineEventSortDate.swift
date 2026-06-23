@@ -14,8 +14,8 @@ extension ModelContext {
     func generateRoutineEventSortDate(
         at index: Int,
         /// May or may not contain the routine event being placed.
-        in sortedRoutineEvents: [RoutineEvent],
-        on weekday: Weekday
+        in sortedRoutineEventContexts: [RoutineEventContext],
+        for routine: Routine
     ) -> Date {
         guard let baseDay = Self.baseRoutineDate else {
             // Fallback to now. This should never occur.
@@ -25,14 +25,9 @@ extension ModelContext {
         // TODO: should this just be a list of instances?
         return generateSortDate(
             at: index,
-            in: sortedRoutineEvents,
+            in: sortedRoutineEventContexts,
             startOfDay: baseDay,
-            getSortDate: {
-                $0.instance(on: weekday)?.sortDate ?? baseDay.date
-            },
-            setSortDate: { event, sortDate in
-                event.instance(on: weekday)?.sortDate = sortDate
-            }
+            routine: routine
         )
     }
 }

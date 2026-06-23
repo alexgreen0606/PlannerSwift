@@ -17,60 +17,58 @@ extension ModelContext {
     // MARK: - CREATE
 
     @MainActor
-    func createRoutineEvent(
+    func createRoutineEventContext(
         at index: Int,
-        in sortedRoutineEvents: [RoutineEvent],
-        on weekday: Weekday
+        in sortedRoutineEvents: [RoutineEventContext],
+        routine: Routine
     ) -> /// The ID of the new event.
         UUID?
     {
         let sortDate = generateRoutineEventSortDate(
             at: index,
             in: sortedRoutineEvents,
-            on: weekday
+            for: routine
         )
 
-        let routineEvent = RoutineEvent()
-        let instance = RoutineEventWeekdayInstance(
-            weekday: weekday,
+        let routineEventContext = RoutineEventContext()
+        let _ = RoutineEvent(
+            routine: routine,
+            routineEventContext: routineEventContext,
             sortDate: sortDate
         )
 
-        routineEvent.weekdayInstances?.append(instance)
-        instance.routineEvent = routineEvent
-
-        insert(routineEvent)
+        insert(routineEventContext)
 
         // Note: Don't save the context here.
         // It can cause flickered duplicates in the list.
 
-        return routineEvent.stableId
+        return routineEventContext.stableId
     }
 
     // MARK: - READ
 
     @MainActor
     func getSortedRoutineEvents(
-        for weekday: Weekday,
+        for routine: Routine,
         reversed: Bool = false
-    ) -> [RoutineEvent] {
+    ) -> [RoutineEventContext] {
         do {
             let allRoutineEvents = try fetch(
-                FetchDescriptor<RoutineEventWeekdayInstance>(
+                FetchDescriptor<RoutineEvent>(
                     predicate:
-                        RoutineEventWeekdayInstance.instances(
-                            for: weekday
+                        RoutineEvent.routineEvents(
+                            for: routine
                         ),
                     sortBy: [
                         SortDescriptor(
-                            \RoutineEventWeekdayInstance.sortDate,
+                            \RoutineEvent.sortDate,
                             order: reversed ? .reverse : .forward
                         )
                     ]
                 )
             )
 
-            return allRoutineEvents.compactMap(\.routineEvent)
+            return allRoutineEvents.compactMap(\.routineEventContext)
 
         } catch {
             assertionFailure(
@@ -81,7 +79,6 @@ extension ModelContext {
         return []
     }
 
-    
     @MainActor
     func getRoutineEventVariant(
         for calendarItemExternalIdentifier: String
@@ -89,7 +86,7 @@ extension ModelContext {
         do {
             let matchingRoutineVariants = try fetch(
                 FetchDescriptor<RoutineEventVariant>(
-                    predicate: RoutineEventVariant.variants(
+                    predicate: RoutineEventVariant.routineEventVariants(
                         for: calendarItemExternalIdentifier
                     )
                 )
@@ -104,6 +101,27 @@ extension ModelContext {
 
         return nil
     }
+    
+    @MainActor
+    func getRoutines(
+        for weekdays: Set<Weekday>
+    ) -> [Routine] {
+        do {
+            return try fetch(
+                FetchDescriptor<Routine>(
+                    predicate: Routine.routines(
+                        for: weekdays
+                    )
+                )
+            )
+        } catch {
+            assertionFailure(
+                "ERROR ModelContext+Routine getRoutines: \(error)"
+            )
+        }
+
+        return []
+    }
 
     // MARK: - UPDATE
 
@@ -111,29 +129,33 @@ extension ModelContext {
     func moveRoutineEvent(
         from: Int,
         to: Int,
-        on weekday: Weekday,
-        sortedRoutineEvents: [RoutineEvent]
+        sortedRoutineEvents: [RoutineEventContext],
+        routine: Routine
     ) {
         let movedEvent = sortedRoutineEvents[from]
-        movedEvent.instance(on: weekday)?.sortDate =
+
+        guard let movedInstance = movedEvent.routineEvent(for: routine) else {
+            return
+        }
+
+        movedInstance.sortDate =
             generateRoutineEventSortDate(
                 at: to,
                 in: sortedRoutineEvents,
-                on: weekday
+                for: routine
             )
 
-        // Clear synced planner events so that each event re-positions itself in its planner.
-        movedEvent.syncedSortDatePlannerEventIds.removeAll()
+        // Update sort date version so that each routine event record re-positions itself in its planner.
+        movedInstance.sortDateVersion += 0.1
 
         safeSave("ModelContext+Routine moveRoutineEvent")
     }
 
     @MainActor
     func bulkUpdateRoutineEventWeekdays(
-        _ routineEvents: [RoutineEvent],
+        _ routineEvents: [RoutineEventContext],
         to destinationWeekdays: Set<Weekday>,
-        sourceWeekday _: Weekday,
-        sourceSortedRoutineEvents: [RoutineEvent],
+        sourceSortedRoutineEvents: [RoutineEventContext],
         ekEventStore: EKEventStore
     ) {
         guard !destinationWeekdays.isEmpty else { return }
@@ -154,11 +176,11 @@ extension ModelContext {
 
     @MainActor
     func deleteRoutineEvents(
-        _ routineEvents: [RoutineEvent],
+        _ routineEvents: [RoutineEventContext],
         ekEventStore: EKEventStore,
     ) {
         for event in routineEvents {
-            _ = deleteRoutineEvent(
+            _ = deleteRoutineEventContext(
                 event,
                 ekEventStore: ekEventStore,
                 skipSave: true

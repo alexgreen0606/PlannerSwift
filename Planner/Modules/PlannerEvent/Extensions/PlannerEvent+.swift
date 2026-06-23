@@ -19,7 +19,19 @@ extension PlannerEvent: PlannerEventLocationHelpers {
     }()
 
     var isRoutineVariant: Bool {
-        routineEventVariant != nil && routineEvent != nil
+        routineEventVariant != nil
+    }
+
+    var routineEvent: RoutineEvent? {
+        routineEventRecordContext?.routineEvent
+    }
+
+    var routineEventContext: RoutineEventContext? {
+        routineEventRecordContext?.routineEvent.routineEventContext
+    }
+
+    var routineEventVariant: RoutineEventVariant? {
+        routineEventRecordContext?.routineEventVariant
     }
 
     func isEventChip(on startOfDay: DateInRegion) -> Bool {
@@ -103,7 +115,8 @@ extension PlannerEvent: PlannerEventLocationHelpers {
 
             existingContext.ekEvent = ekEvent
         } else {
-            eKEventContext = EKEventContext(ekEvent: ekEvent)
+            // Note: This initializer automatically attaches the EKEventContext to the PlannerEvent
+            _ = EKEventContext(ekEvent: ekEvent, plannerEvent: self)
         }
     }
 
@@ -112,18 +125,28 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         _ routineEvent: RoutineEvent,
         on startOfDay: DateInRegion
     ) {
-        guard !isRoutineVariant else {
+        guard !isRoutineVariant,
+            let routineEventContext = routineEvent.routineEventContext
+        else {
             return
         }
 
-        title = routineEvent.title
-        time = routineEvent.date(on: startOfDay)
+        title = routineEventContext.title
+        time = routineEventContext.date(on: startOfDay)
 
-        self.routineEvent = routineEvent
+        if let existingContext = routineEventRecordContext {
+            existingContext.syncedVersion = routineEventContext.version
+        } else {
+            // Note: This initializer automatically attaches the RoutineEventRecordContext to the PlannerEvent
+            let _ = RoutineEventRecordContext(
+                routineEvent: routineEvent,
+                plannerEvent: self
+            )
+        }
     }
 
     func matches(
-        _ routineEvent: RoutineEvent,
+        _ routineEvent: RoutineEventContext,
         in timeZone: TimeZone,
         originPlanner: Planner,
         settings: PlannerSettings

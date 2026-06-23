@@ -49,7 +49,6 @@ class PlannerSyncService: ObservableObject {
             modelContext.syncRoutine(
                 for: planner,
                 startOfDay: startOfDay,
-                weekday: weekday,
                 todaystamp: todaystamp,
                 ekEventStore: ekEventStore
             )

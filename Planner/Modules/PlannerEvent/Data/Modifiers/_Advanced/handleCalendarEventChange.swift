@@ -32,20 +32,13 @@ extension ModelContext {
                 sourcePlannerEvent.routineEventVariant == nil
             {
                 // MARK: The planner event is a routine event. Mark it as a variant.
-
-                let newRoutineEventVariant = RoutineEventVariant(
-                    routineEvent: routineEvent,
-                    planner: sourcePlanner,
-                    plannerEvent: sourcePlannerEvent
+                insert(
+                    RoutineEventVariant(
+                        routineEvent: routineEvent,
+                        planner: sourcePlanner,
+                        plannerEvent: sourcePlannerEvent
+                    )
                 )
-
-                routineEvent.variants?.append(newRoutineEventVariant)
-                sourcePlanner.routineEventVariants?.append(
-                    newRoutineEventVariant
-                )
-                sourcePlannerEvent.routineEventVariant = newRoutineEventVariant
-
-                insert(newRoutineEventVariant)
             }
 
             guard let calendarEvent else {

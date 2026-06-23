@@ -12,6 +12,9 @@ import SwiftUI
 
 @Model
 class EKEventContext {
+    
+    var plannerEvent: PlannerEvent?
+    
     var startDate: Date = Date.now
     var endDate: Date = Date.now
     var isAllDay: Bool = false
@@ -25,21 +28,22 @@ class EKEventContext {
     var birthdayContactIdentifier: String?
     var birthdayThumbnailData: Data?
 
-    var plannerEvent: PlannerEvent?
-
     @Transient
     var ekEvent: EKEvent?
 
     @Transient
     var birthdayContact: CNContact?
 
-    init(ekEvent: EKEvent) {
+    init(ekEvent: EKEvent, plannerEvent: PlannerEvent) {
+        self.plannerEvent = plannerEvent
+        
         self.startDate = ekEvent.startDate
         self.endDate = ekEvent.endDate
         self.isAllDay = ekEvent.isAllDay
         
         self.calendarItemExternalIdentifier =
             ekEvent.calendarItemExternalIdentifier
+        
         self.calendarIdentifier = ekEvent.calendar.calendarIdentifier
         self.calendarColorHex = ekEvent.calendar.cgColor.hexString
         self.calendarAllowsContentModifications = ekEvent.calendar.allowsContentModifications
@@ -47,5 +51,7 @@ class EKEventContext {
         self.birthdayContactIdentifier = ekEvent.birthdayContactIdentifier
         
         self.ekEvent = ekEvent
+        
+        plannerEvent.eKEventContext = self
     }
 }

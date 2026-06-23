@@ -8,7 +8,7 @@
 import Foundation
 
 struct RoutineEventSheetContext: Identifiable {
-    var routineEvent: RoutineEvent
+    var routineEvent: RoutineEventContext
 
     var id: String {
         routineEvent.transitionId

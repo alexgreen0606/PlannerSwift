@@ -6,7 +6,7 @@
 //
 
 @MainActor
-func canCreateItem<Item: ListItem>(
+func canCreateItem<Item: ListItemDetails>(
     at index: Int,
     in sortedItems: [Item]
 ) -> Bool {

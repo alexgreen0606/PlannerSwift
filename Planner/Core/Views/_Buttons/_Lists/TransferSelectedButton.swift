@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct TransferSelectedButtonView<Item: ListItem>: View {
+struct TransferSelectedButtonView<Item: ListItemDetails>: View {
     @Binding private var showTransferSheet: Bool
     private let systemImage: String
     private let disabled: Bool

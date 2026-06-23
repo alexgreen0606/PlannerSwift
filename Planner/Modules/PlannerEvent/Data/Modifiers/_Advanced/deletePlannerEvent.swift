@@ -11,14 +11,14 @@ import SwiftData
 extension ModelContext {
     @MainActor
     func deletePlannerEvent(
-        _ event: PlannerEvent,
+        _ plannerEvent: PlannerEvent,
         /// Marks routine events as variants so they are not synced.
         in planner: Planner,
         /// Deletes calendar events, otherwise they are preserved.
         ekEventStore: EKEventStore? = nil,
         skipSave: Bool = false
     ) {
-        if let calendarItemExternalIdentifier = event.eKEventContext?
+        if let calendarItemExternalIdentifier = plannerEvent.eKEventContext?
             .calendarItemExternalIdentifier,
             let ekEventStore,
             !ekEventStore.attemptDeleteEvent(
@@ -28,24 +28,21 @@ extension ModelContext {
             return
         }
 
-        if let routineEvent = event.routineEvent,
-            event.routineEventVariant == nil,
+        if let routineEvent = plannerEvent.routineEvent,
+            plannerEvent.routineEventVariant == nil,
             // Note: Variants should not be created when routine is excluded.
             !planner.safeExcludeRoutine
         {
             // Mark this routine event as a variant so it is not synced after deletion.
-            let routineEventVariant = RoutineEventVariant(
-                routineEvent: routineEvent,
-                planner: planner
+            insert(
+                RoutineEventVariant(
+                    routineEvent: routineEvent,
+                    planner: planner
+                )
             )
-
-            routineEvent.variants?.append(routineEventVariant)
-            planner.routineEventVariants?.append(routineEventVariant)
-
-            insert(routineEventVariant)
         }
 
-        delete(event)
+        delete(plannerEvent)
 
         if !skipSave {
             safeSave("deletePlannerEvent")

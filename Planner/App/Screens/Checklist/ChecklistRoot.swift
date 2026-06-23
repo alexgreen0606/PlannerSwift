@@ -36,7 +36,12 @@ struct ChecklistRootView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @StateObject private var listEngine = ListEngine<ChecklistItem>()
+    @StateObject private var listEngine = ListEngine<ChecklistItem>(
+        toggleState: ListItemToggleState(
+            isToggled: { $0.isCompleted },
+            setIsToggled: { $0.isCompleted = $1 }
+        )
+    )
 
     @State private var showEditSheet = false
     @State private var showTransferSheet = false

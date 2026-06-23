@@ -11,12 +11,12 @@ import SwiftData
 extension ModelContext {
     @MainActor
     func updateRoutineEventWeekdays(
-        _ routineEvent: RoutineEvent,
+        _ routineEventContext: RoutineEventContext,
         with destinationWeekdays: Set<Weekday>,
-        sourceSortedRoutineEvents: [RoutineEvent]? = [],
+        sourceSortedRoutineEvents: [RoutineEventContext]? = [],
         ekEventStore: EKEventStore
     ) {
-        let sourceWeekdays = routineEvent.weekdays
+        let sourceWeekdays = routineEventContext.weekdays
 
         // MARK: - Delete Planner, Routine, and Calendar Events From Weekdays That Have Been Removed
 
@@ -24,9 +24,9 @@ extension ModelContext {
 
         let weekdaysToRemove = sourceWeekdays.subtracting(destinationWeekdays)
         for weekday in weekdaysToRemove {
-            removeRoutineEventFromWeekday(
-                routineEvent: routineEvent,
-                weekday: weekday,
+            removeRoutineEventFromRoutine(
+                routineEventContext: routineEventContext,
+                weekdayRawValue: weekday.rawValue,
                 staleCalendarItemExternalIdentifiers:
                     &staleCalendarItemExternalIdentifiers,
                 ekEventStore: ekEventStore
@@ -40,22 +40,21 @@ extension ModelContext {
 
         // MARK: - Create Instances For Weekdays That Have Been Added
 
-        // MARK: Place new events near their siblings.
         let weekdaysToAdd = destinationWeekdays.subtracting(sourceWeekdays)
-        for weekday in weekdaysToAdd {
-            let instance = RoutineEventWeekdayInstance(
-                weekday: weekday,
-                sortDate: generateSortDateNearSiblings(
-                    for: routineEvent,
-                    on: weekday,
-                    from: sourceSortedRoutineEvents ?? []
+
+        let routines = getRoutines(for: weekdaysToAdd)
+        for routine in routines {
+            insert(
+                RoutineEvent(
+                    routine: routine,
+                    routineEventContext: routineEventContext,
+                    sortDate: generateSortDateNearSiblings(
+                        for: routineEventContext,
+                        from: sourceSortedRoutineEvents ?? [],
+                        routine: routine
+                    )
                 )
             )
-
-            instance.routineEvent = routineEvent
-            routineEvent.weekdayInstances?.append(instance)
-            
-            insert(instance)
         }
     }
 

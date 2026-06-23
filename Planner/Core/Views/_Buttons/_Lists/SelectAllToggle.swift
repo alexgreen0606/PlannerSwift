@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct SelectAllToggleView<Item: ListItem>: View {
+struct SelectAllToggleView<Item: ListItemDetails>: View {
     let visibleItems: [Item]
 
     @EnvironmentObject private var listEngine: ListEngine<Item>

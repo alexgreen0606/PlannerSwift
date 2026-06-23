@@ -1,0 +1,32 @@
+//
+//  removeRoutineEventFromRoutine.swift
+//  Planner
+//
+//  Created by Alex Green on 6/16/26.
+//
+
+import EventKit
+import SwiftData
+
+extension ModelContext {
+    @MainActor
+    func removeRoutineEventFromRoutine(
+        routineEventContext: RoutineEventContext,
+        weekdayRawValue: String,
+        staleCalendarItemExternalIdentifiers: inout Set<String>,
+        ekEventStore: EKEventStore
+    ) {
+        for routineEvent in routineEventContext.safeRoutineEvents
+        where routineEvent.routine?.weekdayRawValue == weekdayRawValue {
+
+            routineEvent.plannerEvents = prepareRoutineEventRecordsForDeletion(
+                routineEvent.safePlannerEvents,
+                staleCalendarItemExternalIdentifiers:
+                    &staleCalendarItemExternalIdentifiers,
+                ekEventStore: ekEventStore
+            )
+
+            delete(routineEvent)
+        }
+    }
+}

@@ -1,5 +1,5 @@
 //
-//  removeRoutineEventsFromWeekday.swift
+//  removeRoutineEventsFromRoutine.swift
 //  Planner
 //
 //  Created by Alex Green on 6/15/26.
@@ -10,18 +10,18 @@ import SwiftData
 
 extension ModelContext {
     @MainActor
-    func removeRoutineEventsFromWeekday(
-        routineEvents: [RoutineEvent],
-        weekday: Weekday,
+    func removeRoutineEventsFromRoutine(
+        routineEventContexts: [RoutineEventContext],
+        routine: Routine,
         ekEventStore: EKEventStore
     ) {
         var staleCalendarItemExternalIdentifiers: Set<String> = []
 
-        for routineEvent in routineEvents {
-            if routineEvent.safeWeekdayInstances.count < 2 {
+        for routineEventContext in routineEventContexts {
+            if routineEventContext.safeRoutineEvents.count < 2 {
                 staleCalendarItemExternalIdentifiers.formUnion(
-                    deleteRoutineEvent(
-                        routineEvent,
+                    deleteRoutineEventContext(
+                        routineEventContext,
                         ekEventStore: ekEventStore,
                         skipStaleCalendarRecordDeletion: true,
                         skipSave: true
@@ -30,9 +30,9 @@ extension ModelContext {
                 continue
             }
 
-            removeRoutineEventFromWeekday(
-                routineEvent: routineEvent,
-                weekday: weekday,
+            removeRoutineEventFromRoutine(
+                routineEventContext: routineEventContext,
+                weekdayRawValue: routine.weekdayRawValue,
                 staleCalendarItemExternalIdentifiers:
                     &staleCalendarItemExternalIdentifiers,
                 ekEventStore: ekEventStore

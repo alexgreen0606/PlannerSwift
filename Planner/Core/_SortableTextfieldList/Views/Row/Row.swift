@@ -9,7 +9,7 @@ import SwiftData
 import SwiftUI
 
 struct RowView<
-    Item: ListItem,
+    Item: ListItemDetails,
     LeftAdornment: View,
     RightAdornment: View,
     BottomAdornment: View
@@ -62,9 +62,6 @@ struct RowView<
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var listEngine: ListEngine<Item>
 
-    /// Will be updated dynamically as the number of lines of text changes.
-    // @State private var height: CGFloat = 0
-
     @State private var titleChangeHandlerTask: Task<Void, Never>? = nil
 
     private var isFocused: Bool {
@@ -76,7 +73,7 @@ struct RowView<
             return listEngine.selectedItemIds.contains(item.stableId)
         }
 
-        return item.isCompleted
+        return listEngine.isItemToggled(item)
     }
 
     private var opacity: Double {

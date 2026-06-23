@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ListActionToolbarView<Item: ListItem, SelectedItemActions: View>: View {
+struct ListActionToolbarView<Item: ListItemDetails, SelectedItemActions: View>: View {
     private let keyboardAccessory: ListKeyboardAccessoryView<Item>?
     private let selectedItemActions: SelectedItemActions
     private let createItem: () -> Void

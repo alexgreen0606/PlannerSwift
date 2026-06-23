@@ -7,9 +7,7 @@
 
 import Foundation
 
-protocol EventListItem: ListItem {
-    var time: Date? { get set }
-
+protocol EventListItem: EventDetails {
     /// Controlled by drag-and-drop.
     /// No relation to the event's time.
     var sortDate: Date { get set }

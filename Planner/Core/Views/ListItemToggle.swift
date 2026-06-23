@@ -8,7 +8,7 @@
 import SwiftData
 import SwiftUI
 
-struct ListItemToggleView<Item: ListItem>: View {
+struct ListItemToggleView<Item: ListItemDetails>: View {
     private let item: Item
     private let opacity: Double
     private let customToggleConfig: ToggleConfig?
@@ -40,7 +40,7 @@ struct ListItemToggleView<Item: ListItem>: View {
             return listEngine.selectedItemIds.contains(item.stableId)
         }
 
-        return item.isCompleted
+        return listEngine.isItemToggled(item)
     }
 
     private var toggleConfig: ToggleConfig {

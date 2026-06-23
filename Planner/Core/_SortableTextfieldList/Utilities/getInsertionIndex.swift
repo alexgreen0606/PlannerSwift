@@ -6,7 +6,7 @@
 //
 
 @MainActor
-func getInsertionIndex<Item: ListItem>(
+func getInsertionIndex<Item: ListItemDetails>(
     pendingIndex: Int,
     sortedPendingItems: [Item],
     sortedItems: [Item]

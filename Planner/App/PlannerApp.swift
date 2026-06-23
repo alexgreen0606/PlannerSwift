@@ -30,11 +30,21 @@ struct PlannerApp: App {
     private let modelContainer: ModelContainer = {
         let schema = Schema([
             PlannerSettings.self,
+            
+            Location.self,
+            
+            Trip.self,
+            
             Planner.self,
             PlannerEvent.self,
+            EKEventContext.self,
+            RoutineEventRecordContext.self,
+            
             ChecklistItem.self,
-            Trip.self,
+            
+            Routine.self,
             RoutineEvent.self,
+            RoutineEventContext.self,
             RoutineEventVariant.self,
         ])
 

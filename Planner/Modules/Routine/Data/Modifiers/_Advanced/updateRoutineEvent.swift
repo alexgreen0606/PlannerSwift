@@ -11,9 +11,9 @@ import SwiftData
 extension ModelContext {
     @MainActor
     func updateRoutineEvent(
-        _ sourceRoutineEvent: RoutineEvent?,
+        _ sourceRoutineEvent: RoutineEventContext?,
         with draftRoutineEvent: DraftRoutineEvent,
-        sourceSortedRoutineEvents: [RoutineEvent]?,
+        sourceSortedRoutineEvents: [RoutineEventContext]?,
         plannerSyncService: PlannerSyncService,
         ekEventStore: EKEventStore
     ) {
@@ -25,7 +25,7 @@ extension ModelContext {
 
         let routineEvent =
             sourceRoutineEvent
-            ?? RoutineEvent()
+            ?? RoutineEventContext()
 
         routineEvent.syncWithDraftRoutineEvent(draftRoutineEvent)
 

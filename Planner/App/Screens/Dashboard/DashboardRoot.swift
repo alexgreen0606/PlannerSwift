@@ -140,12 +140,13 @@ struct DashboardRootView: View {
                 item: $routineCoverContext,
                 onDismiss: plannerSyncService.beginSync
             ) { weekday in
-                RoutineEventLoaderView(weekday: weekday) {
-                    events in
+                RoutineContextLoaderView(weekday: weekday) { context in
                     RoutineRootView(
                         routineCoverContext: $routineCoverContext,
-                        weekday: weekday,
-                        sortedRoutineEvents: events
+                        routine: context.routine,
+                        sortedRoutineEventContexts: context
+                            .sortedRoutineEventContexts,
+                        weekday: weekday
                     )
                     .id(weekday)
                 }
@@ -216,7 +217,7 @@ struct DashboardRootView: View {
 
     private func handlePlannerDateSelect(selectedDates: Set<DateComponents>) {
         guard let clickedDate = selectedDates.first,
-              let datestamp = clickedDate.datestamp
+            let datestamp = clickedDate.datestamp
         else { return }
 
         showCalendarPicker = false

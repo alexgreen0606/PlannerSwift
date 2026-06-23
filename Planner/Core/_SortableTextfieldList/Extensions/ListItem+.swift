@@ -7,7 +7,7 @@
 
 import Foundation
 
-extension ListItem {
+extension ListItemDetails {
     var transitionId: String {
         stableId.uuidString
     }

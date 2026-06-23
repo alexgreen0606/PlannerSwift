@@ -10,7 +10,7 @@ import SwiftUI
 // MARK: - Single Delete
 
 func deleteRoutineEventConfig(
-    routineEvent: RoutineEvent,
+    routineEvent: RoutineEventContext,
     inForm: Bool = false,
     delete: @escaping () -> Void
 ) -> ConfirmationConfig {
@@ -35,12 +35,12 @@ func deleteRoutineEventConfig(
 // MARK: - Single Weekday Remove
 
 func removeRoutineEventFromWeekdayConfig(
-    routineEvent: RoutineEvent,
+    routineEvent: RoutineEventContext,
     weekday: Weekday,
     remove: @escaping () -> Void,
     delete: @escaping () -> Void
 ) -> ConfirmationConfig {
-    if routineEvent.safeWeekdayInstances.count < 2 {
+    if routineEvent.safeRoutineEvents.count < 2 {
         return deleteRoutineEventConfig(routineEvent: routineEvent, delete: delete)
     }
 
@@ -66,7 +66,7 @@ func removeRoutineEventFromWeekdayConfig(
 // MARK: - Bulk Weekday Remove
 
 func bulkRemoveRoutineEventFromWeekdayConfig(
-    routineEvents: [RoutineEvent],
+    routineEvents: [RoutineEventContext],
     weekday: Weekday,
     remove: @escaping () -> Void,
     delete: @escaping () -> Void

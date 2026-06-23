@@ -34,7 +34,7 @@ extension ModelContext {
 
         insert(newEvent)
 
-        safeSave("ModelContext+PlannerEvent.createPlannerEvent")
+        safeSave("ModelContext+PlannerEvent createPlannerEvent")
 
         return newEvent.stableId
     }
@@ -80,7 +80,7 @@ extension ModelContext {
             )
         } catch {
             assertionFailure(
-                "ERROR ModelContext+PlannerEvent.getSortedListEvents: \(error)"
+                "ERROR ModelContext+PlannerEvent getSortedListEvents: \(error)"
             )
         }
 
@@ -98,7 +98,7 @@ extension ModelContext {
             )
         } catch {
             assertionFailure(
-                "ERROR ModelContext+PlannerEvent.getPlannerEvents: \(error)"
+                "ERROR ModelContext+PlannerEvent getPlannerEvents: \(error)"
             )
         }
 
@@ -171,8 +171,9 @@ extension ModelContext {
         }()
 
         guard
-            let routineEvent: RoutineEvent = plannerEvent.routineEvent
-                ?? existingVariant?.routineEvent
+            let routineEvent = plannerEvent.routineEvent
+                ?? existingVariant?.routineEvent,
+            let routineEventContext = routineEvent.routineEventContext
         else {
             return
         }
@@ -180,7 +181,7 @@ extension ModelContext {
         // MARK: Check if the event differs from the routine event.
 
         let isRoutineEventVariant = !plannerEvent.matches(
-            routineEvent,
+            routineEventContext,
             in: timeZone,
             originPlanner: existingVariant?.planner ?? sourcePlanner,
             settings: settings
@@ -189,20 +190,13 @@ extension ModelContext {
         if isRoutineEventVariant {
             if existingVariant == nil {
                 // MARK: Create a new variance record so this even is not synced with the routine event.
-
-                let routineEventVariant = RoutineEventVariant(
-                    routineEvent: routineEvent,
-                    planner: sourcePlanner,
-                    plannerEvent: plannerEvent
+                insert(
+                    RoutineEventVariant(
+                        routineEvent: routineEvent,
+                        planner: sourcePlanner,
+                        plannerEvent: plannerEvent
+                    )
                 )
-
-                routineEvent.variants?.append(routineEventVariant)
-                sourcePlanner.routineEventVariants?.append(
-                    routineEventVariant
-                )
-                plannerEvent.routineEventVariant = routineEventVariant
-
-                insert(routineEventVariant)
             }
         } else if let existingVariant {
             // MARK: Event is no longer a variant. Delete the variance record.
@@ -291,7 +285,7 @@ extension ModelContext {
             startOfDay: startOfDay
         )
 
-        safeSave("ModelContext+PlannerEvent.movePlannerEvent")
+        safeSave("ModelContext+PlannerEvent movePlannerEvent")
     }
 
     // MARK: - DELETE
@@ -311,7 +305,7 @@ extension ModelContext {
             )
         }
 
-        safeSave("ModelContext+PlannerEvent.deletePlannerEvents")
+        safeSave("ModelContext+PlannerEvent deletePlannerEvents")
     }
 
     func deletePlannerEventIfExists(

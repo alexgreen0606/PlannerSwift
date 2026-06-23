@@ -18,7 +18,7 @@ struct DraftRoutineEvent {
         self.date = Self.defaultDate()
     }
 
-    init(routineEvent: RoutineEvent) {
+    init(routineEvent: RoutineEventContext) {
         self.title = routineEvent.title
         self.date = routineEvent.time ?? Self.defaultDate()
         self.hasTime = routineEvent.time != nil
