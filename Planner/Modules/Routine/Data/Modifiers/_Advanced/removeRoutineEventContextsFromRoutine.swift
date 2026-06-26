@@ -1,5 +1,5 @@
 //
-//  removeRoutineEventsFromRoutine.swift
+//  removeRoutineEventContextsFromRoutine.swift
 //  Planner
 //
 //  Created by Alex Green on 6/15/26.
@@ -10,7 +10,7 @@ import SwiftData
 
 extension ModelContext {
     @MainActor
-    func removeRoutineEventsFromRoutine(
+    func removeRoutineEventContextsFromRoutine(
         routineEventContexts: [RoutineEventContext],
         routine: Routine,
         ekEventStore: EKEventStore
@@ -44,6 +44,6 @@ extension ModelContext {
                 staleCalendarItemExternalIdentifiers
         )
 
-        safeSave("removeRoutineEventsFromWeekday")
+        safeSave("removeRoutineEventContextsFromRoutine")
     }
 }

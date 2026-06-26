@@ -18,18 +18,14 @@ class Routine {
         inverse: \RoutineEvent.routine
     )
     var routineEvents: [RoutineEvent]?
-    
+
     @Relationship(
         deleteRule: .nullify,
         inverse: \Planner.routine
     )
     var planners: [Planner]?
-    
-    // TODO:
-    // 4. Create a function for creating all Routines as needed when app loads.
-    // 5. Link a routine to each planner as it is created.
 
-    init(weekday: Weekday) {
-        weekdayRawValue = weekday.rawValue
+    init(weekdayRawValue: String) {
+        self.weekdayRawValue = weekdayRawValue
     }
 }

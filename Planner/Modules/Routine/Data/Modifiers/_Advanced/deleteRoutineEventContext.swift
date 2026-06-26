@@ -17,14 +17,22 @@ extension ModelContext {
         skipSave: Bool = false,
     ) -> Set<String> {
         var staleCalendarItemExternalIdentifiers: Set<String> = []
-        
+
         for routineEvent in routineEventContext.safeRoutineEvents {
-            routineEvent.plannerEvents = prepareRoutineEventRecordsForDeletion(
-                routineEvent.safePlannerEvents,
-                staleCalendarItemExternalIdentifiers:
-                    &staleCalendarItemExternalIdentifiers,
-                ekEventStore: ekEventStore
-            )
+            for routineEventRecordContext in routineEvent
+                .safeRoutineEventRecordContexts
+            {
+                guard let plannerEvent = routineEventRecordContext.plannerEvent
+                else { continue }
+
+                routineEventRecordContext.plannerEvent =
+                    prepareRoutineEventRecordForDeletion(
+                        plannerEvent,
+                        staleCalendarItemExternalIdentifiers:
+                            &staleCalendarItemExternalIdentifiers,
+                        ekEventStore: ekEventStore
+                    )
+            }
         }
 
         delete(routineEventContext)
@@ -38,7 +46,7 @@ extension ModelContext {
         }
 
         if !skipSave {
-            safeSave("deleteRoutineEvent")
+            safeSave("deleteRoutineEventContext")
         }
 
         return staleCalendarItemExternalIdentifiers

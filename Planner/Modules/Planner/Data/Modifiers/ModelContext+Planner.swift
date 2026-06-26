@@ -30,7 +30,12 @@ extension ModelContext {
     private func createPlanner(for datestamp: String, skipSave: Bool = false)
         -> Planner
     {
-        let planner = Planner(datestamp: datestamp)
+        guard let routine = getRoutine(for: datestamp.weekday) else {
+            // TODO: is this bad?
+            fatalError()
+        }
+
+        let planner = Planner(datestamp: datestamp, routine: routine)
 
         insert(planner)
 

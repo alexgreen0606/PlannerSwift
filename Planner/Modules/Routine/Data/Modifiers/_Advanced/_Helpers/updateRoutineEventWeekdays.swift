@@ -10,7 +10,7 @@ import SwiftData
 
 extension ModelContext {
     @MainActor
-    func updateRoutineEventWeekdays(
+    func updateRoutineEventContextWeekdays(
         _ routineEventContext: RoutineEventContext,
         with destinationWeekdays: Set<Weekday>,
         sourceSortedRoutineEvents: [RoutineEventContext]? = [],

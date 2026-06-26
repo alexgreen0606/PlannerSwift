@@ -23,10 +23,10 @@
 // Animation goes where needed (first modifier on that view)
 
 // Model Variable Order:
-// 1. Parent owner relationships
 // 2. Identifiers
 // 2. User-visible vars
 // 3. Hidden logic vars
+// 1. Parent owner relationships
 // 4. Relationship children
 
 // TO CHECK:
@@ -49,3 +49,8 @@
 
 // Context = Actual Data (a class or struct)
 // Details = Protocol
+
+// Model Naming Relationships:
+// 1. Parent = this model will be deleted when the parent is deleted
+// 2. Sibling = 2-way deletion
+// 3. Child: this model will delete its child when deleted

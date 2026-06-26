@@ -13,18 +13,6 @@ import SwiftDate
 @Model
 class PlannerEvent: EventListItem {
 
-    @Relationship(
-        deleteRule: .cascade,
-        inverse: \EKEventContext.plannerEvent
-    )
-    var eKEventContext: EKEventContext?
-
-    @Relationship(
-        deleteRule: .cascade,
-        inverse: \RoutineEventRecordContext.plannerEvent
-    )
-    var routineEventRecordContext: RoutineEventRecordContext?
-
     var stableId: UUID = UUID()
 
     var title: String = ""
@@ -41,8 +29,22 @@ class PlannerEvent: EventListItem {
     /// Controlled by drag-and-drop.
     /// No relation to the event's time.
     var sortDate: Date = Date.now
-
+    
     var height: CGFloat = 0
+    
+    // MARK: Child
+    @Relationship(
+        deleteRule: .cascade,
+        inverse: \EKEventContext.plannerEvent
+    )
+    var eKEventContext: EKEventContext?
+
+    // MARK: Sibling
+    @Relationship(
+        deleteRule: .cascade,
+        inverse: \RoutineEventRecordContext.plannerEvent
+    )
+    var routineEventRecordContext: RoutineEventRecordContext?
 
     // MARK: Calendar Event
     init(ekEvent: EKEvent, sortDate: Date) {
@@ -51,7 +53,7 @@ class PlannerEvent: EventListItem {
         location = ekEvent.location()
         self.sortDate = sortDate
 
-        // Note: This initializer automatically attaches the EKEventContext to the PlannerEvent
+        // Note: This initializer automatically attaches the EKEventContext to the PlannerEvent.
         _ = EKEventContext(ekEvent: ekEvent, plannerEvent: self)
     }
 
@@ -75,7 +77,7 @@ class PlannerEvent: EventListItem {
 
         self.sortDate = sortDate
 
-        // Note: This initializer automatically attaches the RoutineEventRecordContext to the PlannerEvent
+        // Note: This initializer automatically attaches the RoutineEventRecordContext to the PlannerEvent.
         _ = RoutineEventRecordContext(
             routineEvent: routineEvent,
             plannerEvent: self

@@ -18,13 +18,20 @@ extension ModelContext {
     ) {
         for routineEvent in routineEventContext.safeRoutineEvents
         where routineEvent.routine?.weekdayRawValue == weekdayRawValue {
+            for routineEventRecordContext in routineEvent
+                .safeRoutineEventRecordContexts
+            {
+                guard let plannerEvent = routineEventRecordContext.plannerEvent
+                else { continue }
 
-            routineEvent.plannerEvents = prepareRoutineEventRecordsForDeletion(
-                routineEvent.safePlannerEvents,
-                staleCalendarItemExternalIdentifiers:
-                    &staleCalendarItemExternalIdentifiers,
-                ekEventStore: ekEventStore
-            )
+                routineEventRecordContext.plannerEvent =
+                    prepareRoutineEventRecordForDeletion(
+                        plannerEvent,
+                        staleCalendarItemExternalIdentifiers:
+                            &staleCalendarItemExternalIdentifiers,
+                        ekEventStore: ekEventStore
+                    )
+            }
 
             delete(routineEvent)
         }

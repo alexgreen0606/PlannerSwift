@@ -9,11 +9,9 @@ import SwiftUI
 
 extension Routine {
     static func routines(
-        for weekday: Weekday
+        for weekdayRawValue: String
     ) -> Predicate<Routine> {
-        let weekdayRawValue = weekday.rawValue
-
-        return #Predicate<Routine> {
+        #Predicate<Routine> {
             $0.weekdayRawValue == weekdayRawValue
         }
     }

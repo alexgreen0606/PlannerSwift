@@ -214,10 +214,10 @@ struct RoutineEventFormView: View {
     // MARK: - Functions
 
     private func saveRoutineEvent() {
-        modelContext.updateRoutineEvent(
+        modelContext.updateRoutineEventContext(
             sourceRoutineEvent,
             with: draftRoutineEvent,
-            sourceSortedRoutineEvents: sourceSortedRoutineEvents,
+            sourceSortedRoutineEventContexts: sourceSortedRoutineEvents,
             plannerSyncService: plannerSyncService,
             ekEventStore: calendarService.ekEventStore
         )

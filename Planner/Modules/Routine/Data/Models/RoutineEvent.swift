@@ -19,12 +19,11 @@ class RoutineEvent {
 
     var sortDateVersion: Double = 1.0
 
-    // TODO: nested relationships not allowed.
     @Relationship(
         deleteRule: .cascade,
-        inverse: \PlannerEvent.routineEventRecordContext?.routineEvent
+        inverse: \RoutineEventRecordContext.routineEvent
     )
-    var plannerEvents: [PlannerEvent]?
+    var routineEventRecordContexts: [RoutineEventRecordContext]?
 
     @Relationship(
         deleteRule: .cascade,

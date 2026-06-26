@@ -6,7 +6,11 @@
 //
 
 extension RoutineEvent {
+    var safeRoutineEventRecordContexts: [RoutineEventRecordContext] {
+        routineEventRecordContexts ?? []
+    }
+
     var safePlannerEvents: [PlannerEvent] {
-        plannerEvents ?? []
+        safeRoutineEventRecordContexts.compactMap(\.plannerEvent)
     }
 }

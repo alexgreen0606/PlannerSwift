@@ -21,40 +21,40 @@ struct RootTabView: View {
         // Navigation titles -> rounded fonts.
         if var descriptor =
             UIFontDescriptor
-                .preferredFontDescriptor(withTextStyle: .largeTitle)
-                .withDesign(.rounded)
+            .preferredFontDescriptor(withTextStyle: .largeTitle)
+            .withDesign(.rounded)
         {
             descriptor = descriptor.addingAttributes([
                 .traits: [
-                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy,
-                ],
+                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy
+                ]
             ])
 
             UINavigationBar.appearance().largeTitleTextAttributes = [
                 .font: UIFont(
                     descriptor: descriptor,
                     size: descriptor.pointSize
-                ),
+                )
             ]
         }
 
         // Navigation subtitles -> rounded fonts.
         if var descriptor =
             UIFontDescriptor
-                .preferredFontDescriptor(withTextStyle: .headline)
-                .withDesign(.rounded)
+            .preferredFontDescriptor(withTextStyle: .headline)
+            .withDesign(.rounded)
         {
             descriptor = descriptor.addingAttributes([
                 .traits: [
-                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy,
-                ],
+                    UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy
+                ]
             ])
 
             UINavigationBar.appearance().titleTextAttributes = [
                 .font: UIFont(
                     descriptor: descriptor,
                     size: descriptor.pointSize
-                ),
+                )
             ]
         }
     }
@@ -68,7 +68,7 @@ struct RootTabView: View {
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
-        .oneMonth
+            .oneMonth
 
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var modelContext
@@ -81,6 +81,7 @@ struct RootTabView: View {
     @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
     @Query private var plannerSettingsList: [PlannerSettings]
+    @Query private var routines: [Routine]
 
     @StateObject private var plannerSearchStore = PlannerSearchStore()
 
@@ -94,7 +95,7 @@ struct RootTabView: View {
 
     var body: some View {
         ZStack {
-            if let settings {
+            if let settings, routines.count == 7 {
                 // MARK: Standard App Navigation
 
                 TabView {
@@ -118,7 +119,8 @@ struct RootTabView: View {
                     }
 
                     Tab(role: .search) {
-                        PlannerLoaderView(datestamp: todayService.todaystamp) { planner in
+                        PlannerLoaderView(datestamp: todayService.todaystamp) {
+                            planner in
                             SearchRootView(
                                 todayPlanner: planner,
                                 settings: settings,
@@ -140,9 +142,11 @@ struct RootTabView: View {
                 ) { context in
                     PlannerRootView(
                         planner: context.planner,
-                        sortedPlannerEvents: context.eventContext.sortedPlannerEvents,
+                        sortedPlannerEvents: context.eventContext
+                            .sortedPlannerEvents,
                         sortedEventChips: context.eventContext.sortedEventChips,
-                        sortedBirthdayChips: context.eventContext.sortedBirthdayChips,
+                        sortedBirthdayChips: context.eventContext
+                            .sortedBirthdayChips,
                         settings: settings
                     )
                 }
@@ -164,9 +168,12 @@ struct RootTabView: View {
                 ) { plannerContext in
                     PlannerRootView(
                         planner: plannerContext.planner,
-                        sortedPlannerEvents: plannerContext.eventContext.sortedPlannerEvents,
-                        sortedEventChips: plannerContext.eventContext.sortedEventChips,
-                        sortedBirthdayChips: plannerContext.eventContext.sortedBirthdayChips,
+                        sortedPlannerEvents: plannerContext.eventContext
+                            .sortedPlannerEvents,
+                        sortedEventChips: plannerContext.eventContext
+                            .sortedEventChips,
+                        sortedBirthdayChips: plannerContext.eventContext
+                            .sortedBirthdayChips,
                         settings: settings
                     )
                     .id(context.datestamp)
@@ -245,6 +252,7 @@ struct RootTabView: View {
             settings: plannerSettingsList
         )
         modelContext.ensureRootFolder()
+        modelContext.ensureRoutines()
 
         // Request access for external data.
         calendarStore.refreshCalendarsAndAccess()

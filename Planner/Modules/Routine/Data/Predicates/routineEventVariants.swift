@@ -12,7 +12,7 @@ extension RoutineEventVariant {
         for calendarItemExternalIdentifier: String
     ) -> Predicate<RoutineEventVariant> {
         return #Predicate<RoutineEventVariant> {
-            if let ekEventContext = $0.plannerEvent?.eKEventContext {
+            if let ekEventContext = $0.routineEventRecordContext?.plannerEvent?.eKEventContext {
                 return ekEventContext.calendarItemExternalIdentifier
                     == calendarItemExternalIdentifier
             } else {

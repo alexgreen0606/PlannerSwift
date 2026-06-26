@@ -61,12 +61,11 @@ extension ModelContext {
             guard
                 let routineEventRecordContext = plannerEvent
                     .routineEventRecordContext,
-                let routineEventContext = plannerEvent.routineEventContext
+                let routineEventContext = plannerEvent.routineEventContext,
+                let routineEvent = routineEventRecordContext.routineEvent
             else {
                 continue
             }
-
-            let routineEvent = routineEventRecordContext.routineEvent
 
             // Invalidate planner event position if it has not updated its position since the routine event position was changed.
             if routineEventRecordContext.syncedSortDateVersion
@@ -96,8 +95,8 @@ extension ModelContext {
             // Mark the routine event as existing if this event originated in this planner.
 
             let originatesFromPlanner =
-                routineEventRecordContext.routineEventVariant?.planner == nil
-                || routineEventRecordContext.routineEventVariant?.planner
+                routineEventRecordContext.variant?.planner == nil
+                || routineEventRecordContext.variant?.planner
                     === planner
 
             if originatesFromPlanner {
@@ -129,8 +128,8 @@ extension ModelContext {
                 guard
                     let routineEventRecordContext = plannerEvent
                         .routineEventRecordContext,
-                    let routineEventContext = routineEventRecordContext
-                        .routineEvent.routineEventContext,
+                    let routineEvent = routineEventRecordContext.routineEvent,
+                    let routineEventContext = routineEvent.routineEventContext,
                     let safeSortedListEvents = sortedListEvents
                 else {
                     continue
@@ -155,7 +154,7 @@ extension ModelContext {
 
                 // Sync the planner event's sort date version.
                 plannerEvent.routineEventRecordContext?.syncedSortDateVersion =
-                    routineEventRecordContext.routineEvent.sortDateVersion
+                    routineEvent.sortDateVersion
 
                 // Track the event at its new position in the planner.
                 sortedListEvents?.insert(plannerEvent, at: targetIndex)

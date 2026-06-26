@@ -20,7 +20,7 @@ struct RoutineLoaderView<Content: View>: View {
         self.content = content
 
         _routines = Query(
-            filter: Routine.routines(for: weekday)
+            filter: Routine.routines(for: weekday.rawValue)
         )
     }
 

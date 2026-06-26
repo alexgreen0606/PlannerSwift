@@ -27,11 +27,11 @@ extension PlannerEvent: PlannerEventLocationHelpers {
     }
 
     var routineEventContext: RoutineEventContext? {
-        routineEventRecordContext?.routineEvent.routineEventContext
+        routineEventRecordContext?.routineEvent?.routineEventContext
     }
 
     var routineEventVariant: RoutineEventVariant? {
-        routineEventRecordContext?.routineEventVariant
+        routineEventRecordContext?.variant
     }
 
     func isEventChip(on startOfDay: DateInRegion) -> Bool {

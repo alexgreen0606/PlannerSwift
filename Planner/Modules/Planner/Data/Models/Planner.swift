@@ -29,8 +29,11 @@ class Planner {
     @Relationship(deleteRule: .cascade, inverse: \RoutineEventVariant.planner)
     var routineEventVariants: [RoutineEventVariant]?
 
-    init(datestamp: String, location: Location? = nil) {
+    init(datestamp: String, routine: Routine, location: Location? = nil) {
         self.datestamp = datestamp
+        self.routine = routine
         self.location = location
+        
+        routine.planners.safeAppend(self)
     }
 }

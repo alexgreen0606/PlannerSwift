@@ -59,5 +59,6 @@ extension RoutineEventContext {
     ) {
         title = draft.title.trimmed
         time = draft.hasTime ? draft.date : nil
+        version += 0.1
     }
 }

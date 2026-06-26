@@ -14,9 +14,13 @@ class RoutineEventVariant {
     
     var planner: Planner?
     
+    // MARK: Sibling (no deletion)
     /// When this is nil, the event is hidden in the planner (due to manual deletion from user).
-    @Relationship(deleteRule: .nullify, inverse: \PlannerEvent.routineEventRecordContext?.routineEventVariant)
-    var plannerEvent: PlannerEvent?
+    @Relationship(
+        deleteRule: .nullify,
+        inverse: \RoutineEventRecordContext.variant
+    )
+    var routineEventRecordContext: RoutineEventRecordContext?
 
     init(
         routineEvent: RoutineEvent,
@@ -25,10 +29,10 @@ class RoutineEventVariant {
     ) {
         self.routineEvent = routineEvent
         self.planner = planner
-        self.plannerEvent = plannerEvent
+        self.routineEventRecordContext = plannerEvent?.routineEventRecordContext
                 
         routineEvent.variants.safeAppend(self)
         planner.routineEventVariants.safeAppend(self)
-        plannerEvent?.routineEventRecordContext?.routineEventVariant = self
+        plannerEvent?.routineEventRecordContext?.variant = self
     }
 }

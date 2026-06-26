@@ -13,6 +13,6 @@ extension RoutineEventRecordContext {
     }
     
     var routineEventContext: RoutineEventContext? {
-        routineEvent.routineEventContext
+        routineEvent?.routineEventContext
     }
 }

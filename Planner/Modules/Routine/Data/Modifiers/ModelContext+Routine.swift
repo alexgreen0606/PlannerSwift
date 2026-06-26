@@ -14,6 +14,41 @@ extension ModelContext {
         DateInRegion("2000-06-06", region: .UTC)?
         .dateAtStartOf(.day)
 
+    // MARK: - ENSURE
+
+    @MainActor
+    func ensureRoutines() {
+        do {
+            let existingRoutines = try fetch(
+                FetchDescriptor<Routine>()
+            )
+
+            let existingWeekdays = Set(existingRoutines.map(\.weekdayRawValue))
+
+            let allWeekdayRawValues = Set(Weekday.allCases.map(\.rawValue))
+
+            let missingWeekdays = allWeekdayRawValues.subtracting(
+                existingWeekdays
+            )
+
+            guard !missingWeekdays.isEmpty else {
+                return
+            }
+
+            for missingWeekday in missingWeekdays {
+                insert(
+                    Routine(weekdayRawValue: missingWeekday)
+                )
+            }
+
+            safeSave("ModelContext+Routine ensureRoutines")
+        } catch {
+            assertionFailure(
+                "ERROR ModelContext+Routine ensureRoutines: \(error)"
+            )
+        }
+    }
+
     // MARK: - CREATE
 
     @MainActor
@@ -103,6 +138,29 @@ extension ModelContext {
     }
     
     @MainActor
+    func getRoutine(
+        for weekdayRawValue: String
+    ) -> Routine? {
+        do {
+            let matchingRoutines = try fetch(
+                FetchDescriptor<Routine>(
+                    predicate: Routine.routines(
+                        for: weekdayRawValue
+                    )
+                )
+            )
+            
+            return matchingRoutines.first
+        } catch {
+            assertionFailure(
+                "ERROR ModelContext+Routine getRoutine: \(error)"
+            )
+        }
+
+        return nil
+    }
+
+    @MainActor
     func getRoutines(
         for weekdays: Set<Weekday>
     ) -> [Routine] {
@@ -161,7 +219,7 @@ extension ModelContext {
         guard !destinationWeekdays.isEmpty else { return }
 
         for routineEvent in routineEvents {
-            updateRoutineEventWeekdays(
+            updateRoutineEventContextWeekdays(
                 routineEvent,
                 with: destinationWeekdays,
                 sourceSortedRoutineEvents: sourceSortedRoutineEvents,

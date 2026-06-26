@@ -56,7 +56,7 @@ struct SelectedRoutineEventActionsView: View {
         routineEngine.clearSelections()
 
         DispatchQueue.main.async {
-            modelContext.removeRoutineEventsFromRoutine(
+            modelContext.removeRoutineEventContextsFromRoutine(
                 routineEventContexts: selections,
                 routine: routine,
                 ekEventStore: calendarStore.ekEventStore
