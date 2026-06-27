@@ -54,14 +54,14 @@ extension ModelContext {
     @MainActor
     func createRoutineEventContext(
         at index: Int,
-        in sortedRoutineEvents: [RoutineEventContext],
+        in sortedRoutineEventContexts: [RoutineEventContext],
         routine: Routine
     ) -> /// The ID of the new event.
         UUID?
     {
         let sortDate = generateRoutineEventSortDate(
             at: index,
-            in: sortedRoutineEvents,
+            in: sortedRoutineEventContexts,
             for: routine
         )
 
@@ -104,7 +104,7 @@ extension ModelContext {
         reversed: Bool = false
     ) -> [RoutineEvent] {
         do {
-            let allRoutineEvents = try fetch(
+            return try fetch(
                 FetchDescriptor<RoutineEvent>(
                     predicate:
                         RoutineEvent.routineEvents(
@@ -119,9 +119,6 @@ extension ModelContext {
                     ]
                 )
             )
-
-            return allRoutineEvents
-
         } catch {
             assertionFailure(
                 "ERROR ModelContext+Routine getSortedRoutineEvents: \(error)"
@@ -136,15 +133,13 @@ extension ModelContext {
         for weekdayRawValue: String
     ) -> Routine? {
         do {
-            let matchingRoutines = try fetch(
+            return try fetch(
                 FetchDescriptor<Routine>(
                     predicate: Routine.routines(
                         for: weekdayRawValue
                     )
                 )
-            )
-
-            return matchingRoutines.first
+            ).first
         } catch {
             assertionFailure(
                 "ERROR ModelContext+Routine getRoutine: \(error)"
@@ -181,10 +176,10 @@ extension ModelContext {
     func moveRoutineEvent(
         from: Int,
         to: Int,
-        sortedRoutineEvents: [RoutineEventContext],
+        sortedRoutineEventContexts: [RoutineEventContext],
         routine: Routine
     ) {
-        let movedEvent = sortedRoutineEvents[from]
+        let movedEvent = sortedRoutineEventContexts[from]
 
         guard let movedInstance = movedEvent.routineEvent(for: routine) else {
             return
@@ -193,7 +188,7 @@ extension ModelContext {
         movedInstance.sortDate =
             generateRoutineEventSortDate(
                 at: to,
-                in: sortedRoutineEvents,
+                in: sortedRoutineEventContexts,
                 for: routine
             )
 
@@ -205,18 +200,18 @@ extension ModelContext {
 
     @MainActor
     func bulkUpdateRoutineEventWeekdays(
-        _ routineEvents: [RoutineEventContext],
+        _ routineEventContexts: [RoutineEventContext],
         to destinationWeekdays: Set<Weekday>,
-        sourceSortedRoutineEvents: [RoutineEventContext],
+        sourceSortedRoutineEventContexts: [RoutineEventContext],
         ekEventStore: EKEventStore
     ) {
         guard !destinationWeekdays.isEmpty else { return }
 
-        for routineEvent in routineEvents {
+        for routineEventContext in routineEventContexts {
             updateRoutineEventContextWeekdays(
-                routineEvent,
+                routineEventContext,
                 with: destinationWeekdays,
-                sourceSortedRoutineEvents: sourceSortedRoutineEvents,
+                sourceSortedRoutineEventContexts: sourceSortedRoutineEventContexts,
                 ekEventStore: ekEventStore
             )
         }

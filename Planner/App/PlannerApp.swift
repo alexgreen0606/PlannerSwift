@@ -44,8 +44,7 @@ struct PlannerApp: App {
             
             Routine.self,
             RoutineEvent.self,
-            RoutineEventContext.self,
-            RoutineEventVariant.self,
+            RoutineEventContext.self
         ])
 
         let configuration = ModelConfiguration(

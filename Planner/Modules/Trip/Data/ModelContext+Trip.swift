@@ -54,29 +54,15 @@ extension ModelContext {
 
             if let sourcePlanner = sourcePlanners[datestamp] {
                 sourcePlanners.removeValue(forKey: datestamp)
-
-                // Clear any of the planner's routine variants if they are now excluded.
-                if sourcePlanner.safeExcludeRoutine {
-                    for variant in sourcePlanner.safeRoutineEventVariants {
-                        delete(variant)
-                    }
-                    sourcePlanner.routineEventVariants = []
-                }
-
                 continue
             }
 
             let newPlanner = getPlanner(for: datestamp)
             trip.planners?.append(newPlanner)
             newPlanner.trip = trip
+            
+            // TODO: make sure this planner is invalidated so it refreshes.
 
-            // Clear any of the planner's routine variants if they are now excluded.
-            if newPlanner.safeExcludeRoutine {
-                for variant in newPlanner.safeRoutineEventVariants {
-                    delete(variant)
-                }
-                newPlanner.routineEventVariants = []
-            }
         }
 
         // Remove any stale planners from this trip.

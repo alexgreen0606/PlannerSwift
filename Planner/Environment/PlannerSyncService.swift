@@ -65,7 +65,6 @@ class PlannerSyncService: ObservableObject {
         freshCalendarPlannerKeys.insert(planner.plannerLocationId)
 
         modelContext.syncCalendar(
-            for: planner,
             startOfDay: startOfDay,
             ekEventStore: ekEventStore,
             settings: settings

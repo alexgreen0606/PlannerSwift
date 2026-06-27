@@ -21,6 +21,7 @@ class RoutineEventContext: EventDetails {
     
     var version: Double = 1.0
 
+    // MARK: Children
     @Relationship(
         deleteRule: .cascade,
         inverse: \RoutineEvent.routineEventContext

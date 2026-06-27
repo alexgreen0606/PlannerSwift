@@ -18,42 +18,6 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         return calendar
     }()
 
-    var isRoutineVariant: Bool {
-        routineEventVariant != nil
-    }
-
-    var routineEvent: RoutineEvent? {
-        routineEventRecordContext?.routineEvent
-    }
-
-    var routineEventContext: RoutineEventContext? {
-        routineEventRecordContext?.routineEvent?.routineEventContext
-    }
-
-    var routineEventVariant: RoutineEventVariant? {
-        routineEventRecordContext?.variant
-    }
-
-    func isEventChip(on startOfDay: DateInRegion) -> Bool {
-        guard let eKEventContext else {
-            return false
-        }
-
-        let startOfNextDay = startOfDay + 1.days
-        let plannerStart = startOfDay.date
-        let plannerEnd = startOfNextDay.date
-
-        if eKEventContext.isAllDay {
-            return eKEventContext.startDate < plannerEnd
-                && eKEventContext.endDate >= plannerStart
-        }
-
-        return eKEventContext.startDate < plannerStart
-            && eKEventContext.endDate >= plannerStart
-            || eKEventContext.endDate >= plannerEnd
-                && eKEventContext.startDate < plannerEnd
-    }
-
     // MARK: - UI
 
     func tint(accentColor: AccentColor) -> Color {
@@ -94,37 +58,38 @@ extension PlannerEvent: PlannerEventLocationHelpers {
             existingPlannerEvent: self
         )
         time = ekEvent.startDate
+        
+        routineEventRecordContext?.isVariant = true
 
         // Sync calendar-specific data.
-        if let existingContext = eKEventContext {
-            existingContext.startDate = ekEvent.startDate
-            existingContext.endDate = ekEvent.endDate
-            existingContext.isAllDay = ekEvent.isAllDay
 
-            existingContext.calendarItemExternalIdentifier =
-                ekEvent.calendarItemExternalIdentifier
-            existingContext.calendarIdentifier =
-                ekEvent.calendar.calendarIdentifier
-            existingContext.calendarColorHex =
-                ekEvent.calendar.cgColor.hexString
-            existingContext.calendarAllowsContentModifications =
-                ekEvent.calendar.allowsContentModifications
-
-            existingContext.birthdayContactIdentifier =
-                ekEvent.birthdayContactIdentifier
-
-            existingContext.ekEvent = ekEvent
-        } else {
-            // Note: This initializer automatically attaches the EKEventContext to the PlannerEvent
+        guard let eKEventContext else {
+            // Note: This initializer automatically attaches the EKEventContext to the PlannerEvent.
             _ = EKEventContext(ekEvent: ekEvent, plannerEvent: self)
+            return
         }
+
+        eKEventContext.startDate = ekEvent.startDate
+        eKEventContext.endDate = ekEvent.endDate
+        eKEventContext.isAllDay = ekEvent.isAllDay
+
+        eKEventContext.calendarItemExternalIdentifier =
+            ekEvent.calendarItemExternalIdentifier
+        eKEventContext.calendarIdentifier =
+            ekEvent.calendar.calendarIdentifier
+        eKEventContext.calendarColorHex =
+            ekEvent.calendar.cgColor.hexString
+        eKEventContext.calendarAllowsContentModifications =
+            ekEvent.calendar.allowsContentModifications
+
+        eKEventContext.birthdayContactIdentifier =
+            ekEvent.birthdayContactIdentifier
+
+        eKEventContext.ekEvent = ekEvent
     }
 
     @MainActor
-    func syncWithRoutineEvent(
-        _ routineEvent: RoutineEvent,
-        on startOfDay: DateInRegion
-    ) {
+    func syncWithRoutineEvent(on startOfDay: DateInRegion) {
         guard
             let routineEventRecordContext,
             !routineEventRecordContext.isVariant,
@@ -142,7 +107,6 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         routineEventRecordContext.syncedVersion = routineEventContext.version
     }
 
-    /// Note: This function will only be called if no calendar event exists.
     @MainActor
     func updateRoutineVariance(
         in timeZone: TimeZone,
@@ -167,18 +131,19 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         in timeZone: TimeZone,
         settings: PlannerSettings
     ) -> Bool {
-        guard eKEventContext == nil, location == nil,
+        guard eKEventContext == nil,
+            location == nil,
             let originPlanner = routineEventRecordContext?.planner
         else {
             return false
         }
 
-        // MARK: Title match.
+        // Title match.
         if title.trimmed != routineEvent.title.trimmed {
             return false
         }
 
-        // MARK: Origin planner match.
+        // Origin planner match.
         if let time {
             let originStartOfDay = originPlanner.startOfDay(settings: settings)
 
@@ -190,19 +155,19 @@ extension PlannerEvent: PlannerEventLocationHelpers {
             return false
         }
 
-        // MARK: Time match.
+        // Time match.
 
         var plannerCalendar = Self.gregorianCalendar
         plannerCalendar.timeZone = timeZone
 
         let eventComponents: DateComponents? = {
-            guard let eventTime = self.time else {
+            guard let time else {
                 return nil
             }
 
             return plannerCalendar.dateComponents(
                 [.hour, .minute],
-                from: eventTime
+                from: time
             )
         }()
 

@@ -1,5 +1,5 @@
 //
-//  updateRoutineEventWeekdays.swift
+//  updateRoutineEventContextWeekdays.swift
 //  Planner
 //
 //  Created by Alex Green on 6/16/26.
@@ -13,7 +13,7 @@ extension ModelContext {
     func updateRoutineEventContextWeekdays(
         _ routineEventContext: RoutineEventContext,
         with destinationWeekdays: Set<Weekday>,
-        sourceSortedRoutineEvents: [RoutineEventContext]? = [],
+        sourceSortedRoutineEventContexts: [RoutineEventContext]? = [],
         ekEventStore: EKEventStore
     ) {
         let sourceWeekdays = routineEventContext.weekdays
@@ -44,15 +44,17 @@ extension ModelContext {
 
         let routines = getRoutines(for: weekdaysToAdd)
         for routine in routines {
+            let sortDate = generateRoutineEventSortDateNearSiblings(
+                for: routineEventContext,
+                from: sourceSortedRoutineEventContexts ?? [],
+                routine: routine
+            )
+
             insert(
                 RoutineEvent(
                     routine: routine,
                     routineEventContext: routineEventContext,
-                    sortDate: generateSortDateNearSiblings(
-                        for: routineEventContext,
-                        from: sourceSortedRoutineEvents ?? [],
-                        routine: routine
-                    )
+                    sortDate: sortDate
                 )
             )
         }

@@ -9,11 +9,11 @@ import EventKit
 import SwiftData
 
 extension ModelContext {
-    // Note: This function filters out planner events that should be protected from deletion,
-    // while also deleting linked calendar events.
+    /// Filters out planner events that should be protected from routine event cascade deletion, while also deleting linked calendar events.
     @MainActor
     func prepareRoutineEventRecordForDeletion(
         _ routineEventRecord: PlannerEvent,
+        /// Collects EKEvent IDs that have been deleted from the calendar.
         staleCalendarItemExternalIdentifiers: inout Set<String>,
         ekEventStore: EKEventStore
     ) -> PlannerEvent? {

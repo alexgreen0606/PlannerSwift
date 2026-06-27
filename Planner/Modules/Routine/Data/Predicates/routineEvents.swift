@@ -15,9 +15,9 @@ extension RoutineEvent {
     ) -> Predicate<RoutineEvent> {
         let weekdayRawValue = routine.weekdayRawValue
 
-        return #Predicate<RoutineEvent> {
-            if let routineEventContext = $0.routineEventContext,
-                let eventRoutine = $0.routine
+        return #Predicate<RoutineEvent> { routineEvent in
+            if let routineEventContext = routineEvent.routineEventContext,
+                let eventRoutine = routineEvent.routine
             {
                 return eventRoutine.weekdayRawValue == weekdayRawValue
                     && !excluding.contains(routineEventContext.stableId)

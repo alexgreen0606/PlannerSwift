@@ -30,7 +30,7 @@ extension ModelContext {
             }
 
             ekEvent.title = plannerEvent.title
-            
+
             _ = ekEventStore.attemptUpdateEvent(ekEvent)
 
             return
@@ -48,12 +48,9 @@ extension ModelContext {
             plannerEvent.time = time
         }
 
-        // MARK: Update the event's routine state if needed.
-
-        updatePlannerEventRoutineVariance(
-            plannerEvent,
+        // MARK: Update the event's routine variance.
+        plannerEvent.updateRoutineVariance(
             in: startOfDay.region.timeZone,
-            sourcePlanner: planner,
             settings: settings
         )
 

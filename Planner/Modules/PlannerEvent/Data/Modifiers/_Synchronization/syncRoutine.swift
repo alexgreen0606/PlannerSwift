@@ -76,9 +76,8 @@ extension ModelContext {
                 !plannerEvent.isCompleted,
                 let routineEventRecordContext = plannerEvent
                     .routineEventRecordContext,
-                let routineEventContext = routineEventRecordContext
-                    .routineEventContext,
-                let routineEvent = routineEventRecordContext.routineEvent
+                let routineEvent = routineEventRecordContext.routineEvent,
+                let routineEventContext = routineEvent.routineEventContext
             else {
                 continue
             }
@@ -94,7 +93,6 @@ extension ModelContext {
 
             // Sync with routine event.
             plannerEvent.syncWithRoutineEvent(
-                routineEvent,
                 on: startOfDay
             )
         }
@@ -129,7 +127,8 @@ extension ModelContext {
                     from: sortedRoutineEventContexts,
                     to: safeSortedListEvents,
                     destinationComparatorId: {
-                        $0.routineEventRecordContext?.routineEventStableId
+                        $0.routineEventRecordContext?.routineEvent?
+                            .routineEventContext?.stableId
                     }
                 )
 
@@ -190,7 +189,10 @@ extension ModelContext {
                 near: routineEventContext.stableId,
                 from: sortedRoutineEventContexts,
                 to: sortedListEvents!,
-                destinationComparatorId: { $0.routineEventContext?.stableId }
+                destinationComparatorId: {
+                    $0.routineEventRecordContext?.routineEvent?
+                        .routineEventContext?.stableId
+                }
             )
 
             let sortDate = generateSortDate(

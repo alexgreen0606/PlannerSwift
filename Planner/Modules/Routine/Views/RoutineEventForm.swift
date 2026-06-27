@@ -137,7 +137,7 @@ struct RoutineEventFormView: View {
                 )
                 .withConfirmation(
                     deleteRoutineEventConfig(
-                        routineEvent: sourceRoutineEvent!,
+                        routineEventContext: sourceRoutineEvent!,
                         inForm: true,
                         delete: deleteEvent
                     ),
@@ -246,7 +246,7 @@ struct RoutineEventFormView: View {
         let selectedWeekdays = draftRoutineEvent.weekdays
 
         let subtitle: LocalizedStringKey? = {
-            guard selectedWeekdays.count < 2,
+            guard selectedWeekdays.count == 1,
                 let weekday = selectedWeekdays.first
             else { return nil }
 

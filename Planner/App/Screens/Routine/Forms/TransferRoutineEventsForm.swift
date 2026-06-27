@@ -74,7 +74,7 @@ struct TransferRoutineEventsFormView: View {
         modelContext.bulkUpdateRoutineEventWeekdays(
             routineEngine.selectedItems,
             to: destinationWeekdays,
-            sourceSortedRoutineEvents: sortedSourceRoutineEvents,
+            sourceSortedRoutineEventContexts: sortedSourceRoutineEvents,
             ekEventStore: calendarService.ekEventStore
         )
 

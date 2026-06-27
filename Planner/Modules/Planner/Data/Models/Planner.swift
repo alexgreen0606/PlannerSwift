@@ -22,6 +22,7 @@ class Planner {
     /// If trip is nil, defaults to false.
     var excludeRoutine: Bool?
     
+    // MARK: Sibling
     var routine: Routine?
     
     var trip: Trip?

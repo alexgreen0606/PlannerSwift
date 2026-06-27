@@ -15,7 +15,6 @@ struct RoutineActionMenuView: View {
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarService
-    @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
     @State private var showDeleteRoutineConfirmation = false
 

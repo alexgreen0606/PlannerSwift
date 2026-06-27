@@ -42,9 +42,7 @@ extension ModelContext {
                 calendarItemExternalIdentifiers:
                     staleCalendarItemExternalIdentifiers
             )
-        }
 
-        if !inLoop {
             safeSave("deleteRoutineEventContext")
         }
 

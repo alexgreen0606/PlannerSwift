@@ -54,8 +54,8 @@ extension ModelContext {
         // MARK: Place the event at the top of its planner if it has moved days.
         let destinationDatestamps = ensureValidSortDate(
             for: event,
-            settings: settings,
-            sourceDatestamp: sourcePlanner?.datestamp
+            sourceDatestamp: sourcePlanner?.datestamp,
+            settings: settings
         )
 
         // MARK: Update routine event variance.

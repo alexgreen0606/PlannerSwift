@@ -17,7 +17,7 @@ extension ModelContext {
             return
         }
 
-        // Scan the title for a date.
+        // Scan the title for a time.
         guard
             let (date, updatedText) = routineEventContext.title.extractTime(
                 for: baseDay

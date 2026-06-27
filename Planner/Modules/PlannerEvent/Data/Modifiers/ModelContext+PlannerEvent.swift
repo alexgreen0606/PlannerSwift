@@ -39,31 +39,6 @@ extension ModelContext {
         return newEvent.stableId
     }
 
-    @MainActor
-    func createPlannerEvent(
-        for ekEvent: EKEvent,
-        on startOfDay: DateInRegion?
-    ) {
-        let sortDate = {
-            guard !ekEvent.isAllDay, let startOfDay else {
-                return ekEvent.startDate ?? Date.now
-            }
-
-            // Event has a target planner. Add it to the top of the list.
-            return getUpperSortDate(for: startOfDay)
-        }()
-
-        insert(
-            PlannerEvent(
-                ekEvent: ekEvent,
-                sortDate: sortDate
-            )
-        )
-
-        // Note: Don't save the context.
-        // This is only ever called as part of a larger pipeline.
-    }
-
     // MARK: - READ
 
     func getSortedListEvents(on startOfDay: DateInRegion)
@@ -116,7 +91,7 @@ extension ModelContext {
             )
         } catch {
             assertionFailure(
-                "ERROR ModelContext+PlannerEvent getCalendarRecords[date]: \(error)"
+                "ERROR ModelContext+PlannerEvent getCalendarRecords startOfDay: \(error)"
             )
         }
 
@@ -136,7 +111,7 @@ extension ModelContext {
             )
         } catch {
             assertionFailure(
-                "ERROR ModelContext+PlannerEvent getCalendarRecords[id]: \(error)"
+                "ERROR ModelContext+PlannerEvent getCalendarRecords calendarItemExternalIdentifier: \(error)"
             )
         }
 
@@ -148,37 +123,32 @@ extension ModelContext {
     /// Ensures that moved events end up at the top of their new planner day.
     @MainActor
     func ensureValidSortDate(
-        for event: PlannerEvent,
-        settings: PlannerSettings,
-        sourceDatestamp: String? = nil
+        for plannerEvent: PlannerEvent,
+        sourceDatestamp: String? = nil,
+        settings: PlannerSettings
     ) -> /// The datestamps the event is now in.
         Set<String>
     {
-        if let eKEventContext = event.eKEventContext, eKEventContext.isAllDay
-        {
-            // Event is all-day. Use its actual time as the sortDate.
-            event.sortDate = eKEventContext.startDate
-            return Set(
-                getSortedPlannerStartOfDays(
-                    for: event.time,
-                    endTime: event.eKEventContext?.endDate,
-                    datestamp: event.datestamp,
-                    settings: settings
-                ).map(\.datestamp)
-            )
-        }
-
         let sortedStartsOfDays = getSortedPlannerStartOfDays(
-            for: event.time,
-            endTime: event.eKEventContext?.endDate,
-            datestamp: event.datestamp,
+            for: plannerEvent.time,
+            endTime: plannerEvent.eKEventContext?.endDate,
+            datestamp: plannerEvent.datestamp,
             settings: settings
         )
 
-        guard !sortedStartsOfDays.isEmpty
+        if let eKEventContext = plannerEvent.eKEventContext,
+            eKEventContext.isAllDay
+        {
+            // Event is all-day. Use its actual time as the sortDate.
+            plannerEvent.sortDate = eKEventContext.startDate
+            return Set(sortedStartsOfDays.map(\.datestamp))
+        }
+
+        guard let earliestStartOfDay = sortedStartsOfDays.first
         else {
             // Event does not belong to any planners. Use its actual time as the sortDate.
-            event.sortDate = event.time ?? sourceDatestamp?.date ?? Date()
+            plannerEvent.sortDate =
+                plannerEvent.time ?? sourceDatestamp?.date ?? Date()
             return []
         }
 
@@ -187,18 +157,16 @@ extension ModelContext {
         if let sourceDatestamp,
             startsOfDaysSet.contains(sourceDatestamp)
         {
-            // The event has not moved planners. Reuse the event's existing position.
+            // The event has not moved planners. Reuse the event's existing sort date.
             return startsOfDaysSet
         }
-
-        let earliestStartOfDay = sortedStartsOfDays.first!
 
         let sortedListEvents = getSortedListEvents(
             on: earliestStartOfDay
         )
 
-        // Place the event at the start of its earliest planner.
-        event.sortDate = generateSortDate(
+        // Place the event at the top of its earliest planner.
+        plannerEvent.sortDate = generateSortDate(
             at: 0,
             in: sortedListEvents,
             startOfDay: earliestStartOfDay
@@ -218,6 +186,7 @@ extension ModelContext {
         startOfDay: DateInRegion
     ) {
         let movedEvent = sortedPendingPlannerEvents[initialIndex]
+
         movedEvent.sortDate = generateSortDate(
             at: targetIndex,
             in: sortedPlannerEvents,
@@ -244,17 +213,15 @@ extension ModelContext {
 
         safeSave("ModelContext+PlannerEvent deletePlannerEvents")
     }
-    
+
     @MainActor
     func deleteCalendarRecords(
         calendarItemExternalIdentifiers: Set<String>
     ) {
-        let calendarRecords = getCalendarRecords(
-            for: calendarItemExternalIdentifiers
+        safeBulkDelete(
+            getCalendarRecords(
+                for: calendarItemExternalIdentifiers
+            )
         )
-        
-        for calendarRecord in calendarRecords {
-            delete(calendarRecord)
-        }
     }
 }

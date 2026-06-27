@@ -1,5 +1,5 @@
 //
-//  generateSortDateNearSiblings.swift
+//  generateRoutineEventSortDateNearSiblings.swift
 //  Planner
 //
 //  Created by Alex Green on 6/16/26.
@@ -11,23 +11,23 @@ import SwiftDate
 
 extension ModelContext {
     @MainActor
-    func generateSortDateNearSiblings(
+    func generateRoutineEventSortDateNearSiblings(
         for routineEvent: RoutineEventContext,
         /// The routine events from the routine where the event was selected.
-        from sourceSortedEvents: [RoutineEventContext] = [],
+        from sourceSortedRoutineEventContexts: [RoutineEventContext] = [],
         routine: Routine
     ) -> Date {
-        let destinationSortedEvents = getSortedRoutineEventContexts(for: routine)
+        let destinationSortedRoutineEventContexts = getSortedRoutineEventContexts(for: routine)
 
         let targetIndex = generateRoutineEventIndex(
             near: routineEvent.stableId,
-            from: sourceSortedEvents,
-            to: destinationSortedEvents
+            from: sourceSortedRoutineEventContexts,
+            to: destinationSortedRoutineEventContexts
         )
 
         return generateRoutineEventSortDate(
             at: targetIndex,
-            in: destinationSortedEvents,
+            in: destinationSortedRoutineEventContexts,
             for: routine
         )
     }

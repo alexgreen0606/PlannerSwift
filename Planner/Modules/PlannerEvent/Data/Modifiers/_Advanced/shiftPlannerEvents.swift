@@ -58,8 +58,8 @@ extension ModelContext {
             // Place the event at the top of its new planner.
             _ = ensureValidSortDate(
                 for: event,
-                settings: settings,
-                sourceDatestamp: sourceDatestamp
+                sourceDatestamp: sourceDatestamp,
+                settings: settings
             )
         }
 

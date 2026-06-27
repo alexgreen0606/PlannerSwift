@@ -9,13 +9,13 @@ import EventKit
 
 extension EKEventStore {
     func getEkEvent(for plannerEvent: PlannerEvent) -> EKEvent? {
-        if let existing = plannerEvent.eKEventContext?.ekEvent {
-            return existing
-        }
-
         guard let eKEventContext = plannerEvent.eKEventContext
         else {
             return nil
+        }
+
+        if let existing = eKEventContext.ekEvent {
+            return existing
         }
 
         let startDate = eKEventContext.startDate
@@ -59,7 +59,7 @@ extension EKEventStore {
             )
         } catch {
             assertionFailure(
-                "ERROR EKEventStore+.attemptUpdateEvent: \(error)"
+                "ERROR EKEventStore+ attemptUpdateEvent: \(error)"
             )
             return false
         }
@@ -83,7 +83,7 @@ extension EKEventStore {
             )
         } catch {
             assertionFailure(
-                "ERROR EKEventStore+.attemptDeleteEvent: \(error)"
+                "ERROR EKEventStore+ attemptDeleteEvent: \(error)"
             )
             return false
         }

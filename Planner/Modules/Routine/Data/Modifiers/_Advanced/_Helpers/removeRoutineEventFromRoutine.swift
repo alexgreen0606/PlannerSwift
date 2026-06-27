@@ -9,11 +9,12 @@ import EventKit
 import SwiftData
 
 extension ModelContext {
-    // TODO: make sure callers delete stale calendar records
+    /// This will only ever be called if the routine event context has more than one weekday assigned.
     @MainActor
     func removeRoutineEventFromRoutine(
         routineEventContext: RoutineEventContext,
         weekdayRawValue: String,
+        /// Collects EKEvent IDs that have been deleted from the calendar.
         staleCalendarItemExternalIdentifiers: inout Set<String>,
         ekEventStore: EKEventStore
     ) {
@@ -34,6 +35,7 @@ extension ModelContext {
                     )
             }
 
+            // This cascade-deletes planner events that remain in the relationship.
             delete(routineEvent)
         }
     }

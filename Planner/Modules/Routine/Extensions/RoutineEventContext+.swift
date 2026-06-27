@@ -9,7 +9,6 @@ import SwiftDate
 import SwiftUI
 
 extension RoutineEventContext {
-
     var safeRoutineEvents: [RoutineEvent] {
         routineEvents ?? []
     }
@@ -59,6 +58,5 @@ extension RoutineEventContext {
     ) {
         title = draft.title.trimmed
         time = draft.hasTime ? draft.date : nil
-        version += 0.1
     }
 }

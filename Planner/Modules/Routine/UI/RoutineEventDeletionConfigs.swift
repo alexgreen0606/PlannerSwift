@@ -10,14 +10,14 @@ import SwiftUI
 // MARK: - Single Delete
 
 func deleteRoutineEventConfig(
-    routineEvent: RoutineEventContext,
+    routineEventContext: RoutineEventContext,
     inForm: Bool = false,
     delete: @escaping () -> Void
 ) -> ConfirmationConfig {
     ConfirmationConfig(
         title:
             deleteSingleItemMessage(
-                title: routineEvent.title,
+                title: routineEventContext.title,
                 type: "recurring event",
                 inForm: inForm
             ),
@@ -35,18 +35,21 @@ func deleteRoutineEventConfig(
 // MARK: - Single Weekday Remove
 
 func removeRoutineEventFromWeekdayConfig(
-    routineEvent: RoutineEventContext,
+    routineEventContext: RoutineEventContext,
     weekday: Weekday,
     remove: @escaping () -> Void,
     delete: @escaping () -> Void
 ) -> ConfirmationConfig {
-    if routineEvent.safeRoutineEvents.count < 2 {
-        return deleteRoutineEventConfig(routineEvent: routineEvent, delete: delete)
+    if routineEventContext.safeRoutineEvents.count == 1 {
+        return deleteRoutineEventConfig(
+            routineEventContext: routineEventContext,
+            delete: delete
+        )
     }
 
     return ConfirmationConfig(
         title:
-            "Remove \"\(routineEvent.title)\" from \(weekday.label)s?",
+            "Remove \"\(routineEventContext.title)\" from \(weekday.label)s?",
         message:
             "Associated planner and calendar events will be deleted. \(UI.GENERIC_DELETE_WARNING)",
         actions: [
@@ -66,16 +69,16 @@ func removeRoutineEventFromWeekdayConfig(
 // MARK: - Bulk Weekday Remove
 
 func bulkRemoveRoutineEventFromWeekdayConfig(
-    routineEvents: [RoutineEventContext],
+    routineEventContexts: [RoutineEventContext],
     weekday: Weekday,
     remove: @escaping () -> Void,
     delete: @escaping () -> Void
 ) -> ConfirmationConfig {
-    let count = routineEvents.count
-    
-    if count < 2 {
+    let count = routineEventContexts.count
+
+    if count == 1, let routineEventContext = routineEventContexts.first {
         return removeRoutineEventFromWeekdayConfig(
-            routineEvent: routineEvents.first!,
+            routineEventContext: routineEventContext,
             weekday: weekday,
             remove: remove,
             delete: delete

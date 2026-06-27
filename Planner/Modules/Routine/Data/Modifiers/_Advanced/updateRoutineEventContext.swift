@@ -32,9 +32,11 @@ extension ModelContext {
         updateRoutineEventContextWeekdays(
             routineEventContext,
             with: draftRoutineEvent.weekdays,
-            sourceSortedRoutineEvents: sourceSortedRoutineEventContexts,
+            sourceSortedRoutineEventContexts: sourceSortedRoutineEventContexts,
             ekEventStore: ekEventStore
         )
+        
+        routineEventContext.version += 0.1
 
         insertIfNeeded(routineEventContext)
 

@@ -197,7 +197,7 @@ struct RoutineRootView: View {
         modelContext.moveRoutineEvent(
             from: from,
             to: to,
-            sortedRoutineEvents: sortedRoutineEventContexts,
+            sortedRoutineEventContexts: sortedRoutineEventContexts,
             routine: routine
         )
         plannerSyncService.invalidateRoutines(weekdays: [weekday])
@@ -212,7 +212,10 @@ struct RoutineRootView: View {
 
     private func handleEventTitleChange(event: RoutineEventContext) {
         modelContext.handleRoutineEventContextTitleChange(event)
+        
         if !invalidatedEventIds.contains(event.stableId) {
+            event.version += 0.1
+            
             // Mark this event's weekdays for refresh in the planner.
             plannerSyncService.invalidateRoutines(
                 weekdays: event.weekdays
@@ -234,7 +237,7 @@ struct RoutineRootView: View {
             ),
             completedIconConfig: IconConfig(name: ""),
             confirmation: removeRoutineEventFromWeekdayConfig(
-                routineEvent: event,
+                routineEventContext: event,
                 weekday: weekday,
                 remove: {
                     removeEventFromWeekday(event)

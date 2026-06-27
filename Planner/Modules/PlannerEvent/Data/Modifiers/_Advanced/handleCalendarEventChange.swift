@@ -7,6 +7,7 @@
 
 import EventKit
 import SwiftData
+import SwiftDate
 
 extension ModelContext {
     @MainActor
@@ -43,8 +44,8 @@ extension ModelContext {
 
             return ensureValidSortDate(
                 for: sourcePlannerEvent,
-                settings: settings,
-                sourceDatestamp: sourcePlanner?.datestamp
+                sourceDatestamp: sourcePlanner?.datestamp,
+                settings: settings
             )
 
         } else if let calendarEvent {
@@ -77,5 +78,32 @@ extension ModelContext {
         // Allow the context to auto-save when ready.
 
         return []
+    }
+    
+    // MARK: - Helper Function
+
+    @MainActor
+    private func createPlannerEvent(
+        for ekEvent: EKEvent,
+        on startOfDay: DateInRegion?
+    ) {
+        let sortDate = {
+            guard !ekEvent.isAllDay, let startOfDay else {
+                return ekEvent.startDate ?? Date.now
+            }
+
+            // Event has a target planner. Add it to the top of the list.
+            return getUpperSortDate(for: startOfDay)
+        }()
+
+        insert(
+            PlannerEvent(
+                ekEvent: ekEvent,
+                sortDate: sortDate
+            )
+        )
+
+        // Note: Don't save the context.
+        // This is only ever called as part of a larger pipeline.
     }
 }

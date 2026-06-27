@@ -13,12 +13,14 @@ class Routine {
     /// Note: This is required by SwiftData limitations. Query by enums is currently not supported.
     var weekdayRawValue: String = ""
 
+    // MARK: Sibling
     @Relationship(
         deleteRule: .nullify,
         inverse: \RoutineEvent.routine
     )
     var routineEvents: [RoutineEvent]?
-
+    
+    // MARK: Sibling
     @Relationship(
         deleteRule: .nullify,
         inverse: \Planner.routine
