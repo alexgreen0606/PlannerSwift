@@ -83,16 +83,33 @@ extension ModelContext {
     // MARK: - READ
 
     @MainActor
-    func getSortedRoutineEvents(
+    func getSortedRoutineEventContexts(
         for routine: Routine,
+        excluding: Set<UUID> = [],
         reversed: Bool = false
     ) -> [RoutineEventContext] {
+        let allRoutineEvents = getSortedRoutineEvents(
+            for: routine,
+            excluding: excluding,
+            reversed: reversed
+        )
+
+        return allRoutineEvents.compactMap(\.routineEventContext)
+    }
+
+    @MainActor
+    func getSortedRoutineEvents(
+        for routine: Routine,
+        excluding: Set<UUID> = [],
+        reversed: Bool = false
+    ) -> [RoutineEvent] {
         do {
             let allRoutineEvents = try fetch(
                 FetchDescriptor<RoutineEvent>(
                     predicate:
                         RoutineEvent.routineEvents(
-                            for: routine
+                            for: routine,
+                            excluding: excluding
                         ),
                     sortBy: [
                         SortDescriptor(
@@ -103,7 +120,7 @@ extension ModelContext {
                 )
             )
 
-            return allRoutineEvents.compactMap(\.routineEventContext)
+            return allRoutineEvents
 
         } catch {
             assertionFailure(
@@ -114,29 +131,6 @@ extension ModelContext {
         return []
     }
 
-    @MainActor
-    func getRoutineEventVariant(
-        for calendarItemExternalIdentifier: String
-    ) -> RoutineEventVariant? {
-        do {
-            let matchingRoutineVariants = try fetch(
-                FetchDescriptor<RoutineEventVariant>(
-                    predicate: RoutineEventVariant.routineEventVariants(
-                        for: calendarItemExternalIdentifier
-                    )
-                )
-            )
-
-            return matchingRoutineVariants.first
-        } catch {
-            assertionFailure(
-                "ERROR ModelContext+Routine getRoutineEventVariant: \(error)"
-            )
-        }
-
-        return nil
-    }
-    
     @MainActor
     func getRoutine(
         for weekdayRawValue: String
@@ -149,7 +143,7 @@ extension ModelContext {
                     )
                 )
             )
-            
+
             return matchingRoutines.first
         } catch {
             assertionFailure(
@@ -234,16 +228,26 @@ extension ModelContext {
 
     @MainActor
     func deleteRoutineEvents(
-        _ routineEvents: [RoutineEventContext],
+        _ routineEventContexts: [RoutineEventContext],
         ekEventStore: EKEventStore,
     ) {
-        for event in routineEvents {
-            _ = deleteRoutineEventContext(
-                event,
-                ekEventStore: ekEventStore,
-                skipSave: true
+        var staleCalendarItemExternalIdentifiers: Set<String> = []
+
+        for routineEventContext in routineEventContexts {
+            staleCalendarItemExternalIdentifiers.formUnion(
+                deleteRoutineEventContext(
+                    routineEventContext,
+                    inLoop: true,
+                    ekEventStore: ekEventStore
+                )
             )
         }
+
+        // Delete all planner events linked to the deleted calendar events.
+        deleteCalendarRecords(
+            calendarItemExternalIdentifiers:
+                staleCalendarItemExternalIdentifiers
+        )
 
         safeSave("ModelContext+Routine deleteRoutineEvents")
     }

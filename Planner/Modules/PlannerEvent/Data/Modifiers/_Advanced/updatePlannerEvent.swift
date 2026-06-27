@@ -58,23 +58,18 @@ extension ModelContext {
             sourceDatestamp: sourcePlanner?.datestamp
         )
 
-        // MARK: Create/delete routine event variant as needed.
-        if let sourcePlanner {
-            updatePlannerEventRoutineVariance(
-                event,
-                in: timeZone,
-                sourcePlanner: sourcePlanner,
-                staleCalendarItemExternalIdentifier: staleEkEvent?
-                    .calendarItemExternalIdentifier,
-                settings: settings
-            )
-        }
+        // MARK: Update routine event variance.
+        event.updateRoutineVariance(
+            in: timeZone,
+            settings: settings
+        )
 
         // MARK: Delete the old calendar event if one exists.
+        // Will not delete sibling occurences, just this event.
         if let staleEkEvent {
             _ = ekEventStore.attemptDeleteEvent(staleEkEvent)
         }
-        
+
         // MARK: Persist changes into the model context.
         insertIfNeeded(event)
 

@@ -27,19 +27,8 @@ extension ModelContext {
         if let sourcePlannerEvent {
             // MARK: A planner event already exists. Sync it with the updated calendar event.
 
-            if let routineEvent = sourcePlannerEvent.routineEvent,
-                let sourcePlanner,
-                sourcePlannerEvent.routineEventVariant == nil
-            {
-                // MARK: The planner event is a routine event. Mark it as a variant.
-                insert(
-                    RoutineEventVariant(
-                        routineEvent: routineEvent,
-                        planner: sourcePlanner,
-                        plannerEvent: sourcePlannerEvent
-                    )
-                )
-            }
+            // MARK: Mark routine event records as variants.
+            sourcePlannerEvent.routineEventRecordContext?.isVariant = true
 
             guard let calendarEvent else {
                 // MARK: The calendar event was deleted. Remove the storage record.

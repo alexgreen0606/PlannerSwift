@@ -125,8 +125,13 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         _ routineEvent: RoutineEvent,
         on startOfDay: DateInRegion
     ) {
-        guard !isRoutineVariant,
-            let routineEventContext = routineEvent.routineEventContext
+        guard
+            let routineEventRecordContext,
+            !routineEventRecordContext.isVariant,
+            let routineEventContext = routineEventRecordContext.routineEvent?
+                .routineEventContext,
+            routineEventRecordContext.syncedVersion
+                != routineEventContext.version
         else {
             return
         }
@@ -134,24 +139,37 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         title = routineEventContext.title
         time = routineEventContext.date(on: startOfDay)
 
-        if let existingContext = routineEventRecordContext {
-            existingContext.syncedVersion = routineEventContext.version
-        } else {
-            // Note: This initializer automatically attaches the RoutineEventRecordContext to the PlannerEvent
-            let _ = RoutineEventRecordContext(
-                routineEvent: routineEvent,
-                plannerEvent: self
-            )
+        routineEventRecordContext.syncedVersion = routineEventContext.version
+    }
+
+    /// Note: This function will only be called if no calendar event exists.
+    @MainActor
+    func updateRoutineVariance(
+        in timeZone: TimeZone,
+        settings: PlannerSettings
+    ) {
+        guard let routineEventRecordContext,
+            let routineEventContext = routineEventRecordContext.routineEvent?
+                .routineEventContext
+        else {
+            return
         }
+
+        routineEventRecordContext.isVariant = !matches(
+            routineEventContext,
+            in: timeZone,
+            settings: settings
+        )
     }
 
     func matches(
         _ routineEvent: RoutineEventContext,
         in timeZone: TimeZone,
-        originPlanner: Planner,
         settings: PlannerSettings
     ) -> Bool {
-        guard eKEventContext == nil, location == nil else {
+        guard eKEventContext == nil, location == nil,
+            let originPlanner = routineEventRecordContext?.planner
+        else {
             return false
         }
 

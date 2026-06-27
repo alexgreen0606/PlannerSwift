@@ -139,7 +139,7 @@ struct PlannerActionMenuView: View {
     private func deleteCompletedEvents() {
         // Note: Don't pass the EKEventStore here.
         // Calendar events are meant to survive mass-deletion so users can look back on their calendar.
-        modelContext.deletePlannerEvents(rawCompletedEvents, in: planner)
+        modelContext.deletePlannerEvents(rawCompletedEvents)
     }
 
     private func toggleRoutineExclusion() {

@@ -9,6 +9,7 @@ import EventKit
 import SwiftData
 
 extension ModelContext {
+    // TODO: make sure callers delete stale calendar records
     @MainActor
     func removeRoutineEventFromRoutine(
         routineEventContext: RoutineEventContext,

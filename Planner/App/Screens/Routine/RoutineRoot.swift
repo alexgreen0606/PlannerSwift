@@ -203,9 +203,9 @@ struct RoutineRootView: View {
         plannerSyncService.invalidateRoutines(weekdays: [weekday])
     }
 
-    private func deleteEvent(_ event: RoutineEventContext) {
+    private func deleteEvent(_ routineEventContext: RoutineEventContext) {
         _ = modelContext.deleteRoutineEventContext(
-            event,
+            routineEventContext,
             ekEventStore: calendarStore.ekEventStore
         )
     }
@@ -288,9 +288,9 @@ struct RoutineRootView: View {
 //        )
     }
 
-    private func deleteEventEverywhere(_ event: RoutineEventContext) {
+    private func deleteEventEverywhere(_ routineEventContext: RoutineEventContext) {
         _ = modelContext.deleteRoutineEventContext(
-            event,
+            routineEventContext,
             ekEventStore: calendarStore.ekEventStore
         )
     }

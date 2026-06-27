@@ -11,8 +11,8 @@ import SwiftDate
 import SwiftUI
 
 extension Planner {
-    var safeRoutineEventVariants: [RoutineEventVariant] {
-        routineEventVariants ?? []
+    var safeRoutineEventRecordContexts: [RoutineEventRecordContext] {
+        routineEventRecordContexts ?? []
     }
 
     var safeExcludeRoutine: Bool {

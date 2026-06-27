@@ -32,19 +32,15 @@ class PlannerEvent: EventListItem {
     
     var height: CGFloat = 0
     
+    // MARK: Parent
+    var routineEventRecordContext: RoutineEventRecordContext?
+    
     // MARK: Child
     @Relationship(
         deleteRule: .cascade,
         inverse: \EKEventContext.plannerEvent
     )
     var eKEventContext: EKEventContext?
-
-    // MARK: Sibling
-    @Relationship(
-        deleteRule: .cascade,
-        inverse: \RoutineEventRecordContext.plannerEvent
-    )
-    var routineEventRecordContext: RoutineEventRecordContext?
 
     // MARK: Calendar Event
     init(ekEvent: EKEvent, sortDate: Date) {
@@ -60,6 +56,7 @@ class PlannerEvent: EventListItem {
     // MARK: Routine Event
     init(
         routineEvent: RoutineEvent,
+        planner: Planner,
         startOfDay: DateInRegion,
         sortDate: Date
     ) {
@@ -80,6 +77,7 @@ class PlannerEvent: EventListItem {
         // Note: This initializer automatically attaches the RoutineEventRecordContext to the PlannerEvent.
         _ = RoutineEventRecordContext(
             routineEvent: routineEvent,
+            planner: planner,
             plannerEvent: self
         )
     }

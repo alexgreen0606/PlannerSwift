@@ -15,7 +15,6 @@ extension ModelContext {
 
     @MainActor
     func syncCalendar(
-        for planner: Planner,
         startOfDay: DateInRegion,
         ekEventStore: EKEventStore,
         settings: PlannerSettings
@@ -59,15 +58,11 @@ extension ModelContext {
                     calendarItemExternalIdentifier
                 ]
             else {
-                deletePlannerEvent(
-                    plannerEvent,
-                    in: planner,
-                    skipSave: true
-                )
+                delete(plannerEvent)
                 continue
             }
 
-            // Remove this event from list of EKEvents that must be created.
+            // Remove event from list of EKEvents that must be created.
             newEkEvents.removeValue(
                 forKey: calendarItemExternalIdentifier
             )
@@ -76,11 +71,7 @@ extension ModelContext {
             if settings.hiddenCalendarIds.contains(
                 ekEvent.calendar.calendarIdentifier
             ) {
-                deletePlannerEventIfExists(
-                    plannerEvent,
-                    in: planner,
-                    ekEventStore: ekEventStore
-                )
+                delete(plannerEvent)
                 continue
             }
 

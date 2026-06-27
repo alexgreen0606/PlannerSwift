@@ -12,9 +12,8 @@ extension ModelContext {
     @MainActor
     func deleteRoutineEventContext(
         _ routineEventContext: RoutineEventContext,
-        ekEventStore: EKEventStore,
-        skipStaleCalendarRecordDeletion: Bool = false,
-        skipSave: Bool = false,
+        inLoop: Bool = false,
+        ekEventStore: EKEventStore
     ) -> Set<String> {
         var staleCalendarItemExternalIdentifiers: Set<String> = []
 
@@ -37,7 +36,7 @@ extension ModelContext {
 
         delete(routineEventContext)
 
-        if !skipStaleCalendarRecordDeletion {
+        if !inLoop {
             // Delete all planner events linked to the deleted calendar events.
             deleteCalendarRecords(
                 calendarItemExternalIdentifiers:
@@ -45,7 +44,7 @@ extension ModelContext {
             )
         }
 
-        if !skipSave {
+        if !inLoop {
             safeSave("deleteRoutineEventContext")
         }
 

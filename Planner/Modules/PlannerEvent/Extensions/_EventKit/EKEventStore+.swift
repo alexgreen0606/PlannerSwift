@@ -22,19 +22,26 @@ extension EKEventStore {
         let calendarItemExternalIdentifier = eKEventContext
             .calendarItemExternalIdentifier
 
-        let ekEvent = events(
+        let ekEvent = getEkEvent(
+            identifier: calendarItemExternalIdentifier,
+            startDate: startDate
+        )
+
+        eKEventContext.ekEvent = ekEvent
+
+        return ekEvent
+    }
+
+    func getEkEvent(identifier: String, startDate: Date) -> EKEvent? {
+        return events(
             matching: predicateForEvents(
                 withStart: startDate,
                 end: startDate.addingTimeInterval(60),
                 calendars: nil
             )
         ).first {
-            $0.calendarItemExternalIdentifier == calendarItemExternalIdentifier
+            $0.calendarItemExternalIdentifier == identifier
         }
-
-        eKEventContext.ekEvent = ekEvent
-
-        return ekEvent
     }
 
     func attemptUpdateEvent(_ event: EKEvent)
@@ -60,7 +67,7 @@ extension EKEventStore {
         return true
     }
 
-    func attemptDeleteEvent(_ event: EKEvent)
+    func attemptDeleteEvent(_ event: EKEvent, span: EKSpan = .thisEvent)
         -> /// Returns the success of the deletion attempt.
         Bool
     {
@@ -71,7 +78,7 @@ extension EKEventStore {
         do {
             try remove(
                 event,
-                span: .thisEvent,
+                span: span,
                 commit: true
             )
         } catch {
@@ -79,24 +86,6 @@ extension EKEventStore {
                 "ERROR EKEventStore+.attemptDeleteEvent: \(error)"
             )
             return false
-        }
-
-        return true
-    }
-
-    // TODO: what if this deletes every occurrence of a recurring event? Maybe I should pass a start date?
-    func attemptDeleteEvent(identifier: String) -> Bool {
-        let items = calendarItems(withExternalIdentifier: identifier)
-
-        for case let event as EKEvent in items {
-            do {
-                try remove(event, span: .thisEvent, commit: true)
-            } catch {
-                assertionFailure(
-                    "ERROR EKEventStore+.deleteEvent: \(error)"
-                )
-                return false
-            }
         }
 
         return true

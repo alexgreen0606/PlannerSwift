@@ -12,40 +12,22 @@ extension ModelContext {
     @MainActor
     func deletePlannerEvent(
         _ plannerEvent: PlannerEvent,
-        /// Marks routine events as variants so they are not synced.
-        in planner: Planner,
         /// Deletes calendar events, otherwise they are preserved.
         ekEventStore: EKEventStore? = nil,
         skipSave: Bool = false
     ) {
-        if let calendarItemExternalIdentifier = plannerEvent.eKEventContext?
-            .calendarItemExternalIdentifier,
-            let ekEventStore,
-            !ekEventStore.attemptDeleteEvent(
-                identifier: calendarItemExternalIdentifier
-            )
+        if let ekEventStore,
+            let ekEventContext = plannerEvent.eKEventContext,
+            let ekEvent = ekEventStore.getEkEvent(for: plannerEvent),
+            !ekEventStore.attemptDeleteEvent(ekEvent)
         {
             return
         }
 
-        if let routineEvent = plannerEvent.routineEvent,
-            plannerEvent.routineEventVariant == nil,
-            // Note: Variants should not be created when routine is excluded.
-            !planner.safeExcludeRoutine
-        {
-            // Mark this routine event as a variant so it is not synced after deletion.
-            insert(
-                RoutineEventVariant(
-                    routineEvent: routineEvent,
-                    planner: planner
-                )
-            )
-        }
-
         delete(plannerEvent)
 
-        if !skipSave {
-            safeSave("deletePlannerEvent")
-        }
+        guard !skipSave else { return }
+
+        safeSave("deletePlannerEvent")
     }
 }

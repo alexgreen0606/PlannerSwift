@@ -21,6 +21,42 @@ extension ModelContext {
             return
         }
 
+        // MARK: - Delete All Routine Records If Routine Is Excluded
+
+        if planner.safeExcludeRoutine {
+
+            var staleCalendarItemExternalIdentifiers: Set<String> = []
+
+            // Delete each record, including linked calendar events.
+            // Keep completed events.
+            for routineEventRecordContext in planner
+                .safeRoutineEventRecordContexts
+            {
+                guard let plannerEvent = routineEventRecordContext.plannerEvent
+                else { continue }
+
+                routineEventRecordContext.plannerEvent =
+                    prepareRoutineEventRecordForDeletion(
+                        plannerEvent,
+                        staleCalendarItemExternalIdentifiers:
+                            &staleCalendarItemExternalIdentifiers,
+                        ekEventStore: ekEventStore
+                    )
+
+                delete(routineEventRecordContext)
+            }
+
+            planner.routineEventRecordContexts = []
+
+            // Delete all planner events linked to the deleted calendar events.
+            deleteCalendarRecords(
+                calendarItemExternalIdentifiers:
+                    staleCalendarItemExternalIdentifiers
+            )
+
+            return
+        }
+
         // MARK: - Skip Synchronization Of Past Planners
 
         if planner.datestamp < todaystamp {
@@ -28,118 +64,69 @@ extension ModelContext {
             return
         }
 
-        // MARK: - Delete All Variants If Routine Is Excluded
-
-        if planner.safeExcludeRoutine {
-            for variant in planner.safeRoutineEventVariants {
-                delete(variant)
-            }
-            planner.routineEventVariants?.removeAll()
-        }
-
-        // MARK: - Load In Routine For This Weekday
-
-        let routineEventContexts: [RoutineEventContext] =
-            getSortedRoutineEvents(
-                for: routine
-            )
-
-        var existingRoutineEvents = Dictionary(
-            uniqueKeysWithValues: routineEventContexts.map { event in
-                (event.stableId, event)
-            }
-        )
-
         // MARK: - Sync Existing Planner Events
 
-        var plannerEventsToPosition: [PlannerEvent] = []
-        var sortedListEvents: [PlannerEvent]?
+        var invalidatedPositionPlannerEvents: [PlannerEvent] = []
 
+        /// Includes chip events and list events.
         let plannerEvents = getPlannerEvents(on: startOfDay)
 
         for plannerEvent in plannerEvents {
             guard
+                !plannerEvent.isCompleted,
                 let routineEventRecordContext = plannerEvent
                     .routineEventRecordContext,
-                let routineEventContext = plannerEvent.routineEventContext,
+                let routineEventContext = routineEventRecordContext
+                    .routineEventContext,
                 let routineEvent = routineEventRecordContext.routineEvent
             else {
                 continue
             }
 
-            // Invalidate planner event position if it has not updated its position since the routine event position was changed.
+            // Invalidate planner event position if its routine event position has changed.
+            // Don't invalidate events that didn't originate from this planner.
             if routineEventRecordContext.syncedSortDateVersion
-                != routineEvent.sortDateVersion
+                != routineEvent.sortDateVersion,
+                routineEventRecordContext.planner === planner
             {
-                plannerEventsToPosition.append(plannerEvent)
+                invalidatedPositionPlannerEvents.append(plannerEvent)
             }
 
-            guard
-                routineEventRecordContext.syncedVersion
-                    != routineEventContext.version
-            else {
-                continue
-            }
-
-            guard
-                validateRoutineEventSynchronization(
-                    plannerEvent: plannerEvent,
-                    routineEvent: routineEventContext,
-                    planner: planner,
-                    ekEventStore: ekEventStore
-                )
-            else {
-                continue
-            }
-
-            // Mark the routine event as existing if this event originated in this planner.
-
-            let originatesFromPlanner =
-                routineEventRecordContext.variant?.planner == nil
-                || routineEventRecordContext.variant?.planner
-                    === planner
-
-            if originatesFromPlanner {
-                existingRoutineEvents.removeValue(
-                    forKey: routineEventContext.stableId
-                )
-            }
-
-            // Sync with routine event if this is not a variant.
-            if !plannerEvent.isRoutineVariant {
-                plannerEvent.syncWithRoutineEvent(
-                    routineEvent,
-                    on: startOfDay
-                )
-            }
+            // Sync with routine event.
+            plannerEvent.syncWithRoutineEvent(
+                routineEvent,
+                on: startOfDay
+            )
         }
+
+        var sortedRoutineEventContexts: [RoutineEventContext]?
+        var sortedListEvents: [PlannerEvent]?
 
         // MARK: - Re-position Moved Routine Events
 
-        if !plannerEventsToPosition.isEmpty {
+        if !invalidatedPositionPlannerEvents.isEmpty {
 
             sortedListEvents = getSortedListEvents(on: startOfDay)
+            sortedRoutineEventContexts = getSortedRoutineEventContexts(
+                for: routine
+            )
 
-            for plannerEvent in plannerEventsToPosition {
-
-                // TODO: what if the event isnt from this weekday initially?
-                // Do I load in the events for that weekday?
-
+            for plannerEvent in invalidatedPositionPlannerEvents {
                 guard
                     let routineEventRecordContext = plannerEvent
                         .routineEventRecordContext,
                     let routineEvent = routineEventRecordContext.routineEvent,
                     let routineEventContext = routineEvent.routineEventContext,
-                    let safeSortedListEvents = sortedListEvents
+                    let safeSortedListEvents = sortedListEvents,
+                    let sortedRoutineEventContexts
                 else {
                     continue
                 }
 
                 // Find a position for the event closest to its routine siblings.
-
                 let targetIndex = generateRoutineEventIndex(
                     near: routineEventContext.stableId,
-                    from: routineEventContexts,
+                    from: sortedRoutineEventContexts,
                     to: safeSortedListEvents,
                     destinationComparatorId: {
                         $0.routineEventRecordContext?.routineEventStableId
@@ -153,7 +140,7 @@ extension ModelContext {
                 )
 
                 // Sync the planner event's sort date version.
-                plannerEvent.routineEventRecordContext?.syncedSortDateVersion =
+                routineEventRecordContext.syncedSortDateVersion =
                     routineEvent.sortDateVersion
 
                 // Track the event at its new position in the planner.
@@ -163,42 +150,36 @@ extension ModelContext {
 
         // MARK: - Create New Routine Events
 
-        guard !planner.safeExcludeRoutine, !existingRoutineEvents.isEmpty else {
+        let existingRoutineEventContextIds: Set<UUID> = Set(
+            planner.safeRoutineEventRecordContexts.compactMap(
+                \.routineEvent?.routineEventContext?.stableId
+            )
+        )
+
+        let missingReverseSortedRoutineEvents =
+            getSortedRoutineEvents(
+                for: routine,
+                excluding: existingRoutineEventContextIds,
+                reversed: true
+            )
+
+        guard !missingReverseSortedRoutineEvents.isEmpty
+        else {
             return
         }
 
-        // Track variant routine events. These will not be added.
-        let plannerVariantIds = Set(
-            planner.safeRoutineEventVariants.compactMap {
-                $0.routineEvent?.routineEventContext?.stableId
-            }
-        )
-
-        let reverseSortedRoutineEventContexts: [RoutineEventContext] =
-            existingRoutineEvents
-            .values
-            .filter {
-                !plannerVariantIds.contains($0.stableId)
-            }
-            .sorted {
-                guard
-                    let firstSortDate = $0.routineEvent(for: routine)?.sortDate,
-                    let secondSortDate = $1.routineEvent(for: routine)?.sortDate
-                else {
-                    return false
-                }
-
-                return firstSortDate > secondSortDate
-            }
-
         sortedListEvents =
-            sortedListEvents ?? getSortedListEvents(on: startOfDay)
+            sortedListEvents
+            ?? getSortedListEvents(on: startOfDay)
 
-        for routineEventContext in reverseSortedRoutineEventContexts {
+        sortedRoutineEventContexts =
+            sortedRoutineEventContexts
+            ?? getSortedRoutineEventContexts(for: routine)
+
+        for routineEvent in missingReverseSortedRoutineEvents {
             guard
-                let routineEvent = routineEventContext.routineEvent(
-                    for: routine
-                )
+                let routineEventContext = routineEvent.routineEventContext,
+                let sortedRoutineEventContexts
             else {
                 continue
             }
@@ -207,7 +188,7 @@ extension ModelContext {
             // Defaults to top of list otherwise.
             let targetIndex = generateRoutineEventIndex(
                 near: routineEventContext.stableId,
-                from: routineEventContexts,
+                from: sortedRoutineEventContexts,
                 to: sortedListEvents!,
                 destinationComparatorId: { $0.routineEventContext?.stableId }
             )
@@ -221,6 +202,7 @@ extension ModelContext {
             let newEvent =
                 PlannerEvent(
                     routineEvent: routineEvent,
+                    planner: planner,
                     startOfDay: startOfDay,
                     sortDate: sortDate,
                 )
@@ -230,51 +212,5 @@ extension ModelContext {
             // Track the event at its position in the planner.
             sortedListEvents!.insert(newEvent, at: targetIndex)
         }
-    }
-
-    // MARK: - Helpers
-
-    private func validateRoutineEventSynchronization(
-        plannerEvent: PlannerEvent,
-        routineEvent: RoutineEventContext,
-        planner: Planner,
-        ekEventStore: EKEventStore
-    ) -> Bool {
-        // MARK: Delete event if routines are excluded.
-
-        if planner.safeExcludeRoutine {
-            deletePlannerEvent(
-                plannerEvent,
-                in: planner,
-                ekEventStore: ekEventStore
-            )
-            return false
-        }
-
-        // Note: This is the weekday that the event originates from. May not match the planner's weekday.
-        // For example, Tuesday's occurrence gets transferred to Wednesday.
-        // In this case, Tuesday still "owns" the event. Removing the event from Tuesdays will still
-        // cause the occurrence to be deleted from Wednesday.
-        let sourceWeekday = {
-            if let variantPlanner = plannerEvent.routineEventVariant?.planner {
-                return Weekday.forDatestamp(variantPlanner.datestamp)
-            }
-            return Weekday.forDatestamp(planner.datestamp)
-        }()
-
-        // MARK: Delete event if its origin weekday has been removed from the routine event.
-        // TODO: can this be removed now that relationships handle the deletions immediately?
-        //        guard let sourceWeekday,
-        //            routineEvent.routineEvent(for: sourceWeekday) != nil
-        //        else {
-        //            deletePlannerEvent(
-        //                plannerEvent,
-        //                in: planner,
-        //                ekEventStore: ekEventStore
-        //            )
-        //            return false
-        //        }
-
-        return true
     }
 }

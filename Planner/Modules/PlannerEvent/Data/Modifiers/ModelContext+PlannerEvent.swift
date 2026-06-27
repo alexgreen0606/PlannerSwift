@@ -145,67 +145,6 @@ extension ModelContext {
 
     // MARK: - UPDATE
 
-    /// Note: This function will only be called if no calendar event exists.
-    @MainActor
-    func updatePlannerEventRoutineVariance(
-        _ plannerEvent: PlannerEvent,
-        in timeZone: TimeZone,
-        sourcePlanner: Planner,
-        staleCalendarItemExternalIdentifier: String? = nil,
-        settings: PlannerSettings
-    ) {
-        let existingVariant: RoutineEventVariant? = {
-            if let existing = plannerEvent.routineEventVariant {
-                // Event is already a variant.
-                return existing
-            }
-
-            if let staleCalendarItemExternalIdentifier {
-                // Event was previously a calendar event. Check if a variant record exists for that calendar event.
-                return getRoutineEventVariant(
-                    for: staleCalendarItemExternalIdentifier
-                )
-            }
-
-            return nil
-        }()
-
-        guard
-            let routineEvent = plannerEvent.routineEvent
-                ?? existingVariant?.routineEvent,
-            let routineEventContext = routineEvent.routineEventContext
-        else {
-            return
-        }
-
-        // MARK: Check if the event differs from the routine event.
-
-        let isRoutineEventVariant = !plannerEvent.matches(
-            routineEventContext,
-            in: timeZone,
-            originPlanner: existingVariant?.planner ?? sourcePlanner,
-            settings: settings
-        )
-
-        if isRoutineEventVariant {
-            if existingVariant == nil {
-                // MARK: Create a new variance record so this even is not synced with the routine event.
-                insert(
-                    RoutineEventVariant(
-                        routineEvent: routineEvent,
-                        planner: sourcePlanner,
-                        plannerEvent: plannerEvent
-                    )
-                )
-            }
-        } else if let existingVariant {
-            // MARK: Event is no longer a variant. Delete the variance record.
-
-            delete(existingVariant)
-
-        }
-    }
-
     /// Ensures that moved events end up at the top of their new planner day.
     @MainActor
     func ensureValidSortDate(
@@ -291,36 +230,19 @@ extension ModelContext {
     // MARK: - DELETE
 
     func deletePlannerEvents(
-        _ events: [PlannerEvent],
-        in planner: Planner,
+        _ plannerEvents: [PlannerEvent],
         /// Deletes calendar events if defined, otherwise they are preserved.
         ekEventStore: EKEventStore? = nil
     ) {
-        for event in events {
+        for plannerEvent in plannerEvents {
             deletePlannerEvent(
-                event,
-                in: planner,
+                plannerEvent,
                 ekEventStore: ekEventStore,
                 skipSave: true
             )
         }
 
         safeSave("ModelContext+PlannerEvent deletePlannerEvents")
-    }
-
-    func deletePlannerEventIfExists(
-        _ event: PlannerEvent?,
-        in planner: Planner,
-        ekEventStore: EKEventStore
-    ) {
-        if let event {
-            deletePlannerEvent(
-                event,
-                in: planner,
-                ekEventStore: ekEventStore,
-                skipSave: true
-            )
-        }
     }
     
     @MainActor

@@ -130,7 +130,6 @@ struct PlannerContentsListView: View {
     private func deleteEvent(_ event: PlannerEvent) {
         modelContext.deletePlannerEvent(
             event,
-            in: planner,
             ekEventStore: calendarStore.ekEventStore
         )
     }

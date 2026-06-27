@@ -52,7 +52,6 @@ struct SelectedEventActionsView: View {
         DispatchQueue.main.async {
             modelContext.deletePlannerEvents(
                 selections,
-                in: planner,
                 ekEventStore: calendarStore.ekEventStore
             )
 

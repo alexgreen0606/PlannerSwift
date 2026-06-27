@@ -13,25 +13,33 @@ extension ModelContext {
         do {
             try save()
         } catch {
-            assertionFailure("ERROR ModelContext+.safeSave_\(source): \(error)")
+            assertionFailure("ERROR ModelContext+ safeSave_\(source): \(error)")
         }
     }
 
     @MainActor
-    func safeDelete<Item: PersistentModel>(_ item: Item?, skipSave: Bool = false) {
+    func safeDelete<Item: PersistentModel>(
+        _ item: Item?,
+        skipSave: Bool = false
+    ) {
         guard let item else {
             return
         }
-        
+
         delete(item)
-        
-        if !skipSave {
-            safeSave("ModelContext+.safeDelete")
-        }
+
+        if skipSave { return }
+
+        safeSave("ModelContext+ safeDelete")
     }
 
     @MainActor
-    func safeBulkDelete<Item: PersistentModel>(_ items: [Item]) {
+    func safeBulkDelete<Item: PersistentModel>(
+        _ items: [Item]?,
+        skipSave: Bool = false
+    ) {
+        guard let items else { return }
+
         do {
             try transaction {
                 for item in items {
@@ -40,12 +48,14 @@ extension ModelContext {
             }
         } catch {
             assertionFailure(
-                "ERROR ModelContext+.safeBulkDelete.transaction: \(error)"
+                "ERROR ModelContext+ safeBulkDelete transaction: \(error)"
             )
             return
         }
 
-        safeSave("ModelContext+.safeBulkDelete")
+        if skipSave { return }
+
+        safeSave("ModelContext+ safeBulkDelete")
     }
 
     @MainActor

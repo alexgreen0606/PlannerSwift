@@ -28,11 +28,13 @@ extension ModelContext {
         // so they are not deleted here
 
         // MARK: Delete calendar records.
-        if let ekEventContext = routineEventRecord.eKEventContext {
-            let identifier = ekEventContext.calendarItemExternalIdentifier
-
-            _ = ekEventStore.attemptDeleteEvent(identifier: identifier)
-            staleCalendarItemExternalIdentifiers.insert(identifier)
+        if let ekEventContext = routineEventRecord.eKEventContext,
+            let ekEvent = ekEventStore.getEkEvent(for: routineEventRecord),
+            ekEventStore.attemptDeleteEvent(ekEvent, span: .futureEvents)
+        {
+            staleCalendarItemExternalIdentifiers.insert(
+                ekEventContext.calendarItemExternalIdentifier
+            )
         }
 
         return routineEventRecord

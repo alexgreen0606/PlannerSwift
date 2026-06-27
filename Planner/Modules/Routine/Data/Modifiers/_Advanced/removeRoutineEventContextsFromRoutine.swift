@@ -22,9 +22,8 @@ extension ModelContext {
                 staleCalendarItemExternalIdentifiers.formUnion(
                     deleteRoutineEventContext(
                         routineEventContext,
-                        ekEventStore: ekEventStore,
-                        skipStaleCalendarRecordDeletion: true,
-                        skipSave: true
+                        inLoop: true,
+                        ekEventStore: ekEventStore
                     )
                 )
                 continue

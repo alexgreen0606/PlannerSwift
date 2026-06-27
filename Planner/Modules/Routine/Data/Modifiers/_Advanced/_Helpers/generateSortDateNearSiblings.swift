@@ -17,7 +17,7 @@ extension ModelContext {
         from sourceSortedEvents: [RoutineEventContext] = [],
         routine: Routine
     ) -> Date {
-        let destinationSortedEvents = getSortedRoutineEvents(for: routine)
+        let destinationSortedEvents = getSortedRoutineEventContexts(for: routine)
 
         let targetIndex = generateRoutineEventIndex(
             near: routineEvent.stableId,

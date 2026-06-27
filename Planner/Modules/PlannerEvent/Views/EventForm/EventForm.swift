@@ -162,13 +162,13 @@ struct EventFormView: View {
             ekEventStore: calendarService.ekEventStore
         ) { action, event in
             guard action != .canceled else {
-                if let sourcePlannerEvent, let sourcePlanner,
+                if let sourcePlannerEvent,
                     sourcePlannerEvent.title.trimmed.isEmpty
                 {
                     // The source event had an empty title. Delete it.
                     modelContext.deletePlannerEvent(
                         sourcePlannerEvent,
-                        in: sourcePlanner
+                        ekEventStore: calendarService.ekEventStore
                     )
                 }
                 dismiss()

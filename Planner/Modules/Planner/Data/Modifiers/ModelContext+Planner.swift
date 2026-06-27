@@ -40,7 +40,7 @@ extension ModelContext {
         insert(planner)
 
         if !skipSave {
-            safeSave("ModelContext+Planner.createPlanner")
+            safeSave("ModelContext+Planner createPlanner")
         }
 
         return planner
@@ -183,7 +183,7 @@ extension ModelContext {
         to newLocation: Location?
     ) {
         planner.location = newLocation
-        safeSave("ModelContext+Planner.updatePlannerLocation")
+        safeSave("ModelContext+Planner updatePlannerLocation")
     }
 
     @MainActor
@@ -200,7 +200,7 @@ extension ModelContext {
             planner.excludeRoutine = nil
         }
 
-        safeSave("ModelContext+Planner.togglePlannerRoutineExclusion")
+        safeSave("ModelContext+Planner togglePlannerRoutineExclusion")
 
         // Sync the planner's routine events.
         plannerSyncService.syncPlannerRoutine(

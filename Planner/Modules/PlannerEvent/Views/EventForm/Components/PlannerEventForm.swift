@@ -44,7 +44,7 @@ struct PlannerEventFormView: View {
     private var sourceEkEvent: EKEvent? {
         sourcePlannerEvent?.eKEventContext?.ekEvent
     }
-    
+
     private var dateInRegion: DateInRegion {
         DateInRegion(draftPlannerEvent.date, region: region)
     }
@@ -57,7 +57,7 @@ struct PlannerEventFormView: View {
                 deviceLocation: locationService.deviceLocation
             )
     }
-    
+
     private var defaultLocation: Location? {
         sourcePlanner?.location(
             settings: settings,
@@ -103,13 +103,12 @@ struct PlannerEventFormView: View {
             CancelButtonView {
                 isTitleFocused = false
 
-                if let sourcePlannerEvent, let sourcePlanner,
+                if let sourcePlannerEvent,
                     sourcePlannerEvent.title.trimmed.isEmpty
                 {
                     // The title was empty when this sheet was opened. Delete the event.
                     modelContext.deletePlannerEvent(
                         sourcePlannerEvent,
-                        in: sourcePlanner,
                         ekEventStore: calendarService.ekEventStore
                     )
                 }
@@ -211,7 +210,7 @@ struct PlannerEventFormView: View {
                     value: "Add Time"
                 ) {
                     isTitleFocused = false
-                    
+
                     withAnimation {
                         visiblePicker = .time
                         draftPlannerEvent.hasTime = true
@@ -247,7 +246,7 @@ struct PlannerEventFormView: View {
                     systemImage: "xmark"
                 ) {
                     isTitleFocused = false
-                    
+
                     withAnimation {
                         draftPlannerEvent.hasTime = false
                         visiblePicker = .none
@@ -310,23 +309,12 @@ struct PlannerEventFormView: View {
     private func deleteSourceEvent() {
         dismiss()
 
-        if let sourceEkEvent {
-            guard
-                calendarService.ekEventStore.attemptDeleteEvent(
-                    sourceEkEvent
-                )
-            else {
-                return
-            }
-        }
+        guard let sourcePlannerEvent else { return }
 
-        if let sourcePlannerEvent, let sourcePlanner {
-            modelContext.deletePlannerEvent(
-                sourcePlannerEvent,
-                in: sourcePlanner,
-                ekEventStore: calendarService.ekEventStore
-            )
-        }
+        modelContext.deletePlannerEvent(
+            sourcePlannerEvent,
+            ekEventStore: calendarService.ekEventStore
+        )
     }
 
     private func addEventToCalendar() {
@@ -370,7 +358,7 @@ struct PlannerEventFormView: View {
 
     private func togglePicker(type: VisibleEventFormPicker) {
         isTitleFocused = false
-        
+
         withAnimation {
             if visiblePicker == type {
                 visiblePicker = .none
