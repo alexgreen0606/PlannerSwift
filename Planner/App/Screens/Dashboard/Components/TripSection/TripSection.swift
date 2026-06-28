@@ -30,9 +30,7 @@ struct TripSectionView: View {
         self.namespace = namespace
 
         _sortedUpcomingTrips = Query(
-            filter: #Predicate<Trip> {
-                $0.lastDatestamp >= todaystamp
-            },
+            filter: Trip.trips(beforeOrOn: todaystamp),
             sort: \.firstDatestamp
         )
     }

@@ -11,7 +11,7 @@ import SwiftUI
 struct ChecklistNavigationView: View {
     /// Only one item should exist without a parent.
     @Query(
-        filter: #Predicate<ChecklistItem> { $0.parent == nil }
+        filter: ChecklistItem.rootFolders
     ) var rootFolders: [ChecklistItem]
 
     @State private var folderPath = NavigationPath()

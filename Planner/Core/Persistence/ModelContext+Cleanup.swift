@@ -80,7 +80,7 @@ extension ModelContext {
             }
 
         } catch {
-            assertionFailure("ModelContext+Cleanup.deleteStaleData: \(error)")
+            assertionFailure("ModelContext+Cleanup deleteStaleData: \(error)")
         }
 
         // Note: DO NOT save the context here.

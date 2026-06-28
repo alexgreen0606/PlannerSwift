@@ -37,7 +37,7 @@ extension CNContactStore {
             return contact
         } catch {
             assertionFailure(
-                "ERROR CNContactStore+Birthdays.loadContact: \(error)"
+                "ERROR CNContactStore+Birthdays loadContact: \(error)"
             )
         }
 
@@ -70,7 +70,7 @@ extension CNContactStore {
             }
         } catch {
             assertionFailure(
-                "ERROR CNContactStore+Birthdays.syncBirthdayContacts: \(error)"
+                "ERROR CNContactStore+Birthdays syncBirthdayContacts: \(error)"
             )
         }
     }

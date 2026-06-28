@@ -55,9 +55,7 @@ extension ModelContext {
         do {
             let planners = try fetch(
                 FetchDescriptor<Planner>(
-                    predicate: #Predicate<Planner> { planner in
-                        planner.datestamp == datestamp
-                    }
+                    predicate: Planner.planners(datestamp: datestamp)
                 )
             )
 
@@ -78,9 +76,7 @@ extension ModelContext {
 
             let existingPlanners = try fetch(
                 FetchDescriptor<Planner>(
-                    predicate: #Predicate<Planner> { planner in
-                        datestamps.contains(planner.datestamp)
-                    }
+                    predicate: Planner.planners(datestamps: datestamps)
                 )
             )
 

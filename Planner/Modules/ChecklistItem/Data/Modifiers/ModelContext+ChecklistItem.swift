@@ -1,5 +1,5 @@
 //
-//  ModelContext+Checklists.swift
+//  ModelContext+ChecklistItem.swift
 //  Planner
 //
 //  Created by Alex Green on 2/12/26.
@@ -16,9 +16,7 @@ extension ModelContext {
         do {
             let existingRoots = try fetch(
                 FetchDescriptor<ChecklistItem>(
-                    predicate: #Predicate<ChecklistItem> { item in
-                        item.parent == nil
-                    }
+                    predicate: ChecklistItem.rootFolders
                 )
             )
 
@@ -27,7 +25,7 @@ extension ModelContext {
             }
         } catch {
             assertionFailure(
-                "ERROR ModelContext+ChecklistItem.ensureRootFolder: \(error)"
+                "ERROR ModelContext+ChecklistItem ensureRootFolder: \(error)"
             )
         }
 
@@ -40,7 +38,7 @@ extension ModelContext {
             )
         )
 
-        safeSave("ModelContext+ChecklistItem.ensureRootFolder")
+        safeSave("ModelContext+ChecklistItem ensureRootFolder")
     }
 
     // MARK: - CREATE
@@ -111,7 +109,7 @@ extension ModelContext {
             )
         }
 
-        safeSave("ModelContext+ChecklistItem.updateChecklistItem")
+        safeSave("ModelContext+ChecklistItem updateChecklistItem")
     }
 
     @MainActor
@@ -133,7 +131,7 @@ extension ModelContext {
             sortedItems: sortedItems
         )
 
-        safeSave("ModelContext+ChecklistItem.moveChecklistItem")
+        safeSave("ModelContext+ChecklistItem moveChecklistItem")
     }
 
     @MainActor
@@ -169,11 +167,11 @@ extension ModelContext {
             }
         } catch {
             assertionFailure(
-                "ERROR ModelContext+ChecklistItem.transferChecklistItems.transaction: \(error)"
+                "ERROR ModelContext+ChecklistItem transferChecklistItems transaction: \(error)"
             )
             return
         }
 
-        safeSave("ModelContext+ChecklistItem.transferChecklistItems")
+        safeSave("ModelContext+ChecklistItem transferChecklistItems")
     }
 }

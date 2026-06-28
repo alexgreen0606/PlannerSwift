@@ -51,7 +51,7 @@ class LocationSearchService:
                 hasNetworkError = true
             }
         } else if nsError.domain == MKError.errorDomain {
-            print("ERROR: LocationSearchService.completer: \(error)")
+            print("ERROR: LocationSearchService completer: \(error)")
         }
     }
 
@@ -88,7 +88,7 @@ class LocationSearchService:
                 timeZoneIdentifier: timeZone.identifier
             )
         } catch {
-            print("ERROR: LocationSearchService.locationInfo: \(error)")
+            print("ERROR: LocationSearchService locationInfo: \(error)")
             return nil
         }
     }

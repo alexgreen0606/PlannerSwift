@@ -21,9 +21,7 @@ struct PlannerLoaderView<Content: View>: View {
         self.content = content
 
         _planners = Query(
-            filter: #Predicate<Planner> {
-                $0.datestamp == datestamp
-            }
+            filter: Planner.planners(datestamp: datestamp)
         )
     }
 

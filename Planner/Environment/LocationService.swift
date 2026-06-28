@@ -118,7 +118,7 @@ final class LocationService:
                     )
                 }
             } catch {
-                print("ERROR LocationService.buildDeviceLocation:", error)
+                print("ERROR LocationService buildDeviceLocation:", error)
             }
         }
     }

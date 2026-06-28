@@ -192,7 +192,7 @@ struct SearchRootView: View {
     // MARK: - Functions
 
     private func search() {
-        modelContext.safeSave("SearchRootView.search")
+        modelContext.safeSave("SearchRootView search")
         plannerSearchStore.search(
             with: draftQuery,
             modelContainer: modelContext.container,

@@ -26,6 +26,11 @@ extension String {
     var calendarSymbolName: String {
         "\(Int(suffix(2)) ?? 0).calendar"
     }
+    
+    /// Example: "2000-12"
+    var monthstamp: String {
+        String(prefix(7))
+    }
 
     /// Example: "2000"
     var year: String {

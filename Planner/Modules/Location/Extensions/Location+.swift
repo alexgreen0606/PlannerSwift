@@ -37,7 +37,7 @@ extension Location {
             TimeZone(identifier: timeZoneIdentifier)
                 ?? {
                     assertionFailure(
-                        "ERROR Location+.region: Could not create a TimeZone from identifier \(timeZoneIdentifier)"
+                        "ERROR Location+ region: Could not create a TimeZone from identifier \(timeZoneIdentifier)"
                     )
                     return TimeZone.current
                 }()

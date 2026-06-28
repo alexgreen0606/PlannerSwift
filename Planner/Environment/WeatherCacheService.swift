@@ -93,7 +93,7 @@ final class WeatherCacheService: ObservableObject {
             }
 
         } catch {
-            print("ERROR WeatherCacheService.ensureWeather: \(error)")
+            print("ERROR WeatherCacheService ensureWeather: \(error)")
         }
     }
 

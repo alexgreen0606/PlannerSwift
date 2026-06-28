@@ -28,7 +28,7 @@ class Location {
     var trips: [Trip]?
 
     // MARK: Sibling
-    @Relationship(inverse: \Trip.location)
+    @Relationship(inverse: \Planner.location)
     var planners: [Planner]?
 
     // MARK: Sibling

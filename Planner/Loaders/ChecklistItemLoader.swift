@@ -18,15 +18,11 @@ struct ChecklistItemLoaderView<Content: View>: View {
         self.content = content
 
         _items = Query(
-            filter: #Predicate<ChecklistItem> {
-                $0.stableId == stableId
-            }
+            filter: ChecklistItem.checklistItems(stableId: stableId)
         )
 
         _sortedItems = Query(
-            filter: #Predicate<ChecklistItem> { item in
-                item.parent?.stableId == stableId
-            },
+            filter: ChecklistItem.checklistItems(parentId: stableId),
             sort: \.sortIndex
         )
     }

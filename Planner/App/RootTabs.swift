@@ -64,7 +64,7 @@ struct RootTabView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @AppStorage("lastCleansedDatestamp") var lastCleansedDatestamp: String = ""
+    @AppStorage("lastCleansedMonthstamp") var lastCleansedMonthstamp: String = ""
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
@@ -266,11 +266,11 @@ struct RootTabView: View {
 
     /// Runs once a day (if app is opened).
     private func cleanseStorage() {
-        guard lastCleansedDatestamp != todayService.todaystamp else {
+        guard lastCleansedMonthstamp != todayService.todaystamp.monthstamp else {
             return
         }
 
-        lastCleansedDatestamp = todayService.todaystamp
+        lastCleansedMonthstamp = todayService.todaystamp.monthstamp
 
         if keepPastEventsDuration != .forever {
             modelContext.deleteStaleData(
@@ -278,6 +278,6 @@ struct RootTabView: View {
             )
         }
 
-        modelContext.safeSave("RootTabs.cleanseStorage")
+        modelContext.safeSave("RootTabs cleanseStorage")
     }
 }

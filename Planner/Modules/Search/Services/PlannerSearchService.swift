@@ -82,9 +82,7 @@ actor PlannerSearchService {
             if !onlySearchCalendar {
                 filteredPlanners = try modelContext.fetch(
                     FetchDescriptor<Planner>(
-                        predicate: #Predicate<Planner> { planner in
-                            planner.location != nil
-                        }
+                        predicate: Planner.plannersWithLocations
                     )
                 )
             }
@@ -105,9 +103,7 @@ actor PlannerSearchService {
             if !onlySearchCalendar {
                 filteredPlannerEvents = try modelContext.fetch(
                     FetchDescriptor<PlannerEvent>(
-                        predicate: #Predicate<PlannerEvent> { event in
-                            event.eKEventContext == nil
-                        }
+                        predicate: PlannerEvent.nonCalendarRecords
                     )
                 )
             }
@@ -251,9 +247,7 @@ actor PlannerSearchService {
 
             let planners = try modelContext.fetch(
                 FetchDescriptor<Planner>(
-                    predicate: #Predicate<Planner> { planner in
-                        planner.datestamp == datestamp
-                    }
+                    predicate: Planner.planners(datestamp: datestamp)
                 )
             )
 

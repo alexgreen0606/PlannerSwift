@@ -85,7 +85,7 @@ extension ModelContext {
         trip.lastDatestamp = trip.sortedPlanners.last?.datestamp ?? ""
 
         insertIfNeeded(trip)
-        safeSave("trip.updateTrip")
+        safeSave("ModelContext+Trip updateTrip")
 
         plannerSyncService.beginSync()
 

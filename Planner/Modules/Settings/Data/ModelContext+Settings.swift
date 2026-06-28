@@ -24,7 +24,7 @@ extension ModelContext {
         }
 
         insert(PlannerSettings())
-        safeSave("plannerSettings.ensurePlannerSettings")
+        safeSave("plannerSettings ensurePlannerSettings")
     }
 
     // MARK: - UPDATE
@@ -35,7 +35,7 @@ extension ModelContext {
         to location: Location?
     ) {
         settings.homeLocation = location
-        safeSave("plannerSettings.updateHomeLocation")
+        safeSave("plannerSettings updateHomeLocation")
     }
 
     @MainActor
@@ -48,7 +48,7 @@ extension ModelContext {
             calendar.calendarIdentifier
         ] = systemImageName
 
-        safeSave("plannerSettings.updateCalendarIcon")
+        safeSave("plannerSettings updateCalendarIcon")
     }
 
     @MainActor
@@ -68,6 +68,6 @@ extension ModelContext {
             )
         }
 
-        safeSave("plannerSettings.toggleCalendarVisibility")
+        safeSave("plannerSettings toggleCalendarVisibility")
     }
 }
