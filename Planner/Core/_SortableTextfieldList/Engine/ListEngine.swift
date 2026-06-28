@@ -29,6 +29,7 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
 
     @Published var focusedId: UUID? = nil
     @Published var pendingFocusId: UUID? = nil
+    @Published var keyboardOwnerId: UUID? = nil
 
     /// Protects items from being deleted on blur of their textfield.
     @Published var protectedId: UUID? = nil

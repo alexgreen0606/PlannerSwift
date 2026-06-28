@@ -57,12 +57,16 @@ struct RowView<
         self.createItem = createItem
         self.deleteItem = deleteItem
         self.onTitleChange = onTitleChange
+
+        self._title = State(initialValue: item.title)
     }
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var listEngine: ListEngine<Item>
 
     @State private var titleChangeHandlerTask: Task<Void, Never>? = nil
+
+    @State private var title: String
 
     private var isFocused: Bool {
         listEngine.focusedId == item.stableId
@@ -83,13 +87,6 @@ struct RowView<
         }
 
         return listEngine.fadingOpacity
-    }
-
-    private var titleBinding: Binding<String> {
-        Binding(
-            get: { item.title },
-            set: { item.title = $0 }
-        )
     }
 
     private var heightBinding: Binding<CGFloat> {
@@ -170,7 +167,7 @@ struct RowView<
                     .frame(height: ListLayout.ADORNMENT_HEIGHT)
                     .opacity(opacity)
 
-                textfield
+                titleView
                     .padding(.vertical, ListLayout.VERTICAL_TEXT_PADDING)
                     .opacity(opacity)
 
@@ -198,39 +195,13 @@ struct RowView<
         }
     }
 
-    private var textfield: some View {
-        TextfieldView(
-            text: titleBinding,
-            height: heightBinding,
-            focusedId: $listEngine.focusedId,
-            stableId: item.stableId,
-            tint: tint,
-            onEnter: {
-                if !item.title.trimmed.isEmpty {
-                    createItem?(index + 1)
-                } else {
-                    // Trigger a deletion of the item in the below handler.
-                    listEngine.focusedId = nil
-                }
-            }
-        )
-        .tint(tint)
-        .frame(height: item.height)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .fixedSize(horizontal: false, vertical: true)
-
-        // MARK: Debounce the title change handler (1 second delay).
-
-        .onChange(of: item.title) { _, _ in
-            guard let onTitleChange else { return }
-
-            titleChangeHandlerTask?.cancel()
-
-            titleChangeHandlerTask = Task {
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
-                guard !Task.isCancelled else { return }
-
-                onTitleChange(item)
+    @ViewBuilder
+    private var titleView: some View {
+        ZStack {
+            if isFocused || listEngine.keyboardOwnerId == item.stableId {
+                titleTextfield
+            } else {
+                staticTitle
             }
         }
 
@@ -240,7 +211,7 @@ struct RowView<
             if wasFocused, !isFocused {
                 titleChangeHandlerTask?.cancel()
 
-                let trimmedTitle = item.title.trimmed
+                let trimmedTitle = title.trimmed
 
                 if trimmedTitle.isEmpty {
                     // Item is blurred and has an empty title. Delete it.
@@ -260,5 +231,58 @@ struct RowView<
                 }
             }
         }
+    }
+
+    private var titleTextfield: some View {
+        TextfieldView(
+            text: $title,
+            height: heightBinding,
+            focusedId: $listEngine.focusedId,
+            keyboardOwnerId: $listEngine.keyboardOwnerId,
+            stableId: item.stableId,
+            tint: tint,
+            onEnter: {
+                item.title = title
+
+                if !title.trimmed.isEmpty {
+                    createItem?(index + 1)
+                } else {
+                    // Trigger a deletion of the item in the below handler.
+                    listEngine.focusedId = nil
+                }
+            }
+        )
+        .tint(tint)
+        .frame(height: item.height)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .fixedSize(horizontal: false, vertical: true)
+
+        // MARK: Debounce the title change handler (1 second delay).
+
+        .onChange(of: title) { _, _ in
+            guard let onTitleChange else { return }
+
+            titleChangeHandlerTask?.cancel()
+
+            titleChangeHandlerTask = Task {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                guard !Task.isCancelled else { return }
+
+                item.title = title
+                onTitleChange(item)
+            }
+        }
+    }
+
+    private var staticTitle: some View {
+        Text(title)
+            .font(.system(size: ListLayout.FONT_SIZE))
+            .lineLimit(nil)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                listEngine.focusedId = item.stableId
+            }
     }
 }

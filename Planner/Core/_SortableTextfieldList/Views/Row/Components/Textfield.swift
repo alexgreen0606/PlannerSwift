@@ -13,6 +13,7 @@ struct TextfieldView: UIViewRepresentable {
     @Binding var text: String
     @Binding var height: CGFloat
     @Binding var focusedId: UUID?
+    @Binding var keyboardOwnerId: UUID?
     let stableId: UUID
     var tint: Color
     var onEnter: () -> Void
@@ -53,9 +54,13 @@ struct TextfieldView: UIViewRepresentable {
         if focusedId == stableId, !uiView.isFirstResponder {
             // Item has requested focus. Make it the first responder.
             uiView.becomeFirstResponder()
+            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1)) {
+                keyboardOwnerId = stableId
+            }
         } else if focusedId == nil, uiView.isFirstResponder {
             // List has requested blur. Resign the first responder.
             uiView.resignFirstResponder()
+            keyboardOwnerId = nil
         }
     }
 
