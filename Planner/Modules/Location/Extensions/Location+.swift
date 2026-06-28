@@ -17,8 +17,8 @@ extension Location {
         planners ?? []
     }
 
-    var safeEvents: [PlannerEvent] {
-        events ?? []
+    var safePlannerEvents: [PlannerEvent] {
+        plannerEvents ?? []
     }
 
     var coordinateId: String {

@@ -10,8 +10,6 @@ import SwiftUI
 
 @Model
 class ChecklistItem: ListItemDetails {
-    
-    var parent: ChecklistItem?
 
     var stableId: UUID = UUID()
 
@@ -20,12 +18,16 @@ class ChecklistItem: ListItemDetails {
     var color: ChecklistItemColor = ChecklistItemColor.red
     var isCompleted: Bool = false
     
+    var height: CGFloat = 0
+    
     var sortIndex: Double = ChecklistsData.SORT_INDEX_SPACING
 
     var showCompleted: Bool = false
     
-    var height: CGFloat = 0
+    // MARK: Parent
+    var parent: ChecklistItem?
 
+    // MARK: Children
     @Relationship(
         deleteRule: .cascade,
         inverse: \ChecklistItem.parent

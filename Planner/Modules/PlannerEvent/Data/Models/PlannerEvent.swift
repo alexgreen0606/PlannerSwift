@@ -18,9 +18,6 @@ class PlannerEvent: EventListItem {
     var title: String = ""
     var time: Date?
 
-    @Relationship(deleteRule: .nullify, inverse: \Location.events)
-    var location: Location?
-
     var isCompleted: Bool = false
 
     /// Must be set when an event doesn't have a time.
@@ -34,6 +31,9 @@ class PlannerEvent: EventListItem {
     
     // MARK: Parent
     var routineEventRecordContext: RoutineEventRecordContext?
+    
+    // MARK: Sibling
+    var location: Location?
     
     // MARK: Child
     @Relationship(

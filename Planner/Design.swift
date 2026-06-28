@@ -54,3 +54,5 @@
 // 1. Parent = this model will be deleted when the parent is deleted
 // 2. Sibling = 2-way deletion
 // 3. Child: this model will delete its child when deleted
+
+// For siblings, atttach the declaration ofn the relationship to the "smaller"/less common model

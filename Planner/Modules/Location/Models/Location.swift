@@ -19,10 +19,21 @@ class Location {
     /// Used for displaying recents in LocationSearchForm.
     var selectedOn: Date = Date.now
 
+    // MARK: Sibling
+    @Relationship(inverse: \PlannerSettings.homeLocation)
     var plannerSettings: PlannerSettings?
+
+    // MARK: Sibling
+    @Relationship(inverse: \Trip.location)
     var trips: [Trip]?
+
+    // MARK: Sibling
+    @Relationship(inverse: \Trip.location)
     var planners: [Planner]?
-    var events: [PlannerEvent]?
+
+    // MARK: Sibling
+    @Relationship(inverse: \PlannerEvent.location)
+    var plannerEvents: [PlannerEvent]?
 
     init(
         name: String,

@@ -16,8 +16,8 @@ class PlannerSettings {
     /// Set of calendar IDs to exclude from planners.
     var hiddenCalendarIds: Set<String> = []
 
+    // MARK: Sibling
     /// Planners default to this location, else the current device location is used (not recommended).
-    @Relationship(deleteRule: .nullify, inverse: \Location.plannerSettings)
     var homeLocation: Location?
 
     init() {}

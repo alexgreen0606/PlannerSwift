@@ -12,18 +12,19 @@ import SwiftUI
 @Model
 class Trip {
     var title: String = ""
-
-    @Relationship(inverse: \Planner.trip)
-    var planners: [Planner]?
+    
+    var excludeRoutines: Bool = true
 
     /// SwiftData query helpers.
     var firstDatestamp: String = ""
     var lastDatestamp: String = ""
-
-    @Relationship(deleteRule: .nullify, inverse: \Location.trips)
+    
+    // MARK: Sibling
     var location: Location?
-
-    var excludeRoutines: Bool = true
+    
+    // MARK: Sibling
+    @Relationship(inverse: \Planner.trip)
+    var planners: [Planner]?
 
     init() {}
 }

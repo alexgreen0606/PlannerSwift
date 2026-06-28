@@ -21,7 +21,7 @@ class RoutineEvent {
     // MARK: Sibling
     var routine: Routine?
 
-    // MARK: Child
+    // MARK: Children
     @Relationship(
         deleteRule: .cascade,
         inverse: \RoutineEventRecordContext.routineEvent

@@ -26,7 +26,7 @@ extension ModelContext {
             ).filter {
                 $0.safeTrips.isEmpty
                     && $0.safePlanners.isEmpty
-                    && $0.safeEvents.isEmpty
+                    && $0.safePlannerEvents.isEmpty
             }
 
             for location in orphanedLocations {

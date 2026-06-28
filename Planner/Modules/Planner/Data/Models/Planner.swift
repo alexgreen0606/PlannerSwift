@@ -13,9 +13,6 @@ class Planner {
     /// Converts to the start of day (DateInRegion) based on the planner's time zone.
     var datestamp: String = ""
 
-    @Relationship(deleteRule: .nullify, inverse: \Location.planners)
-    var location: Location?
-
     var showCompleted: Bool = false
 
     /// When nil, it inherits from trip.
@@ -23,8 +20,12 @@ class Planner {
     var excludeRoutine: Bool?
     
     // MARK: Sibling
+    var location: Location?
+    
+    // MARK: Sibling
     var routine: Routine?
     
+    // MARK: Sibling
     var trip: Trip?
 
     // MARK: Children
