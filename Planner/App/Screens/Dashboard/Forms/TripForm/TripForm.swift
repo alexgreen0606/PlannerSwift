@@ -39,7 +39,7 @@ struct TripFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var todayService: TodayService
-    @EnvironmentObject private var plannerSyncService: PlannerSyncService
+    @EnvironmentObject private var plannerService: PlannerService
 
     @State private var draftTrip: DraftTrip
 
@@ -280,7 +280,7 @@ struct TripFormView: View {
         let savedTrip = modelContext.updateTrip(
             from: draftTrip,
             to: sourceTrip,
-            plannerSyncService: plannerSyncService
+            plannerService: plannerService
         )
 
         dismiss()

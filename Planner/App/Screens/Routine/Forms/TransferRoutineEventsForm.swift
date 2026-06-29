@@ -30,7 +30,7 @@ struct TransferRoutineEventsFormView: View {
     @Environment(\.showToast) private var showToast
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var plannerSyncService: PlannerSyncService
+    @EnvironmentObject private var plannerService: PlannerService
     @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var routineEngine: ListEngine<RoutineEventContext>
 
@@ -69,7 +69,7 @@ struct TransferRoutineEventsFormView: View {
             Set(routineEngine.selectedItems.flatMap { $0.weekdays })
                 .union(destinationWeekdays)
 
-        plannerSyncService.invalidateRoutines(weekdays: affectedWeekdays)
+        plannerService.invalidateRoutines(weekdays: affectedWeekdays)
 
         modelContext.bulkUpdateRoutineEventWeekdays(
             routineEngine.selectedItems,

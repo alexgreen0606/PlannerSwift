@@ -18,6 +18,7 @@ struct TripPreviewView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var todayService: TodayService
 
     private var isExpanded: Bool {
@@ -34,7 +35,7 @@ struct TripPreviewView: View {
 
     private var countdownLabel: String {
         if trip.firstDatestamp <= todayService.todaystamp,
-           trip.lastDatestamp >= todayService.todaystamp
+            trip.lastDatestamp >= todayService.todaystamp
         {
             return ""
         }

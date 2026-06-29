@@ -64,19 +64,17 @@ struct PlannerApp: App {
     @StateObject private var calendarStore = CalendarService()
     @StateObject private var todayService = TodayService()
     @StateObject private var plannerCoverStore = PlannerCoverStore()
-    @StateObject private var plannerSyncService = PlannerSyncService()
     @StateObject private var locationSearchService = LocationSearchService()
 
     var body: some Scene {
         WindowGroup {
-            RootTabView()
+            RootLoaderView()
                 .preferredColorScheme(appColorScheme.colorScheme)
                 .environmentObject(todayService)
                 .environmentObject(weatherCacheService)
                 .environmentObject(calendarStore)
                 .environmentObject(locationService)
                 .environmentObject(plannerCoverStore)
-                .environmentObject(plannerSyncService)
                 .environmentObject(locationSearchService)
         }
         .modelContainer(modelContainer)

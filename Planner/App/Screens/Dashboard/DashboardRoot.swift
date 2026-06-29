@@ -23,7 +23,7 @@ struct DashboardRootView: View {
     @EnvironmentObject private var weatherCacheService: WeatherCacheService
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
-    @EnvironmentObject private var plannerSyncService: PlannerSyncService
+    @EnvironmentObject private var plannerService: PlannerService
 
     @State private var showCalendarPicker = false
     @State private var tappedDates: Set<DateComponents> = []
@@ -62,7 +62,6 @@ struct DashboardRootView: View {
                         TripSectionView(
                             tripSheetContext: $tripSheetContext,
                             expandedTripIds: $expandedTripIds,
-                            todaystamp: todayService.todaystamp,
                             scrollProxy: scrollProxy,
                             settings: settings,
                             namespace: namespace
@@ -74,7 +73,7 @@ struct DashboardRootView: View {
                         weatherCacheService.beginReload()
                         calendarService.refreshCalendarsAndAccess()
                         locationService.loadDeviceLocation()
-                        plannerSyncService.syncAllPlanners()
+                        plannerService.syncAllPlanners()
                     }
                     .background(Color.appBackground)
                     .safeAreaPadding(.bottom, 32)
@@ -138,7 +137,8 @@ struct DashboardRootView: View {
 
             .fullScreenCover(
                 item: $routineCoverContext,
-                onDismiss: plannerSyncService.beginSync
+                // TODO: re-sync routines here
+                // onDismiss: plannerService.beginSync
             ) { weekday in
                 RoutineContextLoaderView(weekday: weekday) { context in
                     RoutineRootView(
@@ -222,6 +222,12 @@ struct DashboardRootView: View {
 
         showCalendarPicker = false
         tappedDates.removeAll()
+
+        // Sync the planner with external data.
+        plannerService.syncPlanner(
+            datestamp: datestamp,
+            todaystamp: todayService.todaystamp
+        )
 
         DispatchQueue.main.async {
             plannerCoverStore.context = PlannerCoverContext(

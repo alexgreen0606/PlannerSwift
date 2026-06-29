@@ -9,36 +9,16 @@ import SwiftData
 import SwiftUI
 
 struct TripSectionView: View {
-    @Binding private var tripSheetContext: TripSheetContext?
-    @Binding private var expandedTripIds: Set<PersistentIdentifier>
-    private let scrollProxy: ScrollViewProxy
-    private let settings: PlannerSettings
-    private let namespace: Namespace.ID
+    @Binding var tripSheetContext: TripSheetContext?
+    @Binding var expandedTripIds: Set<PersistentIdentifier>
+    let scrollProxy: ScrollViewProxy
+    let settings: PlannerSettings
+    let namespace: Namespace.ID
 
-    init(
-        tripSheetContext: Binding<TripSheetContext?>,
-        expandedTripIds: Binding<Set<PersistentIdentifier>>,
-        todaystamp: String,
-        scrollProxy: ScrollViewProxy,
-        settings: PlannerSettings,
-        namespace: Namespace.ID
-    ) {
-        _tripSheetContext = tripSheetContext
-        _expandedTripIds = expandedTripIds
-        self.scrollProxy = scrollProxy
-        self.settings = settings
-        self.namespace = namespace
-
-        _sortedUpcomingTrips = Query(
-            filter: Trip.trips(beforeOrOn: todaystamp),
-            sort: \.firstDatestamp
-        )
-    }
-
-    @Query private var sortedUpcomingTrips: [Trip]
+    @EnvironmentObject private var plannerService: PlannerService
 
     private var tripsByYear: [String: [Trip]] {
-        Dictionary(grouping: sortedUpcomingTrips) {
+        Dictionary(grouping: plannerService.sortedUpcomingTrips) {
             $0.firstDatestamp.year
         }
     }
@@ -50,7 +30,7 @@ struct TripSectionView: View {
     // MARK: - Body
 
     var body: some View {
-        if sortedUpcomingTrips.isEmpty {
+        if plannerService.sortedUpcomingTrips.isEmpty {
             Section("Trips") {
                 EmptyLabel("No upcoming trips")
                     .frame(

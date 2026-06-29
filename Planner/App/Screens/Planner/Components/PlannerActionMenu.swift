@@ -18,7 +18,7 @@ struct PlannerActionMenuView: View {
     @EnvironmentObject private var plannerManager: ListEngine<PlannerEvent>
     @EnvironmentObject private var calendarStore: CalendarService
     @EnvironmentObject private var todayService: TodayService
-    @EnvironmentObject private var plannerSyncService: PlannerSyncService
+    @EnvironmentObject private var plannerService: PlannerService
 
     @State private var showDeleteCompletedConfirmation = false
 
@@ -145,7 +145,7 @@ struct PlannerActionMenuView: View {
     private func toggleRoutineExclusion() {
         modelContext.togglePlannerRoutineExclusion(
             for: planner,
-            plannerSyncService: plannerSyncService
+            plannerService: plannerService
         )
     }
 }

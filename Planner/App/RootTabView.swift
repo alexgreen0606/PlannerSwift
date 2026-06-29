@@ -1,5 +1,5 @@
 //
-//  RootTabs.swift
+//  RootTabView.swift
 //  Planner
 //
 //  Created by Alex Green on 12/1/25.
@@ -14,7 +14,15 @@ import SwiftDate
 import SwiftUI
 
 struct RootTabView: View {
-    init() {
+    private let settings: PlannerSettings
+
+    init(
+        modelContext: ModelContext,
+        ekEventStore: EKEventStore,
+        settings: PlannerSettings
+    ) {
+        self.settings = settings
+
         // Date picker -> 5 minute intervals.
         UIDatePicker.appearance().minuteInterval = 5
 
@@ -57,6 +65,14 @@ struct RootTabView: View {
                 )
             ]
         }
+
+        self._plannerService = StateObject(
+            wrappedValue: PlannerService(
+                modelContext: modelContext,
+                ekEventStore: ekEventStore,
+                settings: settings
+            )
+        )
     }
 
     private let contactsStore = CNContactStore()
@@ -64,7 +80,8 @@ struct RootTabView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @AppStorage("lastCleansedMonthstamp") var lastCleansedMonthstamp: String = ""
+    @AppStorage("lastCleansedMonthstamp") var lastCleansedMonthstamp: String =
+        ""
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
@@ -78,24 +95,18 @@ struct RootTabView: View {
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var weatherCacheService: WeatherCacheService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
-    @EnvironmentObject private var plannerSyncService: PlannerSyncService
 
-    @Query private var plannerSettingsList: [PlannerSettings]
     @Query private var routines: [Routine]
 
-    @StateObject private var plannerSearchStore = PlannerSearchStore()
+    @StateObject private var plannerService: PlannerService
 
     @Namespace private var namespace
-
-    private var settings: PlannerSettings? {
-        plannerSettingsList.first
-    }
 
     // MARK: - Body
 
     var body: some View {
         ZStack {
-            if let settings, routines.count == 7 {
+            if routines.count == 7 {
                 // MARK: Standard App Navigation
 
                 TabView {
@@ -126,7 +137,6 @@ struct RootTabView: View {
                                 settings: settings,
                                 namespace: namespace
                             )
-                            .environmentObject(plannerSearchStore)
                         }
                     }
                 }
@@ -153,39 +163,45 @@ struct RootTabView: View {
                 .opacity(plannerCoverStore.showTodayDefault ? 1 : 0)
             }
         }
-        .task {
-            initializeAppData()
-            initializeSearchResults()
+        .task(id: plannerService.refreshTrigger) {
+            plannerService.syncPlanners(todaystamp: todayService.todaystamp)
         }
 
         // MARK: Planner Cover
 
         .fullScreenCover(item: $plannerCoverStore.context) { context in
-            if let settings {
-                PlannerContextLoaderView(
-                    datestamp: context.datestamp,
+            PlannerContextLoaderView(
+                datestamp: context.datestamp,
+                settings: settings
+            ) { plannerContext in
+                PlannerRootView(
+                    planner: plannerContext.planner,
+                    sortedPlannerEvents: plannerContext.eventContext
+                        .sortedPlannerEvents,
+                    sortedEventChips: plannerContext.eventContext
+                        .sortedEventChips,
+                    sortedBirthdayChips: plannerContext.eventContext
+                        .sortedBirthdayChips,
                     settings: settings
-                ) { plannerContext in
-                    PlannerRootView(
-                        planner: plannerContext.planner,
-                        sortedPlannerEvents: plannerContext.eventContext
-                            .sortedPlannerEvents,
-                        sortedEventChips: plannerContext.eventContext
-                            .sortedEventChips,
-                        sortedBirthdayChips: plannerContext.eventContext
-                            .sortedBirthdayChips,
-                        settings: settings
-                    )
-                    .id(context.datestamp)
-                }
-                .navigationTransition(
-                    .zoom(
-                        sourceID: context.id,
-                        in: namespace
-                    )
                 )
-                .interactiveDismissDisabled(true)
+                .id(context.datestamp)
             }
+            .navigationTransition(
+                .zoom(
+                    sourceID: context.id,
+                    in: namespace
+                )
+            )
+            .interactiveDismissDisabled(true)
+        }
+
+        // MARK: Pass the planner service up the tree.
+
+        .environmentObject(plannerService)
+
+        // TODO: move this to RootLoaderView
+        .task {
+            initializeAppData()
         }
 
         // MARK: Refresh external data when the app focuses.
@@ -197,7 +213,7 @@ struct RootTabView: View {
                     accentColor: accentColor,
                     systemColorScheme: systemColorScheme
                 )
-                plannerSyncService.syncCalendar()
+                plannerService.syncCalendar()
             }
         }
 
@@ -214,31 +230,6 @@ struct RootTabView: View {
 
     // MARK: - Functions
 
-    // TODO: find a way to initialize the search query in init.
-    private func initializeSearchResults() {
-        guard let settings else { return }
-
-        let todayPlanner = modelContext.getPlanner(
-            for: todayService.todaystamp
-        )
-
-        plannerSearchStore.search(
-            with: PlannerSearchQuery(
-                text: "",
-                calendarIds: [],
-                past: false,
-                todayStartOfDay: todayPlanner.startOfDay(settings: settings),
-                fuse: Fuse()
-            ),
-            modelContainer: modelContext.container,
-            modelContext: modelContext,
-            plannerSyncService: plannerSyncService,
-            todaystamp: todayService.todaystamp,
-            settings: settings,
-            ekEventStore: calendarStore.ekEventStore
-        )
-    }
-
     /// Runs each time the app opens.
     private func initializeAppData() {
         // Update the app icon to match the theme settings.
@@ -248,9 +239,6 @@ struct RootTabView: View {
         )
 
         // Ensure needed data exists in storage.
-        modelContext.ensurePlannerSettings(
-            settings: plannerSettingsList
-        )
         modelContext.ensureRootFolder()
         modelContext.ensureRoutines()
 
@@ -266,7 +254,8 @@ struct RootTabView: View {
 
     /// Runs once a day (if app is opened).
     private func cleanseStorage() {
-        guard lastCleansedMonthstamp != todayService.todaystamp.monthstamp else {
+        guard lastCleansedMonthstamp != todayService.todaystamp.monthstamp
+        else {
             return
         }
 

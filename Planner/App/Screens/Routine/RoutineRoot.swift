@@ -21,7 +21,7 @@ struct RoutineRootView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarService
-    @EnvironmentObject private var plannerSyncService: PlannerSyncService
+    @EnvironmentObject private var plannerService: PlannerService
 
     @StateObject private var routineEngine = ListEngine<RoutineEventContext>()
 
@@ -200,7 +200,7 @@ struct RoutineRootView: View {
             sortedRoutineEventContexts: sortedRoutineEventContexts,
             routine: routine
         )
-        plannerSyncService.invalidateRoutines(weekdays: [weekday])
+        plannerService.invalidateRoutines(weekdays: [weekday])
     }
 
     private func deleteEvent(_ routineEventContext: RoutineEventContext) {
@@ -217,7 +217,7 @@ struct RoutineRootView: View {
             event.version += 0.1
             
             // Mark this event's weekdays for refresh in the planner.
-            plannerSyncService.invalidateRoutines(
+            plannerService.invalidateRoutines(
                 weekdays: event.weekdays
             )
             invalidatedEventIds.insert(event.stableId)
@@ -287,7 +287,7 @@ struct RoutineRootView: View {
 //            [event],
 //            from: weekday,
 //            ekEventStore: calendarStore.ekEventStore,
-//            plannerSyncService: plannerSyncService
+//            plannerService: plannerService
 //        )
     }
 
