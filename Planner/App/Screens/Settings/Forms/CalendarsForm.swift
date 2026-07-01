@@ -39,7 +39,7 @@ struct CalendarsFormView: View {
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarService
-    @EnvironmentObject private var plannerSyncService: PlannerSyncService
+    @EnvironmentObject private var plannerService: PlannerService
 
     @State private var calendarStoreRefreshTask: Task<Void, Never>?
 
@@ -66,7 +66,7 @@ struct CalendarsFormView: View {
         // MARK: Refresh the calendar store when the hidden calendars change.
 
         .onChange(of: settings.hiddenCalendarIds) { _, _ in
-            scheduleCalendarStoreRefresh()
+            scheduleCalendarSync()
         }
     }
 
@@ -128,7 +128,7 @@ struct CalendarsFormView: View {
 
     // MARK: - Functions
 
-    private func scheduleCalendarStoreRefresh() {
+    private func scheduleCalendarSync() {
         calendarStoreRefreshTask?.cancel()
 
         calendarStoreRefreshTask = Task {
@@ -137,7 +137,7 @@ struct CalendarsFormView: View {
                 guard !Task.isCancelled else { return }
 
                 calendarStore.refreshCalendarsAndAccess()
-                plannerSyncService.syncCalendar()
+                plannerService.syncVisiblePlannersCalendar()
             } catch {}
         }
     }

@@ -38,15 +38,14 @@ struct SearchRootView: View {
     @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var weatherCacheService: WeatherCacheService
     @EnvironmentObject private var locationService: LocationService
-    @EnvironmentObject private var plannerSearchStore: PlannerSearchStore
-    @EnvironmentObject private var plannerSyncService: PlannerSyncService
+    @EnvironmentObject private var plannerService: PlannerService
 
     @State private var draftQuery: PlannerSearchQuery
 
     @State private var searchTask: Task<Void, Never>?
 
     private var noResultsLabel: LocalizedStringKey {
-        guard let activeQuery = plannerSearchStore.results.activeQuery else {
+        guard let activeQuery = plannerService.searchResults.activeQuery else {
             return ""
         }
 
@@ -66,12 +65,12 @@ struct SearchRootView: View {
                 ScrollViewReader { scrollProxy in
                     List {
                         ForEach(
-                            plannerSearchStore.results.sortedYears.enumerated(),
+                            plannerService.searchResults.sortedYears.enumerated(),
                             id: \.element
                         ) { index, year in
                             Section {
                                 ForEach(
-                                    plannerSearchStore.results.datestampMap[
+                                    plannerService.searchResults.datestampMap[
                                         year
                                     ] ?? [],
                                     id: \.self
@@ -83,8 +82,8 @@ struct SearchRootView: View {
                                     ) {
                                         context in
                                         SearchResultPlannerPreviewView(
-                                            activeQuery: plannerSearchStore
-                                                .results.activeQuery,
+                                            activeQuery: plannerService
+                                                .searchResults.activeQuery,
                                             planner: context.planner,
                                             sortedPlannerEvents: context
                                                 .eventContext
@@ -106,15 +105,12 @@ struct SearchRootView: View {
                             .listSectionMargins(.top, index == 0 ? 0 : 32)
                         }
                     }
-                    .animateLazyAction(
-                        from: todayService.todaystamp
-                    )
                     .listStyle(.plain)
                     .refreshable {
                         weatherCacheService.beginReload()
                         calendarStore.refreshCalendarsAndAccess()
                         locationService.loadDeviceLocation()
-                        plannerSyncService.syncAllPlanners()
+                        plannerService.refresh()
                     }
                     .background(Color.appBackground)
                     .safeAreaInset(edge: .top) {
@@ -145,9 +141,9 @@ struct SearchRootView: View {
 
                     .withScrollTrigger(
                         scrollProxy: scrollProxy,
-                        trigger: plannerSearchStore.results.datestampMap,
-                        id: plannerSearchStore.results.topDatestamp,
-                        disabled: plannerSearchStore.results.topDatestamp == nil
+                        trigger: plannerService.searchResults.datestampMap,
+                        id: plannerService.searchResults.topDatestamp,
+                        disabled: plannerService.searchResults.topDatestamp == nil
                     )
                 }
             }
@@ -157,12 +153,6 @@ struct SearchRootView: View {
             prompt: "Search planner.."
         )
         .searchPresentationToolbarBehavior(.avoidHidingContent)
-
-        // MARK: Re-search when the planners re-sync.
-
-        .onChange(of: plannerSyncService.syncTrigger) { _, _ in
-            search()
-        }
 
         // MARK: Re-search when today's date changes.
 
@@ -183,7 +173,7 @@ struct SearchRootView: View {
 
     @ViewBuilder
     private var noResultsLabelView: some View {
-        if plannerSearchStore.results.sortedYears.isEmpty {
+        if plannerService.searchResults.sortedYears.isEmpty {
             EmptyLabel(noResultsLabel)
                 .padding(.horizontal, 64)
         }
@@ -192,16 +182,7 @@ struct SearchRootView: View {
     // MARK: - Functions
 
     private func search() {
-        modelContext.safeSave("SearchRootView search")
-        plannerSearchStore.search(
-            with: draftQuery,
-            modelContainer: modelContext.container,
-            modelContext: modelContext,
-            plannerSyncService: plannerSyncService,
-            todaystamp: todayService.todaystamp,
-            settings: settings,
-            ekEventStore: calendarStore.ekEventStore
-        )
+        plannerService.search(with: draftQuery)
     }
 
     private func scheduleSearch() {

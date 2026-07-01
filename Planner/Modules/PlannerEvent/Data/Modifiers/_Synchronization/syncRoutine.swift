@@ -76,8 +76,7 @@ extension ModelContext {
                 !plannerEvent.isCompleted,
                 let routineEventRecordContext = plannerEvent
                     .routineEventRecordContext,
-                let routineEvent = routineEventRecordContext.routineEvent,
-                let routineEventContext = routineEvent.routineEventContext
+                let routineEvent = routineEventRecordContext.routineEvent
             else {
                 continue
             }

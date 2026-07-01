@@ -33,14 +33,8 @@ struct RoutineLoaderView<Content: View>: View {
     // MARK: - Body
 
     var body: some View {
-        ZStack {
-            if let routine {
-                content(routine)
-            }
-        }
-        .task {
-            // TODO: add an ensure. Maybe at app root?
-            // modelContext.ensurePlanner(planners: planners, datestamp: datestamp)
+        if let routine {
+            content(routine)
         }
     }
 }

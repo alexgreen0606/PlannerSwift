@@ -10,39 +10,27 @@ import EventKit
 import Fuse
 import SwiftData
 import SwiftDate
-
-struct PlannerSearchResults {
-    let datestampMap: [String: [String]]
-    let topDatestamp: String?
-    let sortedYears: [String]
-    let activeQuery: PlannerSearchQuery?
-
-    init(
-        datestampMap: [String: [String]] = [:],
-        topDatestamp: String? = nil,
-        sortedYears: [String] = [],
-        activeQuery: PlannerSearchQuery? = nil
-    ) {
-        self.datestampMap = datestampMap
-        self.topDatestamp = topDatestamp
-        self.sortedYears = sortedYears
-        self.activeQuery = activeQuery
-    }
-}
+import SwiftUI
 
 @MainActor
 class PlannerService: ObservableObject {
-    let modelContext: ModelContext
-    let ekEventStore: EKEventStore
-    let settings: PlannerSettings
+    private let modelContext: ModelContext
+    private let ekEventStore: EKEventStore
+    private let todayService: TodayService
+    private let plannerCoverStore: PlannerCoverStore
+    private let settings: PlannerSettings
 
     init(
         modelContext: ModelContext,
         ekEventStore: EKEventStore,
+        todayService: TodayService,
+        plannerCoverStore: PlannerCoverStore,
         settings: PlannerSettings
     ) {
         self.modelContext = modelContext
         self.ekEventStore = ekEventStore
+        self.todayService = todayService
+        self.plannerCoverStore = plannerCoverStore
         self.settings = settings
 
         self.plannerSearchService = PlannerSearchService(
@@ -52,104 +40,51 @@ class PlannerService: ObservableObject {
 
     private var plannerSearchService: PlannerSearchService
 
-    @Published private(set) var refreshTrigger: UUID = UUID()
+    /// Planner location keys that have synced with the calendar.
+    private var freshCalendarLocationKeys: Set<String> = []
+
+    /// Panner datestamps that have synced with their routine.
+    private var freshRoutineDatestamps: Set<String> = []
+
+    @Published private(set) var thisWeekDatestamps: [String] = []
 
     @Published private(set) var sortedUpcomingTrips: [Trip] = []
 
     @Published private(set) var searchResults = PlannerSearchResults()
 
-    @Published private(set) var thisWeekDatestamps: [String] = []
-
-    /// Planner keys that have up-to-date calendar data.
-    @Published var freshCalendarPlannerKeys: Set<String> = []
-
-    /// Weekdays mapped to all planner datestamps that have synced with their routines.
-    @Published private(set) var freshRoutineMap: [Weekday: Set<String>] =
-        [:]
-
-    func syncPlanners(todaystamp: String) {
+    private var visibleDatestamps: Set<String> {
         var datestampsToSync: Set<String> = []
-        var buildContexts: [PlannerBuildContext] = []
 
-        // MARK: Gather trip datestamps for synchronization.
-
-        sortedUpcomingTrips = modelContext.getSortedTrips(
-            onOrBefore: todaystamp
-        )
-
-        for trip in sortedUpcomingTrips {
-            for planner in trip.safePlanners {
-                buildContexts.append(
-                    PlannerBuildContext(
-                        planner: planner,
-                        startOfDay: planner.startOfDay(settings: settings)
-                    )
-                )
-                datestampsToSync.insert(planner.datestamp)
-            }
+        if plannerCoverStore.showTodayDefault {
+            datestampsToSync.insert(plannerCoverStore.todaystampAtInit)
         }
 
-        // MARK: Gather this week datestamps for synchronization.
-
-        let today = DateInRegion(region: .local)
-
-        thisWeekDatestamps = (0..<7).map { offset in
-            today
-                .dateByAdding(offset, .day)
-                .toFormat("yyyy-MM-dd")
+        if let datestamp = plannerCoverStore.context?.datestamp {
+            datestampsToSync.insert(datestamp)
         }
 
-        let newDatestampsToSync = Set(
-            thisWeekDatestamps
+        datestampsToSync.formUnion(
+            sortedUpcomingTrips
+                .flatMap(\.sortedPlanners)
+                .map(\.datestamp)
         )
-        .subtracting(datestampsToSync)
 
-        if !newDatestampsToSync.isEmpty {
-            buildContexts.append(
-                contentsOf: modelContext.getBulkPlannerBuildContexts(
-                    for: newDatestampsToSync,
-                    settings: settings
-                )
+        datestampsToSync.formUnion(thisWeekDatestamps)
+
+        datestampsToSync.formUnion(
+            Set(
+                searchResults.datestampMap.values.flatMap { $0 }
             )
-            datestampsToSync.formUnion(newDatestampsToSync)
-        }
-
-        // MARK: Gather search result datestamps for synchronization.
-
-        let todayPlanner = modelContext.getPlanner(
-            for: todaystamp
         )
 
-        search(
-            with: PlannerSearchQuery(
-                text: "",
-                calendarIds: [],
-                past: false,
-                todayStartOfDay: todayPlanner.startOfDay(settings: settings),
-                fuse: Fuse()
-            ),
-            todaystamp: todaystamp
-        )
-
-        // MARK: Sync all planners at once.
-
-        for buildContext in buildContexts {
-            syncPlanner(
-                buildContext.planner,
-                startOfDay: buildContext.startOfDay,
-                todaystamp: todaystamp
-            )
-        }
+        return datestampsToSync
     }
 
-    func beginRefresh() {
-        refreshTrigger = UUID()
-    }
+    // MARK: - Search
 
-    func search(
-        with query: PlannerSearchQuery,
-        todaystamp: String
-    ) {
+    func search(with query: PlannerSearchQuery) {
+        modelContext.safeSave("PlannerService search")
+
         Task {
             let datestampMap = await plannerSearchService.search(
                 query: query,
@@ -161,16 +96,15 @@ class PlannerService: ObservableObject {
 
             // Sync the result planners.
 
-            let buildContexts = modelContext.getBulkPlannerBuildContexts(
+            let syncContexts = modelContext.getBulkPlannerSyncContexts(
                 for: Set(datestampMap.values.flatMap { $0 }),
                 settings: settings
             )
 
-            for buildContext in buildContexts {
+            for syncContext in syncContexts {
                 syncPlanner(
-                    buildContext.planner,
-                    startOfDay: buildContext.startOfDay,
-                    todaystamp: todaystamp
+                    syncContext.planner,
+                    startOfDay: syncContext.startOfDay
                 )
             }
 
@@ -182,99 +116,162 @@ class PlannerService: ObservableObject {
 
                 let top = sortedKeys.first.flatMap { datestampMap[$0]?.first }
 
-                self.searchResults = PlannerSearchResults(
-                    datestampMap: datestampMap,
-                    topDatestamp: top,
-                    sortedYears: sortedKeys,
-                    activeQuery: query
-                )
+                withAnimation {
+                    self.searchResults = PlannerSearchResults(
+                        datestampMap: datestampMap,
+                        topDatestamp: top,
+                        sortedYears: sortedKeys,
+                        activeQuery: query
+                    )
+                }
             }
         }
     }
 
+    func search() {
+        search(
+            with: searchResults.activeQuery ?? defaultSearchQuery()
+        )
+    }
+
+    // MARK: - Synchronization
+
+    func syncPlanner(datestamp: String) {
+        let planner = modelContext.getPlanner(for: datestamp)
+        let startOfDay = planner.startOfDay(settings: settings)
+        syncPlanner(
+            planner,
+            startOfDay: startOfDay
+        )
+    }
+
     func syncPlanner(
         _ planner: Planner,
-        startOfDay: DateInRegion,
-        todaystamp: String
+        startOfDay: DateInRegion
     ) {
-        guard
-            let weekday = Weekday.forDatestamp(planner.datestamp)
-        else {
-            return
-        }
-
-        // MARK: Sync Routine
-
-        let syncRoutine = !(freshRoutineMap[weekday] ?? []).contains(
+        // Sync Routine
+        if !freshRoutineDatestamps.contains(
             planner.datestamp
-        )
-
-        if syncRoutine {
+        ) {
             modelContext.syncRoutine(
                 for: planner,
                 startOfDay: startOfDay,
-                todaystamp: todaystamp,
+                todaystamp: todayService.todaystamp,
                 ekEventStore: ekEventStore
             )
 
-            freshRoutineMap[weekday, default: []].insert(planner.datestamp)
+            freshRoutineDatestamps.insert(planner.datestamp)
         }
 
-        // MARK: Sync Calendar
+        let locationKey = planner.locationKey
 
-        if freshCalendarPlannerKeys.contains(planner.plannerLocationId) {
-            return
+        // Sync Calendar
+        if !freshCalendarLocationKeys.contains(locationKey) {
+            modelContext.syncCalendar(
+                startOfDay: startOfDay,
+                ekEventStore: ekEventStore,
+                settings: settings
+            )
+
+            freshCalendarLocationKeys.insert(locationKey)
         }
+    }
 
-        freshCalendarPlannerKeys.insert(planner.plannerLocationId)
+    // MARK: - Bulk Synchronization
 
-        modelContext.syncCalendar(
-            startOfDay: startOfDay,
-            ekEventStore: ekEventStore,
+    func syncVisiblePlanners() {
+        let syncContexts = modelContext.getBulkPlannerSyncContexts(
+            for: visibleDatestamps,
             settings: settings
+        )
+
+        for syncContext in syncContexts {
+            syncPlanner(
+                syncContext.planner,
+                startOfDay: syncContext.startOfDay
+            )
+        }
+    }
+
+    func refresh() {
+        invalidateRoutines()
+        invalidateCalendar()
+        loadVisibleDatestamps()
+        syncVisiblePlanners()
+    }
+
+    func syncVisiblePlannersCalendar() {
+        invalidateCalendar()
+        syncVisiblePlanners()
+    }
+
+    func syncVisiblePlannerRoutines() {
+        invalidateRoutines()
+        syncVisiblePlanners()
+    }
+
+    func syncPlannerRoutine(planner: Planner) {
+        freshRoutineDatestamps.remove(planner.datestamp)
+        syncPlanner(
+            planner,
+            startOfDay: planner.startOfDay(settings: settings)
         )
     }
 
-    // MARK: - Manual Sync Functions
+    // MARK: - Invalidation
 
-    func syncCalendar() {
-        invalidateCalendar()
-        beginRefresh()
+    func invalidateRoutines() {
+        freshRoutineDatestamps = []
     }
-
-    func syncPlannerRoutine(datestamp: String) {
-        invalidatePlannerRoutine(datestamp: datestamp)
-        beginRefresh()
-    }
-
-    func syncAllPlanners() {
-        invalidateCalendar()
-        freshRoutineMap.removeAll()
-        beginRefresh()
-    }
-
-    // MARK: - Invalidation Functions
 
     func invalidateCalendar() {
-        freshCalendarPlannerKeys.removeAll()
+        freshCalendarLocationKeys = []
     }
 
-    func invalidatePlannerRoutine(datestamp: String) {
-        guard let weekday = Weekday.forDatestamp(datestamp) else {
-            return
+    // MARK: - Change Handlers
+
+    func handleTripChange() {
+        withAnimation {
+            loadTrips()
         }
 
-        freshRoutineMap[weekday]?.remove(datestamp)
+        syncVisiblePlannerRoutines()
     }
 
-    func invalidateRoutines(weekdays: Set<Weekday>) {
-        for weekday in weekdays {
-            freshRoutineMap[weekday]?.removeAll()
+    // MARK: - Loaders
+
+    private func loadVisibleDatestamps() {
+        withAnimation {
+            loadThisWeekDatestamps()
+            loadTrips()
         }
     }
 
-    // TODO: functions:
+    private func loadTrips() {
+        sortedUpcomingTrips = modelContext.getSortedTrips(
+            onOrBefore: todayService.todaystamp
+        )
+    }
 
-    // MARK: updateThisWeekDatestamps (with animation)
+    private func loadThisWeekDatestamps() {
+        thisWeekDatestamps = (0..<7).map { offset in
+            DateInRegion(region: .local)
+                .dateByAdding(offset, .day)
+                .toFormat("yyyy-MM-dd")
+        }
+    }
 
+    private func defaultSearchQuery() -> PlannerSearchQuery {
+        let todayPlanner = modelContext.getPlanner(
+            for: todayService.todaystamp
+        )
+
+        return PlannerSearchQuery(
+            text: "",
+            calendarIds: [],
+            past: false,
+            todayStartOfDay: todayPlanner.startOfDay(settings: settings),
+            fuse: Fuse()
+        )
+    }
 }

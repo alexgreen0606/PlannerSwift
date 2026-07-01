@@ -65,7 +65,7 @@ struct TripFormView: View {
         let sortedDatestamps = draftTrip.datestamps.sorted()
 
         guard let firstDatestamp = sortedDatestamps.first,
-              let lastDatestamp = sortedDatestamps.last
+            let lastDatestamp = sortedDatestamps.last
         else {
             return "Select Dates"
         }
@@ -291,6 +291,7 @@ struct TripFormView: View {
         dismiss()
         if let sourceTrip {
             modelContext.safeDelete(sourceTrip)
+            plannerService.handleTripChange()
         }
     }
 }

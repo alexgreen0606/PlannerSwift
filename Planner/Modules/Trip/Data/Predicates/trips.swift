@@ -9,7 +9,7 @@ import SwiftUI
 
 extension Trip {
     static func trips(
-        beforeOrOn datestamp: String
+        onOrBefore datestamp: String
     ) -> Predicate<Trip> {
         #Predicate<Trip> {
             $0.lastDatestamp >= datestamp

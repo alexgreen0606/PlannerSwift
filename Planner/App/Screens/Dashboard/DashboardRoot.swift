@@ -67,13 +67,14 @@ struct DashboardRootView: View {
                             namespace: namespace
                         )
                     }
+                    // TODO: use withAnimation here
                     .animation(.linear, value: expandedTripIds)
                     .listStyle(.plain)
                     .refreshable {
                         weatherCacheService.beginReload()
                         calendarService.refreshCalendarsAndAccess()
                         locationService.loadDeviceLocation()
-                        plannerService.syncAllPlanners()
+                        plannerService.refresh()
                     }
                     .background(Color.appBackground)
                     .safeAreaPadding(.bottom, 32)
@@ -137,8 +138,7 @@ struct DashboardRootView: View {
 
             .fullScreenCover(
                 item: $routineCoverContext,
-                // TODO: re-sync routines here
-                // onDismiss: plannerService.beginSync
+                onDismiss: plannerService.syncVisiblePlanners
             ) { weekday in
                 RoutineContextLoaderView(weekday: weekday) { context in
                     RoutineRootView(
@@ -223,10 +223,8 @@ struct DashboardRootView: View {
         showCalendarPicker = false
         tappedDates.removeAll()
 
-        // Sync the planner with external data.
         plannerService.syncPlanner(
-            datestamp: datestamp,
-            todaystamp: todayService.todaystamp
+            datestamp: datestamp
         )
 
         DispatchQueue.main.async {

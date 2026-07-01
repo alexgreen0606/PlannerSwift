@@ -17,7 +17,7 @@ extension ModelContext {
         skipSave: Bool = false
     ) {
         if let ekEventStore,
-            let ekEventContext = plannerEvent.eKEventContext,
+            plannerEvent.eKEventContext != nil,
             let ekEvent = ekEventStore.getEkEvent(for: plannerEvent),
             !ekEventStore.attemptDeleteEvent(ekEvent)
         {

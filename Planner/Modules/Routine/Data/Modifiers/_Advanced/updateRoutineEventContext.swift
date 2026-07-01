@@ -14,14 +14,10 @@ extension ModelContext {
         _ sourceRoutineEventContext: RoutineEventContext?,
         with draftRoutineEvent: DraftRoutineEvent,
         sourceSortedRoutineEventContexts: [RoutineEventContext]?,
-        plannerSyncService: PlannerSyncService,
+        plannerService: PlannerService,
         ekEventStore: EKEventStore
     ) {
         guard !draftRoutineEvent.weekdays.isEmpty else { return }
-
-        let affectedWeekdays = Set(sourceRoutineEventContext?.weekdays ?? []).union(
-            draftRoutineEvent.weekdays
-        )
 
         let routineEventContext =
             sourceRoutineEventContext
@@ -35,13 +31,17 @@ extension ModelContext {
             sourceSortedRoutineEventContexts: sourceSortedRoutineEventContexts,
             ekEventStore: ekEventStore
         )
-        
+
         routineEventContext.version += 0.1
 
         insertIfNeeded(routineEventContext)
 
         safeSave("updateRoutineEventContext")
 
-        plannerSyncService.invalidateRoutines(weekdays: affectedWeekdays)
+        plannerService.invalidateRoutines()
+
+        if sourceRoutineEventContext == nil {
+            plannerService.syncVisiblePlanners()
+        }
     }
 }

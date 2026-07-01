@@ -9,6 +9,27 @@ import Foundation
 import SwiftData
 
 extension ModelContext {
+    func getSortedTrips(onOrBefore todaystamp: String)
+        -> [Trip]
+    {
+        do {
+            return try fetch(
+                FetchDescriptor<Trip>(
+                    predicate: Trip.trips(onOrBefore: todaystamp),
+                    sortBy: [
+                        SortDescriptor(\Trip.firstDatestamp)
+                    ]
+                )
+            )
+        } catch {
+            assertionFailure(
+                "ERROR ModelContext+Trip getSortedTrips: \(error)"
+            )
+        }
+
+        return []
+    }
+    
     func getExistingTripDatestamps() -> Set<String> {
         do {
             let existingTrips = try fetch(
@@ -29,7 +50,7 @@ extension ModelContext {
     func updateTrip(
         from draftTrip: DraftTrip,
         to sourceTrip: Trip?,
-        plannerSyncService: PlannerSyncService
+        plannerService: PlannerService
     ) -> Trip {
         var sourcePlanners: [String: Planner] = Dictionary(
             uniqueKeysWithValues: (sourceTrip?.planners ?? []).map {
@@ -47,11 +68,6 @@ extension ModelContext {
 
         // Add any new planners to this trip.
         for datestamp in draftTrip.datestamps {
-            // Invalidate the planner routine.
-            plannerSyncService.invalidatePlannerRoutine(
-                datestamp: datestamp
-            )
-
             if let sourcePlanner = sourcePlanners[datestamp] {
                 sourcePlanners.removeValue(forKey: datestamp)
                 continue
@@ -60,18 +76,10 @@ extension ModelContext {
             let newPlanner = getPlanner(for: datestamp)
             trip.planners?.append(newPlanner)
             newPlanner.trip = trip
-            
-            // TODO: make sure this planner is invalidated so it refreshes.
-
         }
 
         // Remove any stale planners from this trip.
         for (_, stalePlanner) in sourcePlanners {
-            // Re-sync the planner routine.
-            plannerSyncService.invalidatePlannerRoutine(
-                datestamp: stalePlanner.datestamp
-            )
-
             if let index = trip.safePlanners.firstIndex(where: {
                 $0 === stalePlanner
             }) {
@@ -87,7 +95,7 @@ extension ModelContext {
         insertIfNeeded(trip)
         safeSave("ModelContext+Trip updateTrip")
 
-        plannerSyncService.beginSync()
+        plannerService.handleTripChange()
 
         return trip
     }

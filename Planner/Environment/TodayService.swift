@@ -31,9 +31,6 @@ final class TodayService: ObservableObject {
     @Published private(set) var todaystamp: String =
         TodayService.makeTodaystamp()
 
-    @Published private(set) var next7Datestamps: [String] =
-        TodayService.makeNext7Datestamps()
-
     var datePickerBounds: ClosedRange<Date> {
         keepPastEventsDuration.cutoffDate ... maxCalendarDate
     }
@@ -55,16 +52,6 @@ final class TodayService: ObservableObject {
         DateInRegion(Date(), region: .local)
             .dateByAdding(3, .year)
             .date
-    }
-
-    private static func makeNext7Datestamps() -> [String] {
-        let today = DateInRegion(region: .local)
-
-        return (0 ..< 7).map { offset in
-            today
-                .dateByAdding(offset, .day)
-                .toFormat("yyyy-MM-dd")
-        }
     }
 
     // MARK: - Schedule Functions
@@ -90,7 +77,6 @@ final class TodayService: ObservableObject {
 
     private func updateStamp() {
         todaystamp = Self.makeTodaystamp()
-        next7Datestamps = Self.makeNext7Datestamps()
         maxCalendarDate = Self.makeMaxCalendarDate()
 
         // Reschedule for the next midnight.

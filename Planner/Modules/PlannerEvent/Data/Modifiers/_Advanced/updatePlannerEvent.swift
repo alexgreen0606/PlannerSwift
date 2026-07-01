@@ -16,7 +16,7 @@ extension ModelContext {
         destinationDatestamp: String,
         sourcePlanner: Planner?,
         timeZone: TimeZone,
-        plannerSyncService: PlannerSyncService,
+        plannerService: PlannerService,
         ekEventStore: EKEventStore,
         settings: PlannerSettings,
     ) -> /// The datestamps the event is now in.
@@ -76,7 +76,7 @@ extension ModelContext {
         // MARK: Re-sync calendar events if this event was recurring.
         if eventWasRecurring {
             DispatchQueue.main.async(
-                execute: plannerSyncService.syncCalendar
+                execute: plannerService.syncVisiblePlannersCalendar
             )
         }
 

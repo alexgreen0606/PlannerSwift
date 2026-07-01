@@ -50,7 +50,7 @@ struct RoutineEventFormView: View {
     @Environment(\.showToast) private var showToast
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var plannerSyncService: PlannerSyncService
+    @EnvironmentObject private var plannerService: PlannerService
     @EnvironmentObject private var calendarService: CalendarService
 
     @State private var draftRoutineEvent: DraftRoutineEvent
@@ -218,7 +218,7 @@ struct RoutineEventFormView: View {
             sourceRoutineEvent,
             with: draftRoutineEvent,
             sourceSortedRoutineEventContexts: sourceSortedRoutineEvents,
-            plannerSyncService: plannerSyncService,
+            plannerService: plannerService,
             ekEventStore: calendarService.ekEventStore
         )
 

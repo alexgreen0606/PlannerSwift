@@ -97,7 +97,7 @@ struct EventFormView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.showToast) private var showToast
     @EnvironmentObject private var calendarService: CalendarService
-    @EnvironmentObject private var plannerSyncService: PlannerSyncService
+    @EnvironmentObject private var plannerService: PlannerService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
     @State private var draftPlannerEvent: DraftPlannerEvent
@@ -189,7 +189,7 @@ struct EventFormView: View {
             event,
             sourcePlannerEvent: sourcePlannerEvent,
             sourcePlanner: sourcePlanner,
-            plannerSyncService: plannerSyncService,
+            plannerService: plannerService,
             settings: settings
         )
 

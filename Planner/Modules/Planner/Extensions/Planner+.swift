@@ -28,10 +28,9 @@ extension Planner {
 
     // MARK: - Location Variables
 
-    // TODO: maybe this should relate to timezone yeah?
-    var plannerLocationId: String {
-        let locationKey = location?.coordinateId ?? "HOME_LOCATION"
-        return "\(datestamp)-\(locationKey)"
+    var locationKey: String {
+        let timeZoneKey = location?.timeZoneIdentifier ?? "HOME_LOCATION"
+        return "\(datestamp)-\(timeZoneKey)"
     }
 
     func location(settings: PlannerSettings, deviceLocation: Location?)

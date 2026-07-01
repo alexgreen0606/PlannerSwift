@@ -67,10 +67,10 @@ extension ModelContext {
 
     /// Gathers all data needed to eager-build a list of planners.
     @MainActor
-    func getBulkPlannerBuildContexts(
+    func getBulkPlannerSyncContexts(
         for datestamps: Set<String>,
         settings: PlannerSettings
-    ) -> [PlannerBuildContext] {
+    ) -> [PlannerSyncContext] {
         do {
             // Load in planners that already exist in storage.
 
@@ -93,11 +93,11 @@ extension ModelContext {
 
             // Build a list of data needed to build each planner.
 
-            var contexts: [PlannerBuildContext] = []
+            var contexts: [PlannerSyncContext] = []
 
             for planner in allPlanners {
                 contexts.append(
-                    PlannerBuildContext(
+                    PlannerSyncContext(
                         planner: planner,
                         startOfDay: planner.startOfDay(settings: settings)
                     )
@@ -185,7 +185,7 @@ extension ModelContext {
     @MainActor
     func togglePlannerRoutineExclusion(
         for planner: Planner,
-        plannerSyncService: PlannerSyncService
+        plannerService: PlannerService
     ) {
         planner.excludeRoutine = !planner.safeExcludeRoutine
 
@@ -198,9 +198,9 @@ extension ModelContext {
 
         safeSave("ModelContext+Planner togglePlannerRoutineExclusion")
 
-        // Sync the planner's routine events.
-        plannerSyncService.syncPlannerRoutine(
-            datestamp: planner.datestamp
+        // Sync the planner's routine.
+        plannerService.syncPlannerRoutine(
+            planner: planner
         )
     }
 }

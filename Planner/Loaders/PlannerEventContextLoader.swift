@@ -17,7 +17,7 @@ struct PlannerEventContextLoaderView<Content: View>: View {
 
     init(
         planner: Planner,
-        plannerSyncService: PlannerSyncService,
+        plannerService: PlannerService,
         settings: PlannerSettings,
         @ViewBuilder content:
             @escaping (PlannerEventContext) -> Content
@@ -61,7 +61,7 @@ struct PlannerEventContextLoaderView<Content: View>: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var weatherCacheService: WeatherCacheService
-    @EnvironmentObject private var plannerSyncService: PlannerSyncService
+    @EnvironmentObject private var plannerService: PlannerService
     @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var locationService: LocationService
 
@@ -86,46 +86,31 @@ struct PlannerEventContextLoaderView<Content: View>: View {
                 sortedBirthdayChips: sortedBirthdayChips
             )
         )
-        .task(id: plannerSyncService.syncTrigger) {
-            syncPlanner()
-        }
         .task(id: weatherCacheService.reloadTrigger) {
             loadWeather()
         }
 
         // MARK: Reload the weather and calendar events when the time zone changes.
 
-        .onChange(of: plannerLocation) {
-            oldLocation,
-            newLocation in
+        .onChange(of: plannerLocation) { oldLocation, newLocation in
             loadWeather()
 
             let deviceTimeZoneIdentifier = TimeZone.current.identifier
-            let oldTimeZoneIdentifier =
-                oldLocation?.timeZoneIdentifier ?? deviceTimeZoneIdentifier
+            let oldTimeZoneIdentifier = oldLocation?.timeZoneIdentifier ?? deviceTimeZoneIdentifier
             let newTimeZoneIdentifier =
                 newLocation?.timeZoneIdentifier ?? deviceTimeZoneIdentifier
 
             if oldTimeZoneIdentifier != newTimeZoneIdentifier {
                 // The 24-hour time window has changed. Sync the planner again to get accurate calendar events.
-                syncPlanner()
+
+                // TODO: should I just sync this when the location form closes, or when the trip form closes,
+                // or when the home location form closes?
+                plannerService.syncPlanner(planner, startOfDay: startOfDay)
             }
         }
     }
 
     // MARK: - Functions
-
-    @MainActor
-    private func syncPlanner() {
-        plannerSyncService.syncPlanner(
-            planner,
-            startOfDay: startOfDay,
-            todaystamp: todayService.todaystamp,
-            ekEventStore: calendarService.ekEventStore,
-            modelContext: modelContext,
-            settings: settings
-        )
-    }
 
     private func loadWeather() {
         Task {

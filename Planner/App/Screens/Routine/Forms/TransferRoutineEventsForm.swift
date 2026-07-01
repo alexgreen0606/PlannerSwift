@@ -65,11 +65,7 @@ struct TransferRoutineEventsFormView: View {
     // MARK: - Functions
 
     private func handleTransfer() {
-        let affectedWeekdays: Set<Weekday> =
-            Set(routineEngine.selectedItems.flatMap { $0.weekdays })
-                .union(destinationWeekdays)
-
-        plannerService.invalidateRoutines(weekdays: affectedWeekdays)
+        plannerService.invalidateRoutines()
 
         modelContext.bulkUpdateRoutineEventWeekdays(
             routineEngine.selectedItems,

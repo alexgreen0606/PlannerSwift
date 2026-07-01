@@ -24,7 +24,7 @@ struct PlannerEventFormView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var todayService: TodayService
-    @EnvironmentObject private var plannerSyncService: PlannerSyncService
+    @EnvironmentObject private var plannerService: PlannerService
     @EnvironmentObject private var locationService: LocationService
 
     @State private var visiblePicker: VisibleEventFormPicker = .none
@@ -296,7 +296,7 @@ struct PlannerEventFormView: View {
             ).datestamp,
             sourcePlanner: sourcePlanner,
             timeZone: region.timeZone,
-            plannerSyncService: plannerSyncService,
+            plannerService: plannerService,
             ekEventStore: calendarService.ekEventStore,
             settings: settings
         )

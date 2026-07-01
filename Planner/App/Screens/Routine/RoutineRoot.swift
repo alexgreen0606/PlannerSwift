@@ -200,7 +200,7 @@ struct RoutineRootView: View {
             sortedRoutineEventContexts: sortedRoutineEventContexts,
             routine: routine
         )
-        plannerService.invalidateRoutines(weekdays: [weekday])
+        plannerService.invalidateRoutines()
     }
 
     private func deleteEvent(_ routineEventContext: RoutineEventContext) {
@@ -212,14 +212,12 @@ struct RoutineRootView: View {
 
     private func handleEventTitleChange(event: RoutineEventContext) {
         modelContext.handleRoutineEventContextTitleChange(event)
-        
+
         if !invalidatedEventIds.contains(event.stableId) {
             event.version += 0.1
-            
-            // Mark this event's weekdays for refresh in the planner.
-            plannerService.invalidateRoutines(
-                weekdays: event.weekdays
-            )
+
+            // Mark routines for refresh in the planners.
+            plannerService.invalidateRoutines()
             invalidatedEventIds.insert(event.stableId)
         }
     }
@@ -228,7 +226,9 @@ struct RoutineRootView: View {
         openRoutineEventSheet(for: event)
     }
 
-    private func eventToggleConfig(_ event: RoutineEventContext) -> ToggleConfig? {
+    private func eventToggleConfig(_ event: RoutineEventContext)
+        -> ToggleConfig?
+    {
         ToggleConfig(
             pendingIconConfig: IconConfig(
                 name: "minus.circle",
@@ -282,16 +282,16 @@ struct RoutineRootView: View {
     }
 
     private func removeEventFromWeekday(_ event: RoutineEventContext) {
-        // TODO: how do I just remove it from this one weekday
-//        modelContext.deleteRoutineEvents(
-//            [event],
-//            from: weekday,
-//            ekEventStore: calendarStore.ekEventStore,
-//            plannerService: plannerService
-//        )
+        modelContext.removeRoutineEventContextsFromRoutine(
+            routineEventContexts: [event],
+            routine: routine,
+            ekEventStore: calendarStore.ekEventStore
+        )
     }
 
-    private func deleteEventEverywhere(_ routineEventContext: RoutineEventContext) {
+    private func deleteEventEverywhere(
+        _ routineEventContext: RoutineEventContext
+    ) {
         _ = modelContext.deleteRoutineEventContext(
             routineEventContext,
             ekEventStore: calendarStore.ekEventStore

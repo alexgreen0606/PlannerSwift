@@ -177,7 +177,7 @@ actor PlannerSearchService {
             }
 
             // ------------------------------------------------------------------
-            // Phase 5: Assemble the data and display the top 10 results.
+            // Phase 5: Assemble the data and display the top 20 results.
             // ------------------------------------------------------------------
 
             if query?.isSearching == true {
@@ -290,7 +290,7 @@ actor PlannerSearchService {
                     // Sort by scores descending.
                     return $0.value > $1.value
                 }
-                .prefix(10)
+                .prefix(20)
                 .map { $0.key }
 
         return Dictionary(grouping: topDatestamps) {
@@ -318,7 +318,7 @@ actor PlannerSearchService {
                         ? $0 > $1 // descending
                         : $0 < $1 // ascending
                 }
-                .prefix(10)
+                .prefix(20)
 
         return Dictionary(grouping: limitedDatestamps) {
             datestamp in

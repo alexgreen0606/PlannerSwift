@@ -15,7 +15,7 @@ extension ModelContext {
         _ calendarEvent: EKEvent?,
         sourcePlannerEvent: PlannerEvent?,
         sourcePlanner: Planner?,
-        plannerSyncService: PlannerSyncService,
+        plannerService: PlannerService,
         settings: PlannerSettings
     ) -> /// The datestamps the event is now in.
         Set<String>
@@ -70,7 +70,7 @@ extension ModelContext {
         // MARK: Re-sync calendar events if source or final event is recurring.
         if sourceWasRecurringEvent || finalIsRecurringEvent {
             DispatchQueue.main.async(
-                execute: plannerSyncService.syncCalendar
+                execute: plannerService.syncVisiblePlannersCalendar
             )
         }
 

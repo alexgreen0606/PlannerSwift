@@ -18,6 +18,8 @@ struct RootTabView: View {
 
     init(
         modelContext: ModelContext,
+        todayService: TodayService,
+        plannerCoverStore: PlannerCoverStore,
         ekEventStore: EKEventStore,
         settings: PlannerSettings
     ) {
@@ -70,6 +72,8 @@ struct RootTabView: View {
             wrappedValue: PlannerService(
                 modelContext: modelContext,
                 ekEventStore: ekEventStore,
+                todayService: todayService,
+                plannerCoverStore: plannerCoverStore,
                 settings: settings
             )
         )
@@ -100,6 +104,8 @@ struct RootTabView: View {
 
     @StateObject private var plannerService: PlannerService
 
+    @State private var selectedTab: TabId = .dashboard
+
     @Namespace private var namespace
 
     // MARK: - Body
@@ -109,11 +115,12 @@ struct RootTabView: View {
             if routines.count == 7 {
                 // MARK: Standard App Navigation
 
-                TabView {
+                TabView(selection: $selectedTab) {
                     Tab(
                         "",
                         systemImage: todayService.todaystamp
-                            .calendarSymbolName
+                            .calendarSymbolName,
+                        value: .dashboard
                     ) {
                         DashboardRootView(
                             settings: settings,
@@ -121,15 +128,15 @@ struct RootTabView: View {
                         )
                     }
 
-                    Tab("", systemImage: "list.bullet") {
+                    Tab("", systemImage: "list.bullet", value: .checklists) {
                         ChecklistNavigationView()
                     }
 
-                    Tab("", systemImage: "gear") {
+                    Tab("", systemImage: "gear", value: .settings) {
                         SettingsRootView(settings: settings)
                     }
 
-                    Tab(role: .search) {
+                    Tab(value: .search, role: .search) {
                         PlannerLoaderView(datestamp: todayService.todaystamp) {
                             planner in
                             SearchRootView(
@@ -163,12 +170,46 @@ struct RootTabView: View {
                 .opacity(plannerCoverStore.showTodayDefault ? 1 : 0)
             }
         }
-        .task(id: plannerService.refreshTrigger) {
-            plannerService.syncPlanners(todaystamp: todayService.todaystamp)
+
+        // MARK: Initialize the results on the search page.
+        .task {
+            plannerService.search()
+        }
+
+        // MARK: Sync the planners at midnight.
+        .task(id: todayService.todaystamp) {
+            plannerService.refresh()
+        }
+
+        // MARK: Search each time the search tab opens.
+        .onChange(of: selectedTab) { _, newTab in
+            if newTab == .search {
+                plannerService.search()
+            }
+        }
+
+        // MARK: Sync calendar data when the app focuses.
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                calendarStore.refreshCalendarsAndAccess()
+                syncAppIconWithSettings(
+                    accentColor: accentColor,
+                    systemColorScheme: systemColorScheme
+                )
+                plannerService.syncVisiblePlannersCalendar()
+            }
+        }
+
+        // MARK: Sync weather data when the device's location changes.
+        .onChange(
+            of: locationService.deviceClLocation?.coordinate.id
+        ) {
+            _,
+            _ in
+            weatherCacheService.beginReload()
         }
 
         // MARK: Planner Cover
-
         .fullScreenCover(item: $plannerCoverStore.context) { context in
             PlannerContextLoaderView(
                 datestamp: context.datestamp,
@@ -196,35 +237,11 @@ struct RootTabView: View {
         }
 
         // MARK: Pass the planner service up the tree.
-
         .environmentObject(plannerService)
 
         // TODO: move this to RootLoaderView
         .task {
             initializeAppData()
-        }
-
-        // MARK: Refresh external data when the app focuses.
-
-        .onChange(of: scenePhase) { _, phase in
-            if phase == .active {
-                calendarStore.refreshCalendarsAndAccess()
-                syncAppIconWithSettings(
-                    accentColor: accentColor,
-                    systemColorScheme: systemColorScheme
-                )
-                plannerService.syncCalendar()
-            }
-        }
-
-        // MARK: Refresh weather data when the device's location changes.
-
-        .onChange(
-            of: locationService.deviceClLocation?.coordinate.id
-        ) {
-            _,
-            _ in
-            weatherCacheService.beginReload()
         }
     }
 
@@ -267,6 +284,6 @@ struct RootTabView: View {
             )
         }
 
-        modelContext.safeSave("RootTabs cleanseStorage")
+        modelContext.safeSave("RootTabView cleanseStorage")
     }
 }

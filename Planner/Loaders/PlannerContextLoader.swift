@@ -12,7 +12,7 @@ struct PlannerContextLoaderView<Content: View>: View {
     let settings: PlannerSettings
     let content: (PlannerContext) -> Content
 
-    @EnvironmentObject private var plannerSyncService: PlannerSyncService
+    @EnvironmentObject private var plannerService: PlannerService
 
     // MARK: - Body
 
@@ -20,7 +20,7 @@ struct PlannerContextLoaderView<Content: View>: View {
         PlannerLoaderView(datestamp: datestamp) { planner in
             PlannerEventContextLoaderView(
                 planner: planner,
-                plannerSyncService: plannerSyncService,
+                plannerService: plannerService,
                 settings: settings
             ) { eventContext in
                 content(
