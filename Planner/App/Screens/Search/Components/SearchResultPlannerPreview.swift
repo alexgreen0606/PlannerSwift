@@ -10,7 +10,7 @@ import SwiftData
 import SwiftUI
 
 struct SearchResultPlannerPreviewView: View {
-    let activeQuery: PlannerSearchQuery?
+    let activeQuery: PlannerSearchQuery
     let planner: Planner
     let sortedPlannerEvents: [PlannerEvent]
     let sortedEventChips: [PlannerEvent]
@@ -80,13 +80,11 @@ struct SearchResultPlannerPreviewView: View {
                 )
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                if let activeQuery {
-                    SearchResultWeatherView(
-                        activeQuery: activeQuery,
-                        planner: planner,
-                        settings: settings
-                    )
-                }
+                SearchResultWeatherView(
+                    activeQuery: activeQuery,
+                    planner: planner,
+                    settings: settings
+                )
             }
             .frame(maxWidth: .infinity)
 
@@ -96,7 +94,7 @@ struct SearchResultPlannerPreviewView: View {
                 sortedBirthdayEvents: filteredBirthdayChips,
                 sortedEventChips: filteredEventChips,
                 sortedPlannerEvents: filteredPlannerEvents,
-                hideRemainingPlans: activeQuery?.isSearching == true,
+                hideRemainingPlans: activeQuery.isFiltering,
                 hideEmptyLabel: true,
                 settings: settings
             )

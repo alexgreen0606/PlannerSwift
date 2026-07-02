@@ -54,16 +54,7 @@ extension Trip {
                 .frame(width: progressBarWidth)
 
             Capsule()
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            accentColor.color,
-                            accentColor.color.opacity(0.7),
-                        ],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
+                .fill(accentColor.color)
                 .frame(width: progressBarWidth * tripProgress)
                 .animation(.easeInOut(duration: 0.3), value: tripProgress)
         }
@@ -85,48 +76,5 @@ extension Trip {
 
     func transitionId(for datestamp: String) -> String {
         "\(datestamp)_\(String(describing: id))"
-    }
-
-    // MARK: - Search Helper
-
-    func searchQueryScore(_ query: PlannerSearchQuery?) -> Double? // nil means the event doesn't match the query
-    {
-        guard let query else {
-            // Include. No query set.
-            return 1.0
-        }
-
-        if !query.containsDatestampRange(
-            startDatestamp: firstDatestamp,
-            endDatestamp: lastDatestamp
-        ) {
-            // Exclude. Doesn't match the time range.
-            return nil
-        }
-
-        if query.text.isEmpty {
-            // Include. No search text.
-            return 1.0
-        }
-
-        var score = 0.0
-
-        if let titleScore = query.score(for: title) {
-            // Include. Title matches the search text.
-            score += titleScore
-        }
-
-        if let location = location,
-           let locationScore = query.score(for: location.name)
-        {
-            // Include. Location matches the search text.
-            score += locationScore
-        }
-
-        if score != 0.0 {
-            return score
-        }
-
-        return nil
     }
 }

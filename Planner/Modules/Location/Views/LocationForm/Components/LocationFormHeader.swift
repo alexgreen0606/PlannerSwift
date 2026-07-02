@@ -272,7 +272,9 @@ struct LocationFormHeaderView: View {
                 label: "Use Current Location",
                 systemImage: "location"
             ) {
-                selectedLocation = nil
+                withAnimation {
+                    selectedLocation = nil
+                }
             }
         }
     }
@@ -284,7 +286,9 @@ struct LocationFormHeaderView: View {
                 label: "Use Home Location",
                 systemImage: "house"
             ) {
-                selectedLocation = nil
+                withAnimation {
+                    selectedLocation = nil
+                }
             }
         }
     }
@@ -296,7 +300,9 @@ struct LocationFormHeaderView: View {
                 label: "Use Trip Location",
                 systemImage: "suitcase"
             ) {
-                selectedLocation = nil
+                withAnimation {
+                    selectedLocation = nil
+                }
             }
         }
     }
@@ -309,7 +315,9 @@ struct LocationFormHeaderView: View {
                 systemImage: sourcePlanner?.datestamp.calendarSymbolName
                     ?? "note"
             ) {
-                selectedLocation = nil
+                withAnimation {
+                    selectedLocation = nil
+                }
             }
         }
     }

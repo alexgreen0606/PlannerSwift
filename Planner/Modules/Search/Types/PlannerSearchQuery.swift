@@ -35,11 +35,10 @@ struct PlannerSearchQuery: Equatable {
         }
     }
 
-    static let fuzzyThreshold: Double = 0.35
+    static let fuzzyThreshold: Double = 0.25
 
-    var isSearching: Bool {
-        !text.isEmpty
-            || !calendarIds.isEmpty
+    var isFiltering: Bool {
+        !text.isEmpty || !calendarIds.isEmpty
     }
 
     func containsDate(_ date: Date) -> Bool {

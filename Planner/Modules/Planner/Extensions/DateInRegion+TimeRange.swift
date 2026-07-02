@@ -9,11 +9,16 @@ import Foundation
 import SwiftDate
 
 extension DateInRegion {
-    func includes(startTime: Date, endTime: Date)
+    func includes(startTime: Date, endTime: Date?)
         -> Bool
     {
         let dayStart = date
         let nextDayStart = (self + 1.days).date
-        return startTime < nextDayStart && endTime >= dayStart
+        
+        guard let endTime else {
+            return startTime >= dayStart && startTime < nextDayStart
+        }
+        
+        return startTime < nextDayStart && endTime > dayStart
     }
 }

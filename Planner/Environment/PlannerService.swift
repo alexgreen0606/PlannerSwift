@@ -36,6 +36,13 @@ class PlannerService: ObservableObject {
         self.plannerSearchService = PlannerSearchService(
             modelContainer: modelContext.container
         )
+
+        self.searchResults = PlannerSearchResults(
+            activeQuery: modelContext.defaultSearchQuery(
+                todaystamp: todayService.todaystamp,
+                settings: settings
+            )
+        )
     }
 
     private var plannerSearchService: PlannerSearchService
@@ -50,7 +57,7 @@ class PlannerService: ObservableObject {
 
     @Published private(set) var sortedUpcomingTrips: [Trip] = []
 
-    @Published private(set) var searchResults = PlannerSearchResults()
+    @Published private(set) var searchResults: PlannerSearchResults
 
     private var visibleDatestamps: Set<String> {
         var datestampsToSync: Set<String> = []
@@ -129,9 +136,7 @@ class PlannerService: ObservableObject {
     }
 
     func search() {
-        search(
-            with: searchResults.activeQuery ?? defaultSearchQuery()
-        )
+        search(with: searchResults.activeQuery)
     }
 
     // MARK: - Synchronization
@@ -259,19 +264,5 @@ class PlannerService: ObservableObject {
                 .dateByAdding(offset, .day)
                 .toFormat("yyyy-MM-dd")
         }
-    }
-
-    private func defaultSearchQuery() -> PlannerSearchQuery {
-        let todayPlanner = modelContext.getPlanner(
-            for: todayService.todaystamp
-        )
-
-        return PlannerSearchQuery(
-            text: "",
-            calendarIds: [],
-            past: false,
-            todayStartOfDay: todayPlanner.startOfDay(settings: settings),
-            fuse: Fuse()
-        )
     }
 }

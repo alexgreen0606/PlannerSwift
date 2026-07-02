@@ -30,4 +30,10 @@ extension PlannerSettings {
             name: homeLocation != nil ? "house" : "location"
         )
     }
+    
+    func isCalendarHidden(calendarId: String) -> Bool {
+        hiddenCalendarIds.contains(
+            calendarId
+        )
+    }
 }

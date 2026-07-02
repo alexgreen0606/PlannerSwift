@@ -46,7 +46,11 @@ struct ChecklistActionMenuView: View {
         Menu("", systemImage: "ellipsis") {
             CompletedVisibilityToggleView(
                 showCompleted: checklist.showCompleted,
-                toggle: { checklist.showCompleted.toggle() }
+                toggle: {
+                    withAnimation {
+                        checklist.showCompleted.toggle()
+                    }
+                }
             )
 
             SelectItemsButtonView<ChecklistItem>(

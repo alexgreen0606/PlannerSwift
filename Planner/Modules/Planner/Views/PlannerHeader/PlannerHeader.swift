@@ -89,7 +89,7 @@ struct PlannerHeaderView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 Text(title)
-                    .minimumScaleFactor(0.6)
+                    .minimumScaleFactor(0.5)
                     .lineLimit(1)
                     .font(
                         .system(

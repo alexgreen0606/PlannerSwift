@@ -23,7 +23,7 @@ extension ModelContext {
         // MARK: - Load In Calendar Events For This Day
 
         let nextDay = startOfDay + 1.days
-        let calendarEvents = ekEventStore.events(
+        let ekEvents = ekEventStore.events(
             matching: ekEventStore.predicateForEvents(
                 withStart: startOfDay.date,
                 end: nextDay.date,
@@ -31,9 +31,19 @@ extension ModelContext {
             )
         )
 
-        var newEkEvents = Dictionary(
-            uniqueKeysWithValues: calendarEvents.compactMap { event in
-                event.calendarItemExternalIdentifier.map { ($0, event) }
+        var ekEventDictionary = Dictionary(
+            uniqueKeysWithValues: ekEvents.compactMap {
+                event -> (String, EKEvent)? in
+                guard
+                    !settings.hiddenCalendarIds.contains(
+                        event.calendar.calendarIdentifier
+                    ),
+                    let identifier = event.calendarItemExternalIdentifier
+                else {
+                    return nil
+                }
+
+                return (identifier, event)
             }
         )
 
@@ -54,7 +64,7 @@ extension ModelContext {
 
             // Guard 1: Calendar event is deleted. Remove this record and continue.
             guard
-                let ekEvent = newEkEvents[
+                let ekEvent = ekEventDictionary[
                     calendarItemExternalIdentifier
                 ]
             else {
@@ -63,7 +73,7 @@ extension ModelContext {
             }
 
             // Remove event from list of EKEvents that must be created.
-            newEkEvents.removeValue(
+            ekEventDictionary.removeValue(
                 forKey: calendarItemExternalIdentifier
             )
 
@@ -88,7 +98,7 @@ extension ModelContext {
         // MARK: - Create New Calendar Records
 
         bulkCreatePlannerEvents(
-            for: Array(newEkEvents.values),
+            for: Array(ekEventDictionary.values),
             on: startOfDay,
             birthdayEvents: &birthdayEvents
         )

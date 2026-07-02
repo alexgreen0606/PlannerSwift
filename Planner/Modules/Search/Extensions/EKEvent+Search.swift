@@ -8,12 +8,7 @@
 import EventKit
 
 extension EKEvent {
-    func searchQueryScore(_ query: PlannerSearchQuery?) -> Double? {
-        guard let query else {
-            // No search query. Complete match!
-            return 1.0
-        }
-
+    func searchQueryScore(_ query: PlannerSearchQuery) -> Double? {
         if query.isCalendarHidden(calendarId: calendar.calendarIdentifier) {
             // Calendar is hidden. Exclude.
             return nil
@@ -40,9 +35,8 @@ extension EKEvent {
         }
 
         // Scan the location for a match.
-        if let location,
-            self.location() != nil,
-            let locationScore = query.score(for: location)
+        if let location = self.location(),
+           let locationScore = query.score(for: location.name)
         {
             score += locationScore
         }

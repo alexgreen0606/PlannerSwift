@@ -205,7 +205,7 @@ struct PlannerRootView: View {
             )
             .animation(nil, value: plannerEngine.isSelectMode)
             .frame(
-                width: plannerEngine.isSelectMode ? 190 : 250,
+                width: plannerEngine.isSelectMode ? 170 : 250,
                 alignment: .leading
             )
             .padding(.leading, -8)

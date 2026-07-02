@@ -45,11 +45,9 @@ struct SearchRootView: View {
     @State private var searchTask: Task<Void, Never>?
 
     private var noResultsLabel: LocalizedStringKey {
-        guard let activeQuery = plannerService.searchResults.activeQuery else {
-            return ""
-        }
+        let activeQuery = plannerService.searchResults.activeQuery
 
-        if activeQuery.isSearching {
+        if activeQuery.isFiltering {
             return
                 "No matching events, trips, or locations in the \(activeQuery.timeFrameLabel)"
         }

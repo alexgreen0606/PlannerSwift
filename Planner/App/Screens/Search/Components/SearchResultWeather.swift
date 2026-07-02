@@ -17,17 +17,13 @@ struct SearchResultWeatherView: View {
     @EnvironmentObject private var weatherCacheService: WeatherCacheService
     @EnvironmentObject private var locationService: LocationService
 
-    private var isSearching: Bool {
-        activeQuery.isSearching
+    private var isFiltering: Bool {
+        activeQuery.isFiltering
     }
 
     private var showLocationLabel: Bool {
-        guard planner.searchQueryScore(activeQuery) != nil else {
-            return false
-        }
-
-        if isSearching {
-            return true
+        if isFiltering {
+            return planner.searchQueryScore(activeQuery) != nil
         }
 
         let homeLocationLabel = settings.homeLocationLabel(
@@ -49,13 +45,11 @@ struct SearchResultWeatherView: View {
     // MARK: - Body
 
     var body: some View {
-        if !isSearching || showLocationLabel {
-            WeatherPreviewView(
-                planner: planner,
-                startAdorned: false,
-                showLocationLabel: showLocationLabel,
-                settings: settings
-            )
-        }
+        WeatherPreviewView(
+            planner: planner,
+            startAdorned: false,
+            showLocationLabel: showLocationLabel,
+            settings: settings
+        )
     }
 }

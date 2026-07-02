@@ -9,13 +9,13 @@ struct PlannerSearchResults {
     let datestampMap: [String: [String]]
     let topDatestamp: String?
     let sortedYears: [String]
-    let activeQuery: PlannerSearchQuery?
+    let activeQuery: PlannerSearchQuery
 
     init(
         datestampMap: [String: [String]] = [:],
         topDatestamp: String? = nil,
         sortedYears: [String] = [],
-        activeQuery: PlannerSearchQuery? = nil
+        activeQuery: PlannerSearchQuery
     ) {
         self.datestampMap = datestampMap
         self.topDatestamp = topDatestamp
