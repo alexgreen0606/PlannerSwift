@@ -44,7 +44,6 @@ struct ChecklistItemHeaderView: ToolbarContent {
                     .minimumScaleFactor(0.6)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .animation(nil, value: listEngine.isSelectMode)
             .font(.system(size: 22, weight: .bold, design: .rounded))
             .frame(width: width, alignment: .leading)
             .drawingGroup()

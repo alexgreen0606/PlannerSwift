@@ -101,10 +101,12 @@ struct TripPreviewView: View {
         .padding()
         .contentShape(Rectangle())
         .onTapGesture {
-            if isExpanded {
-                expandedTripIds.remove(trip.id)
-            } else {
-                expandedTripIds.insert(trip.id)
+            withAnimation {
+                if isExpanded {
+                    expandedTripIds.remove(trip.id)
+                } else {
+                    expandedTripIds.insert(trip.id)
+                }
             }
         }
     }

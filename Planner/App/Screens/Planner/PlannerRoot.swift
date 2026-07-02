@@ -203,7 +203,6 @@ struct PlannerRootView: View {
                 iconDetailSize: showHeaderDateIcon ? 9 : 11,
                 iconDetailOffset: showHeaderDateIcon ? 3 : 18
             )
-            .animation(nil, value: plannerEngine.isSelectMode)
             .frame(
                 width: plannerEngine.isSelectMode ? 170 : 250,
                 alignment: .leading

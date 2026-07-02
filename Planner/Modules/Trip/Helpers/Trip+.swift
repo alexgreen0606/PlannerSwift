@@ -56,7 +56,6 @@ extension Trip {
             Capsule()
                 .fill(accentColor.color)
                 .frame(width: progressBarWidth * tripProgress)
-                .animation(.easeInOut(duration: 0.3), value: tripProgress)
         }
         .frame(height: 8)
     }

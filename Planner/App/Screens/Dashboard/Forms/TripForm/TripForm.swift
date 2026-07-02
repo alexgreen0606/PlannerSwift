@@ -31,6 +31,7 @@ struct TripFormView: View {
         }
 
         _draftTrip = State(initialValue: draftTrip)
+        _showDatePicker = State(initialValue: sourceTrip == nil)
     }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -111,12 +112,8 @@ struct TripFormView: View {
             .navigationTitle("\(isNewTrip ? "Create" : "Edit") Trip")
             .navigationBarTitleDisplayMode(.inline)
         }
-        .animation(.linear, value: showDatePicker)
-        .animation(.linear, value: datesError)
         .tint(accentColor.color)
         .task {
-            showDatePicker = isNewTrip
-
             var existingTripDatestamps =
                 modelContext.getExistingTripDatestamps()
 

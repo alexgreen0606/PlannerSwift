@@ -67,8 +67,6 @@ struct DashboardRootView: View {
                             namespace: namespace
                         )
                     }
-                    // TODO: use withAnimation here
-                    .animation(.linear, value: expandedTripIds)
                     .listStyle(.plain)
                     .refreshable {
                         weatherCacheService.beginReload()
@@ -118,7 +116,9 @@ struct DashboardRootView: View {
                     sourceTrip: context.trip,
                     settings: settings,
                     onSave: { trip in
-                        expandedTripIds.insert(trip.id)
+                        _ = withAnimation {
+                            expandedTripIds.insert(trip.id)
+                        }
                     }
                 )
 
