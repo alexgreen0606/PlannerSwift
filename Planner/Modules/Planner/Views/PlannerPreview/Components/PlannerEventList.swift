@@ -13,7 +13,7 @@ struct PlannerEventListView: View {
     let plannerRegion: Region
     let events: [PlannerEvent]
     let hideLowerDivider: Bool
-    let settings: PlannerSettings
+    let settings: Settings
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue

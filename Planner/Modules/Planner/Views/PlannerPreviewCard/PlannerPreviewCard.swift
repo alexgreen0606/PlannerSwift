@@ -18,7 +18,7 @@ struct PlannerPreviewCardView<Header: View>: View {
     private let header: Header
     private let width: CGFloat
     private let transitionId: String
-    private let settings: PlannerSettings
+    private let settings: Settings
     private let namespace: Namespace.ID
 
     init(
@@ -31,7 +31,7 @@ struct PlannerPreviewCardView<Header: View>: View {
         defaultLocationLabel: String? = nil,
         width: CGFloat = PlannerPreviewCardLayout.DEFAULT_WIDTH,
         transitionId: String,
-        settings: PlannerSettings,
+        settings: Settings,
         namespace: Namespace.ID
     ) {
         self.planner = planner

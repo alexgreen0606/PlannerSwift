@@ -9,8 +9,8 @@ import EventKit
 import SwiftUI
 
 struct SearchFilterToolbarView: ToolbarContent {
-    @Binding var draftQuery: PlannerSearchQuery
-    let settings: PlannerSettings
+    @Binding var draftQuery: SearchQuery
+    let settings: Settings
 
     @EnvironmentObject private var calendarStore: CalendarService
 

@@ -1,5 +1,5 @@
 //
-//  PlannerSettings.swift
+//  Settings.swift
 //  Planner
 //
 //  Created by Alex Green on 1/4/26.
@@ -9,7 +9,7 @@ import SwiftData
 import SwiftUI
 
 @Model
-class PlannerSettings {
+class Settings {
     /// Maps calendar event IDs to system image names.
     var iconMap: [String: String] = [:]
 

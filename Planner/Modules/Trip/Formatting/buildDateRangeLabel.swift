@@ -59,7 +59,7 @@ private func format(
 
     let year = String(parts[0])
     let month = Int(parts[1]) ?? 0
-    let day = String(parts[2])
+    let day = Int(parts[2]) ?? 0
 
     let monthNames = [
         "", "January", "February", "March",
@@ -74,7 +74,7 @@ private func format(
         result += "\(monthNames[month]) "
     }
 
-    result += day
+    result += "\(day)"
 
     if includeYear {
         result += ", \(year)"

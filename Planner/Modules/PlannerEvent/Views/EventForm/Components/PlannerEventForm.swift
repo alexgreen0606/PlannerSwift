@@ -14,7 +14,7 @@ struct PlannerEventFormView: View {
     @Binding var draftPlannerEvent: DraftPlannerEvent
     let sourcePlannerEvent: PlannerEvent?
     let sourcePlanner: Planner?
-    let settings: PlannerSettings
+    let settings: Settings
     let showNotification: (Set<String>) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =

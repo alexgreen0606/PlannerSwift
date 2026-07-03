@@ -14,10 +14,10 @@ import SwiftUI
 struct EventFormView: View {
     private let sourcePlannerEvent: PlannerEvent?
     private let sourcePlanner: Planner?
-    private let settings: PlannerSettings
+    private let settings: Settings
 
     // MARK: Create Planner Event (Dashboard)
-    init(settings: PlannerSettings) {
+    init(settings: Settings) {
         self.sourcePlannerEvent = nil
         self.sourcePlanner = nil
         self.settings = settings
@@ -38,7 +38,7 @@ struct EventFormView: View {
         plannerEvent: PlannerEvent,
         sourcePlanner: Planner,
         ekEventStore: EKEventStore,
-        settings: PlannerSettings
+        settings: Settings
     ) {
         self.sourcePlannerEvent = plannerEvent
         self.sourcePlanner = sourcePlanner

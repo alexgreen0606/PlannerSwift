@@ -12,7 +12,7 @@ struct TripSectionView: View {
     @Binding var tripSheetContext: TripSheetContext?
     @Binding var expandedTripIds: Set<PersistentIdentifier>
     let scrollProxy: ScrollViewProxy
-    let settings: PlannerSettings
+    let settings: Settings
     let namespace: Namespace.ID
 
     @EnvironmentObject private var plannerService: PlannerService

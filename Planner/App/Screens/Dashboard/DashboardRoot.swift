@@ -10,7 +10,7 @@ import SwiftDate
 import SwiftUI
 
 struct DashboardRootView: View {
-    let settings: PlannerSettings
+    let settings: Settings
     let namespace: Namespace.ID
 
     private let CALENDAR_BUTTON_ID = "CALENDAR_BUTTON_ID"

@@ -11,7 +11,7 @@ import SwiftUI
 struct TripPreviewView: View {
     @Binding var expandedTripIds: Set<PersistentIdentifier>
     let trip: Trip
-    let settings: PlannerSettings
+    let settings: Settings
     let namespace: Namespace.ID
     let openEditSheet: () -> Void
 

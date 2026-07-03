@@ -89,7 +89,7 @@ struct ChecklistRootView: View {
                         bottomAdornment: { _ in EmptyView() },
                         scrollProxy: scrollProxy
                     )
-                    .safeAreaInset(edge: .bottom) {
+                    .safeAreaBar(edge: .bottom) {
                         actionToolbar(scrollProxy: scrollProxy)
                     }
                     .toolbar {

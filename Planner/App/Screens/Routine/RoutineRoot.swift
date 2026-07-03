@@ -53,7 +53,7 @@ struct RoutineRootView: View {
                         scrollProxy: scrollProxy,
                         namespace: namespace
                     )
-                    .safeAreaInset(edge: .bottom) {
+                    .safeAreaBar(edge: .bottom) {
                         actionToolbar(scrollProxy: scrollProxy)
                     }
                     .toolbar {

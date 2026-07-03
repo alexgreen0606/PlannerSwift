@@ -28,7 +28,7 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         return accentColor.color
     }
 
-    func calendarSystemImageName(settings: PlannerSettings) -> String {
+    func calendarSystemImageName(settings: Settings) -> String {
         if let calendar = eKEventContext?.ekEvent?.calendar {
             return calendar.systemImageName(settings: settings)
         }
@@ -110,7 +110,7 @@ extension PlannerEvent: PlannerEventLocationHelpers {
     @MainActor
     func updateRoutineVariance(
         in timeZone: TimeZone,
-        settings: PlannerSettings
+        settings: Settings
     ) {
         guard let routineEventRecordContext,
             let routineEventContext = routineEventRecordContext.routineEvent?
@@ -129,7 +129,7 @@ extension PlannerEvent: PlannerEventLocationHelpers {
     func matches(
         _ routineEvent: RoutineEventContext,
         in timeZone: TimeZone,
-        settings: PlannerSettings
+        settings: Settings
     ) -> Bool {
         guard eKEventContext == nil,
             location == nil,

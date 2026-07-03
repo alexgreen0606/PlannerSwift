@@ -12,7 +12,7 @@ struct LocationChipView: View {
     @Binding var showLocationSheet: Bool
     let locationLabel: String
     let planner: Planner
-    let settings: PlannerSettings
+    let settings: Settings
     let namespace: Namespace.ID
 
     private let LOCATION_CHIP_ID = "LOCATION_CHIP_ID"

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct PlannerContextLoaderView<Content: View>: View {
     let datestamp: String
-    let settings: PlannerSettings
+    let settings: Settings
     let content: (PlannerContext) -> Content
 
     @EnvironmentObject private var plannerService: PlannerService

@@ -10,12 +10,12 @@ import SwiftData
 import SwiftUI
 
 struct SearchResultPlannerPreviewView: View {
-    let activeQuery: PlannerSearchQuery
+    let activeQuery: SearchQuery
     let planner: Planner
     let sortedPlannerEvents: [PlannerEvent]
     let sortedEventChips: [PlannerEvent]
     let sortedBirthdayChips: [PlannerEvent]
-    let settings: PlannerSettings
+    let settings: Settings
     let namespace: Namespace.ID
 
     @EnvironmentObject private var todayService: TodayService

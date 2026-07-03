@@ -17,7 +17,7 @@ extension ModelContext {
         startOfDay: DateInRegion,
         plannerLocation: Location?,
         ekEventStore: EKEventStore,
-        settings: PlannerSettings
+        settings: Settings
     ) {
         if plannerEvent.eKEventContext != nil {
             // MARK: Event is a calendar event. Update its title in the calendar.

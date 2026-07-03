@@ -11,7 +11,7 @@ struct TripDayPreviewCardView: View {
     let trip: Trip
     let datestamp: String
     let index: Int
-    let settings: PlannerSettings
+    let settings: Settings
     let namespace: Namespace.ID
 
     // MARK: - Body

@@ -15,7 +15,7 @@ struct PlannerRootView: View {
     let sortedPlannerEvents: [PlannerEvent]
     let sortedEventChips: [PlannerEvent]
     let sortedBirthdayChips: [PlannerEvent]
-    let settings: PlannerSettings
+    let settings: Settings
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
@@ -108,7 +108,7 @@ struct PlannerRootView: View {
                         handleEventTitleChange: handleEventTitleChange,
                         openPlannerEventSheet: openPlannerEventSheet
                     )
-                    .safeAreaInset(edge: .bottom) {
+                    .safeAreaBar(edge: .bottom) {
                         actionToolbar(scrollProxy: scrollProxy)
                     }
                     .toolbar {

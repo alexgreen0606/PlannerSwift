@@ -18,7 +18,7 @@ extension ModelContext {
         timeZone: TimeZone,
         plannerService: PlannerService,
         ekEventStore: EKEventStore,
-        settings: PlannerSettings,
+        settings: Settings,
     ) -> /// The datestamps the event is now in.
         Set<String>
     {

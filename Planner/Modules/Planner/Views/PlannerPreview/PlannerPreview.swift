@@ -17,7 +17,7 @@ struct PlannerPreviewView: View {
     private let sortedPlannerEvents: [PlannerEvent]
     private let hideRemainingPlans: Bool
     private let hideEmptyLabel: Bool
-    private let settings: PlannerSettings
+    private let settings: Settings
 
     init(
         planner: Planner,
@@ -27,7 +27,7 @@ struct PlannerPreviewView: View {
         sortedPlannerEvents: [PlannerEvent],
         hideRemainingPlans: Bool = false,
         hideEmptyLabel: Bool = false,
-        settings: PlannerSettings
+        settings: Settings
     ) {
         self.planner = planner
         self.tripLabel = tripLabel

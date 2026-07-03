@@ -13,13 +13,13 @@ struct WeatherPreviewView: View {
     let planner: Planner
     let startAdorned: Bool
     let showLocationLabel: Bool
-    let settings: PlannerSettings
+    let settings: Settings
 
     init(
         planner: Planner,
         startAdorned: Bool = true,
         showLocationLabel: Bool,
-        settings: PlannerSettings
+        settings: Settings
     ) {
         self.planner = planner
         self.startAdorned = startAdorned

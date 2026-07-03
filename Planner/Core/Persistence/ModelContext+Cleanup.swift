@@ -20,7 +20,7 @@ extension ModelContext {
             let orphanedLocations = try fetch(
                 FetchDescriptor<Location>(
                     predicate: #Predicate<Location> {
-                        $0.plannerSettings == nil
+                        $0.settings == nil
                     }
                 )
             ).filter {

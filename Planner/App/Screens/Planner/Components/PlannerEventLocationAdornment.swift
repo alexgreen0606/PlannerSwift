@@ -11,7 +11,7 @@ import SwiftUI
 struct PlannerEventLocationAdornmentView: View {
     let plannerEvent: PlannerEvent
     let planner: Planner
-    let settings: PlannerSettings
+    let settings: Settings
     let openEventSheet: () -> Void
 
     private let SCALE: CGFloat = 0.65

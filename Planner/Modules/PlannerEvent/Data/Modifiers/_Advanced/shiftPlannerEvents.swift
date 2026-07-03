@@ -18,7 +18,7 @@ extension ModelContext {
         sourceDatestamp: String,
         destinationDatestamp: String,
         ekEventStore: EKEventStore,
-        settings: PlannerSettings
+        settings: Settings
     ) {
         // Assemble the events in reverse-chronological ordering so they
         // are inserted correctly.

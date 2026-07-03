@@ -1,21 +1,21 @@
 //
-//  PlannerSearchResults.swift
+//  SearchResults.swift
 //  Planner
 //
 //  Created by Alex Green on 6/29/26.
 //
 
-struct PlannerSearchResults {
+struct SearchResults {
     let datestampMap: [String: [String]]
     let topDatestamp: String?
     let sortedYears: [String]
-    let activeQuery: PlannerSearchQuery
+    let activeQuery: SearchQuery
 
     init(
         datestampMap: [String: [String]] = [:],
         topDatestamp: String? = nil,
         sortedYears: [String] = [],
-        activeQuery: PlannerSearchQuery
+        activeQuery: SearchQuery
     ) {
         self.datestampMap = datestampMap
         self.topDatestamp = topDatestamp

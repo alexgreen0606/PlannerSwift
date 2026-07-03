@@ -29,7 +29,7 @@ struct PlannerApp: App {
 
     private let modelContainer: ModelContainer = {
         let schema = Schema([
-            PlannerSettings.self,
+            Settings.self,
             
             Location.self,
             

@@ -11,7 +11,7 @@ import SwiftData
 import SwiftUI
 
 struct CalendarsFormView: View {
-    let settings: PlannerSettings
+    let settings: Settings
 
     private let systemImageNameOptions: [String] = [
         "briefcase",

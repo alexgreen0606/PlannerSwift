@@ -11,13 +11,13 @@ import SwiftData
 extension ModelContext {
     func defaultSearchQuery(
         todaystamp: String,
-        settings: PlannerSettings
-    ) -> PlannerSearchQuery {
+        settings: Settings
+    ) -> SearchQuery {
         let todayPlanner = getPlanner(
             for: todaystamp
         )
 
-        return PlannerSearchQuery(
+        return SearchQuery(
             text: "",
             calendarIds: [],
             past: false,

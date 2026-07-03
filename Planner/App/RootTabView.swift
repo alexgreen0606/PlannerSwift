@@ -14,14 +14,14 @@ import SwiftDate
 import SwiftUI
 
 struct RootTabView: View {
-    private let settings: PlannerSettings
+    private let settings: Settings
 
     init(
         modelContext: ModelContext,
         todayService: TodayService,
         plannerCoverStore: PlannerCoverStore,
         ekEventStore: EKEventStore,
-        settings: PlannerSettings
+        settings: Settings
     ) {
         self.settings = settings
 

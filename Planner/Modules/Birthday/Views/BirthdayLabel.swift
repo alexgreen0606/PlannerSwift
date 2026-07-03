@@ -11,7 +11,7 @@ import SwiftUI
 
 struct BirthdayLabelView: View {
     let plannerEvent: PlannerEvent
-    let settings: PlannerSettings
+    let settings: Settings
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue

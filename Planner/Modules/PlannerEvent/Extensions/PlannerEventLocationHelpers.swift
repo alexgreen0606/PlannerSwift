@@ -14,7 +14,7 @@ protocol PlannerEventLocationHelpers {
 extension PlannerEventLocationHelpers {
     func region(
         planner: Planner?,
-        settings: PlannerSettings,
+        settings: Settings,
         deviceLocation: Location?
     ) -> Region {
         location(
@@ -26,7 +26,7 @@ extension PlannerEventLocationHelpers {
 
     func locationLabel(
         planner: Planner?,
-        settings: PlannerSettings,
+        settings: Settings,
         deviceLocation: Location?
     ) -> String {
         location(
@@ -40,7 +40,7 @@ extension PlannerEventLocationHelpers {
 
     private func location(
         planner: Planner?,
-        settings: PlannerSettings,
+        settings: Settings,
         deviceLocation: Location?
     ) -> Location? {
         location

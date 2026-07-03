@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ThisWeekSectionView: View {
-    let settings: PlannerSettings
+    let settings: Settings
     let namespace: Namespace.ID
 
     @EnvironmentObject private var plannerService: PlannerService

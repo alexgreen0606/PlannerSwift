@@ -17,30 +17,30 @@ extension ModelContext {
 
     @MainActor
     func ensurePlannerSettings(
-        settings: [PlannerSettings]
+        settings: [Settings]
     ) {
         if settings.first != nil {
             return
         }
 
-        insert(PlannerSettings())
-        safeSave("plannerSettings ensurePlannerSettings")
+        insert(Settings())
+        safeSave("settings ensurePlannerSettings")
     }
 
     // MARK: - UPDATE
 
     @MainActor
     func updateHomeLocation(
-        in settings: PlannerSettings,
+        in settings: Settings,
         to location: Location?
     ) {
         settings.homeLocation = location
-        safeSave("plannerSettings updateHomeLocation")
+        safeSave("settings updateHomeLocation")
     }
 
     @MainActor
     func updateCalendarIcon(
-        in settings: PlannerSettings,
+        in settings: Settings,
         for calendar: EKCalendar,
         to systemImageName: String
     ) {
@@ -48,12 +48,12 @@ extension ModelContext {
             calendar.calendarIdentifier
         ] = systemImageName
 
-        safeSave("plannerSettings updateCalendarIcon")
+        safeSave("settings updateCalendarIcon")
     }
 
     @MainActor
     func toggleCalendarVisibility(
-        in settings: PlannerSettings,
+        in settings: Settings,
         for calendar: EKCalendar
     ) {
         if settings.hiddenCalendarIds.contains(
@@ -68,6 +68,6 @@ extension ModelContext {
             )
         }
 
-        safeSave("plannerSettings toggleCalendarVisibility")
+        safeSave("settings toggleCalendarVisibility")
     }
 }

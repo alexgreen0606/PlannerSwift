@@ -15,9 +15,9 @@ struct RootLoaderView: View {
     @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
-    @Query private var plannerSettingsList: [PlannerSettings]
+    @Query private var plannerSettingsList: [Settings]
 
-    private var settings: PlannerSettings? {
+    private var settings: Settings? {
         plannerSettingsList.first
     }
 

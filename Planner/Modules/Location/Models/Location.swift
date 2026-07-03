@@ -20,8 +20,8 @@ class Location {
     var selectedOn: Date = Date.now
 
     // MARK: Sibling
-    @Relationship(inverse: \PlannerSettings.homeLocation)
-    var plannerSettings: PlannerSettings?
+    @Relationship(inverse: \Settings.homeLocation)
+    var settings: Settings?
 
     // MARK: Sibling
     @Relationship(inverse: \Trip.location)

@@ -69,7 +69,7 @@ extension ModelContext {
     @MainActor
     func getBulkPlannerSyncContexts(
         for datestamps: Set<String>,
-        settings: PlannerSettings
+        settings: Settings
     ) -> [PlannerSyncContext] {
         do {
             // Load in planners that already exist in storage.
@@ -117,7 +117,7 @@ extension ModelContext {
         for time: Date?,
         endTime: Date? = nil,
         datestamp: String? = nil,
-        settings: PlannerSettings
+        settings: Settings
     ) -> [DateInRegion] {
         guard let time else {
             guard let datestamp else {

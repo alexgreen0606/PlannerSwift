@@ -12,7 +12,7 @@ import WeatherKit
 struct PlannerCardWeatherView: View {
     let planner: Planner
     let customDefaultLocationLabel: String?
-    let settings: PlannerSettings
+    let settings: Settings
 
     @EnvironmentObject private var locationService: LocationService
 

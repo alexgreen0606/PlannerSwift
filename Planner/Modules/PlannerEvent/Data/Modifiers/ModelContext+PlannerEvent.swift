@@ -125,7 +125,7 @@ extension ModelContext {
     func ensureValidSortDate(
         for plannerEvent: PlannerEvent,
         sourceDatestamp: String? = nil,
-        settings: PlannerSettings
+        settings: Settings
     ) -> /// The datestamps the event is now in.
         Set<String>
     {

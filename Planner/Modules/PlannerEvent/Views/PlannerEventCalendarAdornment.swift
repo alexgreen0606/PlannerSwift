@@ -10,12 +10,12 @@ import SwiftUI
 
 struct PlannerEventCalendarAdornmentView: View {
     private let plannerEvent: PlannerEvent
-    private let settings: PlannerSettings
+    private let settings: Settings
     private let openEventSheet: (() -> Void)?
 
     init(
         plannerEvent: PlannerEvent,
-        settings: PlannerSettings,
+        settings: Settings,
         openEventSheet: (() -> Void)? = nil
     ) {
         self.plannerEvent = plannerEvent

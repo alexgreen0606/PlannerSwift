@@ -10,12 +10,12 @@ import SwiftUI
 
 struct TripFormView: View {
     private let sourceTrip: Trip?
-    private let settings: PlannerSettings
+    private let settings: Settings
     private let onSave: ((Trip) -> Void)?
 
     init(
         sourceTrip: Trip? = nil,
-        settings: PlannerSettings,
+        settings: Settings,
         onSave: ((Trip) -> Void)? = nil
     ) {
         self.sourceTrip = sourceTrip

@@ -24,7 +24,7 @@ struct PlannerContentsListView: View {
     let sortedBirthdayChips: [PlannerEvent]
     let showCompleted: Bool
     let scrollProxy: ScrollViewProxy
-    let settings: PlannerSettings
+    let settings: Settings
     let namespace: Namespace.ID
     let createEvent: (Int) -> Void
     let handleEventTitleChange: (PlannerEvent) -> Void

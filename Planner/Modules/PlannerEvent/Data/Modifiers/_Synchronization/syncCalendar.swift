@@ -17,7 +17,7 @@ extension ModelContext {
     func syncCalendar(
         startOfDay: DateInRegion,
         ekEventStore: EKEventStore,
-        settings: PlannerSettings
+        settings: Settings
     ) {
 
         // MARK: - Load In Calendar Events For This Day

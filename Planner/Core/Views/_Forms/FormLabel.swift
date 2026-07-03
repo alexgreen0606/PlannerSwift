@@ -63,7 +63,9 @@ struct FormLabelView<CustomValue: View>: View {
         let row = HStack {
             Image(systemName: systemImageName)
             Text(label)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            
+            Spacer()
+            
             VStack(alignment: .trailing) {
                 if let customValue {
                     customValue

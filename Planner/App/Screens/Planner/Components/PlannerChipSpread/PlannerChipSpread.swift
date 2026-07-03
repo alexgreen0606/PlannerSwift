@@ -18,7 +18,7 @@ struct PlannerChipSpreadView: View {
     let plannerLocation: Location?
     let sortedEventChips: [PlannerEvent]
     let sortedBirthdayChips: [PlannerEvent]
-    let settings: PlannerSettings
+    let settings: Settings
     var namespace: Namespace.ID
     let openEventSheet: (PlannerEvent) -> Void
 

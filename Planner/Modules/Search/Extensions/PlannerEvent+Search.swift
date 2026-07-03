@@ -10,7 +10,7 @@ import SwiftDate
 
 extension PlannerEvent {
     static func plannerEvents(
-        matching query: PlannerSearchQuery
+        matching query: SearchQuery
     ) -> Predicate<PlannerEvent> {
         let todayStartDate = query.todayStartOfDay.date
         let todaystamp = query.todayStartOfDay.datestamp
@@ -44,21 +44,19 @@ extension PlannerEvent {
                     // Skip calendar events. These will be evaluated directly from the EKEventStore.
                     return false
 
-                } else if !searchingText && plannerEvent.isCompleted {
-
-                    // Event is completed in the present or future and there is no text we are searching for.
-                    // Exclude.
-                    return false
-
                 } else if let time = plannerEvent.time {
 
-                    // Timed planner events that exist on or after today.
+                    // Timed planner events that exist on or after today,
+                    // are pending or we are searching for text.
                     return time >= todayStartDate
+                        && (!plannerEvent.isCompleted || searchingText)
 
                 } else if let datestamp = plannerEvent.datestamp {
 
-                    // Untimed planner events that exist on or after today.
+                    // Untimed planner events that exist on or after today,
+                    // are pending or we are searching for text.
                     return datestamp >= todaystamp
+                        && (!plannerEvent.isCompleted || searchingText)
 
                 } else {
                     return false
@@ -67,33 +65,35 @@ extension PlannerEvent {
         }
     }
 
-    func searchQueryScore(_ query: PlannerSearchQuery) -> Double? {
-        if let calendarIdentifier = eKEventContext?.calendarIdentifier,
-            query.isCalendarHidden(calendarId: calendarIdentifier)
-        {
-            // Calendar is hidden. Exclude.
-            return nil
-        }
-        
-        if !query.calendarIds.isEmpty && eKEventContext == nil {
-            return nil
+    func searchQueryScore(_ query: SearchQuery) -> Double? {
+        if !query.calendarIds.isEmpty {
+            guard
+                let calendarIdentifier = eKEventContext?.calendarIdentifier,
+                !query.isCalendarHidden(calendarId: calendarIdentifier)
+            else {
+                // Filtering by calendar events and this isn't a calendar event
+                // or its calendar is hidden. Exclude.
+                return nil
+            }
         }
 
         if let eKEventContext {
-            if !query.containsDateRange(
-                startDate: eKEventContext.startDate,
-                endDate: eKEventContext.endDate
-            ) {
+            guard
+                query.containsDateRange(
+                    startDate: eKEventContext.startDate,
+                    endDate: eKEventContext.endDate
+                )
+            else {
                 // Doesn't match the time range. Exclude.
                 return nil
             }
         } else if let time {
-            if !query.containsDate(time) {
+            guard query.containsDate(time) else {
                 // Doesn't match the time range. Exclude.
                 return nil
             }
         } else if let datestamp {
-            if !query.containsDatestamp(datestamp) {
+            guard query.containsDatestamp(datestamp) else {
                 // Doesn't match the time range. Exclude.
                 return nil
             }
@@ -101,9 +101,10 @@ extension PlannerEvent {
 
         if query.text.isEmpty {
             if isCompleted && !query.past {
+                // No search text, event is complete, and in the present or future. Exclude.
                 return nil
             } else {
-                // No search text and event is pending. Complete match!
+                // No search text and event is pending or in the past. Include!
                 return 1.0
             }
         }

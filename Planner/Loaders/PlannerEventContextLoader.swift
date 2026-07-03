@@ -12,13 +12,13 @@ import SwiftUI
 
 struct PlannerEventContextLoaderView<Content: View>: View {
     private let planner: Planner
-    private let settings: PlannerSettings
+    private let settings: Settings
     private var content: (PlannerEventContext) -> Content
 
     init(
         planner: Planner,
         plannerService: PlannerService,
-        settings: PlannerSettings,
+        settings: Settings,
         @ViewBuilder content:
             @escaping (PlannerEventContext) -> Content
     ) {

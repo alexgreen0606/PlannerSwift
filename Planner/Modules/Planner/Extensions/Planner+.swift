@@ -22,7 +22,7 @@ extension Planner {
         return trip?.excludeRoutines ?? false
     }
 
-    func startOfDay(settings: PlannerSettings) -> DateInRegion {
+    func startOfDay(settings: Settings) -> DateInRegion {
         datestamp.startOfDay(in: region(settings: settings))
     }
 
@@ -33,7 +33,7 @@ extension Planner {
         return "\(datestamp)-\(timeZoneKey)"
     }
 
-    func location(settings: PlannerSettings, deviceLocation: Location?)
+    func location(settings: Settings, deviceLocation: Location?)
         // Note: nil means the device location is used and hasn't loaded yet.
         -> Location?
     {
@@ -41,18 +41,18 @@ extension Planner {
             ?? settings.homeLocation(deviceLocation: deviceLocation)
     }
 
-    func region(settings: PlannerSettings) -> Region {
+    func region(settings: Settings) -> Region {
         location?.region ?? trip?.location?.region ?? settings.homeRegion
     }
 
-    func locationLabel(settings: PlannerSettings, deviceLocation: Location?)
+    func locationLabel(settings: Settings, deviceLocation: Location?)
         -> String
     {
         location(settings: settings, deviceLocation: deviceLocation)?.name
             ?? "Current Location"
     }
 
-    func locationIconConfig(settings: PlannerSettings, accentColor: AccentColor)
+    func locationIconConfig(settings: Settings, accentColor: AccentColor)
         -> IconConfig
     {
         if location != nil {

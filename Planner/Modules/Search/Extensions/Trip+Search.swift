@@ -9,7 +9,7 @@ import Foundation
 
 extension Trip {
     static func trips(
-        matching query: PlannerSearchQuery
+        matching query: SearchQuery
     ) -> Predicate<Trip> {
         let todaystamp = query.todayStartOfDay.datestamp
 
@@ -26,22 +26,22 @@ extension Trip {
         }
     }
 
-    func searchQueryScore(_ query: PlannerSearchQuery) -> Double? {
-        if !query.calendarIds.isEmpty {
+    func searchQueryScore(_ query: SearchQuery) -> Double? {
+        guard query.calendarIds.isEmpty else {
             // Filtering by calendar events only. Exclude.
             return nil
         }
         
-        if !query.containsDatestampRange(
+        guard query.containsDatestampRange(
             startDatestamp: firstDatestamp,
             endDatestamp: lastDatestamp
-        ) {
+        ) else {
             // Doesn't match the time range. Exclude.
             return nil
         }
 
         if query.text.isEmpty {
-            // No search text. Complete match!
+            // No search text. Include!
             return 1.0
         }
 

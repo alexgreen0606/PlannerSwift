@@ -13,7 +13,7 @@ import SwiftUI
 struct LocationFormView: View {
     private let variant: LocationFormVariant
     private let subtitle: String?
-    private let settings: PlannerSettings
+    private let settings: Settings
     private let sourcePlanner: Planner?
     private let saveSelection: (Location?) -> Void
 
@@ -22,7 +22,7 @@ struct LocationFormView: View {
         subtitle: String? = nil,
         initialLocation: Location?,
         sourcePlanner: Planner? = nil,
-        settings: PlannerSettings,
+        settings: Settings,
         saveSelection: @escaping (Location?) -> Void
     ) {
         self.variant = variant

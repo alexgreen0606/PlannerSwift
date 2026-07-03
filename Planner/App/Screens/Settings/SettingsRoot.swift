@@ -10,7 +10,7 @@ import SwiftData
 import SwiftUI
 
 struct SettingsRootView: View {
-    let settings: PlannerSettings
+    let settings: Settings
 
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
         .dark

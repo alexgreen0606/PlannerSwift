@@ -10,9 +10,9 @@ import SwiftDate
 import SwiftUI
 
 struct TransferEventsFormView: View {
-    private let settings: PlannerSettings
+    private let settings: Settings
 
-    init(sourceStartOfDay: DateInRegion, settings: PlannerSettings) {
+    init(sourceStartOfDay: DateInRegion, settings: Settings) {
         self.settings = settings
 
         _destinationDate = State(initialValue: sourceStartOfDay.date)

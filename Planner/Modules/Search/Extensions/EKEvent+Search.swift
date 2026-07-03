@@ -8,22 +8,22 @@
 import EventKit
 
 extension EKEvent {
-    func searchQueryScore(_ query: PlannerSearchQuery) -> Double? {
-        if query.isCalendarHidden(calendarId: calendar.calendarIdentifier) {
+    func searchQueryScore(_ query: SearchQuery) -> Double? {
+        guard !query.isCalendarHidden(calendarId: calendar.calendarIdentifier) else{
             // Calendar is hidden. Exclude.
             return nil
         }
 
-        if !query.containsDateRange(
+        guard query.containsDateRange(
             startDate: startDate,
             endDate: endDate
-        ) {
+        ) else {
             // Doesn't match the time range. Exclude.
             return nil
         }
 
         if query.text.isEmpty {
-            // No search text. Complete match!
+            // No search text. Include!
             return 1.0
         }
 
@@ -36,7 +36,7 @@ extension EKEvent {
 
         // Scan the location for a match.
         if let location = self.location(),
-           let locationScore = query.score(for: location.name)
+            let locationScore = query.score(for: location.name)
         {
             score += locationScore
         }

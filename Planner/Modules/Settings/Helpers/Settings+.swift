@@ -11,7 +11,7 @@ import SwiftUI
 
 // Clean
 
-extension PlannerSettings {
+extension Settings {
     func homeLocation(deviceLocation: Location?) -> Location?  // nil means the current device location is used and hasn't loaded yet
     {
         homeLocation ?? deviceLocation

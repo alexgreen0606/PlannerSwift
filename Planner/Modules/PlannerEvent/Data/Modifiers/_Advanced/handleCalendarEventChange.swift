@@ -16,7 +16,7 @@ extension ModelContext {
         sourcePlannerEvent: PlannerEvent?,
         sourcePlanner: Planner?,
         plannerService: PlannerService,
-        settings: PlannerSettings
+        settings: Settings
     ) -> /// The datestamps the event is now in.
         Set<String>
     {

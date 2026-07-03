@@ -10,7 +10,7 @@ import SwiftUI
 struct TripChipView: View {
     let trip: Trip
     let planner: Planner
-    let settings: PlannerSettings
+    let settings: Settings
     let namespace: Namespace.ID
 
     private let TRIP_CHIP_ID = "TRIP_CHIP"

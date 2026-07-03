@@ -11,19 +11,19 @@ import SwiftDate
 import SwiftUI
 
 struct SearchRootView: View {
-    let settings: PlannerSettings
+    let settings: Settings
     let namespace: Namespace.ID
 
     init(
         todayPlanner: Planner,
-        settings: PlannerSettings,
+        settings: Settings,
         namespace: Namespace.ID
     ) {
         self.settings = settings
         self.namespace = namespace
 
         _draftQuery = State(
-            initialValue: PlannerSearchQuery(
+            initialValue: SearchQuery(
                 text: "",
                 calendarIds: [],
                 past: false,
@@ -40,7 +40,7 @@ struct SearchRootView: View {
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var plannerService: PlannerService
 
-    @State private var draftQuery: PlannerSearchQuery
+    @State private var draftQuery: SearchQuery
 
     @State private var searchTask: Task<Void, Never>?
 

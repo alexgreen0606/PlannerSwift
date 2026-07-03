@@ -18,14 +18,14 @@ class PlannerService: ObservableObject {
     private let ekEventStore: EKEventStore
     private let todayService: TodayService
     private let plannerCoverStore: PlannerCoverStore
-    private let settings: PlannerSettings
+    private let settings: Settings
 
     init(
         modelContext: ModelContext,
         ekEventStore: EKEventStore,
         todayService: TodayService,
         plannerCoverStore: PlannerCoverStore,
-        settings: PlannerSettings
+        settings: Settings
     ) {
         self.modelContext = modelContext
         self.ekEventStore = ekEventStore
@@ -33,11 +33,11 @@ class PlannerService: ObservableObject {
         self.plannerCoverStore = plannerCoverStore
         self.settings = settings
 
-        self.plannerSearchService = PlannerSearchService(
+        self.searchService = SearchService(
             modelContainer: modelContext.container
         )
 
-        self.searchResults = PlannerSearchResults(
+        self.searchResults = SearchResults(
             activeQuery: modelContext.defaultSearchQuery(
                 todaystamp: todayService.todaystamp,
                 settings: settings
@@ -45,7 +45,7 @@ class PlannerService: ObservableObject {
         )
     }
 
-    private var plannerSearchService: PlannerSearchService
+    private var searchService: SearchService
 
     /// Planner location keys that have synced with the calendar.
     private var freshCalendarLocationKeys: Set<String> = []
@@ -57,7 +57,7 @@ class PlannerService: ObservableObject {
 
     @Published private(set) var sortedUpcomingTrips: [Trip] = []
 
-    @Published private(set) var searchResults: PlannerSearchResults
+    @Published private(set) var searchResults: SearchResults
 
     private var visibleDatestamps: Set<String> {
         var datestampsToSync: Set<String> = []
@@ -89,11 +89,11 @@ class PlannerService: ObservableObject {
 
     // MARK: - Search
 
-    func search(with query: PlannerSearchQuery) {
+    func search(with query: SearchQuery) {
         modelContext.safeSave("PlannerService search")
 
         Task {
-            let datestampMap = await plannerSearchService.search(
+            let datestampMap = await searchService.search(
                 query: query,
                 ekEventStore: ekEventStore,
                 settings: settings
@@ -124,7 +124,7 @@ class PlannerService: ObservableObject {
                 let top = sortedKeys.first.flatMap { datestampMap[$0]?.first }
 
                 withAnimation {
-                    self.searchResults = PlannerSearchResults(
+                    self.searchResults = SearchResults(
                         datestampMap: datestampMap,
                         topDatestamp: top,
                         sortedYears: sortedKeys,

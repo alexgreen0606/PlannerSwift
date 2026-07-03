@@ -10,9 +10,9 @@ import SwiftUI
 import WeatherKit
 
 struct SearchResultWeatherView: View {
-    let activeQuery: PlannerSearchQuery
+    let activeQuery: SearchQuery
     let planner: Planner
-    let settings: PlannerSettings
+    let settings: Settings
 
     @EnvironmentObject private var weatherCacheService: WeatherCacheService
     @EnvironmentObject private var locationService: LocationService
