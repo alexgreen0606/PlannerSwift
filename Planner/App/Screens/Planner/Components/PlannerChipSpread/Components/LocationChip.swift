@@ -57,10 +57,12 @@ struct LocationChipView: View {
                 sourcePlanner: planner,
                 settings: settings,
                 saveSelection: { location in
-                    modelContext.updatePlannerLocation(
-                        for: planner,
-                        to: location
-                    )
+                    withAnimation {
+                        modelContext.updatePlannerLocation(
+                            for: planner,
+                            to: location
+                        )
+                    }
                 }
             )
             .navigationTransition(

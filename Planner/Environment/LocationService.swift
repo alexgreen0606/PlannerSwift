@@ -7,6 +7,7 @@
 
 import Combine
 import MapKit
+import SwiftUI
 
 @MainActor
 final class LocationService:
@@ -109,13 +110,15 @@ final class LocationService:
                    let addressInfo = item.addressRepresentations,
                    let city = addressInfo.cityWithContext
                 {
-                    deviceLocation = Location(
-                        name: city,
-                        subtitle: addressInfo.regionName,
-                        latitude: coordinate.latitude,
-                        longitude: coordinate.longitude,
-                        timeZoneIdentifier: TimeZone.current.identifier
-                    )
+                    withAnimation {
+                        deviceLocation = Location(
+                            name: city,
+                            subtitle: addressInfo.regionName,
+                            latitude: coordinate.latitude,
+                            longitude: coordinate.longitude,
+                            timeZoneIdentifier: TimeZone.current.identifier
+                        )
+                    }
                 }
             } catch {
                 print("ERROR LocationService buildDeviceLocation:", error)

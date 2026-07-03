@@ -65,7 +65,6 @@ struct PlannerChipSpreadView: View {
         .animateLazyAction(
             from: sortedEventChips.map(\.title)
         )
-        .animateLazyAction(from: locationLabel)
     }
 
     // MARK: - View Builders

@@ -266,7 +266,7 @@ struct PlannerRootView: View {
     }
 
     private func handleEventTitleChange(event: PlannerEvent) {
-        modelContext.handlePlannerEventTitleChange(
+        return modelContext.handlePlannerEventTitleChange(
             event,
             in: planner,
             startOfDay: startOfDay,

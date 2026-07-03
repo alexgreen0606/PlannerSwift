@@ -39,7 +39,7 @@ struct PlannerContentsListView: View {
     @EnvironmentObject private var locationService: LocationService
 
     private var emptyPendingEventsLabel: LocalizedStringKey {
-        "No \(!sortedCompletePlannerEvents.isEmpty && showCompleted ? "more " : "")plans"
+        "No \(!sortedCompletePlannerEvents.isEmpty ? "more " : "")plans"
     }
 
     // MARK: - Body
@@ -58,7 +58,6 @@ struct PlannerContentsListView: View {
             showCompleted: showCompleted,
             completedHeader: "Completed Events",
             emptyCompletedLabel: "No completed events",
-            rowId: eventId,
             tint: eventTint,
             leftAdornment: calendarAdornment,
             rightAdornment: timeAdornment,
@@ -132,10 +131,6 @@ struct PlannerContentsListView: View {
             event,
             ekEventStore: calendarStore.ekEventStore
         )
-    }
-
-    private func eventId(event: PlannerEvent) -> String {
-        "\(event.stableId)_\(event.location?.name ?? "NO_LOCATION")"
     }
 
     private func eventTint(event: PlannerEvent) -> Color {

@@ -124,6 +124,14 @@ struct RowView<
                 }
             }
 
+            // MARK: Sync the state title with the item's title when it is changed from an external source.
+
+            .onChange(of: item.title) { _, newTitle in
+                if title != newTitle {
+                    title = newTitle
+                }
+            }
+
         if let namespace {
             row
                 .matchedTransitionSource(

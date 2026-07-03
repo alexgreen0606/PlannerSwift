@@ -211,8 +211,6 @@ struct RoutineRootView: View {
     }
 
     private func handleEventTitleChange(event: RoutineEventContext) {
-        modelContext.handleRoutineEventContextTitleChange(event)
-
         if !invalidatedEventIds.contains(event.stableId) {
             event.version += 0.1
 
@@ -220,6 +218,8 @@ struct RoutineRootView: View {
             plannerService.invalidateRoutines()
             invalidatedEventIds.insert(event.stableId)
         }
+        
+        modelContext.handleRoutineEventContextTitleChange(event)
     }
 
     private func handleToolbarTap(icon _: String, event: RoutineEventContext) {
