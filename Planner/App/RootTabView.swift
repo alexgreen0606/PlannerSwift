@@ -108,6 +108,10 @@ struct RootTabView: View {
 
     @Namespace private var namespace
 
+    private var searchRefreshTrigger: String {
+        "\(scenePhase)_\(selectedTab)"
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -148,7 +152,7 @@ struct RootTabView: View {
                     }
                 }
                 .tabBarMinimizeBehavior(.onScrollDown)
-                .accentColor(accentColor.color)
+                .accentColor(accentColor.swiftUiColor)
                 .opacity(plannerCoverStore.showTodayDefault ? 0 : 1)
 
                 // MARK: Default App Landing. Today Planner.
@@ -171,19 +175,19 @@ struct RootTabView: View {
             }
         }
 
-        // MARK: Initialize the results on the search page.
+        // MARK: Initialize results on the search page.
         .task {
             plannerService.search()
         }
 
-        // MARK: Sync the planners at midnight.
+        // MARK: Refresh planners at midnight.
         .task(id: todayService.todaystamp) {
             plannerService.refresh()
         }
 
-        // MARK: Search each time the search tab opens.
-        .onChange(of: selectedTab) { _, newTab in
-            if newTab == .search {
+        // MARK: Search each time the search tab is active.
+        .onChange(of: searchRefreshTrigger) { _, searchRefreshTrigger in
+            if scenePhase == .active && selectedTab == .search {
                 plannerService.search()
             }
         }

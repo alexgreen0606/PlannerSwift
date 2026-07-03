@@ -33,7 +33,7 @@ struct FormSaveButtonView: ToolbarContent {
                 action: save
             )
             .disabled(!canSave)
-            .tint(customTint ?? accentColor.color)
+            .tint(customTint ?? accentColor.swiftUiColor)
         }
     }
 }

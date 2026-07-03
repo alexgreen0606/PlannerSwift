@@ -122,7 +122,7 @@ struct CalendarsFormView: View {
                 )
             )
             .labelsHidden()
-            .tint(accentColor.color)
+            .tint(accentColor.swiftUiColor)
         }
     }
 

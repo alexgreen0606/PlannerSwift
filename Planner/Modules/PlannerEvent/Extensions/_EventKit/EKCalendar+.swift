@@ -14,7 +14,7 @@ extension EKCalendar {
     }
     
     func systemImageName(settings: Settings) -> String {
-        if let customSystemImage = settings.iconMap[
+        if let customSystemImage = settings.calendarIconMap[
             calendarIdentifier
         ] {
             return customSystemImage

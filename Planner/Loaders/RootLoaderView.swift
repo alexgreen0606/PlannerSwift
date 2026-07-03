@@ -36,7 +36,7 @@ struct RootLoaderView: View {
             }
         }
         .task {
-            modelContext.ensurePlannerSettings(
+            modelContext.ensureSettings(
                 settings: plannerSettingsList
             )
         }

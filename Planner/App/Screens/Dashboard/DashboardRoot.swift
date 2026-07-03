@@ -180,7 +180,7 @@ struct DashboardRootView: View {
                         selection: $tappedDates,
                         in: todayService.multiDatePickerBounds
                     )
-                    .tint(accentColor.color)
+                    .tint(accentColor.swiftUiColor)
                     .onChange(of: tappedDates) { _, selectedDates in
                         handlePlannerDateSelect(selectedDates: selectedDates)
                     }

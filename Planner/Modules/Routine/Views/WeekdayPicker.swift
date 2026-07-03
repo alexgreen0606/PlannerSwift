@@ -54,7 +54,7 @@ struct WeekdayPickerView: View {
 
     private var selectionIndicator: some View {
         Circle()
-            .fill(accentColor.color)
+            .fill(accentColor.swiftUiColor)
             .frame(width: 36, height: 36)
     }
 

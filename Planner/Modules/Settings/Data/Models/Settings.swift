@@ -10,8 +10,8 @@ import SwiftUI
 
 @Model
 class Settings {
-    /// Maps calendar event IDs to system image names.
-    var iconMap: [String: String] = [:]
+    /// Maps calendar IDs to system image names.
+    var calendarIconMap: [String: String] = [:]
 
     /// Set of calendar IDs to exclude from planners.
     var hiddenCalendarIds: Set<String> = []

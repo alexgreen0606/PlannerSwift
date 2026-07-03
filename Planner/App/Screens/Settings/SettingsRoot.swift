@@ -64,20 +64,20 @@ struct SettingsRootView: View {
                         IconPickerView(
                             selectedIconConfig: IconConfig(
                                 name: "square.fill",
-                                primaryColor: accentColor.color
+                                primaryColor: accentColor.swiftUiColor
                             ),
                             largeIcon: true,
                             options: AccentColor.allCases.map { colorConfig in
                                 IconConfig(
                                     name: colorConfig == accentColor
                                         ? "circle.fill" : "circle",
-                                    primaryColor: colorConfig.color
+                                    primaryColor: colorConfig.swiftUiColor
                                 )
                             },
                             numColumns: 3,
                             onTap: { config in
                                 if let selected = AccentColor.allCases.first(
-                                    where: { $0.color == config.primaryColor }
+                                    where: { $0.swiftUiColor == config.primaryColor }
                                 ) {
                                     accentColor = selected
                                 }
@@ -88,7 +88,7 @@ struct SettingsRootView: View {
                     // MARK: List Dividers
 
                     Toggle("Show List Dividers", isOn: $showListDividers)
-                        .tint(accentColor.color)
+                        .tint(accentColor.swiftUiColor)
 
                     // MARK: Toggle Transition Duration
 

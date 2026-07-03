@@ -54,7 +54,7 @@ extension Trip {
                 .frame(width: progressBarWidth)
 
             Capsule()
-                .fill(accentColor.color)
+                .fill(accentColor.swiftUiColor)
                 .frame(width: progressBarWidth * tripProgress)
         }
         .frame(height: 8)

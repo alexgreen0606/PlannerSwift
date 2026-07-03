@@ -46,7 +46,7 @@ struct WeekdaySpreadView: View {
                     )
                     .foregroundStyle(
                         selected.contains(weekday)
-                            ? customAccentColor ?? accentColor.color : .tertiary
+                            ? customAccentColor ?? accentColor.swiftUiColor : .tertiary
                     )
             }
         }

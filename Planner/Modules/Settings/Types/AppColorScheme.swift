@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-// Clean
-
 enum AppColorScheme: String, CaseIterable {
     case system
     case light

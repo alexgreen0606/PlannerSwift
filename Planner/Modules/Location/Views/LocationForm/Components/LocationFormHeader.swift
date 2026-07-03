@@ -187,7 +187,7 @@ struct LocationFormHeaderView: View {
                 selectedLocation.name,
                 iconConfig: IconConfig(
                     name: "mappin.and.ellipse",
-                    primaryColor: accentColor.color
+                    primaryColor: accentColor.swiftUiColor
                 )
             )
             .glassChip(height: 40)
@@ -243,7 +243,7 @@ struct LocationFormHeaderView: View {
             text: $locationSearchService.text
         )
         .focused($isSearchFocused)
-        .tint(accentColor.color)
+        .tint(accentColor.swiftUiColor)
         .padding()
         .glassEffect(.regular.interactive())
         // Increase the focusable area of the field.

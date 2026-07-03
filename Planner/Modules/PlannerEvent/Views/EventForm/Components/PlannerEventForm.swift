@@ -274,7 +274,7 @@ struct PlannerEventFormView: View {
                 iconConfig: IconConfig(
                     name: "mappin.and.ellipse",
                     primaryColor: draftPlannerEvent.location == nil
-                        ? Color.secondary : accentColor.color,
+                        ? Color.secondary : accentColor.swiftUiColor,
                     secondaryColor: Color.label
                 ),
                 label: draftPlannerEvent.location?.name

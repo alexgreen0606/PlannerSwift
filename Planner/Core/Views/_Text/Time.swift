@@ -48,7 +48,7 @@ struct Time: View {
                     .system(size: 14 * scale, weight: .black, design: .rounded)
                 )
                 .foregroundStyle(
-                    customColor ?? accentColor.color
+                    customColor ?? accentColor.swiftUiColor
                 )
 
             Text(details.indicator)

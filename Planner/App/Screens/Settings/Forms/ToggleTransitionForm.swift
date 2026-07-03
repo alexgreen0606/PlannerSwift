@@ -46,7 +46,7 @@ struct ToggleTransitionFormView: View {
             if transitionDuration == toggleTransitionDuration {
                 Image(systemName: "checkmark")
                     .fontWeight(.semibold)
-                    .foregroundStyle(accentColor.color)
+                    .foregroundStyle(accentColor.swiftUiColor)
             }
         }
         .contentShape(Rectangle())

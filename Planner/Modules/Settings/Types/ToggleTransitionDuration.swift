@@ -8,8 +8,6 @@
 import SwiftDate
 import SwiftUI
 
-// Clean
-
 enum ToggleTransitionDuration: String, Codable, CaseIterable {
     case instant
     case twoSeconds

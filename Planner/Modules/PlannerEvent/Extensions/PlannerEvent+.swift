@@ -25,7 +25,7 @@ extension PlannerEvent: PlannerEventLocationHelpers {
             return calendarColor
         }
 
-        return accentColor.color
+        return accentColor.swiftUiColor
     }
 
     func calendarSystemImageName(settings: Settings) -> String {
@@ -34,7 +34,7 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         }
 
         if let eKEventContext,
-            let existing = settings.iconMap[eKEventContext.calendarIdentifier]
+            let existing = settings.calendarIconMap[eKEventContext.calendarIdentifier]
         {
             return existing
         }

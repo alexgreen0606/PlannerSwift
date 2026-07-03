@@ -10,13 +10,11 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-// Clean
-
 extension ModelContext {
     // MARK: - ENSURE
 
     @MainActor
-    func ensurePlannerSettings(
+    func ensureSettings(
         settings: [Settings]
     ) {
         if settings.first != nil {
@@ -24,7 +22,7 @@ extension ModelContext {
         }
 
         insert(Settings())
-        safeSave("settings ensurePlannerSettings")
+        safeSave("ModelContext+Settings ensurePlannerSettings")
     }
 
     // MARK: - UPDATE
@@ -35,7 +33,7 @@ extension ModelContext {
         to location: Location?
     ) {
         settings.homeLocation = location
-        safeSave("settings updateHomeLocation")
+        safeSave("ModelContext+Settings updateHomeLocation")
     }
 
     @MainActor
@@ -44,11 +42,11 @@ extension ModelContext {
         for calendar: EKCalendar,
         to systemImageName: String
     ) {
-        settings.iconMap[
+        settings.calendarIconMap[
             calendar.calendarIdentifier
         ] = systemImageName
 
-        safeSave("settings updateCalendarIcon")
+        safeSave("ModelContext+Settings updateCalendarIcon")
     }
 
     @MainActor
@@ -68,6 +66,6 @@ extension ModelContext {
             )
         }
 
-        safeSave("settings toggleCalendarVisibility")
+        safeSave("ModelContext+Settings toggleCalendarVisibility")
     }
 }

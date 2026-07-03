@@ -9,11 +9,8 @@ import EventKit
 import SwiftDate
 import SwiftUI
 
-// Clean
-
 extension Settings {
-    func homeLocation(deviceLocation: Location?) -> Location?  // nil means the current device location is used and hasn't loaded yet
-    {
+    func homeLocation(deviceLocation: Location?) -> Location? {
         homeLocation ?? deviceLocation
     }
 

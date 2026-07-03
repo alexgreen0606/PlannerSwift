@@ -66,7 +66,7 @@ struct TransferEventsFormView: View {
                     )
                     .environment(\.timeZone, sourceRegion.timeZone)
                     .datePickerStyle(.graphical)
-                    .tint(accentColor.color)
+                    .tint(accentColor.swiftUiColor)
                     .listRowInsets(.top, 0)
                     .discreetListItem()
                 }

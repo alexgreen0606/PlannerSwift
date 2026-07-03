@@ -177,7 +177,7 @@ struct EventFormView: View {
 
             saveCalendarEvent(event)
         }
-        .tint(accentColor.color)
+        .tint(accentColor.swiftUiColor)
         .ignoresSafeArea()
         .navigationBarBackButtonHidden(true)
     }

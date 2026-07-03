@@ -60,10 +60,10 @@ struct ListItemToggleView<Item: ListItemDetails>: View {
 
     private var color: Color {
         guard let customColor else {
-            return accentColor.color
+            return accentColor.swiftUiColor
         }
 
-        return listEngine.isSelectMode ? accentColor.color : customColor
+        return listEngine.isSelectMode ? accentColor.swiftUiColor : customColor
     }
 
     private var systemImageName: String {

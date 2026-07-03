@@ -88,7 +88,7 @@ struct TripPreviewView: View {
                         locationLabel,
                         iconConfig: IconConfig(
                             name: "mappin.and.ellipse",
-                            primaryColor: accentColor.color
+                            primaryColor: accentColor.swiftUiColor
                         ),
                         color: Color.secondary,
                         scale: 0.8
@@ -163,7 +163,7 @@ struct TripPreviewView: View {
             Text("Edit Trip")
         }
         .font(.system(size: 14, weight: .bold, design: .rounded))
-        .foregroundStyle(accentColor.color)
+        .foregroundStyle(accentColor.swiftUiColor)
         .frame(
             width: PlannerPreviewCardLayout.DEFAULT_WIDTH,
             height: PlannerPreviewCardLayout.HEIGHT
@@ -173,7 +173,7 @@ struct TripPreviewView: View {
                 cornerRadius: PlannerPreviewCardLayout.CORNER_RADIUS
             )
             .stroke(
-                accentColor.color,
+                accentColor.swiftUiColor,
                 style: StrokeStyle(
                     lineWidth: 1,
                     dash: [6]

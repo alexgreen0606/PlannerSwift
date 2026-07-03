@@ -65,7 +65,7 @@ struct RoutineSectionView: View {
                 .foregroundStyle(Color.label)
 
             Capsule()
-                .fill(accentColor.color)
+                .fill(accentColor.swiftUiColor)
                 .opacity(
                     todayService.todaystamp.weekday
                         == weekday.label ? 1 : 0

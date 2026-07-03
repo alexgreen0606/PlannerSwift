@@ -112,7 +112,7 @@ struct TripFormView: View {
             .navigationTitle("\(isNewTrip ? "Create" : "Edit") Trip")
             .navigationBarTitleDisplayMode(.inline)
         }
-        .tint(accentColor.color)
+        .tint(accentColor.swiftUiColor)
         .task {
             var existingTripDatestamps =
                 modelContext.getExistingTripDatestamps()
@@ -246,7 +246,7 @@ struct TripFormView: View {
                 Image(systemName: "mappin.and.ellipse")
                     .foregroundStyle(
                         draftTrip.location == nil
-                            ? Color.secondary : accentColor.color,
+                            ? Color.secondary : accentColor.swiftUiColor,
                         Color.label
                     )
                 Spacer()

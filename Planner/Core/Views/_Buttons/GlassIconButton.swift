@@ -46,7 +46,7 @@ struct GlassIconButtonView: View {
                 .frame(width: 32, height: 32)
         }
         .buttonBorderShape(.circle)
-        .tint(disabled ? Color.tertiary : color ?? accentColor.color)
+        .tint(disabled ? Color.tertiary : color ?? accentColor.swiftUiColor)
 
         if prominent {
             button.buttonStyle(.glassProminent)

@@ -53,7 +53,7 @@ struct ActionButtonView: View {
                     adornment
                 }
             }
-            .foregroundStyle(customColor ?? accentColor.color)
+            .foregroundStyle(customColor ?? accentColor.swiftUiColor)
         }
     }
 

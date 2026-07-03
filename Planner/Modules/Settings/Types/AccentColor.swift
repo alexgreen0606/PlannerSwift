@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-// Clean
-
 enum AccentColor: String, Codable, CaseIterable {
     case red
     case pink
@@ -20,15 +18,13 @@ enum AccentColor: String, Codable, CaseIterable {
     case teal
     case indigo
 
-    static var title: String {
-        "Accent Color"
-    }
+    static let title = "Accent Color"
 
     var label: String {
         rawValue.capitalized
     }
 
-    var color: Color {
+    var swiftUiColor: Color {
         switch self {
         case .red: return .red
         case .orange: return .orange

@@ -45,7 +45,7 @@ struct RoutineRootView: View {
                         moveItem: moveEvent,
                         deleteItem: deleteEvent,
                         handleTitleChange: handleEventTitleChange,
-                        tint: { _ in accentColor.color },
+                        tint: { _ in accentColor.swiftUiColor },
                         toggleConfig: eventToggleConfig,
                         leftAdornment: { _ in EmptyView() },
                         rightAdornment: timeAdornment,

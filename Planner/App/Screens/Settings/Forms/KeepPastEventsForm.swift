@@ -47,7 +47,7 @@ struct KeepPastEventsFormView: View {
             if pastPlansDuration == keepPastEventsDuration {
                 Image(systemName: "checkmark")
                     .fontWeight(.semibold)
-                    .foregroundStyle(accentColor.color)
+                    .foregroundStyle(accentColor.swiftUiColor)
             }
         }
         .contentShape(Rectangle())

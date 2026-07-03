@@ -8,17 +8,13 @@
 import SwiftDate
 import SwiftUI
 
-// Clean
-
 enum KeepPastEventsDuration: String, Codable, CaseIterable {
     case oneMonth
     case threeMonths
     case sixMonths
     case forever
 
-    static var title: String {
-        "Keep Past Events"
-    }
+    static let title = "Keep Past Events"
 
     var label: String {
         switch self {
@@ -33,8 +29,9 @@ enum KeepPastEventsDuration: String, Codable, CaseIterable {
         }
     }
 
+    /// The farthest back date users can access in their calendar.
     var cutoffDate: Date {
-        guard let monthOffset = monthOffset else { return .distantPast }
+        guard let monthOffset else { return .distantPast }
 
         return DateInRegion(Date(), region: .local)
             .dateByAdding(monthOffset, .month)

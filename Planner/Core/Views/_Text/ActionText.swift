@@ -35,7 +35,7 @@ struct ActionText: View {
                 )
             )
             .foregroundStyle(
-                customColor ?? accentColor.color
+                customColor ?? accentColor.swiftUiColor
             )
     }
 }
