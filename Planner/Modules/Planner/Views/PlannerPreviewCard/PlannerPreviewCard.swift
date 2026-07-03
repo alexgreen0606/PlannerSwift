@@ -28,6 +28,7 @@ struct PlannerPreviewCardView<Header: View>: View {
         sortedEventChips: [PlannerEvent],
         sortedBirthdayChips: [PlannerEvent],
         header: Header,
+        defaultLocationLabel: String? = nil,
         width: CGFloat = PlannerPreviewCardLayout.DEFAULT_WIDTH,
         transitionId: String,
         settings: PlannerSettings,
@@ -43,7 +44,11 @@ struct PlannerPreviewCardView<Header: View>: View {
         self.transitionId = transitionId
         self.settings = settings
         self.namespace = namespace
+        
+        self.customDefaultLocationLabel = defaultLocationLabel
     }
+    
+    private let customDefaultLocationLabel: String?
 
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
@@ -74,6 +79,7 @@ struct PlannerPreviewCardView<Header: View>: View {
 
             PlannerCardWeatherView(
                 planner: planner,
+                customDefaultLocationLabel: customDefaultLocationLabel,
                 settings: settings
             )
         }

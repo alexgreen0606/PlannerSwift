@@ -20,6 +20,7 @@ struct TripPreviewView: View {
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var todayService: TodayService
+    @EnvironmentObject private var locationService: LocationService
 
     private var isExpanded: Bool {
         expandedTripIds.contains(trip.id)
@@ -27,6 +28,18 @@ struct TripPreviewView: View {
 
     private var locationLabel: String? {
         trip.location?.name
+    }
+
+    private var showLocationLabel: Bool {
+        guard trip.location != nil else {
+            return false
+        }
+        
+        let homeLocationLabel = settings.homeLocationLabel(
+            deviceLocation: locationService.deviceLocation
+        )
+
+        return locationLabel != homeLocationLabel
     }
 
     private var dateRangeLabel: String {
@@ -70,7 +83,7 @@ struct TripPreviewView: View {
                         .system(size: 20, weight: .heavy, design: .rounded)
                     )
 
-                if let locationLabel {
+                if showLocationLabel, let locationLabel {
                     AdornedValue(
                         locationLabel,
                         iconConfig: IconConfig(

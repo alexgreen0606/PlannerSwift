@@ -11,6 +11,7 @@ import WeatherKit
 
 struct PlannerCardWeatherView: View {
     let planner: Planner
+    let customDefaultLocationLabel: String?
     let settings: PlannerSettings
 
     @EnvironmentObject private var locationService: LocationService
@@ -29,7 +30,10 @@ struct PlannerCardWeatherView: View {
     }
 
     private var showLocationLabel: Bool {
-        if locationLabel != homeLocationLabel {
+        let defaultLocationLabel =
+            customDefaultLocationLabel ?? homeLocationLabel
+
+        if locationLabel != defaultLocationLabel {
             // Show the location when the planner's location
             // differs from the home location.
             return true

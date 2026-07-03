@@ -30,6 +30,7 @@ struct TripDayPreviewCardView: View {
                     title: "Day \(index + 1)",
                     subtitle: datestamp.weekday
                 ),
+                defaultLocationLabel: trip.location?.name,
                 transitionId: trip.transitionId(
                     for: datestamp
                 ),
