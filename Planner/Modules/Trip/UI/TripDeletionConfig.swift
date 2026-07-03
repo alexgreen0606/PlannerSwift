@@ -5,6 +5,8 @@
 //  Created by Alex Green on 4/19/26.
 //
 
+import SwiftUI
+
 func deleteTripConfig(
     trip: Trip,
     delete: @escaping () -> Void
@@ -16,16 +18,17 @@ func deleteTripConfig(
                 "Events won't be deleted. \(UI.GENERIC_DELETE_WARNING)"
 
             if trip.location != nil {
-                message = "Planner locations will default to your home location. \(message)"
+                message =
+                    "Planner locations will default to your home location. \(message)"
             }
 
             return message
         }(),
         actions: [
             ConfirmationAction(
-                title: "Delete Trip",
+                title: LocalizedStringKey("Delete Trip"),
                 handler: delete
-            ),
+            )
         ]
     )
 }

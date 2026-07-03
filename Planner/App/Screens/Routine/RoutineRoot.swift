@@ -40,11 +40,11 @@ struct RoutineRootView: View {
                 ScrollViewReader { scrollProxy in
                     SortableTextfieldListView(
                         sortedItems: sortedRoutineEventContexts,
+                        itemsLabel: "\(weekday.label) Routine",
                         createItem: createEvent,
                         moveItem: moveEvent,
                         deleteItem: deleteEvent,
                         handleTitleChange: handleEventTitleChange,
-                        emptyPendingLabel: "No \(weekday.label) routine",
                         tint: { _ in accentColor.color },
                         toggleConfig: eventToggleConfig,
                         leftAdornment: { _ in EmptyView() },

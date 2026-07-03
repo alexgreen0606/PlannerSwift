@@ -7,13 +7,14 @@
 
 import SwiftUI
 
-struct ConfirmationAction {
-    let title: String
+struct ConfirmationAction: Identifiable {
+    let id = UUID()
+    let title: LocalizedStringKey
     let role: ButtonRole
     let handler: () -> Void
 
     init(
-        title: String,
+        title: LocalizedStringKey,
         role: ButtonRole = .destructive,
         handler: @escaping () -> Void
     ) {

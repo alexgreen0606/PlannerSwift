@@ -38,26 +38,20 @@ struct PlannerContentsListView: View {
     @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
     @EnvironmentObject private var locationService: LocationService
 
-    private var emptyPendingEventsLabel: LocalizedStringKey {
-        "No \(!sortedCompletePlannerEvents.isEmpty ? "more " : "")plans"
-    }
-
     // MARK: - Body
 
     var body: some View {
         SortableTextfieldListView(
             sortedItems: sortedPlannerEvents,
+            itemsLabel: "Plans",
             floatingInfo: chipSpread,
             createItem: createEvent,
             moveItem: moveUncheckedEvent,
             deleteItem: deleteEvent,
             handleTitleChange: handleEventTitleChange,
             sortedPendingItems: sortedPendingPlannerEvents,
-            emptyPendingLabel: emptyPendingEventsLabel,
             sortedCompletedItems: sortedCompletePlannerEvents,
             showCompleted: showCompleted,
-            completedHeader: "Completed Events",
-            emptyCompletedLabel: "No completed events",
             tint: eventTint,
             leftAdornment: calendarAdornment,
             rightAdornment: timeAdornment,

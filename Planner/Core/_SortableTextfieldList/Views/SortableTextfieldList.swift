@@ -17,6 +17,7 @@ struct SortableTextfieldListView<
     BottomAdornment: View
 >: View {
     private let sortedItems: [Item]
+    private let itemsLabel: String
     private let floatingInfo: FloatingInfo?
     private let createItem: (_ at: Int) -> Void
     private let moveItem: (_ from: Int, _ to: Int) -> Void
@@ -24,13 +25,10 @@ struct SortableTextfieldListView<
     private let handleTitleChange: ((_ item: Item) -> Void)?
 
     private let sortedPendingItems: [Item]
-    private let emptyPendingLabel: LocalizedStringKey
 
     private let sortedCompletedItems: [Item]
     private let showCompleted: Bool
-    private let completedHeader: String
     private let completedFooter: String?
-    private let emptyCompletedLabel: LocalizedStringKey
 
     private let rowId: (_ item: Item) -> String
     private let tint: (_ item: Item) -> Color
@@ -44,18 +42,16 @@ struct SortableTextfieldListView<
 
     init(
         sortedItems: [Item],
+        itemsLabel: String = "Items",
         floatingInfo: FloatingInfo? = EmptyView(),
         createItem: @escaping (_: Int) -> Void,
         moveItem: @escaping (_: Int, _: Int) -> Void,
         deleteItem: ((_: Item) -> Void)? = nil,
         handleTitleChange: ((_: Item) -> Void)? = nil,
         sortedPendingItems: [Item]? = nil,
-        emptyPendingLabel: LocalizedStringKey,
         sortedCompletedItems: [Item] = [],
         showCompleted: Bool = false,
-        completedHeader: String = "",
         completedFooter: String? = nil,
-        emptyCompletedLabel: LocalizedStringKey = "",
         rowId: @escaping (_ item: Item) -> String = { $0.stableId.uuidString },
         tint: @escaping (_: Item) -> Color,
         toggleConfig: @escaping (_: Item) -> ToggleConfig? = { _ in nil },
@@ -66,18 +62,16 @@ struct SortableTextfieldListView<
         namespace: Namespace.ID? = nil
     ) {
         self.sortedItems = sortedItems
+        self.itemsLabel = itemsLabel
         self.floatingInfo = floatingInfo
         self.createItem = createItem
         self.moveItem = moveItem
         self.deleteItem = deleteItem
         self.handleTitleChange = handleTitleChange
         self.sortedPendingItems = sortedPendingItems ?? sortedItems
-        self.emptyPendingLabel = emptyPendingLabel
         self.sortedCompletedItems = sortedCompletedItems
         self.showCompleted = showCompleted
-        self.completedHeader = completedHeader
         self.completedFooter = completedFooter
-        self.emptyCompletedLabel = emptyCompletedLabel
         self.rowId = rowId
         self.tint = tint
         self.toggleConfig = toggleConfig
@@ -90,6 +84,18 @@ struct SortableTextfieldListView<
 
     @Environment(\.scenePhase) private var appPhase
     @EnvironmentObject private var listEngine: ListEngine<Item>
+
+    private var emptyPendingLabel: LocalizedStringKey {
+        "No \(!sortedCompletedItems.isEmpty ? "more " : "")\(itemsLabel.lowercased())"
+    }
+
+    private var completedHeader: String {
+        "Completed \(itemsLabel)"
+    }
+
+    private var emptyCompletedLabel: LocalizedStringKey {
+        "No completed \(itemsLabel.lowercased())"
+    }
 
     // MARK: - Body
 

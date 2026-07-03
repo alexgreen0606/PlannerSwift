@@ -19,7 +19,7 @@ private struct ConfirmationModifier: ViewModifier {
                     isPresented: $isPresented,
                     titleVisibility: .visible
                 ) {
-                    ForEach(config.actions, id: \.title) { action in
+                    ForEach(config.actions) { action in
                         Button(
                             action.title,
                             role: action.role,

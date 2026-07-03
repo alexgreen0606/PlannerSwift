@@ -34,7 +34,7 @@ extension Planner {
     }
 
     func location(settings: Settings, deviceLocation: Location?)
-        // Note: nil means the device location is used and hasn't loaded yet.
+        /// nil means the device location is used and hasn't loaded yet.
         -> Location?
     {
         location ?? trip?.location
