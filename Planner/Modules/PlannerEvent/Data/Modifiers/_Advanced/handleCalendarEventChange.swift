@@ -12,7 +12,7 @@ import SwiftDate
 extension ModelContext {
     @MainActor
     func handleCalendarEventChange(
-        _ calendarEvent: EKEvent?,
+        _ ekEvent: EKEvent?,
         sourcePlannerEvent: PlannerEvent?,
         sourcePlanner: Planner?,
         plannerService: PlannerService,
@@ -23,7 +23,7 @@ extension ModelContext {
         let sourceWasRecurringEvent =
             sourcePlannerEvent?.eKEventContext?.ekEvent?.hasRecurrenceRules
             == true
-        let finalIsRecurringEvent = calendarEvent?.hasRecurrenceRules == true
+        let finalIsRecurringEvent = ekEvent?.hasRecurrenceRules == true
 
         if let sourcePlannerEvent {
             // MARK: A planner event already exists. Sync it with the updated calendar event.
@@ -31,7 +31,7 @@ extension ModelContext {
             // MARK: Mark routine event records as variants.
             sourcePlannerEvent.routineEventRecordContext?.isVariant = true
 
-            guard let calendarEvent else {
+            guard let ekEvent else {
                 // MARK: The calendar event was deleted. Remove the storage record.
 
                 delete(sourcePlannerEvent)
@@ -40,7 +40,7 @@ extension ModelContext {
 
             // MARK: Sync the storage record with the calendar event.
 
-            sourcePlannerEvent.syncWithCalendarEvent(calendarEvent)
+            sourcePlannerEvent.syncWithEkEvent(ekEvent)
 
             return ensureValidSortDate(
                 for: sourcePlannerEvent,
@@ -48,18 +48,18 @@ extension ModelContext {
                 settings: settings
             )
 
-        } else if let calendarEvent {
+        } else if let ekEvent {
             // MARK: A planner event doesn't exist. Create one for the calendar event.
 
             let sortedStartsOfDays = getSortedPlannerStartOfDays(
-                for: calendarEvent.startDate,
-                endTime: calendarEvent.endDate,
+                for: ekEvent.startDate,
+                endTime: ekEvent.endDate,
                 settings: settings
             )
 
             if let destinationStartOfDay = sortedStartsOfDays.first {
                 createPlannerEvent(
-                    for: calendarEvent,
+                    for: ekEvent,
                     on: destinationStartOfDay
                 )
             }

@@ -64,9 +64,9 @@ struct SettingsRootView: View {
                         IconPickerView(
                             selectedIconConfig: IconConfig(
                                 name: "square.fill",
-                                primaryColor: accentColor.swiftUiColor
+                                primaryColor: accentColor.swiftUiColor,
+                                scale: .large
                             ),
-                            largeIcon: true,
                             options: AccentColor.allCases.map { colorConfig in
                                 IconConfig(
                                     name: colorConfig == accentColor

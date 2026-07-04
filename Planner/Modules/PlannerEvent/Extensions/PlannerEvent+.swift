@@ -49,7 +49,7 @@ extension PlannerEvent: PlannerEventLocationHelpers {
     // MARK: - Synchronization
 
     @MainActor
-    func syncWithCalendarEvent(
+    func syncWithEkEvent(
         _ ekEvent: EKEvent
     ) {
         // Sync common data between planner and calendar events.

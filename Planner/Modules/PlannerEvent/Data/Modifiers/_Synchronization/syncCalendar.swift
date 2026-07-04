@@ -92,7 +92,7 @@ extension ModelContext {
                 birthdayEvents[contactId] = plannerEvent
             }
 
-            plannerEvent.syncWithCalendarEvent(ekEvent)
+            plannerEvent.syncWithEkEvent(ekEvent)
         }
 
         // MARK: - Create New Calendar Records

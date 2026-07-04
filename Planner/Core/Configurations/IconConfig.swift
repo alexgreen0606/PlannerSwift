@@ -11,15 +11,18 @@ struct IconConfig: Identifiable {
     let name: String
     let primaryColor: Color
     let secondaryColor: Color
+    let scale: Image.Scale
 
     init(
         name: String,
         primaryColor: Color = .secondary,
-        secondaryColor: Color = .secondary
+        secondaryColor: Color = .secondary,
+        scale: Image.Scale = .medium
     ) {
         self.name = name
         self.primaryColor = primaryColor
         self.secondaryColor = secondaryColor
+        self.scale = scale
     }
 
     var id: String {

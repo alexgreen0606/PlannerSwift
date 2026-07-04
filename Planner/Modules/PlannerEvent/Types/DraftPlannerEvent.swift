@@ -12,7 +12,7 @@ import SwiftUI
 // TODO: Create init functions for this new vs edit
 struct DraftPlannerEvent: PlannerEventLocationHelpers {
     var title: String = ""
-    var date: Date = .init()
+    var date: Date = Date()
     var hasTime: Bool = false
     var location: Location? = nil
     var ekEvent: EKEvent? = nil

@@ -9,21 +9,17 @@ import SwiftUI
 
 struct IconPickerView: View {
     private let selectedIconConfig: IconConfig
-    // TODO: move this into IconConfig
-    private let largeIcon: Bool
     private let options: [IconConfig]
     private let numColumns: Int
     private let onTap: (IconConfig) -> Void
 
     init(
         selectedIconConfig: IconConfig,
-        largeIcon: Bool = false,
         options: [IconConfig],
         numColumns: Int,
         onTap: @escaping (IconConfig) -> Void
     ) {
         self.selectedIconConfig = selectedIconConfig
-        self.largeIcon = largeIcon
         self.options = options
         self.numColumns = numColumns
         self.onTap = onTap
@@ -44,7 +40,7 @@ struct IconPickerView: View {
 
     var body: some View {
         Image(systemName: selectedIconConfig.name)
-            .imageScale(largeIcon ? .large : .medium)
+            .imageScale(selectedIconConfig.scale)
             .foregroundStyle(
                 selectedIconConfig.primaryColor,
                 selectedIconConfig.secondaryColor
