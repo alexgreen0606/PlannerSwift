@@ -22,17 +22,29 @@
 		077AB2CB2F0C32C000F97FCC /* Exceptions for "Planner" folder in "Planner" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				_Documentation/CodingGuidelines.md,
 				Info.plist,
 			);
 			target = 07BB27D42EDDFB9400593DD0 /* Planner */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		07E1415F2FF8CDA10042F2CE /* Exceptions for "Planner" folder in "Compile Sources" phase from "Planner" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 07BB27D12EDDFB9400593DD0 /* Sources */;
+			membershipExceptions = (
+				_Documentation/CodingGuidelines.md,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		07BB27D72EDDFB9400593DD0 /* Planner */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				077AB2CB2F0C32C000F97FCC /* Exceptions for "Planner" folder in "Planner" target */,
+				07E1415F2FF8CDA10042F2CE /* Exceptions for "Planner" folder in "Compile Sources" phase from "Planner" target */,
 			);
 			path = Planner;
 			sourceTree = "<group>";

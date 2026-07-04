@@ -14,17 +14,11 @@ class Routine {
     var weekdayRawValue: String = ""
 
     // MARK: Sibling
-    @Relationship(
-        deleteRule: .nullify,
-        inverse: \RoutineEvent.routine
-    )
+    @Relationship(inverse: \RoutineEvent.routine)
     var routineEvents: [RoutineEvent]?
     
     // MARK: Sibling
-    @Relationship(
-        deleteRule: .nullify,
-        inverse: \Planner.routine
-    )
+    @Relationship(inverse: \Planner.routine)
     var planners: [Planner]?
 
     init(weekdayRawValue: String) {
