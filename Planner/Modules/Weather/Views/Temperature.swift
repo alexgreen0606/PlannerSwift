@@ -16,13 +16,15 @@ struct TemperatureView: View {
 
     private var highTemp: String {
         let temp = weatherData.highTemperature.converted(to: weatherUnit).value
-        return "\(Int(ceil(temp)))°"
+        return "\(Int(temp))°"
     }
 
     private var lowTemp: String {
         let temp = weatherData.lowTemperature.converted(to: weatherUnit).value
-        return "\(Int(ceil(temp)))°"
+        return "\(Int(temp))°"
     }
+
+    // MARK: - Body
 
     var body: some View {
         HStack(spacing: 4) {
@@ -31,6 +33,8 @@ struct TemperatureView: View {
             value(lowTemp, size: 10)
         }
     }
+
+    // MARK: - View Builder
 
     private func value(_ text: String, size: CGFloat) -> some View {
         Text(text)

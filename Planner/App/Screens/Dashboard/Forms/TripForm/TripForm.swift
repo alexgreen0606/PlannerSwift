@@ -71,7 +71,7 @@ struct TripFormView: View {
             return "Select Dates"
         }
 
-        return buildDateRangeLabel(
+        return tripDateRangeLabel(
             firstDatestamp: firstDatestamp,
             lastDatestamp: lastDatestamp,
             todaystamp: todayService.todaystamp
@@ -91,8 +91,14 @@ struct TripFormView: View {
             return nil
         }
 
+        let conflictLabel = DateFormat.dateLabel.string(
+            from: dateConflict,
+            todaystamp: todayService.todaystamp,
+            ordinal: true
+        )
+
         return
-            "\(dateConflict.dateLabel(todaystamp: todayService.todaystamp)) is linked to a different trip."
+            "\(conflictLabel) is linked to a different trip."
     }
 
     // MARK: - Body
@@ -205,10 +211,12 @@ struct TripFormView: View {
                 if !showDatePicker {
                     isTitleFocused = false
                 }
-                showDatePicker.toggle()
+
+                withAnimation {
+                    showDatePicker.toggle()
+                }
             }
         )
-        .id("DATES_FIELD_\(datesError != nil)")
         .listRowSeparator(showDatePicker ? .hidden : .visible)
     }
 
@@ -242,20 +250,15 @@ struct TripFormView: View {
                 }
             )
         } label: {
-            HStack {
-                Image(systemName: "mappin.and.ellipse")
-                    .foregroundStyle(
-                        draftTrip.location == nil
-                            ? Color.secondary : accentColor.swiftUiColor,
-                        Color.label
-                    )
-                Spacer()
-                Text(
-                    draftTrip.location?.name ?? "Home Location"
-                )
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            }
+            FormNavigationLinkView(
+                iconConfig: IconConfig(
+                    name: "mappin.and.ellipse",
+                    primaryColor: draftTrip.location == nil
+                        ? Color.secondary : accentColor.swiftUiColor,
+                    secondaryColor: Color.label
+                ),
+                label: draftTrip.location?.name ?? "Home Location"
+            )
         }
     }
 
@@ -275,8 +278,8 @@ struct TripFormView: View {
 
     private func saveTrip() {
         let savedTrip = modelContext.updateTrip(
-            from: draftTrip,
-            to: sourceTrip,
+            sourceTrip,
+            with: draftTrip,
             plannerService: plannerService
         )
 

@@ -34,7 +34,7 @@ struct TripPreviewView: View {
         guard trip.location != nil else {
             return false
         }
-        
+
         let homeLocationLabel = settings.homeLocationLabel(
             deviceLocation: locationService.deviceLocation
         )
@@ -67,7 +67,7 @@ struct TripPreviewView: View {
                 dayPreviews
             }
         }
-        .id(getTripRenderId(tripId: trip.id, isExpanded: isExpanded))
+        .id(tripRenderId(tripId: trip.id, isExpanded: isExpanded))
         .discreetListItem()
     }
 
@@ -103,7 +103,10 @@ struct TripPreviewView: View {
                     .font(.system(size: 14, weight: .bold, design: .rounded))
 
                 if countdownLabel.isEmpty {
-                    progressBar
+                    ProgressBar(
+                        trip: trip,
+                        day: trip.day(of: todayService.todaystamp)
+                    )
                 } else {
                     Text(countdownLabel)
                         .font(.footnote)
@@ -122,13 +125,6 @@ struct TripPreviewView: View {
                 }
             }
         }
-    }
-
-    private var progressBar: some View {
-        trip.progressBar(
-            day: trip.day(of: todayService.todaystamp),
-            accentColor: accentColor
-        )
     }
 
     // MARK: - Day Previews

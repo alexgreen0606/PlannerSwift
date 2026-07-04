@@ -5,15 +5,14 @@
 //  Created by Alex Green on 5/12/26.
 //
 
-import SwiftDate
 import SwiftUI
 import WeatherKit
 
 struct WeatherPreviewView: View {
-    let planner: Planner
-    let startAdorned: Bool
-    let showLocationLabel: Bool
-    let settings: Settings
+    private let planner: Planner
+    private let startAdorned: Bool
+    private let showLocationLabel: Bool
+    private let settings: Settings
 
     init(
         planner: Planner,
@@ -37,19 +36,14 @@ struct WeatherPreviewView: View {
     @EnvironmentObject private var weatherCacheService: WeatherCacheService
     @EnvironmentObject private var locationService: LocationService
 
-    private var startOfDay: DateInRegion {
-        planner.startOfDay(settings: settings)
-    }
-
-    private var plannerLocation: Location? {
-        planner.location(
+    private var weatherData: DayWeather? {
+        let startOfDay = planner.startOfDay(settings: settings)
+        let plannerLocation = planner.location(
             settings: settings,
             deviceLocation: locationService.deviceLocation
         )
-    }
 
-    private var weatherData: DayWeather? {
-        weatherCacheService.weather(
+        return weatherCacheService.weather(
             for: startOfDay,
             at: plannerLocation
         )
@@ -62,10 +56,12 @@ struct WeatherPreviewView: View {
         )
     }
 
+    /// Only display the location icon when weather data doesn't exist.
     private var locationIconConfig: IconConfig? {
         guard weatherData == nil else {
             return nil
         }
+
         return planner.locationIconConfig(
             settings: settings,
             accentColor: accentColor
@@ -80,16 +76,12 @@ struct WeatherPreviewView: View {
         }
     }
 
+    // MARK: - Body
+
     var body: some View {
         HStack {
             if startAdorned, let weatherData {
-                Image(systemName: weatherData.symbolName)
-                    .symbolVariant(isDarkMode ? .fill : .none)
-                    .symbolRenderingMode(
-                        isDarkMode ? .multicolor : .monochrome
-                    )
-                    .imageScale(.medium)
-                    .frame(maxHeight: .infinity)
+                weatherIcon(systemImageName: weatherData.symbolName)
             }
 
             VStack(alignment: startAdorned ? .leading : .trailing, spacing: 0) {
@@ -98,40 +90,32 @@ struct WeatherPreviewView: View {
                 }
 
                 if showLocationLabel {
-                    HStack(spacing: 6) {
-                        if let locationIconConfig {
-                            Image(systemName: locationIconConfig.name)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 11, height: 11)
-                                .foregroundStyle(
-                                    locationIconConfig.primaryColor,
-                                    locationIconConfig.secondaryColor
-                                )
-                        }
-
-                        if showLocationLabel {
-                            Text(locationLabel)
-                                .foregroundStyle(
-                                    Color.secondary
-                                )
-                                .font(.system(size: 10))
-                        }
-                    }
+                    AdornedValue(
+                        locationLabel,
+                        iconConfig: locationIconConfig,
+                        color: Color.secondary,
+                        scale: 0.7
+                    )
                 }
             }
 
             if !startAdorned, let weatherData {
-                Image(systemName: weatherData.symbolName)
-                    .symbolVariant(isDarkMode ? .fill : .none)
-                    .symbolRenderingMode(
-                        isDarkMode ? .multicolor : .monochrome
-                    )
-                    .imageScale(.medium)
-                    .frame(maxHeight: .infinity)
+                weatherIcon(systemImageName: weatherData.symbolName)
             }
         }
-        .frame(height: 30)
         .animateLazyAction(from: weatherData)
+        .frame(height: 30)
+    }
+
+    // MARK: - View Builders
+
+    private func weatherIcon(systemImageName: String) -> some View {
+        Image(systemName: systemImageName)
+            .symbolVariant(isDarkMode ? .fill : .none)
+            .symbolRenderingMode(
+                isDarkMode ? .multicolor : .monochrome
+            )
+            .imageScale(.medium)
+            .frame(maxHeight: .infinity)
     }
 }

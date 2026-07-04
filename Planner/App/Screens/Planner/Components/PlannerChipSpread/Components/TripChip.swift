@@ -38,7 +38,7 @@ struct TripChipView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                 VStack(alignment: .trailing) {
-                    progressBar
+                    ProgressBar(trip: trip, day: dayOfTrip)
 
                     Text(
                         "Day \(Int(dayOfTrip)) of \(trip.sortedPlanners.count)"
@@ -79,11 +79,5 @@ struct TripChipView: View {
                 )
             )
         }
-    }
-
-    // MARK: - View Builders
-
-    private var progressBar: some View {
-        trip.progressBar(day: dayOfTrip, accentColor: accentColor)
     }
 }

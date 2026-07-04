@@ -13,6 +13,14 @@ extension Trip {
     var safePlanners: [Planner] {
         planners ?? []
     }
+    
+    var transitionId: String {
+        "\(String(describing: id))"
+    }
+
+    func transitionId(for datestamp: String) -> String {
+        "\(datestamp)_\(transitionId)"
+    }
 
     var sortedPlanners: [Planner] {
         safePlanners.sorted { $0.datestamp < $1.datestamp }
@@ -36,44 +44,12 @@ extension Trip {
         return Double(index) + 1.0
     }
 
-    @ViewBuilder
-    func progressBar(
-        day: CGFloat,
-        accentColor: AccentColor
-    ) -> some View {
-        let progressBarWidth: CGFloat = 100
-
-        let tripProgress: Double = {
-            guard sortedPlanners.count > 0 else { return 0 }
-            return day / Double(sortedPlanners.count)
-        }()
-
-        ZStack(alignment: .leading) {
-            Capsule()
-                .fill(Color.secondary.opacity(0.15))
-                .frame(width: progressBarWidth)
-
-            Capsule()
-                .fill(accentColor.swiftUiColor)
-                .frame(width: progressBarWidth * tripProgress)
-        }
-        .frame(height: 8)
-    }
-
     func dateRangeLabel(todaystamp: String) -> String {
-        buildDateRangeLabel(
+        tripDateRangeLabel(
             firstDatestamp: firstDatestamp,
             lastDatestamp: lastDatestamp,
             todaystamp: todaystamp,
             referenceYear: firstDatestamp.year
         )
-    }
-
-    var transitionId: String {
-        "\(String(describing: id))"
-    }
-
-    func transitionId(for datestamp: String) -> String {
-        "\(datestamp)_\(String(describing: id))"
     }
 }

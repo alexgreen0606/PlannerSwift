@@ -6,16 +6,15 @@
 //
 
 import SwiftData
-import SwiftDate
-import SwiftUI
 
 @Model
 class Trip {
-    var title: String = ""
     
+    var title: String = ""
     var excludeRoutines: Bool = true
 
     /// SwiftData query helpers.
+
     var firstDatestamp: String = ""
     var lastDatestamp: String = ""
     

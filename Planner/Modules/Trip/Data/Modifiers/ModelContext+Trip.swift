@@ -9,13 +9,15 @@ import Foundation
 import SwiftData
 
 extension ModelContext {
-    func getSortedTrips(onOrBefore todaystamp: String)
+    // MARK: - READ
+
+    func getSortedTrips(onOrBefore datestamp: String)
         -> [Trip]
     {
         do {
             return try fetch(
                 FetchDescriptor<Trip>(
-                    predicate: Trip.trips(onOrBefore: todaystamp),
+                    predicate: Trip.trips(onOrBefore: datestamp),
                     sortBy: [
                         SortDescriptor(\Trip.firstDatestamp)
                     ]
@@ -29,68 +31,72 @@ extension ModelContext {
 
         return []
     }
-    
+
+    @MainActor
     func getExistingTripDatestamps() -> Set<String> {
         do {
             let existingTrips = try fetch(
                 FetchDescriptor<Trip>()
             )
 
-            return existingTrips.reduce(into: Set<String>()) {
-                result,
-                trip in
-                result.formUnion(trip.safePlanners.map(\.datestamp))
-            }
+            return Set(
+                existingTrips
+                    .flatMap(\.safePlanners)
+                    .map(\.datestamp)
+            )
         } catch {
-            return []
+            assertionFailure(
+                "ERROR ModelContext+Trip getExistingTripDatestamps: \(error)"
+            )
         }
+
+        return []
     }
+
+    // MARK: - UPDATE
 
     @MainActor
     func updateTrip(
-        from draftTrip: DraftTrip,
-        to sourceTrip: Trip?,
+        _ sourceTrip: Trip?,
+        with draftTrip: DraftTrip,
         plannerService: PlannerService
     ) -> Trip {
-        var sourcePlanners: [String: Planner] = Dictionary(
-            uniqueKeysWithValues: (sourceTrip?.planners ?? []).map {
-                planner in
-                (planner.datestamp, planner)
-            }
-        )
 
         let trip = sourceTrip ?? Trip()
-        trip.title = draftTrip.title.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        )
-        trip.excludeRoutines = draftTrip.excludeRoutines
+
+        trip.title = draftTrip.title.trimmed
         trip.location = draftTrip.location
+        trip.excludeRoutines = draftTrip.excludeRoutines
 
-        // Add any new planners to this trip.
-        for datestamp in draftTrip.datestamps {
-            if let sourcePlanner = sourcePlanners[datestamp] {
-                sourcePlanners.removeValue(forKey: datestamp)
-                continue
-            }
+        let existingPlanners = Dictionary(
+            uniqueKeysWithValues: trip.safePlanners.map { ($0.datestamp, $0) }
+        )
 
-            let newPlanner = getPlanner(for: datestamp)
-            trip.planners?.append(newPlanner)
-            newPlanner.trip = trip
+        let existingDatestamps = Set(existingPlanners.keys)
+        let newDatestamps = Set(draftTrip.datestamps)
+
+        let datestampsToAdd = newDatestamps.subtracting(existingDatestamps)
+        let datestampsToRemove = existingDatestamps.subtracting(newDatestamps)
+
+        // Add new planners to the trip.
+        for datestamp in datestampsToAdd {
+            let planner = getPlanner(for: datestamp)
+            trip.planners.safeAppend(planner)
+            planner.trip = trip
         }
 
-        // Remove any stale planners from this trip.
-        for (_, stalePlanner) in sourcePlanners {
-            if let index = trip.safePlanners.firstIndex(where: {
-                $0 === stalePlanner
-            }) {
-                trip.planners?.remove(at: index)
-            }
+        // Remove stale planners from the trip.
+        for datestamp in datestampsToRemove {
+            guard let planner = existingPlanners[datestamp] else { continue }
 
-            stalePlanner.trip = nil
+            trip.planners?.removeAll { $0 === planner }
+            planner.trip = nil
         }
 
-        trip.firstDatestamp = trip.sortedPlanners.first?.datestamp ?? ""
-        trip.lastDatestamp = trip.sortedPlanners.last?.datestamp ?? ""
+        let sortedPlanners = trip.sortedPlanners
+
+        trip.firstDatestamp = sortedPlanners.first?.datestamp ?? ""
+        trip.lastDatestamp = sortedPlanners.last?.datestamp ?? ""
 
         insertIfNeeded(trip)
         safeSave("ModelContext+Trip updateTrip")

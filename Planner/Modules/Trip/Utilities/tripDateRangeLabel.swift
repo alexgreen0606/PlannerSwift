@@ -1,49 +1,46 @@
 //
-//  buildDateRangeLabel.swift
+//  tripDateRangeLabel.swift
 //  Planner
 //
 //  Created by Alex Green on 3/26/26.
 //
 
-// Clean
-
-func buildDateRangeLabel(
+func tripDateRangeLabel(
     firstDatestamp: String,
     lastDatestamp: String,
     todaystamp: String,
-    referenceYear: String? = nil
-)
-    -> String
-{
+    referenceYear customReferenceYear: String? = nil
+) -> String {
     if firstDatestamp == lastDatestamp {
         // Single-day range.
         return firstDatestamp.dateLabel(todaystamp: todaystamp)
     }
 
-    let currentYear = referenceYear ?? todaystamp.year
+    let referenceYear = customReferenceYear ?? todaystamp.year
     let sameYear = firstDatestamp.year == lastDatestamp.year
     let sameMonth = sameYear && firstDatestamp.monthDigit == lastDatestamp.monthDigit
 
-    let startIncludeMonth = true
-    let startIncludeYear = !sameYear
+    let includeStartMonth = true
+    let includeStartYear = !sameYear
 
-    let endIncludeMonth = !sameMonth
-    let endIncludeYear = lastDatestamp.year != currentYear
+    let includeEndMonth = !sameMonth
+    let includeEndYear = lastDatestamp.year != referenceYear
 
-    let start = format(
+    let startLabel = format(
         firstDatestamp,
-        includeMonth: startIncludeMonth,
-        includeYear: startIncludeYear,
+        includeMonth: includeStartMonth,
+        includeYear: includeStartYear,
         todaystamp: todaystamp
     )
-    let end = format(
+    
+    let endLabel = format(
         lastDatestamp,
-        includeMonth: endIncludeMonth,
-        includeYear: endIncludeYear,
+        includeMonth: includeEndMonth,
+        includeYear: includeEndYear,
         todaystamp: todaystamp
     )
 
-    return "\(start) - \(end)"
+    return "\(startLabel) - \(endLabel)"
 }
 
 // MARK: - Helper Functions

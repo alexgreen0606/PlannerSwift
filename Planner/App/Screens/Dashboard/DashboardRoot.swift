@@ -242,7 +242,7 @@ struct DashboardRootView: View {
         DispatchQueue.main.async {
             withAnimation {
                 scrollProxy.scrollTo(
-                    getTripRenderId(tripId: id, isExpanded: true),
+                    tripRenderId(tripId: id, isExpanded: true),
                     anchor: .top
                 )
             }
