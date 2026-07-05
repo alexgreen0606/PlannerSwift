@@ -74,6 +74,7 @@ extension ModelContext {
     func saveChecklistItem(
         sourceItem: ChecklistItem?,
         parentItem: ChecklistItem?,
+        sortedSiblingItems: [ChecklistItem]?,
         draftItem: ChecklistItem
     ) {
         draftItem.title = draftItem.title.trimmed
@@ -85,16 +86,11 @@ extension ModelContext {
 
             // Note: Do not update the type. An item's type will never change.
 
-        } else {
-            // TODO: pass in this as a param (probably as a context value with the parent)
-            let sortedSiblings =
-                parentItem?.safeItems.sorted {
-                    $0.sortIndex < $1.sortIndex
-                } ?? []
+        } else if let parentItem, let sortedSiblingItems {
 
             let sortIndex = generateSortIndex(
-                index: sortedSiblings.count,
-                sortedItems: sortedSiblings
+                index: sortedSiblingItems.count,
+                sortedItems: sortedSiblingItems
             )
 
             // Create new item.

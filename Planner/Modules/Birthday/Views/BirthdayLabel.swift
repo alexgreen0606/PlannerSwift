@@ -34,7 +34,7 @@ struct BirthdayLabelView: View {
 
     var body: some View {
         if let contactPhoto {
-            HStack(spacing: 6) {
+            HStack(spacing: Layout.DEFAULT_ADORNMENT_SPACING) {
                 Image(uiImage: contactPhoto)
                     .resizable()
                     .scaledToFill()

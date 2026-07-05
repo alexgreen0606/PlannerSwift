@@ -11,30 +11,41 @@ import SwiftUI
 struct ChecklistItemFormView: View {
     private let sourceItem: ChecklistItem?
     private let parentItem: ChecklistItem?
+    private let sortedSiblingItems: [ChecklistItem]?
     private let onDelete: (() -> Void)?
-
+    
+    // MARK: Create Checklist Item
     init(
-        sourceItem: ChecklistItem? = nil,
-        parentItem: ChecklistItem? = nil,
-        onDelete: (() -> Void)? = nil
+        parentItem: ChecklistItem,
+        sortedSiblingItems: [ChecklistItem]
+    ) {
+        self.sourceItem = nil
+        self.parentItem = parentItem
+        self.sortedSiblingItems = sortedSiblingItems
+        self.onDelete = nil
+
+        _draftChecklistItem = State(
+            initialValue: ChecklistItem()
+        )
+    }
+
+    // MARK: Edit Checklist Item
+    init(
+        sourceItem: ChecklistItem,
+        onDelete: @escaping () -> Void
     ) {
         self.sourceItem = sourceItem
-        self.parentItem = parentItem ?? sourceItem?.parent
+        self.parentItem = sourceItem.parent
+        self.sortedSiblingItems = nil
         self.onDelete = onDelete
 
-        if let sourceItem {
-            _draftChecklistItem = State(
-                initialValue: ChecklistItem(
-                    title: sourceItem.title,
-                    type: sourceItem.type,
-                    color: sourceItem.color
-                )
+        _draftChecklistItem = State(
+            initialValue: ChecklistItem(
+                title: sourceItem.title,
+                type: sourceItem.type,
+                color: sourceItem.color
             )
-        } else {
-            _draftChecklistItem = State(
-                initialValue: ChecklistItem()
-            )
-        }
+        )
     }
 
     @Environment(\.modelContext) private var modelContext
@@ -178,6 +189,7 @@ struct ChecklistItemFormView: View {
         modelContext.saveChecklistItem(
             sourceItem: sourceItem,
             parentItem: parentItem,
+            sortedSiblingItems: sortedSiblingItems,
             draftItem: draftChecklistItem
         )
 

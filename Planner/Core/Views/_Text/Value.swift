@@ -20,9 +20,8 @@ struct Value: View {
 
     private let customColor: Color?
 
-    // TODO: make a constant
     private var fontSize: CGFloat {
-        14 * scale
+        Layout.TEXT * scale
     }
 
     // MARK: - Body

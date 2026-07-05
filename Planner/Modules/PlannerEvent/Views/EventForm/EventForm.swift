@@ -22,72 +22,29 @@ struct EventFormView: View {
         self.sourcePlanner = nil
         self.settings = settings
 
-        var draftPlannerEvent = DraftPlannerEvent()
-
-        // Round the time down to the start of the hour.
-        draftPlannerEvent.date =
-            DateInRegion(Date(), region: .local)
-            .dateAtStartOf(.hour)
-            .date
-
-        self._draftPlannerEvent = State(initialValue: draftPlannerEvent)
+        self._draftPlannerEvent = State(initialValue: DraftPlannerEvent())
     }
 
     // MARK: Edit Planner Event (Planner)
     init(
         plannerEvent: PlannerEvent,
-        sourcePlanner: Planner,
+        planner: Planner,
         ekEventStore: EKEventStore,
         settings: Settings
     ) {
         self.sourcePlannerEvent = plannerEvent
-        self.sourcePlanner = sourcePlanner
+        self.sourcePlanner = planner
         self.settings = settings
 
-        var draftPlannerEvent = DraftPlannerEvent()
-
-        if let ekEvent = ekEventStore.getEkEvent(for: plannerEvent) {
-            // MARK: Sync draft with calendar event.
-
-            draftPlannerEvent.title = ekEvent.title
-            draftPlannerEvent.date = ekEvent.startDate
-            draftPlannerEvent.hasTime = true
-            draftPlannerEvent.location = ekEvent.location(
-                existingPlannerEvent: sourcePlannerEvent
-            )
-            draftPlannerEvent.ekEvent = ekEvent
-
-        } else {
-            // MARK: Sync draft with planner event.
-
-            draftPlannerEvent.title = plannerEvent.title
-            draftPlannerEvent.location = plannerEvent.location
-
-            if let time = plannerEvent.time {
-                draftPlannerEvent.date = time
-                draftPlannerEvent.hasTime = true
-
-            } else {
-                // Event is untimed. Default to a user-friendly time.
-
-                let now = DateInRegion(Date(), region: .local)
-
-                let thisTimeOnPlannerDay =
-                    sourcePlanner.startOfDay(settings: settings).dateBySet(
-                        hour: now.hour,
-                        min: 0,
-                        secs: 0
-                    ) ?? now
-
-                // Round the time down to the start of the hour.
-                draftPlannerEvent.date =
-                    thisTimeOnPlannerDay
-                    .dateAtStartOf(.hour)
-                    .date
-            }
-        }
-
-        self.draftPlannerEvent = draftPlannerEvent
+        self._draftPlannerEvent = State(
+            initialValue:
+                DraftPlannerEvent(
+                    plannerEvent: plannerEvent,
+                    planner: planner,
+                    ekEventStore: ekEventStore,
+                    settings: settings
+                )
+        )
     }
 
     @AppStorage("accentColor") var accentColor: AccentColor =

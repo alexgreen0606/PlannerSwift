@@ -32,8 +32,7 @@ struct AdornedValue: View {
     // MARK: - Body
 
     var body: some View {
-        // TODO: store that spacing as a default global for use within BirthdayView
-        HStack(spacing: 6 * scale) {
+        HStack(spacing: Layout.DEFAULT_ADORNMENT_SPACING * scale) {
             if let iconConfig {
                 Image(systemName: iconConfig.name)
                     .foregroundStyle(

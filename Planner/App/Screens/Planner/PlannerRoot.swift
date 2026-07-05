@@ -150,7 +150,7 @@ struct PlannerRootView: View {
                     } else {
                         EventFormView(
                             plannerEvent: context.plannerEvent,
-                            sourcePlanner: planner,
+                            planner: planner,
                             ekEventStore: calendarService.ekEventStore,
                             settings: settings
                         )

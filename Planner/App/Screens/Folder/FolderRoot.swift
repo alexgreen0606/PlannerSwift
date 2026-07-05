@@ -15,6 +15,8 @@ struct FolderRootView: View {
     let namespace: Namespace.ID
     let openItem: (ChecklistItem, ChecklistItem) -> Void
 
+    @Environment(\.dismiss) private var dismiss
+
     @StateObject private var itemSelectEngine = ListEngine<ChecklistItem>()
 
     @State private var showEditSheet = false
@@ -81,13 +83,21 @@ struct FolderRootView: View {
         // MARK: Edit Form
 
         .sheet(isPresented: $showEditSheet) {
-            ChecklistItemFormView(sourceItem: folder)
+            ChecklistItemFormView(
+                sourceItem: folder,
+                onDelete: {
+                    dismiss()
+                }
+            )
         }
 
         // MARK: New Item Form
 
         .sheet(isPresented: $showNewItemSheet) {
-            ChecklistItemFormView(parentItem: folder)
+            ChecklistItemFormView(
+                parentItem: folder,
+                sortedSiblingItems: sortedItems
+            )
         }
 
         // MARK: Update transferability when selected items change.
