@@ -12,9 +12,11 @@ struct RoutineActionMenuView: View {
     let routine: Routine
     let routineEvents: [RoutineEventContext]
     let weekday: Weekday
+    let settings: Settings
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarService
+    @EnvironmentObject private var todayService: TodayService
 
     @State private var showDeleteRoutineConfirmation = false
 
@@ -70,6 +72,7 @@ struct RoutineActionMenuView: View {
         modelContext.removeRoutineEventContextsFromRoutine(
             routineEventContexts: routineEvents,
             routine: routine,
+            todayStartOfDay: todayService.todayPlanner.startOfDay(settings: settings),
             ekEventStore: calendarStore.ekEventStore,
         )
     }

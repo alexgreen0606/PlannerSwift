@@ -18,7 +18,6 @@ struct RootTabView: View {
 
     init(
         modelContext: ModelContext,
-        todayService: TodayService,
         plannerCoverStore: PlannerCoverStore,
         ekEventStore: EKEventStore,
         settings: Settings
@@ -67,6 +66,10 @@ struct RootTabView: View {
                 )
             ]
         }
+        
+        let todayService = TodayService(
+            modelContext: modelContext
+        )
 
         self._plannerService = StateObject(
             wrappedValue: PlannerService(
@@ -76,6 +79,9 @@ struct RootTabView: View {
                 plannerCoverStore: plannerCoverStore,
                 settings: settings
             )
+        )
+        self._todayService = StateObject(
+            wrappedValue: todayService
         )
     }
 
@@ -94,7 +100,6 @@ struct RootTabView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var systemColorScheme
-    @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var calendarStore: CalendarService
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var weatherCacheService: WeatherCacheService
@@ -102,6 +107,7 @@ struct RootTabView: View {
 
     @Query private var routines: [Routine]
 
+    @StateObject private var todayService: TodayService
     @StateObject private var plannerService: PlannerService
 
     @State private var selectedTab: TabId = .dashboard
@@ -240,8 +246,9 @@ struct RootTabView: View {
             .interactiveDismissDisabled(true)
         }
 
-        // MARK: Pass the planner service up the tree.
+        // MARK: Pass the services up the tree.
         .environmentObject(plannerService)
+        .environmentObject(todayService)
 
         // TODO: move this to RootLoaderView
         .task {

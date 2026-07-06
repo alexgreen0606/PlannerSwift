@@ -13,13 +13,15 @@ struct RoutineEventFormView: View {
     private let sourceRoutineEvent: RoutineEventContext?
     private let sourceWeekday: Weekday?
     private let sourceSortedRoutineEvents: [RoutineEventContext]?
+    private let settings: Settings
     private let openRoutine: (Weekday) -> Void
 
     // MARK: Create Routine Event (Dashboard)
-    init(openRoutine: @escaping (Weekday) -> Void) {
+    init(settings: Settings, openRoutine: @escaping (Weekday) -> Void) {
         self.sourceRoutineEvent = nil
         self.sourceWeekday = nil
         self.sourceSortedRoutineEvents = nil
+        self.settings = settings
         self.openRoutine = openRoutine
 
         self._draftRoutineEvent = State(
@@ -32,11 +34,13 @@ struct RoutineEventFormView: View {
         sourceRoutineEvent: RoutineEventContext,
         sourceWeekday: Weekday,
         sourceSortedRoutineEvents: [RoutineEventContext],
+        settings: Settings,
         openRoutine: @escaping (Weekday) -> Void
     ) {
         self.sourceRoutineEvent = sourceRoutineEvent
         self.sourceWeekday = sourceWeekday
         self.sourceSortedRoutineEvents = sourceSortedRoutineEvents
+        self.settings = settings
         self.openRoutine = openRoutine
 
         _draftRoutineEvent = State(
@@ -52,6 +56,7 @@ struct RoutineEventFormView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var plannerService: PlannerService
     @EnvironmentObject private var calendarService: CalendarService
+    @EnvironmentObject private var todayService: TodayService
 
     @State private var draftRoutineEvent: DraftRoutineEvent
 
@@ -218,6 +223,7 @@ struct RoutineEventFormView: View {
             sourceRoutineEvent,
             with: draftRoutineEvent,
             sourceSortedRoutineEventContexts: sourceSortedRoutineEvents,
+            todayStartOfDay: todayService.todayPlanner.startOfDay(settings: settings),
             plannerService: plannerService,
             ekEventStore: calendarService.ekEventStore
         )

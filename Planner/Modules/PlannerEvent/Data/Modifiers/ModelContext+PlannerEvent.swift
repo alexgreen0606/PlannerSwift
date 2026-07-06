@@ -98,14 +98,15 @@ extension ModelContext {
         return []
     }
 
-    func getCalendarRecords(for calendarItemExternalIdentifiers: Set<String>)
+    func getCalendarRecords(for calendarItemExternalIdentifiers: Set<String>, onOrAfter: Date)
         -> [PlannerEvent]
     {
         do {
             return try fetch(
                 FetchDescriptor<PlannerEvent>(
                     predicate: PlannerEvent.calendarRecords(
-                        for: calendarItemExternalIdentifiers
+                        for: calendarItemExternalIdentifiers,
+                        onOrAfter: onOrAfter
                     )
                 )
             )
@@ -216,11 +217,13 @@ extension ModelContext {
 
     @MainActor
     func deleteCalendarRecords(
-        calendarItemExternalIdentifiers: Set<String>
+        externalIds: Set<String>,
+        onOrAfter: Date
     ) {
         safeBulkDelete(
             getCalendarRecords(
-                for: calendarItemExternalIdentifiers
+                for: externalIds,
+                onOrAfter: onOrAfter
             )
         )
     }

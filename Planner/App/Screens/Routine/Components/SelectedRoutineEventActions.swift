@@ -13,10 +13,13 @@ struct SelectedRoutineEventActionsView: View {
     let routine: Routine
     let weekday: Weekday
     let namespace: Namespace.ID
+    let settings: Settings
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var routineEngine: ListEngine<RoutineEventContext>
+    @EnvironmentObject private var routineEngine:
+        ListEngine<RoutineEventContext>
     @EnvironmentObject private var calendarStore: CalendarService
+    @EnvironmentObject private var todayService: TodayService
 
     @State private var showDeleteConfirmation = false
 
@@ -59,6 +62,9 @@ struct SelectedRoutineEventActionsView: View {
             modelContext.removeRoutineEventContextsFromRoutine(
                 routineEventContexts: selections,
                 routine: routine,
+                todayStartOfDay: todayService.todayPlanner.startOfDay(
+                    settings: settings
+                ),
                 ekEventStore: calendarStore.ekEventStore
             )
 
@@ -74,6 +80,9 @@ struct SelectedRoutineEventActionsView: View {
         DispatchQueue.main.async {
             modelContext.deleteRoutineEvents(
                 selections,
+                todayStartOfDay: todayService.todayPlanner.startOfDay(
+                    settings: settings
+                ),
                 ekEventStore: calendarStore.ekEventStore
             )
 

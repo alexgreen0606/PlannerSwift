@@ -11,17 +11,20 @@ import SwiftDate
 import SwiftUI
 
 struct TransferRoutineEventsFormView: View {
-    let sourceDayOfWeek: Weekday
-    let sortedSourceRoutineEvents: [RoutineEventContext]
-    let openRoutine: (Weekday) -> Void
+    private let sourceDayOfWeek: Weekday
+    private let sortedSourceRoutineEvents: [RoutineEventContext]
+    private let settings: Settings
+    private let openRoutine: (Weekday) -> Void
 
     init(
         sourceDayOfWeek: Weekday,
         sortedSourceRoutineEvents: [RoutineEventContext],
+        settings: Settings,
         openRoutine: @escaping (Weekday) -> Void
     ) {
         self.sourceDayOfWeek = sourceDayOfWeek
         self.sortedSourceRoutineEvents = sortedSourceRoutineEvents
+        self.settings = settings
         self.openRoutine = openRoutine
 
         _destinationWeekdays = State(initialValue: [sourceDayOfWeek])
@@ -32,7 +35,9 @@ struct TransferRoutineEventsFormView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var plannerService: PlannerService
     @EnvironmentObject private var calendarService: CalendarService
-    @EnvironmentObject private var routineEngine: ListEngine<RoutineEventContext>
+    @EnvironmentObject private var todayService: TodayService
+    @EnvironmentObject private var routineEngine:
+        ListEngine<RoutineEventContext>
 
     @State private var destinationWeekdays: Set<Weekday> = []
 
@@ -71,6 +76,9 @@ struct TransferRoutineEventsFormView: View {
             routineEngine.selectedItems,
             to: destinationWeekdays,
             sourceSortedRoutineEventContexts: sortedSourceRoutineEvents,
+            todayStartOfDay: todayService.todayPlanner.startOfDay(
+                settings: settings
+            ),
             ekEventStore: calendarService.ekEventStore
         )
 

@@ -6,12 +6,25 @@
 //
 
 import Combine
+import SwiftData
 import SwiftDate
 import SwiftUI
 
 @MainActor
 final class TodayService: ObservableObject {
-    init() {
+    private let modelContext: ModelContext
+    
+    init(modelContext: ModelContext) {
+        self.modelContext = modelContext
+        
+        let todaystamp = TodayService.makeTodaystamp()
+
+        todayPlanner = modelContext.getPlanner(
+            for: todaystamp
+        )
+
+        self.todaystamp = todaystamp
+
         scheduleMidnightUpdate()
     }
 
@@ -26,17 +39,18 @@ final class TodayService: ObservableObject {
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
-        .oneMonth
+            .oneMonth
 
-    @Published private(set) var todaystamp: String =
-        TodayService.makeTodaystamp()
+    @Published private(set) var todaystamp: String
+    
+    @Published private(set) var todayPlanner: Planner
 
     var datePickerBounds: ClosedRange<Date> {
-        keepPastEventsDuration.cutoffDate ... maxCalendarDate
+        keepPastEventsDuration.cutoffDate...maxCalendarDate
     }
 
     var multiDatePickerBounds: Range<Date> {
-        keepPastEventsDuration.cutoffDate ..< maxCalendarDate
+        keepPastEventsDuration.cutoffDate..<maxCalendarDate
     }
 
     // MARK: - Builder Functions
@@ -78,6 +92,7 @@ final class TodayService: ObservableObject {
     private func updateStamp() {
         todaystamp = Self.makeTodaystamp()
         maxCalendarDate = Self.makeMaxCalendarDate()
+        todayPlanner = modelContext.getPlanner(for: todaystamp)
 
         // Reschedule for the next midnight.
         scheduleMidnightUpdate()

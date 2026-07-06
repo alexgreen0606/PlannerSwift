@@ -7,6 +7,7 @@
 
 import EventKit
 import SwiftData
+import SwiftDate
 
 extension ModelContext {
     @MainActor
@@ -14,29 +15,34 @@ extension ModelContext {
         _ routineEventContext: RoutineEventContext,
         with destinationWeekdays: Set<Weekday>,
         sourceSortedRoutineEventContexts: [RoutineEventContext]? = [],
+        todayStartOfDay: DateInRegion,
         ekEventStore: EKEventStore
     ) {
         let sourceWeekdays = routineEventContext.weekdays
 
         // MARK: - Delete Planner, Routine, and Calendar Events From Weekdays That Have Been Removed
 
-        var staleCalendarItemExternalIdentifiers: Set<String> = []
+        var externalCalendarIds: Set<String> = []
 
         let weekdaysToRemove = sourceWeekdays.subtracting(destinationWeekdays)
         for weekday in weekdaysToRemove {
             removeRoutineEventFromRoutine(
                 routineEventContext: routineEventContext,
                 weekdayRawValue: weekday.rawValue,
-                staleCalendarItemExternalIdentifiers:
-                    &staleCalendarItemExternalIdentifiers,
-                ekEventStore: ekEventStore
+                todayStartOfDay: todayStartOfDay,
+                externalCalendarIds:
+                    &externalCalendarIds
             )
         }
 
-        deleteCalendarRecords(
-            calendarItemExternalIdentifiers:
-                staleCalendarItemExternalIdentifiers
-        )
+        // Delete stale calendar events and their records from today onward.
+        if !externalCalendarIds.isEmpty {
+            deleteCalendarEvents(
+                externalIds: externalCalendarIds,
+                onOrAfter: todayStartOfDay,
+                ekEventStore: ekEventStore
+            )
+        }
 
         // MARK: - Create Instances For Weekdays That Have Been Added
 

@@ -90,4 +90,63 @@ extension EKEventStore {
 
         return true
     }
+
+    func attemptDeleteEvents(
+        externalIdentifiers: Set<String>,
+        onOrAfter: Date
+    )
+        -> /// Returns the identifiers of the events that were successfully deleted.
+        Set<String>
+    {
+        guard
+            let endDate = Calendar.current.date(
+                byAdding: .year,
+                value: 3,
+                to: onOrAfter
+            )
+        else {
+            return []
+        }
+
+        let allEvents = events(
+            matching: predicateForEvents(
+                withStart: onOrAfter,
+                end: endDate,
+                calendars: nil
+            )
+        )
+
+        var earliestEvents: [String: EKEvent] = [:]
+        var deletedIdentifiers: Set<String> = []
+
+        for ekEvent in allEvents {
+            guard
+                let externalIdentifier = ekEvent
+                    .calendarItemExternalIdentifier,
+                externalIdentifiers.contains(
+                    ekEvent.calendarItemExternalIdentifier
+                )
+            else {
+                continue
+            }
+
+            if let existing = earliestEvents[externalIdentifier] {
+                if ekEvent.startDate < existing.startDate {
+                    earliestEvents[externalIdentifier] = ekEvent
+                }
+            } else {
+                earliestEvents[externalIdentifier] = ekEvent
+            }
+        }
+
+        for ekEvent in earliestEvents.values {
+            if attemptDeleteEvent(ekEvent, span: .futureEvents) {
+                deletedIdentifiers.insert(
+                    ekEvent.calendarItemExternalIdentifier
+                )
+            }
+        }
+
+        return deletedIdentifiers
+    }
 }

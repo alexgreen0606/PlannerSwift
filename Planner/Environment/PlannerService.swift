@@ -161,7 +161,9 @@ class PlannerService: ObservableObject {
             modelContext.syncRoutine(
                 for: planner,
                 startOfDay: startOfDay,
-                todaystamp: todayService.todaystamp,
+                todayStartOfDay: todayService.todayPlanner.startOfDay(
+                    settings: settings
+                ),
                 ekEventStore: ekEventStore
             )
 

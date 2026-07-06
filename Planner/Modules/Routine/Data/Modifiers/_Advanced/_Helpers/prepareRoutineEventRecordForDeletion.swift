@@ -7,34 +7,51 @@
 
 import EventKit
 import SwiftData
+import SwiftDate
 
 extension ModelContext {
-    /// Filters out planner events that should be protected from routine event cascade deletion, while also deleting linked calendar events.
+    /// Removes relationships of past planner events so they are not cascade-deleted.
     @MainActor
     func prepareRoutineEventRecordForDeletion(
         _ routineEventRecord: PlannerEvent,
-        /// Collects EKEvent IDs that have been deleted from the calendar.
-        staleCalendarItemExternalIdentifiers: inout Set<String>,
-        ekEventStore: EKEventStore
+        /// The first planner day where events should be deleted (and all days afterward).
+        cutoffDay: DateInRegion,
+        /// Collects calendar event external IDs that must be deleted from the calendar.
+        externalCalendarIds: inout Set<String>
     ) -> PlannerEvent? {
-        // MARK: Remove completed planner events so they are not cascade-deleted.
-        if routineEventRecord.isCompleted {
-            routineEventRecord.routineEventRecordContext?.plannerEvent = nil
-            routineEventRecord.routineEventRecordContext = nil
-            return nil
-        }
 
-        // TODO: make sure today or past all-day events are marked as isCompleted
-        // so they are not deleted here
+        if let ekEventContext = routineEventRecord.eKEventContext {
 
-        // MARK: Delete calendar records.
-        if let ekEventContext = routineEventRecord.eKEventContext,
-            let ekEvent = ekEventStore.getEkEvent(for: routineEventRecord),
-            ekEventStore.attemptDeleteEvent(ekEvent, span: .futureEvents)
-        {
-            staleCalendarItemExternalIdentifiers.insert(
+            // Mark calendar events for present/future deletion.
+            externalCalendarIds.insert(
                 ekEventContext.calendarItemExternalIdentifier
             )
+
+            if ekEventContext.endDate <= cutoffDay.date {
+                // Event is from the past. Remove relationship to protect it.
+                routineEventRecord.routineEventRecordContext?.plannerEvent = nil
+                routineEventRecord.routineEventRecordContext = nil
+                return nil
+            }
+
+        } else if let time = routineEventRecord.time {
+
+            if time < cutoffDay.date {
+                // Event is from the past. Remove relationship to protect it.
+                routineEventRecord.routineEventRecordContext?.plannerEvent = nil
+                routineEventRecord.routineEventRecordContext = nil
+                return nil
+            }
+
+        } else if let datestamp = routineEventRecord.datestamp {
+
+            if datestamp < cutoffDay.datestamp {
+                // Event is from the past. Remove relationship to protect it.
+                routineEventRecord.routineEventRecordContext?.plannerEvent = nil
+                routineEventRecord.routineEventRecordContext = nil
+                return nil
+            }
+
         }
 
         return routineEventRecord

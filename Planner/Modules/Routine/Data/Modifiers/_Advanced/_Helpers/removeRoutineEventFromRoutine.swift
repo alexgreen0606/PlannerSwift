@@ -7,6 +7,7 @@
 
 import EventKit
 import SwiftData
+import SwiftDate
 
 extension ModelContext {
     /// This will only ever be called if the routine event context has more than one weekday assigned.
@@ -14,9 +15,9 @@ extension ModelContext {
     func removeRoutineEventFromRoutine(
         routineEventContext: RoutineEventContext,
         weekdayRawValue: String,
-        /// Collects EKEvent IDs that have been deleted from the calendar.
-        staleCalendarItemExternalIdentifiers: inout Set<String>,
-        ekEventStore: EKEventStore
+        todayStartOfDay: DateInRegion,
+        /// Collects calendar event external IDs that must be deleted from the calendar.
+        externalCalendarIds: inout Set<String>
     ) {
         for routineEvent in routineEventContext.safeRoutineEvents
         where routineEvent.routine?.weekdayRawValue == weekdayRawValue {
@@ -29,9 +30,8 @@ extension ModelContext {
                 routineEventRecordContext.plannerEvent =
                     prepareRoutineEventRecordForDeletion(
                         plannerEvent,
-                        staleCalendarItemExternalIdentifiers:
-                            &staleCalendarItemExternalIdentifiers,
-                        ekEventStore: ekEventStore
+                        cutoffDay: todayStartOfDay,
+                        externalCalendarIds: &externalCalendarIds
                     )
             }
 

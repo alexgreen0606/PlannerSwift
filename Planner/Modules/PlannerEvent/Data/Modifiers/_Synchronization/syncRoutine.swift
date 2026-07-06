@@ -14,7 +14,7 @@ extension ModelContext {
     func syncRoutine(
         for planner: Planner,
         startOfDay: DateInRegion,
-        todaystamp: String,
+        todayStartOfDay: DateInRegion,
         ekEventStore: EKEventStore
     ) {
         guard let routine = planner.routine else {
@@ -25,7 +25,7 @@ extension ModelContext {
 
         if planner.safeExcludeRoutine {
 
-            var staleCalendarItemExternalIdentifiers: Set<String> = []
+            var externalCalendarIds: Set<String> = []
 
             // Delete each record, including linked calendar events.
             // Keep completed events.
@@ -38,9 +38,8 @@ extension ModelContext {
                 routineEventRecordContext.plannerEvent =
                     prepareRoutineEventRecordForDeletion(
                         plannerEvent,
-                        staleCalendarItemExternalIdentifiers:
-                            &staleCalendarItemExternalIdentifiers,
-                        ekEventStore: ekEventStore
+                        cutoffDay: todayStartOfDay,
+                        externalCalendarIds: &externalCalendarIds
                     )
 
                 delete(routineEventRecordContext)
@@ -48,18 +47,25 @@ extension ModelContext {
 
             planner.routineEventRecordContexts = []
 
-            // Delete all planner events linked to the deleted calendar events.
-            deleteCalendarRecords(
-                calendarItemExternalIdentifiers:
-                    staleCalendarItemExternalIdentifiers
-            )
+            // TODO: see if excluding routine events in a past planner (July 6) correctly deletes calendar events AND planner events.
+            // TODO: A is singular on that day.
+            // TODO: C is recurring every day.
+
+            // Delete stale calendar events and their records from this planner onward.
+            if !externalCalendarIds.isEmpty {
+                deleteCalendarEvents(
+                    externalIds: externalCalendarIds,
+                    onOrAfter: startOfDay,
+                    ekEventStore: ekEventStore
+                )
+            }
 
             return
         }
 
         // MARK: - Skip Synchronization Of Past Planners
 
-        if planner.datestamp < todaystamp {
+        if planner.datestamp < todayStartOfDay.datestamp {
             // Past routine events will never change.
             return
         }

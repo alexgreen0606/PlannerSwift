@@ -14,6 +14,7 @@ struct RoutineRootView: View {
     let routine: Routine
     let sortedRoutineEventContexts: [RoutineEventContext]
     let weekday: Weekday
+    let settings: Settings
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
@@ -22,6 +23,7 @@ struct RoutineRootView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarStore: CalendarService
     @EnvironmentObject private var plannerService: PlannerService
+    @EnvironmentObject private var todayService: TodayService
 
     @StateObject private var routineEngine = ListEngine<RoutineEventContext>()
 
@@ -72,6 +74,7 @@ struct RoutineRootView: View {
                 TransferRoutineEventsFormView(
                     sourceDayOfWeek: weekday,
                     sortedSourceRoutineEvents: sortedRoutineEventContexts,
+                    settings: settings,
                     openRoutine: openRoutine
                 )
                 .navigationTransition(
@@ -90,6 +93,7 @@ struct RoutineRootView: View {
                     sourceRoutineEvent: context.routineEvent,
                     sourceWeekday: weekday,
                     sourceSortedRoutineEvents: sortedRoutineEventContexts,
+                    settings: settings,
                     openRoutine: openRoutine
                 )
                 .navigationTransition(
@@ -125,7 +129,8 @@ struct RoutineRootView: View {
                 RoutineActionMenuView(
                     routine: routine,
                     routineEvents: sortedRoutineEventContexts,
-                    weekday: weekday
+                    weekday: weekday,
+                    settings: settings
                 )
             } else {
                 SelectAllToggleView(visibleItems: sortedRoutineEventContexts)
@@ -175,7 +180,8 @@ struct RoutineRootView: View {
                 showTransferSheet: $showTransferSheet,
                 routine: routine,
                 weekday: weekday,
-                namespace: namespace
+                namespace: namespace,
+                settings: settings
             ),
             createItem: {
                 createLowerEvent(scrollProxy: scrollProxy)
@@ -206,6 +212,9 @@ struct RoutineRootView: View {
     private func deleteEvent(_ routineEventContext: RoutineEventContext) {
         _ = modelContext.deleteRoutineEventContext(
             routineEventContext,
+            todayStartOfDay: todayService.todayPlanner.startOfDay(
+                settings: settings
+            ),
             ekEventStore: calendarStore.ekEventStore
         )
     }
@@ -218,7 +227,7 @@ struct RoutineRootView: View {
             plannerService.invalidateRoutines()
             invalidatedEventIds.insert(event.stableId)
         }
-        
+
         modelContext.handleRoutineEventContextTitleChange(event)
     }
 
@@ -285,6 +294,9 @@ struct RoutineRootView: View {
         modelContext.removeRoutineEventContextsFromRoutine(
             routineEventContexts: [event],
             routine: routine,
+            todayStartOfDay: todayService.todayPlanner.startOfDay(
+                settings: settings
+            ),
             ekEventStore: calendarStore.ekEventStore
         )
     }
@@ -294,6 +306,9 @@ struct RoutineRootView: View {
     ) {
         _ = modelContext.deleteRoutineEventContext(
             routineEventContext,
+            todayStartOfDay: todayService.todayPlanner.startOfDay(
+                settings: settings
+            ),
             ekEventStore: calendarStore.ekEventStore
         )
     }

@@ -7,6 +7,7 @@
 
 import EventKit
 import SwiftData
+import SwiftDate
 
 extension ModelContext {
     @MainActor
@@ -14,6 +15,7 @@ extension ModelContext {
         _ sourceRoutineEventContext: RoutineEventContext?,
         with draftRoutineEvent: DraftRoutineEvent,
         sourceSortedRoutineEventContexts: [RoutineEventContext]?,
+        todayStartOfDay: DateInRegion,
         plannerService: PlannerService,
         ekEventStore: EKEventStore
     ) {
@@ -29,6 +31,7 @@ extension ModelContext {
             routineEventContext,
             with: draftRoutineEvent.weekdays,
             sourceSortedRoutineEventContexts: sourceSortedRoutineEventContexts,
+            todayStartOfDay: todayStartOfDay,
             ekEventStore: ekEventStore
         )
 

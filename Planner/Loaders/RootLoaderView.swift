@@ -12,7 +12,6 @@ struct RootLoaderView: View {
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarService: CalendarService
-    @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
     @Query private var plannerSettingsList: [Settings]
@@ -28,7 +27,6 @@ struct RootLoaderView: View {
             if let settings {
                 RootTabView(
                     modelContext: modelContext,
-                    todayService: todayService,
                     plannerCoverStore: plannerCoverStore,
                     ekEventStore: calendarService.ekEventStore,
                     settings: settings

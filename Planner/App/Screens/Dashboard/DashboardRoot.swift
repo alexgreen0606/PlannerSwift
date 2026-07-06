@@ -103,6 +103,7 @@ struct DashboardRootView: View {
 
             .sheet(isPresented: $showNewRoutineEventSheet) {
                 RoutineEventFormView(
+                    settings: settings,
                     openRoutine: { weekday in
                         routineCoverContext = weekday
                     }
@@ -146,7 +147,8 @@ struct DashboardRootView: View {
                         routine: context.routine,
                         sortedRoutineEventContexts: context
                             .sortedRoutineEventContexts,
-                        weekday: weekday
+                        weekday: weekday,
+                        settings: settings
                     )
                     .id(weekday)
                 }

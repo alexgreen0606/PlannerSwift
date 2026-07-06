@@ -7,21 +7,24 @@
 
 import EventKit
 import SwiftData
+import SwiftDate
 
 extension ModelContext {
     @MainActor
     func removeRoutineEventContextsFromRoutine(
         routineEventContexts: [RoutineEventContext],
         routine: Routine,
+        todayStartOfDay: DateInRegion,
         ekEventStore: EKEventStore
     ) {
-        var staleCalendarItemExternalIdentifiers: Set<String> = []
+        var externalCalendarIds: Set<String> = []
 
         for routineEventContext in routineEventContexts {
             if routineEventContext.safeRoutineEvents.count < 2 {
-                staleCalendarItemExternalIdentifiers.formUnion(
+                externalCalendarIds.formUnion(
                     deleteRoutineEventContext(
                         routineEventContext,
+                        todayStartOfDay: todayStartOfDay,
                         inLoop: true,
                         ekEventStore: ekEventStore
                     )
@@ -32,16 +35,20 @@ extension ModelContext {
             removeRoutineEventFromRoutine(
                 routineEventContext: routineEventContext,
                 weekdayRawValue: routine.weekdayRawValue,
-                staleCalendarItemExternalIdentifiers:
-                    &staleCalendarItemExternalIdentifiers,
-                ekEventStore: ekEventStore
+                todayStartOfDay: todayStartOfDay,
+                externalCalendarIds:
+                    &externalCalendarIds
             )
         }
 
-        deleteCalendarRecords(
-            calendarItemExternalIdentifiers:
-                staleCalendarItemExternalIdentifiers
-        )
+        // Delete stale calendar events and their records from today onward.
+        if !externalCalendarIds.isEmpty {
+            deleteCalendarEvents(
+                externalIds: externalCalendarIds,
+                onOrAfter: todayStartOfDay,
+                ekEventStore: ekEventStore
+            )
+        }
 
         safeSave("removeRoutineEventContextsFromRoutine")
     }

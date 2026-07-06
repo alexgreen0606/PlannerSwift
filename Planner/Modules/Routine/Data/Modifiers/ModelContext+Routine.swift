@@ -203,6 +203,7 @@ extension ModelContext {
         _ routineEventContexts: [RoutineEventContext],
         to destinationWeekdays: Set<Weekday>,
         sourceSortedRoutineEventContexts: [RoutineEventContext],
+        todayStartOfDay: DateInRegion,
         ekEventStore: EKEventStore
     ) {
         guard !destinationWeekdays.isEmpty else { return }
@@ -211,7 +212,9 @@ extension ModelContext {
             updateRoutineEventContextWeekdays(
                 routineEventContext,
                 with: destinationWeekdays,
-                sourceSortedRoutineEventContexts: sourceSortedRoutineEventContexts,
+                sourceSortedRoutineEventContexts:
+                    sourceSortedRoutineEventContexts,
+                todayStartOfDay: todayStartOfDay,
                 ekEventStore: ekEventStore
             )
         }
@@ -224,26 +227,49 @@ extension ModelContext {
     @MainActor
     func deleteRoutineEvents(
         _ routineEventContexts: [RoutineEventContext],
+        todayStartOfDay: DateInRegion,
         ekEventStore: EKEventStore,
     ) {
-        var staleCalendarItemExternalIdentifiers: Set<String> = []
+        var externalCalendarIds: Set<String> = []
 
         for routineEventContext in routineEventContexts {
-            staleCalendarItemExternalIdentifiers.formUnion(
+            externalCalendarIds.formUnion(
                 deleteRoutineEventContext(
                     routineEventContext,
-                    inLoop: true,
-                    ekEventStore: ekEventStore
+                    todayStartOfDay: todayStartOfDay,
+                    inLoop: true
                 )
             )
         }
 
-        // Delete all planner events linked to the deleted calendar events.
-        deleteCalendarRecords(
-            calendarItemExternalIdentifiers:
-                staleCalendarItemExternalIdentifiers
-        )
+        // Delete stale calendar events and their records from today onward.
+        if !externalCalendarIds.isEmpty {
+            deleteCalendarEvents(
+                externalIds: externalCalendarIds,
+                onOrAfter: todayStartOfDay,
+                ekEventStore: ekEventStore
+            )
+        }
 
         safeSave("ModelContext+Routine deleteRoutineEvents")
+    }
+
+    @MainActor
+    func deleteCalendarEvents(
+        externalIds: Set<String>,
+        onOrAfter: DateInRegion,
+        ekEventStore: EKEventStore
+    ) {
+        let deletedIds = ekEventStore.attemptDeleteEvents(
+            externalIdentifiers: externalIds,
+            onOrAfter: onOrAfter.date
+        )
+
+        if !deletedIds.isEmpty {
+            deleteCalendarRecords(
+                externalIds: deletedIds,
+                onOrAfter: onOrAfter.date
+            )
+        }
     }
 }
