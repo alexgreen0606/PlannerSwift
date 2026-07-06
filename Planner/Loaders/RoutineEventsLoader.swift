@@ -1,5 +1,5 @@
 //
-//  RoutineEventContextsLoader.swift
+//  RoutineEventsLoaderView.swift
 //  Planner
 //
 //  Created by Alex Green on 5/19/26.
@@ -8,13 +8,13 @@
 import SwiftData
 import SwiftUI
 
-struct RoutineEventContextsLoaderView<Content: View>: View {
+struct RoutineEventsLoaderView<Content: View>: View {
     private let routine: Routine
-    private let content: ([RoutineEventContext]) -> Content
+    private let content: ([RoutineEvent]) -> Content
 
     init(
         routine: Routine,
-        @ViewBuilder content: @escaping ([RoutineEventContext]) -> Content
+        @ViewBuilder content: @escaping ([RoutineEvent]) -> Content
     ) {
         self.routine = routine
         self.content = content
@@ -30,6 +30,6 @@ struct RoutineEventContextsLoaderView<Content: View>: View {
     // MARK: - Body
 
     var body: some View {
-        content(routineEvents.compactMap(\.routineEventContext))
+        content(routineEvents)
     }
 }

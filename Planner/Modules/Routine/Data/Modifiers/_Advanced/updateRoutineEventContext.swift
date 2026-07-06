@@ -14,7 +14,7 @@ extension ModelContext {
     func updateRoutineEventContext(
         _ sourceRoutineEventContext: RoutineEventContext?,
         with draftRoutineEvent: DraftRoutineEvent,
-        sourceSortedRoutineEventContexts: [RoutineEventContext]?,
+        sourceSortedRoutineEvents: [RoutineEvent]?,
         todayStartOfDay: DateInRegion,
         plannerService: PlannerService,
         ekEventStore: EKEventStore
@@ -30,7 +30,7 @@ extension ModelContext {
         updateRoutineEventContextWeekdays(
             routineEventContext,
             with: draftRoutineEvent.weekdays,
-            sourceSortedRoutineEventContexts: sourceSortedRoutineEventContexts,
+            sourceSortedRoutineEvents: sourceSortedRoutineEvents,
             todayStartOfDay: todayStartOfDay,
             ekEventStore: ekEventStore
         )

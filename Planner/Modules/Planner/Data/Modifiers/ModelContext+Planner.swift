@@ -164,7 +164,7 @@ extension ModelContext {
     @MainActor
     func getUpperSortDate(for startOfDay: DateInRegion) -> Date {
         let listEvents = getSortedListEvents(on: startOfDay)
-        return generateSortDate(
+        return generatePlannerEventSortDate(
             at: 0,
             in: listEvents,
             startOfDay: startOfDay

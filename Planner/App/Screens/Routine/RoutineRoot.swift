@@ -12,7 +12,7 @@ import SwiftUI
 struct RoutineRootView: View {
     @Binding var routineCoverContext: Weekday?
     let routine: Routine
-    let sortedRoutineEventContexts: [RoutineEventContext]
+    let sortedRoutineEvents: [RoutineEvent]
     let weekday: Weekday
     let settings: Settings
 
@@ -33,6 +33,10 @@ struct RoutineRootView: View {
     @State private var invalidatedEventIds: Set<UUID> = []
 
     @Namespace private var namespace
+    
+    private var sortedRoutineEventContexts: [RoutineEventContext] {
+        sortedRoutineEvents.compactMap(\.routineEventContext)
+    }
 
     // MARK: - Body
 
@@ -73,7 +77,7 @@ struct RoutineRootView: View {
             .sheet(isPresented: $showTransferSheet) {
                 TransferRoutineEventsFormView(
                     sourceDayOfWeek: weekday,
-                    sortedSourceRoutineEvents: sortedRoutineEventContexts,
+                    sourceSortedRoutineEvents: sortedRoutineEvents,
                     settings: settings,
                     openRoutine: openRoutine
                 )
@@ -92,7 +96,7 @@ struct RoutineRootView: View {
                 RoutineEventFormView(
                     sourceRoutineEvent: context.routineEvent,
                     sourceWeekday: weekday,
-                    sourceSortedRoutineEvents: sortedRoutineEventContexts,
+                    sourceSortedRoutineEvents: sortedRoutineEvents,
                     settings: settings,
                     openRoutine: openRoutine
                 )
@@ -194,7 +198,7 @@ struct RoutineRootView: View {
     private func createEvent(at index: Int) {
         routineEngine.pendingFocusId = modelContext.createRoutineEventContext(
             at: index,
-            in: sortedRoutineEventContexts,
+            in: sortedRoutineEvents,
             routine: routine
         )
     }
@@ -203,7 +207,7 @@ struct RoutineRootView: View {
         modelContext.moveRoutineEvent(
             from: from,
             to: to,
-            sortedRoutineEventContexts: sortedRoutineEventContexts,
+            sortedRoutineEvents: sortedRoutineEvents,
             routine: routine
         )
         plannerService.invalidateRoutines()

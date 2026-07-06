@@ -54,14 +54,14 @@ extension ModelContext {
     @MainActor
     func createRoutineEventContext(
         at index: Int,
-        in sortedRoutineEventContexts: [RoutineEventContext],
+        in sortedRoutineEvents: [RoutineEvent],
         routine: Routine
     ) -> /// The ID of the new event.
         UUID?
     {
-        let sortDate = generateRoutineEventSortDate(
+        let sortDate = safeGenerateRoutineEventSortDate(
             at: index,
-            in: sortedRoutineEventContexts,
+            in: sortedRoutineEvents,
             for: routine
         )
 
@@ -176,24 +176,20 @@ extension ModelContext {
     func moveRoutineEvent(
         from: Int,
         to: Int,
-        sortedRoutineEventContexts: [RoutineEventContext],
+        sortedRoutineEvents: [RoutineEvent],
         routine: Routine
     ) {
-        let movedEvent = sortedRoutineEventContexts[from]
+        let movedEvent = sortedRoutineEvents[from]
 
-        guard let movedInstance = movedEvent.routineEvent(for: routine) else {
-            return
-        }
-
-        movedInstance.sortDate =
-            generateRoutineEventSortDate(
+        movedEvent.sortDate =
+            safeGenerateRoutineEventSortDate(
                 at: to,
-                in: sortedRoutineEventContexts,
+                in: sortedRoutineEvents,
                 for: routine
             )
 
         // Update sort date version so that each routine event record re-positions itself in its planner.
-        movedInstance.sortDateVersion += 0.1
+        movedEvent.sortDateVersion += 0.1
 
         safeSave("ModelContext+Routine moveRoutineEvent")
     }
@@ -202,7 +198,7 @@ extension ModelContext {
     func bulkUpdateRoutineEventWeekdays(
         _ routineEventContexts: [RoutineEventContext],
         to destinationWeekdays: Set<Weekday>,
-        sourceSortedRoutineEventContexts: [RoutineEventContext],
+        sourceSortedRoutineEvents: [RoutineEvent],
         todayStartOfDay: DateInRegion,
         ekEventStore: EKEventStore
     ) {
@@ -212,8 +208,7 @@ extension ModelContext {
             updateRoutineEventContextWeekdays(
                 routineEventContext,
                 with: destinationWeekdays,
-                sourceSortedRoutineEventContexts:
-                    sourceSortedRoutineEventContexts,
+                sourceSortedRoutineEvents: sourceSortedRoutineEvents,
                 todayStartOfDay: todayStartOfDay,
                 ekEventStore: ekEventStore
             )

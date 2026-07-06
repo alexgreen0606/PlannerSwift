@@ -12,7 +12,7 @@ import SwiftUI
 struct RoutineEventFormView: View {
     private let sourceRoutineEvent: RoutineEventContext?
     private let sourceWeekday: Weekday?
-    private let sourceSortedRoutineEvents: [RoutineEventContext]?
+    private let sourceSortedRoutineEvents: [RoutineEvent]?
     private let settings: Settings
     private let openRoutine: (Weekday) -> Void
 
@@ -33,7 +33,7 @@ struct RoutineEventFormView: View {
     init(
         sourceRoutineEvent: RoutineEventContext,
         sourceWeekday: Weekday,
-        sourceSortedRoutineEvents: [RoutineEventContext],
+        sourceSortedRoutineEvents: [RoutineEvent],
         settings: Settings,
         openRoutine: @escaping (Weekday) -> Void
     ) {
@@ -222,7 +222,7 @@ struct RoutineEventFormView: View {
         modelContext.updateRoutineEventContext(
             sourceRoutineEvent,
             with: draftRoutineEvent,
-            sourceSortedRoutineEventContexts: sourceSortedRoutineEvents,
+            sourceSortedRoutineEvents: sourceSortedRoutineEvents,
             todayStartOfDay: todayService.todayPlanner.startOfDay(settings: settings),
             plannerService: plannerService,
             ekEventStore: calendarService.ekEventStore

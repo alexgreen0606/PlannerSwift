@@ -134,7 +134,7 @@ extension ModelContext {
                     return ekEvent.startDate ?? Date.now
                 }
 
-                return generateSortDate(
+                return generatePlannerEventSortDate(
                     at: 0,
                     in: listEvents,
                     startOfDay: startOfDay

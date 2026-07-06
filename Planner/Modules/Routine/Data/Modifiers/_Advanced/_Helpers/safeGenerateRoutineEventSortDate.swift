@@ -1,5 +1,5 @@
 //
-//  generateRoutineEventSortDate.swift
+//  safeGenerateRoutineEventSortDate.swift
 //  Planner
 //
 //  Created by Alex Green on 6/16/26.
@@ -11,10 +11,10 @@ import SwiftDate
 
 extension ModelContext {
     @MainActor
-    func generateRoutineEventSortDate(
+    func safeGenerateRoutineEventSortDate(
         at index: Int,
         /// May or may not contain the routine event being placed.
-        in sortedRoutineEventContexts: [RoutineEventContext],
+        in sortedRoutineEvents: [RoutineEvent],
         for routine: Routine
     ) -> Date {
         guard let baseDay = Self.baseRoutineDate else {
@@ -22,10 +22,9 @@ extension ModelContext {
             return Date()
         }
 
-        // TODO: should this just be a list of instances?
-        return generateSortDate(
+        return generateRoutineEventSortDate(
             at: index,
-            in: sortedRoutineEventContexts,
+            in: sortedRoutineEvents,
             startOfDay: baseDay,
             routine: routine
         )

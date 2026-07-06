@@ -14,7 +14,7 @@ extension ModelContext {
     func updateRoutineEventContextWeekdays(
         _ routineEventContext: RoutineEventContext,
         with destinationWeekdays: Set<Weekday>,
-        sourceSortedRoutineEventContexts: [RoutineEventContext]? = [],
+        sourceSortedRoutineEvents: [RoutineEvent]? = [],
         todayStartOfDay: DateInRegion,
         ekEventStore: EKEventStore
     ) {
@@ -52,7 +52,7 @@ extension ModelContext {
         for routine in routines {
             let sortDate = generateRoutineEventSortDateNearSiblings(
                 for: routineEventContext,
-                from: sourceSortedRoutineEventContexts ?? [],
+                from: sourceSortedRoutineEvents ?? [],
                 routine: routine
             )
 

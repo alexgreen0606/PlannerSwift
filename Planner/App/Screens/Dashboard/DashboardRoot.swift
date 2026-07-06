@@ -145,8 +145,7 @@ struct DashboardRootView: View {
                     RoutineRootView(
                         routineCoverContext: $routineCoverContext,
                         routine: context.routine,
-                        sortedRoutineEventContexts: context
-                            .sortedRoutineEventContexts,
+                        sortedRoutineEvents: context.sortedRoutineEvents,
                         weekday: weekday,
                         settings: settings
                     )

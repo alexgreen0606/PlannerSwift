@@ -12,18 +12,18 @@ import SwiftUI
 
 struct TransferRoutineEventsFormView: View {
     private let sourceDayOfWeek: Weekday
-    private let sortedSourceRoutineEvents: [RoutineEventContext]
+    private let sourceSortedRoutineEvents: [RoutineEvent]
     private let settings: Settings
     private let openRoutine: (Weekday) -> Void
 
     init(
         sourceDayOfWeek: Weekday,
-        sortedSourceRoutineEvents: [RoutineEventContext],
+        sourceSortedRoutineEvents: [RoutineEvent],
         settings: Settings,
         openRoutine: @escaping (Weekday) -> Void
     ) {
         self.sourceDayOfWeek = sourceDayOfWeek
-        self.sortedSourceRoutineEvents = sortedSourceRoutineEvents
+        self.sourceSortedRoutineEvents = sourceSortedRoutineEvents
         self.settings = settings
         self.openRoutine = openRoutine
 
@@ -75,7 +75,7 @@ struct TransferRoutineEventsFormView: View {
         modelContext.bulkUpdateRoutineEventWeekdays(
             routineEngine.selectedItems,
             to: destinationWeekdays,
-            sourceSortedRoutineEventContexts: sortedSourceRoutineEvents,
+            sourceSortedRoutineEvents: sourceSortedRoutineEvents,
             todayStartOfDay: todayService.todayPlanner.startOfDay(
                 settings: settings
             ),

@@ -15,13 +15,13 @@ struct RoutineContextLoaderView<Content: View>: View {
 
     var body: some View {
         RoutineLoaderView(weekday: weekday) { routine in
-            RoutineEventContextsLoaderView(
+            RoutineEventsLoaderView(
                 routine: routine
-            ) { sortedRoutineEventContexts in
+            ) { sortedRoutineEvents in
                 content(
                     RoutineContext(
                         routine: routine,
-                        sortedRoutineEventContexts: sortedRoutineEventContexts
+                        sortedRoutineEvents: sortedRoutineEvents
                     )
                 )
             }

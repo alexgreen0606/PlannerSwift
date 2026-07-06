@@ -7,5 +7,5 @@
 
 struct RoutineContext {
     let routine: Routine
-    let sortedRoutineEventContexts: [RoutineEventContext]
+    let sortedRoutineEvents: [RoutineEvent]
 }

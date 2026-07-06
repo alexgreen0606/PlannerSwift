@@ -102,7 +102,7 @@ extension ModelContext {
             )
         }
 
-        var sortedRoutineEventContexts: [RoutineEventContext]?
+        var sortedRoutineEvents: [RoutineEvent]?
         var sortedListEvents: [PlannerEvent]?
 
         // MARK: - Re-position Moved Routine Events
@@ -110,7 +110,7 @@ extension ModelContext {
         if !invalidatedPositionPlannerEvents.isEmpty {
 
             sortedListEvents = getSortedListEvents(on: startOfDay)
-            sortedRoutineEventContexts = getSortedRoutineEventContexts(
+            sortedRoutineEvents = getSortedRoutineEvents(
                 for: routine
             )
 
@@ -121,23 +121,19 @@ extension ModelContext {
                     let routineEvent = routineEventRecordContext.routineEvent,
                     let routineEventContext = routineEvent.routineEventContext,
                     let safeSortedListEvents = sortedListEvents,
-                    let sortedRoutineEventContexts
+                    let sortedRoutineEvents
                 else {
                     continue
                 }
 
                 // Find a position for the event closest to its routine siblings.
-                let targetIndex = generateRoutineEventIndex(
+                let targetIndex = generateRoutineRecordIndex(
                     near: routineEventContext.stableId,
-                    from: sortedRoutineEventContexts,
-                    to: safeSortedListEvents,
-                    destinationComparatorId: {
-                        $0.routineEventRecordContext?.routineEvent?
-                            .routineEventContext?.stableId
-                    }
+                    from: sortedRoutineEvents,
+                    to: safeSortedListEvents
                 )
 
-                plannerEvent.sortDate = generateSortDate(
+                plannerEvent.sortDate = generatePlannerEventSortDate(
                     at: targetIndex,
                     in: safeSortedListEvents,
                     startOfDay: startOfDay
@@ -176,31 +172,27 @@ extension ModelContext {
             sortedListEvents
             ?? getSortedListEvents(on: startOfDay)
 
-        sortedRoutineEventContexts =
-            sortedRoutineEventContexts
-            ?? getSortedRoutineEventContexts(for: routine)
+        sortedRoutineEvents =
+            sortedRoutineEvents
+            ?? getSortedRoutineEvents(for: routine)
 
         for routineEvent in missingReverseSortedRoutineEvents {
             guard
                 let routineEventContext = routineEvent.routineEventContext,
-                let sortedRoutineEventContexts
+                let sortedRoutineEvents
             else {
                 continue
             }
 
             // Find a position for the routine event record closest to its routine siblings.
             // Defaults to top of list otherwise.
-            let targetIndex = generateRoutineEventIndex(
+            let targetIndex = generateRoutineRecordIndex(
                 near: routineEventContext.stableId,
-                from: sortedRoutineEventContexts,
-                to: sortedListEvents!,
-                destinationComparatorId: {
-                    $0.routineEventRecordContext?.routineEvent?
-                        .routineEventContext?.stableId
-                }
+                from: sortedRoutineEvents,
+                to: sortedListEvents!
             )
 
-            let sortDate = generateSortDate(
+            let sortDate = generatePlannerEventSortDate(
                 at: targetIndex,
                 in: sortedListEvents!,
                 startOfDay: startOfDay

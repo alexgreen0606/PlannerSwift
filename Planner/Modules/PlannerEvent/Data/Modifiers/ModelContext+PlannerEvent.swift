@@ -21,7 +21,7 @@ extension ModelContext {
     ) -> /// The ID of the new event.
         UUID?
     {
-        let sortDate = generateSortDate(
+        let sortDate = generatePlannerEventSortDate(
             at: index,
             in: sortedPlannerEvents,
             startOfDay: startOfDay
@@ -167,7 +167,7 @@ extension ModelContext {
         )
 
         // Place the event at the top of its earliest planner.
-        plannerEvent.sortDate = generateSortDate(
+        plannerEvent.sortDate = generatePlannerEventSortDate(
             at: 0,
             in: sortedListEvents,
             startOfDay: earliestStartOfDay
@@ -188,7 +188,7 @@ extension ModelContext {
     ) {
         let movedEvent = sortedPendingPlannerEvents[initialIndex]
 
-        movedEvent.sortDate = generateSortDate(
+        movedEvent.sortDate = generatePlannerEventSortDate(
             at: targetIndex,
             in: sortedPlannerEvents,
             startOfDay: startOfDay
