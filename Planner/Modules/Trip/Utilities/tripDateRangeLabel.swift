@@ -18,7 +18,8 @@ func tripDateRangeLabel(
 
     let referenceYear = customReferenceYear ?? todaystamp.year
     let sameYear = firstDatestamp.year == lastDatestamp.year
-    let sameMonth = sameYear && firstDatestamp.monthDigit == lastDatestamp.monthDigit
+    let sameMonth =
+        sameYear && firstDatestamp.monthDigit == lastDatestamp.monthDigit
 
     let includeStartMonth = true
     let includeStartYear = !sameYear
@@ -32,7 +33,7 @@ func tripDateRangeLabel(
         includeYear: includeStartYear,
         todaystamp: todaystamp
     )
-    
+
     let endLabel = format(
         lastDatestamp,
         includeMonth: includeEndMonth,
@@ -52,23 +53,18 @@ private func format(
     todaystamp: String
 ) -> String {
     let parts = datestamp.split(separator: "-")
-    guard parts.count == 3 else { return datestamp.dateLabel(todaystamp: todaystamp) }
+    guard parts.count == 3 else {
+        return datestamp.dateLabel(todaystamp: todaystamp)
+    }
 
     let year = String(parts[0])
     let month = Int(parts[1]) ?? 0
     let day = Int(parts[2]) ?? 0
 
-    let monthNames = [
-        "", "January", "February", "March",
-        "April", "May", "June",
-        "July", "August", "September",
-        "October", "November", "December",
-    ]
-
     var result = ""
 
-    if includeMonth, month > 0, month < monthNames.count {
-        result += "\(monthNames[month]) "
+    if includeMonth, let month = Month.from(number: month) {
+        result += "\(month.label) "
     }
 
     result += "\(day)"

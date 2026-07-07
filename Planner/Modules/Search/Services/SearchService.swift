@@ -151,7 +151,23 @@ actor SearchService {
             }
 
             // ------------------------------------------------------------------
-            // Final: Return the top 20 results.
+            // Phase 5: Search weekdays.
+            // ------------------------------------------------------------------
+
+            if !searchingCalendar {
+                searchWeekdays(query: query, datestampScores: &datestampScores)
+            }
+
+            // ------------------------------------------------------------------
+            // Phase 5: Search months.
+            // ------------------------------------------------------------------
+
+            if !searchingCalendar {
+                searchMonths(query: query, datestampScores: &datestampScores)
+            }
+
+            // ------------------------------------------------------------------
+            // Final: Return the top 31 results.
             // ------------------------------------------------------------------
 
             return buildSearchResults(
@@ -186,7 +202,7 @@ actor SearchService {
                 // Sort highest scores at the top.
                 return $0.value > $1.value
             }
-            .prefix(20)
+            .prefix(31)
             .map { $0.key }
 
         return Dictionary(grouping: topDatestamps) {
@@ -252,6 +268,104 @@ actor SearchService {
                 endTime: ekEvent?.endDate
             ) {
                 datestampScores[datestamp, default: 0] += score
+            }
+        }
+    }
+
+    private func searchWeekdays(
+        query: SearchQuery,
+        datestampScores: inout [String: Double]
+    ) {
+        let today = query.todayStartOfDay
+
+        guard let todayWeekday = Weekday.forDatestamp(today.datestamp)
+        else {
+            return
+        }
+
+        for weekday in Weekday.allCases {
+            guard let weekdayScore = query.score(for: weekday.label) else {
+                continue
+            }
+
+            var day: DateInRegion
+
+            if query.past {
+                let daysSince = (todayWeekday.index - weekday.index + 7) % 7
+                day = today - daysSince.days
+            } else {
+                let daysUntil = (weekday.index - todayWeekday.index + 7) % 7
+                day = today + daysUntil.days
+            }
+
+            for _ in 0..<31 {
+                let datestamp = day.datestamp
+
+                datestampScores[datestamp, default: 0] += weekdayScore
+
+                day =
+                    query.past
+                    ? day - 1.weeks
+                    : day + 1.weeks
+            }
+        }
+    }
+
+    private func searchMonths(
+        query: SearchQuery,
+        datestampScores: inout [String: Double]
+    ) {
+        let today = query.todayStartOfDay
+
+        for month in Month.allCases {
+            guard let monthScore = query.score(for: month.label) else {
+                continue
+            }
+
+            var day: DateInRegion
+            var year = today.year
+
+            if query.past {
+                if month.number > today.month {
+                    // Month is after this month and we are searching the past.
+                    // Jump to last year.
+                    year -= 1
+                }
+
+                day = DateInRegion(
+                    year: year,
+                    month: month.number,
+                    day: 1,
+                    region: today.region
+                )
+                .dateAtEndOf(.month)
+
+            } else {
+                if month.number < today.month {
+                    // Month is before this month and we are searching the future.
+                    // Jump to next year.
+                    year += 1
+                }
+
+                day = DateInRegion(
+                    year: year,
+                    month: month.number,
+                    day: 1,
+                    region: today.region
+                )
+            }
+
+            while day.month == month.number {
+                let datestamp = day.datestamp
+
+                if query.containsDatestamp(datestamp) {
+                    datestampScores[datestamp, default: 0] += monthScore
+                }
+
+                day =
+                    query.past
+                    ? day - 1.days
+                    : day + 1.days
             }
         }
     }

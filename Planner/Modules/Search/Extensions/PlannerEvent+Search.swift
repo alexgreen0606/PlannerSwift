@@ -123,6 +123,36 @@ extension PlannerEvent {
             score += locationScore
         }
 
+        // TODO: clean this up below
+        var possibleDatestamps: [String] = []
+
+        if let eKEventContext {
+            possibleDatestamps = getSortedPossibleDatestamps(
+                for: eKEventContext.startDate,
+                ending: eKEventContext.endDate
+            )
+        } else if let time {
+            possibleDatestamps = getSortedPossibleDatestamps(for: time)
+        } else if let datestamp {
+            possibleDatestamps = [datestamp]
+        }
+
+        // Scan every possible datestamp for a matching weekday or month.
+        for datestamp in possibleDatestamps {
+            // Scan this weekday for a match.
+            if let weekdayScore = query.score(for: datestamp.weekday) {
+                score += weekdayScore
+            }
+
+            // Scan this month for a match.
+            if let monthDigit = Int(datestamp.monthDigit),
+                let month = Month.from(number: monthDigit),
+                let monthScore = query.score(for: month.label)
+            {
+                score += monthScore
+            }
+        }
+
         if score != 0.0 {
             // Title or location matches the search text. Include weighted score.
             return score

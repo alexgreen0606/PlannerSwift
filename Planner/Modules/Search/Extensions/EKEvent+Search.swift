@@ -9,15 +9,18 @@ import EventKit
 
 extension EKEvent {
     func searchQueryScore(_ query: SearchQuery) -> Double? {
-        guard !query.isCalendarHidden(calendarId: calendar.calendarIdentifier) else{
+        guard !query.isCalendarHidden(calendarId: calendar.calendarIdentifier)
+        else {
             // Calendar is hidden. Exclude.
             return nil
         }
 
-        guard query.containsDateRange(
-            startDate: startDate,
-            endDate: endDate
-        ) else {
+        guard
+            query.containsDateRange(
+                startDate: startDate,
+                endDate: endDate
+            )
+        else {
             // Doesn't match the time range. Exclude.
             return nil
         }
@@ -41,8 +44,29 @@ extension EKEvent {
             score += locationScore
         }
 
+        let possibleDatestamps = getSortedPossibleDatestamps(
+            for: startDate,
+            ending: endDate
+        )
+
+        // Scan every possible datestamp for a matching weekday or month.
+        for datestamp in possibleDatestamps {
+            // Scan this weekday for a match.
+            if let weekdayScore = query.score(for: datestamp.weekday) {
+                score += weekdayScore
+            }
+
+            // Scan this month for a match.
+            if let monthDigit = Int(datestamp.monthDigit),
+                let month = Month.from(number: monthDigit),
+                let monthScore = query.score(for: month.label)
+            {
+                score += monthScore
+            }
+        }
+
         if score != 0.0 {
-            // Title or location matches the search text. Include weighted score.
+            // Title, location, weekday, or month matches the search text. Include weighted score.
             return score
         }
 
