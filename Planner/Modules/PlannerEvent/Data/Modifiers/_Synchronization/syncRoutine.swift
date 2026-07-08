@@ -47,10 +47,6 @@ extension ModelContext {
 
             planner.routineEventRecordContexts = []
 
-            // TODO: see if excluding routine events in a past planner (July 6) correctly deletes calendar events AND planner events.
-            // TODO: A is singular on that day.
-            // TODO: C is recurring every day.
-
             // Delete stale calendar events and their records from this planner onward.
             if !externalCalendarIds.isEmpty {
                 deleteCalendarEvents(
