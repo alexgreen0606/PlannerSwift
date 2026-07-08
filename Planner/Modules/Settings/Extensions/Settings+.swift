@@ -27,10 +27,29 @@ extension Settings {
             name: homeLocation != nil ? "house" : "location"
         )
     }
-    
+
     func isCalendarHidden(calendarId: String) -> Bool {
         hiddenCalendarIds.contains(
             calendarId
         )
+    }
+
+    func ensureDefaultCalendarIcon(calendar: EKCalendar) {
+        let calendarIdentifier = calendar.calendarIdentifier
+
+        guard calendarIconMap[calendarIdentifier] == nil else {
+            return
+        }
+
+        // Default birthday calendar to cake icon.
+        if calendar.type == .birthday {
+            calendarIconMap[calendarIdentifier] =
+                "birthday.cake.fill"
+        }
+
+        // Default holiday calendar to globe icon.
+        if calendar.title.localizedCaseInsensitiveContains("holiday") {
+            calendarIconMap[calendarIdentifier] = "globe.americas.fill"
+        }
     }
 }

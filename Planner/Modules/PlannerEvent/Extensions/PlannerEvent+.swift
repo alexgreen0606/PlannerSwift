@@ -29,21 +29,17 @@ extension PlannerEvent: PlannerEventLocationHelpers {
     }
 
     func calendarSystemImageName(settings: Settings) -> String {
-        if let calendar = eKEventContext?.ekEvent?.calendar {
-            return calendar.systemImageName(settings: settings)
+        guard let eKEventContext else {
+            return ""
         }
 
-        if let eKEventContext,
-            let existing = settings.calendarIconMap[eKEventContext.calendarIdentifier]
-        {
-            return existing
+        if let calendar = eKEventContext.ekEvent?.calendar {
+            settings.ensureDefaultCalendarIcon(calendar: calendar)
         }
 
-        if title.localizedCaseInsensitiveContains("birthday") {
-            return "birthday.cake.fill"
-        }
-
-        return "calendar"
+        return settings.calendarIconMap[
+            eKEventContext.calendarIdentifier
+        ] ?? "calendar"
     }
 
     // MARK: - Synchronization
@@ -58,7 +54,7 @@ extension PlannerEvent: PlannerEventLocationHelpers {
             existingPlannerEvent: self
         )
         time = ekEvent.startDate
-        
+
         routineEventRecordContext?.isVariant = true
 
         // Sync calendar-specific data.
