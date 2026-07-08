@@ -9,10 +9,10 @@ import EventKit
 import SwiftData
 import SwiftDate
 
-// TODO: add a date formatter check for weekdays and dates
-
 @ModelActor
 actor SearchService {
+    static let MAX_RESULTS = 31
+    
     func search(
         query: SearchQuery,
         ekEventStore: EKEventStore,
@@ -21,260 +21,169 @@ actor SearchService {
         -> /// Maps years to lists of planner datestamps that contain data matching the query.
         [String: [String]]
     {
-        do {
-            var datestampScores: [String: Double] = [:]
+        var scores: [String: Double] = [:]
 
+        do {
             var plannerDayCache: [String: DateInRegion] = [:]
 
-            let searchingCalendar = !query.calendarIds.isEmpty
+            if query.calendarIds.isEmpty {
 
-            // ------------------------------------------------------------------
-            // Phase 1: Search trips.
-            // ------------------------------------------------------------------
-
-            if !searchingCalendar {
-                let filteredTrips = try modelContext.fetch(
-                    FetchDescriptor<Trip>(
-                        predicate: Trip.trips(matching: query)
-                    )
-                )
-
-                for trip in filteredTrips {
-                    guard let score = trip.searchQueryScore(query) else {
-                        continue
-                    }
-
-                    for planner in trip.sortedPlanners {
-                        plannerDayCache[planner.datestamp] = planner.startOfDay(
-                            settings: settings
-                        )
-
-                        guard query.containsDatestamp(planner.datestamp) else {
-                            continue
-                        }
-
-                        datestampScores[planner.datestamp, default: 0] += score
-                    }
-                }
-            }
-
-            // ------------------------------------------------------------------
-            // Phase 2: Search planners.
-            // ------------------------------------------------------------------
-
-            if !searchingCalendar && !query.text.isEmpty {
-                let filteredPlanners = try modelContext.fetch(
-                    FetchDescriptor<Planner>(
-                        predicate: Planner.planners(matching: query)
-                    )
-                )
-
-                for planner in filteredPlanners {
-                    guard let score = planner.searchQueryScore(query) else {
-                        continue
-                    }
-
-                    datestampScores[planner.datestamp, default: 0] += score
-                }
-            }
-
-            // ------------------------------------------------------------------
-            // Phase 3: Search planner events.
-            // ------------------------------------------------------------------
-
-            if !searchingCalendar {
-                let filteredPlannerEvents = try modelContext.fetch(
-                    FetchDescriptor<PlannerEvent>(
-                        predicate: PlannerEvent.plannerEvents(matching: query)
-                    )
-                )
-
-                for plannerEvent in filteredPlannerEvents {
-                    guard let score = plannerEvent.searchQueryScore(query)
-                    else {
-                        continue
-                    }
-
-                    guard let time = plannerEvent.time else {
-                        if let datestamp = plannerEvent.datestamp {
-                            datestampScores[datestamp, default: 0] += score
-                        }
-
-                        continue
-                    }
-
-                    // Add the datestamps that own this event.
-                    try updateDatestampsForTimedEvent(
-                        with: time,
-                        score: score,
-                        query: query,
-                        datestampScores: &datestampScores,
-                        plannerDayCache: &plannerDayCache,
-                        homeRegion: settings.homeRegion,
-                        settings: settings,
-                    )
-                }
-            }
-
-            // ------------------------------------------------------------------
-            // Phase 4: Search calendar events.
-            // ------------------------------------------------------------------
-
-            let filteredEkEvents = ekEventStore.events(
-                matching: ekEventStore.predicateForEvents(
-                    withStart: query.startDate,
-                    end: query.endDate,
-                    calendars: nil
-                )
-            ).filter {
-                !settings.hiddenCalendarIds.contains(
-                    $0.calendar.calendarIdentifier
-                )
-            }
-
-            for ekEvent in filteredEkEvents {
-                guard let score = ekEvent.searchQueryScore(query) else {
-                    continue
-                }
-
-                // Add the datestamps that own this event.
-                try updateDatestampsForTimedEvent(
-                    with: ekEvent.startDate,
-                    ekEvent: ekEvent,
-                    score: score,
+                // Search trips.
+                try searchTrips(
                     query: query,
-                    datestampScores: &datestampScores,
+                    scores: &scores,
                     plannerDayCache: &plannerDayCache,
-                    homeRegion: settings.homeRegion,
                     settings: settings
                 )
+
+                // Search planners.
+                if !query.text.isEmpty {
+                    try searchPlanners(
+                        query: query,
+                        scores: &scores,
+                        plannerDayCache: &plannerDayCache,
+                        settings: settings
+                    )
+                }
+
+                // Search planner events.
+                try searchPlannerEvents(
+                    query: query,
+                    scores: &scores,
+                    plannerDayCache: &plannerDayCache,
+                    settings: settings
+                )
+
+                // Search weekdays.
+                searchWeekdays(query: query, scores: &scores)
+
+                // Search months.
+                searchMonths(query: query, scores: &scores)
             }
 
-            // ------------------------------------------------------------------
-            // Phase 5: Search weekdays.
-            // ------------------------------------------------------------------
-
-            if !searchingCalendar {
-                searchWeekdays(query: query, datestampScores: &datestampScores)
-            }
-
-            // ------------------------------------------------------------------
-            // Phase 5: Search months.
-            // ------------------------------------------------------------------
-
-            if !searchingCalendar {
-                searchMonths(query: query, datestampScores: &datestampScores)
-            }
-
-            // ------------------------------------------------------------------
-            // Final: Return the top 31 results.
-            // ------------------------------------------------------------------
-
-            return buildSearchResults(
-                from: datestampScores,
-                query: query
+            // Search calendar events.
+            try searchEkEvents(
+                query: query,
+                scores: &scores,
+                plannerDayCache: &plannerDayCache,
+                ekEventStore: ekEventStore,
+                settings: settings
             )
+
         } catch {
             assertionFailure("ERROR SearchService search: \(error)")
         }
 
-        return [:]
+        return buildSearchResults(
+            from: scores,
+            query: query
+        )
     }
 
-    // MARK: - Helper Functions
+    // MARK: - Search Functions
 
-    private func buildSearchResults(
-        from datestampScores: [String: Double],
-        query: SearchQuery
-    ) -> [String: [String]] {
-        let isSearchingPast = query.past
+    private func searchTrips(
+        query: SearchQuery,
+        scores: inout [String: Double],
+        plannerDayCache: inout [String: DateInRegion],
+        settings: Settings
+    ) throws {
+        let filteredTrips = try modelContext.fetch(
+            FetchDescriptor<Trip>(
+                predicate: Trip.trips(matching: query)
+            )
+        )
 
-        let topDatestamps =
-            datestampScores
-            .sorted {
-                if query.text.isEmpty || $0.value == $1.value {
-                    // Scores are equal or user is not searching for specific text. Sort by datestamp.
-                    return isSearchingPast
-                        ? $0.key > $1.key
-                        : $0.key < $1.key
-                }
-
-                // Sort highest scores at the top.
-                return $0.value > $1.value
+        for trip in filteredTrips {
+            guard let score = trip.searchQueryScore(query) else {
+                continue
             }
-            .prefix(31)
-            .map { $0.key }
 
-        return Dictionary(grouping: topDatestamps) {
-            datestamp in
-            String(datestamp.prefix(4))
-        }.mapValues { datestamps in
-            datestamps.sorted {
-                isSearchingPast
-                    ? $0 > $1
-                    : $0 < $1
+            for planner in trip.sortedPlanners {
+                plannerDayCache[planner.datestamp] = planner.startOfDay(
+                    settings: settings
+                )
+
+                if query.containsDatestamp(planner.datestamp) {
+                    scores[planner.datestamp, default: 0] += score
+                }
             }
         }
     }
 
-    private func updateDatestampsForTimedEvent(
-        with time: Date,
-        ekEvent: EKEvent? = nil,
-        score: Double,
+    private func searchPlanners(
         query: SearchQuery,
-        datestampScores: inout [String: Double],
+        scores: inout [String: Double],
         plannerDayCache: inout [String: DateInRegion],
-        homeRegion: Region,
-        settings: Settings,
+        settings: Settings
     ) throws {
-        let possibleDatestamps = getSortedPossibleDatestamps(
-            for: time,
-            ending: ekEvent?.endDate
+        let filteredPlanners = try modelContext.fetch(
+            FetchDescriptor<Planner>(
+                predicate: Planner.planners(matching: query)
+            )
         )
 
-        for datestamp in possibleDatestamps
-        where query.containsDatestamp(datestamp) {
+        for planner in filteredPlanners {
+            plannerDayCache[planner.datestamp] = planner.startOfDay(
+                settings: settings
+            )
 
-            // Use the cached start of day to determine if the planner owns this event.
-            if let cachedPlannerDay = plannerDayCache[
-                datestamp
-            ] {
-                if cachedPlannerDay.includes(
-                    startTime: time,
-                    endTime: ekEvent?.endDate
-                ) {
-                    datestampScores[datestamp, default: 0] += score
+            if let score = planner.searchQueryScore(query) {
+                scores[planner.datestamp, default: 0] += score
+            }
+        }
+    }
+
+    private func searchPlannerEvents(
+        query: SearchQuery,
+        scores: inout [String: Double],
+        plannerDayCache: inout [String: DateInRegion],
+        settings: Settings
+    ) throws {
+        let homeRegion = settings.homeRegion
+
+        let filteredPlannerEvents = try modelContext.fetch(
+            FetchDescriptor<PlannerEvent>(
+                predicate: PlannerEvent.plannerEvents(matching: query)
+            )
+        )
+
+        for plannerEvent in filteredPlannerEvents {
+            guard let time = plannerEvent.time else {
+                if let datestamp = plannerEvent.datestamp,
+                    let score = plannerEvent.searchQueryScore(
+                        query,
+                        in: datestamp
+                    )
+                {
+                    scores[datestamp, default: 0] += score
                 }
 
                 continue
             }
 
-            // Load the planner to determine if it owns the event.
-
-            let planner = try modelContext.fetch(
-                FetchDescriptor<Planner>(
-                    predicate: Planner.planners(datestamp: datestamp)
-                )
-            ).first
-
-            let plannerDay = datestamp.startOfDay(
-                in: planner?.region(settings: settings) ?? homeRegion
+            let parentDatestamps = try getPlannerDatestamps(
+                startTime: time,
+                query: query,
+                plannerDayCache: &plannerDayCache,
+                homeRegion: homeRegion,
+                settings: settings
             )
 
-            plannerDayCache[datestamp] = plannerDay
-
-            if plannerDay.includes(
-                startTime: time,
-                endTime: ekEvent?.endDate
-            ) {
-                datestampScores[datestamp, default: 0] += score
+            for datestamp in parentDatestamps {
+                if let score = plannerEvent.searchQueryScore(
+                    query,
+                    in: datestamp
+                ) {
+                    scores[datestamp, default: 0] += score
+                }
             }
         }
     }
 
     private func searchWeekdays(
         query: SearchQuery,
-        datestampScores: inout [String: Double]
+        scores: inout [String: Double]
     ) {
         let today = query.todayStartOfDay
 
@@ -298,10 +207,10 @@ actor SearchService {
                 day = today + daysUntil.days
             }
 
-            for _ in 0..<31 {
+            for _ in 0..<Self.MAX_RESULTS {
                 let datestamp = day.datestamp
 
-                datestampScores[datestamp, default: 0] += weekdayScore
+                scores[datestamp, default: 0] += weekdayScore
 
                 day =
                     query.past
@@ -313,7 +222,7 @@ actor SearchService {
 
     private func searchMonths(
         query: SearchQuery,
-        datestampScores: inout [String: Double]
+        scores: inout [String: Double]
     ) {
         let today = query.todayStartOfDay
 
@@ -359,7 +268,7 @@ actor SearchService {
                 let datestamp = day.datestamp
 
                 if query.containsDatestamp(datestamp) {
-                    datestampScores[datestamp, default: 0] += monthScore
+                    scores[datestamp, default: 0] += monthScore
                 }
 
                 day =
@@ -368,5 +277,136 @@ actor SearchService {
                     : day + 1.days
             }
         }
+    }
+
+    private func searchEkEvents(
+        query: SearchQuery,
+        scores: inout [String: Double],
+        plannerDayCache: inout [String: DateInRegion],
+        ekEventStore: EKEventStore,
+        settings: Settings
+    ) throws {
+        let filteredEkEvents = ekEventStore.events(
+            matching: ekEventStore.predicateForEvents(
+                withStart: query.startDate,
+                end: query.endDate,
+                calendars: nil
+            )
+        ).filter {
+            !settings.hiddenCalendarIds.contains(
+                $0.calendar.calendarIdentifier
+            )
+        }
+
+        for ekEvent in filteredEkEvents {
+            let parentDatestamps = try getPlannerDatestamps(
+                startTime: ekEvent.startDate,
+                endTime: ekEvent.endDate,
+                query: query,
+                plannerDayCache: &plannerDayCache,
+                homeRegion: settings.homeRegion,
+                settings: settings
+            )
+
+            for datestamp in parentDatestamps {
+                if let score = ekEvent.searchQueryScore(
+                    query,
+                    in: datestamp
+                ) {
+                    scores[datestamp, default: 0] += score
+                }
+            }
+        }
+    }
+
+    // MARK: - Helper Functions
+
+    private func buildSearchResults(
+        from scores: [String: Double],
+        query: SearchQuery
+    ) -> [String: [String]] {
+        let topDatestamps =
+            scores
+            .sorted {
+                if query.text.isEmpty || $0.value == $1.value {
+                    // Scores are equal or user is not searching for specific text. Sort by datestamp.
+                    return query.past
+                        ? $0.key > $1.key
+                        : $0.key < $1.key
+                }
+
+                // Sort highest scores at the top.
+                return $0.value > $1.value
+            }
+            .prefix(Self.MAX_RESULTS)
+            .map(\.key)
+
+        return Dictionary(grouping: topDatestamps) {
+            datestamp in
+            String(datestamp.prefix(4))
+        }.mapValues { datestamps in
+            datestamps.sorted {
+                query.past
+                    ? $0 > $1
+                    : $0 < $1
+            }
+        }
+    }
+
+    private func getPlannerDatestamps(
+        startTime time: Date,
+        endTime: Date? = nil,
+        query: SearchQuery,
+        plannerDayCache: inout [String: DateInRegion],
+        homeRegion: Region,
+        settings: Settings,
+    ) throws -> [String] {
+        var datestamps: [String] = []
+
+        let possibleDatestamps = getSortedPossibleDatestamps(
+            for: time,
+            ending: endTime
+        )
+
+        for datestamp in possibleDatestamps
+        where query.containsDatestamp(datestamp) {
+
+            // Use the cached start of day to determine if the planner owns this event.
+            if let cachedPlannerDay = plannerDayCache[
+                datestamp
+            ] {
+                if cachedPlannerDay.includes(
+                    startTime: time,
+                    endTime: endTime
+                ) {
+                    datestamps.append(datestamp)
+                }
+
+                continue
+            }
+
+            // Load the planner to determine if it owns the event.
+
+            let planner = try modelContext.fetch(
+                FetchDescriptor<Planner>(
+                    predicate: Planner.planners(datestamp: datestamp)
+                )
+            ).first
+
+            let plannerDay = datestamp.startOfDay(
+                in: planner?.region(settings: settings) ?? homeRegion
+            )
+
+            plannerDayCache[datestamp] = plannerDay
+
+            if plannerDay.includes(
+                startTime: time,
+                endTime: endTime
+            ) {
+                datestamps.append(datestamp)
+            }
+        }
+
+        return datestamps
     }
 }

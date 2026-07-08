@@ -65,7 +65,11 @@ extension PlannerEvent {
         }
     }
 
-    func searchQueryScore(_ query: SearchQuery) -> Double? {
+    func searchQueryScore(
+        _ query: SearchQuery,
+        /// Used to determine if event's planner matches the query.
+        in plannerDatestamp: String
+    ) -> Double? {
         if !query.calendarIds.isEmpty {
             guard
                 let calendarIdentifier = eKEventContext?.calendarIdentifier,
@@ -123,29 +127,16 @@ extension PlannerEvent {
             score += locationScore
         }
 
-        // TODO: clean this up below
-        var possibleDatestamps: [String] = []
-
-        if let eKEventContext {
-            possibleDatestamps = getSortedPossibleDatestamps(
-                for: eKEventContext.startDate,
-                ending: eKEventContext.endDate
-            )
-        } else if let time {
-            possibleDatestamps = getSortedPossibleDatestamps(for: time)
-        } else if let datestamp {
-            possibleDatestamps = [datestamp]
-        }
-
-        // Scan every possible datestamp for a matching weekday or month.
-        for datestamp in possibleDatestamps {
-            // Scan this weekday for a match.
-            if let weekdayScore = query.score(for: datestamp.weekday) {
+        // Scan the planner for a match when searching calendar events.
+        // This helps us pin-point calendar events in certain months or weekdays.
+        if !query.calendarIds.isEmpty, eKEventContext != nil {
+            // Scan planner weekday for a match.
+            if let weekdayScore = query.score(for: plannerDatestamp.weekday) {
                 score += weekdayScore
             }
 
-            // Scan this month for a match.
-            if let monthDigit = Int(datestamp.monthDigit),
+            // Scan planner month for a match.
+            if let monthDigit = Int(plannerDatestamp.monthDigit),
                 let month = Month.from(number: monthDigit),
                 let monthScore = query.score(for: month.label)
             {
@@ -154,7 +145,7 @@ extension PlannerEvent {
         }
 
         if score != 0.0 {
-            // Title or location matches the search text. Include weighted score.
+            // Title, location, weekday, or month matches the search text. Include weighted score.
             return score
         }
 

@@ -33,19 +33,19 @@ struct SearchResultPlannerPreviewView: View {
 
     private var filteredBirthdayChips: [PlannerEvent] {
         sortedBirthdayChips.filter {
-            $0.searchQueryScore(activeQuery) != nil
+            $0.searchQueryScore(activeQuery, in: planner.datestamp) != nil
         }
     }
 
     private var filteredEventChips: [PlannerEvent] {
         sortedEventChips.filter {
-            $0.searchQueryScore(activeQuery) != nil
+            $0.searchQueryScore(activeQuery, in: planner.datestamp) != nil
         }
     }
 
     private var filteredPlannerEvents: [PlannerEvent] {
         sortedPlannerEvents.filter {
-            $0.searchQueryScore(activeQuery) != nil
+            $0.searchQueryScore(activeQuery, in: planner.datestamp) != nil
         }
     }
 

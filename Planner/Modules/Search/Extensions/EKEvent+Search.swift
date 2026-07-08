@@ -8,7 +8,11 @@
 import EventKit
 
 extension EKEvent {
-    func searchQueryScore(_ query: SearchQuery) -> Double? {
+    func searchQueryScore(
+        _ query: SearchQuery,
+        /// Used to determine if event's planner matches the query.
+        in plannerDatestamp: String
+    ) -> Double? {
         guard !query.isCalendarHidden(calendarId: calendar.calendarIdentifier)
         else {
             // Calendar is hidden. Exclude.
@@ -44,20 +48,16 @@ extension EKEvent {
             score += locationScore
         }
 
-        let possibleDatestamps = getSortedPossibleDatestamps(
-            for: startDate,
-            ending: endDate
-        )
-
-        // Scan every possible datestamp for a matching weekday or month.
-        for datestamp in possibleDatestamps {
-            // Scan this weekday for a match.
-            if let weekdayScore = query.score(for: datestamp.weekday) {
+        // Scan the planner for a match when searching calendar events.
+        // This helps us pin-point calendar events in certain months or weekdays.
+        if !query.calendarIds.isEmpty {
+            // Scan planner weekday for a match.
+            if let weekdayScore = query.score(for: plannerDatestamp.weekday) {
                 score += weekdayScore
             }
 
-            // Scan this month for a match.
-            if let monthDigit = Int(datestamp.monthDigit),
+            // Scan planner month for a match.
+            if let monthDigit = Int(plannerDatestamp.monthDigit),
                 let month = Month.from(number: monthDigit),
                 let monthScore = query.score(for: month.label)
             {
