@@ -109,6 +109,7 @@ struct SearchRootView: View {
                         calendarStore.refreshCalendarsAndAccess()
                         locationService.loadDeviceLocation()
                         plannerService.refresh()
+                        plannerService.search()
                     }
                     .background(Color.appBackground)
                     .safeAreaInset(edge: .top) {

@@ -15,6 +15,7 @@ extension ModelContext {
         for planner: Planner,
         startOfDay: DateInRegion,
         todayStartOfDay: DateInRegion,
+        syncPast: Bool,
         ekEventStore: EKEventStore
     ) {
         guard let routine = planner.routine else {
@@ -61,8 +62,8 @@ extension ModelContext {
 
         // MARK: - Skip Synchronization Of Past Planners
 
-        if planner.datestamp < todayStartOfDay.datestamp {
-            // Past routine events will never change.
+        if !syncPast && planner.datestamp < todayStartOfDay.datestamp {
+            // Past routine events will never change unless forced to.
             return
         }
 

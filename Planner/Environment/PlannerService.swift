@@ -53,6 +53,9 @@ class PlannerService: ObservableObject {
     /// Panner datestamps that have synced with their routine.
     private var freshRoutineDatestamps: Set<String> = []
 
+    /// Bypasses the "don't sync routines of past planners" rule.
+    private var forceSyncRoutineDatestamps: Set<String> = []
+
     @Published private(set) var thisWeekDatestamps: [String] = []
 
     @Published private(set) var sortedUpcomingTrips: [Trip] = []
@@ -154,33 +157,38 @@ class PlannerService: ObservableObject {
         _ planner: Planner,
         startOfDay: DateInRegion
     ) {
-        // Sync Routine
+        let datestamp = planner.datestamp
+
+        // Sync routine.
         if !freshRoutineDatestamps.contains(
-            planner.datestamp
+            datestamp
         ) {
+            freshRoutineDatestamps.insert(datestamp)
+
             modelContext.syncRoutine(
                 for: planner,
                 startOfDay: startOfDay,
                 todayStartOfDay: todayService.todayPlanner.startOfDay(
                     settings: settings
                 ),
+                syncPast: forceSyncRoutineDatestamps.contains(datestamp),
                 ekEventStore: ekEventStore
             )
-
-            freshRoutineDatestamps.insert(planner.datestamp)
+            
+            forceSyncRoutineDatestamps.remove(datestamp)
         }
 
         let locationKey = planner.locationKey
 
-        // Sync Calendar
+        // Sync calendar.
         if !freshCalendarLocationKeys.contains(locationKey) {
+            freshCalendarLocationKeys.insert(locationKey)
+
             modelContext.syncCalendar(
                 startOfDay: startOfDay,
                 ekEventStore: ekEventStore,
                 settings: settings
             )
-
-            freshCalendarLocationKeys.insert(locationKey)
         }
     }
 
@@ -218,7 +226,10 @@ class PlannerService: ObservableObject {
     }
 
     func syncPlannerRoutine(planner: Planner) {
-        freshRoutineDatestamps.remove(planner.datestamp)
+        let datestamp = planner.datestamp
+
+        freshRoutineDatestamps.remove(datestamp)
+        forceSyncRoutineDatestamps.insert(datestamp)
         syncPlanner(
             planner,
             startOfDay: planner.startOfDay(settings: settings)
@@ -264,7 +275,7 @@ class PlannerService: ObservableObject {
         thisWeekDatestamps = (0..<7).map { offset in
             DateInRegion(region: .local)
                 .dateByAdding(offset, .day)
-                .toFormat("yyyy-MM-dd")
+                .datestamp
         }
     }
 }

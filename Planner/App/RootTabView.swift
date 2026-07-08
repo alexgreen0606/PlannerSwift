@@ -115,7 +115,7 @@ struct RootTabView: View {
     @Namespace private var namespace
 
     private var searchRefreshTrigger: String {
-        "\(scenePhase)_\(selectedTab)"
+        "\(scenePhase)_\(selectedTab)_\(plannerCoverStore.context == nil)"
     }
 
     // MARK: - Body
@@ -193,7 +193,10 @@ struct RootTabView: View {
 
         // MARK: Search each time the search tab is active.
         .onChange(of: searchRefreshTrigger) { _, searchRefreshTrigger in
-            if scenePhase == .active && selectedTab == .search {
+            if scenePhase == .active &&
+                selectedTab == .search &&
+                plannerCoverStore.context == nil
+            {
                 plannerService.search()
             }
         }
