@@ -11,18 +11,57 @@ import SwiftDate
 import SwiftUI
 
 extension ModelContext {
-    // MARK: - ENSURE
+    // MARK: - ENSURE / DEDUPLICATION
 
     @MainActor
     func ensureSettings(
         settings: [Settings]
     ) {
-        if settings.first != nil {
+        switch settings.count {
+        case 0:
+            insert(Settings())
+            safeSave("ModelContext+Settings ensurePlannerSettings")
+
+        case 1:
+            break
+
+        default:
+            deduplicateSettings(settingsList: settings)
+        }
+    }
+
+    @MainActor
+    private func deduplicateSettings(
+        settingsList: [Settings]
+    ) {
+        guard settingsList.count > 1 else {
             return
         }
 
-        insert(Settings())
-        safeSave("ModelContext+Settings ensurePlannerSettings")
+        let merged: Settings = settingsList.first!
+
+        for settings in settingsList.dropFirst() {
+            // Merge calendar icons.
+            merged.calendarIconMap.merge(settings.calendarIconMap) { old, _ in
+                old
+            }
+
+            // Merge hidden calendars.
+            merged.hiddenCalendarIds.formUnion(settings.hiddenCalendarIds)
+
+            // Merge home location.
+            if let location = settings.homeLocation, merged.homeLocation == nil
+            {
+                merged.homeLocation = location
+                location.settings = merged
+            }
+            
+            settings.homeLocation = nil
+
+            safeDelete(settings)
+        }
+
+        safeSave("ModelContext+Settings deduplicateSettings")
     }
 
     // MARK: - UPDATE

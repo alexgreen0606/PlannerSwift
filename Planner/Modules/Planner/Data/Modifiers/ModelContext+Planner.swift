@@ -11,18 +11,70 @@ import SwiftDate
 import SwiftUI
 
 extension ModelContext {
-    // MARK: - ENSURE
+    // MARK: - ENSURE / DEDUPLICATION
 
     @MainActor
     func ensurePlanner(
         planners: [Planner],
         datestamp: String
     ) {
-        if planners.first != nil {
+        switch planners.count {
+        case 0:
+            _ = createPlanner(for: datestamp)
+
+        case 1:
+            break
+
+        default:
+            deduplicatePlanner(planners: planners)
+        }
+    }
+
+    @MainActor
+    private func deduplicatePlanner(
+        planners: [Planner]
+    ) {
+        guard planners.count > 1 else {
             return
         }
 
-        _ = createPlanner(for: datestamp)
+        let merged: Planner = planners.first!
+
+        for planner in planners.dropFirst()
+        where planner.datestamp == merged.datestamp {
+            // Merge locations.
+            if let location = planner.location, merged.location == nil {
+                merged.location = location
+                location.planners.safeAppend(merged)
+            }
+
+            // Merge routines.
+            if let routine = planner.routine, merged.routine == nil {
+                merged.routine = routine
+                routine.planners.safeAppend(merged)
+            }
+
+            // Merge trips.
+            if let trip = planner.trip, merged.trip == nil {
+                merged.trip = trip
+                trip.planners.safeAppend(merged)
+            }
+
+            // Merge routine records.
+            for context in planner.safeRoutineEventRecordContexts {
+                merged.routineEventRecordContexts.safeAppend(context)
+                context.planner = merged
+            }
+
+            planner.location = nil
+            planner.routine = nil
+            planner.trip = nil
+            planner.routineEventRecordContexts = nil
+            
+            safeDelete(planner)
+        }
+
+        safeSave("ModelContext+Planner deduplicatePlanner")
     }
 
     // MARK: - CREATE

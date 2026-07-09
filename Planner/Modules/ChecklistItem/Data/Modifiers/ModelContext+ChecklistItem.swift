@@ -13,32 +13,66 @@ extension ModelContext {
 
     @MainActor
     func ensureRootFolder() {
+        let rootFolders: [ChecklistItem]
+
         do {
-            let existingRoots = try fetch(
-                FetchDescriptor<ChecklistItem>(
+            rootFolders = try fetch(
+                FetchDescriptor(
                     predicate: ChecklistItem.rootFolders
                 )
             )
-
-            if existingRoots.first != nil {
-                return
-            }
         } catch {
             assertionFailure(
                 "ERROR ModelContext+ChecklistItem ensureRootFolder: \(error)"
             )
+            return
         }
 
-        insert(
-            ChecklistItem(
-                title: "Checklists",
-                type: .folder,
-                color: .cyan,
-                sortIndex: 0
+        switch rootFolders.count {
+        case 0:
+            insert(
+                ChecklistItem(
+                    title: "Checklists",
+                    type: .folder,
+                    color: .cyan,
+                    sortIndex: 0
+                )
             )
-        )
 
-        safeSave("ModelContext+ChecklistItem ensureRootFolder")
+            safeSave("ModelContext+ChecklistItem ensureRootFolder")
+
+        case 1:
+            break
+
+        default:
+            deduplicateRootFolder(rootFolders: rootFolders)
+        }
+    }
+
+    @MainActor
+    private func deduplicateRootFolder(
+        rootFolders: [ChecklistItem]
+    ) {
+        guard rootFolders.count > 1 else {
+            return
+        }
+
+        let merged: ChecklistItem = rootFolders.first!
+
+        for folder in rootFolders.dropFirst() {
+
+            // Merge items.
+            for item in folder.safeItems {
+                merged.items.safeAppend(item)
+                item.parent = merged
+            }
+
+            folder.items = nil
+
+            safeDelete(folder)
+        }
+
+        safeSave("ModelContext+ChecklistItem deduplicateRootFolder")
     }
 
     // MARK: - CREATE
