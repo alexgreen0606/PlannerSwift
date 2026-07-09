@@ -34,11 +34,9 @@ extension ModelContext {
     private func deduplicateSettings(
         settingsList: [Settings]
     ) {
-        guard settingsList.count > 1 else {
+        guard let merged = settingsList.first else {
             return
         }
-
-        let merged: Settings = settingsList.first!
 
         for settings in settingsList.dropFirst() {
             // Merge calendar icons.

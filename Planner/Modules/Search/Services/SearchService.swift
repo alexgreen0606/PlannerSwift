@@ -12,7 +12,7 @@ import SwiftDate
 @ModelActor
 actor SearchService {
     static let MAX_RESULTS = 31
-    
+
     func search(
         query: SearchQuery,
         ekEventStore: EKEventStore,

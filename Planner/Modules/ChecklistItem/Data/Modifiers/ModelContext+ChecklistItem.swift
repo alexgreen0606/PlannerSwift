@@ -53,11 +53,9 @@ extension ModelContext {
     private func deduplicateRootFolder(
         rootFolders: [ChecklistItem]
     ) {
-        guard rootFolders.count > 1 else {
+        guard let merged = rootFolders.first else {
             return
         }
-
-        let merged: ChecklistItem = rootFolders.first!
 
         for folder in rootFolders.dropFirst() {
 

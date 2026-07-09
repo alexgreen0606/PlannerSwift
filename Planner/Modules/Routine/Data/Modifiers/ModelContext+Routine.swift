@@ -14,7 +14,7 @@ extension ModelContext {
         DateInRegion("2000-06-06", region: .UTC)?
         .dateAtStartOf(.day)
 
-    // MARK: - ENSURE
+    // MARK: - ENSURE / DEDUPLICATION
 
     @MainActor
     func ensureRoutines() {
@@ -23,29 +23,71 @@ extension ModelContext {
                 FetchDescriptor<Routine>()
             )
 
-            let existingWeekdays = Set(existingRoutines.map(\.weekdayRawValue))
-
-            let allWeekdayRawValues = Set(Weekday.allCases.map(\.rawValue))
-
-            let missingWeekdays = allWeekdayRawValues.subtracting(
-                existingWeekdays
+            let routinesByWeekday = Dictionary(
+                grouping: existingRoutines,
+                by: \.weekdayRawValue
             )
 
-            guard !missingWeekdays.isEmpty else {
-                return
+            var didModify = false
+
+            for weekday in Weekday.allCases {
+                let routines = routinesByWeekday[weekday.rawValue] ?? []
+
+                switch routines.count {
+                case 0:
+                    insert(
+                        Routine(weekdayRawValue: weekday.rawValue)
+                    )
+                    
+                    didModify = true
+
+                    break
+
+                case 1:
+                    break
+
+                default:
+                    deduplicateRoutine(routines: routines)
+                    
+                    didModify = true
+                }
             }
 
-            for missingWeekday in missingWeekdays {
-                insert(
-                    Routine(weekdayRawValue: missingWeekday)
-                )
+            if didModify {
+                safeSave("ModelContext+Routine ensureRoutines")
             }
-
-            safeSave("ModelContext+Routine ensureRoutines")
         } catch {
             assertionFailure(
                 "ERROR ModelContext+Routine ensureRoutines: \(error)"
             )
+        }
+    }
+
+    @MainActor
+    private func deduplicateRoutine(
+        routines: [Routine]
+    ) {
+        guard let merged = routines.first else {
+            return
+        }
+
+        for routine in routines.dropFirst() {
+            // Merge routine events.
+            for routineEvent in routine.safeRoutineEvents {
+                merged.routineEvents.safeAppend(routineEvent)
+                routineEvent.routine = merged
+            }
+
+            // Merge planners.
+            for planner in routine.safePlanners {
+                merged.planners.safeAppend(planner)
+                planner.routine = merged
+            }
+
+            routine.routineEvents = nil
+            routine.planners = nil
+
+            safeDelete(routine)
         }
     }
 

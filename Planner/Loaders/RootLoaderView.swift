@@ -15,6 +15,8 @@ struct RootLoaderView: View {
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
     @Query private var plannerSettingsList: [Settings]
+    
+    @State private var areRoutinesSafe: Bool = false
 
     private var settings: Settings? {
         plannerSettingsList.first
@@ -24,7 +26,7 @@ struct RootLoaderView: View {
 
     var body: some View {
         ZStack {
-            if let settings {
+            if let settings, areRoutinesSafe {
                 RootTabView(
                     modelContext: modelContext,
                     plannerCoverStore: plannerCoverStore,
@@ -37,6 +39,9 @@ struct RootLoaderView: View {
             modelContext.ensureSettings(
                 settings: plannerSettingsList
             )
+            
+            modelContext.ensureRoutines()
+            areRoutinesSafe = true
         }
     }
 }

@@ -34,11 +34,9 @@ extension ModelContext {
     private func deduplicatePlanner(
         planners: [Planner]
     ) {
-        guard planners.count > 1 else {
+        guard let merged = planners.first else {
             return
         }
-
-        let merged: Planner = planners.first!
 
         for planner in planners.dropFirst()
         where planner.datestamp == merged.datestamp {
@@ -70,7 +68,7 @@ extension ModelContext {
             planner.routine = nil
             planner.trip = nil
             planner.routineEventRecordContexts = nil
-            
+
             safeDelete(planner)
         }
 
@@ -79,15 +77,16 @@ extension ModelContext {
 
     // MARK: - CREATE
 
-    private func createPlanner(for datestamp: String, skipSave: Bool = false)
-        -> Planner
-    {
-        guard let routine = getRoutine(for: datestamp.weekday) else {
-            // TODO: is this bad?
-            fatalError()
-        }
-
-        let planner = Planner(datestamp: datestamp, routine: routine)
+    private func createPlanner(
+        for datestamp: String,
+        skipSave: Bool = false
+    ) -> Planner {
+        let routine = getRoutine(for: datestamp.weekday)!
+        
+        let planner = Planner(
+            datestamp: datestamp,
+            routine: routine
+        )
 
         insert(planner)
 
