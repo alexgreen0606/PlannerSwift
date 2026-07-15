@@ -1,5 +1,5 @@
 //
-//  RootLoaderView.swift
+//  DataLoader.swift
 //  Planner
 //
 //  Created by Alex Green on 6/28/26.
@@ -8,7 +8,7 @@
 import SwiftData
 import SwiftUI
 
-struct RootLoaderView: View {
+struct DataLoaderView: View {
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var locationService: LocationService
@@ -27,7 +27,7 @@ struct RootLoaderView: View {
     var body: some View {
         ZStack {
             if let settings, areRoutinesSafe {
-                OnboardingView(
+                EnvironmentLoaderView(
                     plannerCoverStore: plannerCoverStore,
                     locationService: locationService,
                     modelContext: modelContext,

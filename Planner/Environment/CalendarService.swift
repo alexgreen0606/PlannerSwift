@@ -20,7 +20,7 @@ final class CalendarService: ObservableObject {
     private let eventStore = EKEventStore()
     private let contactStore = CNContactStore()
 
-    private var calendarsById: [String: EKCalendar] = [:]
+    @Published private var calendarsById: [String: EKCalendar] = [:]
 
     var ekEventStore: EKEventStore {
         eventStore
@@ -61,7 +61,7 @@ final class CalendarService: ObservableObject {
     var sortedVisibleCalendars: [EKCalendar] {
         sortedCalendars
             .filter {
-                settings.isCalendarHidden(calendarId: $0.calendarIdentifier)
+                !settings.isCalendarHidden(calendarId: $0.calendarIdentifier)
             }
     }
 
@@ -73,13 +73,13 @@ final class CalendarService: ObservableObject {
 
         let calendars = eventStore.calendars(for: .event)
 
-        var calendarsById: [String: EKCalendar] = [:]
+        var calendarMap: [String: EKCalendar] = [:]
 
         for calendar in calendars {
             settings.ensureDefaultCalendarIcon(calendar: calendar)
-            calendarsById[calendar.calendarIdentifier] = calendar
+            calendarMap[calendar.calendarIdentifier] = calendar
         }
 
-        self.calendarsById = calendarsById
+        self.calendarsById = calendarMap
     }
 }

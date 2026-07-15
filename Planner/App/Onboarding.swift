@@ -14,9 +14,7 @@ struct OnboardingView: View {
     private let settings: Settings
 
     init(
-        plannerCoverStore: PlannerCoverStore,
         locationService: LocationService,
-        modelContext: ModelContext,
         settings: Settings
     ) {
         self.settings = settings
@@ -43,27 +41,8 @@ struct OnboardingView: View {
 
         screens.append(.complete)
 
-        let calendarService = CalendarService(settings: settings)
-        let todayService = TodayService(modelContext: modelContext)
-
         self._isOnboarding = State(initialValue: screens.count > 2)
         self._screens = State(initialValue: screens)
-
-        self._plannerService = StateObject(
-            wrappedValue: PlannerService(
-                modelContext: modelContext,
-                calendarService: calendarService,
-                todayService: todayService,
-                plannerCoverStore: plannerCoverStore,
-                settings: settings
-            )
-        )
-        self._calendarService = StateObject(
-            wrappedValue: calendarService
-        )
-        self._todayService = StateObject(
-            wrappedValue: todayService
-        )
     }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -80,10 +59,9 @@ struct OnboardingView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.colorScheme) private var systemColorScheme
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
-
-    @StateObject private var calendarService: CalendarService
-    @StateObject private var todayService: TodayService
-    @StateObject private var plannerService: PlannerService
+    @EnvironmentObject private var calendarService: CalendarService
+    @EnvironmentObject private var plannerService: PlannerService
+    @EnvironmentObject private var todayService: TodayService
 
     @State private var screens: [OnboardingScreen]
 
@@ -129,14 +107,12 @@ struct OnboardingView: View {
                     .transition(.scale)
             }
         }
-        .environmentObject(plannerService)
-        .environmentObject(todayService)
-        .environmentObject(calendarService)
 
         // MARK: App Setup
 
         .task {
             // Build the initial planners in the UI.
+            calendarService.loadCalendars()
             plannerService.refresh()
 
             staggerMainActorInteraction(delay: 1) {

@@ -66,7 +66,7 @@ struct PlannerApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootLoaderView()
+            DataLoaderView()
                 .preferredColorScheme(appColorScheme.colorScheme)
                 .environmentObject(weatherCacheService)
                 .environmentObject(locationService)
