@@ -70,7 +70,7 @@ struct DashboardRootView: View {
                     .listStyle(.plain)
                     .refreshable {
                         weatherCacheService.beginReload()
-                        calendarService.refreshCalendarsAndAccess()
+                        calendarService.loadCalendars()
                         locationService.loadDeviceLocation()
                         plannerService.refresh()
                     }

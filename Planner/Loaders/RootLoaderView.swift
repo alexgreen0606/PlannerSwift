@@ -11,11 +11,11 @@ import SwiftUI
 struct RootLoaderView: View {
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var calendarService: CalendarService
+    @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
     @Query private var plannerSettingsList: [Settings]
-    
+
     @State private var areRoutinesSafe: Bool = false
 
     private var settings: Settings? {
@@ -27,10 +27,10 @@ struct RootLoaderView: View {
     var body: some View {
         ZStack {
             if let settings, areRoutinesSafe {
-                RootTabView(
-                    modelContext: modelContext,
+                OnboardingView(
                     plannerCoverStore: plannerCoverStore,
-                    ekEventStore: calendarService.ekEventStore,
+                    locationService: locationService,
+                    modelContext: modelContext,
                     settings: settings
                 )
             }
@@ -39,7 +39,7 @@ struct RootLoaderView: View {
             modelContext.ensureSettings(
                 settings: plannerSettingsList
             )
-            
+
             modelContext.ensureRoutines()
             areRoutinesSafe = true
         }

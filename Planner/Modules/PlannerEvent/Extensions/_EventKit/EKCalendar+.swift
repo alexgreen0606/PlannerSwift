@@ -14,8 +14,6 @@ extension EKCalendar {
     }
 
     func systemImageName(settings: Settings) -> String {
-        settings.ensureDefaultCalendarIcon(calendar: self)
-
         return settings.calendarIconMap[
             calendarIdentifier
         ] ?? "calendar"

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SuggestedLocationsListView: View {
     @Binding var selectedLocation: Location?
+    let variant: LocationFormVariant
     let suggestedLocations: [Location]
     let homeLocation: Location?
     let sourcePlanner: Planner?
@@ -35,8 +36,10 @@ struct SuggestedLocationsListView: View {
             sourcePlanner: sourcePlanner,
             selectOption: {
                 if selectedLocation === location {
-                    withAnimation {
-                        selectedLocation = nil
+                    if variant != .home {
+                        withAnimation {
+                            selectedLocation = nil
+                        }
                     }
                     return
                 }

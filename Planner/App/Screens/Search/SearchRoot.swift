@@ -34,7 +34,7 @@ struct SearchRootView: View {
     }
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var calendarStore: CalendarService
+    @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var weatherCacheService: WeatherCacheService
     @EnvironmentObject private var locationService: LocationService
@@ -106,7 +106,7 @@ struct SearchRootView: View {
                     .listStyle(.plain)
                     .refreshable {
                         weatherCacheService.beginReload()
-                        calendarStore.refreshCalendarsAndAccess()
+                        calendarService.loadCalendars()
                         locationService.loadDeviceLocation()
                         plannerService.refresh()
                         plannerService.search()
@@ -152,14 +152,6 @@ struct SearchRootView: View {
             prompt: "Search planner.."
         )
         .searchPresentationToolbarBehavior(.avoidHidingContent)
-
-        // MARK: Re-search when today's date changes.
-
-        .onChange(of: todayService.todaystamp) {
-            _,
-            _ in
-            search()
-        }
 
         // MARK: Schedule a search each time the draft query changes.
 

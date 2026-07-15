@@ -31,7 +31,7 @@ struct TransferEventsFormView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.showToast) private var showToast
     @EnvironmentObject private var todayService: TodayService
-    @EnvironmentObject private var calendarStore: CalendarService
+    @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
@@ -146,7 +146,7 @@ struct TransferEventsFormView: View {
             days: dayOffset.days,
             sourceDatestamp: sourceDatestamp,
             destinationDatestamp: destinationDatestamp,
-            ekEventStore: calendarStore.ekEventStore,
+            ekEventStore: calendarService.ekEventStore,
             settings: settings
         )
 

@@ -38,10 +38,7 @@ struct CalendarsFormView: View {
         .blue
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var calendarStore: CalendarService
-    @EnvironmentObject private var plannerService: PlannerService
-
-    @State private var calendarStoreRefreshTask: Task<Void, Never>?
+    @EnvironmentObject private var calendarService: CalendarService
 
     // MARK: - Body
 
@@ -49,7 +46,7 @@ struct CalendarsFormView: View {
         List {
             Section {
                 ForEach(
-                    calendarStore.sortedCalendars,
+                    calendarService.sortedCalendars,
                     id: \.calendarIdentifier,
                     content: row
                 )
@@ -62,12 +59,6 @@ struct CalendarsFormView: View {
         .safeAreaPadding(.bottom, 32)
         .navigationTitle("Calendars")
         .navigationBarTitleDisplayMode(.inline)
-
-        // MARK: Refresh the calendar store when the hidden calendars change.
-
-        .onChange(of: settings.hiddenCalendarIds) { _, _ in
-            scheduleCalendarSync()
-        }
     }
 
     // MARK: - View Builders
@@ -123,22 +114,6 @@ struct CalendarsFormView: View {
             )
             .labelsHidden()
             .tint(accentColor.swiftUiColor)
-        }
-    }
-
-    // MARK: - Functions
-
-    private func scheduleCalendarSync() {
-        calendarStoreRefreshTask?.cancel()
-
-        calendarStoreRefreshTask = Task {
-            do {
-                try await Task.sleep(for: .milliseconds(5000))
-                guard !Task.isCancelled else { return }
-
-                calendarStore.refreshCalendarsAndAccess()
-                plannerService.syncVisiblePlannersCalendar()
-            } catch {}
         }
     }
 }

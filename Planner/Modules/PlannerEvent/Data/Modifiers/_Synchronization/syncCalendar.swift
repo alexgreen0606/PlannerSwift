@@ -16,29 +16,27 @@ extension ModelContext {
     @MainActor
     func syncCalendar(
         startOfDay: DateInRegion,
-        ekEventStore: EKEventStore,
+        calendarService: CalendarService,
         settings: Settings
     ) {
 
         // MARK: - Load In Calendar Events For This Day
+        
+        let ekEventStore = calendarService.ekEventStore
 
         let nextDay = startOfDay + 1.days
         let ekEvents = ekEventStore.events(
             matching: ekEventStore.predicateForEvents(
                 withStart: startOfDay.date,
                 end: nextDay.date,
-                calendars: nil  // Match all calendars.
+                calendars: calendarService.sortedVisibleCalendars
             )
         )
 
         var ekEventDictionary = Dictionary(
             uniqueKeysWithValues: ekEvents.compactMap {
                 event -> (String, EKEvent)? in
-                guard
-                    !settings.hiddenCalendarIds.contains(
-                        event.calendar.calendarIdentifier
-                    ),
-                    let identifier = event.calendarItemExternalIdentifier
+                guard let identifier = event.calendarItemExternalIdentifier
                 else {
                     return nil
                 }

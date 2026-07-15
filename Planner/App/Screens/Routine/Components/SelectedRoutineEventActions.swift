@@ -18,7 +18,7 @@ struct SelectedRoutineEventActionsView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var routineEngine:
         ListEngine<RoutineEventContext>
-    @EnvironmentObject private var calendarStore: CalendarService
+    @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var todayService: TodayService
 
     @State private var showDeleteConfirmation = false
@@ -65,7 +65,7 @@ struct SelectedRoutineEventActionsView: View {
                 todayStartOfDay: todayService.todayPlanner.startOfDay(
                     settings: settings
                 ),
-                ekEventStore: calendarStore.ekEventStore
+                ekEventStore: calendarService.ekEventStore
             )
 
             DispatchQueue.main.async(execute: routineEngine.toggleSelectMode)
@@ -83,7 +83,7 @@ struct SelectedRoutineEventActionsView: View {
                 todayStartOfDay: todayService.todayPlanner.startOfDay(
                     settings: settings
                 ),
-                ekEventStore: calendarStore.ekEventStore
+                ekEventStore: calendarService.ekEventStore
             )
 
             DispatchQueue.main.async(execute: routineEngine.toggleSelectMode)

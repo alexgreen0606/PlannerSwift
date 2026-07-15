@@ -10,6 +10,7 @@ import SwiftUI
 
 struct ResultLocationsListView: View {
     @Binding var selectedLocation: Location?
+    let variant: LocationFormVariant
     let homeLocation: Location?
     let sourcePlanner: Planner?
 
@@ -65,8 +66,10 @@ struct ResultLocationsListView: View {
         isSelected: Bool
     ) {
         if isSelected {
-            withAnimation {
-                selectedLocation = nil
+            if variant != .home {
+                withAnimation {
+                    selectedLocation = nil
+                }
             }
             return
         }

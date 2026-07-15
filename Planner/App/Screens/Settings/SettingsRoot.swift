@@ -30,11 +30,11 @@ struct SettingsRootView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var systemColorScheme
-    @EnvironmentObject private var calendarStore: CalendarService
+    @EnvironmentObject private var calendarService: CalendarService
 
     private var activeCalendarCount: String {
         String(
-            calendarStore.sortedCalendars.filter {
+            calendarService.sortedCalendars.filter {
                 !settings.hiddenCalendarIds.contains($0.calendarIdentifier)
             }.count
         )
@@ -144,14 +144,14 @@ struct SettingsRootView: View {
                             Text("Calendars")
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             Text(
-                                calendarStore.hasAccess != true
+                                calendarService.hasCalendarAccess != true
                                     ? "No Access" : activeCalendarCount
                             )
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                         }
                     }
-                    .disabled(calendarStore.hasAccess != true)
+                    .disabled(calendarService.hasCalendarAccess != true)
 
                     // MARK: Keep Past Events Duration
 

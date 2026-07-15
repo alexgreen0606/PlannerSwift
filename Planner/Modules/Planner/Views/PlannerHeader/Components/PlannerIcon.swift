@@ -93,5 +93,6 @@ struct PlannerIconView: View {
                 .foregroundStyle(detailColor)
                 .offset(y: detailOffset)
         }
+        .drawingGroup()
     }
 }

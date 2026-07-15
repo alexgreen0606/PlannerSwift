@@ -33,10 +33,6 @@ extension PlannerEvent: PlannerEventLocationHelpers {
             return ""
         }
 
-        if let calendar = eKEventContext.ekEvent?.calendar {
-            settings.ensureDefaultCalendarIcon(calendar: calendar)
-        }
-
         return settings.calendarIconMap[
             eKEventContext.calendarIdentifier
         ] ?? "calendar"

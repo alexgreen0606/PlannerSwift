@@ -32,6 +32,12 @@ final class LocationService:
 
     @Published var deviceClLocation: CLLocation?
     @Published var deviceLocation: Location?
+    
+    @Published private(set) var hasAccess: Bool? = nil
+    
+    var locationManager: CLLocationManager {
+        manager
+    }
 
     func loadDeviceLocation() {
         manager.requestLocation()
@@ -42,9 +48,13 @@ final class LocationService:
         case .authorizedWhenInUse, .authorizedAlways:
             loadDeviceLocation()
             scheduleRefresh()
+            hasAccess = true
+            break
         case .notDetermined:
-            manager.requestWhenInUseAuthorization()
+            hasAccess = nil
+            break
         case .denied, .restricted:
+            hasAccess = false
             break
         @unknown default:
             break

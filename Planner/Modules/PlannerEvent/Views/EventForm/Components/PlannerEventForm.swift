@@ -140,7 +140,7 @@ struct PlannerEventFormView: View {
 
     @ToolbarContentBuilder
     private var addToCalendarButton: some ToolbarContent {
-        if calendarService.hasAccess == true {
+        if calendarService.hasCalendarAccess == true {
             ToolbarItem(placement: .bottomBar) {
                 Button(
                     "Add to Calendar",

@@ -14,7 +14,7 @@ struct SelectedEventActionsView: View {
     let namespace: Namespace.ID
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var calendarStore: CalendarService
+    @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
 
     private var deleteConfig: ConfirmationConfig {
@@ -52,7 +52,7 @@ struct SelectedEventActionsView: View {
         DispatchQueue.main.async {
             modelContext.deletePlannerEvents(
                 selections,
-                ekEventStore: calendarStore.ekEventStore
+                ekEventStore: calendarService.ekEventStore
             )
 
             DispatchQueue.main.async(execute: plannerEngine.toggleSelectMode)

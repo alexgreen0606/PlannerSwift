@@ -16,7 +16,7 @@ struct PlannerActionMenuView: View {
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var plannerManager: ListEngine<PlannerEvent>
-    @EnvironmentObject private var calendarStore: CalendarService
+    @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var plannerService: PlannerService
 
@@ -52,7 +52,7 @@ struct PlannerActionMenuView: View {
         bulkDeleteCompletedPlannerEventConfig(
             completedEventCount: rawCompletedEvents.count,
             dateLabel: dateLabel,
-            hasCalendarAccess: calendarStore.hasAccess == true,
+            hasCalendarAccess: calendarService.hasCalendarAccess == true,
             delete: deleteCompletedEvents
         )
     }

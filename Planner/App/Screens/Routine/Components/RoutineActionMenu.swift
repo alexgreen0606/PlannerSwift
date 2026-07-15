@@ -15,7 +15,7 @@ struct RoutineActionMenuView: View {
     let settings: Settings
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var calendarStore: CalendarService
+    @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var todayService: TodayService
 
     @State private var showDeleteRoutineConfirmation = false
@@ -73,7 +73,7 @@ struct RoutineActionMenuView: View {
             routineEventContexts: routineEvents,
             routine: routine,
             todayStartOfDay: todayService.todayPlanner.startOfDay(settings: settings),
-            ekEventStore: calendarStore.ekEventStore,
+            ekEventStore: calendarService.ekEventStore,
         )
     }
 }

@@ -110,12 +110,14 @@ struct LocationFormHeaderView: View {
     // MARK: Options
 
     private var showCurrentOption: Bool {
-        switch formVariant {
-        case .home:
-            return selectedLocation != nil
-        case .event, .planner, .trip:
-            return false
-        }
+        false
+        // Note: Removed as onboarding now enforces a home location.
+        //        switch formVariant {
+        //        case .home:
+        //            return selectedLocation != nil
+        //        case .event, .planner, .trip:
+        //            return false
+        //        }
     }
 
     private var showHomeOption: Bool {
@@ -171,7 +173,9 @@ struct LocationFormHeaderView: View {
     @ViewBuilder
     private var selectionIndicator: some View {
         if showCurrentIndicator {
-            currentLocationIndicator
+            // Note: Removed as onboarding now enforces a home location.
+            // Nothing will be shown in this case.
+            // currentLocationIndicator
 
         } else if showHomeIndicator, let homeLocation {
             homeLocationIndicator(homeLocation)
@@ -194,15 +198,16 @@ struct LocationFormHeaderView: View {
         }
     }
 
-    private var currentLocationIndicator: some View {
-        LabelValueView(
-            title: "Current Location",
-            subtitle: deviceLocationLabel,
-            iconConfig: IconConfig(name: "location")
-        )
-        .animateLazyAction(from: deviceLocationLabel)
-        .glassChip(height: 46)
-    }
+    // Note: Removed as onboarding now enforces a home location.
+    //    private var currentLocationIndicator: some View {
+    //        LabelValueView(
+    //            title: "Current Location",
+    //            subtitle: deviceLocationLabel,
+    //            iconConfig: IconConfig(name: "location")
+    //        )
+    //        .animateLazyAction(from: deviceLocationLabel)
+    //        .glassChip(height: 46)
+    //    }
 
     private func homeLocationIndicator(_ home: Location) -> some View {
         LabelValueView(

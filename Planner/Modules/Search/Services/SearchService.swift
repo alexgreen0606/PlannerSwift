@@ -15,6 +15,7 @@ actor SearchService {
 
     func search(
         query: SearchQuery,
+        visibleCalendars: [EKCalendar],
         ekEventStore: EKEventStore,
         settings: Settings
     )
@@ -66,6 +67,7 @@ actor SearchService {
                 query: query,
                 scores: &scores,
                 plannerDayCache: &plannerDayCache,
+                visibleCalendars: visibleCalendars,
                 ekEventStore: ekEventStore,
                 settings: settings
             )
@@ -283,6 +285,7 @@ actor SearchService {
         query: SearchQuery,
         scores: inout [String: Double],
         plannerDayCache: inout [String: DateInRegion],
+        visibleCalendars: [EKCalendar],
         ekEventStore: EKEventStore,
         settings: Settings
     ) throws {
@@ -290,13 +293,9 @@ actor SearchService {
             matching: ekEventStore.predicateForEvents(
                 withStart: query.startDate,
                 end: query.endDate,
-                calendars: nil
+                calendars: visibleCalendars
             )
-        ).filter {
-            !settings.hiddenCalendarIds.contains(
-                $0.calendar.calendarIdentifier
-            )
-        }
+        )
 
         for ekEvent in filteredEkEvents {
             let parentDatestamps = try getPlannerDatestamps(

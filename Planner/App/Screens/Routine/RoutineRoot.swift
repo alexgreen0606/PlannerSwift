@@ -21,7 +21,7 @@ struct RoutineRootView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var calendarStore: CalendarService
+    @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var plannerService: PlannerService
     @EnvironmentObject private var todayService: TodayService
 
@@ -219,7 +219,7 @@ struct RoutineRootView: View {
             todayStartOfDay: todayService.todayPlanner.startOfDay(
                 settings: settings
             ),
-            ekEventStore: calendarStore.ekEventStore
+            ekEventStore: calendarService.ekEventStore
         )
     }
 
@@ -301,7 +301,7 @@ struct RoutineRootView: View {
             todayStartOfDay: todayService.todayPlanner.startOfDay(
                 settings: settings
             ),
-            ekEventStore: calendarStore.ekEventStore
+            ekEventStore: calendarService.ekEventStore
         )
     }
 
@@ -313,7 +313,7 @@ struct RoutineRootView: View {
             todayStartOfDay: todayService.todayPlanner.startOfDay(
                 settings: settings
             ),
-            ekEventStore: calendarStore.ekEventStore
+            ekEventStore: calendarService.ekEventStore
         )
     }
 }

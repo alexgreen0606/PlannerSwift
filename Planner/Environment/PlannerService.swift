@@ -15,20 +15,20 @@ import SwiftUI
 @MainActor
 class PlannerService: ObservableObject {
     private let modelContext: ModelContext
-    private let ekEventStore: EKEventStore
+    private let calendarService: CalendarService
     private let todayService: TodayService
     private let plannerCoverStore: PlannerCoverStore
     private let settings: Settings
 
     init(
         modelContext: ModelContext,
-        ekEventStore: EKEventStore,
+        calendarService: CalendarService,
         todayService: TodayService,
         plannerCoverStore: PlannerCoverStore,
         settings: Settings
     ) {
         self.modelContext = modelContext
-        self.ekEventStore = ekEventStore
+        self.calendarService = calendarService
         self.todayService = todayService
         self.plannerCoverStore = plannerCoverStore
         self.settings = settings
@@ -93,12 +93,18 @@ class PlannerService: ObservableObject {
     // MARK: - Search
 
     func search(with query: SearchQuery) {
+        guard
+            calendarService.hasCalendarAccess != nil,
+            calendarService.hasContactsAccess != nil
+        else { return }
+
         modelContext.safeSave("PlannerService search")
 
         Task {
             let datestampMap = await searchService.search(
                 query: query,
-                ekEventStore: ekEventStore,
+                visibleCalendars: calendarService.sortedVisibleCalendars,
+                ekEventStore: calendarService.ekEventStore,
                 settings: settings
             )
 
@@ -157,6 +163,9 @@ class PlannerService: ObservableObject {
         _ planner: Planner,
         startOfDay: DateInRegion
     ) {
+        guard settings.homeLocation != nil
+        else { return }
+        
         let datestamp = planner.datestamp
 
         // Sync routine.
@@ -172,11 +181,16 @@ class PlannerService: ObservableObject {
                     settings: settings
                 ),
                 syncPast: forceSyncRoutineDatestamps.contains(datestamp),
-                ekEventStore: ekEventStore
+                ekEventStore: calendarService.ekEventStore
             )
-            
+
             forceSyncRoutineDatestamps.remove(datestamp)
         }
+
+        guard
+            calendarService.hasCalendarAccess != nil,
+            calendarService.hasContactsAccess != nil
+        else { return }
 
         let locationKey = planner.locationKey
 
@@ -186,7 +200,7 @@ class PlannerService: ObservableObject {
 
             modelContext.syncCalendar(
                 startOfDay: startOfDay,
-                ekEventStore: ekEventStore,
+                calendarService: calendarService,
                 settings: settings
             )
         }

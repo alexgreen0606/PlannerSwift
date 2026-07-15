@@ -6,18 +6,48 @@
 //
 
 import Combine
+import Contacts
 import EventKit
 
 @MainActor
 final class CalendarService: ObservableObject {
+    let settings: Settings
+
+    init(settings: Settings) {
+        self.settings = settings
+    }
+
     private let eventStore = EKEventStore()
+    private let contactStore = CNContactStore()
 
     private var calendarsById: [String: EKCalendar] = [:]
 
-    @Published private(set) var hasAccess: Bool? = nil
-
     var ekEventStore: EKEventStore {
         eventStore
+    }
+
+    var cnContactStore: CNContactStore {
+        contactStore
+    }
+
+    var hasCalendarAccess: Bool? {
+        let access = EKEventStore.authorizationStatus(for: .event)
+
+        if access == .notDetermined {
+            return nil
+        }
+
+        return [.writeOnly, .fullAccess].contains(access)
+    }
+
+    var hasContactsAccess: Bool? {
+        let access = CNContactStore.authorizationStatus(for: .contacts)
+
+        if access == .notDetermined {
+            return nil
+        }
+
+        return access == .authorized
     }
 
     var sortedCalendars: [EKCalendar] {
@@ -28,42 +58,28 @@ final class CalendarService: ObservableObject {
             }
     }
 
-    func refreshCalendarsAndAccess() {
-        switch EKEventStore.authorizationStatus(for: .event) {
-        case .authorized:
-            hasAccess = true
-            loadCalendars()
-        case .notDetermined:
-            requestAccess()
-        case .denied:
-            hasAccess = false
-            calendarsById = [:]
-        default:
-            break
-        }
-    }
-
-    // MARK: - Helper Functions
-
-    private func requestAccess() {
-        eventStore.requestFullAccessToEvents { granted, _ in
-            Task { @MainActor in
-                if granted {
-                    self.hasAccess = true
-                    self.loadCalendars()
-                } else {
-                    self.hasAccess = false
-                    self.calendarsById = [:]
-                }
+    var sortedVisibleCalendars: [EKCalendar] {
+        sortedCalendars
+            .filter {
+                settings.isCalendarHidden(calendarId: $0.calendarIdentifier)
             }
-        }
     }
 
-    private func loadCalendars() {
+    func loadCalendars() {
+        guard hasCalendarAccess == true else {
+            calendarsById = [:]
+            return
+        }
+
         let calendars = eventStore.calendars(for: .event)
 
-        calendarsById = Dictionary(
-            uniqueKeysWithValues: calendars.map { ($0.calendarIdentifier, $0) }
-        )
+        var calendarsById: [String: EKCalendar] = [:]
+
+        for calendar in calendars {
+            settings.ensureDefaultCalendarIcon(calendar: calendar)
+            calendarsById[calendar.calendarIdentifier] = calendar
+        }
+
+        self.calendarsById = calendarsById
     }
 }

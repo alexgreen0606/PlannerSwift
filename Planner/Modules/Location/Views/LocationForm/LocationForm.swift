@@ -53,6 +53,7 @@ struct LocationFormView: View {
                 if locationSearchService.text.count < 2 {
                     SuggestedLocationsListView(
                         selectedLocation: $selectedLocation,
+                        variant: variant,
                         suggestedLocations: suggestedLocations,
                         homeLocation: settings.homeLocation,
                         sourcePlanner: sourcePlanner
@@ -60,6 +61,7 @@ struct LocationFormView: View {
                 } else {
                     ResultLocationsListView(
                         selectedLocation: $selectedLocation,
+                        variant: variant,
                         homeLocation: settings.homeLocation,
                         sourcePlanner: sourcePlanner
                     )

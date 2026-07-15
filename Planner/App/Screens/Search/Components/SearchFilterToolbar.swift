@@ -12,15 +12,7 @@ struct SearchFilterToolbarView: ToolbarContent {
     @Binding var draftQuery: SearchQuery
     let settings: Settings
 
-    @EnvironmentObject private var calendarStore: CalendarService
-
-    private var sortedCalendars: [EKCalendar] {
-        calendarStore.sortedCalendars.filter {
-            !settings.hiddenCalendarIds.contains(
-                $0.calendarIdentifier
-            )
-        }
-    }
+    @EnvironmentObject private var calendarService: CalendarService
 
     // MARK: - Body
 
@@ -28,7 +20,7 @@ struct SearchFilterToolbarView: ToolbarContent {
         ToolbarItemGroup(placement: .topBarLeading) {
             Menu("", systemImage: "line.3.horizontal.decrease") {
                 timeFrameSection
-                if calendarStore.hasAccess == true {
+                if calendarService.hasCalendarAccess == true {
                     calendarSection
                 }
             }
@@ -67,7 +59,7 @@ struct SearchFilterToolbarView: ToolbarContent {
 
     private var calendarSection: some View {
         Section("Calendars") {
-            ForEach(sortedCalendars, id: \.calendarIdentifier) {
+            ForEach(calendarService.sortedVisibleCalendars, id: \.calendarIdentifier) {
                 calendar in
                 Toggle(
                     isOn: Binding(
