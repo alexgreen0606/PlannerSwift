@@ -87,7 +87,7 @@ extension ModelContext {
             routine.routineEvents = nil
             routine.planners = nil
 
-            safeDelete(routine)
+            delete(routine)
         }
     }
 

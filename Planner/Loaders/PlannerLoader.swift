@@ -41,8 +41,5 @@ struct PlannerLoaderView<Content: View>: View {
                 content(planner)
             }
         }
-        .task {
-            modelContext.ensurePlanner(planners: planners, datestamp: datestamp)
-        }
     }
 }

@@ -67,7 +67,7 @@ extension ModelContext {
 
             folder.items = nil
 
-            safeDelete(folder)
+            delete(folder)
         }
 
         safeSave("ModelContext+ChecklistItem deduplicateRootFolder")

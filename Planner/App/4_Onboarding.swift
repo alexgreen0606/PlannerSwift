@@ -47,6 +47,9 @@ struct OnboardingView: View {
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
+    
+    @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
+        .dark
 
     @AppStorage("lastCleansedMonthstamp") var lastCleansedMonthstamp: String =
         ""
@@ -117,10 +120,12 @@ struct OnboardingView: View {
 
             staggerMainActorInteraction(delay: 1) {
                 // Update the app icon to match the theme settings.
-                syncAppIconWithSettings(
-                    accentColor: accentColor,
-                    systemColorScheme: systemColorScheme
-                )
+                if appColorScheme == .system {
+                    syncAppIconWithSettings(
+                        accentColor: accentColor,
+                        systemColorScheme: systemColorScheme
+                    )
+                }
 
                 // Ensure the root folder exists.
                 modelContext.ensureRootFolder()
@@ -144,10 +149,12 @@ struct OnboardingView: View {
                 calendarService.loadCalendars()
                 plannerService.syncVisiblePlannersCalendar()
 
-                syncAppIconWithSettings(
-                    accentColor: accentColor,
-                    systemColorScheme: systemColorScheme
-                )
+                if appColorScheme == .system {
+                    syncAppIconWithSettings(
+                        accentColor: accentColor,
+                        systemColorScheme: systemColorScheme
+                    )
+                }
             }
         }
 

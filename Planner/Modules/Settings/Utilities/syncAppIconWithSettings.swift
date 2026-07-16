@@ -11,15 +11,15 @@ func syncAppIconWithSettings(
     accentColor: AccentColor,
     systemColorScheme: ColorScheme
 ) {
-    guard UIApplication.shared.supportsAlternateIcons else {
-        return
-    }
-
+    guard
+        UIApplication.shared.supportsAlternateIcons
+    else { return }
+    
     let alernateIconName: String? =
         accentColor == .blue && systemColorScheme == .dark
-        ? nil // Default icon is bluedark.
+        ? nil  // Default icon is bluedark.
         : "\(accentColor)\(systemColorScheme)"
-
+    
     if UIApplication.shared.alternateIconName == alernateIconName {
         return
     }

@@ -63,7 +63,7 @@ struct ListItemToggleView<Item: ListItemDetails>: View {
             return accentColor.swiftUiColor
         }
 
-        return listEngine.isSelectMode ? accentColor.swiftUiColor : customColor
+        return customColor
     }
 
     private var systemImageName: String {

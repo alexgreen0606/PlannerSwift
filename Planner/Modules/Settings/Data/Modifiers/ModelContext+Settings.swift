@@ -56,7 +56,7 @@ extension ModelContext {
             
             settings.homeLocation = nil
 
-            safeDelete(settings)
+            delete(settings)
         }
 
         safeSave("ModelContext+Settings deduplicateSettings")

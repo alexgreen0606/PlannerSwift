@@ -21,12 +21,13 @@ struct SettingsRootView: View {
     @AppStorage("showListDividers") private var showListDividers: Bool =
         true
 
-    @AppStorage("toggleTransitionDuration") private var toggleTransitionDuration: ToggleTransitionDuration =
-        .threeSeconds
+    @AppStorage("toggleTransitionDuration") private
+        var toggleTransitionDuration: ToggleTransitionDuration =
+            .threeSeconds
 
     @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
         KeepPastEventsDuration =
-        .oneMonth
+            .oneMonth
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var systemColorScheme
@@ -38,6 +39,10 @@ struct SettingsRootView: View {
                 !settings.hiddenCalendarIds.contains($0.calendarIdentifier)
             }.count
         )
+    }
+
+    private var appIconKey: String {
+        "\(accentColor)_\(systemColorScheme)"
     }
 
     // MARK: - Body
@@ -77,7 +82,9 @@ struct SettingsRootView: View {
                             numColumns: 3,
                             onTap: { config in
                                 if let selected = AccentColor.allCases.first(
-                                    where: { $0.swiftUiColor == config.primaryColor }
+                                    where: {
+                                        $0.swiftUiColor == config.primaryColor
+                                    }
                                 ) {
                                     accentColor = selected
                                 }
@@ -173,18 +180,9 @@ struct SettingsRootView: View {
             .navigationTitle("Settings")
         }
 
-        // MARK: Update app icon when accent color changes.
+        // MARK: Update app icon when dependencies changes.
 
-        .onChange(of: accentColor) { _, _ in
-            syncAppIconWithSettings(
-                accentColor: accentColor,
-                systemColorScheme: systemColorScheme
-            )
-        }
-
-        // MARK: Update app icon when color scheme changes.
-
-        .onChange(of: systemColorScheme) { _, _ in
+        .onChange(of: appIconKey) { _, _ in
             syncAppIconWithSettings(
                 accentColor: accentColor,
                 systemColorScheme: systemColorScheme

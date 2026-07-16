@@ -11,31 +11,14 @@ import SwiftDate
 import SwiftUI
 
 extension ModelContext {
-    // MARK: - ENSURE / DEDUPLICATION
-
-    @MainActor
-    func ensurePlanner(
-        planners: [Planner],
-        datestamp: String
-    ) {
-        switch planners.count {
-        case 0:
-            _ = createPlanner(for: datestamp)
-
-        case 1:
-            break
-
-        default:
-            deduplicatePlanner(planners: planners)
-        }
-    }
+    // MARK: - DEDUPLICATION
 
     @MainActor
     private func deduplicatePlanner(
         planners: [Planner]
-    ) {
+    ) -> Planner? {
         guard let merged = planners.first else {
-            return
+            return nil
         }
 
         for planner in planners.dropFirst()
@@ -58,21 +41,54 @@ extension ModelContext {
                 trip.planners.safeAppend(merged)
             }
 
-            // Merge routine records.
-            for context in planner.safeRoutineEventRecordContexts {
-                merged.routineEventRecordContexts.safeAppend(context)
+            // Merge routine records. Only carry over variants.
+
+            let variantsToCarryOver = planner.safeRoutineEventRecordContexts
+                .filter(\.isVariant)
+
+            let variantIdsToCarryOver = Set(
+                variantsToCarryOver.compactMap {
+                    $0.routineEvent?.routineEventContext?.stableId
+                }
+            )
+
+            // Remove carried variants from old planner.
+            planner.routineEventRecordContexts?.removeAll { context in
+                guard
+                    let id = context.routineEvent?.routineEventContext?.stableId
+                else {
+                    return false
+                }
+
+                return variantIdsToCarryOver.contains(id)
+            }
+
+            // Delete conflicting variants from merged.
+            for existing in merged.safeRoutineEventRecordContexts {
+                if let id = existing.routineEvent?.routineEventContext?
+                    .stableId,
+                    variantIdsToCarryOver.contains(id)
+                {
+                    delete(existing)
+                }
+            }
+
+            // Move variants to merged.
+            for context in variantsToCarryOver {
                 context.planner = merged
+                merged.routineEventRecordContexts.safeAppend(context)
             }
 
             planner.location = nil
             planner.routine = nil
             planner.trip = nil
-            planner.routineEventRecordContexts = nil
 
-            safeDelete(planner)
+            delete(planner)
         }
 
         safeSave("ModelContext+Planner deduplicatePlanner")
+
+        return merged
     }
 
     // MARK: - CREATE
@@ -82,7 +98,7 @@ extension ModelContext {
         skipSave: Bool = false
     ) -> Planner {
         let routine = getRoutine(for: datestamp.weekday)!
-        
+
         let planner = Planner(
             datestamp: datestamp,
             routine: routine
@@ -131,18 +147,36 @@ extension ModelContext {
                 )
             )
 
-            var allPlanners = existingPlanners
+            // Deduplicate existing planners.
+
+            var allPlanners: [Planner] = []
+
+            let plannersByDatestamp = Dictionary(
+                grouping: existingPlanners,
+                by: \.datestamp
+            )
+
+            for planners in plannersByDatestamp.values {
+                if planners.count > 1 {
+                    if let planner = deduplicatePlanner(planners: planners) {
+                        allPlanners.append(planner)
+                    }
+                } else if let planner = planners.first {
+                    allPlanners.append(planner)
+                }
+            }
 
             // Create new planners that don't exist yet.
 
-            for datestamp in datestamps
-            where !allPlanners.contains(where: { $0.datestamp == datestamp }) {
+            let existingDatestamps = Set(plannersByDatestamp.keys)
+
+            for datestamp in datestamps.subtracting(existingDatestamps) {
                 allPlanners.append(
                     createPlanner(for: datestamp, skipSave: true)
                 )
             }
 
-            // Build a list of data needed to build each planner.
+            // Build a list of data needed to sync each planner.
 
             var contexts: [PlannerSyncContext] = []
 

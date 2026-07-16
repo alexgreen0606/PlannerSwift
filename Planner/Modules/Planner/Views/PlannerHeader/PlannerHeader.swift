@@ -107,5 +107,6 @@ struct PlannerHeaderView: View {
                     .foregroundStyle(Color.secondary)
             }
         }
+        .drawingGroup() // TODO: is this ok at midnight?
     }
 }

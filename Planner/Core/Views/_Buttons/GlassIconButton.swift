@@ -30,6 +30,10 @@ struct GlassIconButtonView: View {
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
+    
+    private var tint: Color {
+        disabled ? Color.tertiary : color ?? accentColor.swiftUiColor
+    }
 
     // MARK: - Body
 
@@ -46,7 +50,8 @@ struct GlassIconButtonView: View {
                 .frame(width: 32, height: 32)
         }
         .buttonBorderShape(.circle)
-        .tint(disabled ? Color.tertiary : color ?? accentColor.swiftUiColor)
+        .foregroundStyle(Color.inverseLabel)
+        .tint(tint)
 
         if prominent {
             button.buttonStyle(.glassProminent)

@@ -60,7 +60,7 @@ struct WelcomeOnboardingView: View {
 
                     feature(
                         title: "Plan Trips",
-                        iconName: "suitcase",
+                        iconName: "airplane",
                         index: 3
                     )
 
@@ -72,6 +72,7 @@ struct WelcomeOnboardingView: View {
                     .font(.system(size: 16, design: .rounded))
                     .foregroundStyle(Color.secondary)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             },
             button: {
                 OnboardingActionButtonView(
