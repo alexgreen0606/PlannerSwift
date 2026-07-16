@@ -63,23 +63,24 @@ struct WelcomeOnboardingView: View {
                         iconName: "airplane",
                         index: 3
                     )
-
-                    Spacer()
-
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            },
+            button: {
+                VStack(alignment: .leading, spacing: 16) {
                     Text(
                         "Just a few quick steps to get everything set up."
                     )
                     .font(.system(size: 16, design: .rounded))
                     .foregroundStyle(Color.secondary)
+                    
+                    OnboardingActionButtonView(
+                        buttonLabel: "Begin",
+                        hideButton: !showButton,
+                        onTap: openNextScreen
+                    )
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-            },
-            button: {
-                OnboardingActionButtonView(
-                    buttonLabel: "Begin",
-                    hideButton: !showButton,
-                    onTap: openNextScreen
-                )
             }
         )
 

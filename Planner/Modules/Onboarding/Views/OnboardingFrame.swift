@@ -15,16 +15,18 @@ struct OnboardingFrameView<Header: View, Content: View, Button: View>: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 16) {
-            header()
-                .padding(.bottom, 32)
-
+        ScrollView {
             content()
-
+                .frame(maxWidth: .infinity)
+                .padding(.top, 32)
+        }
+        .safeAreaInset(edge: .top) {
+            header()
+        }
+        .safeAreaInset(edge: .bottom) {
             button()
         }
-        .frame(maxHeight: .infinity, alignment: .top)
-        .frame(maxWidth: .infinity)
+        .scrollIndicators(.hidden)
         .padding(.horizontal, 32)
     }
 }
