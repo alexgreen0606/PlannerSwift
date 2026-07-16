@@ -74,8 +74,7 @@ struct OnboardingView: View {
     @State private var visitedScreens: Set<OnboardingScreen> = []
 
     private var canSyncPlanners: Bool {
-        calendarService.hasCalendarAccess != nil
-            && calendarService.hasContactsAccess != nil
+        !calendarService.isOnboardingCalendars
             && settings.homeLocation != nil
     }
 

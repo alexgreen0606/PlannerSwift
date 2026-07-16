@@ -41,6 +41,10 @@ final class CalendarService: ObservableObject {
     }
 
     var hasContactsAccess: Bool? {
+        if hasCalendarAccess == false {
+            return false
+        }
+
         let access = CNContactStore.authorizationStatus(for: .contacts)
 
         if access == .notDetermined {
@@ -48,6 +52,10 @@ final class CalendarService: ObservableObject {
         }
 
         return access == .authorized
+    }
+
+    var isOnboardingCalendars: Bool {
+        hasCalendarAccess == nil || hasContactsAccess == nil
     }
 
     var sortedCalendars: [EKCalendar] {

@@ -94,8 +94,7 @@ class PlannerService: ObservableObject {
 
     func search(with query: SearchQuery) {
         guard
-            calendarService.hasCalendarAccess != nil,
-            calendarService.hasContactsAccess != nil
+            !calendarService.isOnboardingCalendars
         else { return }
 
         modelContext.safeSave("PlannerService search")
@@ -188,8 +187,7 @@ class PlannerService: ObservableObject {
         }
 
         guard
-            calendarService.hasCalendarAccess != nil,
-            calendarService.hasContactsAccess != nil
+            !calendarService.isOnboardingCalendars
         else { return }
 
         let locationKey = planner.locationKey

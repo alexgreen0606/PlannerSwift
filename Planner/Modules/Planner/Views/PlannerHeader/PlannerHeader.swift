@@ -101,7 +101,7 @@ struct PlannerHeaderView: View {
                     .foregroundStyle(Color.label)
 
                 Text(subtitle)
-                    .minimumScaleFactor(0.7)
+                    .minimumScaleFactor(0.5)
                     .lineLimit(1)
                     .font(.system(size: 12))
                     .foregroundStyle(Color.secondary)

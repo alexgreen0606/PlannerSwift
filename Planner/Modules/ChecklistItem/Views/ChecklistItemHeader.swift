@@ -18,7 +18,7 @@ struct ChecklistItemHeaderView: ToolbarContent {
 
     private var width: CGFloat {
         if listEngine.isSelectMode {
-            return 40
+            return item.type == .checklist ? 162 : 40
         }
 
         if item.type == .folder {
@@ -41,7 +41,7 @@ struct ChecklistItemHeaderView: ToolbarContent {
 
                 Text(item.title)
                     .lineLimit(2)
-                    .minimumScaleFactor(0.6)
+                    .minimumScaleFactor(0.5)
                     .fixedSize(horizontal: false, vertical: true)
             }
             .font(.system(size: 22, weight: .bold, design: .rounded))

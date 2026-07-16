@@ -104,7 +104,8 @@ extension ModelContext {
         // MARK: - Load In Contacts For Birthdays
 
         Self.contactStore.syncBirthdayContacts(
-            for: birthdayEvents
+            for: birthdayEvents,
+            calendarService: calendarService
         )
     }
 

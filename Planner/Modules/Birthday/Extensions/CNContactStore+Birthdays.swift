@@ -11,8 +11,13 @@ import EventKit
 
 extension CNContactStore {
     func loadContact(
-        for plannerEvent: PlannerEvent
+        for plannerEvent: PlannerEvent,
+        calendarService: CalendarService
     ) -> CNContact? {
+        guard
+            calendarService.hasContactsAccess == true
+        else { return nil }
+
         if let existing = plannerEvent.eKEventContext?.birthdayContact {
             return existing
         }
@@ -31,9 +36,9 @@ extension CNContactStore {
                     CNContactViewController.descriptorForRequiredKeys()
                 ] as [CNKeyDescriptor]
             )
-            
+
             plannerEvent.eKEventContext?.birthdayContact = contact
-            
+
             return contact
         } catch {
             assertionFailure(
@@ -43,11 +48,26 @@ extension CNContactStore {
 
         return nil
     }
-    
+
     func syncBirthdayContacts(
         /// Maps contact IDs to planner events for birthdays.
-        for plannerEventMap: [String: PlannerEvent]
+        for plannerEventMap: [String: PlannerEvent],
+        calendarService: CalendarService
     ) {
+        guard
+            calendarService.hasContactsAccess == true
+        else {
+            if calendarService.hasCalendarAccess == false {
+                // Clear references to contacts data when access is denied.
+                for event in plannerEventMap.values {
+                    event.eKEventContext?.birthdayContact = nil
+                    event.eKEventContext?.birthdayThumbnailData = nil
+                }
+            }
+
+            return
+        }
+
         do {
             let contacts = try unifiedContacts(
                 matching: CNContact.predicateForContacts(

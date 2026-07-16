@@ -53,6 +53,7 @@ struct FolderContentsListView: View {
 
                     ListItemToggleView(
                         item: item,
+                        color: item.color.swiftUIColor,
                         opacity: isSelectMode ? 1 : 0
                     )
                     .frame(

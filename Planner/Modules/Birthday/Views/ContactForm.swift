@@ -13,11 +13,13 @@ struct ContactFormView: UIViewControllerRepresentable {
     let plannerEvent: PlannerEvent
 
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var calendarService: CalendarService
 
     func makeUIViewController(context: Context) -> UINavigationController {
         guard
             let contact = ContactService.shared.store.loadContact(
-                for: plannerEvent
+                for: plannerEvent,
+                calendarService: calendarService
             )
         else {
             // Show empty view in case of load error.
