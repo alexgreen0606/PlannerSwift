@@ -25,7 +25,9 @@ struct OnboardingView: View {
             screens.append(.calendar)
         }
 
-        if CNContactStore.authorizationStatus(for: .contacts) == .notDetermined
+        if
+            CNContactStore.authorizationStatus(for: .contacts) == .notDetermined
+                && EKEventStore.authorizationStatus(for: .event) != .denied
         {
             screens.append(.contacts)
         }

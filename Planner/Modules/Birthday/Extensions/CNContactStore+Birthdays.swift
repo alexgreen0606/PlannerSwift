@@ -54,10 +54,12 @@ extension CNContactStore {
         for plannerEventMap: [String: PlannerEvent],
         calendarService: CalendarService
     ) {
+        let contactsAccess = calendarService.hasContactsAccess
+        
         guard
-            calendarService.hasContactsAccess == true
+            contactsAccess == true
         else {
-            if calendarService.hasCalendarAccess == false {
+            if contactsAccess == false {
                 // Clear references to contacts data when access is denied.
                 for event in plannerEventMap.values {
                     event.eKEventContext?.birthdayContact = nil
