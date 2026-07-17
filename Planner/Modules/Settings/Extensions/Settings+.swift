@@ -17,7 +17,27 @@ extension Settings {
     var homeRegion: Region {
         homeLocation?.region ?? .local
     }
+
+    var toggleTransitionDuration: ToggleTransitionDuration {
+        get {
+            ToggleTransitionDuration(rawValue: toggleTransitionDurationRawValue)
+                ?? .oneSecond
+        }
+        set {
+            toggleTransitionDurationRawValue = newValue.rawValue
+        }
+    }
     
+    var keepPastEventsDuration: KeepPastEventsDuration {
+        get {
+            KeepPastEventsDuration(rawValue: keepPastEventsDurationRawValue)
+            ?? .oneMonth
+        }
+        set {
+            keepPastEventsDurationRawValue = newValue.rawValue
+        }
+    }
+
     var calendarKey: SettingsCalendarKey {
         SettingsCalendarKey(
             hiddenCalendarIds: hiddenCalendarIds,

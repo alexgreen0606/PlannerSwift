@@ -12,23 +12,35 @@ struct ChecklistRootView: View {
     private let checklist: ChecklistItem
     private let sortedItems: [ChecklistItem]
     private let rootFolder: ChecklistItem
+    private let settings: Settings
     private let openItem: (ChecklistItem, ChecklistItem) -> Void
 
     init(
         checklist: ChecklistItem,
         sortedItems: [ChecklistItem],
         rootFolder: ChecklistItem,
+        settings: Settings,
         openItem: @escaping (ChecklistItem, ChecklistItem) -> Void
     ) {
         self.checklist = checklist
         self.sortedItems = sortedItems
         self.rootFolder = rootFolder
+        self.settings = settings
         self.openItem = openItem
 
         canTransferSelectedItems = rootFolder.containsType(
             .checklist,
             excluding: Set([checklist.stableId])
         )
+        
+        self._listEngine = StateObject(
+            wrappedValue: ListEngine<ChecklistItem>(
+            toggleState: ListItemToggleState(
+                isToggled: { $0.isCompleted },
+                setIsToggled: { $0.isCompleted = $1 }
+            ),
+            settings: settings
+        ))
     }
 
     private let canTransferSelectedItems: Bool
@@ -36,12 +48,7 @@ struct ChecklistRootView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @StateObject private var listEngine = ListEngine<ChecklistItem>(
-        toggleState: ListItemToggleState(
-            isToggled: { $0.isCompleted },
-            setIsToggled: { $0.isCompleted = $1 }
-        )
-    )
+    @StateObject private var listEngine: ListEngine<ChecklistItem>
 
     @State private var showEditSheet = false
     @State private var showTransferSheet = false
@@ -84,7 +91,8 @@ struct ChecklistRootView: View {
                         leftAdornment: { _ in EmptyView() },
                         rightAdornment: { _ in EmptyView() },
                         bottomAdornment: { _ in EmptyView() },
-                        scrollProxy: scrollProxy
+                        scrollProxy: scrollProxy,
+                        settings: settings
                     )
                     .safeAreaBar(edge: .bottom) {
                         actionToolbar(scrollProxy: scrollProxy)

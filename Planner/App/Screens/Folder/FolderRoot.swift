@@ -9,15 +9,36 @@ import SwiftData
 import SwiftUI
 
 struct FolderRootView: View {
-    let folder: ChecklistItem
-    let sortedItems: [ChecklistItem]
-    let rootFolder: ChecklistItem
-    let namespace: Namespace.ID
-    let openItem: (ChecklistItem, ChecklistItem) -> Void
+    private let folder: ChecklistItem
+    private let sortedItems: [ChecklistItem]
+    private let rootFolder: ChecklistItem
+    private let namespace: Namespace.ID
+    private let settings: Settings
+    private let openItem: (ChecklistItem, ChecklistItem) -> Void
+
+    init(
+        folder: ChecklistItem,
+        sortedItems: [ChecklistItem],
+        rootFolder: ChecklistItem,
+        namespace: Namespace.ID,
+        settings: Settings,
+        openItem: @escaping (ChecklistItem, ChecklistItem) -> Void
+    ) {
+        self.folder = folder
+        self.sortedItems = sortedItems
+        self.rootFolder = rootFolder
+        self.namespace = namespace
+        self.settings = settings
+        self.openItem = openItem
+
+        self._itemSelectEngine = StateObject(
+            wrappedValue: ListEngine<ChecklistItem>(settings: settings)
+        )
+    }
 
     @Environment(\.dismiss) private var dismiss
 
-    @StateObject private var itemSelectEngine = ListEngine<ChecklistItem>()
+    @StateObject private var itemSelectEngine: ListEngine<ChecklistItem>
 
     @State private var showEditSheet = false
     @State private var showTransferSheet = false

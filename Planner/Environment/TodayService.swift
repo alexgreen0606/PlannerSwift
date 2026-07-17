@@ -12,9 +12,11 @@ import SwiftUI
 
 @MainActor
 final class TodayService: ObservableObject {
+    private let settings: Settings
     private let modelContext: ModelContext
     
-    init(modelContext: ModelContext) {
+    init(settings: Settings, modelContext: ModelContext) {
+        self.settings = settings
         self.modelContext = modelContext
         
         let todaystamp = TodayService.makeTodaystamp()
@@ -37,20 +39,16 @@ final class TodayService: ObservableObject {
 
     private var timer: Timer?
 
-    @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
-        KeepPastEventsDuration =
-            .oneMonth
-
     @Published private(set) var todaystamp: String
     
     @Published private(set) var todayPlanner: Planner
 
     var datePickerBounds: ClosedRange<Date> {
-        keepPastEventsDuration.cutoffDate...maxCalendarDate
+        settings.keepPastEventsDuration.cutoffDate...maxCalendarDate
     }
 
     var multiDatePickerBounds: Range<Date> {
-        keepPastEventsDuration.cutoffDate..<maxCalendarDate
+        settings.keepPastEventsDuration.cutoffDate..<maxCalendarDate
     }
 
     // MARK: - Builder Functions

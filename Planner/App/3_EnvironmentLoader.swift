@@ -20,7 +20,7 @@ struct EnvironmentLoaderView: View {
         self.settings = settings
 
         let calendarService = CalendarService(settings: settings)
-        let todayService = TodayService(modelContext: modelContext)
+        let todayService = TodayService(settings: settings, modelContext: modelContext)
 
         self._plannerService = StateObject(
             wrappedValue: PlannerService(

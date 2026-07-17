@@ -18,17 +18,6 @@ struct SettingsRootView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @AppStorage("showListDividers") private var showListDividers: Bool =
-        true
-
-    @AppStorage("toggleTransitionDuration") private
-        var toggleTransitionDuration: ToggleTransitionDuration =
-            .threeSeconds
-
-    @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
-        KeepPastEventsDuration =
-            .oneMonth
-
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var systemColorScheme
     @EnvironmentObject private var calendarService: CalendarService
@@ -94,19 +83,25 @@ struct SettingsRootView: View {
 
                     // MARK: List Dividers
 
-                    Toggle("Show List Dividers", isOn: $showListDividers)
-                        .tint(accentColor.swiftUiColor)
+                    Toggle(
+                        "Show List Dividers",
+                        isOn: Binding(
+                            get: { settings.showListDividers },
+                            set: { settings.showListDividers = $0 }
+                        )
+                    )
+                    .tint(accentColor.swiftUiColor)
 
                     // MARK: Toggle Transition Duration
 
                     NavigationLink {
-                        ToggleTransitionFormView()
+                        ToggleTransitionFormView(settings: settings)
                     } label: {
                         HStack {
                             Text(ToggleTransitionDuration.title)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             Text(
-                                toggleTransitionDuration.label
+                                settings.toggleTransitionDuration.label
                             )
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
@@ -163,13 +158,13 @@ struct SettingsRootView: View {
                     // MARK: Keep Past Events Duration
 
                     NavigationLink {
-                        KeepPastEventsFormView()
+                        KeepPastEventsFormView(settings: settings)
                     } label: {
                         HStack {
                             Text(KeepPastEventsDuration.title)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             Text(
-                                keepPastEventsDuration.label
+                                settings.keepPastEventsDuration.label
                             )
                             .font(.subheadline)
                             .foregroundStyle(.secondary)

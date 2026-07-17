@@ -57,7 +57,8 @@ struct PlannerContentsListView: View {
             rightAdornment: timeAdornment,
             bottomAdornment: locationAdornment,
             scrollProxy: scrollProxy,
-            namespace: namespace
+            namespace: namespace,
+            settings: settings
         )
     }
 

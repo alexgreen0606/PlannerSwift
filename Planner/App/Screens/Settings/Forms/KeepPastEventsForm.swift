@@ -8,12 +8,10 @@
 import SwiftUI
 
 struct KeepPastEventsFormView: View {
+    let settings: Settings
+    
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
-
-    @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
-        KeepPastEventsDuration =
-        .oneMonth
 
     // MARK: - Body
 
@@ -44,7 +42,7 @@ struct KeepPastEventsFormView: View {
             Text(pastPlansDuration.label)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            if pastPlansDuration == keepPastEventsDuration {
+            if pastPlansDuration == settings.keepPastEventsDuration {
                 Image(systemName: "checkmark")
                     .fontWeight(.semibold)
                     .foregroundStyle(accentColor.swiftUiColor)
@@ -52,7 +50,7 @@ struct KeepPastEventsFormView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            keepPastEventsDuration = pastPlansDuration
+            settings.keepPastEventsDuration = pastPlansDuration
         }
     }
 }

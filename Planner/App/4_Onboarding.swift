@@ -56,10 +56,6 @@ struct OnboardingView: View {
     @AppStorage("lastCleansedMonthstamp") var lastCleansedMonthstamp: String =
         ""
 
-    @AppStorage("keepPastEventsDuration") private var keepPastEventsDuration:
-        KeepPastEventsDuration =
-            .oneMonth
-
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.colorScheme) private var systemColorScheme
@@ -245,9 +241,9 @@ struct OnboardingView: View {
 
         lastCleansedMonthstamp = todayService.todaystamp.monthstamp
 
-        if keepPastEventsDuration != .forever {
+        if settings.keepPastEventsDuration != .forever {
             modelContext.deleteStaleData(
-                cutoffDate: keepPastEventsDuration.cutoffDate
+                cutoffDate: settings.keepPastEventsDuration.cutoffDate
             )
         }
 

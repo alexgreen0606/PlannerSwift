@@ -99,7 +99,7 @@ struct RootTabView: View {
                 }
 
                 Tab("", systemImage: "list.bullet", value: .checklists) {
-                    ChecklistNavigationView()
+                    ChecklistNavigationView(settings: settings)
                 }
 
                 Tab("", systemImage: "gear", value: .settings) {

@@ -25,6 +25,7 @@ struct RowView<
 
     private let showCompleted: Bool
     private let namespace: Namespace.ID?
+    private let settings: Settings
     private let createItem: ((_: Int) -> Void)?
     private let deleteItem: ((_: Item) -> Void)?
     private let onTitleChange: ((_: Item) -> Void)?
@@ -40,6 +41,7 @@ struct RowView<
         bottomAdornment: BottomAdornment,
         showCompleted: Bool,
         namespace: Namespace.ID? = nil,
+        settings: Settings,
         createItem: ((_: Int) -> Void)? = nil,
         deleteItem: ((_: Item) -> Void)? = nil,
         onTitleChange: ((_: Item) -> Void)? = nil
@@ -54,6 +56,7 @@ struct RowView<
         self.bottomAdornment = bottomAdornment
         self.showCompleted = showCompleted
         self.namespace = namespace
+        self.settings = settings
         self.createItem = createItem
         self.deleteItem = deleteItem
         self.onTitleChange = onTitleChange
@@ -160,6 +163,7 @@ struct RowView<
             SeparatorView(
                 showUpperDivider: index == 0,
                 opacity: opacity,
+                settings: settings,
                 onTap: {
                     if listEngine.isSelectMode || toggleOnly {
                         listEngine.toggleItem(item)
@@ -191,6 +195,7 @@ struct RowView<
             SeparatorView(
                 showLowerDivider: true,
                 opacity: opacity,
+                settings: settings,
                 onTap: {
                     if listEngine.isSelectMode || toggleOnly {
                         listEngine.toggleItem(item)

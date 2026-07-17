@@ -11,10 +11,28 @@ import SwiftUI
 
 struct RoutineRootView: View {
     @Binding var routineCoverContext: Weekday?
-    let routine: Routine
-    let sortedRoutineEvents: [RoutineEvent]
-    let weekday: Weekday
-    let settings: Settings
+    private let routine: Routine
+    private let sortedRoutineEvents: [RoutineEvent]
+    private let weekday: Weekday
+    private let settings: Settings
+
+    init(
+        routineCoverContext: Binding<Weekday?>,
+        routine: Routine,
+        sortedRoutineEvents: [RoutineEvent],
+        weekday: Weekday,
+        settings: Settings
+    ) {
+        self._routineCoverContext = routineCoverContext
+        self.routine = routine
+        self.sortedRoutineEvents = sortedRoutineEvents
+        self.weekday = weekday
+        self.settings = settings
+
+        self._routineEngine = StateObject(
+            wrappedValue: ListEngine<RoutineEventContext>(settings: settings)
+        )
+    }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
@@ -25,7 +43,7 @@ struct RoutineRootView: View {
     @EnvironmentObject private var plannerService: PlannerService
     @EnvironmentObject private var todayService: TodayService
 
-    @StateObject private var routineEngine = ListEngine<RoutineEventContext>()
+    @StateObject private var routineEngine: ListEngine<RoutineEventContext>
 
     @State private var showTransferSheet = false
     @State private var routineEventSheetContext: RoutineEventSheetContext? = nil
@@ -33,7 +51,7 @@ struct RoutineRootView: View {
     @State private var invalidatedEventIds: Set<UUID> = []
 
     @Namespace private var namespace
-    
+
     private var sortedRoutineEventContexts: [RoutineEventContext] {
         sortedRoutineEvents.compactMap(\.routineEventContext)
     }
@@ -57,7 +75,8 @@ struct RoutineRootView: View {
                         rightAdornment: timeAdornment,
                         bottomAdornment: weekdaysAdornment,
                         scrollProxy: scrollProxy,
-                        namespace: namespace
+                        namespace: namespace,
+                        settings: settings
                     )
                     .safeAreaBar(edge: .bottom) {
                         actionToolbar(scrollProxy: scrollProxy)

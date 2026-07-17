@@ -11,9 +11,11 @@ import SwiftUI
 @MainActor
 final class ListEngine<Item: ListItemDetails>: ObservableObject {
     private let toggleState: ListItemToggleState<Item>?
+    private let settings: Settings
 
-    init(toggleState: ListItemToggleState<Item>? = nil) {
+    init(toggleState: ListItemToggleState<Item>? = nil, settings: Settings) {
         self.toggleState = toggleState
+        self.settings = settings
     }
 
     deinit {
@@ -22,10 +24,6 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
 
     private let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
     private var toggleTransitionTask: Task<Void, Never>?
-
-    @AppStorage("toggleTransitionDuration") private
-        var toggleTransitionDuration: ToggleTransitionDuration =
-            .threeSeconds
 
     @Published var focusedId: UUID? = nil
     @Published var pendingFocusId: UUID? = nil
@@ -122,7 +120,7 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
             focusedId = nil
         }
 
-        if toggleTransitionDuration != .instant {
+        if settings.toggleTransitionDuration != .instant {
             if toggleState.isToggled(item) {
                 if !newlyCompletedIds.contains(item.stableId) {
                     newlyPendingIds.insert(item.stableId)
@@ -159,13 +157,13 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
                 try await Task.sleep(for: .milliseconds(500))
 
                 withAnimation(
-                    .linear(duration: toggleTransitionDuration.seconds)
+                    .linear(duration: settings.toggleTransitionDuration.seconds)
                 ) {
                     self.fadingOpacity = 0
                 }
 
                 // Move items to their new list (user-defined delay).
-                try await Task.sleep(for: toggleTransitionDuration.duration)
+                try await Task.sleep(for: settings.toggleTransitionDuration.duration)
 
                 withAnimation {
                     self.newlyCompletedIds = []

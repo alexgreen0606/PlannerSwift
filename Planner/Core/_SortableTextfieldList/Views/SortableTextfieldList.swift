@@ -39,6 +39,7 @@ struct SortableTextfieldListView<
 
     private let scrollProxy: ScrollViewProxy
     private let namespace: Namespace.ID?
+    private let settings: Settings
 
     init(
         sortedItems: [Item],
@@ -59,7 +60,8 @@ struct SortableTextfieldListView<
         @ViewBuilder rightAdornment: @escaping (_: Item) -> RightAdornment,
         @ViewBuilder bottomAdornment: @escaping (_: Item) -> BottomAdornment,
         scrollProxy: ScrollViewProxy,
-        namespace: Namespace.ID? = nil
+        namespace: Namespace.ID? = nil,
+        settings: Settings
     ) {
         self.sortedItems = sortedItems
         self.itemsLabel = itemsLabel
@@ -80,6 +82,7 @@ struct SortableTextfieldListView<
         self.bottomAdornment = bottomAdornment
         self.scrollProxy = scrollProxy
         self.namespace = namespace
+        self.settings = settings
     }
 
     @Environment(\.scenePhase) private var appPhase
@@ -148,7 +151,7 @@ struct SortableTextfieldListView<
 
     private var pendingList: some View {
         Section {
-            SeparatorView {
+            SeparatorView(settings: settings) {
                 attemptCreateItem(at: 0)
             }
             .listRowInsets(EdgeInsets())
@@ -168,6 +171,7 @@ struct SortableTextfieldListView<
                     bottomAdornment: bottomAdornment(item),
                     showCompleted: showCompleted,
                     namespace: namespace,
+                    settings: settings,
                     createItem: attemptCreateItem,
                     deleteItem: deleteItem,
                     onTitleChange: handleTitleChange
@@ -176,7 +180,7 @@ struct SortableTextfieldListView<
             }
             .onMove(perform: handleRowMove)
 
-            SeparatorView {
+            SeparatorView(settings: settings) {
                 attemptCreateItem(at: sortedPendingItems.count)
             }
             .id(ListIds.PENDING_ITEMS)
@@ -212,7 +216,8 @@ struct SortableTextfieldListView<
                         leftAdornment: leftAdornment(item),
                         rightAdornment: rightAdornment(item),
                         bottomAdornment: bottomAdornment(item),
-                        showCompleted: showCompleted
+                        showCompleted: showCompleted,
+                        settings: settings
                     )
                 }
 

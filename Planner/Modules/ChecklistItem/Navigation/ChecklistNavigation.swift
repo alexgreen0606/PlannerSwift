@@ -9,6 +9,8 @@ import SwiftData
 import SwiftUI
 
 struct ChecklistNavigationView: View {
+    let settings: Settings
+    
     /// Only one item should exist without a parent.
     @Query(
         filter: ChecklistItem.rootFolders
@@ -39,6 +41,7 @@ struct ChecklistNavigationView: View {
                             sortedItems: context.sortedItems,
                             rootFolder: rootFolder,
                             namespace: namespace,
+                            settings: settings,
                             openItem: openItem
                         )
                     }
@@ -54,6 +57,7 @@ struct ChecklistNavigationView: View {
                                     sortedItems: context.sortedItems,
                                     rootFolder: rootFolder,
                                     namespace: namespace,
+                                    settings: settings,
                                     openItem: openItem
                                 )
                             }
@@ -71,6 +75,7 @@ struct ChecklistNavigationView: View {
                             checklist: context.item,
                             sortedItems: context.sortedItems,
                             rootFolder: rootFolder,
+                            settings: settings,
                             openItem: openItem
                         )
                     }

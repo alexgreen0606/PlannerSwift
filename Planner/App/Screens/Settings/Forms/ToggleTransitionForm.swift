@@ -8,11 +8,10 @@
 import SwiftUI
 
 struct ToggleTransitionFormView: View {
+    let settings: Settings
+    
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
-
-    @AppStorage("toggleTransitionDuration") private var toggleTransitionDuration: ToggleTransitionDuration =
-        .threeSeconds
 
     // MARK: - Body
 
@@ -43,7 +42,7 @@ struct ToggleTransitionFormView: View {
             Text(transitionDuration.label)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            if transitionDuration == toggleTransitionDuration {
+            if transitionDuration == settings.toggleTransitionDuration {
                 Image(systemName: "checkmark")
                     .fontWeight(.semibold)
                     .foregroundStyle(accentColor.swiftUiColor)
@@ -51,7 +50,7 @@ struct ToggleTransitionFormView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            toggleTransitionDuration = transitionDuration
+            settings.toggleTransitionDuration = transitionDuration
         }
     }
 }

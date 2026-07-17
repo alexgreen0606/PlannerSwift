@@ -11,11 +11,35 @@ import SwiftDate
 import SwiftUI
 
 struct PlannerRootView: View {
-    let planner: Planner
-    let sortedPlannerEvents: [PlannerEvent]
-    let sortedEventChips: [PlannerEvent]
-    let sortedBirthdayChips: [PlannerEvent]
-    let settings: Settings
+    private let planner: Planner
+    private let sortedPlannerEvents: [PlannerEvent]
+    private let sortedEventChips: [PlannerEvent]
+    private let sortedBirthdayChips: [PlannerEvent]
+    private let settings: Settings
+
+    init(
+        planner: Planner,
+        sortedPlannerEvents: [PlannerEvent],
+        sortedEventChips: [PlannerEvent],
+        sortedBirthdayChips: [PlannerEvent],
+        settings: Settings
+    ) {
+        self.planner = planner
+        self.sortedPlannerEvents = sortedPlannerEvents
+        self.sortedEventChips = sortedEventChips
+        self.sortedBirthdayChips = sortedBirthdayChips
+        self.settings = settings
+
+        self._plannerEngine = StateObject(
+            wrappedValue: ListEngine<PlannerEvent>(
+                toggleState: ListItemToggleState(
+                    isToggled: { $0.isCompleted },
+                    setIsToggled: { $0.isCompleted = $1 }
+                ),
+                settings: settings
+            )
+        )
+    }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
@@ -27,12 +51,7 @@ struct PlannerRootView: View {
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
-    @StateObject private var plannerEngine = ListEngine<PlannerEvent>(
-        toggleState: ListItemToggleState(
-            isToggled: { $0.isCompleted },
-            setIsToggled: { $0.isCompleted = $1 }
-        )
-    )
+    @StateObject private var plannerEngine: ListEngine<PlannerEvent>
 
     @State private var eventSheetContext: PlannerEventSheetContext?
     @State private var showTransferSheet = false
@@ -140,7 +159,9 @@ struct PlannerRootView: View {
 
             .sheet(item: $eventSheetContext) { context in
                 Group {
-                    if context.plannerEvent.eKEventContext?.calendarAllowsContentModifications == false {
+                    if context.plannerEvent.eKEventContext?
+                        .calendarAllowsContentModifications == false
+                    {
                         ViewCalendarEventFormView(
                             plannerEvent: context.plannerEvent,
                             ekEventStore: calendarService.ekEventStore
