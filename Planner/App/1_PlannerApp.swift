@@ -10,41 +10,26 @@ import SwiftUI
 
 @main
 struct PlannerApp: App {
-    init() {
-        let locationService = LocationService()
-
-        _locationService = StateObject(
-            wrappedValue: locationService
-        )
-
-        _weatherCacheService = StateObject(
-            wrappedValue: WeatherCacheService(
-                locationService: locationService
-            )
-        )
-    }
-
-    @StateObject private var weatherCacheService: WeatherCacheService
-    @StateObject private var locationService: LocationService
 
     private let modelContainer: ModelContainer = {
         let schema = Schema([
             Settings.self,
-            
+
             Location.self,
-            
+
             Trip.self,
-            
+
             Planner.self,
             PlannerEvent.self,
             EKEventContext.self,
             RoutineEventRecordContext.self,
-            
+            PlannerWeather.self,
+
             ChecklistItem.self,
-            
+
             Routine.self,
             RoutineEvent.self,
-            RoutineEventContext.self
+            RoutineEventContext.self,
         ])
 
         let configuration = ModelConfiguration(
@@ -61,14 +46,16 @@ struct PlannerApp: App {
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
         .dark
 
+    @StateObject private var locationService = LocationService()
     @StateObject private var plannerCoverStore = PlannerCoverStore()
     @StateObject private var locationSearchService = LocationSearchService()
+
+    // MARK: - Body
 
     var body: some Scene {
         WindowGroup {
             DataLoaderView()
                 .preferredColorScheme(appColorScheme.colorScheme)
-                .environmentObject(weatherCacheService)
                 .environmentObject(locationService)
                 .environmentObject(plannerCoverStore)
                 .environmentObject(locationSearchService)

@@ -53,7 +53,7 @@ extension ModelContext {
                 merged.homeLocation = location
                 location.settings = merged
             }
-            
+
             settings.homeLocation = nil
 
             delete(settings)
@@ -67,10 +67,13 @@ extension ModelContext {
     @MainActor
     func updateHomeLocation(
         in settings: Settings,
-        to location: Location?
+        to location: Location?,
+        plannerService: PlannerService
     ) {
         settings.homeLocation = location
         safeSave("ModelContext+Settings updateHomeLocation")
+
+        plannerService.syncVisiblePlanners()
     }
 
     @MainActor
@@ -89,7 +92,8 @@ extension ModelContext {
     @MainActor
     func toggleCalendarVisibility(
         in settings: Settings,
-        for calendar: EKCalendar
+        for calendar: EKCalendar,
+        plannerService: PlannerService
     ) {
         if settings.hiddenCalendarIds.contains(
             calendar.calendarIdentifier
@@ -104,5 +108,7 @@ extension ModelContext {
         }
 
         safeSave("ModelContext+Settings toggleCalendarVisibility")
+        
+        plannerService.refreshCalendar()
     }
 }

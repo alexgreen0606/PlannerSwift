@@ -33,38 +33,12 @@ struct WeatherPreviewView: View {
         .blue
 
     @Environment(\.colorScheme) private var systemColorScheme
-    @EnvironmentObject private var weatherCacheService: WeatherCacheService
     @EnvironmentObject private var locationService: LocationService
-
-    private var weatherData: DayWeather? {
-        let startOfDay = planner.startOfDay(settings: settings)
-        let plannerLocation = planner.location(
-            settings: settings,
-            deviceLocation: locationService.deviceLocation
-        )
-
-        return weatherCacheService.weather(
-            for: startOfDay,
-            at: plannerLocation
-        )
-    }
 
     private var locationLabel: String {
         planner.locationLabel(
             settings: settings,
             deviceLocation: locationService.deviceLocation
-        )
-    }
-
-    /// Only display the location icon when weather data doesn't exist.
-    private var locationIconConfig: IconConfig? {
-        guard weatherData == nil else {
-            return nil
-        }
-
-        return planner.locationIconConfig(
-            settings: settings,
-            accentColor: accentColor
         )
     }
 
@@ -79,32 +53,55 @@ struct WeatherPreviewView: View {
     // MARK: - Body
 
     var body: some View {
-        HStack {
-            if startAdorned, let weatherData {
-                weatherIcon(systemImageName: weatherData.symbolName)
-            }
-
-            VStack(alignment: startAdorned ? .leading : .trailing, spacing: 0) {
-                if let weatherData {
-                    TemperatureView(weatherData: weatherData)
+        PlannerWeatherLoaderView(
+            planner: planner,
+            settings: settings
+        ) { plannerWeather in
+            HStack {
+                if startAdorned, let plannerWeather {
+                    weatherIcon(systemImageName: plannerWeather.symbolName)
                 }
-
-                if showLocationLabel {
-                    AdornedValue(
-                        locationLabel,
-                        iconConfig: locationIconConfig,
-                        color: Color.secondary,
-                        scale: 0.7
-                    )
+                
+                VStack(
+                    alignment: startAdorned ? .leading : .trailing,
+                    spacing: 0
+                ) {
+                    if let plannerWeather {
+                        TemperatureView(plannerWeather: plannerWeather)
+                    }
+                    
+                    if showLocationLabel {
+                        AdornedValue(
+                            locationLabel,
+                            iconConfig: locationIconConfig(
+                                hasWeather: plannerWeather != nil
+                            ),
+                            color: Color.secondary,
+                            scale: 0.7
+                        )
+                    }
+                }
+                
+                if !startAdorned, let plannerWeather {
+                    weatherIcon(systemImageName: plannerWeather.symbolName)
                 }
             }
-
-            if !startAdorned, let weatherData {
-                weatherIcon(systemImageName: weatherData.symbolName)
-            }
+            .frame(height: 30)
         }
-        .animateLazyAction(from: weatherData)
-        .frame(height: 30)
+    }
+    
+    // MARK: - Conditional Var
+    
+    /// Only display the location icon when weather doesn't exist.
+    private func locationIconConfig(hasWeather: Bool) -> IconConfig? {
+        guard !hasWeather else {
+            return nil
+        }
+
+        return planner.locationIconConfig(
+            settings: settings,
+            accentColor: accentColor
+        )
     }
 
     // MARK: - View Builders

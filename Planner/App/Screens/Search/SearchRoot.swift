@@ -32,11 +32,12 @@ struct SearchRootView: View {
             )
         )
     }
+    
+    @AppStorage("lastRefresh") private var lastRefresh: Double = 0
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var todayService: TodayService
-    @EnvironmentObject private var weatherCacheService: WeatherCacheService
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var plannerService: PlannerService
 
@@ -105,7 +106,7 @@ struct SearchRootView: View {
                     }
                     .listStyle(.plain)
                     .refreshable {
-                        weatherCacheService.beginReload()
+                        lastRefresh = Date.now.timeIntervalSince1970
                         calendarService.loadCalendars()
                         locationService.loadDeviceLocation()
                         plannerService.refresh()

@@ -25,9 +25,8 @@ struct OnboardingView: View {
             screens.append(.calendar)
         }
 
-        if
-            CNContactStore.authorizationStatus(for: .contacts) == .notDetermined
-                && EKEventStore.authorizationStatus(for: .event) != .denied
+        if CNContactStore.authorizationStatus(for: .contacts) == .notDetermined
+            && EKEventStore.authorizationStatus(for: .event) != .denied
         {
             screens.append(.contacts)
         }
@@ -49,7 +48,7 @@ struct OnboardingView: View {
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
-    
+
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
         .dark
 
@@ -111,11 +110,11 @@ struct OnboardingView: View {
         // MARK: App Setup
 
         .task {
-            // Build the initial planners in the UI.
-            calendarService.loadCalendars()
-            plannerService.refresh()
-
             staggerMainActorInteraction(delay: 1) {
+                // Build the initial planners in the UI.
+                calendarService.loadCalendars()
+                plannerService.refresh()
+
                 // Update the app icon to match the theme settings.
                 if appColorScheme == .system {
                     syncAppIconWithSettings(
@@ -126,15 +125,11 @@ struct OnboardingView: View {
 
                 // Ensure the root folder exists.
                 modelContext.ensureRootFolder()
-            }
 
-            // Initialize results for the search page.
-            staggerMainActorInteraction(delay: 2) {
+                // Initialize results for the search page.
                 plannerService.search()
-            }
 
-            // Clean stale storage data.
-            staggerMainActorInteraction(delay: 3) {
+                // Clean stale storage data.
                 cleanseStorage()
             }
         }
@@ -144,7 +139,7 @@ struct OnboardingView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 calendarService.loadCalendars()
-                plannerService.syncVisiblePlannersCalendar()
+                plannerService.refreshCalendar()
 
                 if appColorScheme == .system {
                     syncAppIconWithSettings(
@@ -153,13 +148,6 @@ struct OnboardingView: View {
                     )
                 }
             }
-        }
-
-        // MARK: Refresh calendar data when related settings change.
-
-        .onChange(of: settings.calendarKey) { _, _ in
-            calendarService.loadCalendars()
-            plannerService.syncVisiblePlannersCalendar()
         }
 
         // MARK: Refresh calendars when calendar access changes.

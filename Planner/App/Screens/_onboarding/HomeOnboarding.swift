@@ -22,6 +22,7 @@ struct HomeOnboardingView: View {
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var locationService: LocationService
+    @EnvironmentObject private var plannerService: PlannerService
 
     @State private var showLocationSheet: Bool = false
 
@@ -106,7 +107,11 @@ struct HomeOnboardingView: View {
             return
         }
 
-        modelContext.updateHomeLocation(in: settings, to: homeLocation)
+        modelContext.updateHomeLocation(
+            in: settings,
+            to: homeLocation,
+            plannerService: plannerService
+        )
         openNextScreen()
     }
 }

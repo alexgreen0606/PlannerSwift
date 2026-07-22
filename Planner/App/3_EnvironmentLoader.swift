@@ -27,6 +27,7 @@ struct EnvironmentLoaderView: View {
                 modelContext: modelContext,
                 calendarService: calendarService,
                 todayService: todayService,
+                locationService: locationService,
                 plannerCoverStore: plannerCoverStore,
                 settings: settings
             )

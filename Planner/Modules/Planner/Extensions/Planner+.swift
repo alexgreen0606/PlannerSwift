@@ -28,7 +28,7 @@ extension Planner {
 
     // MARK: - Location Variables
 
-    var locationKey: String {
+    var timeZoneDateId: String {
         let timeZoneKey = location?.timeZoneIdentifier ?? "HOME_LOCATION"
         return "\(datestamp)-\(timeZoneKey)"
     }

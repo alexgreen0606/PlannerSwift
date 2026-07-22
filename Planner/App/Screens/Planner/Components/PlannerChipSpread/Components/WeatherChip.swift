@@ -9,7 +9,8 @@ import SwiftUI
 import WeatherKit
 
 struct WeatherChipView: View {
-    let weatherData: DayWeather
+    let planner: Planner
+    let settings: Settings
 
     private let ICON_SIZE: CGFloat = 17
 
@@ -17,6 +18,7 @@ struct WeatherChipView: View {
         .dark
 
     @Environment(\.colorScheme) private var systemColorScheme
+    @EnvironmentObject private var locationService: LocationService
 
     private var isDarkMode: Bool {
         switch appColorScheme {
@@ -29,23 +31,33 @@ struct WeatherChipView: View {
     // MARK: - Body
 
     var body: some View {
-        HStack(spacing: 8) {
-            HStack(spacing: 4) {
-                Image(systemName: weatherData.symbolName)
-                    .resizable()
-                    .scaledToFit()
-                    .symbolVariant(isDarkMode ? .fill : .none)
-                    .symbolRenderingMode(
-                        isDarkMode ? .multicolor : .monochrome
-                    )
-                    .frame(width: ICON_SIZE, height: ICON_SIZE)
+        PlannerWeatherLoaderView(
+            planner: planner,
+            settings: settings
+        ) { plannerWeather in
+            if let plannerWeather {
+                HStack(spacing: 8) {
+                    HStack(spacing: 4) {
+                        Image(systemName: plannerWeather.symbolName)
+                            .resizable()
+                            .scaledToFit()
+                            .symbolVariant(isDarkMode ? .fill : .none)
+                            .symbolRenderingMode(
+                                isDarkMode ? .multicolor : .monochrome
+                            )
+                            .frame(width: ICON_SIZE, height: ICON_SIZE)
 
-                Value(weatherData.condition.description)
+                        Value(plannerWeather.condition)
+                    }
+
+                    TemperatureView(plannerWeather: plannerWeather)
+                }
+                .glassChip(
+                    height: PlannerLayout.CHIP_HEIGHT,
+                    onTap: openWeatherApp
+                )
             }
-
-            TemperatureView(weatherData: weatherData)
         }
-        .glassChip(height: PlannerLayout.CHIP_HEIGHT, onTap: openWeatherApp)
     }
 
     // MARK: - Functions

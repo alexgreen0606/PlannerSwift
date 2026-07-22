@@ -18,9 +18,10 @@ struct DashboardRootView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
+    @AppStorage("lastRefresh") private var lastRefresh: Double = 0
+
     @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var todayService: TodayService
-    @EnvironmentObject private var weatherCacheService: WeatherCacheService
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
     @EnvironmentObject private var plannerService: PlannerService
@@ -69,7 +70,7 @@ struct DashboardRootView: View {
                     }
                     .listStyle(.plain)
                     .refreshable {
-                        weatherCacheService.beginReload()
+                        lastRefresh = Date.now.timeIntervalSince1970
                         calendarService.loadCalendars()
                         locationService.loadDeviceLocation()
                         plannerService.refresh()

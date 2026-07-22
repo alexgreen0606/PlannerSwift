@@ -21,6 +21,8 @@ struct LocationChipView: View {
         .blue
 
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var plannerService: PlannerService
+    @EnvironmentObject private var locationService: LocationService
 
     private var locationIconConfig: IconConfig {
         planner.locationIconConfig(
@@ -57,12 +59,11 @@ struct LocationChipView: View {
                 sourcePlanner: planner,
                 settings: settings,
                 saveSelection: { location in
-                    withAnimation {
-                        modelContext.updatePlannerLocation(
-                            for: planner,
-                            to: location
-                        )
-                    }
+                    modelContext.updatePlannerLocation(
+                        for: planner,
+                        to: location,
+                        plannerService: plannerService
+                    )
                 }
             )
             .navigationTransition(

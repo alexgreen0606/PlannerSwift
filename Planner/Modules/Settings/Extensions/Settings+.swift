@@ -38,13 +38,6 @@ extension Settings {
         }
     }
 
-    var calendarKey: SettingsCalendarKey {
-        SettingsCalendarKey(
-            hiddenCalendarIds: hiddenCalendarIds,
-            timeZoneIdentifier: homeLocation?.timeZoneIdentifier
-        )
-    }
-
     func homeLocationLabel(deviceLocation: Location?) -> String {
         homeLocation(deviceLocation: deviceLocation)?.name ?? "Current Location"
     }

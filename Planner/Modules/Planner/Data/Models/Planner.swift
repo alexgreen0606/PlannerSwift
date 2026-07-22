@@ -18,25 +18,28 @@ class Planner {
     /// When nil, it inherits from trip.
     /// If trip is nil, defaults to false.
     var excludeRoutine: Bool?
-    
+
     // MARK: Sibling
     var location: Location?
-    
+
     // MARK: Sibling
     var routine: Routine?
-    
+
     // MARK: Sibling
     var trip: Trip?
 
     // MARK: Children
-    @Relationship(deleteRule: .cascade, inverse: \RoutineEventRecordContext.planner)
+    @Relationship(
+        deleteRule: .cascade,
+        inverse: \RoutineEventRecordContext.planner
+    )
     var routineEventRecordContexts: [RoutineEventRecordContext]?
 
     init(datestamp: String, routine: Routine, location: Location? = nil) {
         self.datestamp = datestamp
         self.routine = routine
         self.location = location
-        
+
         routine.planners.safeAppend(self)
     }
 }

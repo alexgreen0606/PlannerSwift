@@ -21,6 +21,7 @@ struct SettingsRootView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var systemColorScheme
     @EnvironmentObject private var calendarService: CalendarService
+    @EnvironmentObject private var plannerService: PlannerService
 
     private var activeCalendarCount: String {
         String(
@@ -120,7 +121,8 @@ struct SettingsRootView: View {
                             saveSelection: {
                                 modelContext.updateHomeLocation(
                                     in: settings,
-                                    to: $0
+                                    to: $0,
+                                    plannerService: plannerService
                                 )
                             }
                         )

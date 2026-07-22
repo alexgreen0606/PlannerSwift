@@ -27,11 +27,6 @@ struct PlannerChipSpreadView: View {
 
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var calendarService: CalendarService
-    @EnvironmentObject private var weatherCacheService: WeatherCacheService
-
-    private var weatherData: DayWeather? {
-        weatherCacheService.weather(for: startOfDay, at: plannerLocation)
-    }
 
     private var locationLabel: String {
         planner.locationLabel(
@@ -61,7 +56,6 @@ struct PlannerChipSpreadView: View {
                 content: eventChip
             )
         }
-        .animateLazyAction(from: weatherData)
         .animateLazyAction(
             from: sortedEventChips.map(\.title)
         )
@@ -81,9 +75,10 @@ struct PlannerChipSpreadView: View {
 
     @ViewBuilder
     private var weatherChip: some View {
-        if let weatherData {
-            WeatherChipView(weatherData: weatherData)
-        }
+        WeatherChipView(
+            planner: planner,
+            settings: settings
+        )
     }
 
     @ViewBuilder

@@ -79,6 +79,7 @@ extension ModelContext {
                 merged.routineEventRecordContexts.safeAppend(context)
             }
 
+            // TODO: dont i not want to nillify these if i didn't carry over
             planner.location = nil
             planner.routine = nil
             planner.trip = nil
@@ -132,12 +133,10 @@ extension ModelContext {
         }
     }
 
-    /// Gathers all data needed to eager-build a list of planners.
     @MainActor
-    func getBulkPlannerSyncContexts(
-        for datestamps: Set<String>,
-        settings: Settings
-    ) -> [PlannerSyncContext] {
+    func getBulkPlanners(
+        for datestamps: Set<String>
+    ) -> [Planner] {
         do {
             // Load in planners that already exist in storage.
 
@@ -176,20 +175,8 @@ extension ModelContext {
                 )
             }
 
-            // Build a list of data needed to sync each planner.
+            return allPlanners
 
-            var contexts: [PlannerSyncContext] = []
-
-            for planner in allPlanners {
-                contexts.append(
-                    PlannerSyncContext(
-                        planner: planner,
-                        startOfDay: planner.startOfDay(settings: settings)
-                    )
-                )
-            }
-
-            return contexts
         } catch {
             return []
         }
@@ -261,10 +248,15 @@ extension ModelContext {
     @MainActor
     func updatePlannerLocation(
         for planner: Planner,
-        to newLocation: Location?
+        to newLocation: Location?,
+        plannerService: PlannerService
     ) {
         planner.location = newLocation
         safeSave("ModelContext+Planner updatePlannerLocation")
+
+        /// Freshness is based on location and date for weather and calendar.
+        /// No need to invalidate anything.
+        plannerService.syncPlanner(planner)
     }
 
     @MainActor
@@ -284,7 +276,7 @@ extension ModelContext {
         safeSave("ModelContext+Planner togglePlannerRoutineExclusion")
 
         // Sync the planner's routine.
-        plannerService.syncPlannerRoutine(
+        plannerService.refreshPlannerRoutine(
             planner: planner
         )
     }

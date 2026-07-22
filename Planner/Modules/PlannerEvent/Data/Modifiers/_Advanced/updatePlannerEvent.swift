@@ -76,7 +76,7 @@ extension ModelContext {
         // MARK: Re-sync calendar events if this event was recurring.
         if eventWasRecurring {
             DispatchQueue.main.async(
-                execute: plannerService.syncVisiblePlannersCalendar
+                execute: plannerService.refreshCalendar
             )
         }
 

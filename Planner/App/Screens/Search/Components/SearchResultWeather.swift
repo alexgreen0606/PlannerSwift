@@ -14,7 +14,6 @@ struct SearchResultWeatherView: View {
     let planner: Planner
     let settings: Settings
 
-    @EnvironmentObject private var weatherCacheService: WeatherCacheService
     @EnvironmentObject private var locationService: LocationService
 
     private var isFiltering: Bool {

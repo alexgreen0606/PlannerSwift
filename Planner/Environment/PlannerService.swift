@@ -11,12 +11,14 @@ import Fuse
 import SwiftData
 import SwiftDate
 import SwiftUI
+import WeatherKit
 
 @MainActor
 class PlannerService: ObservableObject {
     private let modelContext: ModelContext
     private let calendarService: CalendarService
     private let todayService: TodayService
+    private let locationService: LocationService
     private let plannerCoverStore: PlannerCoverStore
     private let settings: Settings
 
@@ -24,12 +26,14 @@ class PlannerService: ObservableObject {
         modelContext: ModelContext,
         calendarService: CalendarService,
         todayService: TodayService,
+        locationService: LocationService,
         plannerCoverStore: PlannerCoverStore,
         settings: Settings
     ) {
         self.modelContext = modelContext
         self.calendarService = calendarService
         self.todayService = todayService
+        self.locationService = locationService
         self.plannerCoverStore = plannerCoverStore
         self.settings = settings
 
@@ -45,13 +49,19 @@ class PlannerService: ObservableObject {
         )
     }
 
-    private var searchService: SearchService
+    private let searchService: SearchService
+    private let weatherService = WeatherService()
+
+    @AppStorage("lastRefresh") private var lastRefresh: Double = 0
 
     /// Planner location keys that have synced with the calendar.
-    private var freshCalendarLocationKeys: Set<String> = []
+    private var freshCalendarTimeZoneDateIds: Set<String> = []
 
     /// Panner datestamps that have synced with their routine.
     private var freshRoutineDatestamps: Set<String> = []
+
+    /// Weather coordinate IDs that have synced with WeatherKit.
+    private var freshWeatherCoordinateIds: Set<String> = []
 
     /// Bypasses the "don't sync routines of past planners" rule.
     private var forceSyncRoutineDatestamps: Set<String> = []
@@ -111,16 +121,12 @@ class PlannerService: ObservableObject {
 
             // Sync the result planners.
 
-            let syncContexts = modelContext.getBulkPlannerSyncContexts(
-                for: Set(datestampMap.values.flatMap { $0 }),
-                settings: settings
+            let planners = modelContext.getBulkPlanners(
+                for: Set(datestampMap.values.flatMap { $0 })
             )
 
-            for syncContext in syncContexts {
-                syncPlanner(
-                    syncContext.planner,
-                    startOfDay: syncContext.startOfDay
-                )
+            for planner in planners {
+                syncPlanner(planner)
             }
 
             // Return results so the UI can display them.
@@ -151,21 +157,15 @@ class PlannerService: ObservableObject {
 
     func syncPlanner(datestamp: String) {
         let planner = modelContext.getPlanner(for: datestamp)
-        let startOfDay = planner.startOfDay(settings: settings)
-        syncPlanner(
-            planner,
-            startOfDay: startOfDay
-        )
+        syncPlanner(planner)
     }
 
-    func syncPlanner(
-        _ planner: Planner,
-        startOfDay: DateInRegion
-    ) {
+    func syncPlanner(_ planner: Planner) {
         guard settings.homeLocation != nil
         else { return }
-        
+
         let datestamp = planner.datestamp
+        let startOfDay = planner.startOfDay(settings: settings)
 
         // Sync routine.
         if !freshRoutineDatestamps.contains(
@@ -186,15 +186,41 @@ class PlannerService: ObservableObject {
             forceSyncRoutineDatestamps.remove(datestamp)
         }
 
+        // Sync weather for the planners coming up this week.
+        if thisWeekDatestamps.contains(planner.datestamp),
+            let location = planner.location(
+                settings: settings,
+                deviceLocation: locationService.deviceLocation
+            ),
+            !freshWeatherCoordinateIds.contains(location.coordinateId)
+        {
+            let existingWeather = modelContext.getPlannerWeather(
+                for: startOfDay.date,
+                at: location.coordinateId
+            )
+
+            if existingWeather.needsRefresh(lastRefresh: lastRefresh) {
+                freshWeatherCoordinateIds.insert(location.coordinateId)
+
+                Task {
+                    await modelContext.syncWeather(
+                        location: location,
+                        startOfDay: startOfDay,
+                        weatherService: weatherService
+                    )
+                }
+            }
+        }
+
         guard
             !calendarService.isOnboardingCalendars
         else { return }
 
-        let locationKey = planner.locationKey
+        let timeZoneDateId = planner.timeZoneDateId
 
         // Sync calendar.
-        if !freshCalendarLocationKeys.contains(locationKey) {
-            freshCalendarLocationKeys.insert(locationKey)
+        if !freshCalendarTimeZoneDateIds.contains(timeZoneDateId) {
+            freshCalendarTimeZoneDateIds.insert(timeZoneDateId)
 
             modelContext.syncCalendar(
                 startOfDay: startOfDay,
@@ -203,59 +229,51 @@ class PlannerService: ObservableObject {
             )
         }
     }
-
-    // MARK: - Bulk Synchronization
-
+    
     func syncVisiblePlanners() {
-        let syncContexts = modelContext.getBulkPlannerSyncContexts(
-            for: visibleDatestamps,
-            settings: settings
-        )
-
-        for syncContext in syncContexts {
-            syncPlanner(
-                syncContext.planner,
-                startOfDay: syncContext.startOfDay
-            )
+        let planners = modelContext.getBulkPlanners(for: visibleDatestamps)
+        for planner in planners {
+            syncPlanner(planner)
         }
     }
+
+    // MARK: - Refresh (invalidate and sync)
 
     func refresh() {
         invalidateRoutines()
         invalidateCalendar()
+        invalidateWeather()
         loadVisibleDatestamps()
         syncVisiblePlanners()
     }
 
-    func syncVisiblePlannersCalendar() {
+    func refreshCalendar() {
         invalidateCalendar()
         syncVisiblePlanners()
     }
 
-    func syncVisiblePlannerRoutines() {
-        invalidateRoutines()
-        syncVisiblePlanners()
-    }
-
-    func syncPlannerRoutine(planner: Planner) {
+    func refreshPlannerRoutine(planner: Planner) {
         let datestamp = planner.datestamp
 
         freshRoutineDatestamps.remove(datestamp)
         forceSyncRoutineDatestamps.insert(datestamp)
-        syncPlanner(
-            planner,
-            startOfDay: planner.startOfDay(settings: settings)
-        )
+        syncPlanner(planner)
     }
 
     // MARK: - Invalidation
+    /// Note: Only invalidate when you expect external data to have changed (not when the window you are searching changes).
 
     func invalidateRoutines() {
         freshRoutineDatestamps = []
     }
 
-    func invalidateCalendar() {
-        freshCalendarLocationKeys = []
+    private func invalidateCalendar() {
+        freshCalendarTimeZoneDateIds = []
+    }
+
+    private func invalidateWeather() {
+        lastRefresh = Date.now.timeIntervalSince1970
+        freshWeatherCoordinateIds = []
     }
 
     // MARK: - Change Handlers
@@ -265,7 +283,8 @@ class PlannerService: ObservableObject {
             loadTrips()
         }
 
-        syncVisiblePlannerRoutines()
+        invalidateRoutines()
+        syncVisiblePlanners()
     }
 
     // MARK: - Loaders

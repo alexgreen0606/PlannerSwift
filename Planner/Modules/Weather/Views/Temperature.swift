@@ -9,19 +9,31 @@ import SwiftUI
 import WeatherKit
 
 struct TemperatureView: View {
-    let weatherData: DayWeather
+    let plannerWeather: PlannerWeather
 
     private let weatherUnit: UnitTemperature =
         Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
 
     private var highTemp: String {
-        let temp = weatherData.highTemperature.converted(to: weatherUnit).value
-        return "\(Int(temp))°"
+        let measurement = Measurement(
+            value: plannerWeather.highTemp,
+            unit: UnitTemperature.fahrenheit
+        )
+
+        let converted = measurement.converted(to: weatherUnit)
+
+        return "\(Int(converted.value.rounded()))°"
     }
 
     private var lowTemp: String {
-        let temp = weatherData.lowTemperature.converted(to: weatherUnit).value
-        return "\(Int(temp))°"
+        let measurement = Measurement(
+            value: plannerWeather.lowTemp,
+            unit: UnitTemperature.fahrenheit
+        )
+
+        let converted = measurement.converted(to: weatherUnit)
+
+        return "\(Int(converted.value.rounded()))°"
     }
 
     // MARK: - Body
