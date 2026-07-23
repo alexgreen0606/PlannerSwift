@@ -12,6 +12,7 @@ import SwiftUI
 
 struct PlannerEventFormView: View {
     @Binding var draftPlannerEvent: DraftPlannerEvent
+    @Binding var showCalendarEventForm: Bool
     let sourcePlannerEvent: PlannerEvent?
     let sourcePlanner: Planner?
     let settings: Settings
@@ -354,6 +355,7 @@ struct PlannerEventFormView: View {
         ekEvent.timeZone = region.timeZone
 
         draftPlannerEvent.ekEvent = ekEvent
+        showCalendarEventForm = true
     }
 
     private func togglePicker(type: VisibleEventFormPicker) {

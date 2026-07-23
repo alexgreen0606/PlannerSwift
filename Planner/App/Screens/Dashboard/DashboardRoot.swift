@@ -70,7 +70,6 @@ struct DashboardRootView: View {
                     }
                     .listStyle(.plain)
                     .refreshable {
-                        lastRefresh = Date.now.timeIntervalSince1970
                         calendarService.loadCalendars()
                         locationService.loadDeviceLocation()
                         plannerService.refresh()

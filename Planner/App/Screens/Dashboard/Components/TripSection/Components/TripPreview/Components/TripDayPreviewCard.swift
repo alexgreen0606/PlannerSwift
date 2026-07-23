@@ -27,8 +27,8 @@ struct TripDayPreviewCardView: View {
                 header: PlannerHeaderView(
                     datestamp: datestamp,
                     iconType: .date,
-                    title: "Day \(index + 1)",
-                    subtitle: datestamp.weekday
+                    title: datestamp.weekday,
+                    subtitle: "Day \(index + 1)"
                 ),
                 defaultLocationLabel: trip.location?.name,
                 transitionId: trip.transitionId(

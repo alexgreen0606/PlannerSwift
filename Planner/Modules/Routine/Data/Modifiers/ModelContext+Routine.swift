@@ -262,7 +262,7 @@ extension ModelContext {
     // MARK: - DELETE
 
     @MainActor
-    func deleteRoutineEvents(
+    func deleteRoutineEventContexts(
         _ routineEventContexts: [RoutineEventContext],
         todayStartOfDay: DateInRegion,
         ekEventStore: EKEventStore,

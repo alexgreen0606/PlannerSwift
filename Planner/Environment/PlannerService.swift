@@ -99,6 +99,11 @@ class PlannerService: ObservableObject {
 
         return datestampsToSync
     }
+    
+    func initializePlanners() {
+        loadVisibleDatestamps()
+        syncVisiblePlanners()
+    }
 
     // MARK: - Search
 

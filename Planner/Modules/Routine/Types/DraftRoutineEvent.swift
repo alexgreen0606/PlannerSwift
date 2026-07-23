@@ -18,11 +18,11 @@ struct DraftRoutineEvent {
         self.date = Self.defaultDate()
     }
 
-    init(routineEvent: RoutineEventContext) {
-        self.title = routineEvent.title
-        self.date = routineEvent.time ?? Self.defaultDate()
-        self.hasTime = routineEvent.time != nil
-        self.weekdays = routineEvent.weekdays
+    init(routineEventContext: RoutineEventContext) {
+        self.title = routineEventContext.title
+        self.date = routineEventContext.time ?? Self.defaultDate()
+        self.hasTime = routineEventContext.time != nil
+        self.weekdays = routineEventContext.weekdays
     }
 
     // MARK: - Helper Function

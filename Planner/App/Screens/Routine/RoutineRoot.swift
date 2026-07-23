@@ -113,7 +113,8 @@ struct RoutineRootView: View {
 
             .sheet(item: $routineEventSheetContext) { context in
                 RoutineEventFormView(
-                    sourceRoutineEvent: context.routineEvent,
+                    sourceRoutineEventContext: context.routineEvent,
+                    sourceRoutine: routine,
                     sourceWeekday: weekday,
                     sourceSortedRoutineEvents: sortedRoutineEvents,
                     settings: settings,

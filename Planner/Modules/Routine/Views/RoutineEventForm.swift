@@ -10,7 +10,8 @@ import SwiftDate
 import SwiftUI
 
 struct RoutineEventFormView: View {
-    private let sourceRoutineEvent: RoutineEventContext?
+    private let sourceRoutineEventContext: RoutineEventContext?
+    private let sourceRoutine: Routine?
     private let sourceWeekday: Weekday?
     private let sourceSortedRoutineEvents: [RoutineEvent]?
     private let settings: Settings
@@ -18,7 +19,8 @@ struct RoutineEventFormView: View {
 
     // MARK: Create Routine Event (Dashboard)
     init(settings: Settings, openRoutine: @escaping (Weekday) -> Void) {
-        self.sourceRoutineEvent = nil
+        self.sourceRoutineEventContext = nil
+        self.sourceRoutine = nil
         self.sourceWeekday = nil
         self.sourceSortedRoutineEvents = nil
         self.settings = settings
@@ -31,20 +33,24 @@ struct RoutineEventFormView: View {
 
     // MARK: Edit Routine Event (Routine)
     init(
-        sourceRoutineEvent: RoutineEventContext,
+        sourceRoutineEventContext: RoutineEventContext,
+        sourceRoutine: Routine,
         sourceWeekday: Weekday,
         sourceSortedRoutineEvents: [RoutineEvent],
         settings: Settings,
         openRoutine: @escaping (Weekday) -> Void
     ) {
-        self.sourceRoutineEvent = sourceRoutineEvent
+        self.sourceRoutineEventContext = sourceRoutineEventContext
+        self.sourceRoutine = sourceRoutine
         self.sourceWeekday = sourceWeekday
         self.sourceSortedRoutineEvents = sourceSortedRoutineEvents
         self.settings = settings
         self.openRoutine = openRoutine
 
         _draftRoutineEvent = State(
-            initialValue: DraftRoutineEvent(routineEvent: sourceRoutineEvent)
+            initialValue: DraftRoutineEvent(
+                routineEventContext: sourceRoutineEventContext
+            )
         )
     }
 
@@ -67,7 +73,7 @@ struct RoutineEventFormView: View {
     @FocusState private var isTitleFocused
 
     private var isCreateForm: Bool {
-        sourceRoutineEvent == nil
+        sourceRoutineEventContext == nil
     }
 
     private var canSave: Bool {
@@ -123,6 +129,14 @@ struct RoutineEventFormView: View {
         ToolbarItem(placement: .cancellationAction) {
             CancelButtonView(cancel: {
                 isTitleFocused = false
+
+                if let sourceRoutineEventContext,
+                    sourceRoutineEventContext.title.trimmed.isEmpty
+                {
+                    // The title was empty when this sheet was opened. Delete the event.
+                    deleteSourceRoutineEvent()
+                }
+
                 dismiss()
             })
         }
@@ -142,7 +156,7 @@ struct RoutineEventFormView: View {
                 )
                 .withConfirmation(
                     deleteRoutineEventConfig(
-                        routineEventContext: sourceRoutineEvent!,
+                        routineEventContext: sourceRoutineEventContext!,
                         inForm: true,
                         delete: deleteEvent
                     ),
@@ -220,10 +234,12 @@ struct RoutineEventFormView: View {
 
     private func saveRoutineEvent() {
         modelContext.updateRoutineEventContext(
-            sourceRoutineEvent,
+            sourceRoutineEventContext,
             with: draftRoutineEvent,
             sourceSortedRoutineEvents: sourceSortedRoutineEvents,
-            todayStartOfDay: todayService.todayPlanner.startOfDay(settings: settings),
+            todayStartOfDay: todayService.todayPlanner.startOfDay(
+                settings: settings
+            ),
             plannerService: plannerService,
             ekEventStore: calendarService.ekEventStore
         )
@@ -232,19 +248,17 @@ struct RoutineEventFormView: View {
 
         showNotification()
     }
-    
+
     private func deleteEvent() {
         dismiss()
-
-        if let sourceRoutineEvent {
-            modelContext.safeDelete(sourceRoutineEvent)
-        }
+        deleteSourceRoutineEvent()
     }
 
     private func showNotification() {
         guard
             isCreateForm
-                || !draftRoutineEvent.weekdays.contains(sourceWeekday!)
+                || (sourceWeekday != nil
+                    && !draftRoutineEvent.weekdays.contains(sourceWeekday!))
         else {
             return
         }
@@ -286,7 +300,7 @@ struct RoutineEventFormView: View {
                 openRoutine(selectedWeekdays.first!)
             } : nil
 
-        if sourceRoutineEvent != nil {
+        if sourceRoutineEventContext != nil {
             showToast(
                 Toast(
                     title: "Successfully moved recurring event!",
@@ -323,5 +337,21 @@ struct RoutineEventFormView: View {
         withAnimation {
             showTimePicker.toggle()
         }
+    }
+
+    private func deleteSourceRoutineEvent() {
+        guard
+            let sourceRoutineEventContext,
+            let sourceRoutine
+        else { return }
+
+        modelContext.removeRoutineEventContextsFromRoutine(
+            routineEventContexts: [sourceRoutineEventContext],
+            routine: sourceRoutine,
+            todayStartOfDay: todayService.todayPlanner.startOfDay(
+                settings: settings
+            ),
+            ekEventStore: calendarService.ekEventStore
+        )
     }
 }

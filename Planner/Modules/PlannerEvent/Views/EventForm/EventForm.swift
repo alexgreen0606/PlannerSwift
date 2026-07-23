@@ -45,6 +45,10 @@ struct EventFormView: View {
                     settings: settings
                 )
         )
+
+        _showCalendarEventForm = State(
+            initialValue: draftPlannerEvent.ekEvent != nil
+        )
     }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -59,30 +63,22 @@ struct EventFormView: View {
 
     @State private var draftPlannerEvent: DraftPlannerEvent
 
+    /// Note: Don't just use a binding related to draftPlannerEvent.ekEvent
+    /// When the CalendarEventForm is dismissed, this value must stay true to prevent the onAppear inside PlannerEventForm from running.
+    @State private var showCalendarEventForm: Bool = false
+
     private var isCreateForm: Bool {
         sourcePlannerEvent == nil
-    }
-
-    private var showCalendarEventSheetBinding: Binding<Bool> {
-        Binding(
-            get: {
-                draftPlannerEvent.ekEvent != nil
-            },
-            set: { newValue in
-                if !newValue {
-                    draftPlannerEvent.ekEvent = nil
-                }
-            }
-        )
     }
 
     // MARK: - Body
 
     var body: some View {
         NavigationStack {
-            if !showCalendarEventSheetBinding.wrappedValue {
+            if draftPlannerEvent.ekEvent == nil {
                 PlannerEventFormView(
                     draftPlannerEvent: $draftPlannerEvent,
+                    showCalendarEventForm: $showCalendarEventForm,
                     sourcePlannerEvent: sourcePlannerEvent,
                     sourcePlanner: sourcePlanner,
                     settings: settings,
@@ -90,7 +86,7 @@ struct EventFormView: View {
                 )
             }
         }
-        .sheet(isPresented: showCalendarEventSheetBinding) {
+        .sheet(isPresented: $showCalendarEventForm) {
             if let ekEvent = draftPlannerEvent.ekEvent {
                 calendarEventForm(for: ekEvent)
                     .toolbar {
@@ -214,5 +210,6 @@ struct EventFormView: View {
         // Note: EventKit does not give access to the updated EKEvent.
         // Therefore we cannot sync the planner event to the draft calendar event.
         draftPlannerEvent.ekEvent = nil
+        showCalendarEventForm = false
     }
 }

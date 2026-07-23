@@ -78,7 +78,7 @@ struct SelectedRoutineEventActionsView: View {
         routineEngine.clearSelections()
 
         DispatchQueue.main.async {
-            modelContext.deleteRoutineEvents(
+            modelContext.deleteRoutineEventContexts(
                 selections,
                 todayStartOfDay: todayService.todayPlanner.startOfDay(
                     settings: settings

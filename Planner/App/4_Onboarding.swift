@@ -111,9 +111,9 @@ struct OnboardingView: View {
 
         .task {
             staggerMainActorInteraction(delay: 1) {
-                // Build the initial planners in the UI.
+                // Build the initial UI.
                 calendarService.loadCalendars()
-                plannerService.refresh()
+                plannerService.initializePlanners()
 
                 // Update the app icon to match the theme settings.
                 if appColorScheme == .system {
