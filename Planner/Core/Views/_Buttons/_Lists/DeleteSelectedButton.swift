@@ -17,13 +17,10 @@ struct DeleteSelectedButtonView<Item: ListItemDetails>: View {
     // MARK: - Body
 
     var body: some View {
-        GlassIconButtonView(
-            systemImageName: "trash",
-            disabled: listEngine.selectedItemIds.isEmpty,
-            color: Color.label
-        ) {
+        GlassIconButtonView(systemImageName: "trash") {
             showConfirmation = true
         }
+        .disabled(listEngine.selectedItemIds.isEmpty)
         .withConfirmation(confirmationConfig, isPresented: $showConfirmation)
     }
 }

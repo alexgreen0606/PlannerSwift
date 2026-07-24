@@ -150,6 +150,12 @@ struct OnboardingView: View {
             }
         }
 
+        // MARK: Refresh next 7 days at midnight.
+
+        .onChange(of: todayService.todaystamp) { _, _ in
+            plannerService.loadThisWeekDatestamps()
+        }
+
         // MARK: Refresh calendars when calendar access changes.
 
         .onChange(of: calendarService.hasCalendarAccess) { _, _ in

@@ -30,13 +30,10 @@ struct TransferSelectedButtonView<Item: ListItemDetails>: View {
     // MARK: - Body
 
     var body: some View {
-        GlassIconButtonView(
-            systemImageName: systemImage,
-            disabled: disabled || listEngine.selectedItemIds.isEmpty,
-            color: Color.label
-        ) {
+        GlassIconButtonView(systemImageName: systemImage) {
             showTransferSheet = true
         }
+        .disabled(disabled || listEngine.selectedItemIds.isEmpty)
         .matchedTransitionSource(
             id: ListIds.TRANSFER_BUTTON,
             in: namespace

@@ -99,7 +99,7 @@ class PlannerService: ObservableObject {
 
         return datestampsToSync
     }
-    
+
     func initializePlanners() {
         loadVisibleDatestamps()
         syncVisiblePlanners()
@@ -234,7 +234,7 @@ class PlannerService: ObservableObject {
             )
         }
     }
-    
+
     func syncVisiblePlanners() {
         let planners = modelContext.getBulkPlanners(for: visibleDatestamps)
         for planner in planners {
@@ -307,7 +307,7 @@ class PlannerService: ObservableObject {
         )
     }
 
-    private func loadThisWeekDatestamps() {
+    func loadThisWeekDatestamps() {
         thisWeekDatestamps = (0..<7).map { offset in
             DateInRegion(region: .local)
                 .dateByAdding(offset, .day)

@@ -32,9 +32,9 @@ final class LocationService:
 
     @Published var deviceClLocation: CLLocation?
     @Published var deviceLocation: Location?
-    
+
     @Published private(set) var hasAccess: Bool? = nil
-    
+
     var locationManager: CLLocationManager {
         manager
     }
@@ -117,9 +117,11 @@ final class LocationService:
             do {
                 let mapItems = try await request.mapItems
                 if let item = mapItems.first,
-                   let addressInfo = item.addressRepresentations,
-                   let city = addressInfo.cityWithContext
+                    let addressInfo = item.addressRepresentations,
+                    let city = addressInfo.cityWithContext?.nilIfEmpty
+                        ?? addressInfo.cityName
                 {
+
                     withAnimation {
                         deviceLocation = Location(
                             name: city,

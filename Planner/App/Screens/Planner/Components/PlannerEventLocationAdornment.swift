@@ -67,8 +67,12 @@ struct PlannerEventLocationAdornmentView: View {
     }
 
     private var homeTimeLabel: String? {
-        let homeRegion = Region.local
-        let homeTimeZoneIdentifier = homeRegion.timeZone.identifier
+        guard
+            let homeLocation = settings.homeLocation
+        else { return nil }
+        
+        let homeRegion = homeLocation.region
+        let homeTimeZoneIdentifier = homeLocation.timeZoneIdentifier
 
         if plannerTimeZoneIdentifier != homeTimeZoneIdentifier,
             let time = plannerEvent.time

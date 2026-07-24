@@ -16,6 +16,9 @@ struct ProminentListButtonView<Item: ListItemDetails>: View {
         self.createItem = createItem
     }
 
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        .blue
+
     @EnvironmentObject private var listEngine: ListEngine<Item>
 
     private var isFocused: Bool {
@@ -32,7 +35,6 @@ struct ProminentListButtonView<Item: ListItemDetails>: View {
         GlassIconButtonView(
             systemImageName: systemImageName,
             prominent: true,
-            color: color,
             onTap: {
                 if isFocused {
                     listEngine.focusedId = nil
@@ -42,6 +44,8 @@ struct ProminentListButtonView<Item: ListItemDetails>: View {
                 createItem()
             }
         )
+        .tint(color ?? accentColor.swiftUiColor)
+        .foregroundStyle(Color.inverseLabel)
         .contentTransition(
             .symbolEffect(
                 .replace.upUp
