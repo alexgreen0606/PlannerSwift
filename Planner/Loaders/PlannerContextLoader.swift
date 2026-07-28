@@ -13,7 +13,6 @@ struct PlannerContextLoaderView<Content: View>: View {
     let content: (PlannerContext) -> Content
 
     @EnvironmentObject private var plannerService: PlannerService
-    @EnvironmentObject private var locationService: LocationService
 
     // MARK: - Body
 

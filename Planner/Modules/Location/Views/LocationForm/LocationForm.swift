@@ -90,7 +90,7 @@ struct LocationFormView: View {
 
             // MARK: Build the suggestions on mount and if the device location changes.
 
-            .task(id: locationService.deviceLocation) {
+            .task(id: locationService.deviceLocationName) {
                 buildSuggestedLocations()
             }
         }
@@ -146,11 +146,16 @@ struct LocationFormView: View {
     private func buildSuggestedLocations() {
         var combinedLocations = recentLocations
 
+        if variant == .home
+            && settings.homeLocation == nil
+            && !locationService.deviceLocationName.isEmpty
+        {
+            buildInitialCurrentLocationMatches()
+            return
+        }
+
         // Add common locations to the top of the recents list.
 
-        if let deviceLocation = locationService.deviceLocation {
-            combinedLocations.insert(deviceLocation, at: 0)
-        }
         if let plannerLocation = sourcePlanner?.location {
             combinedLocations.insert(plannerLocation, at: 0)
         }
@@ -176,5 +181,9 @@ struct LocationFormView: View {
         }
 
         self.suggestedLocations = suggestedLocations
+    }
+
+    private func buildInitialCurrentLocationMatches() {
+        locationSearchService.text = locationService.deviceLocationName
     }
 }

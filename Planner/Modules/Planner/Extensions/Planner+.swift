@@ -33,22 +33,23 @@ extension Planner {
         return "\(datestamp)-\(timeZoneKey)"
     }
 
-    func location(settings: Settings, deviceLocation: Location?)
+    func location(settings: Settings)
         /// nil means the device location is used and hasn't loaded yet.
         -> Location?
     {
-        location ?? trip?.location
-            ?? settings.homeLocation(deviceLocation: deviceLocation)
+        location
+            ?? trip?.location
+            ?? settings.homeLocation
     }
 
     func region(settings: Settings) -> Region {
         location?.region ?? trip?.location?.region ?? settings.homeRegion
     }
 
-    func locationLabel(settings: Settings, deviceLocation: Location?)
+    func locationLabel(settings: Settings)
         -> String
     {
-        location(settings: settings, deviceLocation: deviceLocation)?.name
+        location(settings: settings)?.name
             ?? "Current Location"
     }
 

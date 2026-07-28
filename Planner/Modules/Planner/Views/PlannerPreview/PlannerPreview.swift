@@ -44,8 +44,6 @@ struct PlannerPreviewView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @EnvironmentObject private var locationService: LocationService
-
     private var totalItemCount: Int {
         tripSlotSize
             + sortedBirthdayEvents.count
@@ -82,8 +80,7 @@ struct PlannerPreviewView: View {
 
     private var plannerLocation: Location? {
         planner.location(
-            settings: settings,
-            deviceLocation: locationService.deviceLocation
+            settings: settings
         )
     }
 

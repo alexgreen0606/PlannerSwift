@@ -176,15 +176,5 @@ struct RootTabView: View {
             )
             .interactiveDismissDisabled(true)
         }
-
-        // Note: Removed as onboarding now enforces a home location.
-        // Sync weather data when the device's location changes.
-        //        .onChange(
-        //            of: locationService.deviceClLocation?.coordinate.id
-        //        ) {
-        //            _,
-        //            _ in
-        //            weatherCacheService.beginReload()
-        //        }
     }
 }

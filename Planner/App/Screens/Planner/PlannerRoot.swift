@@ -48,7 +48,6 @@ struct PlannerRootView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var calendarService: CalendarService
-    @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
     @StateObject private var plannerEngine: ListEngine<PlannerEvent>
@@ -89,8 +88,7 @@ struct PlannerRootView: View {
 
     private var plannerLocation: Location? {
         planner.location(
-            settings: settings,
-            deviceLocation: locationService.deviceLocation
+            settings: settings
         )
     }
 

@@ -62,7 +62,8 @@ struct SearchRootView: View {
                 ScrollViewReader { scrollProxy in
                     List {
                         ForEach(
-                            plannerService.searchResults.sortedYears.enumerated(),
+                            plannerService.searchResults.sortedYears
+                                .enumerated(),
                             id: \.element
                         ) { index, year in
                             Section {
@@ -140,7 +141,8 @@ struct SearchRootView: View {
                         scrollProxy: scrollProxy,
                         trigger: plannerService.searchResults.datestampMap,
                         id: plannerService.searchResults.topDatestamp,
-                        disabled: plannerService.searchResults.topDatestamp == nil
+                        disabled: plannerService.searchResults.topDatestamp
+                            == nil
                     )
                 }
             }
@@ -162,7 +164,9 @@ struct SearchRootView: View {
 
     @ViewBuilder
     private var noResultsLabelView: some View {
-        if plannerService.searchResults.sortedYears.isEmpty {
+        if plannerService.searchResults.sortedYears.isEmpty
+            && plannerService.didInitializeSearch
+        {
             EmptyLabel(noResultsLabel)
                 .padding(.horizontal, 64)
         }

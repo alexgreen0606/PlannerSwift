@@ -14,25 +14,21 @@ protocol PlannerEventLocationHelpers {
 extension PlannerEventLocationHelpers {
     func region(
         planner: Planner?,
-        settings: Settings,
-        deviceLocation: Location?
+        settings: Settings
     ) -> Region {
         location(
             planner: planner,
-            settings: settings,
-            deviceLocation: deviceLocation
+            settings: settings
         )?.region ?? .local
     }
 
     func locationLabel(
         planner: Planner?,
-        settings: Settings,
-        deviceLocation: Location?
+        settings: Settings
     ) -> String {
         location(
             planner: planner,
-            settings: settings,
-            deviceLocation: deviceLocation
+            settings: settings
         )?.name ?? "Current Location"
     }
 
@@ -40,13 +36,11 @@ extension PlannerEventLocationHelpers {
 
     private func location(
         planner: Planner?,
-        settings: Settings,
-        deviceLocation: Location?
+        settings: Settings
     ) -> Location? {
         location
             ?? planner?.location(
-                settings: settings,
-                deviceLocation: deviceLocation
+                settings: settings
             )
     }
 }

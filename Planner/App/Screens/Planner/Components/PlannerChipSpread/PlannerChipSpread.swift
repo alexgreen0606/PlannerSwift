@@ -25,13 +25,11 @@ struct PlannerChipSpreadView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var calendarService: CalendarService
 
     private var locationLabel: String {
         planner.locationLabel(
-            settings: settings,
-            deviceLocation: locationService.deviceLocation
+            settings: settings
         )
     }
 

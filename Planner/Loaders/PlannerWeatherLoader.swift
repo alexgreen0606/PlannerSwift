@@ -14,12 +14,9 @@ struct PlannerWeatherLoaderView<Content: View>: View {
     let settings: Settings
     @ViewBuilder let content: (PlannerWeather?) -> Content
 
-    @EnvironmentObject private var locationService: LocationService
-
     private var coordinateId: String? {
         planner.location(
-            settings: settings,
-            deviceLocation: locationService.deviceLocation
+            settings: settings
         )?.coordinateId
     }
 

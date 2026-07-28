@@ -110,10 +110,16 @@ struct OnboardingView: View {
         // MARK: App Setup
 
         .task {
-            staggerMainActorInteraction(delay: 1) {
+            staggerMainActorInteraction(delay: 0.5) {
+
                 // Build the initial UI.
-                calendarService.loadCalendars()
-                plannerService.initializePlanners()
+                if !calendarService.isOnboardingCalendars {
+                    calendarService.loadCalendars()
+
+                    if settings.homeLocation != nil {
+                        plannerService.initializePlanners()
+                    }
+                }
 
                 // Update the app icon to match the theme settings.
                 if appColorScheme == .system {
@@ -125,9 +131,6 @@ struct OnboardingView: View {
 
                 // Ensure the root folder exists.
                 modelContext.ensureRootFolder()
-
-                // Initialize results for the search page.
-                plannerService.search()
 
                 // Clean stale storage data.
                 cleanseStorage()
@@ -165,8 +168,7 @@ struct OnboardingView: View {
         // MARK: Initialize planners after onboarding.
 
         .onChange(of: canSyncPlanners) { _, _ in
-            plannerService.refresh()
-            plannerService.search()
+            plannerService.initializePlanners()
         }
     }
 

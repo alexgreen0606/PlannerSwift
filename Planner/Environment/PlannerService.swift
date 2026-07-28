@@ -18,7 +18,6 @@ class PlannerService: ObservableObject {
     private let modelContext: ModelContext
     private let calendarService: CalendarService
     private let todayService: TodayService
-    private let locationService: LocationService
     private let plannerCoverStore: PlannerCoverStore
     private let settings: Settings
 
@@ -26,14 +25,12 @@ class PlannerService: ObservableObject {
         modelContext: ModelContext,
         calendarService: CalendarService,
         todayService: TodayService,
-        locationService: LocationService,
         plannerCoverStore: PlannerCoverStore,
         settings: Settings
     ) {
         self.modelContext = modelContext
         self.calendarService = calendarService
         self.todayService = todayService
-        self.locationService = locationService
         self.plannerCoverStore = plannerCoverStore
         self.settings = settings
 
@@ -71,6 +68,8 @@ class PlannerService: ObservableObject {
     @Published private(set) var sortedUpcomingTrips: [Trip] = []
 
     @Published private(set) var searchResults: SearchResults
+
+    @Published private(set) var didInitializeSearch: Bool = false
 
     private var visibleDatestamps: Set<String> {
         var datestampsToSync: Set<String> = []
@@ -149,6 +148,8 @@ class PlannerService: ObservableObject {
                         sortedYears: sortedKeys,
                         activeQuery: query
                     )
+
+                    self.didInitializeSearch = true
                 }
             }
         }
@@ -194,8 +195,7 @@ class PlannerService: ObservableObject {
         // Sync weather for the planners coming up this week.
         if thisWeekDatestamps.contains(planner.datestamp),
             let location = planner.location(
-                settings: settings,
-                deviceLocation: locationService.deviceLocation
+                settings: settings
             ),
             !freshWeatherCoordinateIds.contains(location.coordinateId)
         {

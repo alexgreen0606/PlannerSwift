@@ -14,8 +14,6 @@ struct SearchResultWeatherView: View {
     let planner: Planner
     let settings: Settings
 
-    @EnvironmentObject private var locationService: LocationService
-
     private var isFiltering: Bool {
         activeQuery.isFiltering
     }
@@ -25,13 +23,10 @@ struct SearchResultWeatherView: View {
             return planner.searchQueryScore(activeQuery) != nil
         }
 
-        let homeLocationLabel = settings.homeLocationLabel(
-            deviceLocation: locationService.deviceLocation
-        )
+        let homeLocationLabel = settings.homeLocationLabel
 
         let locationLabel = planner.locationLabel(
-            settings: settings,
-            deviceLocation: locationService.deviceLocation
+            settings: settings
         )
 
         if locationLabel != homeLocationLabel {

@@ -26,7 +26,6 @@ struct PlannerEventFormView: View {
     @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var plannerService: PlannerService
-    @EnvironmentObject private var locationService: LocationService
 
     @State private var visiblePicker: VisibleEventFormPicker = .none
     @State private var hasTitleAutoFocused = false
@@ -54,19 +53,15 @@ struct PlannerEventFormView: View {
         draftPlannerEvent
             .region(
                 planner: sourcePlanner,
-                settings: settings,
-                deviceLocation: locationService.deviceLocation
+                settings: settings
             )
     }
 
     private var defaultLocation: Location? {
         sourcePlanner?.location(
-            settings: settings,
-            deviceLocation: locationService.deviceLocation
+            settings: settings
         )
-            ?? settings.homeLocation(
-                deviceLocation: locationService.deviceLocation
-            )
+            ?? settings.homeLocation
     }
 
     // MARK: - Body

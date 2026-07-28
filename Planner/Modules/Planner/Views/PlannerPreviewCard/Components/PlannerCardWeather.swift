@@ -14,18 +14,13 @@ struct PlannerCardWeatherView: View {
     let customDefaultLocationLabel: String?
     let settings: Settings
 
-    @EnvironmentObject private var locationService: LocationService
-
     private var homeLocationLabel: String? {
-        settings.homeLocationLabel(
-            deviceLocation: locationService.deviceLocation
-        )
+        settings.homeLocationLabel
     }
 
     private var locationLabel: String? {
         planner.locationLabel(
-            settings: settings,
-            deviceLocation: locationService.deviceLocation
+            settings: settings
         )
     }
 

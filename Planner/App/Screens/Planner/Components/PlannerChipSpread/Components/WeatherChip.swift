@@ -18,7 +18,6 @@ struct WeatherChipView: View {
         .dark
 
     @Environment(\.colorScheme) private var systemColorScheme
-    @EnvironmentObject private var locationService: LocationService
 
     private var isDarkMode: Bool {
         switch appColorScheme {

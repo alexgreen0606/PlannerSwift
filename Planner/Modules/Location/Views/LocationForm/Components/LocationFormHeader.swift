@@ -29,14 +29,6 @@ struct LocationFormHeaderView: View {
         sourcePlanner?.location
     }
 
-    private var deviceLocationLabel: LocalizedStringKey? {
-        guard let deviceLocation = locationService.deviceLocation else {
-            return nil
-        }
-
-        return LocalizedStringKey(deviceLocation.name)
-    }
-
     // MARK: Indicators
 
     private var showCurrentIndicator: Bool {
@@ -109,17 +101,6 @@ struct LocationFormHeaderView: View {
 
     // MARK: Options
 
-    private var showCurrentOption: Bool {
-        false
-        // Note: Removed as onboarding now enforces a home location.
-        //        switch formVariant {
-        //        case .home:
-        //            return selectedLocation != nil
-        //        case .event, .planner, .trip:
-        //            return false
-        //        }
-    }
-
     private var showHomeOption: Bool {
         switch formVariant {
         case .home:
@@ -172,12 +153,7 @@ struct LocationFormHeaderView: View {
 
     @ViewBuilder
     private var selectionIndicator: some View {
-        if showCurrentIndicator {
-            // Note: Removed as onboarding now enforces a home location.
-            // Nothing will be shown in this case.
-            // currentLocationIndicator
-
-        } else if showHomeIndicator, let homeLocation {
+        if showHomeIndicator, let homeLocation {
             homeLocationIndicator(homeLocation)
 
         } else if showTripIndicator, let tripLocation {
@@ -197,17 +173,6 @@ struct LocationFormHeaderView: View {
             .glassChip(height: 40)
         }
     }
-
-    // Note: Removed as onboarding now enforces a home location.
-    //    private var currentLocationIndicator: some View {
-    //        LabelValueView(
-    //            title: "Current Location",
-    //            subtitle: deviceLocationLabel,
-    //            iconConfig: IconConfig(name: "location")
-    //        )
-    //        .animateLazyAction(from: deviceLocationLabel)
-    //        .glassChip(height: 46)
-    //    }
 
     private func homeLocationIndicator(_ home: Location) -> some View {
         LabelValueView(
@@ -262,26 +227,11 @@ struct LocationFormHeaderView: View {
 
     private var clearSelectionButton: some View {
         Group {
-            currentLocationButton
             homeLocationButton
             plannerLocationButton
             tripLocationButton
         }
         .padding(.top, 8)
-    }
-
-    @ViewBuilder
-    private var currentLocationButton: some View {
-        if showCurrentOption {
-            ActionButtonView(
-                label: "Use Current Location",
-                systemImage: "location"
-            ) {
-                withAnimation {
-                    selectedLocation = nil
-                }
-            }
-        }
     }
 
     @ViewBuilder

@@ -33,12 +33,10 @@ struct WeatherPreviewView: View {
         .blue
 
     @Environment(\.colorScheme) private var systemColorScheme
-    @EnvironmentObject private var locationService: LocationService
 
     private var locationLabel: String {
         planner.locationLabel(
-            settings: settings,
-            deviceLocation: locationService.deviceLocation
+            settings: settings
         )
     }
 

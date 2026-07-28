@@ -19,119 +19,174 @@ struct PlannerEventLocationAdornmentView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @EnvironmentObject private var locationService: LocationService
-
     private var plannerTimeZoneIdentifier: String {
-        planner.region(settings: settings)
-            .timeZone.identifier
+        planner.location(settings: settings)?.timeZoneIdentifier
+            ?? TimeZone.current.identifier
     }
 
-    private var eventLocationLabel: String? {
-        let plannerLocationLabel = planner.locationLabel(
-            settings: settings,
-            deviceLocation: locationService.deviceLocation
-        )
+    private var homeLocation: Location? {
+        settings.homeLocation
+    }
 
-        let eventLocationLabel = plannerEvent.locationLabel(
-            planner: planner,
-            settings: settings,
-            deviceLocation: locationService.deviceLocation
-        )
+    private var tripLocation: Location? {
+        planner.trip?.location
+    }
 
-        guard eventLocationLabel != plannerLocationLabel else {
-            return nil
+    private var eventLocation: Location? {
+        plannerEvent.location
+    }
+
+    private var locationContextsByTimezoneId: [String: [LocationContext]] {
+        guard plannerEvent.time != nil else { return [:] }
+
+        let locations: [LocationContext?] = [
+            eventLocation.map(LocationContext.event),
+            homeLocation.map(LocationContext.home),
+            tripLocation.map(LocationContext.trip),
+        ]
+
+        var contextMap: [String: [LocationContext]] = [:]
+        var coordinateIds: Set<String> = []
+        let currentTimeZoneId = TimeZone.current.identifier
+
+        // Filter out duplicate locations.
+        for context in locations {
+            guard
+                let context,
+                let location = context.location,
+                location.timeZoneIdentifier != plannerTimeZoneIdentifier,
+                !coordinateIds.contains(location.coordinateId)
+            else {
+                continue
+            }
+
+            coordinateIds.insert(location.coordinateId)
+
+            contextMap[location.timeZoneIdentifier, default: []].append(
+                context
+            )
         }
 
-        return eventLocationLabel
-    }
-
-    private var locationTimeLabel: String? {
-        let eventRegion = plannerEvent.region(
-            planner: planner,
-            settings: settings,
-            deviceLocation: locationService.deviceLocation
-        )
-
-        let eventTimeZoneIdentifier = eventRegion.timeZone.identifier
-
-        if eventTimeZoneIdentifier != plannerTimeZoneIdentifier,
-            let time = plannerEvent.time
+        // Only display local time when it doesn't match any of the other timezones.
+        if currentTimeZoneId != plannerTimeZoneIdentifier,
+            contextMap[currentTimeZoneId] == nil
         {
-            return DateInRegion(
-                time,
-                region: eventRegion
-            ).timeString
+            contextMap[currentTimeZoneId] = [
+                LocationContext.current
+            ]
         }
 
-        return nil
-    }
-
-    private var homeTimeLabel: String? {
-        guard
-            let homeLocation = settings.homeLocation
-        else { return nil }
-        
-        let homeRegion = homeLocation.region
-        let homeTimeZoneIdentifier = homeLocation.timeZoneIdentifier
-
-        if plannerTimeZoneIdentifier != homeTimeZoneIdentifier,
-            let time = plannerEvent.time
-        {
-            // Display the home time if it differs from the planner's time.
-            return DateInRegion(
-                time,
-                region: homeRegion
-            ).timeString
-        }
-
-        return nil
+        return contextMap
     }
 
     // MARK: - Body
 
     var body: some View {
-        Grid(horizontalSpacing: 6, verticalSpacing: 4) {
-            if eventLocationLabel != nil || locationTimeLabel != nil {
-                GridRow {
-                    if let eventLocationLabel {
+        if let time = plannerEvent.time {
+            Grid(horizontalSpacing: 6, verticalSpacing: 4) {
+                ForEach(
+                    locationContextsByTimezoneId.keys.sorted(),
+                    id: \.self
+                ) { timeZoneId in
+                    if let contexts = locationContextsByTimezoneId[timeZoneId],
+                        let timeZone = TimeZone(identifier: timeZoneId),
+                        let timeString = DateInRegion(
+                            time,
+                            region: Region(
+                                calendar: Calendar.current,
+                                zone: timeZone,
+                                locale: Locale.current
+                            )
+                        ).timeString
+                    {
+                        timeZoneRow(
+                            timeString: timeString,
+                            locations: contexts
+                        )
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .contentShape(Rectangle())
+            .onTapGesture(perform: openEventSheet)
+        }
+    }
+
+    // MARK: - View Builders
+
+    private func timeZoneRow(
+        timeString: String,
+        locations: [LocationContext]
+    )
+        -> some View
+    {
+        let split = splitLocations(locations)
+
+        return GridRow {
+            HStack(spacing: 4) {
+                ForEach(Array(split.unlabeled.enumerated()), id: \.element.id) {
+                    index,
+                    location in
+                    AdornedValue(
+                        iconConfig: location.iconConfig(
+                            event: plannerEvent,
+                            accentColor: accentColor
+                        ),
+                        color: .secondary,
+                        scale: SCALE
+                    )
+
+                    if index < split.unlabeled.count - 1
+                        || !split.labeled.isEmpty
+                    {
+                        Value(
+                            "+",
+                            color: .tertiary,
+                            scale: SCALE
+                        )
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(split.labeled) { location in
                         AdornedValue(
-                            eventLocationLabel,
-                            iconConfig: IconConfig(
-                                name: "mappin.and.ellipse",
-                                primaryColor: plannerEvent.tint(
-                                    accentColor: accentColor
-                                )
+                            location.location?.name,
+                            iconConfig: location.iconConfig(
+                                event: plannerEvent,
+                                accentColor: accentColor
                             ),
                             color: .secondary,
                             scale: SCALE
                         )
-                        .gridColumnAlignment(.trailing)
-                    }
-
-                    if let locationTimeLabel {
-                        Value(
-                            locationTimeLabel,
-                            color: .secondary,
-                            scale: SCALE
-                        )
                     }
                 }
             }
+            .gridColumnAlignment(.trailing)
 
-            if let homeTimeLabel {
-                GridRow {
-                    AdornedValue(
-                        nil,
-                        iconConfig: IconConfig(name: "house"),
-                        color: .secondary,
-                        scale: SCALE
-                    )
-                    .gridColumnAlignment(.trailing)
+            Value(
+                timeString,
+                color: .secondary,
+                scale: SCALE
+            )
+            .gridColumnAlignment(.trailing)
+        }
+    }
 
-                    Value(homeTimeLabel, color: .secondary, scale: SCALE)
-                }
+    // MARK: - Functions
+
+    /// Organizes locations into labeled (with text) and unlabeled (icon only).
+    private func splitLocations(_ locations: [LocationContext]) -> (
+        unlabeled: [LocationContext],
+        labeled: [LocationContext]
+    ) {
+        locations.reduce(into: (unlabeled: [], labeled: [])) {
+            result,
+            location in
+            if location.displayLocationName {
+                result.labeled.append(location)
+            } else {
+                result.unlabeled.append(location)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .trailing)
     }
 }

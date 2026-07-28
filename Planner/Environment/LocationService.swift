@@ -29,9 +29,9 @@ final class LocationService:
     private let manager = CLLocationManager()
 
     private var refreshTask: Task<Void, Never>?
-
-    @Published var deviceClLocation: CLLocation?
-    @Published var deviceLocation: Location?
+    
+    /// Used to set an initial search value in the home location form during onboarding.
+    @Published var deviceLocationName: String = ""
 
     @Published private(set) var hasAccess: Bool? = nil
 
@@ -80,12 +80,9 @@ final class LocationService:
             timestamp: latest.timestamp
         )
 
-        deviceClLocation = roundedLocation
-
         Task {
-            await buildDeviceLocation(
-                clLocation: roundedLocation,
-                coordinate: roundedCoordinate
+            await findDeviceLocationName(
+                clLocation: roundedLocation
             )
         }
     }
@@ -109,9 +106,8 @@ final class LocationService:
         }
     }
 
-    private func buildDeviceLocation(
-        clLocation: CLLocation,
-        coordinate: CLLocationCoordinate2D
+    private func findDeviceLocationName(
+        clLocation: CLLocation
     ) async {
         if let request = MKReverseGeocodingRequest(location: clLocation) {
             do {
@@ -121,19 +117,12 @@ final class LocationService:
                     let city = addressInfo.cityWithContext?.nilIfEmpty
                         ?? addressInfo.cityName
                 {
-
                     withAnimation {
-                        deviceLocation = Location(
-                            name: city,
-                            subtitle: addressInfo.regionName,
-                            latitude: coordinate.latitude,
-                            longitude: coordinate.longitude,
-                            timeZoneIdentifier: TimeZone.current.identifier
-                        )
+                        deviceLocationName = city
                     }
                 }
             } catch {
-                print("ERROR LocationService buildDeviceLocation:", error)
+                print("ERROR LocationService findDeviceLocationName:", error)
             }
         }
     }

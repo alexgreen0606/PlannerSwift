@@ -13,7 +13,6 @@ struct EnvironmentLoaderView: View {
 
     init(
         plannerCoverStore: PlannerCoverStore,
-        locationService: LocationService,
         modelContext: ModelContext,
         settings: Settings
     ) {
@@ -27,7 +26,6 @@ struct EnvironmentLoaderView: View {
                 modelContext: modelContext,
                 calendarService: calendarService,
                 todayService: todayService,
-                locationService: locationService,
                 plannerCoverStore: plannerCoverStore,
                 settings: settings
             )

@@ -62,7 +62,6 @@ struct PlannerEventContextLoaderView<Content: View>: View {
     @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var plannerService: PlannerService
     @EnvironmentObject private var todayService: TodayService
-    @EnvironmentObject private var locationService: LocationService
 
     @Query private var sortedPlannerEvents: [PlannerEvent]
     @Query private var sortedEventChips: [PlannerEvent]
@@ -70,8 +69,7 @@ struct PlannerEventContextLoaderView<Content: View>: View {
 
     private var plannerLocation: Location? {
         planner.location(
-            settings: settings,
-            deviceLocation: locationService.deviceLocation
+            settings: settings
         )
     }
 

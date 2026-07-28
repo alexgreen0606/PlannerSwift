@@ -10,9 +10,6 @@ import SwiftDate
 import SwiftUI
 
 extension Settings {
-    func homeLocation(deviceLocation: Location?) -> Location? {
-        homeLocation ?? deviceLocation
-    }
 
     var homeRegion: Region {
         homeLocation?.region ?? .local
@@ -38,8 +35,8 @@ extension Settings {
         }
     }
 
-    func homeLocationLabel(deviceLocation: Location?) -> String {
-        homeLocation(deviceLocation: deviceLocation)?.name ?? "Current Location"
+    var homeLocationLabel: String {
+        homeLocation?.name ?? "Current Location"
     }
 
     var homeLocationIconConfig: IconConfig {

@@ -22,7 +22,6 @@ struct LocationChipView: View {
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var plannerService: PlannerService
-    @EnvironmentObject private var locationService: LocationService
 
     private var locationIconConfig: IconConfig {
         planner.locationIconConfig(

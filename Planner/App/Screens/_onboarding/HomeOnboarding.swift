@@ -21,7 +21,6 @@ struct HomeOnboardingView: View {
         .blue
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var plannerService: PlannerService
 
     @State private var showLocationSheet: Bool = false
