@@ -14,7 +14,7 @@ struct PlannerEventLocationAdornmentView: View {
     let settings: Settings
     let openEventSheet: () -> Void
 
-    private let CURRENT_COORD_ID = "CURRENT"
+    private let CURRENT_ID = "CURRENT"
     private let SCALE: CGFloat = 0.65
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -22,14 +22,12 @@ struct PlannerEventLocationAdornmentView: View {
 
     @EnvironmentObject private var locationService: LocationService
 
-    private var plannerTimeZoneIdentifier: String {
+    private var plannerTimeZoneId: String {
         planner.location(settings: settings)?.timeZoneIdentifier
             ?? TimeZone.current.identifier
     }
 
     private var locationContextsByTimeZoneId: [String: [LocationContext]] {
-        guard plannerEvent.time != nil else { return [:] }
-
         let typedLocations: [TypedLocation] = [
             TypedLocation(location: plannerEvent.location, type: .event),
             TypedLocation(location: settings.homeLocation, type: .home),
@@ -39,14 +37,21 @@ struct PlannerEventLocationAdornmentView: View {
         var contextMap: [String: [String: LocationContext]] = [:]
 
         let currentTimeZoneId = TimeZone.current.identifier
-        let shouldDisplayCurrent =
-            currentTimeZoneId != plannerTimeZoneIdentifier
+        let shouldDisplayCurrent = LocationType.current.shouldDisplayLocation(
+            for: plannerEvent,
+            plannerTimeZoneId: plannerTimeZoneId,
+            locationTimeZoneId: TimeZone.current.identifier
+        )
         var didAddCurrent = false
 
         for typedLocation in typedLocations {
             guard
                 let location = typedLocation.location,
-                location.timeZoneIdentifier != plannerTimeZoneIdentifier
+                typedLocation.type.shouldDisplayLocation(
+                    for: plannerEvent,
+                    plannerTimeZoneId: plannerTimeZoneId,
+                    locationTimeZoneId: location.timeZoneIdentifier
+                )
             else {
                 continue
             }
@@ -76,7 +81,7 @@ struct PlannerEventLocationAdornmentView: View {
         if shouldDisplayCurrent,
             !didAddCurrent
         {
-            contextMap[currentTimeZoneId, default: [:]][CURRENT_COORD_ID] =
+            contextMap[currentTimeZoneId, default: [:]][CURRENT_ID] =
                 LocationContext(types: [.current])
         }
 
@@ -92,66 +97,74 @@ struct PlannerEventLocationAdornmentView: View {
     // MARK: - Body
 
     var body: some View {
-        if let time = plannerEvent.time {
-            Grid(horizontalSpacing: 4, verticalSpacing: 6) {
-                ForEach(
-                    sortedTimezones,
-                    id: \.identifier
-                ) { timeZone in
-                    if let contexts =
-                        locationContextsByTimeZoneId[timeZone.identifier]
-                    {
-                        let timeAndDay = DateInRegion(
-                            time,
-                            region: Region(
-                                calendar: Calendar.current,
-                                zone: timeZone,
-                                locale: Locale.current
-                            )
-                        )
-
-                        if let timeString = timeAndDay.timeString {
-                            timeZoneRow(
-                                datestamp: timeAndDay.datestamp,
-                                timeString: timeString,
-                                locationContexts: contexts
-                            )
-                        }
-                    }
+        Grid(horizontalSpacing: 4, verticalSpacing: 6) {
+            ForEach(
+                sortedTimezones,
+                id: \.identifier
+            ) { timeZone in
+                if let contexts =
+                    locationContextsByTimeZoneId[timeZone.identifier]
+                {
+                    timeZoneRow(
+                        timeZone: timeZone,
+                        locationContexts: contexts
+                    )
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .trailing)
-            .contentShape(Rectangle())
-            .onTapGesture(perform: openEventSheet)
         }
+        .frame(maxWidth: .infinity, alignment: .trailing)
+        .contentShape(Rectangle())
+        .onTapGesture(perform: openEventSheet)
     }
 
     // MARK: - View Builders
 
     private func timeZoneRow(
-        datestamp: String,
-        timeString: String,
+        timeZone: TimeZone,
         locationContexts: [LocationContext]
-    )
-        -> some View
-    {
-        GridRow(alignment: .top) {
+    ) -> some View {
+        let time = plannerEvent.time
+        let timeAndDay =
+            time != nil
+            ? DateInRegion(
+                time!,
+                region: Region(
+                    calendar: Calendar.current,
+                    zone: timeZone,
+                    locale: Locale.current
+                )
+            ) : nil
+
+        let displayTime = timeZone.identifier != plannerTimeZoneId
+
+        return GridRow(alignment: .top) {
             ZStack {
-                if datestamp != planner.datestamp {
+                if displayTime, let timeAndDay {
+                    let datestamp = timeAndDay.datestamp
+
+                    if datestamp != planner.datestamp {
+                        Value(
+                            datestamp.weekday,
+                            color: .secondary,
+                            scale: SCALE
+                        )
+                    }
+                }
+            }
+            .gridColumnAlignment(.trailing)
+
+            ZStack {
+                if displayTime,
+                    let timeAndDay,
+                    let timeString = timeAndDay.timeString
+                {
                     Value(
-                        datestamp.weekday,
+                        timeString,
                         color: .secondary,
                         scale: SCALE
                     )
                 }
             }
-            .gridColumnAlignment(.trailing)
-
-            Value(
-                timeString,
-                color: .secondary,
-                scale: SCALE
-            )
             .gridColumnAlignment(.trailing)
 
             VStack(alignment: .trailing, spacing: 4) {
@@ -183,10 +196,19 @@ struct PlannerEventLocationAdornmentView: View {
 
     // MARK: - Functions
 
+    /// Sorts geographically from East to West. Planner time zone is always shifted to the top.
     private func sortTimeZones(
         lhsTimeZone: TimeZone,
         rhsTimeZone: TimeZone
     ) -> Bool {
+        guard lhsTimeZone.identifier != plannerTimeZoneId else {
+            return true
+        }
+
+        guard rhsTimeZone.identifier != plannerTimeZoneId else {
+            return false
+        }
+
         let now = Date()
         let lhsOffset = lhsTimeZone.secondsFromGMT(for: now)
         let rhsOffset = rhsTimeZone.secondsFromGMT(for: now)

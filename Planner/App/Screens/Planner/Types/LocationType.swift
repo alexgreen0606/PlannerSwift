@@ -13,6 +13,26 @@ enum LocationType {
     case event
     case current
 
+    func shouldDisplayLocation(
+        for event: PlannerEvent,
+        plannerTimeZoneId: String,
+        locationTimeZoneId: String
+    ) -> Bool {
+        let eventIsTimed = event.time != nil
+        let hasDifferentTimeThanPlanner = locationTimeZoneId != plannerTimeZoneId
+
+        switch self {
+        case .home:
+            return eventIsTimed && hasDifferentTimeThanPlanner
+        case .trip:
+            return eventIsTimed && hasDifferentTimeThanPlanner
+        case .event:
+            return true
+        case .current:
+            return eventIsTimed && hasDifferentTimeThanPlanner
+        }
+    }
+
     func iconConfig(event: PlannerEvent, accentColor: AccentColor)
         -> IconConfig
     {

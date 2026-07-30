@@ -18,6 +18,6 @@ struct LocationContext: Identifiable {
     }
 
     func locationName(deviceLocationName: String) -> String {
-        location?.name ?? deviceLocationName.nilIfEmpty ?? "Current"
+        location?.name ?? deviceLocationName
     }
 }
