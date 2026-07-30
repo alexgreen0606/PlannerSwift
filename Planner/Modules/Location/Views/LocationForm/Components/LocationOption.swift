@@ -29,7 +29,7 @@ struct LocationOptionView: View {
     }
 
     private var isDeviceLocation: Bool {
-        title == locationService.deviceLocationName
+        title == locationService.validDeviceLocationName
     }
 
     private var isPlannerLocation: Bool {

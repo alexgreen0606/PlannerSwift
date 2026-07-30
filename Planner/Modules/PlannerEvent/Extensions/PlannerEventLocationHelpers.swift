@@ -31,6 +31,16 @@ extension PlannerEventLocationHelpers {
             settings: settings
         )?.name ?? "Current Location"
     }
+    
+    func coordinateId(
+        planner: Planner?,
+        settings: Settings
+    ) -> String {
+        location(
+            planner: planner,
+            settings: settings
+        ).coordinateId
+    }
 
     // MARK: - Helper Function
 

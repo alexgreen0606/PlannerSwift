@@ -29,14 +29,23 @@ final class LocationService:
     private let manager = CLLocationManager()
 
     private var refreshTask: Task<Void, Never>?
-    
-    /// Used to set an initial search value in the home location form during onboarding.
-    @Published var deviceLocationName: String = ""
+
+    @AppStorage("deviceLocationName") private var deviceLocationName: String = ""
+    @AppStorage("deviceLocationTimeZoneId") private var deviceLocationTimeZoneId: String =
+        ""
 
     @Published private(set) var hasAccess: Bool? = nil
 
     var locationManager: CLLocationManager {
         manager
+    }
+
+    var validDeviceLocationName: String {
+        guard deviceLocationTimeZoneId == TimeZone.current.identifier else {
+            return ""
+        }
+
+        return deviceLocationName
     }
 
     func loadDeviceLocation() {
@@ -115,10 +124,12 @@ final class LocationService:
                 if let item = mapItems.first,
                     let addressInfo = item.addressRepresentations,
                     let city = addressInfo.cityWithContext?.nilIfEmpty
-                        ?? addressInfo.cityName
+                        ?? addressInfo.cityName,
+                   let timeZoneId = item.timeZone?.identifier
                 {
                     withAnimation {
                         deviceLocationName = city
+                        deviceLocationTimeZoneId = timeZoneId
                     }
                 }
             } catch {

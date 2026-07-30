@@ -17,7 +17,7 @@ struct PlannerWeatherLoaderView<Content: View>: View {
     private var coordinateId: String? {
         planner.location(
             settings: settings
-        )?.coordinateId
+        ).coordinateId
     }
 
     // MARK: Body

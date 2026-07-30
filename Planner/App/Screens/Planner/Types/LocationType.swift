@@ -15,21 +15,27 @@ enum LocationType {
 
     func shouldDisplayLocation(
         for event: PlannerEvent,
-        plannerTimeZoneId: String,
-        locationTimeZoneId: String
+        planner: Planner,
+        locationTimeZoneId: String,
+        settings: Settings
     ) -> Bool {
-        let eventIsTimed = event.time != nil
-        let hasDifferentTimeThanPlanner = locationTimeZoneId != plannerTimeZoneId
+        let plannerLocation = planner.location(settings: settings)
 
         switch self {
-        case .home:
-            return eventIsTimed && hasDifferentTimeThanPlanner
-        case .trip:
+        case .home, .trip, .current:
+            let eventIsTimed = event.time != nil
+            let hasDifferentTimeThanPlanner = locationTimeZoneId != plannerLocation.timeZoneId
+            
             return eventIsTimed && hasDifferentTimeThanPlanner
         case .event:
-            return true
-        case .current:
-            return eventIsTimed && hasDifferentTimeThanPlanner
+            let plannerCoordinateId = planner.location(settings: settings).coordinateId
+            
+            let eventCoordinateId = event.coordinateId(
+                planner: planner,
+                settings: settings
+            )
+            
+            return eventCoordinateId != plannerCoordinateId
         }
     }
 

@@ -23,8 +23,7 @@ struct PlannerEventLocationAdornmentView: View {
     @EnvironmentObject private var locationService: LocationService
 
     private var plannerTimeZoneId: String {
-        planner.location(settings: settings)?.timeZoneIdentifier
-            ?? TimeZone.current.identifier
+        planner.location(settings: settings).timeZoneId
     }
 
     private var locationContextsByTimeZoneId: [String: [LocationContext]] {
@@ -39,8 +38,9 @@ struct PlannerEventLocationAdornmentView: View {
         let currentTimeZoneId = TimeZone.current.identifier
         let shouldDisplayCurrent = LocationType.current.shouldDisplayLocation(
             for: plannerEvent,
-            plannerTimeZoneId: plannerTimeZoneId,
-            locationTimeZoneId: TimeZone.current.identifier
+            planner: planner,
+            locationTimeZoneId: TimeZone.current.identifier,
+            settings: settings
         )
         var didAddCurrent = false
 
@@ -49,8 +49,9 @@ struct PlannerEventLocationAdornmentView: View {
                 let location = typedLocation.location,
                 typedLocation.type.shouldDisplayLocation(
                     for: plannerEvent,
-                    plannerTimeZoneId: plannerTimeZoneId,
-                    locationTimeZoneId: location.timeZoneIdentifier
+                    planner: planner,
+                    locationTimeZoneId: location.timeZoneIdentifier,
+                    settings: settings
                 )
             else {
                 continue
@@ -66,7 +67,7 @@ struct PlannerEventLocationAdornmentView: View {
             if shouldDisplayCurrent,
                 !didAddCurrent,
                 context.timeZoneId == currentTimeZoneId,
-                context.location?.name == locationService.deviceLocationName
+                context.location?.name == locationService.validDeviceLocationName
             {
                 didAddCurrent = true
                 context.types.append(.current)
@@ -176,7 +177,7 @@ struct PlannerEventLocationAdornmentView: View {
                     AdornedValue(
                         context.locationName(
                             deviceLocationName: locationService
-                                .deviceLocationName
+                                .validDeviceLocationName
                         ).withoutLocationContext,
                         additionalIconConfigs: context.types.map {
                             $0.iconConfig(

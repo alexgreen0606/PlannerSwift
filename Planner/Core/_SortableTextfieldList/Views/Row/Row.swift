@@ -129,9 +129,9 @@ struct RowView<
 
             // MARK: Sync the state title with the item's title when it is changed from an external source.
 
-            .onChange(of: item.title) { _, newTitle in
-                if title != newTitle {
-                    title = newTitle
+            .task(id: item.title) {
+                if title != item.title {
+                    title = item.title
                 }
             }
 
@@ -272,7 +272,7 @@ struct RowView<
 
         // MARK: Debounce the title change handler (1 second delay).
 
-        .onChange(of: title) { _, _ in
+        .onChange(of: title) { _, newTitle in
             guard let onTitleChange else { return }
 
             titleChangeHandlerTask?.cancel()
@@ -281,7 +281,7 @@ struct RowView<
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
                 guard !Task.isCancelled else { return }
 
-                item.title = title
+                item.title = newTitle
                 onTitleChange(item)
             }
         }

@@ -90,7 +90,7 @@ struct LocationFormView: View {
 
             // MARK: Build the suggestions on mount and if the device location changes.
 
-            .task(id: locationService.deviceLocationName) {
+            .task(id: locationService.validDeviceLocationName) {
                 buildSuggestedLocations()
             }
         }
@@ -148,7 +148,7 @@ struct LocationFormView: View {
 
         if variant == .home
             && settings.homeLocation == nil
-            && !locationService.deviceLocationName.isEmpty
+            && !locationService.validDeviceLocationName.isEmpty
         {
             buildInitialCurrentLocationMatches()
             return
@@ -184,6 +184,6 @@ struct LocationFormView: View {
     }
 
     private func buildInitialCurrentLocationMatches() {
-        locationSearchService.text = locationService.deviceLocationName
+        locationSearchService.text = locationService.validDeviceLocationName
     }
 }

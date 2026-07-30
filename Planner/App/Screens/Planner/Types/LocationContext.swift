@@ -11,7 +11,7 @@ struct LocationContext: Identifiable {
     var location: Location?
     var types: [LocationType] = []
 
-    var id: String { location?.coordinateId ?? "CURRENT" }
+    var id: String { location.coordinateId }
 
     var timeZoneId: String {
         location?.timeZoneIdentifier ?? TimeZone.current.identifier
