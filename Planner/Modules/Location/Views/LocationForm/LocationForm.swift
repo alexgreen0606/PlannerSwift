@@ -94,6 +94,9 @@ struct LocationFormView: View {
                 buildSuggestedLocations()
             }
         }
+        .onDisappear {
+            locationSearchService.text = ""
+        }
     }
 
     // MARK: - Toolbars
