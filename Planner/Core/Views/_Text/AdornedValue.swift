@@ -10,6 +10,7 @@ import SwiftUI
 struct AdornedValue: View {
     private let text: String?
     private let iconConfig: IconConfig?
+    private let additionalIconConfigs: [IconConfig]
     private let endAdorned: Bool
     private let color: Color?
     private let scale: Double
@@ -17,12 +18,14 @@ struct AdornedValue: View {
     init(
         _ text: String? = nil,
         iconConfig: IconConfig? = nil,
+        additionalIconConfigs: [IconConfig] = [],
         endAdorned: Bool = false,
         color: Color? = nil,
         scale: Double = 1
     ) {
         self.text = text
         self.iconConfig = iconConfig
+        self.additionalIconConfigs = additionalIconConfigs
         self.endAdorned = endAdorned
         self.color = color
         self.scale = scale
@@ -36,24 +39,44 @@ struct AdornedValue: View {
 
     var body: some View {
         HStack(spacing: Layout.DEFAULT_ADORNMENT_SPACING * scale) {
-            if let iconConfig, !endAdorned {
-                Image(systemName: iconConfig.name)
-                    .foregroundStyle(
-                        iconConfig.primaryColor,
-                        iconConfig.secondaryColor
-                    )
+            if !endAdorned {
+                if let iconConfig {
+                    Image(systemName: iconConfig.name)
+                        .foregroundStyle(
+                            iconConfig.primaryColor,
+                            iconConfig.secondaryColor
+                        )
+                }
+
+                ForEach(additionalIconConfigs, id: \.id) { iconConfig in
+                    Image(systemName: iconConfig.name)
+                        .foregroundStyle(
+                            iconConfig.primaryColor,
+                            iconConfig.secondaryColor
+                        )
+                }
             }
 
             if let text {
                 Value(text, color: color, scale: scale)
             }
 
-            if let iconConfig, endAdorned {
-                Image(systemName: iconConfig.name)
-                    .foregroundStyle(
-                        iconConfig.primaryColor,
-                        iconConfig.secondaryColor
-                    )
+            if endAdorned {
+                if let iconConfig {
+                    Image(systemName: iconConfig.name)
+                        .foregroundStyle(
+                            iconConfig.primaryColor,
+                            iconConfig.secondaryColor
+                        )
+                }
+
+                ForEach(additionalIconConfigs, id: \.id) { iconConfig in
+                    Image(systemName: iconConfig.name)
+                        .foregroundStyle(
+                            iconConfig.primaryColor,
+                            iconConfig.secondaryColor
+                        )
+                }
             }
         }
         .font(.system(size: iconSize, weight: .regular))
