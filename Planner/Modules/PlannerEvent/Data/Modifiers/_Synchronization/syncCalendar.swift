@@ -21,7 +21,7 @@ extension ModelContext {
     ) {
 
         // MARK: - Load In Calendar Events For This Day
-        
+
         let ekEventStore = calendarService.ekEventStore
 
         let nextDay = startOfDay + 1.days
@@ -48,17 +48,19 @@ extension ModelContext {
         // MARK: - Sync/Delete Existing Calendar Records
 
         var birthdayEvents: [String: PlannerEvent] = [:]
+        var invalidatedPositionPlannerEvents: [PlannerEvent] = []
 
         let calendarRecords = getCalendarRecords(on: startOfDay)
 
         for plannerEvent in calendarRecords {
             guard
-                let calendarItemExternalIdentifier = plannerEvent
-                    .eKEventContext?
-                    .calendarItemExternalIdentifier
+                let ekEventContext = plannerEvent.eKEventContext
             else {
                 continue
             }
+
+            let calendarItemExternalIdentifier = ekEventContext
+                .calendarItemExternalIdentifier
 
             // Guard 1: Calendar event is deleted. Remove this record and continue.
             guard
@@ -90,7 +92,34 @@ extension ModelContext {
                 birthdayEvents[contactId] = plannerEvent
             }
 
+            // Collect all-day events that are now timed.
+            if !ekEvent.isAllDay && ekEventContext.isAllDay {
+                invalidatedPositionPlannerEvents.append(plannerEvent)
+            }
+
             plannerEvent.syncWithEkEvent(ekEvent)
+        }
+
+        // MARK: - Re-position All-Day Events That Are Now Timed
+
+        if !invalidatedPositionPlannerEvents.isEmpty {
+            var sortedPlannerEvents = getSortedListEvents(on: startOfDay)
+
+            let reverseSortedEvents = invalidatedPositionPlannerEvents.sorted {
+                ($0.eKEventContext?.startDate ?? .distantPast)
+                    > ($1.eKEventContext?.startDate ?? .distantPast)
+            }
+
+            for plannerEvent in reverseSortedEvents {
+                plannerEvent.sortDate = generatePlannerEventSortDate(
+                    at: 0,
+                    in: sortedPlannerEvents,
+                    startOfDay: startOfDay
+                )
+
+                // Track the event at its new position in the planner.
+                sortedPlannerEvents.insert(plannerEvent, at: 0)
+            }
         }
 
         // MARK: - Create New Calendar Records
@@ -100,7 +129,7 @@ extension ModelContext {
             on: startOfDay,
             birthdayEvents: &birthdayEvents
         )
-        
+
         // TODO: move events to top that were all-day and are now timed.
 
         // MARK: - Load In Contacts For Birthdays

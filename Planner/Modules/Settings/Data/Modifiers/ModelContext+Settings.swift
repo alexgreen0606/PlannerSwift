@@ -52,9 +52,8 @@ extension ModelContext {
             {
                 merged.homeLocation = location
                 location.settings = merged
+                settings.homeLocation = nil
             }
-
-            settings.homeLocation = nil
 
             delete(settings)
         }

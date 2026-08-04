@@ -27,18 +27,21 @@ extension ModelContext {
             if let location = planner.location, merged.location == nil {
                 merged.location = location
                 location.planners.safeAppend(merged)
+                planner.location = nil
             }
 
             // Merge routines.
             if let routine = planner.routine, merged.routine == nil {
                 merged.routine = routine
                 routine.planners.safeAppend(merged)
+                planner.routine = nil
             }
 
             // Merge trips.
             if let trip = planner.trip, merged.trip == nil {
                 merged.trip = trip
                 trip.planners.safeAppend(merged)
+                planner.trip = nil
             }
 
             // Merge routine records. Only carry over variants.
@@ -78,11 +81,6 @@ extension ModelContext {
                 context.planner = merged
                 merged.routineEventRecordContexts.safeAppend(context)
             }
-
-            // TODO: dont i not want to nillify these if i didn't carry over
-            planner.location = nil
-            planner.routine = nil
-            planner.trip = nil
 
             delete(planner)
         }
