@@ -18,6 +18,25 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         return calendar
     }()
 
+    /// Note: We can already assume that the event spans this planner at some point.
+    /// This is needed to ensure that floating all-day events truly belong here.
+    func belongsIn(datestamp: String) -> Bool {
+        guard let context = eKEventContext else {
+            return false
+        }
+
+        guard context.isAllDay else {
+            return true
+        }
+
+        return allDayRangeContains(
+            datestamp: datestamp,
+            startDate: context.startDate,
+            endDate: context.endDate,
+            timeZoneId: context.timeZoneIdentifier
+        )
+    }
+
     // MARK: - UI
 
     func tint(accentColor: AccentColor) -> Color {
@@ -64,6 +83,8 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         eKEventContext.startDate = ekEvent.startDate
         eKEventContext.endDate = ekEvent.endDate
         eKEventContext.isAllDay = ekEvent.isAllDay
+        eKEventContext.timeZoneIdentifier =
+            ekEvent.timeZone?.identifier
 
         eKEventContext.calendarItemExternalIdentifier =
             ekEvent.calendarItemExternalIdentifier

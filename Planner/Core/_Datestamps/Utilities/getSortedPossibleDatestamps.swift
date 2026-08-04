@@ -10,9 +10,10 @@ import SwiftDate
 
 /// Gets all possible datestamps an event can land in.
 /// Example: An event could be nighttime in Los Angeles and morning the next day in Rome.
-func getSortedPossibleDatestamps(for date: Date, ending: Date? = nil)
-    -> [String]
-{
+func getSortedPossibleDatestamps(
+    for date: Date,
+    ending: Date? = nil
+) -> [String] {
     var current = date.in(region: earliestRegion).dateAtStartOf(.day)
     let end = (ending ?? date).in(region: latestRegion).dateAtEndOf(.day)
 

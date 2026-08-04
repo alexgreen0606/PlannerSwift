@@ -31,6 +31,8 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
 
     /// Protects items from being deleted on blur of their textfield.
     @Published var protectedId: UUID? = nil
+    
+    @Published var forceSyncFocusedItem: Bool = false
 
     @Published private(set) var newlyCompletedIds: Set<UUID> = []
     @Published private(set) var newlyPendingIds: Set<UUID> = []

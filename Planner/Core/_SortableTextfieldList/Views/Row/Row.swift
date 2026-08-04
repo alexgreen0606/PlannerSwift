@@ -135,6 +135,19 @@ struct RowView<
                 }
             }
 
+            // MARK: Sync the item with the title due to a request from the parent.
+
+            .task(id: listEngine.forceSyncFocusedItem) {
+                if listEngine.forceSyncFocusedItem, isFocused {
+                    listEngine.forceSyncFocusedItem = false
+
+                    item.title = title
+                    modelContext.safeSave("RowView forceSyncFocusedItem")
+
+                    listEngine.focusedId = nil
+                }
+            }
+
         if let namespace {
             row
                 .matchedTransitionSource(

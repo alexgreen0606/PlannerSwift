@@ -31,6 +31,7 @@ struct ListKeyboardAccessoryView<Item: ListItemDetails>: View {
                                   })
                             else { return }
 
+                            listEngine.forceSyncFocusedItem = true
                             onIconTap?(systemImageName, item)
                         }
                 }

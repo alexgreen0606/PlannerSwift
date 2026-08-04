@@ -52,11 +52,7 @@ struct PlannerEventContextLoaderView<Content: View>: View {
                 )
             ]
         )
-
-        self.startOfDay = startOfDay
     }
-
-    private let startOfDay: DateInRegion
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarService: CalendarService
@@ -73,15 +69,34 @@ struct PlannerEventContextLoaderView<Content: View>: View {
         )
     }
 
+    // MARK: Filter for special case all-day events.
+
+    private var safeEventChips: [PlannerEvent] {
+        filterAllDayEvents(sortedEventChips)
+    }
+
+    private var safeBirthdayChips: [PlannerEvent] {
+        filterAllDayEvents(sortedBirthdayChips)
+    }
+
     // MARK: - Body
 
     var body: some View {
         content(
             PlannerEventContext(
                 sortedPlannerEvents: sortedPlannerEvents,
-                sortedEventChips: sortedEventChips,
-                sortedBirthdayChips: sortedBirthdayChips
+                sortedEventChips: safeEventChips,
+                sortedBirthdayChips: safeBirthdayChips,
             )
         )
+    }
+
+    // MARK: - Functions
+
+    private func filterAllDayEvents(_ events: [PlannerEvent]) -> [PlannerEvent]
+    {
+        events.filter {
+            $0.belongsIn(datestamp: planner.datestamp)
+        }
     }
 }

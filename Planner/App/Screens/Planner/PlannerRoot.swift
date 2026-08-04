@@ -314,7 +314,10 @@ struct PlannerRootView: View {
         handleEventTitleChange(event: event)
 
         plannerEngine.protectedId = event.stableId
-        plannerEngine.focusedId = nil
+
+        if !plannerEngine.forceSyncFocusedItem {
+            plannerEngine.focusedId = nil
+        }
 
         DispatchQueue.main.async {
             eventSheetContext =

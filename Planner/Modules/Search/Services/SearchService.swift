@@ -298,14 +298,24 @@ actor SearchService {
         )
 
         for ekEvent in filteredEkEvents {
-            let parentDatestamps = try getPlannerDatestamps(
-                startTime: ekEvent.startDate,
-                endTime: ekEvent.endDate,
-                query: query,
-                plannerDayCache: &plannerDayCache,
-                homeRegion: settings.homeRegion,
-                settings: settings
-            )
+            let parentDatestamps: [String]
+
+            if ekEvent.isAllDay {
+                parentDatestamps = allDayDatestamps(
+                    startDate: ekEvent.startDate,
+                    endDate: ekEvent.endDate,
+                    timeZoneId: ekEvent.timeZone?.identifier
+                ).filter(query.containsDatestamp(_:))
+            } else {
+                parentDatestamps = try getPlannerDatestamps(
+                    startTime: ekEvent.startDate,
+                    endTime: ekEvent.endDate,
+                    query: query,
+                    plannerDayCache: &plannerDayCache,
+                    homeRegion: settings.homeRegion,
+                    settings: settings
+                )
+            }
 
             for datestamp in parentDatestamps {
                 if let score = ekEvent.searchQueryScore(

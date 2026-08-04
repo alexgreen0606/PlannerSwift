@@ -16,6 +16,7 @@ class EKEventContext {
     var startDate: Date = Date.now
     var endDate: Date = Date.now
     var isAllDay: Bool = false
+    var timeZoneIdentifier: String?
 
     var calendarItemExternalIdentifier: String = ""
 
@@ -39,6 +40,7 @@ class EKEventContext {
         self.startDate = ekEvent.startDate
         self.endDate = ekEvent.endDate
         self.isAllDay = ekEvent.isAllDay
+        self.timeZoneIdentifier = ekEvent.timeZone?.identifier
 
         self.calendarItemExternalIdentifier =
             ekEvent.calendarItemExternalIdentifier

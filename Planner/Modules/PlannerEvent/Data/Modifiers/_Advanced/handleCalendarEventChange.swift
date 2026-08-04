@@ -51,20 +51,35 @@ extension ModelContext {
         } else if let ekEvent {
             // MARK: A planner event doesn't exist. Create one for the calendar event.
 
-            let sortedStartsOfDays = getSortedPlannerStartOfDays(
-                for: ekEvent.startDate,
-                endTime: ekEvent.endDate,
-                settings: settings
-            )
+            if ekEvent.isAllDay {
 
-            if let destinationStartOfDay = sortedStartsOfDays.first {
                 createPlannerEvent(
-                    for: ekEvent,
-                    on: destinationStartOfDay
+                    for: ekEvent
                 )
-            }
 
-            return Set(sortedStartsOfDays.map(\.datestamp))
+                // All day events are floating. Directly compute the datestamps.
+                return allDayDatestamps(
+                    startDate: ekEvent.startDate,
+                    endDate: ekEvent.endDate,
+                    timeZoneId: ekEvent.timeZone?.identifier
+                )
+
+            } else {
+                let sortedStartsOfDays = getSortedPlannerStartOfDays(
+                    for: ekEvent.startDate,
+                    endTime: ekEvent.endDate,
+                    settings: settings
+                )
+
+                if let destinationStartOfDay = sortedStartsOfDays.first {
+                    createPlannerEvent(
+                        for: ekEvent,
+                        on: destinationStartOfDay
+                    )
+                }
+
+                return Set(sortedStartsOfDays.map(\.datestamp))
+            }
         }
 
         // MARK: Re-sync calendar events if source or final event is recurring.
@@ -79,13 +94,13 @@ extension ModelContext {
 
         return []
     }
-    
+
     // MARK: - Helper Function
 
     @MainActor
     private func createPlannerEvent(
         for ekEvent: EKEvent,
-        on startOfDay: DateInRegion?
+        on startOfDay: DateInRegion? = nil
     ) {
         let sortDate = {
             guard !ekEvent.isAllDay, let startOfDay else {

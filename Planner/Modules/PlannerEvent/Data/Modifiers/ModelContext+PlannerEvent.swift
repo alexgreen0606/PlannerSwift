@@ -98,7 +98,10 @@ extension ModelContext {
         return []
     }
 
-    func getCalendarRecords(for calendarItemExternalIdentifiers: Set<String>, onOrAfter: Date)
+    func getCalendarRecords(
+        for calendarItemExternalIdentifiers: Set<String>,
+        onOrAfter: Date
+    )
         -> [PlannerEvent]
     {
         do {
@@ -122,6 +125,7 @@ extension ModelContext {
     // MARK: - UPDATE
 
     /// Ensures that moved events end up at the top of their new planner day.
+    /// Note: All-day events can be skipped. This will be called if they are ever turned into timed events.
     @MainActor
     func ensureValidSortDate(
         for plannerEvent: PlannerEvent,
@@ -130,20 +134,25 @@ extension ModelContext {
     ) -> /// The datestamps the event is now in.
         Set<String>
     {
+        if let eKEventContext = plannerEvent.eKEventContext,
+            eKEventContext.isAllDay
+        {
+            // Event is all-day. Use its actual time as the sortDate.
+            plannerEvent.sortDate = eKEventContext.startDate
+
+            return allDayDatestamps(
+                startDate: eKEventContext.startDate,
+                endDate: eKEventContext.endDate,
+                timeZoneId: eKEventContext.timeZoneIdentifier
+            )
+        }
+
         let sortedStartsOfDays = getSortedPlannerStartOfDays(
             for: plannerEvent.time,
             endTime: plannerEvent.eKEventContext?.endDate,
             datestamp: plannerEvent.datestamp,
             settings: settings
         )
-
-        if let eKEventContext = plannerEvent.eKEventContext,
-            eKEventContext.isAllDay
-        {
-            // Event is all-day. Use its actual time as the sortDate.
-            plannerEvent.sortDate = eKEventContext.startDate
-            return Set(sortedStartsOfDays.map(\.datestamp))
-        }
 
         guard let earliestStartOfDay = sortedStartsOfDays.first
         else {

@@ -100,6 +100,8 @@ extension ModelContext {
             on: startOfDay,
             birthdayEvents: &birthdayEvents
         )
+        
+        // TODO: move events to top that were all-day and are now timed.
 
         // MARK: - Load In Contacts For Birthdays
 
