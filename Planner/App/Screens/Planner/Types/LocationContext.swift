@@ -17,6 +17,16 @@ struct LocationContext: Identifiable {
         location?.timeZoneIdentifier ?? TimeZone.current.identifier
     }
 
+    var timeZoneSecondsFromGmt: Int {
+        let fallback = TimeZone.current.secondsFromGMT()
+
+        guard let location else {
+            return fallback
+        }
+
+        return TimeZone(identifier: location.timeZoneIdentifier)?.secondsFromGMT() ?? fallback
+    }
+
     func locationName(deviceLocationName: String) -> String {
         location?.name ?? deviceLocationName
     }

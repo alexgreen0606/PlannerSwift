@@ -26,16 +26,18 @@ struct PlannerEventLocationAdornmentView: View {
         planner.location(settings: settings).timeZoneId
     }
 
-    private var locationContextsByTimeZoneId: [String: [LocationContext]] {
+    private var locationContextsByTimeZoneSecondsFromGmt:
+        [Int: [LocationContext]]
+    {
         let typedLocations: [TypedLocation] = [
             TypedLocation(location: plannerEvent.location, type: .event),
             TypedLocation(location: settings.homeLocation, type: .home),
             TypedLocation(location: planner.trip?.location, type: .trip),
         ]
 
-        var contextMap: [String: [String: LocationContext]] = [:]
+        var contextMap: [Int: [String: LocationContext]] = [:]
 
-        let currentTimeZoneId = TimeZone.current.identifier
+        let currentTimeZoneSecondsFromGmt = TimeZone.current.secondsFromGMT()
         let shouldDisplayCurrent = LocationType.current.shouldDisplayLocation(
             for: plannerEvent,
             planner: planner,
@@ -52,13 +54,16 @@ struct PlannerEventLocationAdornmentView: View {
                     planner: planner,
                     locationTimeZoneId: location.timeZoneIdentifier,
                     settings: settings
-                )
+                ),
+                let secondsFromGmt = TimeZone(
+                    identifier: location.timeZoneIdentifier
+                )?.secondsFromGMT()
             else {
                 continue
             }
 
             var context =
-                contextMap[location.timeZoneIdentifier, default: [:]][
+                contextMap[secondsFromGmt, default: [:]][
                     location.coordinateId
                 ] ?? LocationContext(location: location)
 
@@ -66,14 +71,15 @@ struct PlannerEventLocationAdornmentView: View {
 
             if shouldDisplayCurrent,
                 !didAddCurrent,
-                context.timeZoneId == currentTimeZoneId,
-                context.location?.name == locationService.validDeviceLocationName
+                secondsFromGmt == currentTimeZoneSecondsFromGmt,
+                context.location?.name
+                    == locationService.validDeviceLocationName
             {
                 didAddCurrent = true
                 context.types.append(.current)
             }
 
-            contextMap[location.timeZoneIdentifier, default: [:]][
+            contextMap[secondsFromGmt, default: [:]][
                 location.coordinateId
             ] = context
         }
@@ -82,7 +88,9 @@ struct PlannerEventLocationAdornmentView: View {
         if shouldDisplayCurrent,
             !didAddCurrent
         {
-            contextMap[currentTimeZoneId, default: [:]][CURRENT_ID] =
+            contextMap[currentTimeZoneSecondsFromGmt, default: [:]][
+                CURRENT_ID
+            ] =
                 LocationContext(types: [.current])
         }
 
@@ -90,8 +98,8 @@ struct PlannerEventLocationAdornmentView: View {
     }
 
     private var sortedTimezones: [TimeZone] {
-        locationContextsByTimeZoneId.keys
-            .compactMap(TimeZone.init(identifier:))
+        locationContextsByTimeZoneSecondsFromGmt.keys
+            .compactMap(TimeZone.init(secondsFromGMT:))
             .sorted(by: sortTimeZones)
     }
 
@@ -104,7 +112,9 @@ struct PlannerEventLocationAdornmentView: View {
                 id: \.identifier
             ) { timeZone in
                 if let contexts =
-                    locationContextsByTimeZoneId[timeZone.identifier]
+                    locationContextsByTimeZoneSecondsFromGmt[
+                        timeZone.secondsFromGMT()
+                    ]
                 {
                     timeZoneRow(
                         timeZone: timeZone,
@@ -232,5 +242,4 @@ struct PlannerEventLocationAdornmentView: View {
 
         return lhsLocation.name < rhsLocation.name
     }
-
 }
