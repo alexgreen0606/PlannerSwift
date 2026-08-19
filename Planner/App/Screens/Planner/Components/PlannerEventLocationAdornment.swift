@@ -99,8 +99,8 @@ struct PlannerEventLocationAdornmentView: View {
 
     private var sortedTimezones: [TimeZone] {
         locationContextsByTimeZoneSecondsFromGmt.keys
+            .sorted(by: sortTimeZoneSecondsFromGmt)
             .compactMap(TimeZone.init(secondsFromGMT:))
-            .sorted(by: sortTimeZones)
     }
 
     // MARK: - Body
@@ -207,24 +207,12 @@ struct PlannerEventLocationAdornmentView: View {
 
     // MARK: - Functions
 
-    /// Sorts geographically from East to West. Planner time zone is always shifted to the top.
-    private func sortTimeZones(
-        lhsTimeZone: TimeZone,
-        rhsTimeZone: TimeZone
+    /// Sorts geographically from East to West.
+    private func sortTimeZoneSecondsFromGmt(
+        lhsTimeZoneSeconds: Int,
+        rhsTimeZoneSeconds: Int
     ) -> Bool {
-        guard lhsTimeZone.identifier != plannerTimeZoneId else {
-            return true
-        }
-
-        guard rhsTimeZone.identifier != plannerTimeZoneId else {
-            return false
-        }
-
-        let now = Date()
-        let lhsOffset = lhsTimeZone.secondsFromGMT(for: now)
-        let rhsOffset = rhsTimeZone.secondsFromGMT(for: now)
-
-        return lhsOffset < rhsOffset
+        return lhsTimeZoneSeconds < rhsTimeZoneSeconds
     }
 
     /// Sorts alphabetically. Current location is always shifted to the bottom.

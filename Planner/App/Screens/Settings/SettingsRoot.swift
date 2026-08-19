@@ -8,6 +8,7 @@
 import EventKit
 import SwiftData
 import SwiftUI
+import WeatherKit
 
 struct SettingsRootView: View {
     let settings: Settings
@@ -22,6 +23,8 @@ struct SettingsRootView: View {
     @Environment(\.colorScheme) private var systemColorScheme
     @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var plannerService: PlannerService
+
+    @State private var weatherAttribution: WeatherAttribution?
 
     private var activeCalendarCount: String {
         String(
@@ -40,7 +43,7 @@ struct SettingsRootView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section {
+                Section("Style") {
                     // MARK: App Theme
 
                     Picker("Theme", selection: $appColorScheme) {
@@ -81,7 +84,9 @@ struct SettingsRootView: View {
                             }
                         )
                     }
+                }
 
+                Section("Lists") {
                     // MARK: List Dividers
 
                     Toggle(
@@ -110,7 +115,7 @@ struct SettingsRootView: View {
                     }
                 }
 
-                Section("Planner") {
+                Section {
                     // MARK: Home Location
 
                     NavigationLink {
@@ -172,9 +177,48 @@ struct SettingsRootView: View {
                             .foregroundStyle(.secondary)
                         }
                     }
+
+                    if let attribution = weatherAttribution {
+                        Link(destination: attribution.legalPageURL) {
+                            HStack {
+                                AsyncImage(
+                                    url: systemColorScheme == .dark
+                                        ? attribution.combinedMarkDarkURL
+                                        : attribution.combinedMarkLightURL
+                                ) { image in
+                                    image
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(height: 13)
+                                } placeholder: {
+                                    Text("Weather")
+                                        .font(
+                                            .system(size: 16, weight: .semibold)
+                                        )
+                                        .foregroundStyle(Color.label)
+                                }
+
+                                Spacer()
+
+                                ActionText("Learn More")
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Planner")
                 }
             }
             .navigationTitle("Settings")
+        }
+
+        // MARK: Load in the WeatherKit documentation URL.
+
+        .task {
+            do {
+                weatherAttribution = try await WeatherService().attribution
+            } catch {
+                print("ERROR SettingsRoot: \(error)")
+            }
         }
 
         // MARK: Update app icon when dependencies changes.
