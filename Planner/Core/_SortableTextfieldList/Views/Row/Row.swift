@@ -62,6 +62,7 @@ struct RowView<
         self.onTitleChange = onTitleChange
 
         self._title = State(initialValue: item.title)
+        self._height = State(initialValue: item.height)
     }
 
     @Environment(\.modelContext) private var modelContext
@@ -70,6 +71,7 @@ struct RowView<
     @State private var titleChangeHandlerTask: Task<Void, Never>? = nil
 
     @State private var title: String
+    @State private var height: CGFloat
 
     private var isFocused: Bool {
         listEngine.focusedId == item.stableId
@@ -94,8 +96,8 @@ struct RowView<
 
     private var heightBinding: Binding<CGFloat> {
         Binding(
-            get: { item.height },
-            set: { item.height = $0 }
+            get: { height },
+            set: { height = $0 }
         )
     }
 
@@ -253,6 +255,8 @@ struct RowView<
                     }
                 } else {
                     item.title = trimmedTitle
+                    item.height = height
+
                     onTitleChange?(item)
                 }
             }
@@ -279,7 +283,7 @@ struct RowView<
             }
         )
         .tint(tint)
-        .frame(height: item.height)
+        .frame(height: height)
         .frame(maxWidth: .infinity, alignment: .leading)
         .fixedSize(horizontal: false, vertical: true)
 
@@ -292,10 +296,12 @@ struct RowView<
 
             titleChangeHandlerTask = Task {
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
-                guard !Task.isCancelled else { return }
+                guard !Task.isCancelled, title == newTitle else { return }
 
-                item.title = newTitle
-                onTitleChange(item)
+                if item.title != newTitle {
+                    item.title = newTitle
+                    onTitleChange(item)
+                }
             }
         }
     }

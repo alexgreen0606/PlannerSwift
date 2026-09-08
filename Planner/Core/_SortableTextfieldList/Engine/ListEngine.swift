@@ -49,6 +49,10 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
     var canToggleItems: Bool {
         toggleState != nil
     }
+    
+    var selectModeDisabledColor: Color? {
+        isSelectMode ? Color.tertiary : nil
+    }
 
     func isItemToggled(_ item: Item) -> Bool {
         toggleState?.isToggled(item) ?? false

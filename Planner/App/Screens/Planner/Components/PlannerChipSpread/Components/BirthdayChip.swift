@@ -16,6 +16,8 @@ struct BirthdayChipView: View {
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
+    
+    @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
 
     @State private var showContactSheet: Bool = false
 
@@ -35,13 +37,17 @@ struct BirthdayChipView: View {
     // MARK: - Body
 
     var body: some View {
-        BirthdayLabelView(plannerEvent: plannerEvent, settings: settings)
+        BirthdayLabelView(
+            plannerEvent: plannerEvent,
+            disabled: plannerEngine.isSelectMode,
+            settings: settings
+        )
             .padding(.leading, leadingPadding)
             .glassChip(
-                color: contactPhotoExists
-                    ? nil : plannerEvent.tint(accentColor: accentColor),
+                color: plannerEngine.selectModeDisabledColor ?? (contactPhotoExists
+                    ? nil : plannerEvent.tint(accentColor: accentColor)),
                 height: PlannerLayout.CHIP_HEIGHT,
-                onTap: {
+                onTap: plannerEngine.isSelectMode ? nil : {
                     showContactSheet = true
                 }
             )

@@ -18,6 +18,7 @@ struct WeatherChipView: View {
         .dark
 
     @Environment(\.colorScheme) private var systemColorScheme
+    @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
 
     private var isDarkMode: Bool {
         switch appColorScheme {
@@ -44,25 +45,29 @@ struct WeatherChipView: View {
                             .symbolRenderingMode(
                                 isDarkMode ? .multicolor : .monochrome
                             )
+                            .opacity(plannerEngine.isSelectMode ? 0.2 : 1)
                             .frame(width: ICON_SIZE, height: ICON_SIZE)
 
-                        Value(plannerWeather.condition)
+                        Value(
+                            plannerWeather.condition,
+                            color: plannerEngine.selectModeDisabledColor
+                        )
                     }
 
-                    TemperatureView(plannerWeather: plannerWeather)
+                    TemperatureView(
+                        plannerWeather: plannerWeather,
+                        color: plannerEngine.selectModeDisabledColor
+                    )
                 }
                 .glassChip(
+                    color: plannerEngine.selectModeDisabledColor,
                     height: PlannerLayout.CHIP_HEIGHT,
-                    onTap: openWeatherApp
+                    onTap: plannerEngine.isSelectMode ? nil : {
+                        guard let url = URL(string: "weather://") else { return }
+                        UIApplication.shared.open(url)
+                    }
                 )
             }
         }
-    }
-
-    // MARK: - Functions
-
-    private func openWeatherApp() {
-        guard let url = URL(string: "weather://") else { return }
-        UIApplication.shared.open(url)
     }
 }

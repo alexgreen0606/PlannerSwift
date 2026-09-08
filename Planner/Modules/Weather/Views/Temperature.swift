@@ -9,7 +9,13 @@ import SwiftUI
 import WeatherKit
 
 struct TemperatureView: View {
-    let plannerWeather: PlannerWeather
+    private let plannerWeather: PlannerWeather
+    private let color: Color?
+    
+    init(plannerWeather: PlannerWeather, color: Color? = nil) {
+        self.plannerWeather = plannerWeather
+        self.color = color
+    }
 
     private let weatherUnit: UnitTemperature =
         Locale.current.measurementSystem == .metric ? .celsius : .fahrenheit
@@ -57,6 +63,6 @@ struct TemperatureView: View {
                     design: .rounded
                 )
             )
-            .foregroundStyle(Color.label)
+            .foregroundStyle(color ?? Color.label)
     }
 }

@@ -18,6 +18,8 @@ struct TripChipView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
+    @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
+
     @State private var showTripSheet = false
 
     private var dayOfTrip: CGFloat {
@@ -27,18 +29,22 @@ struct TripChipView: View {
     // MARK: - Body
 
     var body: some View {
-        Group {
+        let chip = Group {
             HStack(spacing: 0) {
                 Text(trip.title)
                     .lineLimit(2)
                     .font(
                         .system(size: 16, weight: .semibold, design: .rounded)
                     )
-                    .foregroundStyle(Color.label)
+                    .foregroundStyle(plannerEngine.selectModeDisabledColor ?? Color.label)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                 VStack(alignment: .trailing) {
-                    ProgressBar(trip: trip, day: dayOfTrip)
+                    ProgressBar(
+                        trip: trip,
+                        day: dayOfTrip,
+                        color: plannerEngine.selectModeDisabledColor
+                    )
 
                     Text(
                         "Day \(Int(dayOfTrip)) of \(trip.sortedPlanners.count)"
@@ -46,6 +52,7 @@ struct TripChipView: View {
                     .font(
                         .system(size: 9, weight: .heavy, design: .rounded)
                     )
+                    .foregroundStyle(plannerEngine.selectModeDisabledColor ?? Color.label)
                 }
             }
             .padding(.horizontal)
@@ -53,7 +60,7 @@ struct TripChipView: View {
         }
         .frame(maxWidth: .infinity)
         .glassEffect(
-            .regular.interactive(true),
+            .regular.interactive(!plannerEngine.isSelectMode),
             in: .capsule
         )
         .matchedTransitionSource(
@@ -61,9 +68,6 @@ struct TripChipView: View {
             in: namespace
         )
         .contentShape(Rectangle())
-        .onTapGesture {
-            showTripSheet = true
-        }
 
         // MARK: Trip Sheet
 
@@ -78,6 +82,15 @@ struct TripChipView: View {
                     in: namespace
                 )
             )
+        }
+
+        if !plannerEngine.isSelectMode {
+            chip
+                .onTapGesture {
+                    showTripSheet = true
+                }
+        } else {
+            chip
         }
     }
 }

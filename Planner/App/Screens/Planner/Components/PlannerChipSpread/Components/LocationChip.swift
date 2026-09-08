@@ -22,11 +22,18 @@ struct LocationChipView: View {
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var plannerService: PlannerService
+    @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
 
     private var locationIconConfig: IconConfig {
-        planner.locationIconConfig(
+        let config = planner.locationIconConfig(
             settings: settings,
             accentColor: accentColor
+        )
+        
+        return IconConfig(
+            name: config.name,
+            primaryColor: plannerEngine.selectModeDisabledColor ?? config.primaryColor,
+            secondaryColor: plannerEngine.selectModeDisabledColor ?? config.secondaryColor
         )
     }
 
@@ -35,11 +42,13 @@ struct LocationChipView: View {
     var body: some View {
         AdornedValue(
             locationLabel,
-            iconConfig: locationIconConfig
+            iconConfig: locationIconConfig,
+            color: plannerEngine.selectModeDisabledColor
         )
         .glassChip(
+            color: plannerEngine.selectModeDisabledColor,
             height: PlannerLayout.CHIP_HEIGHT,
-            onTap: {
+            onTap: plannerEngine.isSelectMode ? nil : {
                 showLocationSheet = true
             }
         )

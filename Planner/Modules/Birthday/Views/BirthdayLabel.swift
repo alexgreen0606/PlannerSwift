@@ -10,11 +10,26 @@ import EventKit
 import SwiftUI
 
 struct BirthdayLabelView: View {
-    let plannerEvent: PlannerEvent
-    let settings: Settings
+    private let plannerEvent: PlannerEvent
+    private let settings: Settings
+    private let disabled: Bool
+    
+    init(
+        plannerEvent: PlannerEvent,
+        disabled: Bool = false,
+        settings: Settings
+    ) {
+        self.plannerEvent = plannerEvent
+        self.disabled = disabled
+        self.settings = settings
+    }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
+    
+    private var disabledColor: Color? {
+        disabled ? Color.tertiary : nil
+    }
 
     private var contactPhoto: UIImage? {
         guard
@@ -38,10 +53,11 @@ struct BirthdayLabelView: View {
                 Image(uiImage: contactPhoto)
                     .resizable()
                     .scaledToFill()
+                    .opacity(disabled ? 0.2 : 1)
                     .frame(width: 24, height: 24)
                     .clipShape(Circle())
 
-                Value(plannerEvent.title)
+                Value(plannerEvent.title, color: disabledColor)
             }
         } else {
             AdornedValue(
@@ -50,10 +66,10 @@ struct BirthdayLabelView: View {
                     name: plannerEvent.calendarSystemImageName(
                         settings: settings
                     ),
-                    primaryColor: calendarColor,
-                    secondaryColor: calendarColor
+                    primaryColor: disabledColor ?? calendarColor,
+                    secondaryColor: disabledColor ?? calendarColor
                 ),
-                color: calendarColor
+                color: disabledColor ?? calendarColor
             )
         }
     }

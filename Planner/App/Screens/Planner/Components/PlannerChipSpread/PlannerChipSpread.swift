@@ -26,6 +26,7 @@ struct PlannerChipSpreadView: View {
         .blue
 
     @EnvironmentObject private var calendarService: CalendarService
+    @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
 
     private var locationLabel: String {
         planner.locationLabel(
@@ -102,14 +103,19 @@ struct PlannerChipSpreadView: View {
     @ViewBuilder
     private func eventChip(_ plannerEvent: PlannerEvent) -> some View {
         let calendarColor = plannerEvent.tint(accentColor: accentColor)
+        let activeColor =
+            (!plannerEngine.isSelectMode
+                || plannerEngine.selectedItemIds.contains(plannerEvent.stableId))
+            ? calendarColor : Color.label
+
         AdornedValue(
             plannerEvent.title,
             iconConfig: IconConfig(
                 name: plannerEvent.calendarSystemImageName(settings: settings),
-                primaryColor: calendarColor,
-                secondaryColor: calendarColor
+                primaryColor: activeColor,
+                secondaryColor: activeColor
             ),
-            color: calendarColor
+            color: activeColor
         )
         .glassChip(height: PlannerLayout.CHIP_HEIGHT) {
             openEventSheet(plannerEvent)

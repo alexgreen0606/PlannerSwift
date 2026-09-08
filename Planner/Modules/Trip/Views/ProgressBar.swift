@@ -8,8 +8,15 @@
 import SwiftUI
 
 struct ProgressBar: View {
-    let trip: Trip
-    let day: CGFloat
+    private let trip: Trip
+    private let day: CGFloat
+    private let color: Color?
+    
+    init(trip: Trip, day: CGFloat, color: Color? = nil) {
+        self.trip = trip
+        self.day = day
+        self.color = color
+    }
 
     private let PROGRESS_BAR_WIDTH: CGFloat = 100
 
@@ -31,7 +38,7 @@ struct ProgressBar: View {
                 .frame(width: PROGRESS_BAR_WIDTH)
 
             Capsule()
-                .fill(accentColor.swiftUiColor)
+                .fill(color ?? accentColor.swiftUiColor)
                 .frame(width: PROGRESS_BAR_WIDTH * progress)
         }
         .frame(height: 8)
