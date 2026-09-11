@@ -126,9 +126,6 @@ struct RoutineRootView: View {
                         in: namespace
                     )
                 )
-                .onDisappear {
-                    routineEngine.protectedId = nil
-                }
             }
         }
     }
@@ -170,7 +167,7 @@ struct RoutineRootView: View {
             Time(
                 timeInRegion: DateInRegion(time, region: .UTC),
                 onTap: {
-                    openRoutineEventSheet(for: event)
+                    handleEventClick(event)
                 }
             )
         }
@@ -185,7 +182,7 @@ struct RoutineRootView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
             .onTapGesture {
-                openRoutineEventSheet(for: event)
+                handleEventClick(event)
             }
         }
     }
@@ -196,7 +193,6 @@ struct RoutineRootView: View {
             SelectedRoutineEventActionsView
         >(
             keyboardAccessory: ListKeyboardAccessoryView(
-                items: sortedRoutineEventContexts,
                 iconImageNames: ["info"],
                 onIconTap: handleToolbarTap
             ),
@@ -255,8 +251,10 @@ struct RoutineRootView: View {
         modelContext.handleRoutineEventContextTitleChange(event)
     }
 
-    private func handleToolbarTap(icon _: String, event: RoutineEventContext) {
-        openRoutineEventSheet(for: event)
+    private func handleToolbarTap(icon _: String) {
+        if let event = routineEngine.focusedItem {
+            handleEventClick(event)
+        }
     }
 
     private func eventToggleConfig(_ event: RoutineEventContext)
@@ -280,8 +278,8 @@ struct RoutineRootView: View {
                 }
             ),
             onClick: {
-                if routineEngine.focusedId == event.stableId {
-                    routineEngine.focusedId = nil
+                if routineEngine.isFocused {
+                    routineEngine.finalizeEdit()
                 }
             }
         )
@@ -296,21 +294,14 @@ struct RoutineRootView: View {
         routineCoverContext = weekday
     }
 
-    private func openRoutineEventSheet(for event: RoutineEventContext) {
-        if routineEngine.isSelectMode {
-            routineEngine.toggleItem(event)
-            return
-        }
-
-        handleEventTitleChange(event: event)
-
-        routineEngine.protectedId = event.stableId
-        routineEngine.focusedId = nil
-
-        DispatchQueue.main.async {
-            routineEventSheetContext = RoutineEventSheetContext(
-                routineEvent: event
-            )
+    private func handleEventClick(_ event: RoutineEventContext) {
+        let openModal = routineEngine.handleItemClick(event)
+        if openModal {
+            DispatchQueue.main.async {
+                routineEventSheetContext = RoutineEventSheetContext(
+                    routineEvent: event
+                )
+            }
         }
     }
 

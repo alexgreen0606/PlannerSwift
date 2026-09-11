@@ -28,7 +28,7 @@ struct RowView<
     private let settings: Settings
     private let createItem: ((_: Int) -> Void)?
     private let deleteItem: ((_: Item) -> Void)?
-    private let onTitleChange: ((_: Item) -> Void)?
+    private let onCommit: ((_: Item) -> Void)?
 
     init(
         item: Item,
@@ -42,9 +42,10 @@ struct RowView<
         showCompleted: Bool,
         namespace: Namespace.ID? = nil,
         settings: Settings,
+        modelContext: ModelContext,
         createItem: ((_: Int) -> Void)? = nil,
         deleteItem: ((_: Item) -> Void)? = nil,
-        onTitleChange: ((_: Item) -> Void)? = nil
+        onCommit: ((_: Item) -> Void)? = nil
     ) {
         self.item = item
         self.index = index
@@ -59,22 +60,33 @@ struct RowView<
         self.settings = settings
         self.createItem = createItem
         self.deleteItem = deleteItem
-        self.onTitleChange = onTitleChange
+        self.onCommit = onCommit
 
-        self._title = State(initialValue: item.title)
-        self._height = State(initialValue: item.height)
+        self._editorSession = StateObject(
+            wrappedValue: EditorSession(
+                item: item,
+                deleteItem: { item in
+                    if let deleteItem {
+                        deleteItem(item)
+                    } else {
+                        modelContext.safeDelete(item)
+                    }
+                },
+                onCommit: onCommit
+            )
+        )
     }
 
-    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var listEngine: ListEngine<Item>
 
-    @State private var titleChangeHandlerTask: Task<Void, Never>? = nil
+    @StateObject private var editorSession: EditorSession<Item>
 
-    @State private var title: String
-    @State private var height: CGFloat
+    private var isItemFocused: Bool {
+        listEngine.isItemFocused(item)
+    }
 
-    private var isFocused: Bool {
-        listEngine.focusedId == item.stableId
+    private var isToggleable: Bool {
+        toggleOnly || listEngine.isSelectMode
     }
 
     private var isChecked: Bool {
@@ -94,13 +106,6 @@ struct RowView<
         return listEngine.fadingOpacity
     }
 
-    private var heightBinding: Binding<CGFloat> {
-        Binding(
-            get: { height },
-            set: { height = $0 }
-        )
-    }
-
     // MARK: - Body
 
     var body: some View {
@@ -113,10 +118,10 @@ struct RowView<
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal)
             .discreetListItem()
-            .allowsHitTesting(!toggleOnly && !listEngine.isSelectMode)
+            .allowsHitTesting(!isToggleable)
             .contentShape(Rectangle())
             .onTapGesture {
-                guard toggleOnly || listEngine.isSelectMode else { return }
+                guard isToggleable else { return }
                 listEngine.toggleItem(item)
             }
 
@@ -125,28 +130,7 @@ struct RowView<
             .onAppear {
                 if listEngine.pendingFocusId == item.stableId {
                     listEngine.pendingFocusId = nil
-                    listEngine.focusedId = item.stableId
-                }
-            }
-
-            // MARK: Sync the state title with the item's title when it is changed from an external source.
-
-            .task(id: item.title) {
-                if title != item.title {
-                    title = item.title
-                }
-            }
-
-            // MARK: Sync the item with the title due to a request from the parent.
-
-            .task(id: listEngine.forceSyncFocusedItem) {
-                if listEngine.forceSyncFocusedItem, isFocused {
-                    listEngine.forceSyncFocusedItem = false
-
-                    item.title = title
-                    modelContext.safeSave("RowView forceSyncFocusedItem")
-
-                    listEngine.focusedId = nil
+                    listEngine.beginEditing(editorSession)
                 }
             }
 
@@ -180,11 +164,6 @@ struct RowView<
                 opacity: opacity,
                 settings: settings,
                 onTap: {
-                    if listEngine.isSelectMode || toggleOnly {
-                        listEngine.toggleItem(item)
-                        return
-                    }
-
                     createItem?(index)
                 }
             )
@@ -212,11 +191,6 @@ struct RowView<
                 opacity: opacity,
                 settings: settings,
                 onTap: {
-                    if listEngine.isSelectMode || toggleOnly {
-                        listEngine.toggleItem(item)
-                        return
-                    }
-
                     createItem?(index + 1)
                 }
             )
@@ -226,95 +200,47 @@ struct RowView<
     @ViewBuilder
     private var titleView: some View {
         ZStack {
-            if isFocused || listEngine.keyboardOwnerId == item.stableId {
+            if isItemFocused || listEngine.wasItemFocused(item) {
                 titleTextfield
             } else {
                 staticTitle
-            }
-        }
-
-        // MARK: Focus change handler.
-
-        .onChange(of: isFocused) { wasFocused, isFocused in
-            if wasFocused, !isFocused {
-                titleChangeHandlerTask?.cancel()
-
-                let trimmedTitle = title.trimmed
-
-                if trimmedTitle.isEmpty {
-                    // Item is blurred and has an empty title. Delete it.
-                    if listEngine.protectedId != item.stableId {
-                        // Note: Delay this so that the keyboard has time to animate closed before deletion.
-                        DispatchQueue.main.async {
-                            if let deleteItem {
-                                deleteItem(item)
-                            } else {
-                                modelContext.safeDelete(item)
-                            }
-                        }
-                    }
-                } else {
-                    item.title = trimmedTitle
-                    item.height = height
-
-                    onTitleChange?(item)
-                }
             }
         }
     }
 
     private var titleTextfield: some View {
         TextfieldView(
-            text: $title,
-            height: heightBinding,
-            focusedId: $listEngine.focusedId,
-            keyboardOwnerId: $listEngine.keyboardOwnerId,
-            stableId: item.stableId,
+            text: $editorSession.title,
+            height: $editorSession.height,
             tint: tint,
+            isNothingFocused: !listEngine.isFocused,
+            isFocused: isItemFocused,
+            onBecameFirstResponder: {
+                listEngine.handleNewFirstResponder(stableId: item.stableId)
+            },
             onEnter: {
-                item.title = title
-
-                if !title.trimmed.isEmpty {
+                if !editorSession.hasEmptyTitle {
                     createItem?(index + 1)
                 } else {
-                    // Trigger a deletion of the item in the below handler.
-                    listEngine.focusedId = nil
+                    listEngine.deleteFocusedItem()
                 }
             }
         )
         .tint(tint)
-        .frame(height: height)
+        .frame(height: editorSession.height)
         .frame(maxWidth: .infinity, alignment: .leading)
         .fixedSize(horizontal: false, vertical: true)
-
-        // MARK: Debounce the title change handler (1 second delay).
-
-        .onChange(of: title) { _, newTitle in
-            guard let onTitleChange else { return }
-
-            titleChangeHandlerTask?.cancel()
-
-            titleChangeHandlerTask = Task {
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
-                guard !Task.isCancelled, title == newTitle else { return }
-
-                if item.title != newTitle {
-                    item.title = newTitle
-                    onTitleChange(item)
-                }
-            }
-        }
     }
 
     private var staticTitle: some View {
-        Text(title)
+        Text(editorSession.title)
             .font(.system(size: ListLayout.FONT_SIZE))
             .lineLimit(nil)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
             .onTapGesture {
-                listEngine.focusedId = item.stableId
+                listEngine.beginEditing(editorSession)
             }
     }
 }

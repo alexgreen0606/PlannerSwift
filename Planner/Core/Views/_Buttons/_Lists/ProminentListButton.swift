@@ -21,12 +21,8 @@ struct ProminentListButtonView<Item: ListItemDetails>: View {
 
     @EnvironmentObject private var listEngine: ListEngine<Item>
 
-    private var isFocused: Bool {
-        listEngine.focusedId != nil
-    }
-
     private var systemImageName: String {
-        isFocused ? "checkmark" : "plus"
+        listEngine.isFocused ? "checkmark" : "plus"
     }
 
     // MARK: - Body
@@ -36,8 +32,8 @@ struct ProminentListButtonView<Item: ListItemDetails>: View {
             systemImageName: systemImageName,
             prominent: true,
             onTap: {
-                if isFocused {
-                    listEngine.focusedId = nil
+                if listEngine.isFocused {
+                    listEngine.finalizeEdit()
                     return
                 }
 
@@ -46,10 +42,5 @@ struct ProminentListButtonView<Item: ListItemDetails>: View {
         )
         .tint(color ?? accentColor.swiftUiColor)
         .foregroundStyle(Color.inverseLabel)
-        .contentTransition(
-            .symbolEffect(
-                .replace.upUp
-            )
-        )
     }
 }

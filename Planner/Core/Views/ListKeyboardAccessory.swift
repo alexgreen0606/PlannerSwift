@@ -8,11 +8,8 @@
 import SwiftUI
 
 struct ListKeyboardAccessoryView<Item: ListItemDetails>: View {
-    let items: [Item]
     let iconImageNames: [String]
-    let onIconTap: ((String, Item) -> Void)?
-
-    @EnvironmentObject private var listEngine: ListEngine<Item>
+    let onIconTap: ((String) -> Void)?
 
     // MARK: - Body
 
@@ -25,14 +22,7 @@ struct ListKeyboardAccessoryView<Item: ListItemDetails>: View {
                         .imageScale(.medium)
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            guard let focusedId = listEngine.focusedId,
-                                  let item = items.first(where: {
-                                      $0.stableId == focusedId
-                                  })
-                            else { return }
-
-                            listEngine.forceSyncFocusedItem = true
-                            onIconTap?(systemImageName, item)
+                            onIconTap?(systemImageName)
                         }
                 }
             }

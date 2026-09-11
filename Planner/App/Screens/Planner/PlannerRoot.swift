@@ -123,7 +123,7 @@ struct PlannerRootView: View {
                         namespace: namespace,
                         createEvent: createEvent,
                         handleEventTitleChange: handleEventTitleChange,
-                        openPlannerEventSheet: openPlannerEventSheet
+                        openPlannerEventSheet: handleEventClick
                     )
                     .safeAreaBar(edge: .bottom) {
                         actionToolbar(scrollProxy: scrollProxy)
@@ -181,9 +181,6 @@ struct PlannerRootView: View {
                         in: namespace
                     )
                 )
-                .onDisappear {
-                    plannerEngine.protectedId = nil
-                }
             }
         }
     }
@@ -254,7 +251,6 @@ struct PlannerRootView: View {
             SelectedEventActionsView
         >(
             keyboardAccessory: ListKeyboardAccessoryView(
-                items: sortedPendingPlannerEvents,
                 iconImageNames: ["info"],
                 onIconTap: handleToolbarTap
             ),
@@ -279,12 +275,14 @@ struct PlannerRootView: View {
         )
     }
 
-    private func handleToolbarTap(icon _: String, event: PlannerEvent) {
-        openPlannerEventSheet(event)
+    private func handleToolbarTap(icon _: String) {
+        if let event = plannerEngine.focusedItem {
+            handleEventClick(event)
+        }
     }
 
     private func handleEventTitleChange(event: PlannerEvent) {
-        return modelContext.handlePlannerEventTitleChange(
+        modelContext.handlePlannerEventTitleChange(
             event,
             in: planner,
             startOfDay: startOfDay,
@@ -305,25 +303,15 @@ struct PlannerRootView: View {
         scrollProxy.scrollToBottomOfList()
     }
 
-    private func openPlannerEventSheet(_ event: PlannerEvent) {
-        if plannerEngine.isSelectMode || plannerEngine.isItemToggled(event) {
-            plannerEngine.toggleItem(event)
-            return
-        }
-
-        handleEventTitleChange(event: event)
-
-        plannerEngine.protectedId = event.stableId
-
-        if !plannerEngine.forceSyncFocusedItem {
-            plannerEngine.focusedId = nil
-        }
-
-        DispatchQueue.main.async {
-            eventSheetContext =
-                PlannerEventSheetContext(
-                    plannerEvent: event
-                )
+    private func handleEventClick(_ event: PlannerEvent) {
+        let openModal = plannerEngine.handleItemClick(event)
+        if openModal {
+            DispatchQueue.main.async {
+                eventSheetContext =
+                    PlannerEventSheetContext(
+                        plannerEvent: event
+                    )
+            }
         }
     }
 }

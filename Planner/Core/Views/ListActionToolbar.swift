@@ -29,12 +29,8 @@ struct ListActionToolbarView<Item: ListItemDetails, SelectedItemActions: View>: 
 
     @EnvironmentObject private var listEngine: ListEngine<Item>
 
-    private var isFocused: Bool {
-        listEngine.focusedId != nil
-    }
-
     private var padding: EdgeInsets {
-        if isFocused {
+        if listEngine.isFocused {
             return EdgeInsets(
                 top: 16,
                 leading: 16,
@@ -57,7 +53,7 @@ struct ListActionToolbarView<Item: ListItemDetails, SelectedItemActions: View>: 
         Group {
             if !listEngine.isSelectMode {
                 HStack(alignment: .bottom) {
-                    if isFocused {
+                    if listEngine.isFocused {
                         keyboardAccessory
                     }
 

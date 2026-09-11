@@ -25,14 +25,10 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
     private let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
     private var toggleTransitionTask: Task<Void, Never>?
 
-    @Published var focusedId: UUID? = nil
     @Published var pendingFocusId: UUID? = nil
-    @Published var keyboardOwnerId: UUID? = nil
 
-    /// Protects items from being deleted on blur of their textfield.
-    @Published var protectedId: UUID? = nil
-    
-    @Published var forceSyncFocusedItem: Bool = false
+    @Published private(set) var activeEditor: EditorSession<Item>?
+    @Published private(set) var previousEditor: EditorSession<Item>?
 
     @Published private(set) var newlyCompletedIds: Set<UUID> = []
     @Published private(set) var newlyPendingIds: Set<UUID> = []
@@ -46,13 +42,85 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
     @Published private(set) var selectedItems: [Item] = []
     @Published private(set) var selectedItemIds: Set<UUID> = []
 
+    var isFocused: Bool {
+        activeEditor != nil
+    }
+
+    var focusedItem: Item? {
+        activeEditor?.item
+    }
+
     var canToggleItems: Bool {
         toggleState != nil
     }
-    
+
     var selectModeDisabledColor: Color? {
         isSelectMode ? Color.tertiary : nil
     }
+
+    // MARK: - Focus Control Functions
+
+    func isItemFocused(_ item: Item) -> Bool {
+        activeEditor?.belongs(to: item.stableId) == true
+    }
+    
+    func wasItemFocused(_ item: Item) -> Bool {
+        previousEditor?.belongs(to: item.stableId) == true
+    }
+
+    func beginEditing(_ editor: EditorSession<Item>) {
+        if activeEditor !== editor {
+            editor.invalidate()
+        }
+
+        previousEditor = activeEditor
+        activeEditor = editor
+    }
+
+    func handleNewFirstResponder(stableId: UUID) {
+        if let previousEditor {
+            self.previousEditor = nil
+            previousEditor.finalizeEdit()
+        }
+    }
+
+    /// Returns true if a modal should be opened, else false.
+    func handleItemClick(_ item: Item) -> Bool {
+        if isSelectMode || isItemToggled(item) {
+            toggleItem(item)
+            return false
+        }
+
+        if let activeEditor {
+            // Note: We don't want to delete the item here since it will be passed into a modal.
+            activeEditor.commit()
+            blur()
+        }
+
+        return true
+    }
+
+    func deleteFocusedItem() {
+        if let activeEditor {
+            blur()
+
+            DispatchQueue.main.async {
+                activeEditor.delete()
+            }
+        }
+    }
+
+    func finalizeEdit() {
+        if let activeEditor {
+            blur()
+
+            DispatchQueue.main.async {
+                activeEditor.finalizeEdit()
+            }
+        }
+    }
+
+    // MARK: - Toggle Functions
 
     func isItemToggled(_ item: Item) -> Bool {
         toggleState?.isToggled(item) ?? false
@@ -87,7 +155,7 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
                 selectedItemIds = []
                 selectedItems = []
             } else {
-                focusedId = nil
+                finalizeEdit()
                 toggleTransitionTask?.cancel()
                 fadingOpacity = 1
                 newlyCompletedIds = []
@@ -116,15 +184,18 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
 
     // MARK: - Helper Functions
 
+    // MARK: Focus Control
+
+    private func blur() {
+        activeEditor = nil
+    }
+
     // MARK: Completed Items
 
     private func toggleCompletion(_ item: Item) {
         guard let toggleState else { return }
 
-        if focusedId == item.stableId {
-            // Item is focused. Blur it.
-            focusedId = nil
-        }
+        if isFocused { finalizeEdit() }
 
         if settings.toggleTransitionDuration != .instant {
             if toggleState.isToggled(item) {
@@ -169,7 +240,9 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
                 }
 
                 // Move items to their new list (user-defined delay).
-                try await Task.sleep(for: settings.toggleTransitionDuration.duration)
+                try await Task.sleep(
+                    for: settings.toggleTransitionDuration.duration
+                )
 
                 withAnimation {
                     self.newlyCompletedIds = []

@@ -86,6 +86,7 @@ struct SortableTextfieldListView<
     }
 
     @Environment(\.scenePhase) private var appPhase
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var listEngine: ListEngine<Item>
 
     private var emptyPendingLabel: LocalizedStringKey {
@@ -126,14 +127,14 @@ struct SortableTextfieldListView<
         // MARK: Blur the textfield when the list disappears (deletes empty items).
 
         .onDisappear {
-            listEngine.focusedId = nil
+            listEngine.finalizeEdit()
         }
 
         // MARK: Blur the textfield when the app exits focus (deletes empty items).
 
         .onChange(of: appPhase) { _, phase in
             if phase == .inactive {
-                listEngine.focusedId = nil
+                listEngine.finalizeEdit()
             }
         }
 
@@ -172,9 +173,10 @@ struct SortableTextfieldListView<
                     showCompleted: showCompleted,
                     namespace: namespace,
                     settings: settings,
+                    modelContext: modelContext,
                     createItem: attemptCreateItem,
                     deleteItem: deleteItem,
-                    onTitleChange: handleTitleChange
+                    onCommit: handleTitleChange
                 )
                 .id(rowId(item))
             }
@@ -217,7 +219,8 @@ struct SortableTextfieldListView<
                         rightAdornment: rightAdornment(item),
                         bottomAdornment: bottomAdornment(item),
                         showCompleted: showCompleted,
-                        settings: settings
+                        settings: settings,
+                        modelContext: modelContext
                     )
                 }
 
@@ -264,12 +267,12 @@ struct SortableTextfieldListView<
             return
         }
 
-        createItem(
-            getInsertionIndex(
-                pendingIndex: index,
-                sortedPendingItems: sortedPendingItems,
-                sortedItems: sortedItems
-            )
+        let insertionIndex = getInsertionIndex(
+            pendingIndex: index,
+            sortedPendingItems: sortedPendingItems,
+            sortedItems: sortedItems
         )
+
+        createItem(insertionIndex)
     }
 }
