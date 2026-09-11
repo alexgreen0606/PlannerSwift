@@ -164,7 +164,7 @@ struct RowView<
                 opacity: opacity,
                 settings: settings,
                 onTap: {
-                    createItem?(index)
+                    safeCreateItem(at: index)
                 }
             )
 
@@ -191,7 +191,7 @@ struct RowView<
                 opacity: opacity,
                 settings: settings,
                 onTap: {
-                    createItem?(index + 1)
+                    safeCreateItem(at: index + 1)
                 }
             )
         }
@@ -213,16 +213,16 @@ struct RowView<
             text: $editorSession.title,
             height: $editorSession.height,
             tint: tint,
-            isNothingFocused: !listEngine.isFocused,
+            shouldResign: !listEngine.isFocused,
             isFocused: isItemFocused,
-            onBecameFirstResponder: {
-                listEngine.handleNewFirstResponder(stableId: item.stableId)
+            onEndEditing: {
+                listEngine.handleEndEditing(editorSession)
             },
             onEnter: {
                 if !editorSession.hasEmptyTitle {
-                    createItem?(index + 1)
+                    safeCreateItem(at: index + 1)
                 } else {
-                    listEngine.deleteFocusedItem()
+                    listEngine.blur()
                 }
             }
         )
@@ -242,5 +242,16 @@ struct RowView<
             .onTapGesture {
                 listEngine.beginEditing(editorSession)
             }
+    }
+
+    // MARK: - Functions
+
+    private func safeCreateItem(at index: Int) {
+        // TODO: need to ensure this doesn't create if the onCommit makes the title empty again.
+        
+        if let createItem {
+            listEngine.commitFocusedItemTitle()
+            createItem(index)
+        }
     }
 }

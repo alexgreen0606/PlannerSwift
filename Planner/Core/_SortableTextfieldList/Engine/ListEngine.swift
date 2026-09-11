@@ -63,11 +63,12 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
     func isItemFocused(_ item: Item) -> Bool {
         activeEditor?.belongs(to: item.stableId) == true
     }
-    
+
     func wasItemFocused(_ item: Item) -> Bool {
         previousEditor?.belongs(to: item.stableId) == true
     }
 
+    /// Passes the first responder to this item.
     func beginEditing(_ editor: EditorSession<Item>) {
         if activeEditor !== editor {
             editor.invalidate()
@@ -77,10 +78,18 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
         activeEditor = editor
     }
 
-    func handleNewFirstResponder(stableId: UUID) {
-        if let previousEditor {
-            self.previousEditor = nil
-            previousEditor.finalizeEdit()
+    /// Finalizes edits once the first responder releases this item.
+    func handleEndEditing(_ editor: EditorSession<Item>) {
+        DispatchQueue.main.async {
+            editor.finalizeEdit()
+        }
+
+        if previousEditor === editor {
+            previousEditor = nil
+        }
+
+        if activeEditor === editor {
+            activeEditor = nil
         }
     }
 
@@ -100,24 +109,15 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
         return true
     }
 
-    func deleteFocusedItem() {
-        if let activeEditor {
-            blur()
-
-            DispatchQueue.main.async {
-                activeEditor.delete()
-            }
-        }
+    func blur() {
+        previousEditor = activeEditor
+        activeEditor = nil
     }
 
-    func finalizeEdit() {
-        if let activeEditor {
-            blur()
-
-            DispatchQueue.main.async {
-                activeEditor.finalizeEdit()
-            }
-        }
+    /// New items cannot be created next to empty titles.
+    /// This ensures all items in the list have up-to-date titles before evaluating new item creation.
+    func commitFocusedItemTitle() {
+        activeEditor?.commitTitle()
     }
 
     // MARK: - Toggle Functions
@@ -155,7 +155,7 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
                 selectedItemIds = []
                 selectedItems = []
             } else {
-                finalizeEdit()
+                blur()
                 toggleTransitionTask?.cancel()
                 fadingOpacity = 1
                 newlyCompletedIds = []
@@ -184,18 +184,12 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
 
     // MARK: - Helper Functions
 
-    // MARK: Focus Control
-
-    private func blur() {
-        activeEditor = nil
-    }
-
     // MARK: Completed Items
 
     private func toggleCompletion(_ item: Item) {
         guard let toggleState else { return }
 
-        if isFocused { finalizeEdit() }
+        if isFocused { blur() }
 
         if settings.toggleTransitionDuration != .instant {
             if toggleState.isToggled(item) {

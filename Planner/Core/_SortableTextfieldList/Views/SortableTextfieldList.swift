@@ -127,14 +127,14 @@ struct SortableTextfieldListView<
         // MARK: Blur the textfield when the list disappears (deletes empty items).
 
         .onDisappear {
-            listEngine.finalizeEdit()
+            listEngine.blur()
         }
 
         // MARK: Blur the textfield when the app exits focus (deletes empty items).
 
         .onChange(of: appPhase) { _, phase in
             if phase == .inactive {
-                listEngine.finalizeEdit()
+                listEngine.blur()
             }
         }
 

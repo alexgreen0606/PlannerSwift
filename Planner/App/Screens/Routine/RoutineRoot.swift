@@ -279,7 +279,7 @@ struct RoutineRootView: View {
             ),
             onClick: {
                 if routineEngine.isFocused {
-                    routineEngine.finalizeEdit()
+                    routineEngine.blur()
                 }
             }
         )

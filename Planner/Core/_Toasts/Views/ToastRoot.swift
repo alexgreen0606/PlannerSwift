@@ -28,7 +28,7 @@ struct ToastRootView<Content: View>: View {
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.isKeyboardFocused = listEngine.isFocused
-        self.blurFocusedItem = listEngine.finalizeEdit
+        self.blurFocusedItem = listEngine.blur
         self.content = content()
     }
 

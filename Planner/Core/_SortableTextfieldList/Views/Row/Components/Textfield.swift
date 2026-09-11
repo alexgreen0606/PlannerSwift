@@ -13,9 +13,9 @@ struct TextfieldView: UIViewRepresentable {
     @Binding var text: String
     @Binding var height: CGFloat
     var tint: Color
-    var isNothingFocused: Bool
+    var shouldResign: Bool
     var isFocused: Bool
-    var onBecameFirstResponder: () -> Void
+    var onEndEditing: () -> Void
     var onEnter: () -> Void
 
     func makeUIView(context: Context) -> UITextView {
@@ -51,12 +51,15 @@ struct TextfieldView: UIViewRepresentable {
 
         calculateHeight(view: uiView)
 
+        if shouldResign, uiView.isFirstResponder {
+            // List has requested blur. Resign the first responder.
+            uiView.resignFirstResponder()
+            return
+        }
+
         if isFocused, !uiView.isFirstResponder {
             // Item has requested focus. Make it the first responder.
             uiView.becomeFirstResponder()
-        } else if isNothingFocused, uiView.isFirstResponder {
-            // List has requested blur. Resign the first responder.
-            uiView.resignFirstResponder()
         }
     }
 
@@ -65,17 +68,20 @@ struct TextfieldView: UIViewRepresentable {
     }
 
     /// Dynamically update the height as text grows/lines increase.
-    private func calculateHeight(view: UIView) {
+    private func calculateHeight(view: UITextView) {
+        let width = view.bounds.width
+
+        guard width > 0 else { return }
+
         let size = view.sizeThatFits(
-            CGSize(
-                width: view.frame.size.width,
-                height: CGFloat.greatestFiniteMagnitude
-            )
+            CGSize(width: width, height: .greatestFiniteMagnitude)
         )
 
-        guard height != size.height else { return }
+        guard size.height > 0, height != size.height else { return }
 
-        height = size.height
+        DispatchQueue.main.async {
+            self.height = size.height
+        }
     }
 
     final class Coordinator: NSObject, UITextViewDelegate {
@@ -92,9 +98,8 @@ struct TextfieldView: UIViewRepresentable {
             parent.text = textView.text
         }
 
-        /// Inform the list when this textfield has claimed focus.
-        func textViewDidBeginEditing(_: UITextView) {
-            parent.onBecameFirstResponder()
+        func textViewDidEndEditing(_: UITextView) {
+            parent.onEndEditing()
         }
 
         /// Override return key so it doesn't add a newline.

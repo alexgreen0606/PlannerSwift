@@ -33,11 +33,10 @@ struct ProminentListButtonView<Item: ListItemDetails>: View {
             prominent: true,
             onTap: {
                 if listEngine.isFocused {
-                    listEngine.finalizeEdit()
-                    return
+                    listEngine.blur()
+                } else {
+                    createItem()
                 }
-
-                createItem()
             }
         )
         .tint(color ?? accentColor.swiftUiColor)

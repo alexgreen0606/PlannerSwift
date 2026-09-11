@@ -10,7 +10,7 @@ import Foundation
 
 final class EditorSession<Item: ListItemDetails>: ObservableObject {
     let item: Item
-    
+
     private let deleteItem: (Item) -> Void
     private let onCommit: ((Item) -> Void)?
 
@@ -27,7 +27,7 @@ final class EditorSession<Item: ListItemDetails>: ObservableObject {
         self.height = item.height
     }
 
-    private var hasCommitted = false
+    private var hasFinished = false
 
     @Published var title: String
     @Published var height: CGFloat
@@ -35,39 +35,56 @@ final class EditorSession<Item: ListItemDetails>: ObservableObject {
     var hasEmptyTitle: Bool {
         title.trimmed.isEmpty
     }
-    
+
     func belongs(to itemId: UUID) -> Bool {
         item.stableId == itemId
     }
 
     func invalidate() {
-        hasCommitted = false
+        hasFinished = false
     }
 
     func finalizeEdit() {
-        guard !hasCommitted else { return }
-        hasCommitted = true
-        
+        guard !hasFinished else { return }
+        hasFinished = true
+
         let trimmedTitle = title.trimmed
 
         if trimmedTitle.isEmpty {
             deleteItem(item)
         } else {
-            commit(trimmedTitle: trimmedTitle)
+            item.title = trimmedTitle
+            item.height = height
+
+            if let onCommit {
+                onCommit(item)
+                title = item.title
+            }
         }
     }
-    
-    func commit(trimmedTitle: String? = nil) {
-        item.title = trimmedTitle ?? title.trimmed
+
+    func commit() {
+        guard !hasFinished else { return }
+        hasFinished = true
+
+        item.title = title.trimmed
         item.height = height
-        
+
         if let onCommit {
             onCommit(item)
             title = item.title
         }
     }
-    
+
     func delete() {
+        guard !hasFinished else { return }
+        hasFinished = true
+
         deleteItem(item)
+    }
+
+    /// Special handler called before creating new items.
+    func commitTitle() {
+        item.title = title.trimmed
     }
 }
