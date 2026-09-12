@@ -20,16 +20,16 @@ struct LocationOptionView: View {
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var locationSearchService: LocationSearchService
 
+    private var isDeviceLocation: Bool {
+        title == locationService.validDeviceLocationName
+    }
+
     private var isHomeLocation: Bool {
         nameId == homeLocation?.nameId
     }
 
     private var isTripLocation: Bool {
         nameId == sourcePlanner?.trip?.location?.nameId
-    }
-
-    private var isDeviceLocation: Bool {
-        title == locationService.validDeviceLocationName
     }
 
     private var isPlannerLocation: Bool {
@@ -50,32 +50,38 @@ struct LocationOptionView: View {
         HStack {
             VStack(alignment: .leading) {
                 Group {
-                    HStack {
-                        Group {
-                            if isHomeLocation {
-                                Image(systemName: "house")
-                            } else if isTripLocation {
-                                Image(systemName: "suitcase")
-                            } else if isDeviceLocation {
-                                Image(systemName: "location")
-                            } else if isPlannerLocation,
-                                      let plannerIcon = sourcePlanner?.datestamp
-                                      .calendarSymbolName
-                            {
-                                Image(systemName: plannerIcon)
-                            }
-                        }
-                        .foregroundStyle(.secondary)
-
-                        Text(title)
-                    }
-                    .font(.headline)
+                    Text(title)
+                        .font(.headline)
 
                     if let subtitle, !subtitle.isEmpty {
                         Text(subtitle)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
+                            .padding(.bottom, 2)
                     }
+
+                    HStack(alignment: .bottom, spacing: 0) {
+                        if isDeviceLocation {
+                            Image(systemName: "location")
+                        }
+
+                        if isHomeLocation {
+                            Image(systemName: "house")
+                        }
+
+                        if isTripLocation {
+                            Image(systemName: "suitcase")
+                        }
+
+                        if isPlannerLocation,
+                            let plannerIcon = sourcePlanner?.datestamp
+                                .calendarSymbolName
+                        {
+                            Image(systemName: plannerIcon)
+                        }
+                    }
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
                 }
                 .opacity(opacity)
 

@@ -45,6 +45,8 @@ struct LocationFormView: View {
 
     @State private var suggestedLocations: [Location] = []
 
+    @FocusState private var isSearchFocused: Bool
+
     // MARK: - Body
 
     var body: some View {
@@ -70,10 +72,33 @@ struct LocationFormView: View {
             .safeAreaInset(edge: .top) {
                 LocationFormHeaderView(
                     selectedLocation: $selectedLocation,
+                    isSearchFocused: $isSearchFocused,
                     formVariant: variant,
                     homeLocation: settings.homeLocation,
                     sourcePlanner: sourcePlanner
                 )
+            }
+            .safeAreaInset(edge: .bottom) {
+                let deviceLocationName = locationService.validDeviceLocationName
+
+                if !deviceLocationName.isEmpty,
+                    !locationSearchService.text
+                        .localizedCaseInsensitiveContains(deviceLocationName)
+                {
+                    ActionButtonView(
+                        label: deviceLocationName,
+                        systemImage: "magnifyingglass",
+                        onTap: {
+                            withAnimation {
+                                locationSearchService.text = deviceLocationName
+                            }
+                        }
+                    )
+                    .padding(
+                        .bottom,
+                        isSearchFocused ? 12 : variant == .home ? 24 : 0
+                    )
+                }
             }
             .overlay {
                 emptyOptionsLabel

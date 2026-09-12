@@ -9,6 +9,7 @@ import SwiftUI
 
 struct LocationFormHeaderView: View {
     @Binding var selectedLocation: Location?
+    @FocusState.Binding var isSearchFocused: Bool
     let formVariant: LocationFormVariant
     let homeLocation: Location?
     let sourcePlanner: Planner?
@@ -18,8 +19,6 @@ struct LocationFormHeaderView: View {
 
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var locationSearchService: LocationSearchService
-
-    @FocusState private var isSearchFocused
 
     private var tripLocation: Location? {
         sourcePlanner?.trip?.location
