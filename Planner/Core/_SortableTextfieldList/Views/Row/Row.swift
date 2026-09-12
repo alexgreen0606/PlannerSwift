@@ -248,6 +248,7 @@ struct RowView<
 
     private func safeCreateItem(at index: Int) {
         // TODO: need to ensure this doesn't create if the onCommit makes the title empty again.
+        // actually it can, but the item must be deleted.
         
         if let createItem {
             listEngine.commitFocusedItemTitle()

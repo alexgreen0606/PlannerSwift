@@ -80,9 +80,7 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
 
     /// Finalizes edits once the first responder releases this item.
     func handleEndEditing(_ editor: EditorSession<Item>) {
-        DispatchQueue.main.async {
-            editor.finalizeEdit()
-        }
+        editor.finalizeEdit()
 
         if previousEditor === editor {
             previousEditor = nil

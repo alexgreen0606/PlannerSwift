@@ -108,7 +108,6 @@ struct SortableTextfieldListView<
             pendingList
             completedList
         }
-        .animateUserAction(from: sortedItems.count)
         .listStyle(.plain)
         .environment(\.defaultMinListRowHeight, 0)
         .background(Color.appBackground.edgesIgnoringSafeArea(.all))
