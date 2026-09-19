@@ -61,8 +61,10 @@ extension ModelContext {
         }
 
         // MARK: - Skip Synchronization Of Past Planners
+        
+        let todaystamp = todayStartOfDay.datestamp
 
-        if !syncPast && planner.datestamp < todayStartOfDay.datestamp {
+        if !syncPast && planner.datestamp < todaystamp {
             // Past routine events will never change unless forced to.
             return
         }
@@ -106,7 +108,10 @@ extension ModelContext {
 
         if !invalidatedPositionPlannerEvents.isEmpty {
 
-            sortedListEvents = getSortedListEvents(on: startOfDay)
+            sortedListEvents = getSortedListEvents(
+                on: startOfDay,
+                todaystamp: todaystamp
+            )
             sortedRoutineEvents = getSortedRoutineEvents(
                 for: routine
             )
@@ -167,7 +172,7 @@ extension ModelContext {
 
         sortedListEvents =
             sortedListEvents
-            ?? getSortedListEvents(on: startOfDay)
+        ?? getSortedListEvents(on: startOfDay, todaystamp: todaystamp)
 
         sortedRoutineEvents =
             sortedRoutineEvents

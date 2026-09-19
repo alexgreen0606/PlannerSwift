@@ -19,12 +19,12 @@ extension PlannerEvent {
         let plannerDatestamp = startOfDay.datestamp
 
         return #Predicate<PlannerEvent> { event in
-            if let eKEventContext = event.eKEventContext {
+            if event.eKEventContext != nil {
 
                 // MARK: Calendar events that exist on this day.
 
-                return eKEventContext.startDate < plannerEnd
-                    && eKEventContext.endDate > plannerStart
+                return event.eKEventContext!.startDate < plannerEnd
+                    && event.eKEventContext!.endDate > plannerStart
 
             } else if let time = event.time {
 

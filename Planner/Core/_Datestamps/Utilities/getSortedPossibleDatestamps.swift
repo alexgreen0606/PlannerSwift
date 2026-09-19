@@ -12,7 +12,8 @@ import SwiftDate
 /// Example: An event could be nighttime in Los Angeles and morning the next day in Rome.
 func getSortedPossibleDatestamps(
     for date: Date,
-    ending: Date? = nil
+    ending: Date? = nil,
+    includeDatestamp: String? = nil
 ) -> [String] {
     var current = date.in(region: earliestRegion).dateAtStartOf(.day)
     let end = (ending ?? date).in(region: latestRegion).dateAtEndOf(.day)
@@ -22,6 +23,10 @@ func getSortedPossibleDatestamps(
     while current <= end {
         datestamps.insert(current.datestamp)
         current = current + 1.days
+    }
+    
+    if let includeDatestamp {
+        datestamps.insert(includeDatestamp)
     }
 
     return datestamps.sorted()

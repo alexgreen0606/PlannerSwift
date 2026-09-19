@@ -111,20 +111,21 @@ struct SearchRootView: View {
                         plannerService.search()
                     }
                     .background(Color.appBackground)
-                    .safeAreaInset(edge: .top) {
-                        SearchInsetView(
-                            focused: Layout.TOOLBAR_HEIGHT,
-                            blurred: geo.safeAreaInsets.top
-                                - geo.safeAreaInsets.bottom + 32
-                        )
-                    }
-                    .ignoresSafeArea(edges: .top)
-                    .safeAreaInset(edge: .bottom) {
-                        SearchInsetView(
-                            focused: Layout.TOOLBAR_HEIGHT,
-                            blurred: 0
-                        )
-                    }
+                    // TODO: clean up.
+//                    .safeAreaInset(edge: .top) {
+//                        SearchInsetView(
+//                            focused: Layout.TOOLBAR_HEIGHT,
+//                            blurred: geo.safeAreaInsets.top
+//                                - geo.safeAreaInsets.bottom + 32
+//                        )
+//                    }
+//                    .ignoresSafeArea(edges: .top)
+//                    .safeAreaInset(edge: .bottom) {
+//                        SearchInsetView(
+//                            focused: Layout.TOOLBAR_HEIGHT,
+//                            blurred: 0
+//                        )
+//                    }
                     .overlay {
                         noResultsLabelView
                     }

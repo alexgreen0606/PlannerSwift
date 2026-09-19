@@ -62,7 +62,7 @@ struct RootTabView: View {
             ]
         }
     }
-    
+
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
@@ -86,27 +86,16 @@ struct RootTabView: View {
             // MARK: Standard App Navigation
 
             TabView(selection: $selectedTab) {
-                Tab(
-                    "",
-                    systemImage: todayService.todaystamp
-                        .calendarSymbolName,
-                    value: .dashboard
-                ) {
-                    DashboardRootView(
-                        settings: settings,
-                        namespace: namespace
-                    )
+                // TODO: preserve older logic for older ios versions
+                Tab("", systemImage: "gear", value: .settings) {
+                    SettingsRootView(settings: settings)
                 }
 
                 Tab("", systemImage: "list.bullet", value: .checklists) {
                     ChecklistNavigationView(settings: settings)
                 }
 
-                Tab("", systemImage: "gear", value: .settings) {
-                    SettingsRootView(settings: settings)
-                }
-
-                Tab(value: .search, role: .search) {
+                Tab("", systemImage: "magnifyingglass", value: .search) {
                     PlannerLoaderView(datestamp: todayService.todaystamp) {
                         planner in
                         SearchRootView(
@@ -115,6 +104,25 @@ struct RootTabView: View {
                             namespace: namespace
                         )
                     }
+                }
+
+                Tab(
+                    "",
+                    systemImage: todayService.todaystamp
+                        .calendarSymbolName,
+                    value: .dashboard,
+                    role: {
+                        if #available(iOS 27, *) {
+                            .prominent
+                        } else {
+                            nil
+                        }
+                    }()
+                ) {
+                    DashboardRootView(
+                        settings: settings,
+                        namespace: namespace
+                    )
                 }
             }
             .tabBarMinimizeBehavior(.onScrollDown)

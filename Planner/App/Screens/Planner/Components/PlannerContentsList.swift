@@ -27,7 +27,7 @@ struct PlannerContentsListView: View {
     let settings: Settings
     let namespace: Namespace.ID
     let createEvent: (Int) -> Void
-    let handleEventTitleChange: (PlannerEvent) -> Void
+    let handleEventChange: (PlannerEvent) -> Void
     let openPlannerEventSheet: (PlannerEvent) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -47,7 +47,7 @@ struct PlannerContentsListView: View {
             createItem: createEvent,
             moveItem: moveUncheckedEvent,
             deleteItem: deleteEvent,
-            handleTitleChange: handleEventTitleChange,
+            onCommitItem: handleEventChange,
             sortedPendingItems: sortedPendingPlannerEvents,
             sortedCompletedItems: sortedCompletePlannerEvents,
             showCompleted: showCompleted,
@@ -90,6 +90,7 @@ struct PlannerContentsListView: View {
     private func timeAdornment(event: PlannerEvent) -> some View {
         PlannerEventTimeAdornmentView(
             plannerEvent: event,
+            plannerDatestamp: planner.datestamp,
             plannerRegion: startOfDay.region,
             openEventSheet: {
                 openPlannerEventSheet(event)
@@ -98,7 +99,7 @@ struct PlannerContentsListView: View {
     }
 
     private func locationAdornment(event: PlannerEvent) -> some View {
-        PlannerEventLocationAdornmentView(
+        PlannerEventBottomAdornmentView(
             plannerEvent: event,
             planner: planner,
             settings: settings,

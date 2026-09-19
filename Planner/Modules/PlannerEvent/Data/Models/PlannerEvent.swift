@@ -19,6 +19,7 @@ class PlannerEvent: EventListItem {
     var time: Date?
 
     var isCompleted: Bool = false
+    var isFlagged: Bool = false
 
     /// Must be set when an event doesn't have a time.
     var datestamp: String?
@@ -27,14 +28,17 @@ class PlannerEvent: EventListItem {
     /// No relation to the event's time.
     var sortDate: Date = Date.now
     
+    /// Datestamp of the planner where the event was completed.
+    var completedOn: String = ""
+
     var height: CGFloat = 0
-    
+
     // MARK: Parent
     var routineEventRecordContext: RoutineEventRecordContext?
-    
+
     // MARK: Sibling
     var location: Location?
-    
+
     // MARK: Child
     @Relationship(
         deleteRule: .cascade,

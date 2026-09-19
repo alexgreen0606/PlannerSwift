@@ -15,6 +15,7 @@ extension ModelContext {
         _ ekEvent: EKEvent?,
         sourcePlannerEvent: PlannerEvent?,
         sourcePlanner: Planner?,
+        todaystamp: String,
         plannerService: PlannerService,
         settings: Settings
     ) -> /// The datestamps the event is now in.
@@ -45,6 +46,7 @@ extension ModelContext {
             return ensureValidSortDate(
                 for: sourcePlannerEvent,
                 sourceDatestamp: sourcePlanner?.datestamp,
+                todaystamp: todaystamp,
                 settings: settings
             )
 
@@ -54,7 +56,8 @@ extension ModelContext {
             if ekEvent.isAllDay {
 
                 createPlannerEvent(
-                    for: ekEvent
+                    for: ekEvent,
+                    todaystamp: todaystamp
                 )
 
                 // All day events are floating. Directly compute the datestamps.
@@ -74,7 +77,8 @@ extension ModelContext {
                 if let destinationStartOfDay = sortedStartsOfDays.first {
                     createPlannerEvent(
                         for: ekEvent,
-                        on: destinationStartOfDay
+                        on: destinationStartOfDay,
+                        todaystamp: todaystamp
                     )
                 }
 
@@ -100,7 +104,8 @@ extension ModelContext {
     @MainActor
     private func createPlannerEvent(
         for ekEvent: EKEvent,
-        on startOfDay: DateInRegion? = nil
+        on startOfDay: DateInRegion? = nil,
+        todaystamp: String
     ) {
         let sortDate = {
             guard !ekEvent.isAllDay, let startOfDay else {
@@ -108,7 +113,7 @@ extension ModelContext {
             }
 
             // Event has a target planner. Add it to the top of the list.
-            return getUpperSortDate(for: startOfDay)
+            return getUpperSortDate(for: startOfDay, todaystamp: todaystamp)
         }()
 
         insert(

@@ -59,6 +59,7 @@ struct EventFormView: View {
     @Environment(\.showToast) private var showToast
     @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var plannerService: PlannerService
+    @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
     @State private var draftPlannerEvent: DraftPlannerEvent
@@ -142,6 +143,7 @@ struct EventFormView: View {
             event,
             sourcePlannerEvent: sourcePlannerEvent,
             sourcePlanner: sourcePlanner,
+            todaystamp: todayService.todaystamp,
             plannerService: plannerService,
             settings: settings
         )
@@ -152,8 +154,20 @@ struct EventFormView: View {
     }
 
     private func showNotification(destinationDatestamps: Set<String>) {
-        guard let earliestDatestamp = destinationDatestamps.sorted().first
-        else { return }
+        let cutoffDatestamp = DatestampFormatter.datestamp(
+            from: settings.keepPastEventsDuration.cutoffDate,
+            timeZone: .current
+        )
+
+        guard
+            let earliestDatestamp =
+                destinationDatestamps
+                .filter({ $0 >= cutoffDatestamp })
+                .sorted()
+                .first
+        else {
+            return
+        }
 
         guard let sourceDatestamp = sourcePlanner?.datestamp else {
             showToast(

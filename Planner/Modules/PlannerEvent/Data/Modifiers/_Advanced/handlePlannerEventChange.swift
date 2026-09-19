@@ -1,5 +1,5 @@
 //
-//  handlePlannerEventTitleChange.swift
+//  handlePlannerEventChange.swift
 //  Planner
 //
 //  Created by Alex Green on 4/2/26.
@@ -11,7 +11,7 @@ import SwiftDate
 
 extension ModelContext {
     @MainActor
-    func handlePlannerEventTitleChange(
+    func handlePlannerEventChange(
         _ plannerEvent: PlannerEvent,
         in planner: Planner,
         startOfDay: DateInRegion,
@@ -39,10 +39,10 @@ extension ModelContext {
         if let plannerLocation,
             let (time, updatedText) = plannerEvent.title.extractTime(
                 for: startOfDay
-            )
+            ),
+            !updatedText.trimmed.isEmpty
         {
             // MARK: Title has a time value. Re-configure the event.
-
             plannerEvent.title = updatedText
             plannerEvent.location = plannerLocation
             plannerEvent.time = time

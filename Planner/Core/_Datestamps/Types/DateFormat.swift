@@ -13,6 +13,7 @@ enum DateFormat {
     case dateLabel
     case dateWithoutYear
     case conciseWeekday
+    case conciseDateLabel
     case conciseMonth
 
     private static let ordinalFormatter: NumberFormatter = {
@@ -31,6 +32,11 @@ enum DateFormat {
             return datestamp.conciseWeekday
         case .conciseMonth:
             return datestamp.conciseMonth
+        case .conciseDateLabel:
+            let dateLabel = datestamp.conciseDateLabel(todaystamp: todaystamp)
+            return ordinal == true
+                ? formatOrdinalDateLabel(dateLabel)
+                : dateLabel
         case .dateWithoutYear:
             return datestamp.dateWithoutYear
         case .countdown:
@@ -53,15 +59,15 @@ enum DateFormat {
         var formatted = text
 
         if !formatted.contains(","),
-           let dayString = formatted.split(separator: " ").last,
-           let dayInt = Int(dayString),
-           let ordinalDay = Self.ordinalFormatter.string(
-               from: NSNumber(value: dayInt)
-           ),
-           let range = formatted.range(
-               of: dayString,
-               options: .backwards
-           )
+            let dayString = formatted.split(separator: " ").last,
+            let dayInt = Int(dayString),
+            let ordinalDay = Self.ordinalFormatter.string(
+                from: NSNumber(value: dayInt)
+            ),
+            let range = formatted.range(
+                of: dayString,
+                options: .backwards
+            )
         {
             formatted.replaceSubrange(range, with: ordinalDay)
         }

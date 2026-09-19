@@ -37,10 +37,14 @@ struct PlannerApp: App {
             cloudKitDatabase: .automatic
         )
 
-        return try! ModelContainer(
-            for: schema,
-            configurations: [configuration]
-        )
+        do {
+            return try ModelContainer(
+                for: schema,
+                configurations: [configuration]
+            )
+        } catch {
+            fatalError("1_PlannerApp init: \(error)")
+        }
     }()
 
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme

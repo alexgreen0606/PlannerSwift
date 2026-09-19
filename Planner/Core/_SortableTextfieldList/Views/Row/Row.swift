@@ -134,6 +134,14 @@ struct RowView<
                 }
             }
 
+            // MARK: Keep the editor session up-to-date with the item's title.
+
+            .onChange(of: item.title) { _, newTitle in
+                if newTitle != editorSession.title {
+                    editorSession.title = newTitle
+                }
+            }
+
         if let namespace {
             row
                 .matchedTransitionSource(
@@ -247,9 +255,6 @@ struct RowView<
     // MARK: - Functions
 
     private func safeCreateItem(at index: Int) {
-        // TODO: need to ensure this doesn't create if the onCommit makes the title empty again.
-        // actually it can, but the item must be deleted.
-        
         if let createItem {
             listEngine.commitFocusedItemTitle()
             createItem(index)

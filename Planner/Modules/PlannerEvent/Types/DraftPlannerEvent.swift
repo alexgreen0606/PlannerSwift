@@ -14,6 +14,7 @@ struct DraftPlannerEvent: PlannerEventLocationHelpers {
     var date: Date = Date()
     var hasTime: Bool = false
     var location: Location? = nil
+    var isFlagged: Bool = false
     var ekEvent: EKEvent? = nil
 
     // MARK: New Planner Event
@@ -34,6 +35,7 @@ struct DraftPlannerEvent: PlannerEventLocationHelpers {
     ) {
         title = plannerEvent.title
         location = plannerEvent.location
+        isFlagged = plannerEvent.isFlagged
 
         if let ekEvent = ekEventStore.getEkEvent(for: plannerEvent) {
             // Sync draft with calendar event.

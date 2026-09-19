@@ -187,6 +187,7 @@ extension ModelContext {
         for time: Date?,
         endTime: Date? = nil,
         datestamp: String? = nil,
+        includeDatestamp: String? = nil,
         settings: Settings
     ) -> [DateInRegion] {
         guard let time else {
@@ -203,7 +204,11 @@ extension ModelContext {
         }
 
         let sortedPossibleDatestamps =
-            getSortedPossibleDatestamps(for: time, ending: endTime)
+            getSortedPossibleDatestamps(
+                for: time,
+                ending: endTime,
+                includeDatestamp: includeDatestamp
+            )
 
         var sortedStartOfDays: [DateInRegion] = []
 
@@ -214,6 +219,10 @@ extension ModelContext {
             let startOfDay = planner.startOfDay(settings: settings)
 
             let eventExistsInPlanner = {
+                if includeDatestamp == datestamp {
+                    return true
+                }
+                
                 if let endTime,
                     startOfDay.includes(startTime: time, endTime: endTime)
                 {
@@ -232,8 +241,14 @@ extension ModelContext {
     }
 
     @MainActor
-    func getUpperSortDate(for startOfDay: DateInRegion) -> Date {
-        let listEvents = getSortedListEvents(on: startOfDay)
+    func getUpperSortDate(for startOfDay: DateInRegion, todaystamp: String)
+        -> Date
+    {
+        let listEvents = getSortedListEvents(
+            on: startOfDay,
+            todaystamp: todaystamp
+        )
+
         return generatePlannerEventSortDate(
             at: 0,
             in: listEvents,

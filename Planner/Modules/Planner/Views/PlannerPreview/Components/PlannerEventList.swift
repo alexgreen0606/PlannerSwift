@@ -10,6 +10,7 @@ import SwiftDate
 import SwiftUI
 
 struct PlannerEventListView: View {
+    let plannerDatestamp: String
     let plannerRegion: Region
     let events: [PlannerEvent]
     let hideLowerDivider: Bool
@@ -44,6 +45,7 @@ struct PlannerEventListView: View {
 
                     PlannerEventTimeAdornmentView(
                         plannerEvent: event,
+                        plannerDatestamp: plannerDatestamp,
                         plannerRegion: plannerRegion,
                         scale: 0.8
                     )

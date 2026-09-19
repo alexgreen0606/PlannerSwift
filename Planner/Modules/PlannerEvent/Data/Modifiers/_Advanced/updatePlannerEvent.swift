@@ -16,6 +16,7 @@ extension ModelContext {
         destinationDatestamp: String,
         sourcePlanner: Planner?,
         timeZone: TimeZone,
+        todaystamp: String,
         plannerService: PlannerService,
         ekEventStore: EKEventStore,
         settings: Settings,
@@ -45,6 +46,7 @@ extension ModelContext {
         }
 
         event.location = draftPlannerEvent.location
+        event.isFlagged = draftPlannerEvent.isFlagged
 
         // MARK: Delete stale calendar context if one exists.
 
@@ -55,6 +57,7 @@ extension ModelContext {
         let destinationDatestamps = ensureValidSortDate(
             for: event,
             sourceDatestamp: sourcePlanner?.datestamp,
+            todaystamp: todaystamp,
             settings: settings
         )
 

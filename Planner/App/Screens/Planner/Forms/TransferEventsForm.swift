@@ -146,6 +146,7 @@ struct TransferEventsFormView: View {
             days: dayOffset.days,
             sourceDatestamp: sourceDatestamp,
             destinationDatestamp: destinationDatestamp,
+            todaystamp: todayService.todaystamp,
             ekEventStore: calendarService.ekEventStore,
             settings: settings
         )

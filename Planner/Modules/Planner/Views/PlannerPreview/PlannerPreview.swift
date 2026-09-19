@@ -158,6 +158,7 @@ struct PlannerPreviewView: View {
             birthdayChipList
             eventChipList
             PlannerEventListView(
+                plannerDatestamp: planner.datestamp,
                 plannerRegion: startOfDay.region,
                 events: previewContext.plannerEvents,
                 hideLowerDivider: hideRemainingPlans,

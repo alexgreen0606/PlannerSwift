@@ -69,6 +69,7 @@ extension PlannerEvent: PlannerEventLocationHelpers {
             existingPlannerEvent: self
         )
         time = ekEvent.startDate
+        isFlagged = false
 
         routineEventRecordContext?.isVariant = true
 

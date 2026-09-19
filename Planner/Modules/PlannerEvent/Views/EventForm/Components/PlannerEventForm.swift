@@ -75,6 +75,8 @@ struct PlannerEventFormView: View {
             )
 
             detailsSection
+
+            flagSection
         }
         .toolbar {
             cancelButton
@@ -280,6 +282,28 @@ struct PlannerEventFormView: View {
         }
     }
 
+    private var flagSection: some View {
+        Section {
+            Toggle(isOn: $draftPlannerEvent.isFlagged) {
+                Image(
+                    systemName: draftPlannerEvent.isFlagged
+                        ? "flag.fill" : "flag"
+                )
+                .foregroundStyle(
+                    draftPlannerEvent.isFlagged
+                        ? accentColor.swiftUiColor : Color.label
+                )
+            }
+            .tint(accentColor.swiftUiColor)
+        } footer: {
+            if draftPlannerEvent.isFlagged {
+                Text(
+                    "Flagged events will carry forward to the present day until completed."
+                )
+            }
+        }
+    }
+
     // MARK: - Functions
 
     private func savePlannerEvent() {
@@ -292,6 +316,7 @@ struct PlannerEventFormView: View {
             ).datestamp,
             sourcePlanner: sourcePlanner,
             timeZone: region.timeZone,
+            todaystamp: todayService.todaystamp,
             plannerService: plannerService,
             ekEventStore: calendarService.ekEventStore,
             settings: settings

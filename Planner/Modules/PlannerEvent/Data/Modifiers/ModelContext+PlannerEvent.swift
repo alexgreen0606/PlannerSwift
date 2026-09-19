@@ -41,13 +41,16 @@ extension ModelContext {
 
     // MARK: - READ
 
-    func getSortedListEvents(on startOfDay: DateInRegion)
+    func getSortedListEvents(on startOfDay: DateInRegion, todaystamp: String)
         -> [PlannerEvent]
     {
         do {
             return try fetch(
                 FetchDescriptor<PlannerEvent>(
-                    predicate: PlannerEvent.listEvents(on: startOfDay),
+                    predicate: PlannerEvent.listEvents(
+                        on: startOfDay,
+                        todaystamp: todaystamp
+                    ),
                     sortBy: [
                         SortDescriptor(\PlannerEvent.sortDate)
                     ]
@@ -130,6 +133,7 @@ extension ModelContext {
     func ensureValidSortDate(
         for plannerEvent: PlannerEvent,
         sourceDatestamp: String? = nil,
+        todaystamp: String,
         settings: Settings
     ) -> /// The datestamps the event is now in.
         Set<String>
@@ -147,10 +151,27 @@ extension ModelContext {
             )
         }
 
+        // Make sure flagged events are considered within the planners they are carried to.
+        let forceIncludeDatestamp: String? = {
+            guard plannerEvent.isFlagged
+            else { return nil }
+
+            if !plannerEvent.completedOn.isEmpty {
+                return plannerEvent.completedOn
+            }
+
+            if !plannerEvent.isCompleted {
+                return todaystamp
+            }
+
+            return nil
+        }()
+
         let sortedStartsOfDays = getSortedPlannerStartOfDays(
             for: plannerEvent.time,
             endTime: plannerEvent.eKEventContext?.endDate,
             datestamp: plannerEvent.datestamp,
+            includeDatestamp: forceIncludeDatestamp,
             settings: settings
         )
 
@@ -172,7 +193,8 @@ extension ModelContext {
         }
 
         let sortedListEvents = getSortedListEvents(
-            on: earliestStartOfDay
+            on: earliestStartOfDay,
+            todaystamp: todaystamp
         )
 
         // Place the event at the top of its earliest planner.

@@ -68,7 +68,7 @@ struct RoutineRootView: View {
                         createItem: createEvent,
                         moveItem: moveEvent,
                         deleteItem: deleteEvent,
-                        handleTitleChange: handleEventTitleChange,
+                        onCommitItem: handleEventChange,
                         tint: { _ in accentColor.swiftUiColor },
                         toggleConfig: eventToggleConfig,
                         leftAdornment: { _ in EmptyView() },
@@ -239,7 +239,7 @@ struct RoutineRootView: View {
         )
     }
 
-    private func handleEventTitleChange(event: RoutineEventContext) {
+    private func handleEventChange(event: RoutineEventContext) {
         if !invalidatedEventIds.contains(event.stableId) {
             event.version += 0.1
 

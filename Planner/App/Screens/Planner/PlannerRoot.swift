@@ -34,7 +34,15 @@ struct PlannerRootView: View {
             wrappedValue: ListEngine<PlannerEvent>(
                 toggleState: ListItemToggleState(
                     isToggled: { $0.isCompleted },
-                    setIsToggled: { $0.isCompleted = $1 }
+                    setIsToggled: { event, isCompleted in
+                        if isCompleted {
+                            event.completedOn = planner.datestamp
+                            event.isCompleted = true
+                        } else {
+                            event.completedOn = ""
+                            event.isCompleted = false
+                        }
+                    }
                 ),
                 settings: settings
             )
@@ -80,10 +88,10 @@ struct PlannerRootView: View {
 
     private var visibleEvents: [PlannerEvent] {
         if planner.showCompleted {
-            return sortedPlannerEvents
+            return sortedPlannerEvents + sortedEventChips
         }
 
-        return sortedPendingPlannerEvents
+        return sortedPendingPlannerEvents + sortedEventChips
     }
 
     private var plannerLocation: Location? {
@@ -122,7 +130,7 @@ struct PlannerRootView: View {
                         settings: settings,
                         namespace: namespace,
                         createEvent: createEvent,
-                        handleEventTitleChange: handleEventTitleChange,
+                        handleEventChange: handleEventChange,
                         openPlannerEventSheet: handleEventClick
                     )
                     .safeAreaBar(edge: .bottom) {
@@ -246,12 +254,15 @@ struct PlannerRootView: View {
     // MARK: - View Builder
 
     private func actionToolbar(scrollProxy: ScrollViewProxy) -> some View {
-        ListActionToolbarView<
+        let flagImage =
+            plannerEngine.focusedItem?.isFlagged == true ? "flag.fill" : "flag"
+
+        return ListActionToolbarView<
             PlannerEvent,
             SelectedEventActionsView
         >(
             keyboardAccessory: ListKeyboardAccessoryView(
-                iconImageNames: ["info"],
+                iconImageNames: ["info", flagImage],
                 onIconTap: handleToolbarTap
             ),
             selectedItemActions: SelectedEventActionsView(
@@ -275,14 +286,21 @@ struct PlannerRootView: View {
         )
     }
 
-    private func handleToolbarTap(icon _: String) {
+    private func handleToolbarTap(icon: String) {
         if let event = plannerEngine.focusedItem {
-            handleEventClick(event)
+            switch icon {
+            case "info":
+                handleEventClick(event)
+            case "flag", "flag.fill":
+                event.isFlagged.toggle()
+            default:
+                break
+            }
         }
     }
 
-    private func handleEventTitleChange(event: PlannerEvent) {
-        modelContext.handlePlannerEventTitleChange(
+    private func handleEventChange(event: PlannerEvent) {
+        modelContext.handlePlannerEventChange(
             event,
             in: planner,
             startOfDay: startOfDay,

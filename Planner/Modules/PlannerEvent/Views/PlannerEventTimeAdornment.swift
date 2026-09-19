@@ -10,17 +10,20 @@ import SwiftUI
 
 struct PlannerEventTimeAdornmentView: View {
     private let plannerEvent: PlannerEvent
+    private let plannerDatestamp: String
     private let plannerRegion: Region
     private let scale: CGFloat
     private let openEventSheet: (() -> Void)?
 
     init(
         plannerEvent: PlannerEvent,
+        plannerDatestamp: String,
         plannerRegion: Region,
         scale: CGFloat = 1,
         openEventSheet: (() -> Void)? = nil
     ) {
         self.plannerEvent = plannerEvent
+        self.plannerDatestamp = plannerDatestamp
         self.plannerRegion = plannerRegion
         self.scale = scale
         self.openEventSheet = openEventSheet
@@ -32,7 +35,9 @@ struct PlannerEventTimeAdornmentView: View {
     // MARK: - Body
 
     var body: some View {
-        if let time = plannerEvent.time {
+        if let time = plannerEvent.time,
+            eventDatestamp(time: time) == plannerDatestamp
+        {
             Time(
                 timeInRegion: DateInRegion(time, region: plannerRegion),
                 color: plannerEvent.tint(accentColor: accentColor),
@@ -40,5 +45,14 @@ struct PlannerEventTimeAdornmentView: View {
                 onTap: openEventSheet
             )
         }
+    }
+
+    // MARK: - Functions
+
+    private func eventDatestamp(time: Date) -> String {
+        DatestampFormatter.datestamp(
+            from: time,
+            timeZone: plannerRegion.timeZone
+        )
     }
 }

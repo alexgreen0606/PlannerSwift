@@ -1,5 +1,5 @@
 //
-//  PlannerEventLocationAdornment.swift
+//  PlannerEventBottomAdornmentView.swift
 //  Planner
 //
 //  Created by Alex Green on 2/27/26.
@@ -8,7 +8,7 @@
 import SwiftDate
 import SwiftUI
 
-struct PlannerEventLocationAdornmentView: View {
+struct PlannerEventBottomAdornmentView: View {
     let plannerEvent: PlannerEvent
     let planner: Planner
     let settings: Settings
@@ -21,9 +21,30 @@ struct PlannerEventLocationAdornmentView: View {
         .blue
 
     @EnvironmentObject private var locationService: LocationService
+    @EnvironmentObject private var todayService: TodayService
+
+    private var eventDatestamp: String {
+        if let time = plannerEvent.time {
+            // Timed event: placed in a day from the perspective of the planner.
+            return DatestampFormatter.datestamp(
+                from: time,
+                timeZone: plannerRegion.timeZone
+            )
+        } else if let datestamp = plannerEvent.datestamp {
+            // Untimed event: placed directly in its parent planner.
+            return datestamp
+        } else {
+            // Fallback that should never occur in theory.
+            return planner.datestamp
+        }
+    }
+
+    private var plannerRegion: Region {
+        planner.region(settings: settings)
+    }
 
     private var plannerTimeZoneId: String {
-        planner.location(settings: settings).timeZoneId
+        plannerRegion.timeZone.identifier
     }
 
     private var locationContextsByTimeZoneSecondsFromGmt:
@@ -103,27 +124,77 @@ struct PlannerEventLocationAdornmentView: View {
             .compactMap(TimeZone.init(secondsFromGMT:))
     }
 
+    private var flaggedMessage: String {
+        guard plannerEvent.isFlagged
+        else { return "" }
+
+        if !plannerEvent.completedOn.isEmpty
+            && planner.datestamp == eventDatestamp
+        {
+            let formattedCompletionDate = DateFormat.dateLabel.string(
+                from: plannerEvent.completedOn,
+                todaystamp: todayService.todaystamp,
+                ordinal: true
+            )
+
+            return "Completed on \(formattedCompletionDate)"
+        }
+
+        guard eventDatestamp != planner.datestamp
+        else { return "" }
+
+        if let time = plannerEvent.time {
+            let timeString =
+                DateInRegion(
+                    time,
+                    region: plannerRegion
+                ).timeString ?? ""
+
+            return
+                "\(formatDatestamp(eventDatestamp, ordinal: true)) \(timeString)"
+
+        }
+
+        return formatDatestamp(eventDatestamp)
+    }
+
     // MARK: - Body
 
     var body: some View {
-        Grid(horizontalSpacing: 4, verticalSpacing: 6) {
-            ForEach(
-                sortedTimezones,
-                id: \.identifier
-            ) { timeZone in
-                if let contexts =
-                    locationContextsByTimeZoneSecondsFromGmt[
-                        timeZone.secondsFromGMT()
-                    ]
-                {
-                    timeZoneRow(
-                        timeZone: timeZone,
-                        locationContexts: contexts
-                    )
+        HStack(alignment: .top) {
+            if plannerEvent.isFlagged {
+                AdornedValue(
+                    flaggedMessage,
+                    iconConfig: IconConfig(
+                        name: "flag.fill",
+                        primaryColor: plannerEvent.tint(
+                            accentColor: accentColor
+                        )
+                    ),
+                    color: Color.secondary,
+                    scale: 0.7
+                )
+            }
+
+            Grid(horizontalSpacing: 4, verticalSpacing: 6) {
+                ForEach(
+                    sortedTimezones,
+                    id: \.identifier
+                ) { timeZone in
+                    if let contexts =
+                        locationContextsByTimeZoneSecondsFromGmt[
+                            timeZone.secondsFromGMT()
+                        ]
+                    {
+                        timeZoneRow(
+                            timeZone: timeZone,
+                            locationContexts: contexts
+                        )
+                    }
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .trailing)
         }
-        .frame(maxWidth: .infinity, alignment: .trailing)
         .contentShape(Rectangle())
         .onTapGesture(perform: openEventSheet)
     }
@@ -153,9 +224,9 @@ struct PlannerEventLocationAdornmentView: View {
                 if displayTime, let timeAndDay {
                     let datestamp = timeAndDay.datestamp
 
-                    if datestamp != planner.datestamp {
+                    if datestamp != eventDatestamp {
                         Value(
-                            datestamp.weekday,
+                            formatDatestamp(datestamp, ordinal: displayTime),
                             color: .secondary,
                             scale: SCALE
                         )
@@ -229,5 +300,24 @@ struct PlannerEventLocationAdornmentView: View {
         }
 
         return lhsLocation.name < rhsLocation.name
+    }
+
+    private func formatDatestamp(_ datestamp: String, ordinal: Bool = false)
+        -> String
+    {
+        datestamp.proximityFormat(
+            using: [
+                ProximityRule(
+                    proximity: .withinADay,
+                    format: .countdown
+                ),
+                ProximityRule(
+                    proximity: .fallback,
+                    format: .conciseDateLabel,
+                    ordinal: ordinal
+                ),
+            ],
+            todaystamp: todayService.todaystamp
+        )
     }
 }

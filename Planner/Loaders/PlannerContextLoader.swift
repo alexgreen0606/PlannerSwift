@@ -13,6 +13,7 @@ struct PlannerContextLoaderView<Content: View>: View {
     let content: (PlannerContext) -> Content
 
     @EnvironmentObject private var plannerService: PlannerService
+    @EnvironmentObject private var todayService: TodayService
 
     // MARK: - Body
 
@@ -21,6 +22,7 @@ struct PlannerContextLoaderView<Content: View>: View {
             PlannerEventContextLoaderView(
                 planner: planner,
                 plannerService: plannerService,
+                todaystamp: todayService.todaystamp,
                 settings: settings
             ) { eventContext in
                 content(
