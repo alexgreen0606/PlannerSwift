@@ -13,7 +13,10 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
     private let toggleState: ListItemToggleState<Item>?
     private let settings: Settings
 
-    init(toggleState: ListItemToggleState<Item>? = nil, settings: Settings) {
+    init(
+        toggleState: ListItemToggleState<Item>? = nil,
+        settings: Settings
+    ) {
         self.toggleState = toggleState
         self.settings = settings
     }
@@ -21,6 +24,8 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
     deinit {
         toggleTransitionTask?.cancel()
     }
+
+    private var keyboardState: ListItemKeyboardState<Item>?
 
     private let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
     private var toggleTransitionTask: Task<Void, Never>?
@@ -58,6 +63,10 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
         isSelectMode ? Color.tertiary : nil
     }
 
+    func setKeyboardState(_ keyboardState: ListItemKeyboardState<Item>) {
+        self.keyboardState = keyboardState
+    }
+
     // MARK: - Focus Control Functions
 
     func isItemFocused(_ item: Item) -> Bool {
@@ -74,12 +83,16 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
             editor.invalidate()
         }
 
+        keyboardState?.onFocus(editor.item)
+
         previousEditor = activeEditor
         activeEditor = editor
     }
 
     /// Finalizes edits once the first responder releases this item.
     func handleEndEditing(_ editor: EditorSession<Item>) {
+        keyboardState?.onBlur(editor.item)
+
         editor.finalizeEdit()
 
         if previousEditor === editor {

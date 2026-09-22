@@ -32,15 +32,16 @@ struct ChecklistRootView: View {
             .checklist,
             excluding: Set([checklist.stableId])
         )
-        
+
         self._listEngine = StateObject(
             wrappedValue: ListEngine<ChecklistItem>(
-            toggleState: ListItemToggleState(
-                isToggled: { $0.isCompleted },
-                setIsToggled: { $0.isCompleted = $1 }
-            ),
-            settings: settings
-        ))
+                toggleState: ListItemToggleState(
+                    isToggled: { $0.isCompleted },
+                    setIsToggled: { $0.isCompleted = $1 }
+                ),
+                settings: settings
+            )
+        )
     }
 
     private let canTransferSelectedItems: Bool

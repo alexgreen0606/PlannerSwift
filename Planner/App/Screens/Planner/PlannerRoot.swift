@@ -35,6 +35,7 @@ struct PlannerRootView: View {
                 toggleState: ListItemToggleState(
                     isToggled: { $0.isCompleted },
                     setIsToggled: { event, isCompleted in
+                        // Note: In the future isCompleted should be replaced with completedOn only.
                         if isCompleted {
                             event.completedOn = planner.datestamp
                             event.isCompleted = true
@@ -63,6 +64,8 @@ struct PlannerRootView: View {
     @State private var eventSheetContext: PlannerEventSheetContext?
     @State private var showTransferSheet = false
     @State private var showLocationSheet = false
+
+    @State private var isFlaggedById: [UUID: Bool] = [:]
 
     @Namespace private var namespace
 
@@ -143,6 +146,21 @@ struct PlannerRootView: View {
                     }
                     .navigationBarTitleDisplayMode(.inline)
                 }
+            }
+
+            // MARK: Refresh the engine callback so that saved items have up-to-date flagged state.
+
+            .task(id: isFlaggedById) {
+                plannerEngine.setKeyboardState(
+                    ListItemKeyboardState<PlannerEvent>(
+                        onFocus: { event in
+                            isFlaggedById[event.stableId] = event.isFlagged
+                        },
+                        onBlur: { event in
+                            event.isFlagged = isEventFlagged(event)
+                        }
+                    )
+                )
             }
 
             // MARK: Transfer Events Form
@@ -255,7 +273,7 @@ struct PlannerRootView: View {
 
     private func actionToolbar(scrollProxy: ScrollViewProxy) -> some View {
         let flagImage =
-            plannerEngine.focusedItem?.isFlagged == true ? "flag.fill" : "flag"
+            isEventFlagged(plannerEngine.focusedItem) ? "flag.fill" : "flag"
 
         return ListActionToolbarView<
             PlannerEvent,
@@ -292,7 +310,7 @@ struct PlannerRootView: View {
             case "info":
                 handleEventClick(event)
             case "flag", "flag.fill":
-                event.isFlagged.toggle()
+                isFlaggedById[event.stableId] = !isEventFlagged(event)
             default:
                 break
             }
@@ -331,5 +349,11 @@ struct PlannerRootView: View {
                     )
             }
         }
+    }
+
+    private func isEventFlagged(_ event: PlannerEvent?) -> Bool {
+        guard let event else { return false }
+
+        return isFlaggedById[event.stableId] ?? event.isFlagged
     }
 }

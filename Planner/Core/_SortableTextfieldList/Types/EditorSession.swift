@@ -17,7 +17,7 @@ final class EditorSession<Item: ListItemDetails>: ObservableObject {
     init(
         item: Item,
         deleteItem: @escaping (Item) -> Void,
-        onCommit: ((Item) -> Void)?
+        onCommit: ((Item) -> Void)? = nil
     ) {
         self.item = item
         self.deleteItem = deleteItem

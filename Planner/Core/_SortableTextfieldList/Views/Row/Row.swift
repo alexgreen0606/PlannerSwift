@@ -30,26 +30,25 @@ struct RowView<
     private let deleteItem: ((_: Item) -> Void)?
     private let onCommit: ((_: Item) -> Void)?
 
+    // MARK: Pending Items
     init(
         item: Item,
         index: Int,
-        toggleOnly: Bool = false,
         tint: Color,
-        customToggleConfig: ToggleConfig? = nil,
+        customToggleConfig: ToggleConfig?,
         leftAdornment: LeftAdornment,
         rightAdornment: RightAdornment,
         bottomAdornment: BottomAdornment,
         showCompleted: Bool,
-        namespace: Namespace.ID? = nil,
+        namespace: Namespace.ID?,
         settings: Settings,
         modelContext: ModelContext,
-        createItem: ((_: Int) -> Void)? = nil,
-        deleteItem: ((_: Item) -> Void)? = nil,
-        onCommit: ((_: Item) -> Void)? = nil
+        createItem: @escaping (_: Int) -> Void,
+        deleteItem: ((_: Item) -> Void)?,
+        onCommit: ((_: Item) -> Void)?
     ) {
         self.item = item
         self.index = index
-        self.toggleOnly = toggleOnly
         self.tint = tint
         self.customToggleConfig = customToggleConfig
         self.leftAdornment = leftAdornment
@@ -62,6 +61,8 @@ struct RowView<
         self.deleteItem = deleteItem
         self.onCommit = onCommit
 
+        self.toggleOnly = false
+
         self._editorSession = StateObject(
             wrappedValue: EditorSession(
                 item: item,
@@ -73,6 +74,44 @@ struct RowView<
                     }
                 },
                 onCommit: onCommit
+            )
+        )
+    }
+
+    // MARK: Completed Items
+    init(
+        item: Item,
+        index: Int,
+        toggleOnly: Bool = false,
+        tint: Color,
+        customToggleConfig: ToggleConfig? = nil,
+        leftAdornment: LeftAdornment,
+        rightAdornment: RightAdornment,
+        bottomAdornment: BottomAdornment,
+        showCompleted: Bool,
+        settings: Settings,
+        modelContext: ModelContext
+    ) {
+        self.item = item
+        self.index = index
+        self.toggleOnly = toggleOnly
+        self.tint = tint
+        self.customToggleConfig = customToggleConfig
+        self.leftAdornment = leftAdornment
+        self.rightAdornment = rightAdornment
+        self.bottomAdornment = bottomAdornment
+        self.showCompleted = showCompleted
+        self.settings = settings
+
+        self.namespace = nil
+        self.onCommit = nil
+        self.createItem = nil
+        self.deleteItem = nil
+
+        self._editorSession = StateObject(
+            wrappedValue: EditorSession(
+                item: item,
+                deleteItem: { _ in }
             )
         )
     }
