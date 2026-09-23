@@ -136,7 +136,7 @@ struct SearchRootView: View {
         }
         .searchable(
             text: $draftQuery.text,
-            prompt: "Search planner.."
+            prompt: "Search planner..."
         )
         .searchPresentationToolbarBehavior(.avoidHidingContent)
 
