@@ -18,28 +18,56 @@ extension PlannerEvent {
         let plannerEnd = startOfNextDay.date
         let plannerDatestamp = startOfDay.datestamp
 
-        return #Predicate<PlannerEvent> { event in
-            if event.eKEventContext != nil {
+        // Note: iOS 27 no longer allows for "if let" on optional relationships.
+        if #available(iOS 27, *) {
+            return #Predicate<PlannerEvent> { event in
+                if event.eKEventContext != nil {
 
-                // MARK: Calendar events that exist on this day.
+                    // MARK: Calendar events that exist on this day.
 
-                return event.eKEventContext!.startDate < plannerEnd
-                    && event.eKEventContext!.endDate > plannerStart
+                    return event.eKEventContext!.startDate < plannerEnd
+                        && event.eKEventContext!.endDate > plannerStart
 
-            } else if let time = event.time {
+                } else if let time = event.time {
 
-                // MARK: Timed planner events that exist on this day.
+                    // MARK: Timed planner events that exist on this day.
 
-                return time >= plannerStart && time < plannerEnd
+                    return time >= plannerStart && time < plannerEnd
 
-            } else if let datestamp = event.datestamp {
+                } else if let datestamp = event.datestamp {
 
-                // MARK: Untimed planner events that exist on this day.
+                    // MARK: Untimed planner events that exist on this day.
 
-                return datestamp == plannerDatestamp
+                    return datestamp == plannerDatestamp
 
-            } else {
-                return false
+                } else {
+                    return false
+                }
+            }
+        } else {
+            return #Predicate<PlannerEvent> { event in
+                if let ekEventContext = event.eKEventContext {
+
+                    // MARK: Calendar events that exist on this day.
+
+                    return ekEventContext.startDate < plannerEnd
+                        && ekEventContext.endDate > plannerStart
+
+                } else if let time = event.time {
+
+                    // MARK: Timed planner events that exist on this day.
+
+                    return time >= plannerStart && time < plannerEnd
+
+                } else if let datestamp = event.datestamp {
+
+                    // MARK: Untimed planner events that exist on this day.
+
+                    return datestamp == plannerDatestamp
+
+                } else {
+                    return false
+                }
             }
         }
     }

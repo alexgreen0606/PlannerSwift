@@ -103,19 +103,49 @@ struct SettingsRootView: View {
                     NavigationLink {
                         ToggleTransitionFormView(settings: settings)
                     } label: {
-                        HStack {
-                            Text(ToggleTransitionDuration.title)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            Text(
-                                settings.toggleTransitionDuration.label
-                            )
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        }
+                        label(
+                            title: ToggleTransitionDuration.title,
+                            value: settings.toggleTransitionDuration.label
+                        )
                     }
                 }
 
-                Section {
+                Section("Planner") {
+                    // MARK: Homepage
+
+                    NavigationLink {
+                        HomepageFormView(settings: settings)
+                    } label: {
+                        label(
+                            title: "Homepage",
+                            value: settings.homepage.label
+                        )
+                    }
+
+                    // MARK: Calendars
+
+                    NavigationLink {
+                        CalendarsFormView(settings: settings)
+                    } label: {
+                        label(
+                            title: "Calendars",
+                            value: calendarService.hasCalendarAccess != true
+                                ? "No Access" : activeCalendarCount
+                        )
+                    }
+                    .disabled(calendarService.hasCalendarAccess != true)
+
+                    // MARK: Keep Past Events Duration
+
+                    NavigationLink {
+                        KeepPastEventsFormView(settings: settings)
+                    } label: {
+                        label(
+                            title: KeepPastEventsDuration.title,
+                            value: settings.keepPastEventsDuration.label
+                        )
+                    }
+
                     // MARK: Home Location
 
                     NavigationLink {
@@ -132,51 +162,14 @@ struct SettingsRootView: View {
                             }
                         )
                     } label: {
-                        HStack {
-                            Text("Home Location")
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            Text(
-                                settings.homeLocation?.name
-                                    ?? "Current Location"
-                            )
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        }
+                        label(
+                            title: "Home Location",
+                            value: settings.homeLocation?.name
+                                ?? "Current Location"
+                        )
                     }
 
-                    // MARK: Calendars
-
-                    NavigationLink {
-                        CalendarsFormView(settings: settings)
-                    } label: {
-                        HStack {
-                            Text("Calendars")
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            Text(
-                                calendarService.hasCalendarAccess != true
-                                    ? "No Access" : activeCalendarCount
-                            )
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        }
-                    }
-                    .disabled(calendarService.hasCalendarAccess != true)
-
-                    // MARK: Keep Past Events Duration
-
-                    NavigationLink {
-                        KeepPastEventsFormView(settings: settings)
-                    } label: {
-                        HStack {
-                            Text(KeepPastEventsDuration.title)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            Text(
-                                settings.keepPastEventsDuration.label
-                            )
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        }
-                    }
+                    // MARK: WeatherKit Trademark
 
                     if let attribution = weatherAttribution {
                         Link(destination: attribution.legalPageURL) {
@@ -204,8 +197,6 @@ struct SettingsRootView: View {
                             }
                         }
                     }
-                } header: {
-                    Text("Planner")
                 }
             }
             .navigationTitle("Settings")
@@ -228,6 +219,20 @@ struct SettingsRootView: View {
                 accentColor: accentColor,
                 systemColorScheme: systemColorScheme
             )
+        }
+    }
+
+    // MARK: - View Builders
+
+    private func label(title: String, value: String) -> some View {
+        HStack {
+            Text(title)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Text(
+                value
+            )
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
         }
     }
 }

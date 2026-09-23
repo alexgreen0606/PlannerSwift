@@ -86,26 +86,6 @@ struct RootTabView: View {
             // MARK: Standard App Navigation
 
             TabView(selection: $selectedTab) {
-                // TODO: preserve older logic for older ios versions
-                Tab("", systemImage: "gear", value: .settings) {
-                    SettingsRootView(settings: settings)
-                }
-
-                Tab("", systemImage: "list.bullet", value: .checklists) {
-                    ChecklistNavigationView(settings: settings)
-                }
-
-                Tab("", systemImage: "magnifyingglass", value: .search) {
-                    PlannerLoaderView(datestamp: todayService.todaystamp) {
-                        planner in
-                        SearchRootView(
-                            todayPlanner: planner,
-                            settings: settings,
-                            namespace: namespace
-                        )
-                    }
-                }
-
                 Tab(
                     "",
                     systemImage: todayService.todaystamp
@@ -124,10 +104,42 @@ struct RootTabView: View {
                         namespace: namespace
                     )
                 }
+
+                Tab(
+                    "",
+                    systemImage: "magnifyingglass",
+                    value: .search,
+                    role: {
+                        if #available(iOS 27, *) {
+                            nil
+                        } else {
+                            .search
+                        }
+                    }()
+                ) {
+                    PlannerLoaderView(datestamp: todayService.todaystamp) {
+                        planner in
+                        SearchRootView(
+                            todayPlanner: planner,
+                            settings: settings,
+                            namespace: namespace
+                        )
+                    }
+                }
+
+                Tab("", systemImage: "list.bullet", value: .checklists) {
+                    ChecklistNavigationView(settings: settings)
+                }
+
+                Tab("", systemImage: "gear", value: .settings) {
+                    SettingsRootView(settings: settings)
+                }
             }
             .tabBarMinimizeBehavior(.onScrollDown)
             .accentColor(accentColor.swiftUiColor)
-            .opacity(plannerCoverStore.showTodayDefault ? 0 : 1)
+            .opacity(
+                plannerCoverStore.showTodayDefault ? 0 : 1
+            )
 
             // MARK: Default App Landing. Today Planner.
 
@@ -145,7 +157,9 @@ struct RootTabView: View {
                     settings: settings
                 )
             }
-            .opacity(plannerCoverStore.showTodayDefault ? 1 : 0)
+            .opacity(
+                plannerCoverStore.showTodayDefault ? 1 : 0
+            )
         }
 
         // MARK: Search each time the search tab is active.

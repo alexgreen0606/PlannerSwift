@@ -117,7 +117,7 @@ struct OnboardingView: View {
                     calendarService.loadCalendars()
 
                     if settings.homeLocation != nil {
-                        plannerService.initializePlanners()
+                        plannerService.syncVisiblePlanners()
                     }
                 }
 
@@ -168,7 +168,7 @@ struct OnboardingView: View {
         // MARK: Initialize planners after onboarding.
 
         .onChange(of: canSyncPlanners) { _, _ in
-            plannerService.initializePlanners()
+            plannerService.syncVisiblePlanners()
         }
     }
 

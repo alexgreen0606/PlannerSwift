@@ -11,7 +11,6 @@ import SwiftUI
 struct DataLoaderView: View {
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
     @Query private var plannerSettingsList: [Settings]
 
@@ -27,7 +26,6 @@ struct DataLoaderView: View {
         ZStack {
             if let settings, areRoutinesSafe {
                 EnvironmentLoaderView(
-                    plannerCoverStore: plannerCoverStore,
                     modelContext: modelContext,
                     settings: settings
                 )

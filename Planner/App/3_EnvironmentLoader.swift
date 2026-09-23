@@ -12,14 +12,17 @@ struct EnvironmentLoaderView: View {
     private let settings: Settings
 
     init(
-        plannerCoverStore: PlannerCoverStore,
         modelContext: ModelContext,
         settings: Settings
     ) {
         self.settings = settings
 
         let calendarService = CalendarService(settings: settings)
-        let todayService = TodayService(settings: settings, modelContext: modelContext)
+        let todayService = TodayService(
+            settings: settings,
+            modelContext: modelContext
+        )
+        let plannerCoverStore = PlannerCoverStore(settings: settings)
 
         self._plannerService = StateObject(
             wrappedValue: PlannerService(
@@ -29,6 +32,9 @@ struct EnvironmentLoaderView: View {
                 plannerCoverStore: plannerCoverStore,
                 settings: settings
             )
+        )
+        self._plannerCoverStore = StateObject(
+            wrappedValue: plannerCoverStore
         )
         self._calendarService = StateObject(
             wrappedValue: calendarService
@@ -40,6 +46,7 @@ struct EnvironmentLoaderView: View {
 
     @EnvironmentObject private var locationService: LocationService
 
+    @StateObject private var plannerCoverStore: PlannerCoverStore
     @StateObject private var calendarService: CalendarService
     @StateObject private var todayService: TodayService
     @StateObject private var plannerService: PlannerService
@@ -51,6 +58,7 @@ struct EnvironmentLoaderView: View {
             locationService: locationService,
             settings: settings
         )
+        .environmentObject(plannerCoverStore)
         .environmentObject(calendarService)
         .environmentObject(todayService)
         .environmentObject(plannerService)

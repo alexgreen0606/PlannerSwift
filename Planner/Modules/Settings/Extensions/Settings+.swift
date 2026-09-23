@@ -15,6 +15,15 @@ extension Settings {
         homeLocation?.region ?? .local
     }
 
+    var homepage: Homepage {
+        get {
+            Homepage(rawValue: homepageRawValue) ?? .thisWeek
+        }
+        set {
+            homepageRawValue = newValue.rawValue
+        }
+    }
+
     var toggleTransitionDuration: ToggleTransitionDuration {
         get {
             ToggleTransitionDuration(rawValue: toggleTransitionDurationRawValue)
@@ -24,11 +33,11 @@ extension Settings {
             toggleTransitionDurationRawValue = newValue.rawValue
         }
     }
-    
+
     var keepPastEventsDuration: KeepPastEventsDuration {
         get {
             KeepPastEventsDuration(rawValue: keepPastEventsDurationRawValue)
-            ?? .oneMonth
+                ?? .oneMonth
         }
         set {
             keepPastEventsDurationRawValue = newValue.rawValue

@@ -11,6 +11,9 @@ import SwiftUI
 @Model
 class Settings {
 
+    /// Homepage rawValue
+    var homepageRawValue: String = Homepage.thisWeek.rawValue
+
     var showListDividers: Bool = true
 
     /// ToggleTransitionDuration rawValue

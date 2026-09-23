@@ -51,7 +51,6 @@ struct PlannerApp: App {
         .dark
 
     @StateObject private var locationService = LocationService()
-    @StateObject private var plannerCoverStore = PlannerCoverStore()
     @StateObject private var locationSearchService = LocationSearchService()
 
     // MARK: - Body
@@ -61,7 +60,6 @@ struct PlannerApp: App {
             DataLoaderView()
                 .preferredColorScheme(appColorScheme.colorScheme)
                 .environmentObject(locationService)
-                .environmentObject(plannerCoverStore)
                 .environmentObject(locationSearchService)
         }
         .modelContainer(modelContainer)

@@ -21,47 +21,94 @@ extension PlannerEvent {
 
         let isTodayPlanner = startOfDay.datestamp == todaystamp
 
-        return #Predicate<PlannerEvent> { event in
-            if event.eKEventContext != nil {
+        // Note: iOS 27 no longer allows for "if let" on optional relationships.
+        if #available(iOS 27, *) {
+            return #Predicate<PlannerEvent> { event in
+                if event.eKEventContext != nil {
 
-                // MARK: Timed calendar events that start on this day.
+                    // MARK: Timed calendar events that start on this day.
 
-                return event.eKEventContext!.isAllDay == false
-                    && event.eKEventContext!.startDate >= plannerStart
-                    && event.eKEventContext!.startDate < plannerEnd
+                    return event.eKEventContext!.isAllDay == false
+                        && event.eKEventContext!.startDate >= plannerStart
+                        && event.eKEventContext!.startDate < plannerEnd
 
-            } else if let time = event.time {
+                } else if let time = event.time {
 
-                // MARK: Timed planner events that exist on this day,
+                    // MARK: Timed planner events that exist on this day,
 
-                return time < plannerEnd
-                    && (time >= plannerStart
+                    return time < plannerEnd
+                        && (time >= plannerStart
+
+                            // or the event exists before this day, the event is flagged,
+                            // and either the event is pending and this is today's planner,
+                            // or the event was completed in this planner.
+
+                            || (event.isFlagged
+                                && ((!event.isCompleted && isTodayPlanner)
+                                    || event.completedOn == plannerDatestamp)))
+
+                } else if let datestamp = event.datestamp {
+
+                    // MARK: Untimed planner events that exist on this day,
+
+                    return datestamp == plannerDatestamp
 
                         // or the event exists before this day, the event is flagged,
                         // and either the event is pending and this is today's planner,
                         // or the event was completed in this planner.
 
-                        || (event.isFlagged
+                        || (datestamp < plannerDatestamp
+                            && event.isFlagged
                             && ((!event.isCompleted && isTodayPlanner)
-                                || event.completedOn == plannerDatestamp)))
+                                || event.completedOn == plannerDatestamp))
 
-            } else if let datestamp = event.datestamp {
+                } else {
+                    return false
+                }
+            }
+        } else {
+            return #Predicate<PlannerEvent> { event in
+                if let eKEventContext = event.eKEventContext {
 
-                // MARK: Untimed planner events that exist on this day,
+                    // MARK: Timed calendar events that start on this day.
 
-                return datestamp == plannerDatestamp
+                    return !eKEventContext.isAllDay
+                        && eKEventContext.startDate >= plannerStart
+                        && eKEventContext.startDate < plannerEnd
 
-                    // or the event exists before this day, the event is flagged,
-                    // and either the event is pending and this is today's planner,
-                    // or the event was completed in this planner.
+                } else if let time = event.time {
 
-                    || (datestamp < plannerDatestamp
-                        && event.isFlagged
-                        && ((!event.isCompleted && isTodayPlanner)
-                            || event.completedOn == plannerDatestamp))
+                    // MARK: Timed planner events that exist on this day,
 
-            } else {
-                return false
+                    return time < plannerEnd
+                        && (time >= plannerStart
+
+                            // or the event exists before this day, the event is flagged,
+                            // and either the event is pending and this is today's planner,
+                            // or the event was completed in this planner.
+
+                            || (event.isFlagged
+                                && ((!event.isCompleted && isTodayPlanner)
+                                    || event.completedOn == plannerDatestamp)))
+
+                } else if let datestamp = event.datestamp {
+
+                    // MARK: Untimed planner events that exist on this day,
+
+                    return datestamp == plannerDatestamp
+
+                        // or the event exists before this day, the event is flagged,
+                        // and either the event is pending and this is today's planner,
+                        // or the event was completed in this planner.
+
+                        || (datestamp < plannerDatestamp
+                            && event.isFlagged
+                            && ((!event.isCompleted && isTodayPlanner)
+                                || event.completedOn == plannerDatestamp))
+
+                } else {
+                    return false
+                }
             }
         }
     }

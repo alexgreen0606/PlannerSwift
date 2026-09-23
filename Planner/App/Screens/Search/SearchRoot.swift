@@ -111,21 +111,7 @@ struct SearchRootView: View {
                         plannerService.search()
                     }
                     .background(Color.appBackground)
-                    // TODO: clean up.
-//                    .safeAreaInset(edge: .top) {
-//                        SearchInsetView(
-//                            focused: Layout.TOOLBAR_HEIGHT,
-//                            blurred: geo.safeAreaInsets.top
-//                                - geo.safeAreaInsets.bottom + 32
-//                        )
-//                    }
-//                    .ignoresSafeArea(edges: .top)
-//                    .safeAreaInset(edge: .bottom) {
-//                        SearchInsetView(
-//                            focused: Layout.TOOLBAR_HEIGHT,
-//                            blurred: 0
-//                        )
-//                    }
+                    .searchInsets(geometry: geo)
                     .overlay {
                         noResultsLabelView
                     }
@@ -189,6 +175,31 @@ struct SearchRootView: View {
 
                 search()
             } catch {}
+        }
+    }
+}
+
+extension View {
+    @ViewBuilder
+    func searchInsets(geometry: GeometryProxy) -> some View {
+        if #available(iOS 27.0, *) {
+            self
+        } else {
+            self
+                .safeAreaInset(edge: .top) {
+                    SearchInsetView(
+                        focused: Layout.TOOLBAR_HEIGHT,
+                        blurred: geometry.safeAreaInsets.top
+                            - geometry.safeAreaInsets.bottom + 32
+                    )
+                }
+                .ignoresSafeArea(edges: .top)
+                .safeAreaInset(edge: .bottom) {
+                    SearchInsetView(
+                        focused: Layout.TOOLBAR_HEIGHT,
+                        blurred: 0
+                    )
+                }
         }
     }
 }

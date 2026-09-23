@@ -44,6 +44,10 @@ class PlannerService: ObservableObject {
                 settings: settings
             )
         )
+
+        self.sortedUpcomingTrips = modelContext.getSortedTrips(
+            onOrBefore: todayService.todaystamp
+        )
     }
 
     private let searchService: SearchService
@@ -63,9 +67,10 @@ class PlannerService: ObservableObject {
     /// Bypasses the "don't sync routines of past planners" rule.
     private var forceSyncRoutineDatestamps: Set<String> = []
 
-    @Published private(set) var thisWeekDatestamps: [String] = []
+    @Published private(set) var thisWeekDatestamps: [String] =
+        getThisWeekDatestamps()
 
-    @Published private(set) var sortedUpcomingTrips: [Trip] = []
+    @Published private(set) var sortedUpcomingTrips: [Trip]
 
     @Published private(set) var searchResults: SearchResults
 
@@ -97,11 +102,6 @@ class PlannerService: ObservableObject {
         )
 
         return datestampsToSync
-    }
-
-    func initializePlanners() {
-        loadVisibleDatestamps()
-        syncVisiblePlanners()
     }
 
     // MARK: - Search
@@ -309,10 +309,7 @@ class PlannerService: ObservableObject {
     }
 
     func loadThisWeekDatestamps() {
-        thisWeekDatestamps = (0..<7).map { offset in
-            DateInRegion(region: .local)
-                .dateByAdding(offset, .day)
-                .datestamp
-        }
+        thisWeekDatestamps = getThisWeekDatestamps()
     }
+
 }

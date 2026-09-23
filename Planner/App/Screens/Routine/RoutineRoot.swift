@@ -177,7 +177,9 @@ struct RoutineRootView: View {
     private func weekdaysAdornment(event: RoutineEventContext) -> some View {
         if event.weekdays.count > 1 {
             WeekdaySpreadView(
-                selected: event.weekdays
+                selected: event.weekdays,
+                scale: 0.8,
+                accentColor: Color.secondary
             )
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())

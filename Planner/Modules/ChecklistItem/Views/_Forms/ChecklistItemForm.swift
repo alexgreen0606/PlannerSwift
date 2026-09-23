@@ -13,7 +13,7 @@ struct ChecklistItemFormView: View {
     private let parentItem: ChecklistItem?
     private let sortedSiblingItems: [ChecklistItem]?
     private let onDelete: (() -> Void)?
-    
+
     // MARK: Create Checklist Item
     init(
         parentItem: ChecklistItem,
@@ -104,7 +104,7 @@ struct ChecklistItemFormView: View {
             .navigationBarTitleDisplayMode(.inline)
         }
         .presentationBackground(.clear)
-        .presentationDetents([.height(isRootFolder ? 210 : 260)])
+        .presentationDetents([.height(isRootFolder ? 210 : 290)])
     }
 
     // MARK: - Toolbars
