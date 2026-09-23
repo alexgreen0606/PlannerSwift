@@ -12,7 +12,7 @@ struct PlannerEventBottomAdornmentView: View {
     let plannerEvent: PlannerEvent
     let planner: Planner
     let settings: Settings
-    let openEventSheet: () -> Void
+    let handleEventClick: () -> Void
 
     private let CURRENT_ID = "CURRENT"
     private let SCALE: CGFloat = 0.65
@@ -196,7 +196,7 @@ struct PlannerEventBottomAdornmentView: View {
             .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .contentShape(Rectangle())
-        .onTapGesture(perform: openEventSheet)
+        .onTapGesture(perform: handleEventClick)
     }
 
     // MARK: - View Builders

@@ -11,16 +11,16 @@ import SwiftUI
 struct PlannerEventCalendarAdornmentView: View {
     private let plannerEvent: PlannerEvent
     private let settings: Settings
-    private let openEventSheet: (() -> Void)?
+    private let handleEventClick: (() -> Void)?
 
     init(
         plannerEvent: PlannerEvent,
         settings: Settings,
-        openEventSheet: (() -> Void)? = nil
+        handleEventClick: (() -> Void)? = nil
     ) {
         self.plannerEvent = plannerEvent
         self.settings = settings
-        self.openEventSheet = openEventSheet
+        self.handleEventClick = handleEventClick
     }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -38,7 +38,7 @@ struct PlannerEventCalendarAdornmentView: View {
             .foregroundStyle(plannerEvent.tint(accentColor: accentColor))
             .contentShape(Rectangle())
             .onTapGesture {
-                openEventSheet?()
+                handleEventClick?()
             }
         }
     }

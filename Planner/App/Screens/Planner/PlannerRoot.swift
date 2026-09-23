@@ -134,7 +134,7 @@ struct PlannerRootView: View {
                         namespace: namespace,
                         createEvent: createEvent,
                         handleEventChange: handleEventChange,
-                        openPlannerEventSheet: handleEventClick
+                        handleEventClick: handleEventClick
                     )
                     .safeAreaBar(edge: .bottom) {
                         actionToolbar(scrollProxy: scrollProxy)

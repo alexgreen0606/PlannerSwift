@@ -20,7 +20,7 @@ struct PlannerChipSpreadView: View {
     let sortedBirthdayChips: [PlannerEvent]
     let settings: Settings
     var namespace: Namespace.ID
-    let openEventSheet: (PlannerEvent) -> Void
+    let handleEventClick: (PlannerEvent) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
@@ -118,7 +118,7 @@ struct PlannerChipSpreadView: View {
             color: activeColor
         )
         .glassChip(height: PlannerLayout.CHIP_HEIGHT) {
-            openEventSheet(plannerEvent)
+            handleEventClick(plannerEvent)
         }
         .matchedTransitionSource(
             id: plannerEvent.transitionId,

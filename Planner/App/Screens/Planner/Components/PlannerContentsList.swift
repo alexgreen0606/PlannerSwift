@@ -28,7 +28,7 @@ struct PlannerContentsListView: View {
     let namespace: Namespace.ID
     let createEvent: (Int) -> Void
     let handleEventChange: (PlannerEvent) -> Void
-    let openPlannerEventSheet: (PlannerEvent) -> Void
+    let handleEventClick: (PlannerEvent) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
@@ -73,7 +73,7 @@ struct PlannerContentsListView: View {
             sortedBirthdayChips: sortedBirthdayChips,
             settings: settings,
             namespace: namespace,
-            openEventSheet: openPlannerEventSheet
+            handleEventClick: handleEventClick
         )
     }
 
@@ -81,8 +81,8 @@ struct PlannerContentsListView: View {
         PlannerEventCalendarAdornmentView(
             plannerEvent: event,
             settings: settings,
-            openEventSheet: {
-                openPlannerEventSheet(event)
+            handleEventClick: {
+                handleEventClick(event)
             }
         )
     }
@@ -92,8 +92,8 @@ struct PlannerContentsListView: View {
             plannerEvent: event,
             plannerDatestamp: planner.datestamp,
             plannerRegion: startOfDay.region,
-            openEventSheet: {
-                openPlannerEventSheet(event)
+            handleEventClick: {
+                handleEventClick(event)
             }
         )
     }
@@ -103,8 +103,8 @@ struct PlannerContentsListView: View {
             plannerEvent: event,
             planner: planner,
             settings: settings,
-            openEventSheet: {
-                openPlannerEventSheet(event)
+            handleEventClick: {
+                handleEventClick(event)
             }
         )
     }
