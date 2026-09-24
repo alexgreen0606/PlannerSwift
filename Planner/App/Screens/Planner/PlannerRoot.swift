@@ -65,8 +65,6 @@ struct PlannerRootView: View {
     @State private var showTransferSheet = false
     @State private var showLocationSheet = false
 
-    @State private var isFlaggedById: [UUID: Bool] = [:]
-
     @Namespace private var namespace
 
     private var startOfDay: DateInRegion {
@@ -146,21 +144,6 @@ struct PlannerRootView: View {
                     }
                     .navigationBarTitleDisplayMode(.inline)
                 }
-            }
-
-            // MARK: Refresh the engine callback so that saved items have up-to-date flagged state.
-
-            .task(id: isFlaggedById) {
-                plannerEngine.setKeyboardState(
-                    ListItemKeyboardState<PlannerEvent>(
-                        onFocus: { event in
-                            isFlaggedById[event.stableId] = event.isFlagged
-                        },
-                        onBlur: { event in
-                            event.isFlagged = isEventFlagged(event)
-                        }
-                    )
-                )
             }
 
             // MARK: Transfer Events Form
@@ -273,7 +256,8 @@ struct PlannerRootView: View {
 
     private func actionToolbar(scrollProxy: ScrollViewProxy) -> some View {
         let flagImage =
-            isEventFlagged(plannerEngine.focusedItem) ? "flag.fill" : "flag"
+            plannerEngine.activeEditor?.draft.isFlagged == true
+            ? "flag.fill" : "flag"
 
         return ListActionToolbarView<
             PlannerEvent,
@@ -305,19 +289,21 @@ struct PlannerRootView: View {
     }
 
     private func handleToolbarTap(icon: String) {
-        if let event = plannerEngine.focusedItem {
+        if let activeEditor = plannerEngine.activeEditor {
             switch icon {
             case "info":
-                handleEventClick(event)
+                handleEventClick(activeEditor.item)
             case "flag", "flag.fill":
-                isFlaggedById[event.stableId] = !isEventFlagged(event)
+                activeEditor.draft.isFlagged.toggle()
             default:
                 break
             }
         }
     }
 
-    private func handleEventChange(event: PlannerEvent) {
+    private func handleEventChange(event: PlannerEvent, draft: PlannerEvent) {
+        event.isFlagged = draft.isFlagged
+
         modelContext.handlePlannerEventChange(
             event,
             in: planner,
@@ -351,9 +337,4 @@ struct PlannerRootView: View {
         }
     }
 
-    private func isEventFlagged(_ event: PlannerEvent?) -> Bool {
-        guard let event else { return false }
-
-        return isFlaggedById[event.stableId] ?? event.isFlagged
-    }
 }

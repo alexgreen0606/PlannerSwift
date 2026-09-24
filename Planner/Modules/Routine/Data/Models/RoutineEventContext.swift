@@ -18,7 +18,7 @@ class RoutineEventContext: EventDetails {
     var time: Date?
 
     var height: CGFloat = 0
-    
+
     var version: Double = 1.0
 
     // MARK: Children
@@ -29,4 +29,11 @@ class RoutineEventContext: EventDetails {
     var routineEvents: [RoutineEvent]?
 
     init() {}
+
+    // MARK: Draft
+    required init(draftOf source: RoutineEventContext) {
+        stableId = source.stableId
+        title = source.title
+        height = source.height
+    }
 }

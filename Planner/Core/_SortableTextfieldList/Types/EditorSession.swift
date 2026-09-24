@@ -12,28 +12,26 @@ final class EditorSession<Item: ListItemDetails>: ObservableObject {
     let item: Item
 
     private let deleteItem: (Item) -> Void
-    private let onCommit: ((Item) -> Void)?
+    private let onCommit: ((Item, Item) -> Void)?
 
     init(
         item: Item,
         deleteItem: @escaping (Item) -> Void,
-        onCommit: ((Item) -> Void)? = nil
+        onCommit: ((Item, Item) -> Void)? = nil
     ) {
         self.item = item
         self.deleteItem = deleteItem
         self.onCommit = onCommit
-
-        self.title = item.title
-        self.height = item.height
+        
+        self.draft = Item(draftOf: item)
     }
 
     private var hasFinished = false
 
-    @Published var title: String
-    @Published var height: CGFloat
+    @Published var draft: Item
 
     var hasEmptyTitle: Bool {
-        title.trimmed.isEmpty
+        draft.title.trimmed.isEmpty
     }
 
     func belongs(to itemId: UUID) -> Bool {
@@ -48,18 +46,15 @@ final class EditorSession<Item: ListItemDetails>: ObservableObject {
         guard !hasFinished else { return }
         hasFinished = true
 
-        let trimmedTitle = title.trimmed
+        let trimmedTitle = draft.title.trimmed
 
         if trimmedTitle.isEmpty {
             deleteItem(item)
         } else {
             item.title = trimmedTitle
-            item.height = height
-
-            if let onCommit {
-                onCommit(item)
-                title = item.title
-            }
+            item.height = draft.height
+            
+            onCommit?(item, draft)
         }
     }
 
@@ -67,13 +62,10 @@ final class EditorSession<Item: ListItemDetails>: ObservableObject {
         guard !hasFinished else { return }
         hasFinished = true
 
-        item.title = title.trimmed
-        item.height = height
+        item.title = draft.title.trimmed
+        item.height = draft.height
 
-        if let onCommit {
-            onCommit(item)
-            title = item.title
-        }
+        onCommit?(item, draft)
     }
 
     func delete() {
@@ -85,6 +77,6 @@ final class EditorSession<Item: ListItemDetails>: ObservableObject {
 
     /// Special handler called before creating new items.
     func commitTitle() {
-        item.title = title.trimmed
+        item.title = draft.title.trimmed
     }
 }

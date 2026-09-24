@@ -27,7 +27,7 @@ class PlannerEvent: EventListItem {
     /// Controlled by drag-and-drop.
     /// No relation to the event's time.
     var sortDate: Date = Date.now
-    
+
     /// Datestamp of the planner where the event was completed.
     var completedOn: String = ""
 
@@ -90,5 +90,13 @@ class PlannerEvent: EventListItem {
     init(datestamp: String, sortDate: Date) {
         self.datestamp = datestamp
         self.sortDate = sortDate
+    }
+
+    // MARK: Draft
+    required init(draftOf source: PlannerEvent) {
+        stableId = source.stableId
+        title = source.title
+        height = source.height
+        isFlagged = source.isFlagged
     }
 }

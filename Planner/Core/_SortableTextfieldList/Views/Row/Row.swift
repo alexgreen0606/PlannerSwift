@@ -28,7 +28,7 @@ struct RowView<
     private let settings: Settings
     private let createItem: ((_: Int) -> Void)?
     private let deleteItem: ((_: Item) -> Void)?
-    private let onCommit: ((_: Item) -> Void)?
+    private let onCommit: ((_: Item, Item) -> Void)?
 
     // MARK: Pending Items
     init(
@@ -45,7 +45,7 @@ struct RowView<
         modelContext: ModelContext,
         createItem: @escaping (_: Int) -> Void,
         deleteItem: ((_: Item) -> Void)?,
-        onCommit: ((_: Item) -> Void)?
+        onCommit: ((_: Item, Item) -> Void)?
     ) {
         self.item = item
         self.index = index
@@ -176,8 +176,8 @@ struct RowView<
             // MARK: Keep the editor session up-to-date with the item's title.
 
             .onChange(of: item.title) { _, newTitle in
-                if newTitle != editorSession.title {
-                    editorSession.title = newTitle
+                if newTitle != editorSession.draft.title {
+                    editorSession.draft.title = newTitle
                 }
             }
 
@@ -257,8 +257,8 @@ struct RowView<
 
     private var titleTextfield: some View {
         TextfieldView(
-            text: $editorSession.title,
-            height: $editorSession.height,
+            text: $editorSession.draft.title,
+            height: $editorSession.draft.height,
             tint: tint,
             shouldResign: !listEngine.isFocused,
             isFocused: isItemFocused,
@@ -274,13 +274,13 @@ struct RowView<
             }
         )
         .tint(tint)
-        .frame(height: editorSession.height)
+        .frame(height: editorSession.draft.height)
         .frame(maxWidth: .infinity, alignment: .leading)
         .fixedSize(horizontal: false, vertical: true)
     }
 
     private var staticTitle: some View {
-        Text(editorSession.title)
+        Text(editorSession.draft.title)
             .font(.system(size: ListLayout.FONT_SIZE))
             .lineLimit(nil)
             .fixedSize(horizontal: false, vertical: true)

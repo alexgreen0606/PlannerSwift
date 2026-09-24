@@ -14,4 +14,6 @@ protocol ListItemDetails: PersistentModel {
     var title: String { get set }
 
     var height: CGFloat { get set }
+
+    init(draftOf item: Self)
 }

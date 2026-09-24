@@ -22,7 +22,7 @@ struct SortableTextfieldListView<
     private let createItem: (_ at: Int) -> Void
     private let moveItem: (_ from: Int, _ to: Int) -> Void
     private let deleteItem: ((_: Item) -> Void)?
-    private let onCommitItem: ((_ item: Item) -> Void)?
+    private let onCommitItem: ((_ item: Item, Item) -> Void)?
 
     private let sortedPendingItems: [Item]
 
@@ -48,7 +48,7 @@ struct SortableTextfieldListView<
         createItem: @escaping (_: Int) -> Void,
         moveItem: @escaping (_: Int, _: Int) -> Void,
         deleteItem: ((_: Item) -> Void)? = nil,
-        onCommitItem: ((_: Item) -> Void)? = nil,
+        onCommitItem: ((_: Item, Item) -> Void)? = nil,
         sortedPendingItems: [Item]? = nil,
         sortedCompletedItems: [Item] = [],
         showCompleted: Bool = false,

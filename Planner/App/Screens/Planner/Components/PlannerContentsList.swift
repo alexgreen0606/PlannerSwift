@@ -27,7 +27,7 @@ struct PlannerContentsListView: View {
     let settings: Settings
     let namespace: Namespace.ID
     let createEvent: (Int) -> Void
-    let handleEventChange: (PlannerEvent) -> Void
+    let handleEventChange: (PlannerEvent, PlannerEvent) -> Void
     let handleEventClick: (PlannerEvent) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -99,8 +99,12 @@ struct PlannerContentsListView: View {
     }
 
     private func locationAdornment(event: PlannerEvent) -> some View {
-        PlannerEventBottomAdornmentView(
-            plannerEvent: event,
+        let liveEvent =
+            plannerEngine.activeEditor?.draft.stableId == event.stableId
+            ? plannerEngine.activeEditor!.draft : event
+
+        return PlannerEventBottomAdornmentView(
+            plannerEvent: liveEvent,
             planner: planner,
             settings: settings,
             handleEventClick: {

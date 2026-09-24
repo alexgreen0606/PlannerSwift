@@ -49,4 +49,11 @@ class ChecklistItem: ListItemDetails {
         
         parent?.items.safeAppend(self)
     }
+    
+    // MARK: Draft
+    required init(draftOf source: ChecklistItem) {
+        stableId = source.stableId
+        title = source.title
+        height = source.height
+    }
 }

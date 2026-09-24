@@ -241,7 +241,10 @@ struct RoutineRootView: View {
         )
     }
 
-    private func handleEventChange(event: RoutineEventContext) {
+    private func handleEventChange(
+        event: RoutineEventContext,
+        _: RoutineEventContext
+    ) {
         if !invalidatedEventIds.contains(event.stableId) {
             event.version += 0.1
 
@@ -254,7 +257,7 @@ struct RoutineRootView: View {
     }
 
     private func handleToolbarTap(icon _: String) {
-        if let event = routineEngine.focusedItem {
+        if let event = routineEngine.activeEditor?.item {
             handleEventClick(event)
         }
     }
