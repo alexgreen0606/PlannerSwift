@@ -61,7 +61,7 @@ extension ModelContext {
         }
 
         // MARK: - Skip Synchronization Of Past Planners
-        
+
         let todaystamp = todayStartOfDay.datestamp
 
         if !syncPast && planner.datestamp < todaystamp {
@@ -172,7 +172,7 @@ extension ModelContext {
 
         sortedListEvents =
             sortedListEvents
-        ?? getSortedListEvents(on: startOfDay, todaystamp: todaystamp)
+            ?? getSortedListEvents(on: startOfDay, todaystamp: todaystamp)
 
         sortedRoutineEvents =
             sortedRoutineEvents

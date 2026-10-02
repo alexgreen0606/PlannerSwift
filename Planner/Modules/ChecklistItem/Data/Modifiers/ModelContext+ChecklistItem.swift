@@ -122,7 +122,7 @@ extension ModelContext {
         } else if let parentItem, let sortedSiblingItems {
 
             let sortIndex = generateSortIndex(
-                index: sortedSiblingItems.count,
+                index: 0,
                 sortedItems: sortedSiblingItems
             )
 

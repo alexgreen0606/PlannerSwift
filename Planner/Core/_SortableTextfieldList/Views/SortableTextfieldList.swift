@@ -155,7 +155,9 @@ struct SortableTextfieldListView<
     private var pendingList: some View {
         Section {
             SeparatorView(settings: settings) {
-                attemptCreateItem(at: 0)
+                if !listEngine.isSelectMode {
+                    attemptCreateItem(at: 0)
+                }
             }
             .listRowInsets(EdgeInsets())
             .discreetListItem()
@@ -186,7 +188,9 @@ struct SortableTextfieldListView<
             .onMove(perform: handleRowMove)
 
             SeparatorView(settings: settings) {
-                attemptCreateItem(at: sortedPendingItems.count)
+                if !listEngine.isSelectMode {
+                    attemptCreateItem(at: sortedPendingItems.count)
+                }
             }
             .id(ListIds.PENDING_ITEMS)
             .listRowInsets(EdgeInsets())

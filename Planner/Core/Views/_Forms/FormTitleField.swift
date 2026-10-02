@@ -22,10 +22,11 @@ struct FormTitleFieldView: View {
         Section {
             TextField("Title", text: $text)
                 .focused(isFocused)
-                .introspect(.textField, on: .iOS(.v26)) { textfield in
+                .introspect(.textField, on: .iOS(.v26, .v27)) { textfield in
                     if !hasAutoFocused, text.isEmpty {
                         textfield.becomeFirstResponder()
                     }
+                    
                     hasAutoFocused = true
                 }
 

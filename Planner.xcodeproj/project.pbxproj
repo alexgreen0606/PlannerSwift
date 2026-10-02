@@ -11,7 +11,7 @@
 		07BB27E92EDDFF6900593DD0 /* SwiftFormat in Frameworks */ = {isa = PBXBuildFile; productRef = 07BB27E82EDDFF6900593DD0 /* SwiftFormat */; };
 		07CA6BAB2F6B0F91001095BB /* Fuse in Frameworks */ = {isa = PBXBuildFile; productRef = 07CA6BAA2F6B0F91001095BB /* Fuse */; };
 		07DA27532EE28AC900265B25 /* SwiftDate in Frameworks */ = {isa = PBXBuildFile; productRef = 07DA27522EE28AC900265B25 /* SwiftDate */; };
-		07EA142D2F746B4C00748DCE /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = 07EA142C2F746B4C00748DCE /* SwiftUIIntrospect */; };
+		07EA142D2F746B4C00748DCE /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = 07EA142C2F746B4C00748DCE /* SwiftUIIntrospect */; settings = {ATTRIBUTES = (Required, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -459,7 +459,7 @@
 			repositoryURL = "https://github.com/siteline/SwiftUI-Introspect";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 26.0.1;
+				minimumVersion = 27.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
