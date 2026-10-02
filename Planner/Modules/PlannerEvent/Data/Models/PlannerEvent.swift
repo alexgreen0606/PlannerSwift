@@ -11,7 +11,7 @@ import SwiftData
 import SwiftDate
 
 @Model
-class PlannerEvent: EventListItem {
+final class PlannerEvent: EventListItem {
 
     var stableId: UUID = UUID()
 
@@ -45,6 +45,9 @@ class PlannerEvent: EventListItem {
         inverse: \EKEventContext.plannerEvent
     )
     var eKEventContext: EKEventContext?
+
+    @Transient
+    var editor: EditorSession<PlannerEvent>?
 
     // MARK: Calendar Event
     init(ekEvent: EKEvent, sortDate: Date) {
@@ -96,7 +99,10 @@ class PlannerEvent: EventListItem {
     required init(draftOf source: PlannerEvent) {
         stableId = source.stableId
         title = source.title
+        time = source.time
+        datestamp = source.datestamp
         height = source.height
         isFlagged = source.isFlagged
+        completedOn = source.completedOn
     }
 }

@@ -11,17 +11,14 @@ import SwiftUI
 struct Time: View {
     private let timeInRegion: DateInRegion
     private let scale: Double
-    private let onTap: (() -> Void)?
 
     init(
         timeInRegion: DateInRegion,
         color: Color? = nil,
-        scale: Double = 1,
-        onTap: (() -> Void)? = nil
+        scale: Double = 1
     ) {
         self.timeInRegion = timeInRegion
         self.scale = scale
-        self.onTap = onTap
 
         customColor = color
     }
@@ -42,7 +39,7 @@ struct Time: View {
     // MARK: - Body
 
     var body: some View {
-        let val = HStack(alignment: .top, spacing: 1 * scale) {
+        HStack(alignment: .top, spacing: 1 * scale) {
             Text(details.timeValue)
                 .font(
                     .system(size: 14 * scale, weight: .black, design: .rounded)
@@ -56,14 +53,6 @@ struct Time: View {
                 .foregroundStyle(
                     Color.secondary
                 )
-        }
-
-        if let onTap {
-            val
-                .contentShape(Rectangle())
-                .onTapGesture(perform: onTap)
-        } else {
-            val
         }
     }
 }

@@ -13,20 +13,17 @@ struct PlannerEventTimeAdornmentView: View {
     private let plannerDatestamp: String
     private let plannerRegion: Region
     private let scale: CGFloat
-    private let handleEventClick: (() -> Void)?
 
     init(
         plannerEvent: PlannerEvent,
         plannerDatestamp: String,
         plannerRegion: Region,
-        scale: CGFloat = 1,
-        handleEventClick: (() -> Void)? = nil
+        scale: CGFloat = 1
     ) {
         self.plannerEvent = plannerEvent
         self.plannerDatestamp = plannerDatestamp
         self.plannerRegion = plannerRegion
         self.scale = scale
-        self.handleEventClick = handleEventClick
     }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -41,8 +38,7 @@ struct PlannerEventTimeAdornmentView: View {
             Time(
                 timeInRegion: DateInRegion(time, region: plannerRegion),
                 color: plannerEvent.tint(accentColor: accentColor),
-                scale: scale,
-                onTap: handleEventClick
+                scale: scale
             )
         }
     }

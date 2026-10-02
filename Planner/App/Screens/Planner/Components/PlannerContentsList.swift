@@ -28,7 +28,7 @@ struct PlannerContentsListView: View {
     let namespace: Namespace.ID
     let createEvent: (Int) -> Void
     let handleEventChange: (PlannerEvent, PlannerEvent) -> Void
-    let handleEventClick: (PlannerEvent) -> Void
+    let openEvent: (PlannerEvent) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
@@ -48,13 +48,14 @@ struct PlannerContentsListView: View {
             moveItem: moveUncheckedEvent,
             deleteItem: deleteEvent,
             onCommitItem: handleEventChange,
+            onAdornmentClick: openEvent,
             sortedPendingItems: sortedPendingPlannerEvents,
             sortedCompletedItems: sortedCompletePlannerEvents,
             showCompleted: showCompleted,
             tint: eventTint,
             leftAdornment: calendarAdornment,
             rightAdornment: timeAdornment,
-            bottomAdornment: locationAdornment,
+            bottomAdornment: bottomAdornment,
             scrollProxy: scrollProxy,
             namespace: namespace,
             settings: settings
@@ -73,17 +74,21 @@ struct PlannerContentsListView: View {
             sortedBirthdayChips: sortedBirthdayChips,
             settings: settings,
             namespace: namespace,
-            handleEventClick: handleEventClick
+            handleEventClick: { event in
+                if plannerEngine.isSelectMode {
+                    plannerEngine.toggleItem(event)
+                    return
+                }
+
+                openEvent(event)
+            }
         )
     }
 
     private func calendarAdornment(event: PlannerEvent) -> some View {
         PlannerEventCalendarAdornmentView(
             plannerEvent: event,
-            settings: settings,
-            handleEventClick: {
-                handleEventClick(event)
-            }
+            settings: settings
         )
     }
 
@@ -91,25 +96,19 @@ struct PlannerContentsListView: View {
         PlannerEventTimeAdornmentView(
             plannerEvent: event,
             plannerDatestamp: planner.datestamp,
-            plannerRegion: startOfDay.region,
-            handleEventClick: {
-                handleEventClick(event)
-            }
+            plannerRegion: startOfDay.region
         )
     }
 
-    private func locationAdornment(event: PlannerEvent) -> some View {
+    private func bottomAdornment(event: PlannerEvent) -> some View {
         let liveEvent =
-            plannerEngine.activeEditor?.draft.stableId == event.stableId
+            plannerEngine.isItemFocused(event)
             ? plannerEngine.activeEditor!.draft : event
 
         return PlannerEventBottomAdornmentView(
             plannerEvent: liveEvent,
             planner: planner,
-            settings: settings,
-            handleEventClick: {
-                handleEventClick(event)
-            }
+            settings: settings
         )
     }
 

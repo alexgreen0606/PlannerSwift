@@ -26,9 +26,10 @@ struct RowView<
     private let showCompleted: Bool
     private let namespace: Namespace.ID?
     private let settings: Settings
-    private let createItem: ((_: Int) -> Void)?
-    private let deleteItem: ((_: Item) -> Void)?
-    private let onCommit: ((_: Item, Item) -> Void)?
+    private let createItem: ((Int) -> Void)?
+    private let deleteItem: ((Item) -> Void)?
+    private let onCommit: ((Item, Item) -> Void)?
+    private let onAdornmentClick: ((Item) -> Void)?
 
     // MARK: Pending Items
     init(
@@ -43,9 +44,10 @@ struct RowView<
         namespace: Namespace.ID?,
         settings: Settings,
         modelContext: ModelContext,
-        createItem: @escaping (_: Int) -> Void,
-        deleteItem: ((_: Item) -> Void)?,
-        onCommit: ((_: Item, Item) -> Void)?
+        createItem: @escaping (Int) -> Void,
+        deleteItem: ((Item) -> Void)?,
+        onCommit: ((Item, Item) -> Void)?,
+        onAdornmentClick: ((Item) -> Void)?
     ) {
         self.item = item
         self.index = index
@@ -60,6 +62,7 @@ struct RowView<
         self.createItem = createItem
         self.deleteItem = deleteItem
         self.onCommit = onCommit
+        self.onAdornmentClick = onAdornmentClick
 
         self.toggleOnly = false
 
@@ -107,6 +110,7 @@ struct RowView<
         self.onCommit = nil
         self.createItem = nil
         self.deleteItem = nil
+        self.onAdornmentClick = nil
 
         self._editorSession = StateObject(
             wrappedValue: EditorSession(
@@ -167,17 +171,13 @@ struct RowView<
             // MARK: Trigger focus for new items.
 
             .onAppear {
+                if item.editor !== editorSession {
+                    item.editor = editorSession
+                }
+
                 if listEngine.pendingFocusId == item.stableId {
                     listEngine.pendingFocusId = nil
                     listEngine.beginEditing(editorSession)
-                }
-            }
-
-            // MARK: Keep the editor session up-to-date with the item's title.
-
-            .onChange(of: item.title) { _, newTitle in
-                if newTitle != editorSession.draft.title {
-                    editorSession.draft.title = newTitle
                 }
             }
 
@@ -219,6 +219,8 @@ struct RowView<
                 leftAdornment
                     .frame(height: ListLayout.ADORNMENT_HEIGHT)
                     .opacity(opacity)
+                    .contentShape(Rectangle())
+                    .onTapGesture(perform: handleAdornmentClick)
 
                 titleView
                     .padding(.vertical, ListLayout.VERTICAL_TEXT_PADDING)
@@ -227,11 +229,15 @@ struct RowView<
                 rightAdornment
                     .frame(height: ListLayout.ADORNMENT_HEIGHT)
                     .opacity(opacity)
+                    .contentShape(Rectangle())
+                    .onTapGesture(perform: handleAdornmentClick)
             }
             .frame(minHeight: ListLayout.ADORNMENT_HEIGHT)
 
             bottomAdornment
                 .opacity(opacity)
+                .contentShape(Rectangle())
+                .onTapGesture(perform: handleAdornmentClick)
 
             SeparatorView(
                 showLowerDivider: true,
@@ -299,4 +305,14 @@ struct RowView<
             createItem(index)
         }
     }
+
+    private func handleAdornmentClick() {
+        if let onAdornmentClick {
+            onAdornmentClick(item)
+            return
+        }
+
+        listEngine.beginEditing(editorSession)
+    }
+
 }

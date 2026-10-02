@@ -90,25 +90,25 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
         }
     }
 
-    /// Returns true if a modal should be opened, else false.
-    func handleItemClick(_ item: Item) -> Bool {
-        if isSelectMode || isItemToggled(item) {
-            toggleItem(item)
-            return false
-        }
-
-        if let activeEditor {
-            // Note: We don't want to delete the item here since it will be passed into a modal.
-            activeEditor.commit()
-            blur()
-        }
-
-        return true
-    }
-
     func blur() {
         previousEditor = activeEditor
         activeEditor = nil
+    }
+
+    func openSheet(for item: Item, open: @escaping () -> Void) {
+        if let activeEditor {
+            if activeEditor.belongs(to: item.stableId) {
+                /// Force-commit the focused item instead of allowing the blur handler to potentially
+                /// delete it.
+                activeEditor.commit()
+            }
+
+            blur()
+        }
+
+        DispatchQueue.main.async {
+            open()
+        }
     }
 
     /// New items cannot be created next to empty titles.

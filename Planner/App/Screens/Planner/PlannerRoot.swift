@@ -132,7 +132,7 @@ struct PlannerRootView: View {
                         namespace: namespace,
                         createEvent: createEvent,
                         handleEventChange: handleEventChange,
-                        handleEventClick: handleEventClick
+                        openEvent: openEvent
                     )
                     .safeAreaBar(edge: .bottom) {
                         actionToolbar(scrollProxy: scrollProxy)
@@ -201,16 +201,13 @@ struct PlannerRootView: View {
         ToolbarItem(placement: .topBarLeading) {
             if !plannerEngine.isSelectMode {
                 BackButtonView(handleSideEffects: {
-                    if plannerCoverStore.showTodayDefault {
-                        if plannerCoverStore.todaystampAtInit
-                            != planner.datestamp
-                        {
-                            plannerCoverStore.showTodayDefault = false
-                        } else {
-                            withAnimation(.linear) {
-                                plannerCoverStore.showTodayDefault = false
-                            }
-                        }
+                    guard plannerCoverStore.showTodayDefault
+                    else { return }
+
+                    plannerEngine.blur()
+
+                    withAnimation(.linear) {
+                        plannerCoverStore.showTodayDefault = false
                     }
                 })
             } else {
@@ -255,16 +252,21 @@ struct PlannerRootView: View {
     // MARK: - View Builder
 
     private func actionToolbar(scrollProxy: ScrollViewProxy) -> some View {
-        let flagImage =
-            plannerEngine.activeEditor?.draft.isFlagged == true
-            ? "flag.fill" : "flag"
+        var icons = ["info"]
+
+        if plannerEngine.activeEditor?.item.eKEventContext == nil {
+            icons.append(
+                plannerEngine.activeEditor?.draft.isFlagged == true
+                ? "flag.fill" : "flag"
+            )
+        }
 
         return ListActionToolbarView<
             PlannerEvent,
             SelectedEventActionsView
         >(
             keyboardAccessory: ListKeyboardAccessoryView(
-                iconImageNames: ["info", flagImage],
+                iconImageNames: icons,
                 onIconTap: handleToolbarTap
             ),
             selectedItemActions: SelectedEventActionsView(
@@ -292,7 +294,7 @@ struct PlannerRootView: View {
         if let activeEditor = plannerEngine.activeEditor {
             switch icon {
             case "info":
-                handleEventClick(activeEditor.item)
+                openEvent(activeEditor.item)
             case "flag", "flag.fill":
                 activeEditor.draft.isFlagged.toggle()
             default:
@@ -325,15 +327,12 @@ struct PlannerRootView: View {
         scrollProxy.scrollToBottomOfList()
     }
 
-    private func handleEventClick(_ event: PlannerEvent) {
-        let openModal = plannerEngine.handleItemClick(event)
-        if openModal {
-            DispatchQueue.main.async {
-                eventSheetContext =
-                    PlannerEventSheetContext(
-                        plannerEvent: event
-                    )
-            }
+    private func openEvent(_ event: PlannerEvent) {
+        plannerEngine.openSheet(for: event) {
+            eventSheetContext =
+                PlannerEventSheetContext(
+                    plannerEvent: event
+                )
         }
     }
 

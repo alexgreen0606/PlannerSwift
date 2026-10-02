@@ -38,9 +38,17 @@ struct FolderContentsListView: View {
             )
             .onMove(perform: moveItem)
         }
+        .safeAreaInset(edge: .top) {
+            valueSpread
+                .padding(.horizontal)
+        }
     }
 
     // MARK: - View Builders
+
+    private var valueSpread: some View {
+        ChecklistItemFloatingInfoView(item: folder)
+    }
 
     private func row(for item: ChecklistItem) -> some View {
         HStack(alignment: .top) {
@@ -83,7 +91,11 @@ struct FolderContentsListView: View {
             // MARK: End Adornment
 
             Group {
-                if item.type == .checklist {
+                if folder.showItemValues
+                    && (!item.positiveSum.isZero || !item.negativeSum.isZero)
+                {
+                    ChecklistItemValueView(value: item.sum)
+                } else if item.type == .checklist {
                     Text("\(item.safeItems.filter { !$0.isCompleted }.count)")
                 } else {
                     Image(systemName: "chevron.right")

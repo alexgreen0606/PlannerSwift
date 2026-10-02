@@ -24,7 +24,7 @@ enum ChecklistItemColor: String, Codable, CaseIterable {
         case .orange: return .orange
         case .yellow: return .yellow
         case .green: return .green
-        case .cyan: return .cyan
+        case .cyan: return .blue
         case .indigo: return .indigo
         case .purple: return .purple
         case .brown: return .brown

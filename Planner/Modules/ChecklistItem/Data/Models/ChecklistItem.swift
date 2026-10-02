@@ -9,21 +9,26 @@ import SwiftData
 import SwiftUI
 
 @Model
-class ChecklistItem: ListItemDetails {
+final class ChecklistItem: ListItemDetails {
 
     var stableId: UUID = UUID()
 
     var title: String = ""
     var type: ChecklistItemType = ChecklistItemType.checklist
-    var color: ChecklistItemColor = ChecklistItemColor.red
+    var color: ChecklistItemColor = ChecklistItemColor.cyan
     var isCompleted: Bool = false
-    
+
+    /// Should only be non-zero for ChecklistItemType.item
+    var value: Decimal = 0.00
+
+    var showItemValues: Bool = true
+
     var height: CGFloat = 0
-    
+
     var sortIndex: Double = ChecklistsData.SORT_INDEX_SPACING
 
     var showCompleted: Bool = false
-    
+
     // MARK: Parent
     var parent: ChecklistItem?
 
@@ -34,26 +39,59 @@ class ChecklistItem: ListItemDetails {
     )
     var items: [ChecklistItem]?
 
+    /// Used for form currency fields.
+    @Transient
+    var valueInt: Int = 0
+
+    /// Used for form currency fields. (1 is positive, -1 is negative)
+    @Transient
+    var valueSign: Int = 1
+    
+    @Transient
+    var editor: EditorSession<ChecklistItem>?
+
     init(
         title: String = "",
         type: ChecklistItemType = .checklist,
-        color: ChecklistItemColor = .red,
         sortIndex: Double = ChecklistsData.SORT_INDEX_SPACING,
         parent: ChecklistItem? = nil
     ) {
         self.title = title
         self.type = type
-        self.color = color
         self.sortIndex = sortIndex
         self.parent = parent
-        
+
         parent?.items.safeAppend(self)
     }
-    
+
+    init(
+        draft: ChecklistItem,
+        sortIndex: Double,
+        parent: ChecklistItem
+    ) {
+        title = draft.title
+        type = draft.type
+        color = draft.color
+        value = draft.value
+        showItemValues = draft.showItemValues
+
+        self.sortIndex = sortIndex
+        self.parent = parent
+
+        parent.items.safeAppend(self)
+    }
+
     // MARK: Draft
     required init(draftOf source: ChecklistItem) {
         stableId = source.stableId
         title = source.title
+        type = source.type
+        color = source.color
+        value = source.value
+        showItemValues = source.showItemValues
         height = source.height
+
+        valueInt = NSDecimalNumber(decimal: abs(source.value) * 100).intValue
+        valueSign = source.value < 0 ? -1 : 1
     }
 }

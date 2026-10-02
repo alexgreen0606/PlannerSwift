@@ -19,10 +19,11 @@ struct SortableTextfieldListView<
     private let sortedItems: [Item]
     private let itemsLabel: String
     private let floatingInfo: FloatingInfo?
-    private let createItem: (_ at: Int) -> Void
-    private let moveItem: (_ from: Int, _ to: Int) -> Void
-    private let deleteItem: ((_: Item) -> Void)?
-    private let onCommitItem: ((_ item: Item, Item) -> Void)?
+    private let createItem: (Int) -> Void
+    private let moveItem: (Int, Int) -> Void
+    private let deleteItem: ((Item) -> Void)?
+    private let onCommitItem: ((Item, Item) -> Void)?
+    private let onAdornmentClick: ((Item) -> Void)?
 
     private let sortedPendingItems: [Item]
 
@@ -30,12 +31,12 @@ struct SortableTextfieldListView<
     private let showCompleted: Bool
     private let completedFooter: String?
 
-    private let rowId: (_ item: Item) -> String
-    private let tint: (_ item: Item) -> Color
-    private let toggleConfig: (_ item: Item) -> ToggleConfig?
-    private let leftAdornment: (_ item: Item) -> LeftAdornment
-    private let rightAdornment: (_ item: Item) -> RightAdornment
-    private let bottomAdornment: (_ item: Item) -> BottomAdornment
+    private let rowId: (Item) -> String
+    private let tint: (Item) -> Color
+    private let toggleConfig: (Item) -> ToggleConfig?
+    private let leftAdornment: (Item) -> LeftAdornment
+    private let rightAdornment: (Item) -> RightAdornment
+    private let bottomAdornment: (Item) -> BottomAdornment
 
     private let scrollProxy: ScrollViewProxy
     private let namespace: Namespace.ID?
@@ -45,20 +46,21 @@ struct SortableTextfieldListView<
         sortedItems: [Item],
         itemsLabel: String = "Items",
         floatingInfo: FloatingInfo? = EmptyView(),
-        createItem: @escaping (_: Int) -> Void,
-        moveItem: @escaping (_: Int, _: Int) -> Void,
-        deleteItem: ((_: Item) -> Void)? = nil,
-        onCommitItem: ((_: Item, Item) -> Void)? = nil,
+        createItem: @escaping (Int) -> Void,
+        moveItem: @escaping (Int, Int) -> Void,
+        deleteItem: ((Item) -> Void)? = nil,
+        onCommitItem: ((Item, Item) -> Void)? = nil,
+        onAdornmentClick: ((Item) -> Void)? = nil,
         sortedPendingItems: [Item]? = nil,
         sortedCompletedItems: [Item] = [],
         showCompleted: Bool = false,
         completedFooter: String? = nil,
-        rowId: @escaping (_ item: Item) -> String = { $0.stableId.uuidString },
-        tint: @escaping (_: Item) -> Color,
-        toggleConfig: @escaping (_: Item) -> ToggleConfig? = { _ in nil },
-        @ViewBuilder leftAdornment: @escaping (_: Item) -> LeftAdornment,
-        @ViewBuilder rightAdornment: @escaping (_: Item) -> RightAdornment,
-        @ViewBuilder bottomAdornment: @escaping (_: Item) -> BottomAdornment,
+        rowId: @escaping (Item) -> String = { $0.stableId.uuidString },
+        tint: @escaping (Item) -> Color,
+        toggleConfig: @escaping (Item) -> ToggleConfig? = { _ in nil },
+        @ViewBuilder leftAdornment: @escaping (Item) -> LeftAdornment,
+        @ViewBuilder rightAdornment: @escaping (Item) -> RightAdornment,
+        @ViewBuilder bottomAdornment: @escaping (Item) -> BottomAdornment,
         scrollProxy: ScrollViewProxy,
         namespace: Namespace.ID? = nil,
         settings: Settings
@@ -70,6 +72,7 @@ struct SortableTextfieldListView<
         self.moveItem = moveItem
         self.deleteItem = deleteItem
         self.onCommitItem = onCommitItem
+        self.onAdornmentClick = onAdornmentClick
         self.sortedPendingItems = sortedPendingItems ?? sortedItems
         self.sortedCompletedItems = sortedCompletedItems
         self.showCompleted = showCompleted
@@ -175,7 +178,8 @@ struct SortableTextfieldListView<
                     modelContext: modelContext,
                     createItem: attemptCreateItem,
                     deleteItem: deleteItem,
-                    onCommit: onCommitItem
+                    onCommit: onCommitItem,
+                    onAdornmentClick: onAdornmentClick
                 )
                 .id(rowId(item))
             }

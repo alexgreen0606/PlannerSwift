@@ -69,6 +69,7 @@ struct RoutineRootView: View {
                         moveItem: moveEvent,
                         deleteItem: deleteEvent,
                         onCommitItem: handleEventChange,
+                        onAdornmentClick: openEvent,
                         tint: { _ in accentColor.swiftUiColor },
                         toggleConfig: eventToggleConfig,
                         leftAdornment: { _ in EmptyView() },
@@ -164,12 +165,7 @@ struct RoutineRootView: View {
     @ViewBuilder
     private func timeAdornment(event: RoutineEventContext) -> some View {
         if let time = event.time {
-            Time(
-                timeInRegion: DateInRegion(time, region: .UTC),
-                onTap: {
-                    handleEventClick(event)
-                }
-            )
+            Time(timeInRegion: DateInRegion(time, region: .UTC))
         }
     }
 
@@ -182,10 +178,6 @@ struct RoutineRootView: View {
                 accentColor: Color.secondary
             )
             .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                handleEventClick(event)
-            }
         }
     }
 
@@ -258,7 +250,7 @@ struct RoutineRootView: View {
 
     private func handleToolbarTap(icon _: String) {
         if let event = routineEngine.activeEditor?.item {
-            handleEventClick(event)
+            openEvent(event)
         }
     }
 
@@ -299,14 +291,11 @@ struct RoutineRootView: View {
         routineCoverContext = weekday
     }
 
-    private func handleEventClick(_ event: RoutineEventContext) {
-        let openModal = routineEngine.handleItemClick(event)
-        if openModal {
-            DispatchQueue.main.async {
-                routineEventSheetContext = RoutineEventSheetContext(
-                    routineEvent: event
-                )
-            }
+    private func openEvent(_ event: RoutineEventContext) {
+        routineEngine.openSheet(for: event) {
+            routineEventSheetContext = RoutineEventSheetContext(
+                routineEvent: event
+            )
         }
     }
 

@@ -89,4 +89,60 @@ extension ChecklistItem {
 
         return matches
     }
+
+    @MainActor
+    func syncDraft() {
+        guard let editor else { return }
+
+        editor.draft.title = title
+        editor.draft.type = type
+        editor.draft.color = color
+        editor.draft.value = value
+        editor.draft.showItemValues = showItemValues
+        editor.draft.height = height
+    }
+
+    var positiveSum: Decimal {
+        guard showItemValues
+        else { return 0 }
+
+        switch type {
+        case .item:
+            return max(0, value)
+        case .folder, .checklist:
+            var sum: Decimal = 0.00
+
+            for item in safeItems {
+                sum += max(0, item.sum)
+            }
+
+            return sum
+        }
+    }
+
+    var negativeSum: Decimal {
+        guard showItemValues
+        else { return 0 }
+
+        switch type {
+        case .item:
+            return min(0, value)
+        case .folder, .checklist:
+            var sum: Decimal = 0.00
+
+            for item in safeItems {
+                sum += min(0, item.sum)
+            }
+
+            return sum
+        }
+    }
+
+    var sum: Decimal {
+        positiveSum + negativeSum
+    }
+
+    var draftValue: Decimal {
+        Decimal(valueInt) / 100 * Decimal(valueSign)
+    }
 }

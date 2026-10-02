@@ -51,6 +51,7 @@ struct ChecklistRootView: View {
 
     @StateObject private var listEngine: ListEngine<ChecklistItem>
 
+    @State private var itemSheetContext: ChecklistItemSheetContext?
     @State private var showEditSheet = false
     @State private var showTransferSheet = false
 
@@ -83,16 +84,20 @@ struct ChecklistRootView: View {
                 ScrollViewReader { scrollProxy in
                     SortableTextfieldListView(
                         sortedItems: sortedItems,
+                        floatingInfo: valueSpread,
                         createItem: createItem,
                         moveItem: moveItem,
+                        onCommitItem: handleItemChange,
+                        onAdornmentClick: openItem,
                         sortedPendingItems: sortedPendingItems,
                         sortedCompletedItems: sortedCompletedItems,
                         showCompleted: checklist.showCompleted,
                         tint: { _ in checklist.color.swiftUIColor },
                         leftAdornment: { _ in EmptyView() },
-                        rightAdornment: { _ in EmptyView() },
+                        rightAdornment: valueAdornment,
                         bottomAdornment: { _ in EmptyView() },
                         scrollProxy: scrollProxy,
+                        namespace: namespace,
                         settings: settings
                     )
                     .safeAreaBar(edge: .bottom) {
@@ -137,6 +142,20 @@ struct ChecklistRootView: View {
                     }
                 )
             }
+
+            // MARK: Edit Item Form
+
+            .sheet(item: $itemSheetContext) { context in
+                ChecklistItemFormView(
+                    sourceItem: context.checklistItem
+                )
+                .navigationTransition(
+                    .zoom(
+                        sourceID: context.id,
+                        in: namespace
+                    )
+                )
+            }
         }
     }
 
@@ -170,12 +189,20 @@ struct ChecklistRootView: View {
 
     // MARK: - View Builder
 
+    private var valueSpread: some View {
+        ChecklistItemFloatingInfoView(item: checklist)
+    }
+
     private func actionToolbar(scrollProxy: ScrollViewProxy) -> some View {
         ListActionToolbarView<
             ChecklistItem,
             SelectedItemActionsView
         >(
             accentColor: checklist.color.swiftUIColor,
+            keyboardAccessory: ListKeyboardAccessoryView(
+                iconImageNames: ["info"],
+                onIconTap: openFocusedItem
+            ),
             selectedItemActions: SelectedItemActionsView(
                 showTransferSheet: $showTransferSheet,
                 canTransferItems: canTransferSelectedItems,
@@ -187,6 +214,13 @@ struct ChecklistRootView: View {
         )
     }
 
+    @ViewBuilder
+    private func valueAdornment(item: ChecklistItem) -> some View {
+        if checklist.showItemValues && !item.value.isZero {
+            ChecklistItemValueView(value: item.sum)
+        }
+    }
+
     // MARK: - Functions
 
     private func createItem(at index: Int) {
@@ -195,6 +229,24 @@ struct ChecklistRootView: View {
             in: sortedItems,
             parent: checklist
         )
+    }
+
+    private func openFocusedItem(_: String) {
+        if let focusedItem = listEngine.activeEditor?.item {
+            openItem(focusedItem)
+        }
+    }
+
+    private func openItem(_ item: ChecklistItem) {
+        listEngine.openSheet(for: item) {
+            itemSheetContext = ChecklistItemSheetContext(
+                checklistItem: item
+            )
+        }
+    }
+
+    private func handleItemChange(item: ChecklistItem, _: ChecklistItem) {
+        modelContext.handleChecklistItemChange(item: item)
     }
 
     private func moveItem(from: Int, to: Int) {

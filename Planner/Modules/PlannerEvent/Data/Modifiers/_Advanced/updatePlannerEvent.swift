@@ -73,6 +73,9 @@ extension ModelContext {
             _ = ekEventStore.attemptDeleteEvent(staleEkEvent)
         }
 
+        // MARK: Sync the draft of the event.
+        event.syncDraft()
+
         // MARK: Persist changes into the model context.
         insertIfNeeded(event)
 

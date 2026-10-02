@@ -16,8 +16,9 @@ struct BirthdayChipView: View {
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
-    
+
     @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
+    @EnvironmentObject private var plannerService: PlannerService
 
     @State private var showContactSheet: Bool = false
 
@@ -42,31 +43,37 @@ struct BirthdayChipView: View {
             disabled: plannerEngine.isSelectMode,
             settings: settings
         )
-            .padding(.leading, leadingPadding)
-            .glassChip(
-                color: plannerEngine.selectModeDisabledColor ?? (contactPhotoExists
+        .padding(.leading, leadingPadding)
+        .glassChip(
+            color: plannerEngine.selectModeDisabledColor
+                ?? (contactPhotoExists
                     ? nil : plannerEvent.tint(accentColor: accentColor)),
-                height: PlannerLayout.CHIP_HEIGHT,
-                onTap: plannerEngine.isSelectMode ? nil : {
+            height: PlannerLayout.CHIP_HEIGHT,
+            onTap: plannerEngine.isSelectMode
+                ? nil
+                : {
                     showContactSheet = true
                 }
-            )
-            .matchedTransitionSource(
-                id: plannerEvent.transitionId,
-                in: namespace
-            )
+        )
+        .matchedTransitionSource(
+            id: plannerEvent.transitionId,
+            in: namespace
+        )
 
-            // MARK: Contact Form
+        // MARK: Contact Form
 
-            .sheet(isPresented: $showContactSheet) {
-                ContactFormView(plannerEvent: plannerEvent)
-                    .ignoresSafeArea()
-                    .navigationTransition(
-                        .zoom(
-                            sourceID: plannerEvent.transitionId,
-                            in: namespace
-                        )
+        .sheet(
+            isPresented: $showContactSheet,
+            onDismiss: plannerService.refreshCalendar
+        ) {
+            ContactFormView(plannerEvent: plannerEvent)
+                .ignoresSafeArea()
+                .navigationTransition(
+                    .zoom(
+                        sourceID: plannerEvent.transitionId,
+                        in: namespace
                     )
-            }
+                )
+        }
     }
 }

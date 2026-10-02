@@ -78,6 +78,7 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         guard let eKEventContext else {
             // Note: This initializer automatically attaches the EKEventContext to the PlannerEvent.
             _ = EKEventContext(ekEvent: ekEvent, plannerEvent: self)
+            syncDraft()
             return
         }
 
@@ -100,6 +101,8 @@ extension PlannerEvent: PlannerEventLocationHelpers {
             ekEvent.birthdayContactIdentifier
 
         eKEventContext.ekEvent = ekEvent
+
+        syncDraft()
     }
 
     @MainActor
@@ -119,6 +122,20 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         time = routineEventContext.date(on: startOfDay)
 
         routineEventRecordContext.syncedVersion = routineEventContext.version
+
+        syncDraft()
+    }
+
+    @MainActor
+    func syncDraft() {
+        guard let editor else { return }
+
+        editor.draft.title = title
+        editor.draft.time = time
+        editor.draft.datestamp = datestamp
+        editor.draft.isFlagged = isFlagged
+        editor.draft.completedOn = completedOn
+        editor.draft.height = height
     }
 
     @MainActor

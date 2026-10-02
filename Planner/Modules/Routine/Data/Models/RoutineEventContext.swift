@@ -10,7 +10,7 @@ import Foundation
 import SwiftData
 
 @Model
-class RoutineEventContext: EventDetails {
+final class RoutineEventContext: EventDetails {
 
     var stableId: UUID = UUID()
 
@@ -27,6 +27,9 @@ class RoutineEventContext: EventDetails {
         inverse: \RoutineEvent.routineEventContext
     )
     var routineEvents: [RoutineEvent]?
+
+    @Transient
+    var editor: EditorSession<RoutineEventContext>?
 
     init() {}
 

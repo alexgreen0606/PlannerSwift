@@ -32,7 +32,7 @@ struct ChecklistItemFormView: View {
     // MARK: Edit Checklist Item
     init(
         sourceItem: ChecklistItem,
-        onDelete: @escaping () -> Void
+        onDelete: (() -> Void)? = nil
     ) {
         self.sourceItem = sourceItem
         self.parentItem = sourceItem.parent
@@ -41,9 +41,7 @@ struct ChecklistItemFormView: View {
 
         _draftChecklistItem = State(
             initialValue: ChecklistItem(
-                title: sourceItem.title,
-                type: sourceItem.type,
-                color: sourceItem.color
+                draftOf: sourceItem
             )
         )
     }
@@ -57,6 +55,7 @@ struct ChecklistItemFormView: View {
     @State private var showDeleteConfirmation = false
 
     @FocusState private var isTitleFocused: Bool
+    @FocusState private var isValueFocused: Bool
 
     private var canSave: Bool {
         !draftChecklistItem.title.trimmed.isEmpty
@@ -66,8 +65,21 @@ struct ChecklistItemFormView: View {
         sourceItem == nil
     }
 
-    private var isRootFolder: Bool {
-        sourceItem != nil && sourceItem!.parent == nil
+    private var color: Color {
+        switch draftChecklistItem.type {
+        case .item:
+            return parentItem?.color.swiftUIColor ?? Color.red
+        case .checklist, .folder:
+            return draftChecklistItem.color.swiftUIColor
+        }
+    }
+
+    private var showColorSection: Bool {
+        draftChecklistItem.type != .item
+    }
+
+    private var showDeleteButton: Bool {
+        sourceItem != nil && sourceItem!.parent != nil
     }
 
     // MARK: - Body
@@ -84,13 +96,14 @@ struct ChecklistItemFormView: View {
 
                 typeSection
                 colorSection
+                advancedSection
             }
             .scrollDisabled(true)
             .toolbar {
                 FormSaveButtonView(
                     canSave: canSave,
                     tint: draftChecklistItem.title.isEmpty
-                        ? Color.label : draftChecklistItem.color.swiftUIColor,
+                        ? Color.label : color,
                     save: saveChecklistItem
                 )
 
@@ -103,15 +116,18 @@ struct ChecklistItemFormView: View {
             )
             .navigationBarTitleDisplayMode(.inline)
         }
+        .safeAreaBar(edge: .bottom) {
+            valueKeyboardAdornment
+        }
         .presentationBackground(.clear)
-        .presentationDetents([.height(isRootFolder ? 210 : 290)])
+        .presentationDetents([.height(390)])
     }
 
     // MARK: - Toolbars
 
     @ToolbarContentBuilder
     private var deleteButton: some ToolbarContent {
-        if let sourceItem, !isRootFolder {
+        if showDeleteButton, let sourceItem {
             ToolbarItem(placement: .bottomBar) {
                 ActionButtonView(
                     label: "Delete \(sourceItem.type.rawValue.capitalized)",
@@ -151,36 +167,94 @@ struct ChecklistItemFormView: View {
         }
     }
 
+    @ViewBuilder
     private var colorSection: some View {
-        Section {
-            HStack {
-                ForEach(
-                    ChecklistItemColor.allCases.enumerated(),
-                    id: \.element
-                ) {
-                    index,
-                    itemColor in
-                    if index != 0 {
-                        Spacer()
-                    }
+        if showColorSection {
+            Section {
+                HStack {
+                    ForEach(
+                        ChecklistItemColor.allCases.enumerated(),
+                        id: \.element
+                    ) {
+                        index,
+                        itemColor in
+                        if index != 0 {
+                            Spacer()
+                        }
 
-                    Image(
-                        systemName: itemColor
-                            == draftChecklistItem.color
-                            ? "circle.fill" : "circle"
-                    )
-                    .imageScale(.large)
-                    .foregroundColor(itemColor.swiftUIColor)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        draftChecklistItem.color = itemColor
+                        Image(
+                            systemName: itemColor
+                                == draftChecklistItem.color
+                                ? "circle.fill" : "circle"
+                        )
+                        .imageScale(.large)
+                        .foregroundColor(itemColor.swiftUIColor)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            draftChecklistItem.color = itemColor
+                        }
                     }
                 }
+                .frame(maxWidth: .infinity)
             }
-            .frame(maxWidth: .infinity)
+            .listSectionMargins(.vertical, 0)
+            .discreetListItem()
         }
-        .listSectionMargins(.top, 0)
-        .discreetListItem()
+    }
+
+    private var advancedSection: some View {
+        Section("Advanced") {
+            switch draftChecklistItem.type {
+            case .item:
+                HStack {
+                    Text("Value")
+
+                    CurrencyTextFieldView(
+                        value: $draftChecklistItem.valueInt,
+                        textColor: isValueFocused
+                            || draftChecklistItem.draftValue.isZero
+                            ? Color.label
+                            : draftChecklistItem.draftValue < 0
+                                ? Color.red : Color.green
+                    )
+                    .focused($isValueFocused)
+                    .tint(color)
+                }
+            case .folder, .checklist:
+                Toggle(
+                    "Show Values",
+                    isOn: $draftChecklistItem.showItemValues
+                )
+                .tint(color)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var valueKeyboardAdornment: some View {
+        if isValueFocused {
+            HStack(alignment: .bottom) {
+                Picker(
+                    "",
+                    selection: $draftChecklistItem.valueSign
+                ) {
+                    Text("−").tag(-1)
+                    Text("+").tag(1)
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 100)
+
+                Spacer()
+
+                GlassIconButtonView(
+                    systemImageName: "checkmark",
+                    onTap: {
+                        isValueFocused = false
+                    }
+                )
+            }
+            .padding(8)
+        }
     }
 
     // MARK: - Functions

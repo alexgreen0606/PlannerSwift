@@ -33,9 +33,7 @@ extension ModelContext {
             insert(
                 ChecklistItem(
                     title: "Checklists",
-                    type: .folder,
-                    color: .cyan,
-                    sortIndex: 0
+                    type: .folder
                 )
             )
 
@@ -110,11 +108,14 @@ extension ModelContext {
         draftItem: ChecklistItem
     ) {
         draftItem.title = draftItem.title.trimmed
+        draftItem.value = draftItem.draftValue
 
         if let sourceItem {
             // Edit existing item.
             sourceItem.title = draftItem.title
             sourceItem.color = draftItem.color
+            sourceItem.value = draftItem.value
+            sourceItem.showItemValues = draftItem.showItemValues
 
             // Note: Do not update the type. An item's type will never change.
 
@@ -128,9 +129,7 @@ extension ModelContext {
             // Create new item.
             insert(
                 ChecklistItem(
-                    title: draftItem.title,
-                    type: draftItem.type,
-                    color: draftItem.color,
+                    draft: draftItem,
                     sortIndex: sortIndex,
                     parent: parentItem
                 )
@@ -138,6 +137,22 @@ extension ModelContext {
         }
 
         safeSave("ModelContext+ChecklistItem updateChecklistItem")
+    }
+
+    @MainActor
+    func handleChecklistItemChange(
+        item: ChecklistItem
+    ) {
+        if let (value, updatedText) = item.title.extractValue(),
+            !updatedText.trimmed.isEmpty
+        {
+            // MARK: Title has a value.
+            item.title = updatedText
+            item.value = value
+            item.syncDraft()
+        }
+
+        safeSave("ModelContext+ChecklistItem handleChecklistItemChange")
     }
 
     @MainActor

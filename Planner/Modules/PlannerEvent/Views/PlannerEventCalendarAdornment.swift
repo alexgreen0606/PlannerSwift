@@ -9,19 +9,8 @@ import EventKit
 import SwiftUI
 
 struct PlannerEventCalendarAdornmentView: View {
-    private let plannerEvent: PlannerEvent
-    private let settings: Settings
-    private let handleEventClick: (() -> Void)?
-
-    init(
-        plannerEvent: PlannerEvent,
-        settings: Settings,
-        handleEventClick: (() -> Void)? = nil
-    ) {
-        self.plannerEvent = plannerEvent
-        self.settings = settings
-        self.handleEventClick = handleEventClick
-    }
+    let plannerEvent: PlannerEvent
+    let settings: Settings
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
@@ -36,10 +25,6 @@ struct PlannerEventCalendarAdornmentView: View {
                 )
             )
             .foregroundStyle(plannerEvent.tint(accentColor: accentColor))
-            .contentShape(Rectangle())
-            .onTapGesture {
-                handleEventClick?()
-            }
         }
     }
 }

@@ -28,6 +28,7 @@ extension ModelContext {
 
         routineEventContext.title = updatedText
         routineEventContext.time = date
+        routineEventContext.syncDraft()
 
         safeSave("handleRoutineEventContextTitleChange")
     }

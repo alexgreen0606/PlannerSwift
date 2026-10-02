@@ -8,16 +8,16 @@
 import SwiftUI
 
 struct FormLabelView<CustomValue: View>: View {
-    private let systemImageName: String
+    private let iconConfig: IconConfig?
     private let label: String
     private let value: String?
     private let customValue: CustomValue?
     private let detail: LocalizedStringKey?
     private let onTap: (() -> Void)?
-
+    
     // MARK: Standard
     init(
-        systemImageName: String,
+        systemImageName: String? = nil,
         label: String = "",
         value: String,
         detail: LocalizedStringKey? = nil,
@@ -26,7 +26,31 @@ struct FormLabelView<CustomValue: View>: View {
     ) where CustomValue == EmptyView {
         self.customValue = nil
 
-        self.systemImageName = systemImageName
+        self.iconConfig = systemImageName != nil ? IconConfig(
+            name: systemImageName!,
+            primaryColor: Color.label,
+            secondaryColor: Color.label
+        ) : nil
+        self.label = label
+        self.value = value
+        self.detail = detail
+        self.onTap = onTap
+
+        customColor = color
+    }
+
+    // MARK: Custom Icon
+    init(
+        iconConfig: IconConfig? = nil,
+        label: String = "",
+        value: String,
+        detail: LocalizedStringKey? = nil,
+        color: Color? = nil,
+        onTap: (() -> Void)? = nil
+    ) where CustomValue == EmptyView {
+        self.customValue = nil
+
+        self.iconConfig = iconConfig
         self.label = label
         self.value = value
         self.detail = detail
@@ -37,7 +61,7 @@ struct FormLabelView<CustomValue: View>: View {
 
     // MARK: Custom Value View
     init(
-        systemImageName: String,
+        systemImageName: String? = nil,
         label: String = "",
         value: CustomValue,
         detail: LocalizedStringKey? = nil,
@@ -46,7 +70,11 @@ struct FormLabelView<CustomValue: View>: View {
     ) {
         self.value = nil
 
-        self.systemImageName = systemImageName
+        self.iconConfig = systemImageName != nil ? IconConfig(
+            name: systemImageName!,
+            primaryColor: Color.label,
+            secondaryColor: Color.label
+        ) : nil
         self.label = label
         self.customValue = value
         self.detail = detail
@@ -61,7 +89,10 @@ struct FormLabelView<CustomValue: View>: View {
 
     var body: some View {
         let row = HStack {
-            Image(systemName: systemImageName)
+            if let iconConfig {
+                Icon(iconConfig)
+            }
+            
             Text(label)
             
             Spacer()

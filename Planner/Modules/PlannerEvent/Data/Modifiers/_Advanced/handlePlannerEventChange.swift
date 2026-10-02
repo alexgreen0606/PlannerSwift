@@ -46,6 +46,7 @@ extension ModelContext {
             plannerEvent.title = updatedText
             plannerEvent.location = plannerLocation
             plannerEvent.time = time
+            plannerEvent.syncDraft()
         }
 
         // MARK: Update the event's routine variance.
