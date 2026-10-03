@@ -89,21 +89,11 @@ extension ChecklistItem {
 
         return matches
     }
-
-    @MainActor
-    func syncDraft() {
-        guard let editor else { return }
-
-        editor.draft.title = title
-        editor.draft.type = type
-        editor.draft.color = color
-        editor.draft.value = value
-        editor.draft.showItemValues = showItemValues
-        editor.draft.height = height
-    }
+    
+    // MARK: - Values
 
     var positiveSum: Decimal {
-        guard showItemValues
+        guard showItemValues, !isCompleted
         else { return 0 }
 
         switch type {
@@ -121,7 +111,7 @@ extension ChecklistItem {
     }
 
     var negativeSum: Decimal {
-        guard showItemValues
+        guard showItemValues, !isCompleted
         else { return 0 }
 
         switch type {
@@ -140,6 +130,20 @@ extension ChecklistItem {
 
     var sum: Decimal {
         positiveSum + negativeSum
+    }
+    
+    // MARK: - Drafts
+    
+    @MainActor
+    func syncDraft() {
+        guard let editor else { return }
+
+        editor.draft.title = title
+        editor.draft.type = type
+        editor.draft.color = color
+        editor.draft.value = value
+        editor.draft.showItemValues = showItemValues
+        editor.draft.height = height
     }
 
     var draftValue: Decimal {

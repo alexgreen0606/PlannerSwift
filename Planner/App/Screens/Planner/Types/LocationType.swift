@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftDate
 
 enum LocationType {
     case home
@@ -16,7 +17,7 @@ enum LocationType {
     func shouldDisplayLocation(
         for event: PlannerEvent,
         planner: Planner,
-        locationTimeZoneId: String,
+        locationSecondsFromGmt: Int,
         settings: Settings
     ) -> Bool {
         let plannerLocation = planner.location(settings: settings)
@@ -24,17 +25,20 @@ enum LocationType {
         switch self {
         case .home, .trip, .current:
             let eventIsTimed = event.time != nil
-            let hasDifferentTimeThanPlanner = locationTimeZoneId != plannerLocation.timeZoneId
-            
+            let hasDifferentTimeThanPlanner =
+                locationSecondsFromGmt
+                != plannerLocation?.region.timeZone.secondsFromGMT()
+
             return eventIsTimed && hasDifferentTimeThanPlanner
         case .event:
-            let plannerCoordinateId = planner.location(settings: settings).coordinateId
-            
+            let plannerCoordinateId = planner.location(settings: settings)
+                .coordinateId
+
             let eventCoordinateId = event.coordinateId(
                 planner: planner,
                 settings: settings
             )
-            
+
             return eventCoordinateId != plannerCoordinateId
         }
     }

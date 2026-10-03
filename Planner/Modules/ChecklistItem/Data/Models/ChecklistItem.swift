@@ -46,7 +46,7 @@ final class ChecklistItem: ListItemDetails {
     /// Used for form currency fields. (1 is positive, -1 is negative)
     @Transient
     var valueSign: Int = 1
-    
+
     @Transient
     var editor: EditorSession<ChecklistItem>?
 
@@ -64,6 +64,7 @@ final class ChecklistItem: ListItemDetails {
         parent?.items.safeAppend(self)
     }
 
+    // MARK: Create from a draft.
     init(
         draft: ChecklistItem,
         sortIndex: Double,
@@ -81,15 +82,20 @@ final class ChecklistItem: ListItemDetails {
         parent.items.safeAppend(self)
     }
 
-    // MARK: Draft
+    // MARK: Create a draft.
     required init(draftOf source: ChecklistItem) {
         stableId = source.stableId
         title = source.title
         type = source.type
         color = source.color
+        isCompleted = source.isCompleted
         value = source.value
         showItemValues = source.showItemValues
         height = source.height
+        sortIndex = source.sortIndex
+        showCompleted = source.showCompleted
+
+        // Form helpers:
 
         valueInt = NSDecimalNumber(decimal: abs(source.value) * 100).intValue
         valueSign = source.value < 0 ? -1 : 1

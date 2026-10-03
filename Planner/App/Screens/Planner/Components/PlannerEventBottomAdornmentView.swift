@@ -42,10 +42,6 @@ struct PlannerEventBottomAdornmentView: View {
         planner.region(settings: settings)
     }
 
-    private var plannerTimeZoneId: String {
-        plannerRegion.timeZone.identifier
-    }
-
     private var locationContextsByTimeZoneSecondsFromGmt:
         [Int: [LocationContext]]
     {
@@ -57,11 +53,11 @@ struct PlannerEventBottomAdornmentView: View {
 
         var contextMap: [Int: [String: LocationContext]] = [:]
 
-        let currentTimeZoneSecondsFromGmt = TimeZone.current.secondsFromGMT()
+        let currentSecondsFromGmt = TimeZone.current.secondsFromGMT()
         let shouldDisplayCurrent = LocationType.current.shouldDisplayLocation(
             for: plannerEvent,
             planner: planner,
-            locationTimeZoneId: TimeZone.current.identifier,
+            locationSecondsFromGmt: TimeZone.current.secondsFromGMT(),
             settings: settings
         )
         var didAddCurrent = false
@@ -72,7 +68,8 @@ struct PlannerEventBottomAdornmentView: View {
                 typedLocation.type.shouldDisplayLocation(
                     for: plannerEvent,
                     planner: planner,
-                    locationTimeZoneId: location.timeZoneIdentifier,
+                    locationSecondsFromGmt: location.region.timeZone
+                        .secondsFromGMT(),
                     settings: settings
                 ),
                 let secondsFromGmt = TimeZone(
@@ -91,7 +88,7 @@ struct PlannerEventBottomAdornmentView: View {
 
             if shouldDisplayCurrent,
                 !didAddCurrent,
-                secondsFromGmt == currentTimeZoneSecondsFromGmt,
+                secondsFromGmt == currentSecondsFromGmt,
                 context.location?.name
                     == locationService.validDeviceLocationName
             {
@@ -108,7 +105,7 @@ struct PlannerEventBottomAdornmentView: View {
         if shouldDisplayCurrent,
             !didAddCurrent
         {
-            contextMap[currentTimeZoneSecondsFromGmt, default: [:]][
+            contextMap[currentSecondsFromGmt, default: [:]][
                 CURRENT_ID
             ] =
                 LocationContext(types: [.current])
@@ -214,7 +211,8 @@ struct PlannerEventBottomAdornmentView: View {
                 )
             ) : nil
 
-        let displayTime = timeZone.identifier != plannerTimeZoneId
+        let displayTime =
+            timeZone.secondsFromGMT() != plannerRegion.timeZone.secondsFromGMT()
 
         return GridRow(alignment: .top) {
             ZStack {
