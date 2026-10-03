@@ -26,6 +26,7 @@ struct PlannerChipSpreadView: View {
         .blue
 
     @EnvironmentObject private var calendarService: CalendarService
+    @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
 
     private var locationLabel: String {
@@ -38,11 +39,20 @@ struct PlannerChipSpreadView: View {
 
     var body: some View {
         WrappingHStack(alignment: .leading) {
-            HStack {
-                locationChip
-                Spacer()
-                weatherChip
-            }
+
+//            if planner.datestamp == todayService.todaystamp {
+//                ZStack(alignment: .bottomLeading) {
+//                    weatherChip
+//                    locationChip
+//                }
+//            } else {
+            HStack(alignment: .top) {
+                    locationChip
+                    Spacer()
+                    weatherChip
+                }
+            // }
+
             tripChip
             ForEach(
                 sortedBirthdayChips,
@@ -74,10 +84,17 @@ struct PlannerChipSpreadView: View {
 
     @ViewBuilder
     private var weatherChip: some View {
-        WeatherChipView(
-            planner: planner,
-            settings: settings
-        )
+        if planner.datestamp == todayService.todaystamp {
+            TodayWeatherChipView(
+                planner: planner,
+                settings: settings
+            )
+        } else {
+            WeatherChipView(
+                planner: planner,
+                settings: settings
+            )
+        }
     }
 
     @ViewBuilder
