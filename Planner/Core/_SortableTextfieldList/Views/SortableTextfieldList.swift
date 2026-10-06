@@ -117,6 +117,16 @@ struct SortableTextfieldListView<
         .safeAreaInset(edge: .top) {
             floatingInfo
                 .padding(.horizontal)
+                .padding(
+                    .top,
+                    {
+                        if #available(iOS 27, *) {
+                            4
+                        } else {
+                            0
+                        }
+                    }()
+                )
                 .padding(.bottom, -(ListLayout.SEPARATOR_HEIGHT / 2))
         }
         .overlay {

@@ -98,7 +98,7 @@ struct TripPreviewView: View {
                     .font(.system(size: 14, weight: .bold, design: .rounded))
 
                 if countdownLabel.isEmpty {
-                    ProgressBar(
+                    TripProgressBarView(
                         trip: trip,
                         day: trip.day(of: todayService.todaystamp)
                     )

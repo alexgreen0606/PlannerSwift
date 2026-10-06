@@ -38,9 +38,8 @@ struct FolderContentsListView: View {
             )
             .onMove(perform: moveItem)
         }
-        .safeAreaInset(edge: .top) {
+        .safeAreaBar(edge: .top) {
             valueSpread
-                .padding(.horizontal)
         }
     }
 
@@ -48,6 +47,10 @@ struct FolderContentsListView: View {
 
     private var valueSpread: some View {
         ChecklistItemFloatingInfoView(item: folder)
+            .padding(.horizontal)
+            .padding(.horizontal)
+            .padding(.horizontal)
+            .padding(.bottom, 8)
     }
 
     private func row(for item: ChecklistItem) -> some View {
@@ -97,7 +100,9 @@ struct FolderContentsListView: View {
                     ChecklistItemValueView(value: item.sum)
                 } else if item.type == .checklist {
                     Text("\(item.safeItems.filter { !$0.isCompleted }.count)")
-                } else {
+                }
+
+                if item.type == .folder {
                     Image(systemName: "chevron.right")
                 }
             }

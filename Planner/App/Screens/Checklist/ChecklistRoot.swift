@@ -191,6 +191,14 @@ struct ChecklistRootView: View {
 
     private var valueSpread: some View {
         ChecklistItemFloatingInfoView(item: checklist)
+            .padding(8)
+            .glassEffect(
+                .regular.interactive(),
+                in: .rect(
+                    cornerRadius: 12
+                )
+            )
+            .padding(.horizontal)
     }
 
     private func actionToolbar(scrollProxy: ScrollViewProxy) -> some View {

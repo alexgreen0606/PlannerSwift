@@ -1,5 +1,5 @@
 //
-//  ProgressBar.swift
+//  TripProgressBar.swift
 //  Planner
 //
 //  Created by Alex Green on 7/3/26.
@@ -7,11 +7,11 @@
 
 import SwiftUI
 
-struct ProgressBar: View {
+struct TripProgressBarView: View {
     private let trip: Trip
     private let day: CGFloat
     private let color: Color?
-    
+
     init(trip: Trip, day: CGFloat, color: Color? = nil) {
         self.trip = trip
         self.day = day
@@ -32,15 +32,9 @@ struct ProgressBar: View {
     // MARK: - Body
 
     var body: some View {
-        ZStack(alignment: .leading) {
-            Capsule()
-                .fill(Color.secondary.opacity(0.15))
-                .frame(width: PROGRESS_BAR_WIDTH)
-
-            Capsule()
-                .fill(color ?? accentColor.swiftUiColor)
-                .frame(width: PROGRESS_BAR_WIDTH * progress)
-        }
-        .frame(height: 8)
+        ProgressBarView(
+            width: PROGRESS_BAR_WIDTH,
+            progress: progress
+        )
     }
 }

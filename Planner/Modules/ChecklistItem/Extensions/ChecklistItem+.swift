@@ -103,7 +103,7 @@ extension ChecklistItem {
             var sum: Decimal = 0.00
 
             for item in safeItems {
-                sum += max(0, item.sum)
+                sum += max(0, item.positiveSum)
             }
 
             return sum
@@ -121,7 +121,7 @@ extension ChecklistItem {
             var sum: Decimal = 0.00
 
             for item in safeItems {
-                sum += min(0, item.sum)
+                sum += min(0, item.negativeSum)
             }
 
             return sum

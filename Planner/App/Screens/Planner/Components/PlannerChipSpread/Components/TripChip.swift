@@ -40,7 +40,7 @@ struct TripChipView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                 VStack(alignment: .trailing) {
-                    ProgressBar(
+                    TripProgressBarView(
                         trip: trip,
                         day: dayOfTrip,
                         color: plannerEngine.selectModeDisabledColor

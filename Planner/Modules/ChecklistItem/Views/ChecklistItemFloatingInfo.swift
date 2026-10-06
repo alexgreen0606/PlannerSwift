@@ -18,17 +18,33 @@ struct ChecklistItemFloatingInfoView: View {
         item.negativeSum
     }
 
-    private var sum: Decimal {
-        item.sum
+    private var progress: CGFloat {
+        let positive = NSDecimalNumber(decimal: positiveSum)
+            .doubleValue
+
+        let negative = abs(
+            NSDecimalNumber(decimal: negativeSum)
+                .doubleValue
+        )
+
+        let total = positive + negative
+
+        guard total > 0 else { return 0 }
+
+        return CGFloat(positive / total)
     }
 
     // MARK: - Body
 
     var body: some View {
         if item.showItemValues && (!positiveSum.isZero || !negativeSum.isZero) {
-            HStack {
-                Spacer()
-                valueChip(sum)
+            VStack {
+                totalValue
+                HStack {
+                    individualValue(positiveSum)
+                    Spacer()
+                    individualValue(negativeSum)
+                }
             }
         }
     }
@@ -36,18 +52,45 @@ struct ChecklistItemFloatingInfoView: View {
     // MARK: - View Builders
 
     @ViewBuilder
-    private func valueChip(_ value: Decimal, scale: CGFloat = 1) -> some View {
+    private var totalValue: some View {
+        VStack {
+            ChecklistItemValueView(value: item.sum)
+
+            GeometryReader { geometry in
+                HStack {
+                    Capsule()
+                        .fill(Color.green)
+                        .frame(
+                            width: max(
+                                0,
+                                geometry.size.width * progress - 2
+                            )
+                        )
+                        .frame(height: 10)
+
+                    Spacer()
+
+                    Capsule()
+                        .fill(Color.red)
+                        .frame(
+                            width: max(
+                                0,
+                                geometry.size.width * (1 - progress) - 2
+                            )
+                        )
+                        .frame(height: 10)
+                }
+            }
+            .frame(height: 10)
+        }
+    }
+
+    @ViewBuilder
+    private func individualValue(_ value: Decimal) -> some View {
         AdornedValue(
-            "\(value.formatted(.currency(code: "USD")))",
+            "\(value > 0 ? "+" : "")\(value.formatted(.currency(code: "USD")))",
             color: value < 0 ? Color.red : Color.green,
-            scale: scale
-        )
-        .padding(8 * scale)
-        .glassEffect(
-            .regular,
-            in: .rect(
-                cornerRadius: 12 * scale
-            )
+            scale: 0.7
         )
     }
 }
