@@ -19,7 +19,7 @@ struct ChecklistItemValueView: View {
                 .system(size: 12, weight: .black, design: .rounded)
             )
             .foregroundStyle(
-                value < 0 ? Color.red : Color.green
+                value == 0 ? Color.label : value < 0 ? Color.red : Color.green
             )
     }
 }

@@ -221,10 +221,30 @@ struct ChecklistItemFormView: View {
                     .tint(color)
                 }
             case .folder, .checklist:
-                Toggle(
-                    "Show Values",
-                    isOn: $draftChecklistItem.showItemValues
-                )
+                Picker(
+                    "Variant",
+                    selection: Binding<ChecklistItemVariant?>(
+                        get: {
+                            draftChecklistItem.variants.first
+                        },
+                        set: { variant in
+                            if let variant {
+                                draftChecklistItem.variants = [variant]
+                            } else {
+                                draftChecklistItem.variants = []
+                            }
+                        }
+                    )
+                ) {
+                    Text("None")
+                        .tag(nil as ChecklistItemVariant?)
+
+                    Text("Finance")
+                        .tag(
+                            ChecklistItemVariant.finance
+                                as ChecklistItemVariant?
+                        )
+                }
                 .tint(color)
             }
         }

@@ -115,7 +115,7 @@ extension ModelContext {
             sourceItem.title = draftItem.title
             sourceItem.color = draftItem.color
             sourceItem.value = draftItem.value
-            sourceItem.showItemValues = draftItem.showItemValues
+            sourceItem.variants = draftItem.variants
 
             // Note: Do not update the type. An item's type will never change.
 

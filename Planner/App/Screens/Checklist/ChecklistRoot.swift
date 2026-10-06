@@ -220,7 +220,7 @@ struct ChecklistRootView: View {
 
     @ViewBuilder
     private func valueAdornment(item: ChecklistItem) -> some View {
-        if checklist.showItemValues && !item.value.isZero {
+        if !item.value.isZero {
             ChecklistItemValueView(value: item.sum(completed: item.isCompleted))
         }
     }

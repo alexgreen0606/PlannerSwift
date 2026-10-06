@@ -91,15 +91,18 @@ extension ChecklistItem {
     }
 
     // MARK: - Values
+    
+    var isFinanceTracker: Bool {
+        variants.contains(ChecklistItemVariant.finance)
+    }
 
     func positiveSum(completed: Bool = false) -> Decimal {
-        guard showItemValues
-        else { return 0 }
-
         switch type {
         case .item:
             guard completed == isCompleted else { return 0 }
+            
             return max(0, value)
+            
         case .folder, .checklist:
             var sum: Decimal = 0.00
 
@@ -112,13 +115,12 @@ extension ChecklistItem {
     }
 
     func negativeSum(completed: Bool = false) -> Decimal {
-        guard showItemValues
-        else { return 0 }
-
         switch type {
         case .item:
             guard completed == isCompleted else { return 0 }
+            
             return min(0, value)
+            
         case .folder, .checklist:
             var sum: Decimal = 0.00
 
@@ -144,7 +146,7 @@ extension ChecklistItem {
         editor.draft.type = type
         editor.draft.color = color
         editor.draft.value = value
-        editor.draft.showItemValues = showItemValues
+        editor.draft.variants = variants
         editor.draft.height = height
     }
 

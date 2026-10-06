@@ -90,9 +90,7 @@ struct FolderContentsListView: View {
             // MARK: End Adornment
 
             Group {
-                if folder.showItemValues
-                    && (!item.positiveSum().isZero || !item.negativeSum().isZero)
-                {
+                if item.isFinanceTracker {
                     ChecklistItemValueView(value: item.sum())
                 } else if item.type == .checklist {
                     Text("\(item.safeItems.filter { !$0.isCompleted }.count)")

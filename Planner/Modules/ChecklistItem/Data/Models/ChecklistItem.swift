@@ -21,7 +21,7 @@ final class ChecklistItem: ListItemDetails {
     /// Should only be non-zero for ChecklistItemType.item
     var value: Decimal = 0.00
 
-    var showItemValues: Bool = true
+    var variants: [ChecklistItemVariant] = []
 
     var height: CGFloat = 0
 
@@ -74,7 +74,7 @@ final class ChecklistItem: ListItemDetails {
         type = draft.type
         color = draft.color
         value = draft.value
-        showItemValues = draft.showItemValues
+        variants = draft.variants
 
         self.sortIndex = sortIndex
         self.parent = parent
@@ -90,7 +90,7 @@ final class ChecklistItem: ListItemDetails {
         color = source.color
         isCompleted = source.isCompleted
         value = source.value
-        showItemValues = source.showItemValues
+        variants = source.variants
         height = source.height
         sortIndex = source.sortIndex
         showCompleted = source.showCompleted

@@ -28,10 +28,6 @@ struct ChecklistItemFloatingInfoView: View {
         positiveSum + negativeSum
     }
 
-    private var showIndividualSums: Bool {
-        !positiveSum.isZero && !negativeSum.isZero
-    }
-
     private var isGlassChip: Bool {
         item.type == .checklist
     }
@@ -55,19 +51,16 @@ struct ChecklistItemFloatingInfoView: View {
     // MARK: - Body
 
     var body: some View {
-        if item.showItemValues && (!positiveSum.isZero || !negativeSum.isZero) {
+        if item.isFinanceTracker {
             let values = VStack {
                 totalValue
 
-                if showIndividualSums {
-                    HStack {
-                        individualValue(positiveSum)
-                        Spacer()
-                        individualValue(negativeSum)
-                    }
+                HStack {
+                    individualValue(positiveSum)
+                    Spacer()
+                    individualValue(negativeSum)
                 }
             }
-            .animateUserAction(from: sum)
 
             if isGlassChip {
                 values
@@ -78,7 +71,7 @@ struct ChecklistItemFloatingInfoView: View {
                             cornerRadius: 12
                         )
                     )
-                    .padding(.horizontal, showIndividualSums ? 16 : 0)
+                    .padding(.horizontal)
             } else {
                 values
                     .padding(.horizontal, 48)
@@ -94,34 +87,35 @@ struct ChecklistItemFloatingInfoView: View {
         VStack {
             ChecklistItemValueView(value: sum)
 
-            if showIndividualSums {
-                GeometryReader { geometry in
-                    HStack {
-                        Capsule()
-                            .fill(Color.green)
-                            .frame(
-                                width: max(
-                                    0,
-                                    geometry.size.width * progress - 2
-                                )
-                            )
-                            .frame(height: 10)
+            GeometryReader { geometry in
+                let width = geometry.size.width
+                let hasValues = !positiveSum.isZero || !negativeSum.isZero
+                let barWidth = max(0, width - 2)
 
-                        Spacer()
+                HStack(spacing: 0) {
+                    Capsule()
+                        .fill(hasValues ? Color.green : Color.tertiary)
+                        .frame(
+                            width: hasValues
+                                ? barWidth * progress
+                                : barWidth / 2
+                        )
+                        .frame(height: 10)
 
-                        Capsule()
-                            .fill(Color.red)
-                            .frame(
-                                width: max(
-                                    0,
-                                    geometry.size.width * (1 - progress) - 2
-                                )
-                            )
-                            .frame(height: 10)
-                    }
+                    Spacer(minLength: 0)
+
+                    Capsule()
+                        .fill(hasValues ? Color.red : Color.tertiary)
+                        .frame(
+                            width: hasValues
+                                ? barWidth * (1 - progress)
+                                : barWidth / 2
+                        )
+                        .frame(height: 10)
                 }
-                .frame(height: 10)
+                .animateUserAction(from: progress)
             }
+            .frame(height: 10)
         }
     }
 
@@ -129,7 +123,8 @@ struct ChecklistItemFloatingInfoView: View {
     private func individualValue(_ value: Decimal) -> some View {
         AdornedValue(
             "\(value > 0 ? "+" : "")\(value.formatted(.currency(code: "USD")))",
-            color: value < 0 ? Color.red : Color.green,
+            color: value == 0
+                ? Color.secondary : value < 0 ? Color.red : Color.green,
             scale: 0.7
         )
     }
