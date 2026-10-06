@@ -47,10 +47,6 @@ struct FolderContentsListView: View {
 
     private var valueSpread: some View {
         ChecklistItemFloatingInfoView(item: folder)
-            .padding(.horizontal)
-            .padding(.horizontal)
-            .padding(.horizontal)
-            .padding(.bottom, 8)
     }
 
     private func row(for item: ChecklistItem) -> some View {
@@ -95,9 +91,9 @@ struct FolderContentsListView: View {
 
             Group {
                 if folder.showItemValues
-                    && (!item.positiveSum.isZero || !item.negativeSum.isZero)
+                    && (!item.positiveSum().isZero || !item.negativeSum().isZero)
                 {
-                    ChecklistItemValueView(value: item.sum)
+                    ChecklistItemValueView(value: item.sum())
                 } else if item.type == .checklist {
                     Text("\(item.safeItems.filter { !$0.isCompleted }.count)")
                 }

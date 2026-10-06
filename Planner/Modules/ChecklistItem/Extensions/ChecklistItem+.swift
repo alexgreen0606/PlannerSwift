@@ -89,51 +89,53 @@ extension ChecklistItem {
 
         return matches
     }
-    
+
     // MARK: - Values
 
-    var positiveSum: Decimal {
-        guard showItemValues, !isCompleted
+    func positiveSum(completed: Bool = false) -> Decimal {
+        guard showItemValues
         else { return 0 }
 
         switch type {
         case .item:
+            guard completed == isCompleted else { return 0 }
             return max(0, value)
         case .folder, .checklist:
             var sum: Decimal = 0.00
 
             for item in safeItems {
-                sum += max(0, item.positiveSum)
+                sum += max(0, item.positiveSum(completed: completed))
             }
 
             return sum
         }
     }
 
-    var negativeSum: Decimal {
-        guard showItemValues, !isCompleted
+    func negativeSum(completed: Bool = false) -> Decimal {
+        guard showItemValues
         else { return 0 }
 
         switch type {
         case .item:
+            guard completed == isCompleted else { return 0 }
             return min(0, value)
         case .folder, .checklist:
             var sum: Decimal = 0.00
 
             for item in safeItems {
-                sum += min(0, item.negativeSum)
+                sum += min(0, item.negativeSum(completed: completed))
             }
 
             return sum
         }
     }
 
-    var sum: Decimal {
-        positiveSum + negativeSum
+    func sum(completed: Bool = false) -> Decimal {
+        positiveSum(completed: completed) + negativeSum(completed: completed)
     }
-    
+
     // MARK: - Drafts
-    
+
     @MainActor
     func syncDraft() {
         guard let editor else { return }

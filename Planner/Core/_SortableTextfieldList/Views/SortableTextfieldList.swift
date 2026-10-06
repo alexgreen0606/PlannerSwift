@@ -12,6 +12,8 @@ import SwiftUI
 struct SortableTextfieldListView<
     Item: ListItemDetails,
     FloatingInfo: View,
+    PendingHeader: View,
+    CompletedHeader: View,
     LeftAdornment: View,
     RightAdornment: View,
     BottomAdornment: View
@@ -19,6 +21,8 @@ struct SortableTextfieldListView<
     private let sortedItems: [Item]
     private let itemsLabel: String
     private let floatingInfo: FloatingInfo?
+    private let pendingHeader: PendingHeader?
+    private let completedHeader: CompletedHeader?
     private let createItem: (Int) -> Void
     private let moveItem: (Int, Int) -> Void
     private let deleteItem: ((Item) -> Void)?
@@ -46,6 +50,8 @@ struct SortableTextfieldListView<
         sortedItems: [Item],
         itemsLabel: String = "Items",
         floatingInfo: FloatingInfo? = EmptyView(),
+        pendingHeader: PendingHeader? = EmptyView(),
+        completedHeader: CompletedHeader? = EmptyView(),
         createItem: @escaping (Int) -> Void,
         moveItem: @escaping (Int, Int) -> Void,
         deleteItem: ((Item) -> Void)? = nil,
@@ -68,6 +74,8 @@ struct SortableTextfieldListView<
         self.sortedItems = sortedItems
         self.itemsLabel = itemsLabel
         self.floatingInfo = floatingInfo
+        self.pendingHeader = pendingHeader
+        self.completedHeader = completedHeader
         self.createItem = createItem
         self.moveItem = moveItem
         self.deleteItem = deleteItem
@@ -96,7 +104,7 @@ struct SortableTextfieldListView<
         "No \(!sortedCompletedItems.isEmpty ? "more " : "")\(itemsLabel.lowercased())"
     }
 
-    private var completedHeader: String {
+    private var completedHeaderText: String {
         "Completed \(itemsLabel)"
     }
 
@@ -213,6 +221,9 @@ struct SortableTextfieldListView<
                     .frame(height: ListLayout.EMPTY_LABEL_HEIGHT)
                     .discreetListItem()
             }
+        } header: {
+            pendingHeader
+                .listRowInsets(.vertical, 0)
         }
         .listSectionSeparator(.hidden)
         .listSectionMargins(.top, 0)
@@ -249,7 +260,10 @@ struct SortableTextfieldListView<
                         .discreetListItem()
                 }
             } header: {
-                Text(completedHeader)
+                VStack(alignment: .leading) {
+                    Text(completedHeaderText)
+                    completedHeader
+                }
             } footer: {
                 if let completedFooter, !sortedCompletedItems.isEmpty {
                     Text(completedFooter)

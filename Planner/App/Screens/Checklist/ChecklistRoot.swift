@@ -84,7 +84,8 @@ struct ChecklistRootView: View {
                 ScrollViewReader { scrollProxy in
                     SortableTextfieldListView(
                         sortedItems: sortedItems,
-                        floatingInfo: valueSpread,
+                        pendingHeader: valueSpread(completed: false),
+                        completedHeader: valueSpread(completed: true),
                         createItem: createItem,
                         moveItem: moveItem,
                         onCommitItem: handleItemChange,
@@ -189,16 +190,11 @@ struct ChecklistRootView: View {
 
     // MARK: - View Builder
 
-    private var valueSpread: some View {
-        ChecklistItemFloatingInfoView(item: checklist)
-            .padding(8)
-            .glassEffect(
-                .regular.interactive(),
-                in: .rect(
-                    cornerRadius: 12
-                )
-            )
-            .padding(.horizontal)
+    private func valueSpread(completed: Bool) -> some View {
+        ChecklistItemFloatingInfoView(
+            item: checklist,
+            completed: completed
+        )
     }
 
     private func actionToolbar(scrollProxy: ScrollViewProxy) -> some View {
@@ -225,7 +221,7 @@ struct ChecklistRootView: View {
     @ViewBuilder
     private func valueAdornment(item: ChecklistItem) -> some View {
         if checklist.showItemValues && !item.value.isZero {
-            ChecklistItemValueView(value: item.sum)
+            ChecklistItemValueView(value: item.sum(completed: item.isCompleted))
         }
     }
 

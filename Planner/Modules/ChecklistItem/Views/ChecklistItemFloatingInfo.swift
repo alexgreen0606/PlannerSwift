@@ -8,14 +8,32 @@
 import SwiftUI
 
 struct ChecklistItemFloatingInfoView: View {
-    let item: ChecklistItem
+    private let item: ChecklistItem
+    private let completed: Bool
+
+    init(item: ChecklistItem, completed: Bool = false) {
+        self.item = item
+        self.completed = completed
+    }
 
     private var positiveSum: Decimal {
-        item.positiveSum
+        item.positiveSum(completed: completed)
     }
 
     private var negativeSum: Decimal {
-        item.negativeSum
+        item.negativeSum(completed: completed)
+    }
+
+    private var sum: Decimal {
+        positiveSum + negativeSum
+    }
+
+    private var showIndividualSums: Bool {
+        !positiveSum.isZero && !negativeSum.isZero
+    }
+
+    private var isGlassChip: Bool {
+        item.type == .checklist
     }
 
     private var progress: CGFloat {
@@ -38,13 +56,33 @@ struct ChecklistItemFloatingInfoView: View {
 
     var body: some View {
         if item.showItemValues && (!positiveSum.isZero || !negativeSum.isZero) {
-            VStack {
+            let values = VStack {
                 totalValue
-                HStack {
-                    individualValue(positiveSum)
-                    Spacer()
-                    individualValue(negativeSum)
+
+                if showIndividualSums {
+                    HStack {
+                        individualValue(positiveSum)
+                        Spacer()
+                        individualValue(negativeSum)
+                    }
                 }
+            }
+            .animateUserAction(from: sum)
+
+            if isGlassChip {
+                values
+                    .padding(8)
+                    .glassEffect(
+                        .regular.interactive(),
+                        in: .rect(
+                            cornerRadius: 12
+                        )
+                    )
+                    .padding(.horizontal, showIndividualSums ? 16 : 0)
+            } else {
+                values
+                    .padding(.horizontal, 48)
+                    .padding(.bottom)
             }
         }
     }
@@ -54,34 +92,36 @@ struct ChecklistItemFloatingInfoView: View {
     @ViewBuilder
     private var totalValue: some View {
         VStack {
-            ChecklistItemValueView(value: item.sum)
+            ChecklistItemValueView(value: sum)
 
-            GeometryReader { geometry in
-                HStack {
-                    Capsule()
-                        .fill(Color.green)
-                        .frame(
-                            width: max(
-                                0,
-                                geometry.size.width * progress - 2
+            if showIndividualSums {
+                GeometryReader { geometry in
+                    HStack {
+                        Capsule()
+                            .fill(Color.green)
+                            .frame(
+                                width: max(
+                                    0,
+                                    geometry.size.width * progress - 2
+                                )
                             )
-                        )
-                        .frame(height: 10)
+                            .frame(height: 10)
 
-                    Spacer()
+                        Spacer()
 
-                    Capsule()
-                        .fill(Color.red)
-                        .frame(
-                            width: max(
-                                0,
-                                geometry.size.width * (1 - progress) - 2
+                        Capsule()
+                            .fill(Color.red)
+                            .frame(
+                                width: max(
+                                    0,
+                                    geometry.size.width * (1 - progress) - 2
+                                )
                             )
-                        )
-                        .frame(height: 10)
+                            .frame(height: 10)
+                    }
                 }
+                .frame(height: 10)
             }
-            .frame(height: 10)
         }
     }
 
