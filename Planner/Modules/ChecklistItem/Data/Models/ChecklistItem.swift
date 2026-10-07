@@ -20,6 +20,8 @@ final class ChecklistItem: ListItemDetails {
 
     /// Should only be non-zero for ChecklistItemType.item
     var value: Decimal = 0.00
+    
+    var notes: String = ""
 
     var variants: [ChecklistItemVariant] = []
 
@@ -75,6 +77,7 @@ final class ChecklistItem: ListItemDetails {
         color = draft.color
         value = draft.value
         variants = draft.variants
+        notes = draft.notes.trimmed
 
         self.sortIndex = sortIndex
         self.parent = parent
@@ -91,6 +94,7 @@ final class ChecklistItem: ListItemDetails {
         isCompleted = source.isCompleted
         value = source.value
         variants = source.variants
+        notes = source.notes.trimmed
         height = source.height
         sortIndex = source.sortIndex
         showCompleted = source.showCompleted

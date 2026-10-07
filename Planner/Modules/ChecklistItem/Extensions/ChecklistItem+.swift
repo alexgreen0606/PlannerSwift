@@ -147,6 +147,7 @@ extension ChecklistItem {
         editor.draft.color = color
         editor.draft.value = value
         editor.draft.variants = variants
+        editor.draft.notes = notes.trimmed
         editor.draft.height = height
     }
 

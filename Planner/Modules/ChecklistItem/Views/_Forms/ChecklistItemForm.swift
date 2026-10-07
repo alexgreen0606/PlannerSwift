@@ -120,7 +120,7 @@ struct ChecklistItemFormView: View {
             valueKeyboardAdornment
         }
         .presentationBackground(.clear)
-        .presentationDetents([.height(390)])
+        .presentationDetents([.height(510)])
     }
 
     // MARK: - Toolbars
@@ -206,6 +206,20 @@ struct ChecklistItemFormView: View {
         Section("Advanced") {
             switch draftChecklistItem.type {
             case .item:
+                ZStack(alignment: .topLeading) {
+                    TextEditor(text: $draftChecklistItem.notes)
+                        .scrollContentBackground(.hidden)
+
+                    if draftChecklistItem.notes.trimmed.isEmpty {
+                        Text("Notes")
+                            .foregroundStyle(.tertiary)
+                            .padding(.leading, 5)
+                            .padding(.top, 8)
+                            .allowsHitTesting(false)
+                    }
+                }
+                .frame(height: 120)
+
                 HStack {
                     Text("Value")
 

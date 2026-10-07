@@ -108,6 +108,7 @@ extension ModelContext {
         draftItem: ChecklistItem
     ) {
         draftItem.title = draftItem.title.trimmed
+        draftItem.notes = draftItem.notes.trimmed
         draftItem.value = draftItem.draftValue
 
         if let sourceItem {
@@ -116,6 +117,7 @@ extension ModelContext {
             sourceItem.color = draftItem.color
             sourceItem.value = draftItem.value
             sourceItem.variants = draftItem.variants
+            sourceItem.notes = draftItem.notes
 
             // Note: Do not update the type. An item's type will never change.
 
