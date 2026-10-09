@@ -61,7 +61,6 @@ extension ModelContext {
         with draftTrip: DraftTrip,
         plannerService: PlannerService
     ) -> Trip {
-
         let trip = sourceTrip ?? Trip()
 
         trip.title = draftTrip.title.trimmed

@@ -12,6 +12,10 @@ struct DateRangePickerView: View {
 
     @EnvironmentObject private var todayService: TodayService
 
+    private var calendar: Calendar {
+        Calendar.current
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -30,16 +34,21 @@ struct DateRangePickerView: View {
     private func updateSelectedDateComponents(
         _ newDates: Set<DateComponents>
     ) {
-        if newDates.count == selectedDates.count {
-            // MARK: Date was de-selected. Clear the entire selection.
+        // MARK: Handle Date de-selection.
 
-            // Limitation: MultiDatePicker does not grant access to which date was "removed" from the selections.
+        // Pre iOS 27 case: Date was de-selected.
+        if newDates.count == selectedDates.count {
+            // MultiDatePicker does not grant access to which date was removed from the selections.
             // In this case we'll need to just clear the list and have the user start again.
             selectedDates = []
             return
         }
 
-        let calendar = Calendar.current
+        // iOS 27 case: Date was de-selected.
+        if newDates.count < selectedDates.count, #available(iOS 27, *) {
+            handleDateDeselection(newDates)
+            return
+        }
 
         switch newDates.count {
         case 0, 1:
@@ -47,41 +56,28 @@ struct DateRangePickerView: View {
         case 2:
             // MARK: Two dates are selected. Fill all dates between them.
 
-            let sortedNewDates = newDates.sorted {
-                guard let lhsDate = calendar.date(from: $0),
-                    let rhsDate = calendar.date(from: $1)
-                else {
-                    return false
-                }
-
-                return lhsDate < rhsDate
-            }
+            let (startDate, endDate) = getStartAndEnd(for: newDates)
 
             updateDateRange(
-                from: sortedNewDates.first!,
-                to: sortedNewDates.last!
+                from: startDate,
+                to: endDate
             )
+
         default:
             // MARK: New date was selected. Expand the range to fill all dates in-between.
 
-            let sortedPrevDates = selectedDates.sorted {
-                guard let lhsDate = calendar.date(from: $0),
-                    let rhsDate = calendar.date(from: $1)
-                else {
-                    return false
-                }
-
-                return lhsDate < rhsDate
-            }
-            let prevEarliest = sortedPrevDates.first!
-            let prevLatest = sortedPrevDates.last!
+            let (startDate, endDate) = getStartAndEnd(for: selectedDates)
 
             guard
-                let clickedDateComponents = newDates.subtracting(selectedDates)
-                    .first,
-                let clickedDate = calendar.date(from: clickedDateComponents),
+                let clickedDateComponents = newDates.subtracting(
+                    selectedDates
+                )
+                .first,
+                let clickedDate = calendar.date(
+                    from: clickedDateComponents
+                ),
                 let prevEarliestDate = calendar.date(
-                    from: prevEarliest
+                    from: startDate
                 )
             else {
                 return
@@ -90,13 +86,48 @@ struct DateRangePickerView: View {
             if clickedDate < prevEarliestDate {
                 updateDateRange(
                     from: clickedDateComponents,
-                    to: prevLatest
+                    to: endDate
                 )
             } else {
                 updateDateRange(
-                    from: prevEarliest,
+                    from: startDate,
                     to: clickedDateComponents
                 )
+            }
+        }
+    }
+
+    private func handleDateDeselection(_ newDates: Set<DateComponents>) {
+        let (startDate, endDate) = getStartAndEnd(for: selectedDates)
+
+        if let clickedDate = selectedDates.subtracting(newDates).first {
+            if [startDate, endDate].contains(clickedDate) {
+                selectedDates = newDates
+                return
+            }
+
+            let distanceFromStart = abs(
+                calendar.dateComponents(
+                    [.day],
+                    from: startDate,
+                    to: clickedDate
+                ).day ?? 0
+            )
+
+            let distanceFromEnd = abs(
+                calendar.dateComponents(
+                    [.day],
+                    from: clickedDate,
+                    to: endDate
+                ).day ?? 0
+            )
+
+            if distanceFromStart < distanceFromEnd {
+                // Move the start of the range.
+                updateDateRange(from: clickedDate, to: endDate)
+            } else {
+                // Move the end of the range.
+                updateDateRange(from: startDate, to: clickedDate)
             }
         }
     }
@@ -124,5 +155,26 @@ struct DateRangePickerView: View {
         }
 
         selectedDates = expandedDates
+    }
+
+    private func getStartAndEnd(for dates: Set<DateComponents>) -> (
+        startDate: DateComponents, endDate: DateComponents
+    ) {
+        let sortedDates = dates.sorted {
+            guard let lhsDate = calendar.date(from: $0),
+                let rhsDate = calendar.date(from: $1)
+            else {
+                return false
+            }
+
+            return lhsDate < rhsDate
+        }
+
+        let earliest = sortedDates.first!
+        let latest = sortedDates.last!
+
+        return (
+            startDate: earliest, endDate: latest
+        )
     }
 }
