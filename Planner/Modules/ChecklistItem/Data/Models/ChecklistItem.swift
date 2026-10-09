@@ -30,6 +30,8 @@ final class ChecklistItem: ListItemDetails {
     var sortIndex: Double = ChecklistsData.SORT_INDEX_SPACING
 
     var showCompleted: Bool = false
+    
+    var hideToggles: Bool = false
 
     // MARK: Parent
     var parent: ChecklistItem?
@@ -78,6 +80,7 @@ final class ChecklistItem: ListItemDetails {
         value = draft.value
         variants = draft.variants
         notes = draft.notes.trimmed
+        hideToggles = draft.hideToggles
 
         self.sortIndex = sortIndex
         self.parent = parent
@@ -95,6 +98,7 @@ final class ChecklistItem: ListItemDetails {
         value = source.value
         variants = source.variants
         notes = source.notes.trimmed
+        hideToggles = source.hideToggles
         height = source.height
         sortIndex = source.sortIndex
         showCompleted = source.showCompleted

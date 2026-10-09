@@ -17,6 +17,7 @@ struct RowView<
     private let item: Item
     private let index: Int
     private let toggleOnly: Bool
+    private let hideToggle: Bool
     private let tint: Color
     private let customToggleConfig: ToggleConfig?
     private let leftAdornment: LeftAdornment
@@ -35,6 +36,7 @@ struct RowView<
     init(
         item: Item,
         index: Int,
+        hideToggle: Bool,
         tint: Color,
         customToggleConfig: ToggleConfig?,
         leftAdornment: LeftAdornment,
@@ -51,6 +53,7 @@ struct RowView<
     ) {
         self.item = item
         self.index = index
+        self.hideToggle = hideToggle
         self.tint = tint
         self.customToggleConfig = customToggleConfig
         self.leftAdornment = leftAdornment
@@ -85,7 +88,7 @@ struct RowView<
     init(
         item: Item,
         index: Int,
-        toggleOnly: Bool = false,
+        hideToggle: Bool,
         tint: Color,
         customToggleConfig: ToggleConfig? = nil,
         leftAdornment: LeftAdornment,
@@ -97,7 +100,7 @@ struct RowView<
     ) {
         self.item = item
         self.index = index
-        self.toggleOnly = toggleOnly
+        self.hideToggle = hideToggle
         self.tint = tint
         self.customToggleConfig = customToggleConfig
         self.leftAdornment = leftAdornment
@@ -106,6 +109,7 @@ struct RowView<
         self.showCompleted = showCompleted
         self.settings = settings
 
+        self.toggleOnly = true
         self.namespace = nil
         self.onCommit = nil
         self.createItem = nil
@@ -154,7 +158,9 @@ struct RowView<
     var body: some View {
         let row =
             HStack(alignment: .top, spacing: 12) {
-                toggle
+                if !hideToggle {
+                    toggle
+                }
                 content
             }
             .listRowInsets(EdgeInsets())

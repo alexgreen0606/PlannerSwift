@@ -23,6 +23,7 @@ struct SortableTextfieldListView<
     private let floatingInfo: FloatingInfo?
     private let pendingHeader: PendingHeader?
     private let completedHeader: CompletedHeader?
+    private let hideToggles: Bool
     private let createItem: (Int) -> Void
     private let moveItem: (Int, Int) -> Void
     private let deleteItem: ((Item) -> Void)?
@@ -52,6 +53,7 @@ struct SortableTextfieldListView<
         floatingInfo: FloatingInfo? = EmptyView(),
         pendingHeader: PendingHeader? = EmptyView(),
         completedHeader: CompletedHeader? = EmptyView(),
+        hideToggles: Bool = false,
         createItem: @escaping (Int) -> Void,
         moveItem: @escaping (Int, Int) -> Void,
         deleteItem: ((Item) -> Void)? = nil,
@@ -76,6 +78,7 @@ struct SortableTextfieldListView<
         self.floatingInfo = floatingInfo
         self.pendingHeader = pendingHeader
         self.completedHeader = completedHeader
+        self.hideToggles = hideToggles
         self.createItem = createItem
         self.moveItem = moveItem
         self.deleteItem = deleteItem
@@ -187,6 +190,7 @@ struct SortableTextfieldListView<
                 RowView(
                     item: item,
                     index: index,
+                    hideToggle: hideToggles,
                     tint: tint(item),
                     customToggleConfig: toggleConfig(item),
                     leftAdornment: leftAdornment(item),
@@ -240,7 +244,7 @@ struct SortableTextfieldListView<
                     RowView(
                         item: item,
                         index: index,
-                        toggleOnly: true,
+                        hideToggle: hideToggles,
                         tint: tint(item),
                         customToggleConfig: toggleConfig(item),
                         leftAdornment: leftAdornment(item),

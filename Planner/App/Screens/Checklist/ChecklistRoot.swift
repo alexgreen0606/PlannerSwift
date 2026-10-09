@@ -86,6 +86,7 @@ struct ChecklistRootView: View {
                         sortedItems: sortedItems,
                         pendingHeader: valueSpread(completed: false),
                         completedHeader: valueSpread(completed: true),
+                        hideToggles: checklist.hideToggles,
                         createItem: createItem,
                         moveItem: moveItem,
                         onCommitItem: handleItemChange,

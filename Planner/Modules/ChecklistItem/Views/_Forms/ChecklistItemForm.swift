@@ -260,6 +260,14 @@ struct ChecklistItemFormView: View {
                         )
                 }
                 .tint(color)
+
+                if draftChecklistItem.type == .checklist {
+                    Toggle(
+                        "Hide Toggles",
+                        isOn: $draftChecklistItem.hideToggles
+                    )
+                    .tint(color)
+                }
             }
         }
     }

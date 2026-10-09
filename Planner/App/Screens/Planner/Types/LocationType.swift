@@ -27,7 +27,9 @@ enum LocationType {
             let eventIsTimed = event.time != nil
             let hasDifferentTimeThanPlanner =
                 locationSecondsFromGmt
-                != plannerLocation?.region.timeZone.secondsFromGMT()
+                != plannerLocation?.region.timeZone.secondsFromGMT(
+                    for: event.time ?? Date()
+                )
 
             return eventIsTimed && hasDifferentTimeThanPlanner
         case .event:

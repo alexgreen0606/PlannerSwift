@@ -148,6 +148,7 @@ extension ChecklistItem {
         editor.draft.value = value
         editor.draft.variants = variants
         editor.draft.notes = notes.trimmed
+        editor.draft.hideToggles = hideToggles
         editor.draft.height = height
     }
 

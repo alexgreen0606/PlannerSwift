@@ -22,6 +22,7 @@ struct PlannerEventBottomAdornmentView: View {
     @EnvironmentObject private var locationService: LocationService
     @EnvironmentObject private var todayService: TodayService
 
+    /// This is the datestamp the event lands in relative to the planner's region.
     private var eventDatestamp: String {
         if let time = plannerEvent.time {
             // Timed event: placed in a day from the perspective of the planner.
@@ -36,6 +37,11 @@ struct PlannerEventBottomAdornmentView: View {
             // Fallback that should never occur in theory.
             return planner.datestamp
         }
+    }
+    
+    /// Used to ensure that timezones are evaluated with the correct DST offset.
+    private var eventTime: Date {
+        plannerEvent.time ?? Date()
     }
 
     private var plannerRegion: Region {
@@ -53,11 +59,11 @@ struct PlannerEventBottomAdornmentView: View {
 
         var contextMap: [Int: [String: LocationContext]] = [:]
 
-        let currentSecondsFromGmt = TimeZone.current.secondsFromGMT()
+        let currentSecondsFromGmt = TimeZone.current.secondsFromGMT(for: eventTime)
         let shouldDisplayCurrent = LocationType.current.shouldDisplayLocation(
             for: plannerEvent,
             planner: planner,
-            locationSecondsFromGmt: TimeZone.current.secondsFromGMT(),
+            locationSecondsFromGmt: currentSecondsFromGmt,
             settings: settings
         )
         var didAddCurrent = false
@@ -69,12 +75,12 @@ struct PlannerEventBottomAdornmentView: View {
                     for: plannerEvent,
                     planner: planner,
                     locationSecondsFromGmt: location.region.timeZone
-                        .secondsFromGMT(),
+                        .secondsFromGMT(for: eventTime),
                     settings: settings
                 ),
                 let secondsFromGmt = TimeZone(
                     identifier: location.timeZoneIdentifier
-                )?.secondsFromGMT()
+                )?.secondsFromGMT(for: eventTime)
             else {
                 continue
             }
@@ -179,7 +185,7 @@ struct PlannerEventBottomAdornmentView: View {
                 ) { timeZone in
                     if let contexts =
                         locationContextsByTimeZoneSecondsFromGmt[
-                            timeZone.secondsFromGMT()
+                            timeZone.secondsFromGMT(for: eventTime)
                         ]
                     {
                         timeZoneRow(
@@ -212,7 +218,7 @@ struct PlannerEventBottomAdornmentView: View {
             ) : nil
 
         let displayTime =
-            timeZone.secondsFromGMT() != plannerRegion.timeZone.secondsFromGMT()
+        timeZone.secondsFromGMT(for: eventTime) != plannerRegion.timeZone.secondsFromGMT(for: eventTime)
 
         return GridRow(alignment: .top) {
             ZStack {
