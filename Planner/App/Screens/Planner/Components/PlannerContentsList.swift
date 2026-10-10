@@ -27,15 +27,17 @@ struct PlannerContentsListView: View {
     let settings: Settings
     let namespace: Namespace.ID
     let createEvent: (Int) -> Void
-    let handleEventChange: (PlannerEvent, PlannerEvent) -> Void
     let openEvent: (PlannerEvent) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
+    @Environment(\.showToast) private var showToast
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarService: CalendarService
+    @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
+    @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
     // MARK: - Body
 
@@ -131,7 +133,70 @@ struct PlannerContentsListView: View {
         )
     }
 
+    private func handleEventChange(event: PlannerEvent, draft: PlannerEvent) {
+        event.isFlagged = draft.isFlagged
+
+        modelContext.handlePlannerEventChange(
+            event,
+            in: planner,
+            startOfDay: startOfDay,
+            plannerLocation: plannerLocation,
+            ekEventStore: calendarService.ekEventStore,
+            settings: settings
+        )
+
+        let sortedStartsOfDays = modelContext.getSortedPlannerStartOfDays(
+            for: event.time,
+            endTime: event.eKEventContext?.endDate,
+            datestamp: event.datestamp,
+            includeDatestamp: event.forceIncludeDatestamp(
+                todaystamp: todayService.todaystamp
+            ),
+            settings: settings
+        )
+
+        showUnflaggedNotification(
+            destinationDatestamps: Set(sortedStartsOfDays.map(\.datestamp))
+        )
+    }
+
     private func eventTint(event: PlannerEvent) -> Color {
         event.tint(accentColor: accentColor)
+    }
+
+    private func showUnflaggedNotification(destinationDatestamps: Set<String>) {
+        let cutoffDatestamp = DatestampFormatter.datestamp(
+            from: settings.keepPastEventsDuration.cutoffDate,
+            timeZone: .current
+        )
+
+        guard
+            let earliestDatestamp =
+                destinationDatestamps
+                .filter({ $0 >= cutoffDatestamp })
+                .sorted()
+                .first
+        else {
+            return
+        }
+
+        guard !destinationDatestamps.contains(planner.datestamp) else { return }
+
+        showToast(
+            Toast(
+                title: "Event unflagged!",
+                subtitle:
+                    "\(earliestDatestamp.dateWithYear) | \(earliestDatestamp.weekday)",
+                iconConfig: IconConfig(
+                    name: "arrow.left.arrow.right",
+                    primaryColor: Color.label
+                ),
+                action: {
+                    plannerCoverStore.context = PlannerCoverContext(
+                        datestamp: earliestDatestamp
+                    )
+                }
+            )
+        )
     }
 }

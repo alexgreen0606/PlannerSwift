@@ -37,6 +37,20 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         )
     }
 
+    func forceIncludeDatestamp(todaystamp: String) -> String? {
+        guard isFlagged else { return nil }
+
+        if !completedOn.isEmpty {
+            return completedOn
+        }
+
+        if !isCompleted {
+            return todaystamp
+        }
+
+        return nil
+    }
+
     // MARK: - UI
 
     func tint(accentColor: AccentColor) -> Color {
@@ -101,6 +115,10 @@ extension PlannerEvent: PlannerEventLocationHelpers {
             ekEvent.birthdayContactIdentifier
 
         eKEventContext.ekEvent = ekEvent
+
+        if ekEvent.isAllDay {
+            isCompleted = false
+        }
 
         syncDraft()
     }

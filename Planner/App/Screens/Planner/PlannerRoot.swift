@@ -131,7 +131,6 @@ struct PlannerRootView: View {
                         settings: settings,
                         namespace: namespace,
                         createEvent: createEvent,
-                        handleEventChange: handleEventChange,
                         openEvent: openEvent
                     )
                     .safeAreaBar(edge: .bottom) {
@@ -257,7 +256,7 @@ struct PlannerRootView: View {
         if plannerEngine.activeEditor?.item.eKEventContext == nil {
             icons.append(
                 plannerEngine.activeEditor?.draft.isFlagged == true
-                ? "flag.fill" : "flag"
+                    ? "flag.fill" : "flag"
             )
         }
 
@@ -301,19 +300,6 @@ struct PlannerRootView: View {
                 break
             }
         }
-    }
-
-    private func handleEventChange(event: PlannerEvent, draft: PlannerEvent) {
-        event.isFlagged = draft.isFlagged
-
-        modelContext.handlePlannerEventChange(
-            event,
-            in: planner,
-            startOfDay: startOfDay,
-            plannerLocation: plannerLocation,
-            ekEventStore: calendarService.ekEventStore,
-            settings: settings
-        )
     }
 
     private func createLowerEvent(scrollProxy: ScrollViewProxy) {

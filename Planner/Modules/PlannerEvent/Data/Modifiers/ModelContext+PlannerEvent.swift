@@ -152,20 +152,9 @@ extension ModelContext {
         }
 
         // Make sure flagged events are considered within the planners they are carried to.
-        let forceIncludeDatestamp: String? = {
-            guard plannerEvent.isFlagged
-            else { return nil }
-
-            if !plannerEvent.completedOn.isEmpty {
-                return plannerEvent.completedOn
-            }
-
-            if !plannerEvent.isCompleted {
-                return todaystamp
-            }
-
-            return nil
-        }()
+        let forceIncludeDatestamp = plannerEvent.forceIncludeDatestamp(
+            todaystamp: todaystamp
+        )
 
         let sortedStartsOfDays = getSortedPlannerStartOfDays(
             for: plannerEvent.time,

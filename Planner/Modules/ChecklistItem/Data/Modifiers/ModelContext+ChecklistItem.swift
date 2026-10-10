@@ -119,6 +119,7 @@ extension ModelContext {
             sourceItem.variants = draftItem.variants
             sourceItem.notes = draftItem.notes
             sourceItem.hideToggles = draftItem.hideToggles
+            sourceItem.syncDraft()
 
             // Note: Do not update the type. An item's type will never change.
 
