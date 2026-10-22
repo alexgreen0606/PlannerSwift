@@ -118,6 +118,9 @@ extension ModelContext {
             sourceItem.value = draftItem.value
             sourceItem.variants = draftItem.variants
             sourceItem.notes = draftItem.notes
+            sourceItem.month = draftItem.month
+            sourceItem.day = draftItem.day
+            sourceItem.year = draftItem.year
             sourceItem.hideToggles = draftItem.hideToggles
             sourceItem.syncDraft()
 

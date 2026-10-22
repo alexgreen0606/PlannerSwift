@@ -16,8 +16,8 @@ extension String {
 
         return
             DatestampFormatter
-                .formatter(format: format)
-                .string(from: date)
+            .formatter(format: format)
+            .string(from: date)
     }
 
     // MARK: - Base Formats
@@ -26,7 +26,7 @@ extension String {
     var calendarSymbolName: String {
         "\(Int(suffix(2)) ?? 0).calendar"
     }
-    
+
     /// Example: "2000-12"
     var monthstamp: String {
         String(prefix(7))
@@ -40,6 +40,11 @@ extension String {
     /// Example: "06"
     var monthDigit: String {
         split(separator: "-")[1].description
+    }
+
+    /// Example: "06"
+    var dayDigit: Int? {
+        Int(suffix(2))
     }
 
     /// Example: "Tuesday"

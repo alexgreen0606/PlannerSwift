@@ -55,6 +55,7 @@ struct ChecklistItemFormView: View {
     @State private var showDeleteConfirmation = false
 
     @FocusState private var isTitleFocused: Bool
+    @FocusState private var isNotesFocused: Bool
     @FocusState private var isValueFocused: Bool
 
     private var canSave: Bool {
@@ -117,10 +118,10 @@ struct ChecklistItemFormView: View {
             .navigationBarTitleDisplayMode(.inline)
         }
         .safeAreaBar(edge: .bottom) {
-            valueKeyboardAdornment
+            keyboardAdornment
         }
         .presentationBackground(.clear)
-        .presentationDetents([.height(510)])
+        .presentationDetents([.height(610)])
     }
 
     // MARK: - Toolbars
@@ -208,6 +209,7 @@ struct ChecklistItemFormView: View {
             case .item:
                 ZStack(alignment: .topLeading) {
                     TextEditor(text: $draftChecklistItem.notes)
+                        .focused($isNotesFocused)
                         .scrollContentBackground(.hidden)
 
                     if draftChecklistItem.notes.trimmed.isEmpty {
@@ -219,6 +221,8 @@ struct ChecklistItemFormView: View {
                     }
                 }
                 .frame(height: 120)
+
+                whenSection
 
                 HStack {
                     Text("Value")
@@ -234,6 +238,7 @@ struct ChecklistItemFormView: View {
                     .focused($isValueFocused)
                     .tint(color)
                 }
+
             case .folder, .checklist:
                 Picker(
                     "Variant",
@@ -273,18 +278,123 @@ struct ChecklistItemFormView: View {
     }
 
     @ViewBuilder
-    private var valueKeyboardAdornment: some View {
-        if isValueFocused {
-            HStack(alignment: .bottom) {
-                Picker(
-                    "",
-                    selection: $draftChecklistItem.valueSign
-                ) {
-                    Text("−").tag(-1)
-                    Text("+").tag(1)
+    private var whenSection: some View {
+        HStack(spacing: 2) {
+            Text("When")
+
+            Menu {
+                Button("--") {
+                    draftChecklistItem.month = nil
                 }
-                .pickerStyle(.segmented)
-                .frame(width: 100)
+
+                ForEach(1...12, id: \.self) { month in
+                    Button(DateFormatter().monthSymbols[month - 1]) {
+                        draftChecklistItem.month = month
+                    }
+                }
+            } label: {
+                ZStack {
+                    if let month = draftChecklistItem.month {
+                        Text(DateFormatter().monthSymbols[month - 1])
+                            .font(
+                                .system(
+                                    size: 16,
+                                    weight: .heavy,
+                                    design: .rounded
+                                )
+                            )
+                            .foregroundStyle(Color.label)
+                    } else {
+                        Text("Month")
+                            .foregroundStyle(Color.tertiary)
+                    }
+                }
+                .glassChip(height: 30)
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing)
+
+            Menu {
+                Button("--") {
+                    draftChecklistItem.day = nil
+                }
+
+                ForEach(1...31, id: \.self) { day in
+                    Button("\(day)") {
+                        draftChecklistItem.day = day
+                    }
+                }
+            } label: {
+                ZStack {
+                    if let day = draftChecklistItem.day {
+                        Text("\(day)")
+                            .font(
+                                .system(
+                                    size: 16,
+                                    weight: .heavy,
+                                    design: .rounded
+                                )
+                            )
+                            .foregroundStyle(Color.label)
+                    } else {
+                        Text("Day")
+                            .foregroundStyle(Color.tertiary)
+                    }
+                }
+                .glassChip(height: 30)
+            }
+
+            Menu {
+                Button("--") {
+                    draftChecklistItem.year = nil
+                }
+
+                ForEach(
+                    (Calendar.current.component(.year, from: .now) - 10)...(Calendar
+                        .current.component(.year, from: .now) + 10),
+                    id: \.self
+                ) { year in
+                    Button(String(year)) {
+                        draftChecklistItem.year = year
+                    }
+                }
+            } label: {
+                ZStack {
+                    if let year = draftChecklistItem.year {
+                        Text(String(year))
+                            .font(
+                                .system(
+                                    size: 16,
+                                    weight: .heavy,
+                                    design: .rounded
+                                )
+                            )
+                            .foregroundStyle(Color.label)
+                    } else {
+                        Text("Year")
+                            .foregroundStyle(Color.tertiary)
+                    }
+                }
+                .glassChip(height: 30)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var keyboardAdornment: some View {
+        if isValueFocused || isNotesFocused || isTitleFocused {
+            HStack(alignment: .bottom) {
+
+                if isValueFocused {
+                    Picker(
+                        "",
+                        selection: $draftChecklistItem.valueSign
+                    ) {
+                        Text("−").tag(-1)
+                        Text("+").tag(1)
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 100)
+                }
 
                 Spacer()
 
@@ -292,6 +402,8 @@ struct ChecklistItemFormView: View {
                     systemImageName: "checkmark",
                     onTap: {
                         isValueFocused = false
+                        isNotesFocused = false
+                        isTitleFocused = false
                     }
                 )
             }

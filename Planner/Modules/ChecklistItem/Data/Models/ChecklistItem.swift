@@ -17,11 +17,14 @@ final class ChecklistItem: ListItemDetails {
     var type: ChecklistItemType = ChecklistItemType.checklist
     var color: ChecklistItemColor = ChecklistItemColor.cyan
     var isCompleted: Bool = false
-
+    
     /// Should only be non-zero for ChecklistItemType.item
     var value: Decimal = 0.00
     
     var notes: String = ""
+    var month: Int? = nil
+    var day: Int? = nil
+    var year: Int? = nil
 
     var variants: [ChecklistItemVariant] = []
 
@@ -80,6 +83,9 @@ final class ChecklistItem: ListItemDetails {
         value = draft.value
         variants = draft.variants
         notes = draft.notes.trimmed
+        month = draft.month
+        day = draft.day
+        year = draft.year
         hideToggles = draft.hideToggles
 
         self.sortIndex = sortIndex
@@ -98,6 +104,9 @@ final class ChecklistItem: ListItemDetails {
         value = source.value
         variants = source.variants
         notes = source.notes.trimmed
+        month = source.month
+        day = source.day
+        year = source.year
         hideToggles = source.hideToggles
         height = source.height
         sortIndex = source.sortIndex

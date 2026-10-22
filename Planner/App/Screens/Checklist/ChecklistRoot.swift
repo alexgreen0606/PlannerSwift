@@ -95,7 +95,7 @@ struct ChecklistRootView: View {
                         sortedCompletedItems: sortedCompletedItems,
                         showCompleted: checklist.showCompleted,
                         tint: { _ in checklist.color.swiftUIColor },
-                        leftAdornment: { _ in EmptyView() },
+                        leftAdornment: { ChecklistItemDateAdornment(item: $0) },
                         rightAdornment: valueAdornment,
                         bottomAdornment: notesAdornment,
                         scrollProxy: scrollProxy,

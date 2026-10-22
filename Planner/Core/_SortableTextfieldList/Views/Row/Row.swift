@@ -223,27 +223,36 @@ struct RowView<
 
             HStack(alignment: .top, spacing: 8) {
                 leftAdornment
-                    .frame(height: ListLayout.ADORNMENT_HEIGHT)
+                    .frame(minHeight: ListLayout.ADORNMENT_HEIGHT)
                     .opacity(opacity)
                     .contentShape(Rectangle())
                     .onTapGesture(perform: handleAdornmentClick)
 
-                titleView
-                    .padding(.vertical, ListLayout.VERTICAL_TEXT_PADDING)
-                    .opacity(opacity)
+                VStack(alignment: .leading, spacing: 0) {
 
-                rightAdornment
-                    .frame(height: ListLayout.ADORNMENT_HEIGHT)
-                    .opacity(opacity)
-                    .contentShape(Rectangle())
-                    .onTapGesture(perform: handleAdornmentClick)
+                    HStack(alignment: .top, spacing: 8) {
+                        titleView
+                            .padding(
+                                .vertical,
+                                ListLayout.VERTICAL_TEXT_PADDING
+                            )
+                            .opacity(opacity)
+
+                        rightAdornment
+                            .frame(minHeight: ListLayout.ADORNMENT_HEIGHT)
+                            .opacity(opacity)
+                            .contentShape(Rectangle())
+                            .onTapGesture(perform: handleAdornmentClick)
+                    }
+
+                    bottomAdornment
+                        .opacity(opacity)
+                        .contentShape(Rectangle())
+                        .onTapGesture(perform: handleAdornmentClick)
+                }
+
             }
             .frame(minHeight: ListLayout.ADORNMENT_HEIGHT)
-
-            bottomAdornment
-                .opacity(opacity)
-                .contentShape(Rectangle())
-                .onTapGesture(perform: handleAdornmentClick)
 
             SeparatorView(
                 showLowerDivider: true,

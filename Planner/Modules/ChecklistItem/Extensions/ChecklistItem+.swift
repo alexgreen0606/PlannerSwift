@@ -148,6 +148,9 @@ extension ChecklistItem {
         editor.draft.value = value
         editor.draft.variants = variants
         editor.draft.notes = notes.trimmed
+        editor.draft.month = month
+        editor.draft.day = day
+        editor.draft.year = year
         editor.draft.hideToggles = hideToggles
         editor.draft.height = height
     }

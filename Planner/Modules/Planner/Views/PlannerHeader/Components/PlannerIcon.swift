@@ -2,7 +2,7 @@
 //  PlannerIcon.swift
 //  Planner
 //
-//  Created by Alex Green on 12/21/25.
+//  Created by Alex Green on 10/11/26.
 //
 
 import SwiftUI
@@ -81,17 +81,17 @@ struct PlannerIconView: View {
     // MARK: - Body
 
     var body: some View {
-        ZStack(alignment: .top) {
-            Image(systemName: systemImageName)
-                .font(.system(size: size))
-                .foregroundStyle(primaryIconColor, secondaryIconColor)
-
-            Text(detail)
-                .font(
-                    .system(size: detailSize, weight: .black, design: .rounded)
-                )
-                .foregroundStyle(detailColor)
-                .offset(y: detailOffset)
-        }
+        DateIconView(
+            iconConfig: IconConfig(
+                name: systemImageName,
+                primaryColor: primaryIconColor,
+                secondaryColor: secondaryIconColor
+            ),
+            size: size,
+            detail: detail,
+            detailSize: detailSize,
+            detailColor: detailColor,
+            detailOffset: detailOffset
+        )
     }
 }
