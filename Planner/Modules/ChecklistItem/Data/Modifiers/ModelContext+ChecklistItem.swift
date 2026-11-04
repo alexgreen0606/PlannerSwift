@@ -151,7 +151,7 @@ extension ModelContext {
         item: ChecklistItem
     ) {
         if let (value, updatedText) = item.title.extractValue(),
-            !updatedText.trimmed.isEmpty
+            !updatedText.isEmpty
         {
             // MARK: Title has a value.
             item.title = updatedText

@@ -21,7 +21,8 @@ extension ModelContext {
         guard
             let (date, updatedText) = routineEventContext.title.extractTime(
                 for: baseDay
-            )
+            ),
+            !updatedText.isEmpty
         else {
             return
         }

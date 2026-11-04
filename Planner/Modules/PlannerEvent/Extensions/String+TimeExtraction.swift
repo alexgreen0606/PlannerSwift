@@ -64,7 +64,7 @@ extension String {
 
         return (
             date: finalDate,
-            updatedText: replacingOccurrences(of: fullMatch, with: "")
+            updatedText: replacingOccurrences(of: fullMatch, with: "").trimmed
         )
     }
 }

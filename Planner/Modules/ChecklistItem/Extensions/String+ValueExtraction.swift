@@ -43,7 +43,7 @@ extension String {
 
         return (
             value: value,
-            updatedText: replacingOccurrences(of: fullMatch, with: "")
+            updatedText: replacingOccurrences(of: fullMatch, with: "").trimmed
         )
     }
 }

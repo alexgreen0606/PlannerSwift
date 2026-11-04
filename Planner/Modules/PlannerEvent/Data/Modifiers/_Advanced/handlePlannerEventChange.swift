@@ -40,7 +40,7 @@ extension ModelContext {
             let (time, updatedText) = plannerEvent.title.extractTime(
                 for: startOfDay
             ),
-            !updatedText.trimmed.isEmpty
+            !updatedText.isEmpty
         {
             // MARK: Title has a time value. Re-configure the event.
             plannerEvent.title = updatedText
