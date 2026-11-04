@@ -17,23 +17,24 @@ final class ChecklistItem: ListItemDetails {
     var type: ChecklistItemType = ChecklistItemType.checklist
     var color: ChecklistItemColor = ChecklistItemColor.cyan
     var isCompleted: Bool = false
-    
+
     /// Should only be non-zero for ChecklistItemType.item
     var value: Decimal = 0.00
-    
+
     var notes: String = ""
     var month: Int? = nil
     var day: Int? = nil
     var year: Int? = nil
 
-    var financeVariantRawValue: String = ChecklistItemFinanceVariant.none.rawValue
+    var financeVariantRawValue: String = ChecklistItemFinanceVariant.none
+        .rawValue
 
     var height: CGFloat = 0
 
     var sortIndex: Double = ChecklistsData.SORT_INDEX_SPACING
 
     var showCompleted: Bool = false
-    
+
     var hideToggles: Bool = false
 
     // MARK: Parent
@@ -116,5 +117,23 @@ final class ChecklistItem: ListItemDetails {
 
         valueInt = NSDecimalNumber(decimal: abs(source.value) * 100).intValue
         valueSign = source.value < 0 ? -1 : 1
+    }
+
+    // MARK: Sync draft.
+    @MainActor
+    func syncDraft() {
+        guard let editor else { return }
+
+        editor.draft.title = title
+        editor.draft.type = type
+        editor.draft.color = color
+        editor.draft.value = value
+        editor.draft.financeVariantRawValue = financeVariantRawValue
+        editor.draft.notes = notes.trimmed
+        editor.draft.month = month
+        editor.draft.day = day
+        editor.draft.year = year
+        editor.draft.hideToggles = hideToggles
+        editor.draft.height = height
     }
 }

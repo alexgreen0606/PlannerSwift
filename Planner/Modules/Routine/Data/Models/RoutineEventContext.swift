@@ -33,10 +33,20 @@ final class RoutineEventContext: EventDetails {
 
     init() {}
 
-    // MARK: Draft
+    // MARK: Create a draft.
     required init(draftOf source: RoutineEventContext) {
         stableId = source.stableId
         title = source.title
         height = source.height
+    }
+    
+    // MARK: Sync draft.
+    @MainActor
+    func syncDraft() {
+        guard let editor else { return }
+
+        editor.draft.title = title
+        editor.draft.time = time
+        editor.draft.height = height
     }
 }

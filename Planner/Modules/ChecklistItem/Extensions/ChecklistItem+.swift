@@ -144,23 +144,6 @@ extension ChecklistItem {
 
     // MARK: - Drafts
 
-    @MainActor
-    func syncDraft() {
-        guard let editor else { return }
-
-        editor.draft.title = title
-        editor.draft.type = type
-        editor.draft.color = color
-        editor.draft.value = value
-        editor.draft.financeVariantRawValue = financeVariantRawValue
-        editor.draft.notes = notes.trimmed
-        editor.draft.month = month
-        editor.draft.day = day
-        editor.draft.year = year
-        editor.draft.hideToggles = hideToggles
-        editor.draft.height = height
-    }
-
     var draftValue: Decimal {
         Decimal(valueInt) / 100 * Decimal(valueSign)
     }

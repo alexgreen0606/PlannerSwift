@@ -95,7 +95,7 @@ final class PlannerEvent: EventListItem {
         self.sortDate = sortDate
     }
 
-    // MARK: Draft
+    // MARK: Create a draft.
     required init(draftOf source: PlannerEvent) {
         stableId = source.stableId
         title = source.title
@@ -104,5 +104,18 @@ final class PlannerEvent: EventListItem {
         height = source.height
         isFlagged = source.isFlagged
         completedOn = source.completedOn
+    }
+
+    // MARK: Sync draft.
+    @MainActor
+    func syncDraft() {
+        guard let editor else { return }
+
+        editor.draft.title = title
+        editor.draft.time = time
+        editor.draft.datestamp = datestamp
+        editor.draft.isFlagged = isFlagged
+        editor.draft.completedOn = completedOn
+        editor.draft.height = height
     }
 }

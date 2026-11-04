@@ -156,7 +156,6 @@ extension ModelContext {
             // MARK: Title has a value.
             item.title = updatedText
             item.value = value
-            item.syncDraft()
         }
 
         safeSave("ModelContext+ChecklistItem handleChecklistItemChange")

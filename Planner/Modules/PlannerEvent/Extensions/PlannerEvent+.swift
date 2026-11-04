@@ -145,18 +145,6 @@ extension PlannerEvent: PlannerEventLocationHelpers {
     }
 
     @MainActor
-    func syncDraft() {
-        guard let editor else { return }
-
-        editor.draft.title = title
-        editor.draft.time = time
-        editor.draft.datestamp = datestamp
-        editor.draft.isFlagged = isFlagged
-        editor.draft.completedOn = completedOn
-        editor.draft.height = height
-    }
-
-    @MainActor
     func updateRoutineVariance(
         in timeZone: TimeZone,
         settings: Settings

@@ -55,6 +55,7 @@ final class EditorSession<Item: ListItemDetails>: ObservableObject {
             item.height = draft.height
             
             onCommit?(item, draft)
+            item.syncDraft()
         }
     }
 
@@ -66,6 +67,7 @@ final class EditorSession<Item: ListItemDetails>: ObservableObject {
         item.height = draft.height
 
         onCommit?(item, draft)
+        item.syncDraft()
     }
 
     func delete() {

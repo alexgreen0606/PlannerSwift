@@ -13,6 +13,8 @@ protocol ListItemDetails: PersistentModel {
     var title: String { get set }
     var height: CGFloat { get set }
     var editor: EditorSession<Self>? { get set }
+    
+    func syncDraft()
 
     init(draftOf item: Self)
 }

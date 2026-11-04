@@ -59,13 +59,4 @@ extension RoutineEventContext {
         title = draft.title.trimmed
         time = draft.hasTime ? draft.date : nil
     }
-
-    @MainActor
-    func syncDraft() {
-        guard let editor else { return }
-
-        editor.draft.title = title
-        editor.draft.time = time
-        editor.draft.height = height
-    }
 }
