@@ -46,7 +46,7 @@ struct FolderContentsListView: View {
     // MARK: - View Builders
 
     private var valueSpread: some View {
-        ChecklistItemFloatingInfoView(item: folder)
+        ChecklistItemFinanceView(item: folder)
     }
 
     private func row(for item: ChecklistItem) -> some View {
@@ -90,7 +90,7 @@ struct FolderContentsListView: View {
             // MARK: End Adornment
 
             Group {
-                if item.isFinanceTracker {
+                if item.financeVariant != ChecklistItemFinanceVariant.none {
                     ChecklistItemValueView(value: item.sum())
                 } else if item.type == .checklist {
                     Text("\(item.safeItems.filter { !$0.isCompleted }.count)")

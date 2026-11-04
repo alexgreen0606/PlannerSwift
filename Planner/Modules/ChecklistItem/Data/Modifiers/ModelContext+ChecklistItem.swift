@@ -116,7 +116,7 @@ extension ModelContext {
             sourceItem.title = draftItem.title
             sourceItem.color = draftItem.color
             sourceItem.value = draftItem.value
-            sourceItem.variants = draftItem.variants
+            sourceItem.financeVariant = draftItem.financeVariant
             sourceItem.notes = draftItem.notes
             sourceItem.month = draftItem.month
             sourceItem.day = draftItem.day

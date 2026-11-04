@@ -95,7 +95,7 @@ struct ChecklistRootView: View {
                         sortedCompletedItems: sortedCompletedItems,
                         showCompleted: checklist.showCompleted,
                         tint: { _ in checklist.color.swiftUIColor },
-                        leftAdornment: { ChecklistItemDateAdornment(item: $0) },
+                        leftAdornment: whenAdornment,
                         rightAdornment: valueAdornment,
                         bottomAdornment: notesAdornment,
                         scrollProxy: scrollProxy,
@@ -192,7 +192,7 @@ struct ChecklistRootView: View {
     // MARK: - View Builder
 
     private func valueSpread(completed: Bool) -> some View {
-        ChecklistItemFloatingInfoView(
+        ChecklistItemFinanceView(
             item: checklist,
             completed: completed
         )
@@ -217,6 +217,11 @@ struct ChecklistRootView: View {
                 createLowerItem(scrollProxy: scrollProxy)
             }
         )
+    }
+
+    @ViewBuilder
+    private func whenAdornment(item: ChecklistItem) -> some View {
+        ChecklistItemDateAdornment(item: item)
     }
 
     @ViewBuilder

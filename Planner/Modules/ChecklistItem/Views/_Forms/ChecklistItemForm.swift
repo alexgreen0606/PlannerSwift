@@ -241,28 +241,16 @@ struct ChecklistItemFormView: View {
 
             case .folder, .checklist:
                 Picker(
-                    "Variant",
-                    selection: Binding<ChecklistItemVariant?>(
-                        get: {
-                            draftChecklistItem.variants.first
-                        },
-                        set: { variant in
-                            if let variant {
-                                draftChecklistItem.variants = [variant]
-                            } else {
-                                draftChecklistItem.variants = []
-                            }
-                        }
-                    )
+                    ChecklistItemFinanceVariant.title,
+                    selection: $draftChecklistItem.financeVariant
                 ) {
-                    Text("None")
-                        .tag(nil as ChecklistItemVariant?)
-
-                    Text("Finance")
-                        .tag(
-                            ChecklistItemVariant.finance
-                                as ChecklistItemVariant?
-                        )
+                    ForEach(
+                        ChecklistItemFinanceVariant.allCases,
+                        id: \.self
+                    ) { variant in
+                        Text(variant.label)
+                            .tag(variant)
+                    }
                 }
                 .tint(color)
 

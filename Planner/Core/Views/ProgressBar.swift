@@ -38,8 +38,9 @@ struct ProgressBarView: View {
 
             Capsule()
                 .fill(progressColor ?? accentColor.swiftUiColor)
-                .frame(width: width * progress)
+                .frame(width: min(width * progress, width))
         }
         .frame(height: 8)
+        .animateUserAction(from: progress)
     }
 }

@@ -26,7 +26,7 @@ final class ChecklistItem: ListItemDetails {
     var day: Int? = nil
     var year: Int? = nil
 
-    var variants: [ChecklistItemVariant] = []
+    var financeVariantRawValue: String = ChecklistItemFinanceVariant.none.rawValue
 
     var height: CGFloat = 0
 
@@ -81,7 +81,7 @@ final class ChecklistItem: ListItemDetails {
         type = draft.type
         color = draft.color
         value = draft.value
-        variants = draft.variants
+        financeVariant = draft.financeVariant
         notes = draft.notes.trimmed
         month = draft.month
         day = draft.day
@@ -102,7 +102,7 @@ final class ChecklistItem: ListItemDetails {
         color = source.color
         isCompleted = source.isCompleted
         value = source.value
-        variants = source.variants
+        financeVariant = source.financeVariant
         notes = source.notes.trimmed
         month = source.month
         day = source.day
