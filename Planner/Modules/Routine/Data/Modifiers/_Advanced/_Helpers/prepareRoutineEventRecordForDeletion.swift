@@ -22,7 +22,7 @@ extension ModelContext {
 
         if let ekEventContext = routineEventRecord.eKEventContext {
 
-            // Mark calendar events for present/future deletion.
+            // Mark calendar events for deletion.
             externalCalendarIds.insert(
                 ekEventContext.calendarItemExternalIdentifier
             )

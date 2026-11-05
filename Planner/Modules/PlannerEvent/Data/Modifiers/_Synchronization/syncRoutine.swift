@@ -18,9 +18,14 @@ extension ModelContext {
         syncPast: Bool,
         ekEventStore: EKEventStore
     ) {
-        guard let routine = planner.routine else {
+        guard
+            let routine = planner.routine
+                ?? getRoutine(for: planner.datestamp.weekday)
+        else {
             return
         }
+
+        planner.routine = routine
 
         // MARK: - Delete All Routine Records If Routine Is Excluded
 
@@ -39,7 +44,8 @@ extension ModelContext {
                 routineEventRecordContext.plannerEvent =
                     prepareRoutineEventRecordForDeletion(
                         plannerEvent,
-                        cutoffDay: todayStartOfDay,
+                        cutoffDay: syncPast
+                            ? DateInRegion(.distantPast) : todayStartOfDay,
                         externalCalendarIds: &externalCalendarIds
                     )
 
