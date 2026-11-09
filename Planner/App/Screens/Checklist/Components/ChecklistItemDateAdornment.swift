@@ -9,6 +9,9 @@ import SwiftUI
 
 struct ChecklistItemDateAdornment: View {
     let item: ChecklistItem
+    
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        .blue
 
     @EnvironmentObject private var todaystampService: TodayService
 
@@ -43,7 +46,7 @@ struct ChecklistItemDateAdornment: View {
             || String(item.year!) == todaystamp.year
 
         if isMonth && isDay && isYear {
-            return item.parent?.color.swiftUIColor ?? Color.secondary
+            return item.parent?.color.swiftUIColor(accentColor: accentColor) ?? Color.secondary
         }
 
         return Color.secondary

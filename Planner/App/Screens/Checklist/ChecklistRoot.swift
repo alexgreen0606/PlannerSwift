@@ -45,6 +45,9 @@ struct ChecklistRootView: View {
     }
 
     private let canTransferSelectedItems: Bool
+    
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        .blue
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -94,7 +97,7 @@ struct ChecklistRootView: View {
                         sortedPendingItems: sortedPendingItems,
                         sortedCompletedItems: sortedCompletedItems,
                         showCompleted: checklist.showCompleted,
-                        tint: { _ in checklist.color.swiftUIColor },
+                        tint: { _ in checklist.color.swiftUIColor(accentColor: accentColor) },
                         leftAdornment: whenAdornment,
                         rightAdornment: valueAdornment,
                         bottomAdornment: notesAdornment,
@@ -203,7 +206,7 @@ struct ChecklistRootView: View {
             ChecklistItem,
             SelectedItemActionsView
         >(
-            accentColor: checklist.color.swiftUIColor,
+            accentColor: checklist.color.swiftUIColor(accentColor: accentColor),
             keyboardAccessory: ListKeyboardAccessoryView(
                 iconImageNames: ["info"],
                 onIconTap: openFocusedItem

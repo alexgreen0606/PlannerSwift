@@ -46,6 +46,9 @@ struct ChecklistItemFormView: View {
         )
     }
 
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        .blue
+
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
@@ -69,9 +72,12 @@ struct ChecklistItemFormView: View {
     private var color: Color {
         switch draftChecklistItem.type {
         case .item:
-            return parentItem?.color.swiftUIColor ?? Color.red
+            return parentItem?.color.swiftUIColor(accentColor: accentColor)
+                ?? Color.red
         case .checklist, .folder:
-            return draftChecklistItem.color.swiftUIColor
+            return draftChecklistItem.color.swiftUIColor(
+                accentColor: accentColor
+            )
         }
     }
 
@@ -182,30 +188,63 @@ struct ChecklistItemFormView: View {
         if showColorSection {
             Section {
                 HStack {
+                    ZStack {
+                        Image(
+                            systemName: .accent
+                                == draftChecklistItem.color
+                                ? "square.fill" : "square"
+                        )
+                        .imageScale(.large)
+                        .foregroundColor(accentColor.swiftUiColor)
+
+                        VStack {
+                            Spacer()
+
+                            AdornedValue(
+                                "Accent",
+                                iconConfig: IconConfig(name: "gear"),
+                                color: Color.secondary,
+                                scale: 0.6
+                            )
+                            .offset(y: 16)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        draftChecklistItem.color = .accent
+                    }
+
+                    Divider()
+
                     ForEach(
                         ChecklistItemColor.allCases.enumerated(),
                         id: \.element
                     ) {
                         index,
                         itemColor in
-                        if index != 0 {
-                            Spacer()
-                        }
+                        if itemColor != .accent {
+                            if index != 0 {
+                                Spacer()
+                            }
 
-                        Image(
-                            systemName: itemColor
-                                == draftChecklistItem.color
-                                ? "circle.fill" : "circle"
-                        )
-                        .imageScale(.large)
-                        .foregroundColor(itemColor.swiftUIColor)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            draftChecklistItem.color = itemColor
+                            Image(
+                                systemName: itemColor
+                                    == draftChecklistItem.color
+                                    ? "circle.fill" : "circle"
+                            )
+                            .imageScale(.large)
+                            .foregroundColor(
+                                itemColor.swiftUIColor(accentColor: accentColor)
+                            )
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                draftChecklistItem.color = itemColor
+                            }
                         }
                     }
                 }
                 .frame(maxWidth: .infinity)
+                .padding(.bottom)
             }
             .listSectionMargins(.vertical, 0)
             .discreetListItem()

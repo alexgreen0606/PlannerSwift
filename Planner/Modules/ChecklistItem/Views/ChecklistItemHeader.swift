@@ -9,6 +9,9 @@ import SwiftUI
 
 struct ChecklistItemHeaderView: ToolbarContent {
     let item: ChecklistItem
+    
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        .blue
 
     @EnvironmentObject private var listEngine: ListEngine<ChecklistItem>
 
@@ -37,7 +40,7 @@ struct ChecklistItemHeaderView: ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             HStack {
                 Image(systemName: item.type.systemImageName)
-                    .foregroundStyle(item.color.swiftUIColor)
+                    .foregroundStyle(item.color.swiftUIColor(accentColor: accentColor))
 
                 Text(item.title)
                     .lineLimit(2)

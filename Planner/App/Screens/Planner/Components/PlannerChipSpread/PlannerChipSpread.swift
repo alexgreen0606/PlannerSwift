@@ -103,21 +103,23 @@ struct PlannerChipSpreadView: View {
     @ViewBuilder
     private func eventChip(_ plannerEvent: PlannerEvent) -> some View {
         let calendarColor = plannerEvent.calendarColor(accentColor: accentColor)
-        let activeColor =
-            (!plannerEngine.isSelectMode
-                || plannerEngine.selectedItemIds.contains(plannerEvent.stableId))
-            ? calendarColor : Color.label
+
+        let chipAccentColor =
+            !plannerEngine.isSelectMode
+            ? calendarColor
+            : plannerEngine.selectedItemIds.contains(plannerEvent.stableId)
+                ? accentColor.swiftUiColor : Color.secondary
 
         AdornedValue(
             plannerEvent.title,
             iconConfig: IconConfig(
                 name: plannerEvent.calendarSystemImageName(settings: settings),
-                primaryColor: activeColor,
-                secondaryColor: activeColor
+                primaryColor: chipAccentColor,
+                secondaryColor: chipAccentColor
             ),
             color: .label
         )
-        .glassChip(color: calendarColor, height: PlannerLayout.CHIP_HEIGHT) {
+        .glassChip(color: chipAccentColor, height: PlannerLayout.CHIP_HEIGHT) {
             handleEventClick(plannerEvent)
         }
         .matchedTransitionSource(

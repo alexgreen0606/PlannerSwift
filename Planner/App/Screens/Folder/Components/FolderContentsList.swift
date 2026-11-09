@@ -60,7 +60,7 @@ struct FolderContentsListView: View {
 
                     ListItemToggleView(
                         item: item,
-                        color: item.color.swiftUIColor,
+                        color: item.color.swiftUIColor(accentColor: accentColor),
                         opacity: isSelectMode ? 1 : 0
                     )
                     .frame(
@@ -74,7 +74,7 @@ struct FolderContentsListView: View {
                     Image(
                         systemName: item.type.systemImageName
                     )
-                    .foregroundColor(item.color.swiftUIColor)
+                    .foregroundColor(item.color.swiftUIColor(accentColor: accentColor))
                 }
                 .frame(height: FolderLayout.TYPE_ICON_CONTAINER_HEIGHT)
 

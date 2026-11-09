@@ -12,6 +12,9 @@ struct FolderItemOptionsListView: View {
     @Binding var folderPath: NavigationPath
     let folder: ChecklistItem
     let sourceItem: ChecklistItem
+    
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        .blue
 
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var listEngine: ListEngine<ChecklistItem>
@@ -76,7 +79,7 @@ struct FolderItemOptionsListView: View {
                 Image(
                     systemName: item.type.systemImageName
                 )
-                .foregroundColor(item.color.swiftUIColor)
+                .foregroundColor(item.color.swiftUIColor(accentColor: accentColor))
                 .frame(height: FolderLayout.TYPE_ICON_CONTAINER_HEIGHT)
 
                 // MARK: Title

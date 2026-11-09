@@ -28,7 +28,7 @@ extension View {
             .glassEffect(
                 color != nil
                     ? .regular
-                    .tint(color!.opacity(0.05))
+                    .tint(color!.opacity(0.1))
                     .interactive(onTap != nil)
                     : .regular
                     .interactive(onTap != nil),

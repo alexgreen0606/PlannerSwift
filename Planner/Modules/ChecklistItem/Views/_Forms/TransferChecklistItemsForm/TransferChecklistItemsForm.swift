@@ -175,8 +175,8 @@ struct TransferChecklistItemsFormView: View {
             subtitle: transferCount,
             iconConfig: IconConfig(
                 name: sourceItem.type.systemImageName,
-                primaryColor: sourceItem.color.swiftUIColor,
-                secondaryColor: sourceItem.color.swiftUIColor
+                primaryColor: sourceItem.color.swiftUIColor(accentColor: accentColor),
+                secondaryColor: sourceItem.color.swiftUIColor(accentColor: accentColor)
             )
         )
         .glassChip(height: 46)
@@ -188,8 +188,8 @@ struct TransferChecklistItemsFormView: View {
             title: destinationItem.title,
             iconConfig: IconConfig(
                 name: destinationItem.type.systemImageName,
-                primaryColor: destinationItem.color.swiftUIColor,
-                secondaryColor: destinationItem.color.swiftUIColor
+                primaryColor: destinationItem.color.swiftUIColor(accentColor: accentColor),
+                secondaryColor: destinationItem.color.swiftUIColor(accentColor: accentColor)
             )
         )
         .glassChip(height: 40)

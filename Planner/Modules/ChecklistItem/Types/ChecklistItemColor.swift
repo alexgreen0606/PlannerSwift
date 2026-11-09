@@ -17,8 +17,9 @@ enum ChecklistItemColor: String, Codable, CaseIterable {
     case purple
     case brown
     case label
+    case accent
 
-    var swiftUIColor: Color {
+    func swiftUIColor(accentColor: AccentColor) -> Color {
         switch self {
         case .red: return .red
         case .orange: return .orange
@@ -29,6 +30,7 @@ enum ChecklistItemColor: String, Codable, CaseIterable {
         case .purple: return .purple
         case .brown: return .brown
         case .label: return Color.label
+        case .accent: return accentColor.swiftUiColor
         }
     }
 }
