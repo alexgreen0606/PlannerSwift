@@ -42,7 +42,7 @@ struct BirthdayLabelView: View {
     }
 
     private var calendarColor: Color {
-        plannerEvent.tint(accentColor: accentColor)
+        plannerEvent.calendarColor(accentColor: accentColor)
     }
 
     // MARK: - Body
@@ -69,7 +69,7 @@ struct BirthdayLabelView: View {
                     primaryColor: disabledColor ?? calendarColor,
                     secondaryColor: disabledColor ?? calendarColor
                 ),
-                color: disabledColor ?? calendarColor
+                color: disabledColor ?? .label
             )
         }
     }

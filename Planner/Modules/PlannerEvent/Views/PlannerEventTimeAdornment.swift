@@ -37,7 +37,6 @@ struct PlannerEventTimeAdornmentView: View {
         {
             Time(
                 timeInRegion: DateInRegion(time, region: plannerRegion),
-                color: plannerEvent.tint(accentColor: accentColor),
                 scale: scale
             )
         }

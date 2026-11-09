@@ -56,9 +56,7 @@ enum LocationType {
         case .event:
             return IconConfig(
                 name: "mappin.and.ellipse",
-                primaryColor: event.tint(
-                    accentColor: accentColor
-                )
+                primaryColor: accentColor.swiftUiColor
             )
         case .current:
             return IconConfig(name: "location")

@@ -54,8 +54,8 @@ struct PlannerContentsListView: View {
             sortedPendingItems: sortedPendingPlannerEvents,
             sortedCompletedItems: sortedCompletePlannerEvents,
             showCompleted: showCompleted,
-            tint: eventTint,
-            leftAdornment: calendarAdornment,
+            tint: { _ in accentColor.swiftUiColor },
+            leftAdornment: { _ in EmptyView() },
             rightAdornment: timeAdornment,
             bottomAdornment: bottomAdornment,
             scrollProxy: scrollProxy,
@@ -84,13 +84,6 @@ struct PlannerContentsListView: View {
 
                 openEvent(event)
             }
-        )
-    }
-
-    private func calendarAdornment(event: PlannerEvent) -> some View {
-        PlannerEventCalendarAdornmentView(
-            plannerEvent: event,
-            settings: settings
         )
     }
 
@@ -158,10 +151,6 @@ struct PlannerContentsListView: View {
         showUnflaggedNotification(
             destinationDatestamps: Set(sortedStartsOfDays.map(\.datestamp))
         )
-    }
-
-    private func eventTint(event: PlannerEvent) -> Color {
-        event.tint(accentColor: accentColor)
     }
 
     private func showUnflaggedNotification(destinationDatestamps: Set<String>) {

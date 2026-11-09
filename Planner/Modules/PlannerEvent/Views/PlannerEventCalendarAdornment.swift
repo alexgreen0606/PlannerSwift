@@ -24,7 +24,8 @@ struct PlannerEventCalendarAdornmentView: View {
                     settings: settings
                 )
             )
-            .foregroundStyle(plannerEvent.tint(accentColor: accentColor))
+            .imageScale(.small)
+            .foregroundStyle(plannerEvent.calendarColor(accentColor: accentColor))
         }
     }
 }

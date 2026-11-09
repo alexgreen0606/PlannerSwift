@@ -38,7 +38,7 @@ struct PlannerEventBottomAdornmentView: View {
             return planner.datestamp
         }
     }
-    
+
     /// Used to ensure that timezones are evaluated with the correct DST offset.
     private var eventTime: Date {
         plannerEvent.time ?? Date()
@@ -59,7 +59,9 @@ struct PlannerEventBottomAdornmentView: View {
 
         var contextMap: [Int: [String: LocationContext]] = [:]
 
-        let currentSecondsFromGmt = TimeZone.current.secondsFromGMT(for: eventTime)
+        let currentSecondsFromGmt = TimeZone.current.secondsFromGMT(
+            for: eventTime
+        )
         let shouldDisplayCurrent = LocationType.current.shouldDisplayLocation(
             for: plannerEvent,
             planner: planner,
@@ -169,14 +171,17 @@ struct PlannerEventBottomAdornmentView: View {
                     flaggedMessage,
                     iconConfig: IconConfig(
                         name: "flag.fill",
-                        primaryColor: plannerEvent.tint(
-                            accentColor: accentColor
-                        )
+                        primaryColor: accentColor.swiftUiColor
                     ),
                     color: Color.secondary,
                     scale: 0.7
                 )
             }
+
+            PlannerEventCalendarAdornmentView(
+                plannerEvent: plannerEvent,
+                settings: settings
+            )
 
             Grid(horizontalSpacing: 4, verticalSpacing: 6) {
                 ForEach(
@@ -218,7 +223,8 @@ struct PlannerEventBottomAdornmentView: View {
             ) : nil
 
         let displayTime =
-        timeZone.secondsFromGMT(for: eventTime) != plannerRegion.timeZone.secondsFromGMT(for: eventTime)
+            timeZone.secondsFromGMT(for: eventTime)
+            != plannerRegion.timeZone.secondsFromGMT(for: eventTime)
 
         return GridRow(alignment: .top) {
             ZStack {

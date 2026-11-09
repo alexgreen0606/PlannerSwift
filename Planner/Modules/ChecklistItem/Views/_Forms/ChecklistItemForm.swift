@@ -101,6 +101,8 @@ struct ChecklistItemFormView: View {
             }
             .scrollDisabled(true)
             .toolbar {
+                cancelButton
+
                 FormSaveButtonView(
                     canSave: canSave,
                     tint: draftChecklistItem.title.isEmpty
@@ -120,11 +122,18 @@ struct ChecklistItemFormView: View {
         .safeAreaBar(edge: .bottom) {
             keyboardAdornment
         }
-        .presentationBackground(.clear)
-        .presentationDetents([.height(610)])
     }
 
     // MARK: - Toolbars
+
+    @ToolbarContentBuilder
+    private var cancelButton: some ToolbarContent {
+        ToolbarItem(placement: .cancellationAction) {
+            CancelButtonView {
+                dismiss()
+            }
+        }
+    }
 
     @ToolbarContentBuilder
     private var deleteButton: some ToolbarContent {
@@ -220,7 +229,7 @@ struct ChecklistItemFormView: View {
                             .allowsHitTesting(false)
                     }
                 }
-                .frame(height: 120)
+                .frame(height: 200)
 
                 whenSection
 

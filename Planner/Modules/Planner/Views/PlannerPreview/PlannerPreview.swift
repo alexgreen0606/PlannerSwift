@@ -226,7 +226,7 @@ struct PlannerPreviewView: View {
         ForEach(
             previewContext.chipEvents
         ) { event in
-            let calendarColor = event.tint(accentColor: accentColor)
+            let calendarColor = event.calendarColor(accentColor: accentColor)
             AdornedValue(
                 event.title,
                 iconConfig: IconConfig(
@@ -234,7 +234,7 @@ struct PlannerPreviewView: View {
                     primaryColor: calendarColor,
                     secondaryColor: calendarColor
                 ),
-                color: calendarColor
+                color: .label
             )
         }
     }

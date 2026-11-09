@@ -53,11 +53,12 @@ extension PlannerEvent: PlannerEventLocationHelpers {
 
     // MARK: - UI
 
-    func tint(accentColor: AccentColor) -> Color {
+    func calendarColor(accentColor: AccentColor) -> Color {
         if let calendarColor = eKEventContext?.calendarColorHex.color {
             return calendarColor
         }
 
+        // Fallback to accent color.
         return accentColor.swiftUiColor
     }
 

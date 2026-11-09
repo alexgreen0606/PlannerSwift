@@ -102,7 +102,7 @@ struct PlannerChipSpreadView: View {
 
     @ViewBuilder
     private func eventChip(_ plannerEvent: PlannerEvent) -> some View {
-        let calendarColor = plannerEvent.tint(accentColor: accentColor)
+        let calendarColor = plannerEvent.calendarColor(accentColor: accentColor)
         let activeColor =
             (!plannerEngine.isSelectMode
                 || plannerEngine.selectedItemIds.contains(plannerEvent.stableId))
@@ -115,9 +115,9 @@ struct PlannerChipSpreadView: View {
                 primaryColor: activeColor,
                 secondaryColor: activeColor
             ),
-            color: activeColor
+            color: .label
         )
-        .glassChip(height: PlannerLayout.CHIP_HEIGHT) {
+        .glassChip(color: calendarColor, height: PlannerLayout.CHIP_HEIGHT) {
             handleEventClick(plannerEvent)
         }
         .matchedTransitionSource(

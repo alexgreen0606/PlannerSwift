@@ -47,7 +47,7 @@ struct BirthdayChipView: View {
         .glassChip(
             color: plannerEngine.selectModeDisabledColor
                 ?? (contactPhotoExists
-                    ? nil : plannerEvent.tint(accentColor: accentColor)),
+                    ? nil : plannerEvent.calendarColor(accentColor: accentColor)),
             height: PlannerLayout.CHIP_HEIGHT,
             onTap: plannerEngine.isSelectMode
                 ? nil
