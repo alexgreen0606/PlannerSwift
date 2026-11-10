@@ -12,14 +12,14 @@ struct SeparatorView: View {
     private let showUpperDivider: Bool
     private let opacity: Double
     private let settings: Settings
-    private let onTap: () -> Void
+    private let onTap: (() -> Void)?
 
     init(
         showLowerDivider: Bool = false,
         showUpperDivider: Bool = false,
         opacity: Double = 1,
         settings: Settings,
-        onTap: @escaping () -> Void
+        onTap: (() -> Void)? = nil
     ) {
         self.showLowerDivider = showLowerDivider
         self.showUpperDivider = showUpperDivider
@@ -38,7 +38,9 @@ struct SeparatorView: View {
                 divider
             )
             .contentShape(Rectangle())
-            .onTapGesture(perform: onTap)
+            .onTapGesture {
+                onTap?()
+            }
     }
 
     // MARK: - View Builders

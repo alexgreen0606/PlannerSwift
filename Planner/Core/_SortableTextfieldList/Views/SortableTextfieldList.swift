@@ -36,7 +36,6 @@ struct SortableTextfieldListView<
     private let showCompleted: Bool
     private let completedFooter: String?
 
-    private let rowId: (Item) -> String
     private let tint: (Item) -> Color
     private let toggleConfig: (Item) -> ToggleConfig?
     private let leftAdornment: (Item) -> LeftAdornment
@@ -63,7 +62,6 @@ struct SortableTextfieldListView<
         sortedCompletedItems: [Item] = [],
         showCompleted: Bool = false,
         completedFooter: String? = nil,
-        rowId: @escaping (Item) -> String = { $0.stableId.uuidString },
         tint: @escaping (Item) -> Color,
         toggleConfig: @escaping (Item) -> ToggleConfig? = { _ in nil },
         @ViewBuilder leftAdornment: @escaping (Item) -> LeftAdornment,
@@ -88,7 +86,6 @@ struct SortableTextfieldListView<
         self.sortedCompletedItems = sortedCompletedItems
         self.showCompleted = showCompleted
         self.completedFooter = completedFooter
-        self.rowId = rowId
         self.tint = tint
         self.toggleConfig = toggleConfig
         self.leftAdornment = leftAdornment
@@ -118,27 +115,36 @@ struct SortableTextfieldListView<
     // MARK: - Body
 
     var body: some View {
-        List {
-            pendingList
-            completedList
+        ZStack {
+            if #available(iOS 27, *) {
+                ScrollView {
+                    LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                        pendingSection
+                        completedSection
+                    }
+                    .reorderContainer(
+                        for: Item.self,
+                        itemID: \.stableId,
+                        move: handleRowReorder
+                    )
+                }
+            } else {
+                List {
+                    pendingSection
+                        .discreetListItem()
+                        .listSectionSeparator(.hidden)
+                        .listSectionMargins(.top, 0)
+
+                    completedSection
+                        .discreetListItem()
+                }
+                .listStyle(.plain)
+                .environment(\.defaultMinListRowHeight, 0)
+                .background(Color.appBackground.edgesIgnoringSafeArea(.all))
+            }
         }
-        .listStyle(.plain)
-        .environment(\.defaultMinListRowHeight, 0)
-        .background(Color.appBackground.edgesIgnoringSafeArea(.all))
         .safeAreaInset(edge: .top) {
-            floatingInfo
-                .padding(.horizontal)
-                .padding(
-                    .top,
-                    {
-                        if #available(iOS 27, *) {
-                            4
-                        } else {
-                            0
-                        }
-                    }()
-                )
-                .padding(.bottom, -(ListLayout.SEPARATOR_HEIGHT / 2))
+            floatingInfoView
         }
         .overlay {
             if sortedPendingItems.isEmpty, !showCompleted {
@@ -148,13 +154,11 @@ struct SortableTextfieldListView<
         }
 
         // MARK: Blur the textfield when the list disappears (deletes empty items).
-
         .onDisappear {
             listEngine.blur()
         }
 
         // MARK: Blur the textfield when the app exits focus (deletes empty items).
-
         .onChange(of: appPhase) { _, phase in
             if phase == .inactive {
                 listEngine.blur()
@@ -162,7 +166,6 @@ struct SortableTextfieldListView<
         }
 
         // MARK: Slide to checked items when the user marks them visible.
-
         .withScrollTrigger(
             scrollProxy: scrollProxy,
             trigger: showCompleted,
@@ -173,7 +176,16 @@ struct SortableTextfieldListView<
 
     // MARK: - View Builders
 
-    private var pendingList: some View {
+    @ViewBuilder
+    private var floatingInfoView: some View {
+        floatingInfo
+            .padding(.horizontal)
+            .padding(.top, 4)
+            .padding(.bottom, -(ListLayout.SEPARATOR_HEIGHT / 2))
+    }
+
+    @ViewBuilder
+    private var pendingSection: some View {
         Section {
             SeparatorView(settings: settings) {
                 if !listEngine.isSelectMode {
@@ -183,13 +195,10 @@ struct SortableTextfieldListView<
             .listRowInsets(EdgeInsets())
             .discreetListItem()
 
-            ForEach(
-                Array(sortedPendingItems.enumerated()),
-                id: \.element.stableId
-            ) { index, item in
+            let items = ForEach(sortedPendingItems, id: \.stableId) { item in
                 RowView(
                     item: item,
-                    index: index,
+                    index: indexOf(item, in: sortedPendingItems),
                     hideToggle: hideToggles,
                     tint: tint(item),
                     customToggleConfig: toggleConfig(item),
@@ -205,9 +214,13 @@ struct SortableTextfieldListView<
                     onCommit: onCommitItem,
                     onAdornmentClick: onAdornmentClick
                 )
-                .id(rowId(item))
             }
-            .onMove(perform: handleRowMove)
+
+            if #available(iOS 27, *) {
+                items.reorderable()
+            } else {
+                items.onMove(perform: handleRowMove)
+            }
 
             SeparatorView(settings: settings) {
                 if !listEngine.isSelectMode {
@@ -226,24 +239,28 @@ struct SortableTextfieldListView<
                     .discreetListItem()
             }
         } header: {
-            pendingHeader
-                .listRowInsets(.vertical, 0)
+            if #available(iOS 27, *) {
+                pendingHeader
+                    .padding(.horizontal)
+            } else {
+                pendingHeader
+                    .listRowInsets(.vertical, 0)
+            }
+        } footer: {
+            if #available(iOS 27, *), showCompleted {
+                Color.clear.frame(height: 32)
+            }
         }
-        .listSectionSeparator(.hidden)
-        .listSectionMargins(.top, 0)
     }
 
     @ViewBuilder
-    private var completedList: some View {
+    private var completedSection: some View {
         if showCompleted {
             Section {
-                ForEach(
-                    Array(sortedCompletedItems.enumerated()),
-                    id: \.element.stableId
-                ) { index, item in
+                ForEach(sortedCompletedItems, id: \.stableId) { item in
                     RowView(
                         item: item,
-                        index: index,
+                        index: indexOf(item, in: sortedCompletedItems),
                         hideToggle: hideToggles,
                         tint: tint(item),
                         customToggleConfig: toggleConfig(item),
@@ -256,6 +273,8 @@ struct SortableTextfieldListView<
                     )
                 }
 
+                SeparatorView(settings: settings)
+
                 if sortedCompletedItems.isEmpty {
                     EmptyLabel(emptyCompletedLabel)
                         .transition(.opacity)
@@ -264,9 +283,12 @@ struct SortableTextfieldListView<
                         .discreetListItem()
                 }
             } header: {
-                VStack(alignment: .leading) {
-                    Text(completedHeaderText)
-                    completedHeader
+                if #available(iOS 27, *) {
+                    completedHeaderView
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
+                } else {
+                    completedHeaderView
                 }
             } footer: {
                 if let completedFooter, !sortedCompletedItems.isEmpty {
@@ -276,7 +298,24 @@ struct SortableTextfieldListView<
                 }
             }
             .id(ListIds.COMPLETED_ITEMS)
-            .discreetListItem()
+        }
+    }
+
+    @ViewBuilder
+    private var completedHeaderView: some View {
+        VStack(alignment: .leading) {
+            Text(completedHeaderText)
+                .font(
+                    .system(
+                        size: 16,
+                        weight: .bold,
+                        design: .rounded
+                    )
+                )
+                .foregroundColor(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            completedHeader
         }
     }
 
@@ -286,7 +325,9 @@ struct SortableTextfieldListView<
         from sources: IndexSet,
         to destination: Int
     ) {
-        guard let source = sources.first, source != destination else { return }
+        guard let sourceIndex = sources.first, sourceIndex != destination else {
+            return
+        }
 
         let insertionIndex = getInsertionIndex(
             pendingIndex: destination,
@@ -294,7 +335,45 @@ struct SortableTextfieldListView<
             sortedItems: sortedItems
         )
 
-        moveItem(source, insertionIndex)
+        moveItem(sourceIndex, insertionIndex)
+    }
+
+    @available(iOS 27, *)
+    private func handleRowReorder(
+        _ difference: ReorderDifference<
+            UUID,
+            ReorderableSingleCollectionIdentifier
+        >
+    ) {
+        guard
+            let sourceIndex = sortedPendingItems.firstIndex(
+                where: { $0.stableId == difference.sources[0] }
+            )
+        else { return }
+
+        let destinationIndex: Int
+
+        switch difference.destination.position {
+        case .before(let value):
+            guard
+                let index = sortedPendingItems.firstIndex(where: {
+                    $0.stableId == value
+                })
+            else { return }
+
+            destinationIndex = index
+
+        case .end:
+            destinationIndex = sortedPendingItems.endIndex
+        }
+
+        let insertionIndex = getInsertionIndex(
+            pendingIndex: destinationIndex,
+            sortedPendingItems: sortedPendingItems,
+            sortedItems: sortedItems
+        )
+
+        moveItem(sourceIndex, insertionIndex)
     }
 
     private func attemptCreateItem(at index: Int) {
@@ -309,5 +388,11 @@ struct SortableTextfieldListView<
         )
 
         createItem(insertionIndex)
+    }
+
+    private func indexOf(_ item: Item, in items: [Item]) -> Int {
+        return items.firstIndex(
+            where: { $0.stableId == item.stableId }
+        ) ?? 0
     }
 }

@@ -164,6 +164,7 @@ struct RowView<
 
                 content
             }
+            .id(item.stableId)
             .listRowInsets(EdgeInsets())
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal)
