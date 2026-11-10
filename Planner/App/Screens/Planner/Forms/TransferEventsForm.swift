@@ -141,7 +141,7 @@ struct TransferEventsFormView: View {
             return
         }
 
-        modelContext.shiftPlannerEvents(
+        let successCount = modelContext.shiftPlannerEvents(
             plannerEngine.selectedItems,
             days: dayOffset.days,
             sourceDatestamp: sourceDatestamp,
@@ -154,12 +154,15 @@ struct TransferEventsFormView: View {
         dismiss()
 
         DispatchQueue.main.async {
-            let eventCount = plannerEngine.selectedItems.count
-
             plannerEngine.toggleSelectMode()
 
-            DispatchQueue.main.async {
-                showNotification(eventCount: eventCount, dayOffset: dayOffset)
+            if successCount > 0 {
+                DispatchQueue.main.async {
+                    showNotification(
+                        eventCount: successCount,
+                        dayOffset: dayOffset
+                    )
+                }
             }
         }
     }

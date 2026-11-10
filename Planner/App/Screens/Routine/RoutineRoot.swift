@@ -233,10 +233,7 @@ struct RoutineRootView: View {
         )
     }
 
-    private func handleEventChange(
-        event: RoutineEventContext,
-        _: RoutineEventContext
-    ) {
+    private func handleEventChange(event: RoutineEventContext) {
         if !invalidatedEventIds.contains(event.stableId) {
             event.version += 0.1
 

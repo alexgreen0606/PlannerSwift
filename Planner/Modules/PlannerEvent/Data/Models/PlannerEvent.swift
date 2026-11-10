@@ -47,7 +47,7 @@ final class PlannerEvent: EventListItem {
     var eKEventContext: EKEventContext?
 
     @Transient
-    var editor: EditorSession<PlannerEvent>?
+    var draft: PlannerEvent?
 
     // MARK: Calendar Event
     init(ekEvent: EKEvent, sortDate: Date) {
@@ -106,16 +106,27 @@ final class PlannerEvent: EventListItem {
         completedOn = source.completedOn
     }
 
-    // MARK: Sync draft.
     @MainActor
     func syncDraft() {
-        guard let editor else { return }
+        guard let draft else { return }
 
-        editor.draft.title = title
-        editor.draft.time = time
-        editor.draft.datestamp = datestamp
-        editor.draft.isFlagged = isFlagged
-        editor.draft.completedOn = completedOn
-        editor.draft.height = height
+        draft.title = title
+        draft.time = time
+        draft.datestamp = datestamp
+        draft.isFlagged = isFlagged
+        draft.completedOn = completedOn
+        draft.height = height
+    }
+
+    @MainActor
+    func commitDraft() {
+        guard let draft else { return }
+
+        title = draft.title.trimmed
+        time = draft.time
+        datestamp = draft.datestamp
+        isFlagged = draft.isFlagged
+        completedOn = draft.completedOn
+        height = draft.height
     }
 }

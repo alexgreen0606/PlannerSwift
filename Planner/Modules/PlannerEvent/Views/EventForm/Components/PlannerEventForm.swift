@@ -186,6 +186,7 @@ struct PlannerEventFormView: View {
                 displayedComponents: .date
             )
             .datePickerStyle(.graphical)
+            .tint(accentColor.swiftUiColor)
             .listRowInsets(.top, 0)
         }
     }
@@ -316,8 +317,8 @@ struct PlannerEventFormView: View {
             ).datestamp,
             sourcePlanner: sourcePlanner,
             timeZone: region.timeZone,
-            todaystamp: todayService.todaystamp,
             plannerService: plannerService,
+            todaystamp: todayService.todaystamp,
             ekEventStore: calendarService.ekEventStore,
             settings: settings
         )

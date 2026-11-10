@@ -29,7 +29,7 @@ final class RoutineEventContext: EventDetails {
     var routineEvents: [RoutineEvent]?
 
     @Transient
-    var editor: EditorSession<RoutineEventContext>?
+    var draft: RoutineEventContext?
 
     init() {}
 
@@ -40,13 +40,21 @@ final class RoutineEventContext: EventDetails {
         height = source.height
     }
     
-    // MARK: Sync draft.
     @MainActor
     func syncDraft() {
-        guard let editor else { return }
+        guard let draft else { return }
 
-        editor.draft.title = title
-        editor.draft.time = time
-        editor.draft.height = height
+        draft.title = title
+        draft.time = time
+        draft.height = height
+    }
+    
+    @MainActor
+    func commitDraft() {
+        guard let draft else { return }
+
+        title = draft.title
+        time = draft.time
+        height = draft.height
     }
 }

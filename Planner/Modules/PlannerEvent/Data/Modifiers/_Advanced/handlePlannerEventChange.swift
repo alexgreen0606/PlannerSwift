@@ -8,6 +8,7 @@
 import EventKit
 import SwiftData
 import SwiftDate
+import SwiftUI
 
 extension ModelContext {
     @MainActor
@@ -16,7 +17,10 @@ extension ModelContext {
         in planner: Planner,
         startOfDay: DateInRegion,
         plannerLocation: Location?,
+        todaystamp: String,
         ekEventStore: EKEventStore,
+        showToast: (Toast) -> Void,
+        plannerCoverStore: PlannerCoverStore,
         settings: Settings
     ) {
         if plannerEvent.eKEventContext != nil {
@@ -54,6 +58,40 @@ extension ModelContext {
             settings: settings
         )
 
-        safeSave("handlePlannerEventTitleChange")
+        // MARK: Place the event in its planner if it moved due to flagging.
+
+        let todayPlanner = getPlanner(for: todaystamp)
+
+        let datestamps = ensureValidPlannerEventPosition(
+            for: plannerEvent,
+            sourceDatestamp: planner.datestamp,
+            todayStartOfDay: todayPlanner.startOfDay(settings: settings),
+            settings: settings
+        )
+
+        safeSave("handlePlannerEventChange")
+
+        // Display a toast if the event has moved.
+        if !datestamps.contains(planner.datestamp),
+            let datestamp = datestamps.first
+        {
+            showToast(
+                Toast(
+                    title:
+                        "Event carried to \(datestamp.countdown(todaystamp: todaystamp).lowercased())!",
+                    subtitle:
+                        "\(datestamp.dateWithYear) | \(datestamp.weekday)",
+                    iconConfig: IconConfig(
+                        name: "arrow.left.arrow.right",
+                        primaryColor: Color.label
+                    ),
+                    action: {
+                        plannerCoverStore.context = PlannerCoverContext(
+                            datestamp: todaystamp
+                        )
+                    }
+                )
+            )
+        }
     }
 }

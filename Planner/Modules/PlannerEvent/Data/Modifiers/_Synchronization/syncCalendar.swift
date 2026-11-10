@@ -17,10 +17,8 @@ extension ModelContext {
     func syncCalendar(
         startOfDay: DateInRegion,
         calendarService: CalendarService,
-        todaystamp: String,
         settings: Settings
     ) {
-
         // MARK: - Load In Calendar Events For This Day
 
         let ekEventStore = calendarService.ekEventStore
@@ -104,7 +102,7 @@ extension ModelContext {
         // MARK: - Re-position All-Day Events That Are Now Timed
 
         if !invalidatedPositionPlannerEvents.isEmpty {
-            var sortedPlannerEvents = getSortedListEvents(on: startOfDay, todaystamp: todaystamp)
+            var sortedPlannerEvents = getSortedListEvents(on: startOfDay)
 
             let reverseSortedEvents = invalidatedPositionPlannerEvents.sorted {
                 ($0.eKEventContext?.startDate ?? .distantPast)
@@ -128,7 +126,6 @@ extension ModelContext {
         bulkCreatePlannerEvents(
             for: Array(ekEventDictionary.values),
             on: startOfDay,
-            todaystamp: todaystamp,
             birthdayEvents: &birthdayEvents
         )
 
@@ -146,14 +143,13 @@ extension ModelContext {
     private func bulkCreatePlannerEvents(
         for ekEvents: [EKEvent],
         on startOfDay: DateInRegion,
-        todaystamp: String,
         birthdayEvents: inout [String: PlannerEvent]
     ) {
         guard !ekEvents.isEmpty else {
             return
         }
 
-        var listEvents = getSortedListEvents(on: startOfDay, todaystamp: todaystamp)
+        var listEvents = getSortedListEvents(on: startOfDay)
 
         let reverseSortedEkEvents = ekEvents.sorted {
             $0.startDate > $1.startDate

@@ -112,6 +112,12 @@ struct OnboardingView: View {
         .task {
             staggerMainActorInteraction(delay: 0.5) {
 
+                // Ensure needed events are carried over.
+                modelContext.carryOverPastFlaggedPlannerEvents(
+                    todaystamp: todayService.todaystamp,
+                    settings: settings
+                )
+
                 // Build the initial UI.
                 if !calendarService.isOnboardingCalendars {
                     calendarService.loadCalendars()
@@ -157,6 +163,11 @@ struct OnboardingView: View {
 
         .onChange(of: todayService.todaystamp) { _, _ in
             plannerService.loadThisWeekDatestamps()
+
+            modelContext.carryOverPastFlaggedPlannerEvents(
+                todaystamp: todayService.todaystamp,
+                settings: settings
+            )
         }
 
         // MARK: Refresh calendars when calendar access changes.

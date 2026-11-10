@@ -128,47 +128,13 @@ struct PlannerEventBottomAdornmentView: View {
             .compactMap(TimeZone.init(secondsFromGMT:))
     }
 
-    private var flaggedMessage: String {
-        guard plannerEvent.isFlagged
-        else { return "" }
-
-        if !plannerEvent.completedOn.isEmpty
-            && planner.datestamp == eventDatestamp
-        {
-            let formattedCompletionDate = DateFormat.dateLabel.string(
-                from: plannerEvent.completedOn,
-                todaystamp: todayService.todaystamp,
-                ordinal: true
-            )
-
-            return "Completed on \(formattedCompletionDate)"
-        }
-
-        guard eventDatestamp != planner.datestamp
-        else { return "" }
-
-        if let time = plannerEvent.time {
-            let timeString =
-                DateInRegion(
-                    time,
-                    region: plannerRegion
-                ).timeString ?? ""
-
-            return
-                "\(formatDatestamp(eventDatestamp, ordinal: true)) \(timeString)"
-
-        }
-
-        return formatDatestamp(eventDatestamp)
-    }
-
     // MARK: - Body
 
     var body: some View {
         HStack(alignment: .top) {
-            if plannerEvent.isFlagged {
+            if plannerEvent.safeDraft.isFlagged {
                 AdornedValue(
-                    flaggedMessage,
+                    "",
                     iconConfig: IconConfig(
                         name: "flag.fill",
                         primaryColor: accentColor.swiftUiColor

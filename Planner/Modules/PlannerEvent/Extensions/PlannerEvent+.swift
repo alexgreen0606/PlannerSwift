@@ -37,20 +37,6 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         )
     }
 
-    func forceIncludeDatestamp(todaystamp: String) -> String? {
-        guard isFlagged else { return nil }
-
-        if !completedOn.isEmpty {
-            return completedOn
-        }
-
-        if !isCompleted {
-            return todaystamp
-        }
-
-        return nil
-    }
-
     // MARK: - UI
 
     func calendarColor(accentColor: AccentColor) -> Color {

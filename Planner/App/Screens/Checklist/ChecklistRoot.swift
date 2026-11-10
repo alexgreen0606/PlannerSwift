@@ -271,7 +271,7 @@ struct ChecklistRootView: View {
         }
     }
 
-    private func handleItemChange(item: ChecklistItem, _: ChecklistItem) {
+    private func handleItemChange(item: ChecklistItem) {
         modelContext.handleChecklistItemChange(item: item)
     }
 

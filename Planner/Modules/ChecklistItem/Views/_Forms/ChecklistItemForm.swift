@@ -40,9 +40,7 @@ struct ChecklistItemFormView: View {
         self.onDelete = onDelete
 
         _draftChecklistItem = State(
-            initialValue: ChecklistItem(
-                draftOf: sourceItem
-            )
+            initialValue: sourceItem.safeDraft
         )
     }
 

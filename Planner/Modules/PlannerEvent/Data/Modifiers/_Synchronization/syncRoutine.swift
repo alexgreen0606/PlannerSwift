@@ -115,8 +115,7 @@ extension ModelContext {
         if !invalidatedPositionPlannerEvents.isEmpty {
 
             sortedListEvents = getSortedListEvents(
-                on: startOfDay,
-                todaystamp: todaystamp
+                on: startOfDay
             )
             sortedRoutineEvents = getSortedRoutineEvents(
                 for: routine
@@ -178,7 +177,7 @@ extension ModelContext {
 
         sortedListEvents =
             sortedListEvents
-            ?? getSortedListEvents(on: startOfDay, todaystamp: todaystamp)
+            ?? getSortedListEvents(on: startOfDay)
 
         sortedRoutineEvents =
             sortedRoutineEvents

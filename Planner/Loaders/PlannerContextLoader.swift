@@ -22,7 +22,6 @@ struct PlannerContextLoaderView<Content: View>: View {
             PlannerEventContextLoaderView(
                 planner: planner,
                 plannerService: plannerService,
-                todaystamp: todayService.todaystamp,
                 settings: settings
             ) { eventContext in
                 content(

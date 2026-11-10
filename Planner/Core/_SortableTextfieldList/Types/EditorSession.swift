@@ -12,22 +12,22 @@ final class EditorSession<Item: ListItemDetails>: ObservableObject {
     let item: Item
 
     private let deleteItem: (Item) -> Void
-    private let onCommit: ((Item, Item) -> Void)?
+    private let onCommit: ((Item) -> Void)?
 
     init(
         item: Item,
         deleteItem: @escaping (Item) -> Void,
-        onCommit: ((Item, Item) -> Void)? = nil
+        onCommit: ((Item) -> Void)? = nil
     ) {
         self.item = item
         self.deleteItem = deleteItem
         self.onCommit = onCommit
         
-        self.draft = Item(draftOf: item)
+        self.draft = item.safeDraft
     }
 
     private var hasFinished = false
-
+    
     @Published var draft: Item
 
     var hasEmptyTitle: Bool {
@@ -51,10 +51,8 @@ final class EditorSession<Item: ListItemDetails>: ObservableObject {
         if trimmedTitle.isEmpty {
             deleteItem(item)
         } else {
-            item.title = trimmedTitle
-            item.height = draft.height
-            
-            onCommit?(item, draft)
+            item.commitDraft()
+            onCommit?(item)
             item.syncDraft()
         }
     }
@@ -63,10 +61,8 @@ final class EditorSession<Item: ListItemDetails>: ObservableObject {
         guard !hasFinished else { return }
         hasFinished = true
 
-        item.title = draft.title.trimmed
-        item.height = draft.height
-
-        onCommit?(item, draft)
+        item.commitDraft()
+        onCommit?(item)
         item.syncDraft()
     }
 

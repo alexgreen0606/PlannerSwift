@@ -96,12 +96,8 @@ struct PlannerContentsListView: View {
     }
 
     private func bottomAdornment(event: PlannerEvent) -> some View {
-        let liveEvent =
-            plannerEngine.isItemFocused(event)
-            ? plannerEngine.activeEditor!.draft : event
-
         return PlannerEventBottomAdornmentView(
-            plannerEvent: liveEvent,
+            plannerEvent: event,
             planner: planner,
             settings: settings
         )
@@ -126,66 +122,17 @@ struct PlannerContentsListView: View {
         )
     }
 
-    private func handleEventChange(event: PlannerEvent, draft: PlannerEvent) {
-        event.isFlagged = draft.isFlagged
-
+    private func handleEventChange(event: PlannerEvent) {
         modelContext.handlePlannerEventChange(
             event,
             in: planner,
             startOfDay: startOfDay,
             plannerLocation: plannerLocation,
+            todaystamp: todayService.todaystamp,
             ekEventStore: calendarService.ekEventStore,
+            showToast: showToast,
+            plannerCoverStore: plannerCoverStore,
             settings: settings
-        )
-
-        let sortedStartsOfDays = modelContext.getSortedPlannerStartOfDays(
-            for: event.time,
-            endTime: event.eKEventContext?.endDate,
-            datestamp: event.datestamp,
-            includeDatestamp: event.forceIncludeDatestamp(
-                todaystamp: todayService.todaystamp
-            ),
-            settings: settings
-        )
-
-        showUnflaggedNotification(
-            destinationDatestamps: Set(sortedStartsOfDays.map(\.datestamp))
-        )
-    }
-
-    private func showUnflaggedNotification(destinationDatestamps: Set<String>) {
-        let cutoffDatestamp = DatestampFormatter.datestamp(
-            from: settings.keepPastEventsDuration.cutoffDate,
-            timeZone: .current
-        )
-
-        guard
-            let earliestDatestamp =
-                destinationDatestamps
-                .filter({ $0 >= cutoffDatestamp })
-                .sorted()
-                .first
-        else {
-            return
-        }
-
-        guard !destinationDatestamps.contains(planner.datestamp) else { return }
-
-        showToast(
-            Toast(
-                title: "Event unflagged!",
-                subtitle:
-                    "\(earliestDatestamp.dateWithYear) | \(earliestDatestamp.weekday)",
-                iconConfig: IconConfig(
-                    name: "arrow.left.arrow.right",
-                    primaryColor: Color.label
-                ),
-                action: {
-                    plannerCoverStore.context = PlannerCoverContext(
-                        datestamp: earliestDatestamp
-                    )
-                }
-            )
         )
     }
 }

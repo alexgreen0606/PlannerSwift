@@ -18,7 +18,6 @@ struct PlannerEventContextLoaderView<Content: View>: View {
     init(
         planner: Planner,
         plannerService: PlannerService,
-        todaystamp: String,
         settings: Settings,
         @ViewBuilder content:
             @escaping (PlannerEventContext) -> Content
@@ -31,8 +30,7 @@ struct PlannerEventContextLoaderView<Content: View>: View {
 
         _sortedPlannerEvents = Query(
             filter: PlannerEvent.listEvents(
-                on: startOfDay,
-                todaystamp: todaystamp
+                on: startOfDay
             ),
             sort: \.sortDate
         )

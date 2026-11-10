@@ -56,7 +56,7 @@ final class ChecklistItem: ListItemDetails {
     var valueSign: Int = 1
 
     @Transient
-    var editor: EditorSession<ChecklistItem>?
+    var draft: ChecklistItem?
 
     init(
         title: String = "",
@@ -119,21 +119,37 @@ final class ChecklistItem: ListItemDetails {
         valueSign = source.value < 0 ? -1 : 1
     }
 
-    // MARK: Sync draft.
     @MainActor
     func syncDraft() {
-        guard let editor else { return }
+        guard let draft else { return }
 
-        editor.draft.title = title
-        editor.draft.type = type
-        editor.draft.color = color
-        editor.draft.value = value
-        editor.draft.financeVariantRawValue = financeVariantRawValue
-        editor.draft.notes = notes.trimmed
-        editor.draft.month = month
-        editor.draft.day = day
-        editor.draft.year = year
-        editor.draft.hideToggles = hideToggles
-        editor.draft.height = height
+        draft.title = title
+        draft.type = type
+        draft.color = color
+        draft.value = value
+        draft.financeVariantRawValue = financeVariantRawValue
+        draft.notes = notes.trimmed
+        draft.month = month
+        draft.day = day
+        draft.year = year
+        draft.hideToggles = hideToggles
+        draft.height = height
+    }
+
+    @MainActor
+    func commitDraft() {
+        guard let draft else { return }
+
+        title = draft.title.trimmed
+        type = draft.type
+        color = draft.color
+        value = draft.value
+        financeVariantRawValue = draft.financeVariantRawValue
+        notes = draft.notes.trimmed
+        month = draft.month
+        day = draft.day
+        year = draft.year
+        hideToggles = draft.hideToggles
+        height = draft.height
     }
 }

@@ -113,18 +113,8 @@ extension ModelContext {
 
         if let sourceItem {
             // Edit existing item.
-            sourceItem.title = draftItem.title
-            sourceItem.color = draftItem.color
-            sourceItem.value = draftItem.value
-            sourceItem.financeVariant = draftItem.financeVariant
-            sourceItem.notes = draftItem.notes
-            sourceItem.month = draftItem.month
-            sourceItem.day = draftItem.day
-            sourceItem.year = draftItem.year
-            sourceItem.hideToggles = draftItem.hideToggles
+            sourceItem.commitDraft()
             sourceItem.syncDraft()
-
-            // Note: Do not update the type. An item's type will never change.
 
         } else if let parentItem, let sortedSiblingItems {
 

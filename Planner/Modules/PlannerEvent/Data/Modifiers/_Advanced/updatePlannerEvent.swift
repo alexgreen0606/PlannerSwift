@@ -16,8 +16,8 @@ extension ModelContext {
         destinationDatestamp: String,
         sourcePlanner: Planner?,
         timeZone: TimeZone,
-        todaystamp: String,
         plannerService: PlannerService,
+        todaystamp: String,
         ekEventStore: EKEventStore,
         settings: Settings,
     ) -> /// The datestamps the event is now in.
@@ -54,10 +54,13 @@ extension ModelContext {
         event.eKEventContext = nil
 
         // MARK: Place the event at the top of its planner if it has moved days.
-        let destinationDatestamps = ensureValidSortDate(
+
+        let todayPlanner = getPlanner(for: todaystamp)
+
+        let destinationDatestamps = ensureValidPlannerEventPosition(
             for: event,
             sourceDatestamp: sourcePlanner?.datestamp,
-            todaystamp: todaystamp,
+            todayStartOfDay: todayPlanner.startOfDay(settings: settings),
             settings: settings
         )
 

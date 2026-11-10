@@ -41,15 +41,14 @@ extension ModelContext {
 
     // MARK: - READ
 
-    func getSortedListEvents(on startOfDay: DateInRegion, todaystamp: String)
+    func getSortedListEvents(on startOfDay: DateInRegion)
         -> [PlannerEvent]
     {
         do {
             return try fetch(
                 FetchDescriptor<PlannerEvent>(
                     predicate: PlannerEvent.listEvents(
-                        on: startOfDay,
-                        todaystamp: todaystamp
+                        on: startOfDay
                     ),
                     sortBy: [
                         SortDescriptor(\PlannerEvent.sortDate)
@@ -130,10 +129,10 @@ extension ModelContext {
     /// Ensures that moved events end up at the top of their new planner day.
     /// Note: All-day events can be skipped. This will be called if they are ever turned into timed events.
     @MainActor
-    func ensureValidSortDate(
+    func ensureValidPlannerEventPosition(
         for plannerEvent: PlannerEvent,
         sourceDatestamp: String? = nil,
-        todaystamp: String,
+        todayStartOfDay: DateInRegion? = nil,
         settings: Settings
     ) -> /// The datestamps the event is now in.
         Set<String>
@@ -151,16 +150,27 @@ extension ModelContext {
             )
         }
 
-        // Make sure flagged events are considered within the planners they are carried to.
-        let forceIncludeDatestamp = plannerEvent.forceIncludeDatestamp(
-            todaystamp: todaystamp
-        )
+        // Carry flagged, incomplete, past events into today.
+        if let todayStartOfDay, plannerEvent.isFlagged, !plannerEvent.isCompleted {
+            let todaystamp = todayStartOfDay.datestamp
+
+            if let time = plannerEvent.time {
+                if time < todayStartOfDay.date {
+                    plannerEvent.time = nil
+                    plannerEvent.datestamp = todaystamp
+                }
+            } else if let datestamp = plannerEvent.datestamp {
+                if datestamp < todaystamp {
+                    plannerEvent.time = nil
+                    plannerEvent.datestamp = todaystamp
+                }
+            }
+        }
 
         let sortedStartsOfDays = getSortedPlannerStartOfDays(
             for: plannerEvent.time,
             endTime: plannerEvent.eKEventContext?.endDate,
             datestamp: plannerEvent.datestamp,
-            includeDatestamp: forceIncludeDatestamp,
             settings: settings
         )
 
@@ -182,8 +192,7 @@ extension ModelContext {
         }
 
         let sortedListEvents = getSortedListEvents(
-            on: earliestStartOfDay,
-            todaystamp: todaystamp
+            on: earliestStartOfDay
         )
 
         // Place the event at the top of its earliest planner.

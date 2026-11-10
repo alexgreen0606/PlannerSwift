@@ -10,16 +10,13 @@ import SwiftUI
 
 extension PlannerEvent {
     static func listEvents(
-        on startOfDay: DateInRegion,
-        todaystamp: String
+        on startOfDay: DateInRegion
     ) -> Predicate<PlannerEvent> {
         let startOfNextDay = (startOfDay + 1.days)
 
         let plannerStart = startOfDay.date
         let plannerEnd = startOfNextDay.date
         let plannerDatestamp = startOfDay.datestamp
-
-        let isTodayPlanner = startOfDay.datestamp == todaystamp
 
         // Note: iOS 27 no longer allows for "if let" on optional relationships.
         if #available(iOS 27, *) {
@@ -34,33 +31,15 @@ extension PlannerEvent {
 
                 } else if let time = event.time {
 
-                    // MARK: Timed planner events that exist on this day,
+                    // MARK: Timed planner events that exist on this day.
 
-                    return time < plannerEnd
-                        && (time >= plannerStart
-
-                            // or the event exists before this day, the event is flagged,
-                            // and either the event is pending and this is today's planner,
-                            // or the event was completed in this planner.
-
-                            || (event.isFlagged
-                                && ((!event.isCompleted && isTodayPlanner)
-                                    || event.completedOn == plannerDatestamp)))
+                    return time < plannerEnd && time >= plannerStart
 
                 } else if let datestamp = event.datestamp {
 
-                    // MARK: Untimed planner events that exist on this day,
+                    // MARK: Untimed planner events that exist on this day.
 
                     return datestamp == plannerDatestamp
-
-                        // or the event exists before this day, the event is flagged,
-                        // and either the event is pending and this is today's planner,
-                        // or the event was completed in this planner.
-
-                        || (datestamp < plannerDatestamp
-                            && event.isFlagged
-                            && ((!event.isCompleted && isTodayPlanner)
-                                || event.completedOn == plannerDatestamp))
 
                 } else {
                     return false
@@ -78,33 +57,17 @@ extension PlannerEvent {
 
                 } else if let time = event.time {
 
-                    // MARK: Timed planner events that exist on this day,
+                    // MARK: Timed planner events that exist on this day and
+                    // either aren't flagged, or this is a planner from today or the future...
 
-                    return time < plannerEnd
-                        && (time >= plannerStart
-
-                            // or the event exists before this day, the event is flagged,
-                            // and either the event is pending and this is today's planner,
-                            // or the event was completed in this planner.
-
-                            || (event.isFlagged
-                                && ((!event.isCompleted && isTodayPlanner)
-                                    || event.completedOn == plannerDatestamp)))
+                    return time < plannerEnd && time >= plannerStart
 
                 } else if let datestamp = event.datestamp {
 
-                    // MARK: Untimed planner events that exist on this day,
+                    // MARK: Untimed planner events that exist on this day and
+                    // either aren't flagged, or this is a planner from today or the future...
 
                     return datestamp == plannerDatestamp
-
-                        // or the event exists before this day, the event is flagged,
-                        // and either the event is pending and this is today's planner,
-                        // or the event was completed in this planner.
-
-                        || (datestamp < plannerDatestamp
-                            && event.isFlagged
-                            && ((!event.isCompleted && isTodayPlanner)
-                                || event.completedOn == plannerDatestamp))
 
                 } else {
                     return false

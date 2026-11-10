@@ -27,7 +27,7 @@ struct SortableTextfieldListView<
     private let createItem: (Int) -> Void
     private let moveItem: (Int, Int) -> Void
     private let deleteItem: ((Item) -> Void)?
-    private let onCommitItem: ((Item, Item) -> Void)?
+    private let onCommitItem: ((Item) -> Void)?
     private let onAdornmentClick: ((Item) -> Void)?
 
     private let sortedPendingItems: [Item]
@@ -57,7 +57,7 @@ struct SortableTextfieldListView<
         createItem: @escaping (Int) -> Void,
         moveItem: @escaping (Int, Int) -> Void,
         deleteItem: ((Item) -> Void)? = nil,
-        onCommitItem: ((Item, Item) -> Void)? = nil,
+        onCommitItem: ((Item) -> Void)? = nil,
         onAdornmentClick: ((Item) -> Void)? = nil,
         sortedPendingItems: [Item]? = nil,
         sortedCompletedItems: [Item] = [],

@@ -9,6 +9,9 @@ import SwiftUI
 
 struct DateRangePickerView: View {
     @Binding var selectedDates: Set<DateComponents>
+    
+    @AppStorage("accentColor") var accentColor: AccentColor =
+        .blue
 
     @EnvironmentObject private var todayService: TodayService
 
@@ -27,6 +30,7 @@ struct DateRangePickerView: View {
             ),
             in: todayService.multiDatePickerBounds
         )
+        .tint(accentColor.swiftUiColor)
     }
 
     // MARK: - Functions

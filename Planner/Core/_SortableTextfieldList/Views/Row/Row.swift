@@ -29,7 +29,7 @@ struct RowView<
     private let settings: Settings
     private let createItem: ((Int) -> Void)?
     private let deleteItem: ((Item) -> Void)?
-    private let onCommit: ((Item, Item) -> Void)?
+    private let onCommit: ((Item) -> Void)?
     private let onAdornmentClick: ((Item) -> Void)?
 
     // MARK: Pending Items
@@ -48,7 +48,7 @@ struct RowView<
         modelContext: ModelContext,
         createItem: @escaping (Int) -> Void,
         deleteItem: ((Item) -> Void)?,
-        onCommit: ((Item, Item) -> Void)?,
+        onCommit: ((Item) -> Void)?,
         onAdornmentClick: ((Item) -> Void)?
     ) {
         self.item = item
@@ -177,10 +177,6 @@ struct RowView<
             // MARK: Trigger focus for new items.
 
             .onAppear {
-                if item.editor !== editorSession {
-                    item.editor = editorSession
-                }
-
                 if listEngine.pendingFocusId == item.stableId {
                     listEngine.pendingFocusId = nil
                     listEngine.beginEditing(editorSession)

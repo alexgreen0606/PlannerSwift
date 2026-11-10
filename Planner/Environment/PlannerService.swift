@@ -230,7 +230,6 @@ class PlannerService: ObservableObject {
             modelContext.syncCalendar(
                 startOfDay: startOfDay,
                 calendarService: calendarService,
-                todaystamp: todayService.todaystamp,
                 settings: settings
             )
         }

@@ -20,27 +20,37 @@ extension ModelContext {
         todaystamp: String,
         ekEventStore: EKEventStore,
         settings: Settings
-    ) {
+    ) -> Int {
         // Assemble the events in reverse-chronological ordering so they
         // are inserted correctly.
         let reverseSortedEvents = plannerEvents.sorted {
             $0.sortDate > $1.sortDate
         }
 
+        let todayPlanner = getPlanner(for: todaystamp)
+
+        var successCount = 0
+
         for event in reverseSortedEvents {
-            shiftPlannerEvent(
+            let didShift = shiftPlannerEvent(
                 event,
                 days: days,
                 sourceDatestamp: sourceDatestamp,
                 destinationDatestamp: destinationDatestamp,
-                todaystamp: todaystamp,
+                todayStartOfDay: todayPlanner.startOfDay(settings: settings),
                 ekEventStore: ekEventStore,
                 settings: settings,
                 skipSave: true
             )
+
+            if didShift {
+                successCount += 1
+            }
         }
 
-        safeSave("shiftPlannerEvents")
+        safeSave("shiftPlannerEvent shiftPlannerEvents")
+
+        return successCount
     }
 
     @MainActor
@@ -49,18 +59,18 @@ extension ModelContext {
         days: DateComponents,
         sourceDatestamp: String,
         destinationDatestamp: String,
-        todaystamp: String,
+        todayStartOfDay: DateInRegion,
         ekEventStore: EKEventStore,
         settings: Settings,
         skipSave: Bool = false
-    ) {
+    ) -> Bool {
         if let eKEventContext = event.eKEventContext,
             let ekEvent = ekEventStore.getEkEvent(for: event)
         {
             // MARK: Event is a calendar event. Update the calendar record.
 
             guard ekEvent.calendar.allowsContentModifications else {
-                return
+                return false
             }
 
             // Shift the start and end dates and save.
@@ -72,7 +82,7 @@ extension ModelContext {
 
             if !ekEventStore.attemptUpdateEvent(ekEvent) {
                 // The update failed. Skip this event.
-                return
+                return false
             }
         }
 
@@ -83,15 +93,17 @@ extension ModelContext {
         event.datestamp = destinationDatestamp
 
         // Place the event at the top of its new planner.
-        _ = ensureValidSortDate(
+        _ = ensureValidPlannerEventPosition(
             for: event,
             sourceDatestamp: sourceDatestamp,
-            todaystamp: todaystamp,
+            todayStartOfDay: todayStartOfDay,
             settings: settings
         )
 
         if !skipSave {
-            safeSave("shiftPlannerEvent")
+            safeSave("shiftPlannerEvent shiftPlannerEvent")
         }
+
+        return event.datestamp != sourceDatestamp
     }
 }
