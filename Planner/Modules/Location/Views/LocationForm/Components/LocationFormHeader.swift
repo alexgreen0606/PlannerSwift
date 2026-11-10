@@ -134,6 +134,14 @@ struct LocationFormHeaderView: View {
             return selectedLocation != nil
         }
     }
+    
+    private var topPadding: CGFloat {
+        if #available(iOS 27, *) {
+            return 4
+        } else {
+            return 0
+        }
+    }
 
     // MARK: - Body
 
@@ -144,6 +152,7 @@ struct LocationFormHeaderView: View {
             clearSelectionButton
         }
         .padding(.horizontal)
+        .padding(.top, topPadding)
     }
 
     // MARK: - View Builders

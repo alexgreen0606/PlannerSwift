@@ -158,9 +158,10 @@ struct RowView<
     var body: some View {
         let row =
             HStack(alignment: .top, spacing: 12) {
-                if !hideToggle {
+                if listEngine.isSelectMode || !hideToggle {
                     toggle
                 }
+
                 content
             }
             .listRowInsets(EdgeInsets())
@@ -241,10 +242,22 @@ struct RowView<
                             .onTapGesture(perform: handleAdornmentClick)
                     }
 
-                    bottomAdornment
-                        .opacity(opacity)
-                        .contentShape(Rectangle())
-                        .onTapGesture(perform: handleAdornmentClick)
+                    VStack(spacing: 4) {
+                        bottomAdornment
+
+                        if !item.notes.trimmed.isEmpty {
+                            Text(item.notes)
+                                .font(.system(size: 12))
+                                .foregroundStyle(Color.secondary)
+                                .frame(
+                                    maxWidth: .infinity,
+                                    alignment: .leading
+                                )
+                        }
+                    }
+                    .opacity(opacity)
+                    .contentShape(Rectangle())
+                    .onTapGesture(perform: handleAdornmentClick)
                 }
 
             }

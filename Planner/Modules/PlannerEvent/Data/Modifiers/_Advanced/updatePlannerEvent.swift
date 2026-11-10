@@ -36,6 +36,7 @@ extension ModelContext {
         // MARK: Save draft to planner event.
 
         event.title = draftPlannerEvent.title.trimmed
+        event.notes = draftPlannerEvent.notes.trimmed
 
         if draftPlannerEvent.hasTime {
             event.time = draftPlannerEvent.date

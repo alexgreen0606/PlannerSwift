@@ -66,6 +66,7 @@ extension PlannerEvent: PlannerEventLocationHelpers {
     ) {
         // Sync common data between planner and calendar events.
         title = ekEvent.title
+        notes = ekEvent.notes ?? ""
         location = ekEvent.location(
             existingPlannerEvent: self
         )
@@ -124,6 +125,7 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         }
 
         title = routineEventContext.title
+        notes = routineEventContext.notes
         time = routineEventContext.date(on: startOfDay)
 
         routineEventRecordContext.syncedVersion = routineEventContext.version

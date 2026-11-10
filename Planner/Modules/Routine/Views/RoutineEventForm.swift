@@ -71,6 +71,7 @@ struct RoutineEventFormView: View {
     @State private var hasTitleAutoFocused = false
 
     @FocusState private var isTitleFocused
+    @FocusState private var isNotesFocused: Bool
 
     private var isCreateForm: Bool {
         sourceRoutineEventContext == nil
@@ -102,6 +103,11 @@ struct RoutineEventFormView: View {
 
                 daysSection
                 detailsSection
+
+                FormNotesFieldView(
+                    notes: $draftRoutineEvent.notes,
+                    isFocused: $isNotesFocused
+                )
             }
             .toolbar {
                 cancelButton
@@ -114,6 +120,9 @@ struct RoutineEventFormView: View {
                 isCreateForm ? "Create Recurring Event" : "Edit Recurring Event"
             )
             .navigationBarTitleDisplayMode(.inline)
+        }
+        .safeAreaBar(edge: .bottom) {
+            keyboardAdornment
         }
 
         // MARK: Blur the title field whenever the weekdays change.
@@ -227,6 +236,23 @@ struct RoutineEventFormView: View {
                 }
             }
             .listRowInsets(.top, 0)
+        }
+    }
+
+    @ViewBuilder
+    private var keyboardAdornment: some View {
+        if isNotesFocused {
+            HStack {
+                Spacer()
+
+                GlassIconButtonView(
+                    systemImageName: "checkmark",
+                    onTap: {
+                        isNotesFocused = false
+                    }
+                )
+            }
+            .padding(8)
         }
     }
 

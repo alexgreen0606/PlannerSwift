@@ -253,20 +253,10 @@ struct ChecklistItemFormView: View {
         Section("Advanced") {
             switch draftChecklistItem.type {
             case .item:
-                ZStack(alignment: .topLeading) {
-                    TextEditor(text: $draftChecklistItem.notes)
-                        .focused($isNotesFocused)
-                        .scrollContentBackground(.hidden)
-
-                    if draftChecklistItem.notes.trimmed.isEmpty {
-                        Text("Notes")
-                            .foregroundStyle(.tertiary)
-                            .padding(.leading, 5)
-                            .padding(.top, 8)
-                            .allowsHitTesting(false)
-                    }
-                }
-                .frame(height: 200)
+                FormNotesFieldView(
+                    notes: $draftChecklistItem.notes,
+                    isFocused: $isNotesFocused
+                )
 
                 whenSection
 
@@ -415,7 +405,7 @@ struct ChecklistItemFormView: View {
 
     @ViewBuilder
     private var keyboardAdornment: some View {
-        if isValueFocused || isNotesFocused || isTitleFocused {
+        if isValueFocused || isNotesFocused {
             HStack(alignment: .bottom) {
 
                 if isValueFocused {

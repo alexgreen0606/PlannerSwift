@@ -100,7 +100,7 @@ struct ChecklistRootView: View {
                         tint: { _ in checklist.color.swiftUIColor(accentColor: accentColor) },
                         leftAdornment: whenAdornment,
                         rightAdornment: valueAdornment,
-                        bottomAdornment: notesAdornment,
+                        bottomAdornment: { _ in EmptyView() },
                         scrollProxy: scrollProxy,
                         namespace: namespace,
                         settings: settings
@@ -231,19 +231,6 @@ struct ChecklistRootView: View {
     private func valueAdornment(item: ChecklistItem) -> some View {
         if !item.value.isZero {
             ChecklistItemValueView(value: item.sum(completed: item.isCompleted))
-        }
-    }
-
-    @ViewBuilder
-    private func notesAdornment(item: ChecklistItem) -> some View {
-        if !item.notes.trimmed.isEmpty {
-            Text(item.notes)
-                .font(.system(size: 12))
-                .foregroundStyle(Color.secondary)
-                .frame(
-                    maxWidth: .infinity,
-                    alignment: .leading
-                )
         }
     }
 

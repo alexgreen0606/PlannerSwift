@@ -10,6 +10,7 @@ import SwiftDate
 
 struct DraftRoutineEvent {
     var title: String = ""
+    var notes: String = ""
     var date: Date
     var hasTime: Bool = false
     var weekdays: Set<Weekday> = []
@@ -20,6 +21,7 @@ struct DraftRoutineEvent {
 
     init(routineEventContext: RoutineEventContext) {
         self.title = routineEventContext.title
+        self.notes = routineEventContext.notes
         self.date = routineEventContext.time ?? Self.defaultDate()
         self.hasTime = routineEventContext.time != nil
         self.weekdays = routineEventContext.weekdays

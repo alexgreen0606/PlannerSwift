@@ -32,6 +32,7 @@ struct PlannerEventFormView: View {
     @State private var showDeleteConfirmation = false
 
     @FocusState private var isTitleFocused
+    @FocusState private var isNotesFocused
 
     private var isCreateForm: Bool {
         sourcePlannerEvent == nil
@@ -76,6 +77,11 @@ struct PlannerEventFormView: View {
 
             detailsSection
 
+            FormNotesFieldView(
+                notes: $draftPlannerEvent.notes,
+                isFocused: $isNotesFocused
+            )
+
             flagSection
         }
         .toolbar {
@@ -88,6 +94,9 @@ struct PlannerEventFormView: View {
             ToolbarSpacer(placement: .bottomBar)
 
             addToCalendarButton
+        }
+        .safeAreaBar(edge: .bottom) {
+            keyboardAdornment
         }
         .navigationTitle(isCreateForm ? "Create Event" : "Edit Event")
         .navigationBarTitleDisplayMode(.inline)
@@ -305,6 +314,23 @@ struct PlannerEventFormView: View {
         }
     }
 
+    @ViewBuilder
+    private var keyboardAdornment: some View {
+        if isNotesFocused {
+            HStack {
+                Spacer()
+
+                GlassIconButtonView(
+                    systemImageName: "checkmark",
+                    onTap: {
+                        isNotesFocused = false
+                    }
+                )
+            }
+            .padding(8)
+        }
+    }
+
     // MARK: - Functions
 
     private func savePlannerEvent() {
@@ -367,6 +393,7 @@ struct PlannerEventFormView: View {
         }
 
         ekEvent.title = draftPlannerEvent.title
+        ekEvent.notes = draftPlannerEvent.notes.trimmed.nilIfEmpty
         ekEvent.startDate = draftPlannerEvent.date
         ekEvent.endDate = Calendar.current.date(
             byAdding: .hour,

@@ -16,6 +16,7 @@ final class PlannerEvent: EventListItem {
     var stableId: UUID = UUID()
 
     var title: String = ""
+    var notes: String = ""
     var time: Date?
 
     var isCompleted: Bool = false
@@ -52,6 +53,7 @@ final class PlannerEvent: EventListItem {
     // MARK: Calendar Event
     init(ekEvent: EKEvent, sortDate: Date) {
         title = ekEvent.title
+        notes = ekEvent.notes ?? ""
         time = ekEvent.startDate
         location = ekEvent.location()
         self.sortDate = sortDate
@@ -99,6 +101,7 @@ final class PlannerEvent: EventListItem {
     required init(draftOf source: PlannerEvent) {
         stableId = source.stableId
         title = source.title
+        notes = source.notes
         time = source.time
         datestamp = source.datestamp
         height = source.height
@@ -111,6 +114,7 @@ final class PlannerEvent: EventListItem {
         guard let draft else { return }
 
         draft.title = title
+        draft.notes = notes
         draft.time = time
         draft.datestamp = datestamp
         draft.isFlagged = isFlagged
@@ -123,6 +127,7 @@ final class PlannerEvent: EventListItem {
         guard let draft else { return }
 
         title = draft.title.trimmed
+        notes = draft.notes.trimmed
         time = draft.time
         datestamp = draft.datestamp
         isFlagged = draft.isFlagged

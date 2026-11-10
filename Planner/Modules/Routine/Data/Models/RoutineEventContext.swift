@@ -15,6 +15,7 @@ final class RoutineEventContext: EventDetails {
     var stableId: UUID = UUID()
 
     var title: String = ""
+    var notes: String = ""
     var time: Date?
 
     var height: CGFloat = 0
@@ -37,6 +38,7 @@ final class RoutineEventContext: EventDetails {
     required init(draftOf source: RoutineEventContext) {
         stableId = source.stableId
         title = source.title
+        notes = source.notes
         height = source.height
     }
     
@@ -45,6 +47,7 @@ final class RoutineEventContext: EventDetails {
         guard let draft else { return }
 
         draft.title = title
+        draft.notes = notes
         draft.time = time
         draft.height = height
     }
@@ -53,7 +56,8 @@ final class RoutineEventContext: EventDetails {
     func commitDraft() {
         guard let draft else { return }
 
-        title = draft.title
+        title = draft.title.trimmed
+        notes = draft.notes.trimmed
         time = draft.time
         height = draft.height
     }

@@ -11,6 +11,7 @@ import SwiftUI
 
 struct DraftPlannerEvent: PlannerEventLocationHelpers {
     var title: String = ""
+    var notes: String = ""
     var date: Date = Date()
     var hasTime: Bool = false
     var location: Location? = nil
@@ -34,6 +35,7 @@ struct DraftPlannerEvent: PlannerEventLocationHelpers {
         settings: Settings
     ) {
         title = plannerEvent.title
+        notes = plannerEvent.notes
         location = plannerEvent.location
         isFlagged = plannerEvent.isFlagged
 
