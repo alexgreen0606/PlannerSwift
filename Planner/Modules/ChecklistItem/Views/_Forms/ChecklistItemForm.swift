@@ -80,7 +80,7 @@ struct ChecklistItemFormView: View {
     }
 
     private var showColorSection: Bool {
-        draftChecklistItem.type != .item
+        draftChecklistItem.type != .item && parentItem != nil
     }
 
     private var showDeleteButton: Bool {

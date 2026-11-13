@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ChecklistItemHeaderView: ToolbarContent {
     let item: ChecklistItem
-    
+
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
@@ -38,18 +38,19 @@ struct ChecklistItemHeaderView: ToolbarContent {
 
     var body: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
-            HStack {
-                Image(systemName: item.type.systemImageName)
-                    .foregroundStyle(item.color.swiftUIColor(accentColor: accentColor))
-
-                Text(item.title)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.5)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .font(.system(size: 22, weight: .bold, design: .rounded))
-            .frame(width: width, alignment: .leading)
-            .drawingGroup()
+            Text(item.title)
+                .lineLimit(2)
+                .minimumScaleFactor(0.5)
+                .fixedSize(horizontal: false, vertical: true)
+                .font(
+                    .system(
+                        size: item.parent == nil ? 28 : 22,
+                        weight: .bold,
+                        design: .rounded
+                    )
+                )
+                .frame(width: width, alignment: .leading)
+                .drawingGroup()
         }
         .sharedBackgroundVisibility(.hidden)
     }
