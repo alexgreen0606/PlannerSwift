@@ -114,7 +114,7 @@ struct OnboardingView: View {
 
                 // Ensure needed events are carried over.
                 modelContext.carryOverPastFlaggedPlannerEvents(
-                    todaystamp: todayService.todaystamp,
+                    todayService: todayService,
                     settings: settings
                 )
 
@@ -170,7 +170,7 @@ struct OnboardingView: View {
             plannerService.reloadPlannerList()
             
             modelContext.carryOverPastFlaggedPlannerEvents(
-                todaystamp: todayService.todaystamp,
+                todayService: todayService,
                 settings: settings
             )
         }

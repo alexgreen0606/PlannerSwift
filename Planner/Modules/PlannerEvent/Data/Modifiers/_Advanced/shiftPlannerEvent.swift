@@ -17,7 +17,6 @@ extension ModelContext {
         days: DateComponents,
         sourceDatestamp: String,
         destinationDatestamp: String,
-        todaystamp: String,
         todayService: TodayService,
         ekEventStore: EKEventStore,
         settings: Settings

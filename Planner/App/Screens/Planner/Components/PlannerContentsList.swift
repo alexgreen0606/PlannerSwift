@@ -131,6 +131,7 @@ struct PlannerContentsListView: View {
             todaystamp: todayService.todaystamp,
             ekEventStore: calendarService.ekEventStore,
             showToast: showToast,
+            todayService: todayService,
             plannerCoverStore: plannerCoverStore,
             settings: settings
         )

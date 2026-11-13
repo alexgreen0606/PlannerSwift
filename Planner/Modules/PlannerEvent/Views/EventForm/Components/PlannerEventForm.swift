@@ -343,6 +343,7 @@ struct PlannerEventFormView: View {
             ).datestamp,
             sourcePlanner: sourcePlanner,
             timeZone: region.timeZone,
+            todayService: todayService,
             plannerService: plannerService,
             todaystamp: todayService.todaystamp,
             ekEventStore: calendarService.ekEventStore,
