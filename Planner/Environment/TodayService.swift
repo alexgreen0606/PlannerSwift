@@ -6,6 +6,7 @@
 //
 
 import Combine
+import Fuse
 import SwiftData
 import SwiftDate
 import SwiftUI
@@ -14,18 +15,29 @@ import SwiftUI
 final class TodayService: ObservableObject {
     private let settings: Settings
     private let modelContext: ModelContext
-    
+
     init(settings: Settings, modelContext: ModelContext) {
         self.settings = settings
         self.modelContext = modelContext
-        
+
         let todaystamp = TodayService.makeTodaystamp()
 
-        todayPlanner = modelContext.getPlanner(
+        next30Datestamps = getNext30Datestamps()
+
+        let todayPlanner = modelContext.getPlanner(
             for: todaystamp
         )
 
+        self.todayPlanner = todayPlanner
         self.todaystamp = todaystamp
+
+        self.defaultSearchQuery = PlannerSearchQuery(
+            text: "",
+            calendarIds: [],
+            past: false,
+            todayStartOfDay: todayPlanner.startOfDay(settings: settings),
+            fuse: Fuse()
+        )
 
         scheduleMidnightUpdate()
     }
@@ -39,9 +51,13 @@ final class TodayService: ObservableObject {
 
     private var timer: Timer?
 
+    private var todayPlanner: Planner
+
     @Published private(set) var todaystamp: String
-    
-    @Published private(set) var todayPlanner: Planner
+
+    @Published private(set) var next30Datestamps: [String]
+
+    @Published private(set) var defaultSearchQuery: PlannerSearchQuery
 
     var datePickerBounds: ClosedRange<Date> {
         settings.keepPastEventsDuration.cutoffDate...maxCalendarDate
@@ -49,6 +65,10 @@ final class TodayService: ObservableObject {
 
     var multiDatePickerBounds: Range<Date> {
         settings.keepPastEventsDuration.cutoffDate..<maxCalendarDate
+    }
+
+    var todayStartOfDay: DateInRegion {
+        todayPlanner.startOfDay(settings: settings)
     }
 
     // MARK: - Builder Functions
@@ -89,8 +109,17 @@ final class TodayService: ObservableObject {
 
     private func updateStamp() {
         todaystamp = Self.makeTodaystamp()
+        next30Datestamps = getNext30Datestamps()
         maxCalendarDate = Self.makeMaxCalendarDate()
         todayPlanner = modelContext.getPlanner(for: todaystamp)
+
+        defaultSearchQuery = PlannerSearchQuery(
+            text: "",
+            calendarIds: [],
+            past: false,
+            todayStartOfDay: todayPlanner.startOfDay(settings: settings),
+            fuse: Fuse()
+        )
 
         // Reschedule for the next midnight.
         scheduleMidnightUpdate()

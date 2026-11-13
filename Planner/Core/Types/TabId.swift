@@ -6,8 +6,7 @@
 //
 
 enum TabId {
-    case dashboard
+    case plannerList
+    case trips
     case checklists
-    case settings
-    case search
 }

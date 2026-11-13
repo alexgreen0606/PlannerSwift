@@ -1,5 +1,5 @@
 //
-//  SearchQuery.swift
+//  PlannerSearchQuery.swift
 //  Planner
 //
 //  Created by Alex Green on 3/16/26.
@@ -9,7 +9,7 @@ import Foundation
 import Fuse
 import SwiftDate
 
-struct SearchQuery: Equatable {
+struct PlannerSearchQuery: Equatable {
     var text: String
     var calendarIds: Set<String>
     var past: Bool
@@ -19,8 +19,8 @@ struct SearchQuery: Equatable {
     let fuse: Fuse
 
     static func == (
-        lhs: SearchQuery,
-        rhs: SearchQuery
+        lhs: PlannerSearchQuery,
+        rhs: PlannerSearchQuery
     ) -> Bool {
         lhs.text == rhs.text
             && lhs.calendarIds == rhs.calendarIds
@@ -28,9 +28,9 @@ struct SearchQuery: Equatable {
     }
 
     private static let FUZZY_THRESHOLD: Double = 0.25
-
-    var isFiltering: Bool {
-        !text.isEmpty || !calendarIds.isEmpty
+    
+    var isDefault: Bool {
+        text.isEmpty && calendarIds.isEmpty && !past
     }
 
     var startDate: Date {

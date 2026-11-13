@@ -95,8 +95,8 @@ struct SortableTextfieldListView<
         self.namespace = namespace
         self.settings = settings
     }
-
-    @Environment(\.scenePhase) private var appPhase
+    
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var listEngine: ListEngine<Item>
 
@@ -159,8 +159,8 @@ struct SortableTextfieldListView<
         }
 
         // MARK: Blur the textfield when the app exits focus (deletes empty items).
-        .onChange(of: appPhase) { _, phase in
-            if phase == .inactive {
+        .onChange(of: scenePhase) { _, _ in
+            if scenePhase == .inactive {
                 listEngine.blur()
             }
         }

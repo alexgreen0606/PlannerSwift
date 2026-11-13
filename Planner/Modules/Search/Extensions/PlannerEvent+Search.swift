@@ -10,7 +10,7 @@ import SwiftDate
 
 extension PlannerEvent {
     static func plannerEvents(
-        matching query: SearchQuery
+        matching query: PlannerSearchQuery
     ) -> Predicate<PlannerEvent> {
         let todayStartDate = query.todayStartOfDay.date
         let todaystamp = query.todayStartOfDay.datestamp
@@ -66,7 +66,7 @@ extension PlannerEvent {
     }
 
     func searchQueryScore(
-        _ query: SearchQuery,
+        _ query: PlannerSearchQuery,
         /// Used to determine if event's planner matches the query.
         in plannerDatestamp: String
     ) -> Double? {

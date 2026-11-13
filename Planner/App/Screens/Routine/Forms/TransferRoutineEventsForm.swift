@@ -76,9 +76,7 @@ struct TransferRoutineEventsFormView: View {
             routineEngine.selectedItems,
             to: destinationWeekdays,
             sourceSortedRoutineEvents: sourceSortedRoutineEvents,
-            todayStartOfDay: todayService.todayPlanner.startOfDay(
-                settings: settings
-            ),
+            todayStartOfDay: todayService.todayStartOfDay,
             ekEventStore: calendarService.ekEventStore
         )
 

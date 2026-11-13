@@ -134,7 +134,7 @@ struct LocationFormHeaderView: View {
             return selectedLocation != nil
         }
     }
-    
+
     private var topPadding: CGFloat {
         if #available(iOS 27, *) {
             return 4
@@ -216,19 +216,11 @@ struct LocationFormHeaderView: View {
     // MARK: Textfield
 
     private var textfield: some View {
-        TextField(
-            "Search cities and addresses...",
-            text: $locationSearchService.text
+        SearchBarView(
+            text: $locationSearchService.text,
+            isFocused: $isSearchFocused,
+            placeholder: "Search cities and addresses..."
         )
-        .focused($isSearchFocused)
-        .tint(accentColor.swiftUiColor)
-        .padding()
-        .glassEffect(.regular.interactive())
-        // Increase the focusable area of the field.
-        .contentShape(Rectangle())
-        .onTapGesture {
-            isSearchFocused = true
-        }
     }
 
     // MARK: Options

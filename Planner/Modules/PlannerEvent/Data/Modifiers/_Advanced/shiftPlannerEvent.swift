@@ -18,6 +18,7 @@ extension ModelContext {
         sourceDatestamp: String,
         destinationDatestamp: String,
         todaystamp: String,
+        todayService: TodayService,
         ekEventStore: EKEventStore,
         settings: Settings
     ) -> Int {
@@ -27,8 +28,6 @@ extension ModelContext {
             $0.sortDate > $1.sortDate
         }
 
-        let todayPlanner = getPlanner(for: todaystamp)
-
         var successCount = 0
 
         for event in reverseSortedEvents {
@@ -37,7 +36,7 @@ extension ModelContext {
                 days: days,
                 sourceDatestamp: sourceDatestamp,
                 destinationDatestamp: destinationDatestamp,
-                todayStartOfDay: todayPlanner.startOfDay(settings: settings),
+                todayStartOfDay: todayService.todayStartOfDay,
                 ekEventStore: ekEventStore,
                 settings: settings,
                 skipSave: true

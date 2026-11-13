@@ -66,18 +66,13 @@ struct RootTabView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var plannerService: PlannerService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
-    @State private var selectedTab: TabId = .dashboard
+    @State private var selectedTab: TabId = .plannerList
 
     @Namespace private var namespace
-
-    private var searchRefreshTrigger: String {
-        "\(scenePhase)_\(selectedTab)_\(plannerCoverStore.context == nil)_\(todayService.todaystamp)"
-    }
 
     // MARK: - Body
 
@@ -86,11 +81,18 @@ struct RootTabView: View {
             // MARK: Standard App Navigation
 
             TabView(selection: $selectedTab) {
+                Tab("", systemImage: "list.bullet", value: .checklists) {
+                    ChecklistNavigationView(settings: settings)
+                }
+
+                Tab("", systemImage: "suitcase", value: .trips) {
+                    TripRootView(settings: settings, namespace: namespace)
+                }
+
                 Tab(
                     "",
-                    systemImage: todayService.todaystamp
-                        .calendarSymbolName,
-                    value: .dashboard,
+                    systemImage: todayService.todaystamp.calendarSymbolName,
+                    value: .plannerList,
                     role: {
                         if #available(iOS 27, *) {
                             .prominent
@@ -99,40 +101,11 @@ struct RootTabView: View {
                         }
                     }()
                 ) {
-                    DashboardRootView(
+                    PlannerListRootView(
+                        todayService: todayService,
                         settings: settings,
                         namespace: namespace
                     )
-                }
-
-                Tab(
-                    "",
-                    systemImage: "magnifyingglass",
-                    value: .search,
-                    role: {
-                        if #available(iOS 27, *) {
-                            nil
-                        } else {
-                            .search
-                        }
-                    }()
-                ) {
-                    PlannerLoaderView(datestamp: todayService.todaystamp) {
-                        planner in
-                        SearchRootView(
-                            todayPlanner: planner,
-                            settings: settings,
-                            namespace: namespace
-                        )
-                    }
-                }
-
-                Tab("", systemImage: "list.bullet", value: .checklists) {
-                    ChecklistNavigationView(settings: settings)
-                }
-
-                Tab("", systemImage: "gear", value: .settings) {
-                    SettingsRootView(settings: settings)
                 }
             }
             .tabBarMinimizeBehavior(.onScrollDown)
@@ -160,16 +133,6 @@ struct RootTabView: View {
             .opacity(
                 plannerCoverStore.showTodayDefault ? 1 : 0
             )
-        }
-
-        // MARK: Search each time the search tab is active.
-        .onChange(of: searchRefreshTrigger) { _, _ in
-            if scenePhase == .active
-                && selectedTab == .search
-                && plannerCoverStore.context == nil
-            {
-                plannerService.search()
-            }
         }
 
         // MARK: Planner Cover

@@ -156,14 +156,19 @@ struct OnboardingView: View {
                         systemColorScheme: systemColorScheme
                     )
                 }
+                
+                // Re-search if a query is set.
+                if plannerService.activeQuery != nil {
+                    plannerService.reloadPlannerList()
+                }
             }
         }
 
-        // MARK: Refresh next 7 days at midnight.
+        // MARK: Initiate midnight actions.
 
         .onChange(of: todayService.todaystamp) { _, _ in
-            plannerService.loadThisWeekDatestamps()
-
+            plannerService.reloadPlannerList()
+            
             modelContext.carryOverPastFlaggedPlannerEvents(
                 todaystamp: todayService.todaystamp,
                 settings: settings

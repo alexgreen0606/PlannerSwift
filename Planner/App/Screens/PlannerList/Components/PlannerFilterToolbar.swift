@@ -1,5 +1,5 @@
 //
-//  SearchFilterToolbar.swift
+//  PlannerFilterToolbar.swift
 //  Planner
 //
 //  Created by Alex Green on 4/3/26.
@@ -8,8 +8,9 @@
 import EventKit
 import SwiftUI
 
-struct SearchFilterToolbarView: ToolbarContent {
-    @Binding var draftQuery: SearchQuery
+struct PlannerFilterToolbarView: ToolbarContent {
+    @Binding var draftQuery: PlannerSearchQuery
+    let filterCount: Int?
     let settings: Settings
 
     @EnvironmentObject private var calendarService: CalendarService
@@ -25,6 +26,7 @@ struct SearchFilterToolbarView: ToolbarContent {
                 }
             }
             .menuActionDismissBehavior(.disabled)
+            .badge(filterCount != nil ? String(filterCount!) : nil)
         }
     }
 
@@ -59,7 +61,10 @@ struct SearchFilterToolbarView: ToolbarContent {
 
     private var calendarSection: some View {
         Section("Calendars") {
-            ForEach(calendarService.sortedVisibleCalendars, id: \.calendarIdentifier) {
+            ForEach(
+                calendarService.sortedVisibleCalendars,
+                id: \.calendarIdentifier
+            ) {
                 calendar in
                 Toggle(
                     isOn: Binding(

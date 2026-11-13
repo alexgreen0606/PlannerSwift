@@ -13,11 +13,11 @@ import SwiftUI
 extension ModelContext {
     @MainActor
     func carryOverPastFlaggedPlannerEvents(
-        todaystamp: String,
+        todayService: TodayService,
         settings: Settings
     ) {
-        let todayPlanner = getPlanner(for: todaystamp)
-        let todayStartOfDay = todayPlanner.startOfDay(settings: settings)
+        let todaystamp = todayService.todaystamp
+        let todayStartOfDay = todayService.todayStartOfDay
         let reverseSortedEvents = getReverseSortedCarryOverEvents(
             todayStartOfDay: todayStartOfDay
         )

@@ -1,5 +1,5 @@
 //
-//  SearchResultWeather.swift
+//  PlannerListWeather.swift
 //  Planner
 //
 //  Created by Alex Green on 4/4/26.
@@ -9,17 +9,16 @@ import SwiftDate
 import SwiftUI
 import WeatherKit
 
-struct SearchResultWeatherView: View {
-    let activeQuery: SearchQuery
+struct PlannerListWeatherView: View {
     let planner: Planner
     let settings: Settings
 
-    private var isFiltering: Bool {
-        activeQuery.isFiltering
-    }
+    @EnvironmentObject private var plannerService: PlannerService
 
     private var showLocationLabel: Bool {
-        if isFiltering {
+        if let activeQuery = plannerService.activeQuery,
+            !activeQuery.isDefault
+        {
             return planner.searchQueryScore(activeQuery) != nil
         }
 

@@ -1,5 +1,5 @@
 //
-//  SearchResultPlannerPreview.swift
+//  PlannerListPreview.swift
 //  Planner
 //
 //  Created by Alex Green on 5/13/26.
@@ -9,8 +9,7 @@ import EventKit
 import SwiftData
 import SwiftUI
 
-struct SearchResultPlannerPreviewView: View {
-    let activeQuery: SearchQuery
+struct PlannerListPreviewView: View {
     let planner: Planner
     let sortedPlannerEvents: [PlannerEvent]
     let sortedEventChips: [PlannerEvent]
@@ -20,11 +19,24 @@ struct SearchResultPlannerPreviewView: View {
 
     @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
+    @EnvironmentObject private var plannerService: PlannerService
+
+    private var activeQuery: PlannerSearchQuery? {
+        plannerService.activeQuery
+    }
+
+    private var isSearching: Bool {
+        activeQuery != nil
+    }
 
     private var tripLabel: String? {
-        guard let trip = planner.trip,
-            trip.searchQueryScore(activeQuery) != nil
-        else {
+        guard let trip = planner.trip else {
+            return nil
+        }
+
+        if let activeQuery,
+            trip.searchQueryScore(activeQuery) == nil
+        {
             return nil
         }
 
@@ -32,19 +44,33 @@ struct SearchResultPlannerPreviewView: View {
     }
 
     private var filteredBirthdayChips: [PlannerEvent] {
-        sortedBirthdayChips.filter {
+        guard let activeQuery else {
+            return sortedBirthdayChips
+        }
+
+        return sortedBirthdayChips.filter {
             $0.searchQueryScore(activeQuery, in: planner.datestamp) != nil
         }
     }
 
     private var filteredEventChips: [PlannerEvent] {
-        sortedEventChips.filter {
+        guard let activeQuery else {
+            return sortedEventChips
+        }
+
+        return sortedEventChips.filter {
             $0.searchQueryScore(activeQuery, in: planner.datestamp) != nil
         }
     }
 
     private var filteredPlannerEvents: [PlannerEvent] {
-        sortedPlannerEvents.filter {
+        guard let activeQuery else {
+            return sortedPlannerEvents.filter {
+                !$0.isCompleted
+            }
+        }
+
+        return sortedPlannerEvents.filter {
             $0.searchQueryScore(activeQuery, in: planner.datestamp) != nil
         }
     }
@@ -56,9 +82,12 @@ struct SearchResultPlannerPreviewView: View {
             HStack(alignment: .top) {
                 PlannerHeaderView(
                     datestamp: planner.datestamp,
+                    iconDetailOffset: planner.datestamp.isNext7Days(
+                        todaystamp: todayService.todaystamp
+                    ) ? 2.5 : nil,
                     title:
                         // Note: Same as default, but exclude the year from the date.
-                        // This is show in list section header.
+                        // This is shown in list section header.
                         planner.datestamp.proximityFormat(
                             using: [
                                 ProximityRule(
@@ -80,8 +109,7 @@ struct SearchResultPlannerPreviewView: View {
                 )
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                SearchResultWeatherView(
-                    activeQuery: activeQuery,
+                PlannerListWeatherView(
                     planner: planner,
                     settings: settings
                 )
@@ -94,12 +122,13 @@ struct SearchResultPlannerPreviewView: View {
                 sortedBirthdayEvents: filteredBirthdayChips,
                 sortedEventChips: filteredEventChips,
                 sortedPlannerEvents: filteredPlannerEvents,
-                hideRemainingPlans: activeQuery.isFiltering,
-                hideEmptyLabel: true,
+                hideRemainingPlans: isSearching,
+                hideEmptyLabel: isSearching,
                 settings: settings
             )
         }
         .frame(maxWidth: .infinity)
+        .frame(height: isSearching ? nil : 235, alignment: .top)
         .matchedTransitionSource(
             id: planner.datestamp,
             in: namespace

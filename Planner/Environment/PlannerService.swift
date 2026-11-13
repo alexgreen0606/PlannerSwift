@@ -38,15 +38,10 @@ class PlannerService: ObservableObject {
             modelContainer: modelContext.container
         )
 
-        self.searchResults = SearchResults(
-            activeQuery: modelContext.defaultSearchQuery(
-                todaystamp: todayService.todaystamp,
-                settings: settings
+        self.plannerListContext = PlannerListContext(
+            structuredDatestamps: StructuredDatestampsContext(
+                datestamps: todayService.next30Datestamps
             )
-        )
-
-        self.sortedUpcomingTrips = modelContext.getSortedTrips(
-            onOrBefore: todayService.todaystamp
         )
     }
 
@@ -67,14 +62,13 @@ class PlannerService: ObservableObject {
     /// Bypasses the "don't sync routines of past planners" rule.
     private var forceSyncRoutineDatestamps: Set<String> = []
 
-    @Published private(set) var thisWeekDatestamps: [String] =
-        getThisWeekDatestamps()
+    @Published var expandedTripIds: Set<PersistentIdentifier> = []
 
-    @Published private(set) var sortedUpcomingTrips: [Trip]
+    @Published private(set) var plannerListContext: PlannerListContext
 
-    @Published private(set) var searchResults: SearchResults
-
-    @Published private(set) var didInitializeSearch: Bool = false
+    var activeQuery: PlannerSearchQuery? {
+        plannerListContext.query
+    }
 
     private var visibleDatestamps: Set<String> {
         var datestampsToSync: Set<String> = []
@@ -87,34 +81,47 @@ class PlannerService: ObservableObject {
             datestampsToSync.insert(datestamp)
         }
 
-        datestampsToSync.formUnion(
-            sortedUpcomingTrips
-                .flatMap(\.sortedPlanners)
-                .map(\.datestamp)
-        )
+        if !expandedTripIds.isEmpty {
+            let expandedTrips = modelContext.getTrips(matching: expandedTripIds)
 
-        datestampsToSync.formUnion(thisWeekDatestamps)
+            datestampsToSync.formUnion(
+                expandedTrips
+                    .flatMap(\.sortedPlanners)
+                    .map(\.datestamp)
+            )
+        }
 
         datestampsToSync.formUnion(
             Set(
-                searchResults.datestampMap.values.flatMap { $0 }
+                plannerListContext.structuredDatestamps.datestamps
             )
         )
 
         return datestampsToSync
     }
 
-    // MARK: - Search
+    // MARK: - Planner List Load/Search
 
-    func search(with query: SearchQuery) {
+    func loadPlannerList(matching query: PlannerSearchQuery?) {
         guard
             !calendarService.isOnboardingCalendars
         else { return }
 
-        modelContext.safeSave("PlannerService search")
+        // No search params exist. Default the planner list and exit.
+        guard let query, !query.isDefault
+        else {
+            plannerListContext = PlannerListContext(
+                structuredDatestamps: StructuredDatestampsContext(
+                    datestamps: todayService.next30Datestamps
+                )
+            )
+            return
+        }
+
+        modelContext.safeSave("PlannerService loadPlannerList")
 
         Task {
-            let datestampMap = await searchService.search(
+            let searchResults = await searchService.search(
                 query: query,
                 visibleCalendars: calendarService.sortedVisibleCalendars,
                 ekEventStore: calendarService.ekEventStore,
@@ -123,40 +130,28 @@ class PlannerService: ObservableObject {
 
             guard !Task.isCancelled else { return }
 
+            // Return results so the UI can display them.
+            await MainActor.run {
+                withAnimation {
+                    self.plannerListContext = PlannerListContext(
+                        structuredDatestamps: searchResults,
+                        query: query
+                    )
+                }
+            }
+
             // Sync the result planners.
 
             let planners = modelContext.getBulkPlanners(
-                for: Set(datestampMap.values.flatMap { $0 })
+                for: Set(searchResults.datestamps)
             )
 
-            for planner in planners {
-                syncPlanner(planner)
-            }
-
-            // Return results so the UI can display them.
-            await MainActor.run {
-                let sortedKeys = datestampMap.keys.sorted {
-                    query.past ? $0 > $1 : $0 < $1
-                }
-
-                let top = sortedKeys.first.flatMap { datestampMap[$0]?.first }
-
-                withAnimation {
-                    self.searchResults = SearchResults(
-                        datestampMap: datestampMap,
-                        topDatestamp: top,
-                        sortedYears: sortedKeys,
-                        activeQuery: query
-                    )
-
-                    self.didInitializeSearch = true
-                }
-            }
+            syncPlanners(planners)
         }
     }
 
-    func search() {
-        search(with: searchResults.activeQuery)
+    func reloadPlannerList() {
+        loadPlannerList(matching: plannerListContext.query)
     }
 
     // MARK: - Synchronization
@@ -182,9 +177,7 @@ class PlannerService: ObservableObject {
             modelContext.syncRoutine(
                 for: planner,
                 startOfDay: startOfDay,
-                todayStartOfDay: todayService.todayPlanner.startOfDay(
-                    settings: settings
-                ),
+                todayStartOfDay: todayService.todayStartOfDay,
                 syncPast: forceSyncRoutineDatestamps.contains(datestamp),
                 ekEventStore: calendarService.ekEventStore
             )
@@ -193,7 +186,7 @@ class PlannerService: ObservableObject {
         }
 
         // Sync weather for the planners coming up this week.
-        if thisWeekDatestamps.contains(planner.datestamp),
+        if planner.datestamp.isNext7Days(todaystamp: todayService.todaystamp),
             let location = planner.location(
                 settings: settings
             ),
@@ -237,6 +230,10 @@ class PlannerService: ObservableObject {
 
     func syncVisiblePlanners() {
         let planners = modelContext.getBulkPlanners(for: visibleDatestamps)
+        syncPlanners(planners)
+    }
+
+    func syncPlanners(_ planners: [Planner]) {
         for planner in planners {
             syncPlanner(planner)
         }
@@ -248,7 +245,6 @@ class PlannerService: ObservableObject {
         invalidateRoutines()
         invalidateCalendar()
         invalidateWeather()
-        loadVisibleDatestamps()
         syncVisiblePlanners()
     }
 
@@ -266,6 +262,7 @@ class PlannerService: ObservableObject {
     }
 
     // MARK: - Invalidation
+
     /// Note: Only invalidate when you expect external data to have changed (not when the window you are searching changes).
 
     func invalidateRoutines() {
@@ -280,35 +277,4 @@ class PlannerService: ObservableObject {
         lastRefresh = Date.now.timeIntervalSince1970
         freshWeatherCoordinateIds = []
     }
-
-    // MARK: - Change Handlers
-
-    func handleTripChange() {
-        withAnimation {
-            loadTrips()
-        }
-
-        invalidateRoutines()
-        syncVisiblePlanners()
-    }
-
-    // MARK: - Loaders
-
-    private func loadVisibleDatestamps() {
-        withAnimation {
-            loadThisWeekDatestamps()
-            loadTrips()
-        }
-    }
-
-    private func loadTrips() {
-        sortedUpcomingTrips = modelContext.getSortedTrips(
-            onOrBefore: todayService.todaystamp
-        )
-    }
-
-    func loadThisWeekDatestamps() {
-        thisWeekDatestamps = getThisWeekDatestamps()
-    }
-
 }

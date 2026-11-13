@@ -263,9 +263,7 @@ struct RoutineEventFormView: View {
             sourceRoutineEventContext,
             with: draftRoutineEvent,
             sourceSortedRoutineEvents: sourceSortedRoutineEvents,
-            todayStartOfDay: todayService.todayPlanner.startOfDay(
-                settings: settings
-            ),
+            todayStartOfDay: todayService.todayStartOfDay,
             plannerService: plannerService,
             ekEventStore: calendarService.ekEventStore
         )
@@ -374,9 +372,7 @@ struct RoutineEventFormView: View {
         modelContext.removeRoutineEventContextsFromRoutine(
             routineEventContexts: [sourceRoutineEventContext],
             routine: sourceRoutine,
-            todayStartOfDay: todayService.todayPlanner.startOfDay(
-                settings: settings
-            ),
+            todayStartOfDay: todayService.todayStartOfDay,
             ekEventStore: calendarService.ekEventStore
         )
     }

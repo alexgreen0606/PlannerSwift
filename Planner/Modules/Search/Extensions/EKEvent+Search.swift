@@ -9,7 +9,7 @@ import EventKit
 
 extension EKEvent {
     func searchQueryScore(
-        _ query: SearchQuery,
+        _ query: PlannerSearchQuery,
         /// Used to determine if event's planner matches the query.
         in plannerDatestamp: String
     ) -> Double? {

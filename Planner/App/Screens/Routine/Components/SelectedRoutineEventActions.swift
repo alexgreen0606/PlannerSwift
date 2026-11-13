@@ -62,9 +62,7 @@ struct SelectedRoutineEventActionsView: View {
             modelContext.removeRoutineEventContextsFromRoutine(
                 routineEventContexts: selections,
                 routine: routine,
-                todayStartOfDay: todayService.todayPlanner.startOfDay(
-                    settings: settings
-                ),
+                todayStartOfDay: todayService.todayStartOfDay,
                 ekEventStore: calendarService.ekEventStore
             )
 
@@ -80,9 +78,7 @@ struct SelectedRoutineEventActionsView: View {
         DispatchQueue.main.async {
             modelContext.deleteRoutineEventContexts(
                 selections,
-                todayStartOfDay: todayService.todayPlanner.startOfDay(
-                    settings: settings
-                ),
+                todayStartOfDay: todayService.todayStartOfDay,
                 ekEventStore: calendarService.ekEventStore
             )
 

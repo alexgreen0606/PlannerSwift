@@ -226,9 +226,7 @@ struct RoutineRootView: View {
     private func deleteEvent(_ routineEventContext: RoutineEventContext) {
         _ = modelContext.deleteRoutineEventContext(
             routineEventContext,
-            todayStartOfDay: todayService.todayPlanner.startOfDay(
-                settings: settings
-            ),
+            todayStartOfDay: todayService.todayStartOfDay,
             ekEventStore: calendarService.ekEventStore
         )
     }
@@ -300,9 +298,7 @@ struct RoutineRootView: View {
         modelContext.removeRoutineEventContextsFromRoutine(
             routineEventContexts: [event],
             routine: routine,
-            todayStartOfDay: todayService.todayPlanner.startOfDay(
-                settings: settings
-            ),
+            todayStartOfDay: todayService.todayStartOfDay,
             ekEventStore: calendarService.ekEventStore
         )
     }
@@ -312,9 +308,7 @@ struct RoutineRootView: View {
     ) {
         _ = modelContext.deleteRoutineEventContext(
             routineEventContext,
-            todayStartOfDay: todayService.todayPlanner.startOfDay(
-                settings: settings
-            ),
+            todayStartOfDay: todayService.todayStartOfDay,
             ekEventStore: calendarService.ekEventStore
         )
     }

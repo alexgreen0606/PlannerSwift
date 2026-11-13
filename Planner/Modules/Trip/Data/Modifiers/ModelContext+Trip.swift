@@ -32,6 +32,22 @@ extension ModelContext {
         return []
     }
 
+    func getTrips(matching ids: Set<PersistentIdentifier>) -> [Trip] {
+        do {
+            return try fetch(
+                FetchDescriptor<Trip>(
+                    predicate: Trip.trips(matching: ids)
+                )
+            )
+        } catch {
+            assertionFailure(
+                "ERROR ModelContext+Trip getTrips: \(error)"
+            )
+        }
+
+        return []
+    }
+
     @MainActor
     func getExistingTripDatestamps() -> Set<String> {
         do {
@@ -60,7 +76,7 @@ extension ModelContext {
         _ sourceTrip: Trip?,
         with draftTrip: DraftTrip,
         plannerService: PlannerService
-    ) -> Trip {
+    ) {
         let trip = sourceTrip ?? Trip()
 
         trip.title = draftTrip.title.trimmed
@@ -100,8 +116,15 @@ extension ModelContext {
         insertIfNeeded(trip)
         safeSave("ModelContext+Trip updateTrip")
 
-        plannerService.handleTripChange()
+        plannerService.invalidateRoutines()
+        plannerService.syncVisiblePlanners()
 
-        return trip
+        // Re-search in case routine changes now match the search query.
+        if plannerService.activeQuery != nil {
+            plannerService.reloadPlannerList()
+        }
+
+        plannerService.expandedTripIds.insert(trip.id)
+        plannerService.syncPlanners(trip.safePlanners)
     }
 }

@@ -11,16 +11,13 @@ import SwiftUI
 struct TripFormView: View {
     private let sourceTrip: Trip?
     private let settings: Settings
-    private let onSave: ((Trip) -> Void)?
 
     init(
         sourceTrip: Trip? = nil,
-        settings: Settings,
-        onSave: ((Trip) -> Void)? = nil
+        settings: Settings
     ) {
         self.sourceTrip = sourceTrip
         self.settings = settings
-        self.onSave = onSave
 
         var draftTrip = DraftTrip()
         if let sourceTrip {
@@ -277,21 +274,27 @@ struct TripFormView: View {
     // MARK: - Functions
 
     private func saveTrip() {
-        let savedTrip = modelContext.updateTrip(
+        modelContext.updateTrip(
             sourceTrip,
             with: draftTrip,
             plannerService: plannerService
         )
 
         dismiss()
-        onSave?(savedTrip)
     }
 
     private func deleteTrip() {
         dismiss()
         if let sourceTrip {
             modelContext.safeDelete(sourceTrip)
-            plannerService.handleTripChange()
+
+            plannerService.invalidateRoutines()
+            plannerService.syncVisiblePlanners()
+
+            // Re-search in case routine changes now match the search query.
+            if plannerService.activeQuery != nil {
+                plannerService.reloadPlannerList()
+            }
         }
     }
 }

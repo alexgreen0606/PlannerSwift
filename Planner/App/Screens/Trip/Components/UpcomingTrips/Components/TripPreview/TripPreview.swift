@@ -9,7 +9,6 @@ import SwiftData
 import SwiftUI
 
 struct TripPreviewView: View {
-    @Binding var expandedTripIds: Set<PersistentIdentifier>
     let trip: Trip
     let settings: Settings
     let namespace: Namespace.ID
@@ -20,9 +19,10 @@ struct TripPreviewView: View {
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var todayService: TodayService
+    @EnvironmentObject private var plannerService: PlannerService
 
     private var isExpanded: Bool {
-        expandedTripIds.contains(trip.id)
+        plannerService.expandedTripIds.contains(trip.id)
     }
 
     private var locationLabel: String? {
@@ -114,9 +114,10 @@ struct TripPreviewView: View {
         .onTapGesture {
             withAnimation {
                 if isExpanded {
-                    expandedTripIds.remove(trip.id)
+                    plannerService.expandedTripIds.remove(trip.id)
                 } else {
-                    expandedTripIds.insert(trip.id)
+                    plannerService.expandedTripIds.insert(trip.id)
+                    plannerService.syncPlanners(trip.safePlanners)
                 }
             }
         }

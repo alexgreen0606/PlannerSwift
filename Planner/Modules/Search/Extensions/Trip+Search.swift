@@ -9,7 +9,7 @@ import Foundation
 
 extension Trip {
     static func trips(
-        matching query: SearchQuery
+        matching query: PlannerSearchQuery
     ) -> Predicate<Trip> {
         let todaystamp = query.todayStartOfDay.datestamp
 
@@ -26,7 +26,7 @@ extension Trip {
         }
     }
 
-    func searchQueryScore(_ query: SearchQuery) -> Double? {
+    func searchQueryScore(_ query: PlannerSearchQuery) -> Double? {
         guard query.calendarIds.isEmpty else {
             // Filtering by calendar events only. Exclude.
             return nil

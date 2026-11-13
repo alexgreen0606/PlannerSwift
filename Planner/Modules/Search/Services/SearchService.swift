@@ -14,13 +14,13 @@ actor SearchService {
     static let MAX_RESULTS = 31
 
     func search(
-        query: SearchQuery,
+        query: PlannerSearchQuery,
         visibleCalendars: [EKCalendar],
         ekEventStore: EKEventStore,
         settings: Settings
     )
         -> /// Maps years to lists of planner datestamps that contain data matching the query.
-        [String: [String]]
+        StructuredDatestampsContext
     {
         var scores: [String: Double] = [:]
 
@@ -85,7 +85,7 @@ actor SearchService {
     // MARK: - Search Functions
 
     private func searchTrips(
-        query: SearchQuery,
+        query: PlannerSearchQuery,
         scores: inout [String: Double],
         plannerDayCache: inout [String: DateInRegion],
         settings: Settings
@@ -114,7 +114,7 @@ actor SearchService {
     }
 
     private func searchPlanners(
-        query: SearchQuery,
+        query: PlannerSearchQuery,
         scores: inout [String: Double],
         plannerDayCache: inout [String: DateInRegion],
         settings: Settings
@@ -137,7 +137,7 @@ actor SearchService {
     }
 
     private func searchPlannerEvents(
-        query: SearchQuery,
+        query: PlannerSearchQuery,
         scores: inout [String: Double],
         plannerDayCache: inout [String: DateInRegion],
         settings: Settings
@@ -184,7 +184,7 @@ actor SearchService {
     }
 
     private func searchWeekdays(
-        query: SearchQuery,
+        query: PlannerSearchQuery,
         scores: inout [String: Double]
     ) {
         let today = query.todayStartOfDay
@@ -223,7 +223,7 @@ actor SearchService {
     }
 
     private func searchMonths(
-        query: SearchQuery,
+        query: PlannerSearchQuery,
         scores: inout [String: Double]
     ) {
         let today = query.todayStartOfDay
@@ -282,7 +282,7 @@ actor SearchService {
     }
 
     private func searchEkEvents(
-        query: SearchQuery,
+        query: PlannerSearchQuery,
         scores: inout [String: Double],
         plannerDayCache: inout [String: DateInRegion],
         visibleCalendars: [EKCalendar],
@@ -332,8 +332,8 @@ actor SearchService {
 
     private func buildSearchResults(
         from scores: [String: Double],
-        query: SearchQuery
-    ) -> [String: [String]] {
+        query: PlannerSearchQuery
+    ) -> StructuredDatestampsContext {
         let topDatestamps =
             scores
             .sorted {
@@ -350,22 +350,16 @@ actor SearchService {
             .prefix(Self.MAX_RESULTS)
             .map(\.key)
 
-        return Dictionary(grouping: topDatestamps) {
-            datestamp in
-            String(datestamp.prefix(4))
-        }.mapValues { datestamps in
-            datestamps.sorted {
-                query.past
-                    ? $0 > $1
-                    : $0 < $1
-            }
-        }
+        return StructuredDatestampsContext(
+            datestamps: topDatestamps,
+            reversed: query.past
+        )
     }
 
     private func getPlannerDatestamps(
         startTime time: Date,
         endTime: Date? = nil,
-        query: SearchQuery,
+        query: PlannerSearchQuery,
         plannerDayCache: inout [String: DateInRegion],
         homeRegion: Region,
         settings: Settings,

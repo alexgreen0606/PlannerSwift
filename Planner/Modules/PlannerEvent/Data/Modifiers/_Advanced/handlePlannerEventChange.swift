@@ -20,6 +20,7 @@ extension ModelContext {
         todaystamp: String,
         ekEventStore: EKEventStore,
         showToast: (Toast) -> Void,
+        todayService: TodayService,
         plannerCoverStore: PlannerCoverStore,
         settings: Settings
     ) {
@@ -60,12 +61,10 @@ extension ModelContext {
 
         // MARK: Place the event in its planner if it moved due to flagging.
 
-        let todayPlanner = getPlanner(for: todaystamp)
-
         let datestamps = ensureValidPlannerEventPosition(
             for: plannerEvent,
             sourceDatestamp: planner.datestamp,
-            todayStartOfDay: todayPlanner.startOfDay(settings: settings),
+            todayStartOfDay: todayService.todayStartOfDay,
             settings: settings
         )
 

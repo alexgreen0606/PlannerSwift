@@ -12,6 +12,7 @@ import WeatherKit
 
 struct SettingsRootView: View {
     let settings: Settings
+    let namespace: Namespace.ID
 
     @AppStorage("appColorScheme") private var appColorScheme = AppColorScheme
         .dark
@@ -25,6 +26,8 @@ struct SettingsRootView: View {
     @EnvironmentObject private var plannerService: PlannerService
 
     @State private var weatherAttribution: WeatherAttribution?
+
+    @State private var routineCoverContext: Weekday? = nil
 
     private var activeCalendarCount: String {
         String(
@@ -41,166 +44,173 @@ struct SettingsRootView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section("Style") {
-                    // MARK: App Theme
+        Form {
 
-                    Picker("Theme", selection: $appColorScheme) {
-                        ForEach(AppColorScheme.allCases, id: \.rawValue) {
-                            colorScheme in
-                            Text(colorScheme.rawValue.capitalized)
-                                .tag(colorScheme)
+            // MARK: Routines
+
+            RoutineSectionView(
+                routineCoverContext: $routineCoverContext,
+                namespace: namespace
+            )
+
+            Section("Style") {
+                // MARK: App Theme
+
+                Picker("Theme", selection: $appColorScheme) {
+                    ForEach(AppColorScheme.allCases, id: \.rawValue) {
+                        colorScheme in
+                        Text(colorScheme.rawValue.capitalized)
+                            .tag(colorScheme)
+                    }
+                }
+
+                // MARK: Accent Color
+
+                HStack {
+                    Text(AccentColor.title)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    IconPickerView(
+                        selectedIconConfig: IconConfig(
+                            name: "square.fill",
+                            primaryColor: accentColor.swiftUiColor,
+                            scale: .large
+                        ),
+                        options: AccentColor.allCases.map { colorConfig in
+                            IconConfig(
+                                name: colorConfig == accentColor
+                                    ? "circle.fill" : "circle",
+                                primaryColor: colorConfig.swiftUiColor
+                            )
+                        },
+                        numColumns: 3,
+                        onTap: { config in
+                            if let selected = AccentColor.allCases.first(
+                                where: {
+                                    $0.swiftUiColor == config.primaryColor
+                                }
+                            ) {
+                                accentColor = selected
+                            }
                         }
-                    }
-
-                    // MARK: Accent Color
-
-                    HStack {
-                        Text(AccentColor.title)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        IconPickerView(
-                            selectedIconConfig: IconConfig(
-                                name: "square.fill",
-                                primaryColor: accentColor.swiftUiColor,
-                                scale: .large
-                            ),
-                            options: AccentColor.allCases.map { colorConfig in
-                                IconConfig(
-                                    name: colorConfig == accentColor
-                                        ? "circle.fill" : "circle",
-                                    primaryColor: colorConfig.swiftUiColor
-                                )
-                            },
-                            numColumns: 3,
-                            onTap: { config in
-                                if let selected = AccentColor.allCases.first(
-                                    where: {
-                                        $0.swiftUiColor == config.primaryColor
-                                    }
-                                ) {
-                                    accentColor = selected
-                                }
-                            }
-                        )
-                    }
-                }
-
-                Section("Lists") {
-                    // MARK: List Dividers
-
-                    Toggle(
-                        "Show List Dividers",
-                        isOn: Binding(
-                            get: { settings.showListDividers },
-                            set: { settings.showListDividers = $0 }
-                        )
                     )
-                    .tint(accentColor.swiftUiColor)
+                }
+            }
 
-                    // MARK: Toggle Transition Duration
+            Section("Lists") {
+                // MARK: List Dividers
 
-                    NavigationLink {
-                        ToggleTransitionFormView(settings: settings)
-                    } label: {
-                        label(
-                            title: ToggleTransitionDuration.title,
-                            value: settings.toggleTransitionDuration.label
-                        )
-                    }
+                Toggle(
+                    "Show List Dividers",
+                    isOn: Binding(
+                        get: { settings.showListDividers },
+                        set: { settings.showListDividers = $0 }
+                    )
+                )
+                .tint(accentColor.swiftUiColor)
+
+                // MARK: Toggle Transition Duration
+
+                NavigationLink {
+                    ToggleTransitionFormView(settings: settings)
+                } label: {
+                    label(
+                        title: ToggleTransitionDuration.title,
+                        value: settings.toggleTransitionDuration.label
+                    )
+                }
+            }
+
+            Section("Planner") {
+                // MARK: Homepage
+
+                NavigationLink {
+                    HomepageFormView(settings: settings)
+                } label: {
+                    label(
+                        title: "Homepage",
+                        value: settings.homepage.label
+                    )
                 }
 
-                Section("Planner") {
-                    // MARK: Homepage
+                // MARK: Calendars
 
-                    NavigationLink {
-                        HomepageFormView(settings: settings)
-                    } label: {
-                        label(
-                            title: "Homepage",
-                            value: settings.homepage.label
-                        )
-                    }
+                NavigationLink {
+                    CalendarsFormView(settings: settings)
+                } label: {
+                    label(
+                        title: "Calendars",
+                        value: calendarService.hasCalendarAccess != true
+                            ? "No Access" : activeCalendarCount
+                    )
+                }
+                .disabled(calendarService.hasCalendarAccess != true)
 
-                    // MARK: Calendars
+                // MARK: Keep Past Events Duration
 
-                    NavigationLink {
-                        CalendarsFormView(settings: settings)
-                    } label: {
-                        label(
-                            title: "Calendars",
-                            value: calendarService.hasCalendarAccess != true
-                                ? "No Access" : activeCalendarCount
-                        )
-                    }
-                    .disabled(calendarService.hasCalendarAccess != true)
+                NavigationLink {
+                    KeepPastEventsFormView(settings: settings)
+                } label: {
+                    label(
+                        title: KeepPastEventsDuration.title,
+                        value: settings.keepPastEventsDuration.label
+                    )
+                }
 
-                    // MARK: Keep Past Events Duration
+                // MARK: Home Location
 
-                    NavigationLink {
-                        KeepPastEventsFormView(settings: settings)
-                    } label: {
-                        label(
-                            title: KeepPastEventsDuration.title,
-                            value: settings.keepPastEventsDuration.label
-                        )
-                    }
+                NavigationLink {
+                    LocationFormView(
+                        variant: .home,
+                        initialLocation: settings.homeLocation,
+                        settings: settings,
+                        saveSelection: {
+                            modelContext.updateHomeLocation(
+                                in: settings,
+                                to: $0,
+                                plannerService: plannerService
+                            )
+                        }
+                    )
+                } label: {
+                    label(
+                        title: "Home Location",
+                        value: settings.homeLocation?.name
+                            ?? "Current Location"
+                    )
+                }
 
-                    // MARK: Home Location
+                // MARK: WeatherKit Trademark
 
-                    NavigationLink {
-                        LocationFormView(
-                            variant: .home,
-                            initialLocation: settings.homeLocation,
-                            settings: settings,
-                            saveSelection: {
-                                modelContext.updateHomeLocation(
-                                    in: settings,
-                                    to: $0,
-                                    plannerService: plannerService
-                                )
+                if let attribution = weatherAttribution {
+                    Link(destination: attribution.legalPageURL) {
+                        HStack {
+                            AsyncImage(
+                                url: systemColorScheme == .dark
+                                    ? attribution.combinedMarkDarkURL
+                                    : attribution.combinedMarkLightURL
+                            ) { image in
+                                image
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(height: 13)
+                            } placeholder: {
+                                Text("Weather")
+                                    .font(
+                                        .system(size: 16, weight: .semibold)
+                                    )
+                                    .foregroundStyle(Color.label)
                             }
-                        )
-                    } label: {
-                        label(
-                            title: "Home Location",
-                            value: settings.homeLocation?.name
-                                ?? "Current Location"
-                        )
-                    }
 
-                    // MARK: WeatherKit Trademark
+                            Spacer()
 
-                    if let attribution = weatherAttribution {
-                        Link(destination: attribution.legalPageURL) {
-                            HStack {
-                                AsyncImage(
-                                    url: systemColorScheme == .dark
-                                        ? attribution.combinedMarkDarkURL
-                                        : attribution.combinedMarkLightURL
-                                ) { image in
-                                    image
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(height: 13)
-                                } placeholder: {
-                                    Text("Weather")
-                                        .font(
-                                            .system(size: 16, weight: .semibold)
-                                        )
-                                        .foregroundStyle(Color.label)
-                                }
-
-                                Spacer()
-
-                                ActionText("Learn More")
-                            }
+                            ActionText("Learn More")
                         }
                     }
                 }
             }
-            .navigationTitle("Settings")
         }
+        .navigationTitle("Settings")
+        .navigationBarTitleDisplayMode(.inline)
 
         // MARK: Load in the WeatherKit documentation URL.
 
@@ -219,6 +229,31 @@ struct SettingsRootView: View {
                 accentColor: accentColor,
                 systemColorScheme: systemColorScheme
             )
+        }
+
+        // MARK: Routine Root
+
+        .fullScreenCover(
+            item: $routineCoverContext,
+            onDismiss: plannerService.syncVisiblePlanners
+        ) { weekday in
+            RoutineContextLoaderView(weekday: weekday) { context in
+                RoutineRootView(
+                    routineCoverContext: $routineCoverContext,
+                    routine: context.routine,
+                    sortedRoutineEvents: context.sortedRoutineEvents,
+                    weekday: weekday,
+                    settings: settings
+                )
+                .id(weekday)
+            }
+            .navigationTransition(
+                .zoom(
+                    sourceID: weekday,
+                    in: namespace
+                )
+            )
+            .interactiveDismissDisabled(true)
         }
     }
 

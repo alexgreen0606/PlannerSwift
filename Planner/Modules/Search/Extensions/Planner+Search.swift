@@ -9,7 +9,7 @@ import Foundation
 
 extension Planner {
     static func planners(
-        matching query: SearchQuery
+        matching query: PlannerSearchQuery
     ) -> Predicate<Planner> {
         let todaystamp = query.todayStartOfDay.datestamp
 
@@ -26,7 +26,7 @@ extension Planner {
         }
     }
 
-    func searchQueryScore(_ query: SearchQuery) -> Double? {
+    func searchQueryScore(_ query: PlannerSearchQuery) -> Double? {
         guard query.calendarIds.isEmpty else {
             // Filtering by calendar events only. Exclude.
             return nil

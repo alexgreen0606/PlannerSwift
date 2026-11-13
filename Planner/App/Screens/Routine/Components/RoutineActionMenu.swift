@@ -72,7 +72,7 @@ struct RoutineActionMenuView: View {
         modelContext.removeRoutineEventContextsFromRoutine(
             routineEventContexts: routineEvents,
             routine: routine,
-            todayStartOfDay: todayService.todayPlanner.startOfDay(settings: settings),
+            todayStartOfDay: todayService.todayStartOfDay,
             ekEventStore: calendarService.ekEventStore,
         )
     }
