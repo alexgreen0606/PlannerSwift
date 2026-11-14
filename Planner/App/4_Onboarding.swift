@@ -122,7 +122,7 @@ struct OnboardingView: View {
                 if !calendarService.isOnboardingCalendars {
                     calendarService.loadCalendars()
 
-                    if settings.homeLocation != nil {
+                    if canSyncPlanners {
                         plannerService.syncVisiblePlanners()
                     }
                 }

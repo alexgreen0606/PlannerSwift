@@ -71,33 +71,33 @@ class PlannerService: ObservableObject {
     }
 
     private var visibleDatestamps: Set<String> {
-        var datestampsToSync: Set<String> = []
+        var datestamps: Set<String> = []
 
         if plannerCoverStore.showTodayDefault {
-            datestampsToSync.insert(plannerCoverStore.todaystampAtInit)
+            datestamps.insert(plannerCoverStore.todaystampAtInit)
         }
 
         if let datestamp = plannerCoverStore.context?.datestamp {
-            datestampsToSync.insert(datestamp)
+            datestamps.insert(datestamp)
         }
 
         if !expandedTripIds.isEmpty {
             let expandedTrips = modelContext.getTrips(matching: expandedTripIds)
 
-            datestampsToSync.formUnion(
+            datestamps.formUnion(
                 expandedTrips
                     .flatMap(\.sortedPlanners)
                     .map(\.datestamp)
             )
         }
 
-        datestampsToSync.formUnion(
+        datestamps.formUnion(
             Set(
                 plannerListContext.structuredDatestamps.datestamps
             )
         )
 
-        return datestampsToSync
+        return datestamps
     }
 
     // MARK: - Planner List Load/Search
@@ -115,6 +115,13 @@ class PlannerService: ObservableObject {
                     datestamps: todayService.next30Datestamps
                 )
             )
+
+            let planners = modelContext.getBulkPlanners(
+                for: Set(plannerListContext.structuredDatestamps.datestamps)
+            )
+
+            syncPlanners(planners)
+
             return
         }
 

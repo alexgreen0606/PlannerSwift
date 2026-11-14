@@ -182,6 +182,7 @@ struct PlannerListRootView: View {
 
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("", systemImage: "gear") {
+                            isSearchFocused = false
                             navigationPath.append(
                                 PlannerListPageId.settings
                             )

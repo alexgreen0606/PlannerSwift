@@ -69,7 +69,6 @@ struct FolderRootView: View {
 
                 topTrailingToolbar
             }
-            .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
 
             // MARK: Scroll to new items.

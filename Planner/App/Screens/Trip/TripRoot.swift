@@ -78,7 +78,6 @@ struct TripRootView: View {
                     )
                 }
             }
-            .navigationBarTitleDisplayMode(.inline)
         }
 
         // MARK: Trip Form
