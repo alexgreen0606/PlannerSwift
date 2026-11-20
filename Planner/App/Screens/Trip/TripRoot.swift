@@ -32,71 +32,74 @@ struct TripRootView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollViewReader { scrollProxy in
-                List {
-                    UpcomingTripsView(
-                        tripSheetContext: $tripSheetContext,
-                        scrollProxy: scrollProxy,
-                        settings: settings,
-                        namespace: namespace
-                    )
-                }
-                .listStyle(.plain)
-                .refreshable {
-                    calendarService.loadCalendars()
-                    locationService.loadDeviceLocation()
-                    plannerService.refresh()
-                }
-                .background(Color.appBackground)
-                .safeAreaPadding(.bottom, 32)
-                .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Text("Trips")
-                            .font(
-                                .system(
-                                    size: 28,
-                                    weight: .bold,
-                                    design: .rounded
-                                )
-                            )
-                            .frame(width: 200, alignment: .leading)
+            TripsContextLoaderView(todaystamp: todayService.todaystamp) {
+                context in
+                ScrollViewReader { scrollProxy in
+                    List {
+                        UpcomingTripsView(
+                            tripSheetContext: $tripSheetContext,
+                            tripsContext: context,
+                            scrollProxy: scrollProxy,
+                            settings: settings,
+                            namespace: namespace
+                        )
                     }
-                    .sharedBackgroundVisibility(.hidden)
+                    .listStyle(.plain)
+                    .refreshable {
+                        calendarService.loadCalendars()
+                        locationService.loadDeviceLocation()
+                        plannerService.refresh()
+                        plannerService.loadPlannerList()
+                    }
+                    .background(Color.appBackground)
+                    .safeAreaPadding(.bottom, 32)
+                    .overlay {
+                        if context.sortedTrips.isEmpty {
+                            EmptyLabel("No upcoming trips")
+                        }
+                    }
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) {
+                            PageTitle("Trips")
+                                .frame(width: 200, alignment: .leading)
+                        }
+                        .sharedBackgroundVisibility(.hidden)
 
-                    createTripButton
-                }
+                        createTripButton
+                    }
 
-                // MARK: Scroll to expanded trips.
+                    // MARK: Scroll to expanded trips.
 
-                .onChange(of: plannerService.expandedTripIds) {
-                    oldIds,
-                    newIds in
-                    scrollProxy.scrollToNewItem(
-                        oldItems: oldIds,
-                        newItems: newIds,
-                        getId: { $0 }
-                    )
+                    .onChange(of: plannerService.expandedTripIds) {
+                        oldIds,
+                        newIds in
+                        scrollProxy.scrollToNewItem(
+                            oldItems: oldIds,
+                            newItems: newIds,
+                            getId: { $0 }
+                        )
+                    }
                 }
             }
-        }
 
-        // MARK: Trip Form
+            // MARK: Trip Form
 
-        .sheet(item: $tripSheetContext) { context in
-            let form = TripFormView(
-                sourceTrip: context.trip,
-                settings: settings
-            )
-
-            if let trip = context.trip {
-                form.navigationTransition(
-                    .zoom(
-                        sourceID: trip.transitionId,
-                        in: namespace
-                    )
+            .sheet(item: $tripSheetContext) { context in
+                let form = TripFormView(
+                    sourceTrip: context.trip,
+                    settings: settings
                 )
-            } else {
-                form
+
+                if let trip = context.trip {
+                    form.navigationTransition(
+                        .zoom(
+                            sourceID: trip.transitionId,
+                            in: namespace
+                        )
+                    )
+                } else {
+                    form
+                }
             }
         }
     }

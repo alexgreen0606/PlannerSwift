@@ -8,21 +8,18 @@
 import Foundation
 
 extension Planner {
-    static func planners(
-        matching query: PlannerSearchQuery
+    static func searchablePlanners(
+        within bounds: PlannerBounds
     ) -> Predicate<Planner> {
-        let todaystamp = query.todayStartOfDay.datestamp
+        let minDatestamp = bounds.minStartOfDay.datestamp
+        let maxDatestamp = bounds.maxStartOfDay.datestamp
 
-        if query.past {
-            // Planners in the past that contain a location.
-            return #Predicate<Planner> {
-                $0.location != nil && $0.datestamp < todaystamp
-            }
-        } else {
-            // Planners in the present or future that contain a location.
-            return #Predicate<Planner> {
-                $0.location != nil && $0.datestamp >= todaystamp
-            }
+        // Planners that contain a location and land within available bounds.
+        return #Predicate<Planner> {
+            $0.location != nil
+                && $0.datestamp >= minDatestamp
+                && $0.datestamp <= maxDatestamp
+
         }
     }
 
@@ -39,11 +36,6 @@ extension Planner {
 
         guard let location else {
             // Doesn't have a custom location. Exclude.
-            return nil
-        }
-
-        guard query.containsDatestamp(datestamp) else {
-            // Doesn't match the time range. Exclude.
             return nil
         }
 

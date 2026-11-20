@@ -132,13 +132,32 @@ struct TripPreviewView: View {
                     Array(trip.sortedPlanners.enumerated()),
                     id: \.element.datestamp
                 ) { index, planner in
-                    TripDayPreviewCardView(
-                        trip: trip,
-                        datestamp: planner.datestamp,
-                        index: index,
-                        settings: settings,
-                        namespace: namespace
-                    )
+                    PlannerEventContextLoaderView(
+                        planner: planner,
+                        plannerService: plannerService,
+                        settings: settings
+                    ) { eventContext in
+                        PlannerPreviewCardView(
+                            planner: planner,
+                            sortedPlannerEvents: eventContext
+                                .sortedPlannerEvents,
+                            sortedEventChips: eventContext.sortedEventChips,
+                            sortedBirthdayChips: eventContext
+                                .sortedBirthdayChips,
+                            header: PlannerHeaderView(
+                                datestamp: planner.datestamp,
+                                iconType: .date,
+                                title: planner.datestamp.weekday,
+                                subtitle: "Day \(index + 1)"
+                            ),
+                            defaultLocationLabel: trip.location?.name,
+                            transitionId: trip.transitionId(
+                                for: planner.datestamp
+                            ),
+                            settings: settings,
+                            namespace: namespace
+                        )
+                    }
                 }
 
                 editTripCard

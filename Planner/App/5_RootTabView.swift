@@ -88,6 +88,13 @@ struct RootTabView: View {
                 Tab("", systemImage: "suitcase", value: .trips) {
                     TripRootView(settings: settings, namespace: namespace)
                 }
+                
+                Tab("", systemImage: "calendar", value: .calendar) {
+                    CalendarRootView(
+                        settings: settings,
+                        namespace: namespace
+                    )
+                }
 
                 Tab(
                     "",
@@ -102,7 +109,6 @@ struct RootTabView: View {
                     }()
                 ) {
                     PlannerListRootView(
-                        todayService: todayService,
                         settings: settings,
                         namespace: namespace
                     )

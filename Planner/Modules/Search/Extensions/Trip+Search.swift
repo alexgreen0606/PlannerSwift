@@ -8,35 +8,21 @@
 import Foundation
 
 extension Trip {
-    static func trips(
-        matching query: PlannerSearchQuery
+    static func searchableTrips(
+        within bounds: PlannerBounds
     ) -> Predicate<Trip> {
-        let todaystamp = query.todayStartOfDay.datestamp
+        let minDatestamp = bounds.minStartOfDay.datestamp
+        let maxDatestamp = bounds.maxStartOfDay.datestamp
 
-        if query.past {
-            // Trips in the past.
-            return #Predicate<Trip> {
-                $0.firstDatestamp < todaystamp
-            }
-        } else {
-            // Trips in the present and future.
-            return #Predicate<Trip> {
-                $0.lastDatestamp >= todaystamp
-            }
+        return #Predicate<Trip> {
+            $0.firstDatestamp <= maxDatestamp
+                && $0.lastDatestamp >= minDatestamp
         }
     }
 
     func searchQueryScore(_ query: PlannerSearchQuery) -> Double? {
         guard query.calendarIds.isEmpty else {
             // Filtering by calendar events only. Exclude.
-            return nil
-        }
-        
-        guard query.containsDatestampRange(
-            startDatestamp: firstDatestamp,
-            endDatestamp: lastDatestamp
-        ) else {
-            // Doesn't match the time range. Exclude.
             return nil
         }
 

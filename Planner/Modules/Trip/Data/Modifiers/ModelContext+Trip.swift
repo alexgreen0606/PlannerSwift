@@ -121,7 +121,7 @@ extension ModelContext {
 
         // Re-search in case routine changes now match the search query.
         if plannerService.activeQuery != nil {
-            plannerService.reloadPlannerList()
+            plannerService.loadPlannerList()
         }
 
         plannerService.expandedTripIds.insert(trip.id)

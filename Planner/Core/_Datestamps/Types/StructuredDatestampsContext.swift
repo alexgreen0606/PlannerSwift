@@ -21,10 +21,6 @@ struct StructuredDatestampsContext {
                 : $0 < $1
         }
     }
-    
-    var topDatestamp: String? {
-        sorted.first
-    }
 
     var sortedByYear: [String: [String]] {
         Dictionary(grouping: sorted) {

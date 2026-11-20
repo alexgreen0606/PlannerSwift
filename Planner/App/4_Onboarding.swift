@@ -156,10 +156,10 @@ struct OnboardingView: View {
                         systemColorScheme: systemColorScheme
                     )
                 }
-                
+
                 // Re-search if a query is set.
                 if plannerService.activeQuery != nil {
-                    plannerService.reloadPlannerList()
+                    plannerService.loadPlannerList()
                 }
             }
         }
@@ -167,8 +167,8 @@ struct OnboardingView: View {
         // MARK: Initiate midnight actions.
 
         .onChange(of: todayService.todaystamp) { _, _ in
-            plannerService.reloadPlannerList()
-            
+            plannerService.loadPlannerList()
+
             modelContext.carryOverPastFlaggedPlannerEvents(
                 todayService: todayService,
                 settings: settings
@@ -253,11 +253,9 @@ struct OnboardingView: View {
 
         lastCleansedMonthstamp = todayService.todaystamp.monthstamp
 
-        if settings.keepPastEventsDuration != .forever {
-            modelContext.deleteStaleData(
-                cutoffDate: settings.keepPastEventsDuration.cutoffDate
-            )
-        }
+        modelContext.deleteStaleData(
+            minStartOfDay: todayService.minStartOfDay
+        )
 
         modelContext.safeSave("Onboarding cleanseStorage")
     }

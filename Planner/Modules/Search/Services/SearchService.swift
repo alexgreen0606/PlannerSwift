@@ -15,6 +15,8 @@ actor SearchService {
 
     func search(
         query: PlannerSearchQuery,
+        plannerBounds: PlannerBounds,
+        todaystamp: String,
         visibleCalendars: [EKCalendar],
         ekEventStore: EKEventStore,
         settings: Settings
@@ -32,6 +34,7 @@ actor SearchService {
                 // Search trips.
                 try searchTrips(
                     query: query,
+                    bounds: plannerBounds,
                     scores: &scores,
                     plannerDayCache: &plannerDayCache,
                     settings: settings
@@ -41,6 +44,7 @@ actor SearchService {
                 if !query.text.isEmpty {
                     try searchPlanners(
                         query: query,
+                        bounds: plannerBounds,
                         scores: &scores,
                         plannerDayCache: &plannerDayCache,
                         settings: settings
@@ -50,21 +54,17 @@ actor SearchService {
                 // Search planner events.
                 try searchPlannerEvents(
                     query: query,
+                    bounds: plannerBounds,
                     scores: &scores,
                     plannerDayCache: &plannerDayCache,
                     settings: settings
                 )
-
-                // Search weekdays.
-                searchWeekdays(query: query, scores: &scores)
-
-                // Search months.
-                searchMonths(query: query, scores: &scores)
             }
 
             // Search calendar events.
             try searchEkEvents(
                 query: query,
+                bounds: plannerBounds,
                 scores: &scores,
                 plannerDayCache: &plannerDayCache,
                 visibleCalendars: visibleCalendars,
@@ -78,7 +78,8 @@ actor SearchService {
 
         return buildSearchResults(
             from: scores,
-            query: query
+            query: query,
+            todaystamp: todaystamp
         )
     }
 
@@ -86,13 +87,14 @@ actor SearchService {
 
     private func searchTrips(
         query: PlannerSearchQuery,
+        bounds: PlannerBounds,
         scores: inout [String: Double],
         plannerDayCache: inout [String: DateInRegion],
         settings: Settings
     ) throws {
         let filteredTrips = try modelContext.fetch(
             FetchDescriptor<Trip>(
-                predicate: Trip.trips(matching: query)
+                predicate: Trip.searchableTrips(within: bounds)
             )
         )
 
@@ -106,7 +108,7 @@ actor SearchService {
                     settings: settings
                 )
 
-                if query.containsDatestamp(planner.datestamp) {
+                if bounds.containsDatestamp(planner.datestamp) {
                     scores[planner.datestamp, default: 0] += score
                 }
             }
@@ -115,13 +117,14 @@ actor SearchService {
 
     private func searchPlanners(
         query: PlannerSearchQuery,
+        bounds: PlannerBounds,
         scores: inout [String: Double],
         plannerDayCache: inout [String: DateInRegion],
         settings: Settings
     ) throws {
         let filteredPlanners = try modelContext.fetch(
             FetchDescriptor<Planner>(
-                predicate: Planner.planners(matching: query)
+                predicate: Planner.searchablePlanners(within: bounds)
             )
         )
 
@@ -138,6 +141,7 @@ actor SearchService {
 
     private func searchPlannerEvents(
         query: PlannerSearchQuery,
+        bounds: PlannerBounds,
         scores: inout [String: Double],
         plannerDayCache: inout [String: DateInRegion],
         settings: Settings
@@ -146,7 +150,10 @@ actor SearchService {
 
         let filteredPlannerEvents = try modelContext.fetch(
             FetchDescriptor<PlannerEvent>(
-                predicate: PlannerEvent.plannerEvents(matching: query)
+                predicate: PlannerEvent.searchablePlannerEvents(
+                    within: bounds,
+                    matching: query
+                )
             )
         )
 
@@ -167,6 +174,7 @@ actor SearchService {
             let parentDatestamps = try getPlannerDatestamps(
                 startTime: time,
                 query: query,
+                bounds: bounds,
                 plannerDayCache: &plannerDayCache,
                 homeRegion: homeRegion,
                 settings: settings
@@ -183,106 +191,9 @@ actor SearchService {
         }
     }
 
-    private func searchWeekdays(
-        query: PlannerSearchQuery,
-        scores: inout [String: Double]
-    ) {
-        let today = query.todayStartOfDay
-
-        guard let todayWeekday = Weekday.forDatestamp(today.datestamp)
-        else {
-            return
-        }
-
-        for weekday in Weekday.allCases {
-            guard let weekdayScore = query.score(for: weekday.label) else {
-                continue
-            }
-
-            var day: DateInRegion
-
-            if query.past {
-                let daysSince = (todayWeekday.index - weekday.index + 7) % 7
-                day = today - daysSince.days
-            } else {
-                let daysUntil = (weekday.index - todayWeekday.index + 7) % 7
-                day = today + daysUntil.days
-            }
-
-            for _ in 0..<Self.MAX_RESULTS {
-                let datestamp = day.datestamp
-
-                scores[datestamp, default: 0] += weekdayScore
-
-                day =
-                    query.past
-                    ? day - 1.weeks
-                    : day + 1.weeks
-            }
-        }
-    }
-
-    private func searchMonths(
-        query: PlannerSearchQuery,
-        scores: inout [String: Double]
-    ) {
-        let today = query.todayStartOfDay
-
-        for month in Month.allCases {
-            guard let monthScore = query.score(for: month.label) else {
-                continue
-            }
-
-            var day: DateInRegion
-            var year = today.year
-
-            if query.past {
-                if month.number > today.month {
-                    // Month is after this month and we are searching the past.
-                    // Jump to last year.
-                    year -= 1
-                }
-
-                day = DateInRegion(
-                    year: year,
-                    month: month.number,
-                    day: 1,
-                    region: today.region
-                )
-                .dateAtEndOf(.month)
-
-            } else {
-                if month.number < today.month {
-                    // Month is before this month and we are searching the future.
-                    // Jump to next year.
-                    year += 1
-                }
-
-                day = DateInRegion(
-                    year: year,
-                    month: month.number,
-                    day: 1,
-                    region: today.region
-                )
-            }
-
-            while day.month == month.number {
-                let datestamp = day.datestamp
-
-                if query.containsDatestamp(datestamp) {
-                    scores[datestamp, default: 0] += monthScore
-                }
-
-                day =
-                    query.past
-                    ? day - 1.days
-                    : day + 1.days
-            }
-        }
-    }
-
     private func searchEkEvents(
         query: PlannerSearchQuery,
+        bounds: PlannerBounds,
         scores: inout [String: Double],
         plannerDayCache: inout [String: DateInRegion],
         visibleCalendars: [EKCalendar],
@@ -291,8 +202,8 @@ actor SearchService {
     ) throws {
         let filteredEkEvents = ekEventStore.events(
             matching: ekEventStore.predicateForEvents(
-                withStart: query.startDate,
-                end: query.endDate,
+                withStart: bounds.minStartOfDay.date,
+                end: bounds.endOfBounds,
                 calendars: visibleCalendars
             )
         )
@@ -305,12 +216,13 @@ actor SearchService {
                     startDate: ekEvent.startDate,
                     endDate: ekEvent.endDate,
                     timeZoneId: ekEvent.timeZone?.identifier
-                ).filter(query.containsDatestamp(_:))
+                ).filter(bounds.containsDatestamp(_:))
             } else {
                 parentDatestamps = try getPlannerDatestamps(
                     startTime: ekEvent.startDate,
                     endTime: ekEvent.endDate,
                     query: query,
+                    bounds: bounds,
                     plannerDayCache: &plannerDayCache,
                     homeRegion: settings.homeRegion,
                     settings: settings
@@ -332,27 +244,33 @@ actor SearchService {
 
     private func buildSearchResults(
         from scores: [String: Double],
-        query: PlannerSearchQuery
+        query: PlannerSearchQuery,
+        todaystamp: String
     ) -> StructuredDatestampsContext {
         let topDatestamps =
             scores
             .sorted {
-                if query.text.isEmpty || $0.value == $1.value {
-                    // Scores are equal or user is not searching for specific text. Sort by datestamp.
-                    return query.past
-                        ? $0.key > $1.key
-                        : $0.key < $1.key
+                let lhsIsCurrentOrFuture = $0.key >= todaystamp
+                let rhsIsCurrentOrFuture = $1.key >= todaystamp
+
+                // Priority 1: Current or future planners.
+                if lhsIsCurrentOrFuture != rhsIsCurrentOrFuture {
+                    return lhsIsCurrentOrFuture
                 }
 
-                // Sort highest scores at the top.
+                // Priority 2: Not searching text/equal scores: sort chronologically.
+                if query.text.isEmpty || $0.value == $1.value {
+                    return $0.key < $1.key
+                }
+
+                // Priority 3: Sort by values.
                 return $0.value > $1.value
             }
             .prefix(Self.MAX_RESULTS)
             .map(\.key)
 
         return StructuredDatestampsContext(
-            datestamps: topDatestamps,
-            reversed: query.past
+            datestamps: topDatestamps
         )
     }
 
@@ -360,6 +278,7 @@ actor SearchService {
         startTime time: Date,
         endTime: Date? = nil,
         query: PlannerSearchQuery,
+        bounds: PlannerBounds,
         plannerDayCache: inout [String: DateInRegion],
         homeRegion: Region,
         settings: Settings,
@@ -372,7 +291,7 @@ actor SearchService {
         )
 
         for datestamp in possibleDatestamps
-        where query.containsDatestamp(datestamp) {
+        where bounds.containsDatestamp(datestamp) {
 
             // Use the cached start of day to determine if the planner owns this event.
             if let cachedPlannerDay = plannerDayCache[

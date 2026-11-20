@@ -64,6 +64,58 @@ extension ModelContext {
         return []
     }
 
+    func getSortedBirthdayEvents(on startOfDay: DateInRegion)
+        -> [PlannerEvent]
+    {
+        do {
+            return try fetch(
+                FetchDescriptor<PlannerEvent>(
+                    predicate: PlannerEvent.birthdayChips(
+                        on: startOfDay
+                    ),
+                    sortBy: [
+                        SortDescriptor(
+                            \PlannerEvent.title,
+                            comparator: .localizedStandard
+                        )
+                    ]
+                )
+            )
+        } catch {
+            assertionFailure(
+                "ERROR ModelContext+PlannerEvent getSortedBirthdayEvents: \(error)"
+            )
+        }
+
+        return []
+    }
+
+    func getSortedEventChips(on startOfDay: DateInRegion)
+        -> [PlannerEvent]
+    {
+        do {
+            return try fetch(
+                FetchDescriptor<PlannerEvent>(
+                    predicate: PlannerEvent.eventChips(
+                        on: startOfDay
+                    ),
+                    sortBy: [
+                        SortDescriptor(
+                            \PlannerEvent.title,
+                            comparator: .localizedStandard
+                        )
+                    ]
+                )
+            )
+        } catch {
+            assertionFailure(
+                "ERROR ModelContext+PlannerEvent getSortedEventChips: \(error)"
+            )
+        }
+
+        return []
+    }
+
     func getPlannerEvents(on startOfDay: DateInRegion)
         -> [PlannerEvent]
     {
@@ -151,7 +203,9 @@ extension ModelContext {
         }
 
         // Carry flagged, incomplete, past events into today.
-        if let todayStartOfDay, plannerEvent.isFlagged, !plannerEvent.isCompleted {
+        if let todayStartOfDay, plannerEvent.isFlagged,
+            !plannerEvent.isCompleted
+        {
             let todaystamp = todayStartOfDay.datestamp
 
             if let time = plannerEvent.time {

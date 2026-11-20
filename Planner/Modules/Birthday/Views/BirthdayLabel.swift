@@ -11,22 +11,28 @@ import SwiftUI
 
 struct BirthdayLabelView: View {
     private let plannerEvent: PlannerEvent
-    private let settings: Settings
     private let disabled: Bool
-    
+    private let lineLimit: Int?
+    private let scale: CGFloat
+    private let settings: Settings
+
     init(
         plannerEvent: PlannerEvent,
         disabled: Bool = false,
+        lineLimit: Int? = nil,
+        scale: CGFloat = 1,
         settings: Settings
     ) {
         self.plannerEvent = plannerEvent
         self.disabled = disabled
+        self.lineLimit = lineLimit
+        self.scale = scale
         self.settings = settings
     }
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
-    
+
     private var disabledColor: Color? {
         disabled ? Color.tertiary : nil
     }
@@ -54,10 +60,11 @@ struct BirthdayLabelView: View {
                     .resizable()
                     .scaledToFill()
                     .opacity(disabled ? 0.2 : 1)
-                    .frame(width: 24, height: 24)
+                    .frame(width: 24 * scale, height: 24 * scale)
                     .clipShape(Circle())
 
-                Value(plannerEvent.title, color: disabledColor)
+                Value(plannerEvent.title, color: disabledColor, scale: scale)
+                    .lineLimit(lineLimit)
             }
         } else {
             AdornedValue(
@@ -69,7 +76,9 @@ struct BirthdayLabelView: View {
                     primaryColor: disabledColor ?? calendarColor,
                     secondaryColor: disabledColor ?? calendarColor
                 ),
-                color: disabledColor ?? .label
+                lineLimit: lineLimit,
+                color: disabledColor ?? .label,
+                scale: scale
             )
         }
     }

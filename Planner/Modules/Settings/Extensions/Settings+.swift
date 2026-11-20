@@ -34,16 +34,6 @@ extension Settings {
         }
     }
 
-    var keepPastEventsDuration: KeepPastEventsDuration {
-        get {
-            KeepPastEventsDuration(rawValue: keepPastEventsDurationRawValue)
-                ?? .oneMonth
-        }
-        set {
-            keepPastEventsDurationRawValue = newValue.rawValue
-        }
-    }
-
     var homeLocationLabel: String {
         homeLocation?.name ?? "Current Location"
     }

@@ -154,10 +154,7 @@ struct EventFormView: View {
     }
 
     private func showNotification(destinationDatestamps: Set<String>) {
-        let cutoffDatestamp = DatestampFormatter.datestamp(
-            from: settings.keepPastEventsDuration.cutoffDate,
-            timeZone: .current
-        )
+        let cutoffDatestamp = todayService.minStartOfDay.datestamp
 
         guard
             let earliestDatestamp =

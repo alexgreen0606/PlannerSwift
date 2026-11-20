@@ -43,6 +43,11 @@ class PlannerService: ObservableObject {
                 datestamps: todayService.next30Datestamps
             )
         )
+
+        self.draftQuery = PlannerSearchQuery(
+            text: "",
+            calendarIds: []
+        )
     }
 
     private let searchService: SearchService
@@ -64,7 +69,15 @@ class PlannerService: ObservableObject {
 
     @Published var expandedTripIds: Set<PersistentIdentifier> = []
 
+    @Published var draftQuery: PlannerSearchQuery
+
     @Published private(set) var plannerListContext: PlannerListContext
+
+    /// Monthstamp -> Datestamp -> StructuredPlannerPreviewContext.
+    @Published var calendarContextCache:
+        [String: [String: StructuredPlannerPreviewContext]] = [:]
+    
+    @Published var calendarMonthOffset = 0
 
     var activeQuery: PlannerSearchQuery? {
         plannerListContext.query
@@ -102,13 +115,15 @@ class PlannerService: ObservableObject {
 
     // MARK: - Planner List Load/Search
 
-    func loadPlannerList(matching query: PlannerSearchQuery?) {
+    func loadPlannerList() {
         guard
             !calendarService.isOnboardingCalendars
         else { return }
 
+        calendarContextCache = [:]
+
         // No search params exist. Default the planner list and exit.
-        guard let query, !query.isDefault
+        guard !draftQuery.isDefault
         else {
             plannerListContext = PlannerListContext(
                 structuredDatestamps: StructuredDatestampsContext(
@@ -129,7 +144,12 @@ class PlannerService: ObservableObject {
 
         Task {
             let searchResults = await searchService.search(
-                query: query,
+                query: draftQuery,
+                plannerBounds: PlannerBounds(
+                    minStartOfDay: todayService.minStartOfDay,
+                    maxStartOfDay: todayService.maxStartOfDay
+                ),
+                todaystamp: todayService.todaystamp,
                 visibleCalendars: calendarService.sortedVisibleCalendars,
                 ekEventStore: calendarService.ekEventStore,
                 settings: settings
@@ -142,7 +162,7 @@ class PlannerService: ObservableObject {
                 withAnimation {
                     self.plannerListContext = PlannerListContext(
                         structuredDatestamps: searchResults,
-                        query: query
+                        query: draftQuery
                     )
                 }
             }
@@ -155,10 +175,6 @@ class PlannerService: ObservableObject {
 
             syncPlanners(planners)
         }
-    }
-
-    func reloadPlannerList() {
-        loadPlannerList(matching: plannerListContext.query)
     }
 
     // MARK: - Synchronization
@@ -236,14 +252,18 @@ class PlannerService: ObservableObject {
     }
 
     func syncVisiblePlanners() {
-        let planners = modelContext.getBulkPlanners(for: visibleDatestamps)
-        syncPlanners(planners)
+        syncPlanners(visibleDatestamps)
     }
 
     func syncPlanners(_ planners: [Planner]) {
         for planner in planners {
             syncPlanner(planner)
         }
+    }
+
+    func syncPlanners(_ datestamps: Set<String>) {
+        let planners = modelContext.getBulkPlanners(for: datestamps)
+        syncPlanners(planners)
     }
 
     // MARK: - Refresh (invalidate and sync)

@@ -15,49 +15,25 @@ struct PlannerFilterToolbarView: ToolbarContent {
 
     @EnvironmentObject private var calendarService: CalendarService
 
+    private var hideCalendarSection: Bool {
+        calendarService.hasCalendarAccess != true
+    }
+
     // MARK: - Body
 
     var body: some ToolbarContent {
-        ToolbarItemGroup(placement: .topBarLeading) {
-            Menu("", systemImage: "line.3.horizontal.decrease") {
-                timeFrameSection
-                if calendarService.hasCalendarAccess == true {
+        if !hideCalendarSection {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Menu("", systemImage: "line.3.horizontal.decrease") {
                     calendarSection
                 }
+                .menuActionDismissBehavior(.disabled)
+                .badge(filterCount != nil ? String(filterCount!) : nil)
             }
-            .menuActionDismissBehavior(.disabled)
-            .badge(filterCount != nil ? String(filterCount!) : nil)
         }
     }
 
     // MARK: - View Builders
-
-    private var timeFrameSection: some View {
-        Section("Timeframe") {
-            Toggle(
-                "Future",
-                isOn: Binding(
-                    get: {
-                        !draftQuery.past
-                    },
-                    set: { _ in
-                        draftQuery.past = false
-                    }
-                )
-            )
-            Toggle(
-                "Past",
-                isOn: Binding(
-                    get: {
-                        draftQuery.past
-                    },
-                    set: { _ in
-                        draftQuery.past = true
-                    }
-                )
-            )
-        }
-    }
 
     private var calendarSection: some View {
         Section("Calendars") {

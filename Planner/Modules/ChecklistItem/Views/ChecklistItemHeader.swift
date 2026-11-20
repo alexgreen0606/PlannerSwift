@@ -38,17 +38,10 @@ struct ChecklistItemHeaderView: ToolbarContent {
 
     var body: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
-            Text(item.title)
+            PageTitle(item.title)
                 .lineLimit(2)
                 .minimumScaleFactor(0.5)
                 .fixedSize(horizontal: false, vertical: true)
-                .font(
-                    .system(
-                        size: item.parent == nil ? 28 : 22,
-                        weight: .bold,
-                        design: .rounded
-                    )
-                )
                 .frame(width: width, alignment: .leading)
                 .drawingGroup()
         }

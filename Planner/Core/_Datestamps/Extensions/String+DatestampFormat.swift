@@ -47,6 +47,15 @@ extension String {
         Int(suffix(2))
     }
 
+    /// Example: "June"
+    var month: String {
+        DatestampFormatter.date(
+            from: monthstamp,
+            format: "yyyy-MM",
+            region: Region(calendar: Calendars.gregorian)
+        )?.toFormat("MMMM") ?? ""
+    }
+
     /// Example: "Tuesday"
     var weekday: String {
         formatted("EEEE")

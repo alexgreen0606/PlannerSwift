@@ -145,17 +145,6 @@ struct SettingsRootView: View {
                 }
                 .disabled(calendarService.hasCalendarAccess != true)
 
-                // MARK: Keep Past Events Duration
-
-                NavigationLink {
-                    KeepPastEventsFormView(settings: settings)
-                } label: {
-                    label(
-                        title: KeepPastEventsDuration.title,
-                        value: settings.keepPastEventsDuration.label
-                    )
-                }
-
                 // MARK: Home Location
 
                 NavigationLink {

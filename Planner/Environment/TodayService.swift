@@ -22,22 +22,31 @@ final class TodayService: ObservableObject {
 
         let todaystamp = TodayService.makeTodaystamp()
 
+        let minDatestamp =
+            "\(Int(todaystamp.prefix(4))! - 2)\(todaystamp.dropFirst(4))"
+        let maxDatestamp =
+            "\(Int(todaystamp.prefix(4))! + 2)\(todaystamp.dropFirst(4))"
+
+        CalendarDatestampCache.shared.update(
+            currentMonthstamp: todaystamp.monthstamp
+        )
+
         next30Datestamps = getNext30Datestamps()
 
         let todayPlanner = modelContext.getPlanner(
             for: todaystamp
         )
 
+        self.minPlanner = modelContext.getPlanner(
+            for: minDatestamp
+        )
+
+        self.maxPlanner = modelContext.getPlanner(
+            for: maxDatestamp
+        )
+
         self.todayPlanner = todayPlanner
         self.todaystamp = todaystamp
-
-        self.defaultSearchQuery = PlannerSearchQuery(
-            text: "",
-            calendarIds: [],
-            past: false,
-            todayStartOfDay: todayPlanner.startOfDay(settings: settings),
-            fuse: Fuse()
-        )
 
         scheduleMidnightUpdate()
     }
@@ -46,29 +55,38 @@ final class TodayService: ObservableObject {
         timer?.invalidate()
     }
 
-    private var maxCalendarDate: Date =
-        TodayService.makeMaxCalendarDate()
-
     private var timer: Timer?
 
     private var todayPlanner: Planner
+    private var minPlanner: Planner
+    private var maxPlanner: Planner
 
     @Published private(set) var todaystamp: String
 
     @Published private(set) var next30Datestamps: [String]
 
-    @Published private(set) var defaultSearchQuery: PlannerSearchQuery
-
     var datePickerBounds: ClosedRange<Date> {
-        settings.keepPastEventsDuration.cutoffDate...maxCalendarDate
+        minStartOfDay.date...maxStartOfDay.date
     }
 
     var multiDatePickerBounds: Range<Date> {
-        settings.keepPastEventsDuration.cutoffDate..<maxCalendarDate
+        minStartOfDay.date..<maxStartOfDay.date
     }
 
     var todayStartOfDay: DateInRegion {
         todayPlanner.startOfDay(settings: settings)
+    }
+
+    var minStartOfDay: DateInRegion {
+        minPlanner.startOfDay(settings: settings)
+    }
+
+    var maxStartOfDay: DateInRegion {
+        maxPlanner.startOfDay(settings: settings)
+    }
+
+    var monthstamp: String {
+        todaystamp.monthstamp
     }
 
     // MARK: - Builder Functions
@@ -78,12 +96,6 @@ final class TodayService: ObservableObject {
             "yyyy-MM-dd",
             locale: Locale.current
         )
-    }
-
-    private static func makeMaxCalendarDate() -> Date {
-        DateInRegion(Date(), region: .local)
-            .dateByAdding(3, .year)
-            .date
     }
 
     // MARK: - Schedule Functions
@@ -108,20 +120,33 @@ final class TodayService: ObservableObject {
     }
 
     private func updateStamp() {
+        let previousMonthstamp = monthstamp
+
         todaystamp = Self.makeTodaystamp()
-        next30Datestamps = getNext30Datestamps()
-        maxCalendarDate = Self.makeMaxCalendarDate()
+        
         todayPlanner = modelContext.getPlanner(for: todaystamp)
 
-        defaultSearchQuery = PlannerSearchQuery(
-            text: "",
-            calendarIds: [],
-            past: false,
-            todayStartOfDay: todayPlanner.startOfDay(settings: settings),
-            fuse: Fuse()
+        if monthstamp != previousMonthstamp {
+            CalendarDatestampCache.shared.update(
+                currentMonthstamp: monthstamp
+            )
+        }
+
+        next30Datestamps = getNext30Datestamps()
+
+        let minDatestamp =
+            "\(Int(todaystamp.prefix(4))! - 2)\(todaystamp.dropFirst(4))"
+        let maxDatestamp =
+            "\(Int(todaystamp.prefix(4))! + 2)\(todaystamp.dropFirst(4))"
+
+        minPlanner = modelContext.getPlanner(
+            for: minDatestamp
         )
 
-        // Reschedule for the next midnight.
+        maxPlanner = modelContext.getPlanner(
+            for: maxDatestamp
+        )
+
         scheduleMidnightUpdate()
     }
 }

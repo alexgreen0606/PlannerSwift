@@ -11,8 +11,9 @@ import SwiftUI
 
 extension ModelContext {
     @MainActor
-    func deleteStaleData(cutoffDate: Date) {
-        let cutoffDatestamp = DateInRegion(cutoffDate, region: .local).datestamp
+    func deleteStaleData(minStartOfDay: DateInRegion) {
+        let minDatestamp = minStartOfDay.datestamp
+        let minDate = minStartOfDay.date
 
         do {
             // MARK: Delete locations that have no relationships.
@@ -39,11 +40,11 @@ extension ModelContext {
                 FetchDescriptor<PlannerEvent>(
                     predicate: #Predicate<PlannerEvent> { event in
                         if let ekEventContext = event.eKEventContext {
-                            return ekEventContext.endDate < cutoffDate
+                            return ekEventContext.endDate <= minDate
                         } else if let time = event.time {
-                            return time < cutoffDate
+                            return time < minDate
                         } else if let datestamp = event.datestamp {
-                            return datestamp < cutoffDatestamp
+                            return datestamp < minDatestamp
                         } else {
                             return true
                         }
@@ -60,7 +61,7 @@ extension ModelContext {
             let expiredPlanners = try fetch(
                 FetchDescriptor<Planner>(
                     predicate: #Predicate<Planner> {
-                        $0.datestamp < cutoffDatestamp && $0.trip == nil
+                        $0.datestamp < minDatestamp && $0.trip == nil
                     }
                 )
             )
@@ -72,7 +73,7 @@ extension ModelContext {
             // MARK: Delete trips that ended before the cutoff date.
 
             let expiredTrips = try fetch(FetchDescriptor<Trip>()).filter {
-                $0.lastDatestamp < cutoffDatestamp
+                $0.lastDatestamp < minDatestamp
             }
 
             for trip in expiredTrips {

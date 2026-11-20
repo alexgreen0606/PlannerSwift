@@ -19,16 +19,6 @@ extension EKEvent {
             return nil
         }
 
-        guard
-            query.containsDateRange(
-                startDate: startDate,
-                endDate: endDate
-            )
-        else {
-            // Doesn't match the time range. Exclude.
-            return nil
-        }
-
         if query.text.isEmpty {
             // No search text. Include!
             return 1.0

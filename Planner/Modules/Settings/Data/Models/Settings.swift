@@ -20,10 +20,6 @@ class Settings {
     var toggleTransitionDurationRawValue: String = ToggleTransitionDuration
         .oneSecond.rawValue
 
-    /// KeepPastEventsDuration rawValue
-    var keepPastEventsDurationRawValue: String = KeepPastEventsDuration
-        .oneMonth.rawValue
-
     /// Maps calendar IDs to system image names.
     var calendarIconMap: [String: String] = [:]
 

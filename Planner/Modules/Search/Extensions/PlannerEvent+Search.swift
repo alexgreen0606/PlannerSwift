@@ -9,58 +9,39 @@ import EventKit
 import SwiftDate
 
 extension PlannerEvent {
-    static func plannerEvents(
+    static func searchablePlannerEvents(
+        within bounds: PlannerBounds,
         matching query: PlannerSearchQuery
     ) -> Predicate<PlannerEvent> {
-        let todayStartDate = query.todayStartOfDay.date
-        let todaystamp = query.todayStartOfDay.datestamp
+        let minDatestamp = bounds.minStartOfDay.datestamp
+        let maxDatestamp = bounds.maxStartOfDay.datestamp
+        let minDate = bounds.minStartOfDay.date
+        let endOfBounds = bounds.endOfBounds
+
         let searchingText = !query.text.isEmpty
 
-        if query.past {
-            return #Predicate<PlannerEvent> { plannerEvent in
-                if plannerEvent.eKEventContext != nil {
+        return #Predicate<PlannerEvent> { plannerEvent in
+            if plannerEvent.eKEventContext != nil {
 
-                    // Skip calendar events. These will be evaluated directly from the EKEventStore.
-                    return false
+                // Skip calendar events. These will be evaluated directly from the EKEventStore.
+                return false
 
-                } else if let time = plannerEvent.time {
+            } else if let time = plannerEvent.time {
 
-                    // Timed planner events that exist before today.
-                    return time < todayStartDate
+                // Timed planner events that exist within the bounds,
+                // are pending or we are searching for text.
+                return time >= minDate && time < endOfBounds
+                    && (!plannerEvent.isCompleted || searchingText)
 
-                } else if let datestamp = plannerEvent.datestamp {
+            } else if let datestamp = plannerEvent.datestamp {
 
-                    // Untimed planner events that exist before today.
-                    return datestamp < todaystamp
+                // Untimed planner events that exist within the bounds,
+                // are pending or we are searching for text.
+                return datestamp >= minDatestamp && datestamp <= maxDatestamp
+                    && (!plannerEvent.isCompleted || searchingText)
 
-                } else {
-                    return false
-                }
-            }
-        } else {
-            return #Predicate<PlannerEvent> { plannerEvent in
-                if plannerEvent.eKEventContext != nil {
-
-                    // Skip calendar events. These will be evaluated directly from the EKEventStore.
-                    return false
-
-                } else if let time = plannerEvent.time {
-
-                    // Timed planner events that exist on or after today,
-                    // are pending or we are searching for text.
-                    return time >= todayStartDate
-                        && (!plannerEvent.isCompleted || searchingText)
-
-                } else if let datestamp = plannerEvent.datestamp {
-
-                    // Untimed planner events that exist on or after today,
-                    // are pending or we are searching for text.
-                    return datestamp >= todaystamp
-                        && (!plannerEvent.isCompleted || searchingText)
-
-                } else {
-                    return false
-                }
+            } else {
+                return false
             }
         }
     }
@@ -81,34 +62,12 @@ extension PlannerEvent {
             }
         }
 
-        if let eKEventContext {
-            guard
-                query.containsDateRange(
-                    startDate: eKEventContext.startDate,
-                    endDate: eKEventContext.endDate
-                )
-            else {
-                // Doesn't match the time range. Exclude.
-                return nil
-            }
-        } else if let time {
-            guard query.containsDate(time) else {
-                // Doesn't match the time range. Exclude.
-                return nil
-            }
-        } else if let datestamp {
-            guard query.containsDatestamp(datestamp) else {
-                // Doesn't match the time range. Exclude.
-                return nil
-            }
-        }
-
         if query.text.isEmpty {
-            if isCompleted && !query.past {
-                // No search text, event is complete, and in the present or future. Exclude.
+            if isCompleted {
+                // No search text and event is complete. Exclude.
                 return nil
             } else {
-                // No search text and event is pending or in the past. Include!
+                // No search text and event is pending. Include!
                 return 1.0
             }
         }

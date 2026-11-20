@@ -12,6 +12,7 @@ struct AdornedValue: View {
     private let iconConfig: IconConfig?
     private let additionalIconConfigs: [IconConfig]
     private let endAdorned: Bool
+    private let lineLimit: Int?
     private let color: Color?
     private let scale: Double
 
@@ -20,6 +21,7 @@ struct AdornedValue: View {
         iconConfig: IconConfig? = nil,
         additionalIconConfigs: [IconConfig] = [],
         endAdorned: Bool = false,
+        lineLimit: Int? = nil,
         color: Color? = nil,
         scale: Double = 1
     ) {
@@ -27,6 +29,7 @@ struct AdornedValue: View {
         self.iconConfig = iconConfig
         self.additionalIconConfigs = additionalIconConfigs
         self.endAdorned = endAdorned
+        self.lineLimit = lineLimit
         self.color = color
         self.scale = scale
     }
@@ -59,6 +62,7 @@ struct AdornedValue: View {
 
             if let text {
                 Value(text, color: color, scale: scale)
+                    .lineLimit(lineLimit)
             }
 
             if endAdorned {
