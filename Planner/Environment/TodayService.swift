@@ -22,10 +22,9 @@ final class TodayService: ObservableObject {
 
         let todaystamp = TodayService.makeTodaystamp()
 
-        let minDatestamp =
-            "\(Int(todaystamp.prefix(4))! - 2)\(todaystamp.dropFirst(4))"
-        let maxDatestamp =
-            "\(Int(todaystamp.prefix(4))! + 2)\(todaystamp.dropFirst(4))"
+        let (minDatestamp, maxDatestamp) = Self.plannerBounds(
+            around: todaystamp
+        )
 
         CalendarDatestampCache.shared.update(
             currentMonthstamp: todaystamp.monthstamp
@@ -54,6 +53,8 @@ final class TodayService: ObservableObject {
     deinit {
         timer?.invalidate()
     }
+
+    static let PLANNER_MONTH_RADIUS = 23
 
     private var timer: Timer?
 
@@ -98,6 +99,25 @@ final class TodayService: ObservableObject {
         )
     }
 
+    /// Keeps calendar-event searches safely within EventKit's four-year
+    /// predicate limit.
+    private static func plannerBounds(
+        around todaystamp: String
+    ) -> (min: String, max: String) {
+        let currentMonthStart =
+            todaystamp
+            .startOfDay(in: .local)
+            .dateAtStartOf(.month)
+
+        return (
+            currentMonthStart.dateByAdding(-PLANNER_MONTH_RADIUS, .month)
+                .datestamp,
+            currentMonthStart.dateByAdding(PLANNER_MONTH_RADIUS + 1, .month)
+                .dateByAdding(-1, .day)
+                .datestamp
+        )
+    }
+
     // MARK: - Schedule Functions
 
     private func scheduleMidnightUpdate() {
@@ -123,7 +143,7 @@ final class TodayService: ObservableObject {
         let previousMonthstamp = monthstamp
 
         todaystamp = Self.makeTodaystamp()
-        
+
         todayPlanner = modelContext.getPlanner(for: todaystamp)
 
         if monthstamp != previousMonthstamp {
@@ -134,10 +154,9 @@ final class TodayService: ObservableObject {
 
         next30Datestamps = getNext30Datestamps()
 
-        let minDatestamp =
-            "\(Int(todaystamp.prefix(4))! - 2)\(todaystamp.dropFirst(4))"
-        let maxDatestamp =
-            "\(Int(todaystamp.prefix(4))! + 2)\(todaystamp.dropFirst(4))"
+        let (minDatestamp, maxDatestamp) = Self.plannerBounds(
+            around: todaystamp
+        )
 
         minPlanner = modelContext.getPlanner(
             for: minDatestamp

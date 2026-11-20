@@ -33,8 +33,8 @@ struct CalendarMonthTabView: View {
     private var monthGrid: some View {
         GeometryReader { geo in
             LazyVGrid(columns: weekdayColumns, spacing: 0) {
-                ForEach(datestamps, id: \.self) { datestamp in
-                    if let datestamp {
+                ForEach(datestamps.indices, id: \.self) { index in
+                    if let datestamp = datestamps[index] {
                         CalendarPlannerPreviewView(
                             contextCache: $contextCache,
                             datestamp: datestamp,

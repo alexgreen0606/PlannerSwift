@@ -13,11 +13,8 @@ struct CalendarRootView: View {
     let settings: Settings
     let namespace: Namespace.ID
 
-    /// Two years in each direction.
-    private static let monthRadius = 24
-
     private let monthOffsets = Array(
-        -CalendarRootView.monthRadius...CalendarRootView.monthRadius
+        -TodayService.PLANNER_MONTH_RADIUS...TodayService.PLANNER_MONTH_RADIUS
     )
 
     private let weekdayColumns = Array(
@@ -117,7 +114,6 @@ struct CalendarRootView: View {
 
                                 isScrolling = false
                                 scrollingTask = nil
-
                             }
                         }
                 )
