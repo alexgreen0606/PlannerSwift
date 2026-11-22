@@ -5,12 +5,6 @@
 //  Created by Alex Green on 12/1/25.
 //
 
-import Contacts
-import ContactsUI
-import EventKit
-import Fuse
-import SwiftData
-import SwiftDate
 import SwiftUI
 
 struct RootTabView: View {
@@ -80,7 +74,13 @@ struct RootTabView: View {
         ZStack {
             // MARK: Standard App Navigation
 
-            TabView(selection: $selectedTab) {
+            TabView(
+                selection: $selectedTab.onUpdate { oldTab, newTab in
+                    if newTab == .calendar && oldTab == .calendar {
+                        plannerService.calendarMonthOffset = 0
+                    }
+                }
+            ) {
                 Tab("", systemImage: "list.bullet", value: .checklists) {
                     ChecklistNavigationView(settings: settings)
                 }
@@ -88,7 +88,7 @@ struct RootTabView: View {
                 Tab("", systemImage: "suitcase", value: .trips) {
                     TripRootView(settings: settings, namespace: namespace)
                 }
-                
+
                 Tab("", systemImage: "calendar", value: .calendar) {
                     CalendarRootView(
                         settings: settings,
