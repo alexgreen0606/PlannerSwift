@@ -2,7 +2,7 @@
 //  WeatherChip.swift
 //  Planner
 //
-//  Created by Alex Green on 4/1/26.
+//  Created by Alex Green on 11/22/26.
 //
 
 import SwiftUI
@@ -18,7 +18,7 @@ struct WeatherChipView: View {
         .dark
 
     @Environment(\.colorScheme) private var systemColorScheme
-    @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
+    @EnvironmentObject private var plannerEngine: ListEngine<PlannerItem>
 
     private var isDarkMode: Bool {
         switch appColorScheme {
@@ -50,17 +50,17 @@ struct WeatherChipView: View {
 
                         Value(
                             plannerWeather.condition,
-                            color: plannerEngine.selectModeDisabledColor
+                            color: plannerEngine.dimWhenSelecting
                         )
                     }
 
                     TemperatureView(
                         plannerWeather: plannerWeather,
-                        color: plannerEngine.selectModeDisabledColor
+                        color: plannerEngine.dimWhenSelecting
                     )
                 }
                 .glassChip(
-                    color: plannerEngine.selectModeDisabledColor,
+                    color: plannerEngine.dimWhenSelecting,
                     height: PlannerLayout.CHIP_HEIGHT,
                     onTap: plannerEngine.isSelectMode ? nil : {
                         guard let url = URL(string: "weather://") else { return }

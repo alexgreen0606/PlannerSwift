@@ -2,12 +2,12 @@
 //  SelectAllToggle.swift
 //  Planner
 //
-//  Created by Alex Green on 5/22/26.
+//  Created by Alex Green on 11/22/26.
 //
 
 import SwiftUI
 
-struct SelectAllToggleView<Item: ListItemDetails>: View {
+struct SelectAllToggleView<Item: ListItem>: View {
     let visibleItems: [Item]
 
     @EnvironmentObject private var listEngine: ListEngine<Item>

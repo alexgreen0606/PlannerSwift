@@ -2,14 +2,14 @@
 //  ListEngine.swift
 //  Planner
 //
-//  Created by Alex Green on 12/2/25.
+//  Created by Alex Green on 11/22/26.
 //
 
 import Combine
 import SwiftUI
 
 @MainActor
-final class ListEngine<Item: ListItemDetails>: ObservableObject {
+final class ListEngine<Item: ListItem>: ObservableObject {
     private let toggleState: ListItemToggleState<Item>?
     private let settings: Settings
 
@@ -28,22 +28,26 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
     private let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
     private var toggleTransitionTask: Task<Void, Never>?
 
-    @Published var pendingFocusId: UUID? = nil
+    /// Drafts are stored here (rather than on the items) so items can be lightweight value types.
+    /// Intentionally not published: drafts are `@Observable` themselves.
+    private var drafts: [Item.ID: Item.Draft] = [:]
+
+    @Published var pendingFocusId: Item.ID? = nil
 
     @Published private(set) var activeEditor: EditorSession<Item>?
     @Published private(set) var previousEditor: EditorSession<Item>?
 
-    @Published private(set) var newlyCompletedIds: Set<UUID> = []
-    @Published private(set) var newlyPendingIds: Set<UUID> = []
+    @Published private(set) var newlyCompletedIds: Set<Item.ID> = []
+    @Published private(set) var newlyPendingIds: Set<Item.ID> = []
 
     @Published private(set) var fadingOpacity: Double = 1
 
     /// Same as newlyCompletedIds, but waits 1 second before clearing to allow UI to settle.
-    @Published private(set) var fadingItemIds: Set<UUID> = []
+    @Published private(set) var fadingItemIds: Set<Item.ID> = []
 
     @Published var isSelectMode: Bool = false
     @Published private(set) var selectedItems: [Item] = []
-    @Published private(set) var selectedItemIds: Set<UUID> = []
+    @Published private(set) var selectedItemIds: Set<Item.ID> = []
 
     var isFocused: Bool {
         activeEditor != nil
@@ -53,22 +57,49 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
         toggleState != nil
     }
 
-    var selectModeDisabledColor: Color? {
+    var dimWhenSelecting: Color? {
         isSelectMode ? Color.tertiary : nil
+    }
+
+    // MARK: - Draft Functions
+
+    /// Returns the item's draft, creating one if needed.
+    func draft(for item: Item) -> Item.Draft {
+        if let draft = existingDraft(for: item.id) {
+            return draft
+        }
+
+        let newDraft = Item.Draft(item: item)
+        drafts[item.id] = newDraft
+        return newDraft
+    }
+
+    /// Returns the item's draft only if one already exists.
+    func existingDraft(for itemId: Item.ID) -> Item.Draft? {
+        drafts[itemId]
+    }
+
+    func discardDraft(for itemId: Item.ID) {
+        drafts[itemId] = nil
     }
 
     // MARK: - Focus Control Functions
 
     func isItemFocused(_ item: Item) -> Bool {
-        activeEditor?.belongs(to: item.stableId) == true
+        activeEditor?.belongs(to: item.id) == true
     }
 
     func wasItemFocused(_ item: Item) -> Bool {
-        previousEditor?.belongs(to: item.stableId) == true
+        previousEditor?.belongs(to: item.id) == true
     }
 
     /// Passes the first responder to this item.
     func beginEditing(_ editor: EditorSession<Item>) {
+        if activeEditor?.belongs(to: editor.item.id) != true {
+            // Editing a new item. Ensure its draft reflects the latest item data.
+            editor.syncDraft()
+        }
+
         if activeEditor !== editor {
             editor.invalidate()
         }
@@ -97,7 +128,7 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
 
     func openSheet(for item: Item, open: @escaping () -> Void) {
         if let activeEditor {
-            if activeEditor.belongs(to: item.stableId) {
+            if activeEditor.belongs(to: item.id) {
                 /// Force-commit the focused item instead of allowing the blur handler to potentially
                 /// delete it.
                 activeEditor.commit()
@@ -125,14 +156,14 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
 
     func isItemInPendingList(_ item: Item) -> Bool {
         (!isItemToggled(item)
-            && !newlyPendingIds.contains(item.stableId))
-            || newlyCompletedIds.contains(item.stableId)
+            && !newlyPendingIds.contains(item.id))
+            || newlyCompletedIds.contains(item.id)
     }
 
     func isItemInCompletedList(_ item: Item) -> Bool {
         (isItemToggled(item)
-            && !newlyCompletedIds.contains(item.stableId))
-            || newlyPendingIds.contains(item.stableId)
+            && !newlyCompletedIds.contains(item.id))
+            || newlyPendingIds.contains(item.id)
     }
 
     func toggleItem(_ item: Item) {
@@ -169,7 +200,7 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
             selectedItemIds = []
             selectedItems = []
         } else {
-            selectedItemIds = Set(visibleItems.map(\.stableId))
+            selectedItemIds = Set(visibleItems.map(\.id))
             selectedItems = visibleItems
         }
     }
@@ -190,16 +221,16 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
 
         if settings.toggleTransitionDuration != .instant {
             if toggleState.isToggled(item) {
-                if !newlyCompletedIds.contains(item.stableId) {
-                    newlyPendingIds.insert(item.stableId)
+                if !newlyCompletedIds.contains(item.id) {
+                    newlyPendingIds.insert(item.id)
                 } else {
-                    newlyCompletedIds.remove(item.stableId)
+                    newlyCompletedIds.remove(item.id)
                 }
             } else {
-                if !newlyPendingIds.contains(item.stableId) {
-                    newlyCompletedIds.insert(item.stableId)
+                if !newlyPendingIds.contains(item.id) {
+                    newlyCompletedIds.insert(item.id)
                 } else {
-                    newlyPendingIds.remove(item.stableId)
+                    newlyPendingIds.remove(item.id)
                 }
             }
 
@@ -251,16 +282,16 @@ final class ListEngine<Item: ListItemDetails>: ObservableObject {
     // MARK: Selected Items
 
     private func toggleSelection(_ item: Item) {
-        if selectedItemIds.contains(item.stableId) {
-            selectedItemIds.remove(item.stableId)
+        if selectedItemIds.contains(item.id) {
+            selectedItemIds.remove(item.id)
 
             if let index = selectedItems.firstIndex(where: {
-                $0.stableId == item.stableId
+                $0.id == item.id
             }) {
                 selectedItems.remove(at: index)
             }
         } else {
-            selectedItemIds.insert(item.stableId)
+            selectedItemIds.insert(item.id)
             selectedItems.append(item)
         }
     }

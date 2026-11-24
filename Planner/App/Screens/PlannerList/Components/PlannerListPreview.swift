@@ -13,7 +13,7 @@ import SwiftUI
 struct PlannerListPreviewView: View {
     let planner: Planner
     let sortedBirthdayEvents: [PlannerEvent]
-    let sortedEventChips: [PlannerEvent]
+    let sortedChipItems: [PlannerEvent]
     let sortedPlannerEvents: [PlannerEvent]
     let settings: Settings
     let namespace: Namespace.ID
@@ -78,7 +78,7 @@ struct PlannerListPreviewView: View {
                 planner: planner,
                 activeQuery: plannerService.activeQuery,
                 sortedBirthdayEvents: sortedBirthdayEvents,
-                sortedEventChips: sortedEventChips,
+                sortedChipItems: sortedChipItems,
                 sortedPlannerEvents: sortedPlannerEvents,
                 settings: settings
             )

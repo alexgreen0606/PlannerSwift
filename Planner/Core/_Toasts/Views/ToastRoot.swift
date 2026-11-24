@@ -2,7 +2,7 @@
 //  ToastRoot.swift
 //  Planner
 //
-//  Created by Alex Green on 3/19/26.
+//  Created by Alex Green on 11/22/26.
 //
 
 import SwiftUI
@@ -23,7 +23,7 @@ struct ToastRootView<Content: View>: View {
     }
 
     // MARK: List Page (Planner, Checklist, Routine)
-    init<Item: ListItemDetails>(
+    init<Item: ListItem>(
         listEngine: ListEngine<Item>,
         @ViewBuilder content: @escaping () -> Content
     ) {

@@ -2,12 +2,12 @@
 //  DeleteSelectedButton.swift
 //  Planner
 //
-//  Created by Alex Green on 2/11/26.
+//  Created by Alex Green on 11/22/26.
 //
 
 import SwiftUI
 
-struct DeleteSelectedButtonView<Item: ListItemDetails>: View {
+struct DeleteSelectedButtonView<Item: ListItem>: View {
     let confirmationConfig: ConfirmationConfig
 
     @EnvironmentObject private var listEngine: ListEngine<Item>

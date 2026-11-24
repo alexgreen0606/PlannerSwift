@@ -23,8 +23,8 @@
 //                planner: context.planner,
 //                tripLabel: context.planner.trip?.title,
 //                sortedPlannerEvents: context.eventContext.sortedPlannerEvents,
-//                sortedEventChips: context.eventContext.sortedEventChips,
-//                sortedBirthdayChips: context.eventContext.sortedBirthdayChips,
+//                sortedChipItems: context.eventContext.sortedChipItems,
+//                sortedBirthdayItems: context.eventContext.sortedBirthdayItems,
 //                header: PlannerHeaderView(datestamp: datestamp),
 //                width: todayService.todaystamp == datestamp
 //                    ? PlannerPreviewCardLayout.TODAY_WIDTH

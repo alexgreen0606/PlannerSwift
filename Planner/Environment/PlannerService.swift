@@ -243,11 +243,12 @@ class PlannerService: ObservableObject {
         if !freshCalendarTimeZoneDateIds.contains(timeZoneDateId) {
             freshCalendarTimeZoneDateIds.insert(timeZoneDateId)
 
-            modelContext.syncCalendar(
-                startOfDay: startOfDay,
-                calendarService: calendarService,
-                settings: settings
-            )
+            // TODO
+//            modelContext.syncCalendar(
+//                startOfDay: startOfDay,
+//                calendarService: calendarService,
+//                settings: settings
+//            )
         }
     }
 

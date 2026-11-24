@@ -10,45 +10,6 @@ import ContactsUI
 import EventKit
 
 extension CNContactStore {
-    func loadContact(
-        for plannerEvent: PlannerEvent,
-        calendarService: CalendarService
-    ) -> CNContact? {
-        guard
-            calendarService.hasContactsAccess == true
-        else { return nil }
-
-        if let existing = plannerEvent.eKEventContext?.birthdayContact {
-            return existing
-        }
-
-        guard
-            let contactId = plannerEvent.eKEventContext?
-                .birthdayContactIdentifier
-        else {
-            return nil
-        }
-
-        do {
-            let contact = try unifiedContact(
-                withIdentifier: contactId,
-                keysToFetch: [
-                    CNContactViewController.descriptorForRequiredKeys()
-                ] as [CNKeyDescriptor]
-            )
-
-            plannerEvent.eKEventContext?.birthdayContact = contact
-
-            return contact
-        } catch {
-            assertionFailure(
-                "ERROR CNContactStore+Birthdays loadContact: \(error)"
-            )
-        }
-
-        return nil
-    }
-
     func syncBirthdayContacts(
         /// Maps contact IDs to planner events for birthdays.
         for plannerEventMap: [String: PlannerEvent],

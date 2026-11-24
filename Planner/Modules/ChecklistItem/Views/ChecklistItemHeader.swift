@@ -13,7 +13,7 @@ struct ChecklistItemHeaderView: ToolbarContent {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @EnvironmentObject private var listEngine: ListEngine<ChecklistItem>
+    @EnvironmentObject private var listEngine: ListEngine_old<ChecklistItem>
 
     private var isRootFolder: Bool {
         item.parent == nil

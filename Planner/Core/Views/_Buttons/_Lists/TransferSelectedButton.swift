@@ -2,12 +2,12 @@
 //  TransferSelectedButton.swift
 //  Planner
 //
-//  Created by Alex Green on 5/21/26.
+//  Created by Alex Green on 11/22/26.
 //
 
 import SwiftUI
 
-struct TransferSelectedButtonView<Item: ListItemDetails>: View {
+struct TransferSelectedButtonView<Item: ListItem>: View {
     @Binding private var showTransferSheet: Bool
     private let systemImage: String
     private let disabled: Bool

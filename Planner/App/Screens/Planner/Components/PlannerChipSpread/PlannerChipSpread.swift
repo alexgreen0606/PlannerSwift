@@ -2,7 +2,7 @@
 //  PlannerChipSpread.swift
 //  Planner
 //
-//  Created by Alex Green on 12/17/25.
+//  Created by Alex Green on 11/22/26.
 //
 
 import EventKit
@@ -16,17 +16,17 @@ struct PlannerChipSpreadView: View {
     let planner: Planner
     let startOfDay: DateInRegion
     let plannerLocation: Location?
-    let sortedEventChips: [PlannerEvent]
-    let sortedBirthdayChips: [PlannerEvent]
+    let sortedChipItems: [PlannerItem]
+    let sortedBirthdayItems: [PlannerBirthdayItem]
     let settings: Settings
     var namespace: Namespace.ID
-    let handleEventClick: (PlannerEvent) -> Void
+    let handleItemClick: (PlannerItem) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
     @EnvironmentObject private var calendarService: CalendarService
-    @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
+    @EnvironmentObject private var plannerEngine: ListEngine<PlannerItem>
 
     private var locationLabel: String {
         planner.locationLabel(
@@ -45,18 +45,17 @@ struct PlannerChipSpreadView: View {
             }
             tripChip
             ForEach(
-                sortedBirthdayChips,
-                id: \.stableId,
+                sortedBirthdayItems,
                 content: birthdayChip
             )
             ForEach(
-                sortedEventChips,
-                id: \.stableId,
+                sortedChipItems,
+                id: \.id,
                 content: eventChip
             )
         }
         .animateLazyAction(
-            from: sortedEventChips.map(\.title)
+            from: sortedChipItems.map(\.title)
         )
     }
 
@@ -92,39 +91,44 @@ struct PlannerChipSpreadView: View {
         }
     }
 
-    private func birthdayChip(_ plannerEvent: PlannerEvent) -> some View {
+    private func birthdayChip(_ item: PlannerBirthdayItem) -> some View {
         BirthdayChipView(
-            plannerEvent: plannerEvent,
+            item: item,
             settings: settings,
             namespace: namespace
         )
     }
 
     @ViewBuilder
-    private func eventChip(_ plannerEvent: PlannerEvent) -> some View {
-        let calendarColor = plannerEvent.calendarColor(accentColor: accentColor)
+    private func eventChip(_ item: PlannerItem) -> some View {
+        if let ekEvent = item.ekEvent {
+            let calendarColor = ekEvent.calendarColor(accentColor: accentColor)
 
-        let chipAccentColor =
-            !plannerEngine.isSelectMode
-            ? calendarColor
-            : plannerEngine.selectedItemIds.contains(plannerEvent.stableId)
-                ? accentColor.swiftUiColor : Color.secondary
+            let chipAccentColor =
+                !plannerEngine.isSelectMode
+                ? calendarColor
+                : plannerEngine.selectedItemIds.contains(item.id)
+                    ? accentColor.swiftUiColor : Color.secondary
 
-        AdornedValue(
-            plannerEvent.title,
-            iconConfig: IconConfig(
-                name: plannerEvent.calendarSystemImageName(settings: settings),
-                primaryColor: chipAccentColor,
-                secondaryColor: chipAccentColor
-            ),
-            color: .label
-        )
-        .glassChip(color: chipAccentColor, height: PlannerLayout.CHIP_HEIGHT) {
-            handleEventClick(plannerEvent)
+            AdornedValue(
+                item.title,
+                iconConfig: IconConfig(
+                    name: ekEvent.calendarSystemImageName(settings: settings),
+                    primaryColor: chipAccentColor,
+                    secondaryColor: chipAccentColor
+                ),
+                color: .label
+            )
+            .glassChip(
+                color: chipAccentColor,
+                height: PlannerLayout.CHIP_HEIGHT
+            ) {
+                handleItemClick(item)
+            }
+            .matchedTransitionSource(
+                id: item.id,
+                in: namespace
+            )
         }
-        .matchedTransitionSource(
-            id: plannerEvent.transitionId,
-            in: namespace
-        )
     }
 }

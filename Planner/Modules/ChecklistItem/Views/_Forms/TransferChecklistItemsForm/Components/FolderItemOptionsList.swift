@@ -17,7 +17,7 @@ struct FolderItemOptionsListView: View {
         .blue
 
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var listEngine: ListEngine<ChecklistItem>
+    @EnvironmentObject private var listEngine: ListEngine_old<ChecklistItem>
 
     @State private var options: [ChecklistItem] = []
 

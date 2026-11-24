@@ -14,7 +14,7 @@ struct SelectedItemActionsView: View {
     let namespace: Namespace.ID
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var listEngine: ListEngine<ChecklistItem>
+    @EnvironmentObject private var listEngine: ListEngine_old<ChecklistItem>
 
     private var deleteConfirmation: ConfirmationConfig {
         bulkDeleteChecklistItemsConfig(
@@ -39,13 +39,13 @@ struct SelectedItemActionsView: View {
     // MARK: - View Builders
 
     private var deleteSelectedButton: some View {
-        DeleteSelectedButtonView<ChecklistItem>(
+        DeleteSelectedButtonView_old<ChecklistItem>(
             confirmationConfig: deleteConfirmation
         )
     }
 
     private var transferSelectedButton: some View {
-        TransferSelectedButtonView<ChecklistItem>(
+        TransferSelectedButtonView_old<ChecklistItem>(
             showTransferSheet: $showTransferSheet,
             systemImage: "arrow.left.arrow.right",
             disabled: !canTransferItems,

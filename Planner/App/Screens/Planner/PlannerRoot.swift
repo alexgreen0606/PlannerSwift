@@ -2,48 +2,39 @@
 //  PlannerRoot.swift
 //  Planner
 //
-//  Created by Alex Green on 12/1/25.
+//  Created by Alex Green on 11/22/26.
 //
 
 import EventKit
+import EventKitUI
 import SwiftData
 import SwiftDate
 import SwiftUI
 
 struct PlannerRootView: View {
     private let planner: Planner
-    private let sortedPlannerEvents: [PlannerEvent]
-    private let sortedEventChips: [PlannerEvent]
-    private let sortedBirthdayChips: [PlannerEvent]
+    private let sortedListItems: [PlannerItem]
+    private let sortedChipItems: [PlannerItem]
+    private let sortedBirthdayItems: [PlannerBirthdayItem]
     private let settings: Settings
 
     init(
         planner: Planner,
-        sortedPlannerEvents: [PlannerEvent],
-        sortedEventChips: [PlannerEvent],
-        sortedBirthdayChips: [PlannerEvent],
+        sortedListItems: [PlannerItem],
+        sortedChipItems: [PlannerItem],
+        sortedBirthdayItems: [PlannerBirthdayItem],
         settings: Settings
     ) {
         self.planner = planner
-        self.sortedPlannerEvents = sortedPlannerEvents
-        self.sortedEventChips = sortedEventChips
-        self.sortedBirthdayChips = sortedBirthdayChips
+        self.sortedListItems = sortedListItems
+        self.sortedChipItems = sortedChipItems
+        self.sortedBirthdayItems = sortedBirthdayItems
         self.settings = settings
 
         self._plannerEngine = StateObject(
-            wrappedValue: ListEngine<PlannerEvent>(
-                toggleState: ListItemToggleState(
-                    isToggled: { $0.isCompleted },
-                    setIsToggled: { event, isCompleted in
-                        // Note: In the future isCompleted should be replaced with completedOn only.
-                        if isCompleted {
-                            event.completedOn = planner.datestamp
-                            event.isCompleted = true
-                        } else {
-                            event.completedOn = ""
-                            event.isCompleted = false
-                        }
-                    }
+            wrappedValue: ListEngine<PlannerItem>(
+                toggleState: .completion(
+                    modelContext: { [weak planner] in planner?.modelContext }
                 ),
                 settings: settings
             )
@@ -59,9 +50,9 @@ struct PlannerRootView: View {
     @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
-    @StateObject private var plannerEngine: ListEngine<PlannerEvent>
+    @StateObject private var plannerEngine: ListEngine<PlannerItem>
 
-    @State private var eventSheetContext: PlannerEventSheetContext?
+    @State private var eventSheetContext: EventSheetContext?
     @State private var showTransferSheet = false
     @State private var showLocationSheet = false
 
@@ -71,28 +62,20 @@ struct PlannerRootView: View {
         planner.startOfDay(settings: settings)
     }
 
-    private var sortedPendingPlannerEvents: [PlannerEvent] {
-        sortedPlannerEvents.filter { event in
-            (!plannerEngine.isItemToggled(event)
-                && !plannerEngine.newlyPendingIds.contains(event.stableId))
-                || plannerEngine.newlyCompletedIds.contains(event.stableId)
-        }
+    private var sortedPendingListItems: [PlannerItem] {
+        sortedListItems.filter(plannerEngine.isItemInPendingList)
     }
 
-    private var sortedCompletePlannerEvents: [PlannerEvent] {
-        sortedPlannerEvents.filter { event in
-            (plannerEngine.isItemToggled(event)
-                && !plannerEngine.newlyCompletedIds.contains(event.stableId))
-                || plannerEngine.newlyPendingIds.contains(event.stableId)
-        }
+    private var sortedCompleteListItems: [PlannerItem] {
+        sortedListItems.filter(plannerEngine.isItemInCompletedList)
     }
 
-    private var visibleEvents: [PlannerEvent] {
+    private var visibleItems: [PlannerItem] {
         if planner.showCompleted {
-            return sortedPlannerEvents + sortedEventChips
+            return sortedListItems + sortedChipItems
         }
 
-        return sortedPendingPlannerEvents + sortedEventChips
+        return sortedPendingListItems + sortedChipItems
     }
 
     private var plannerLocation: Location? {
@@ -115,23 +98,20 @@ struct PlannerRootView: View {
                 ScrollViewReader { scrollProxy in
                     PlannerContentsListView(
                         showLocationSheet: $showLocationSheet,
-                        eventSheetContext: $eventSheetContext,
                         planner: planner,
                         startOfDay: startOfDay,
                         plannerLocation: plannerLocation,
-                        sortedPlannerEvents: sortedPlannerEvents,
-                        sortedPendingPlannerEvents:
-                            sortedPendingPlannerEvents,
-                        sortedCompletePlannerEvents:
-                            sortedCompletePlannerEvents,
-                        sortedEventChips: sortedEventChips,
-                        sortedBirthdayChips: sortedBirthdayChips,
+                        sortedListItems: sortedListItems,
+                        sortedPendingListItems: sortedPendingListItems,
+                        sortedCompleteListItems: sortedCompleteListItems,
+                        sortedChipItems: sortedChipItems,
+                        sortedBirthdayItems: sortedBirthdayItems,
                         showCompleted: planner.showCompleted,
                         scrollProxy: scrollProxy,
                         settings: settings,
                         namespace: namespace,
-                        createEvent: createEvent,
-                        openEvent: openEvent
+                        createItem: createItem,
+                        openItem: openItem
                     )
                     .safeAreaBar(edge: .bottom) {
                         actionToolbar(scrollProxy: scrollProxy)
@@ -163,33 +143,12 @@ struct PlannerRootView: View {
 
             // MARK: Event Form
 
-            .sheet(item: $eventSheetContext) { context in
-                Group {
-                    if context.plannerEvent.eKEventContext?
-                        .calendarAllowsContentModifications == false
-                    {
-                        ViewCalendarEventFormView(
-                            plannerEvent: context.plannerEvent,
-                            ekEventStore: calendarService.ekEventStore
-                        )
-                        .ignoresSafeArea()
-                        .presentationDetents([.height(300)])
-                    } else {
-                        EventFormView(
-                            plannerEvent: context.plannerEvent,
-                            planner: planner,
-                            ekEventStore: calendarService.ekEventStore,
-                            settings: settings
-                        )
-                    }
-                }
-                .navigationTransition(
-                    .zoom(
-                        sourceID: context.id,
-                        in: namespace
-                    )
-                )
-            }
+            .eventFormSheet(
+                context: $eventSheetContext,
+                planner: planner,
+                settings: settings,
+                namespace: namespace
+            )
         }
     }
 
@@ -239,21 +198,22 @@ struct PlannerRootView: View {
                 PlannerActionMenuView(
                     showLocationSheet: $showLocationSheet,
                     planner: planner,
-                    plannerEvents: sortedPlannerEvents,
-                    hasVisibleEvents: !visibleEvents.isEmpty
+                    plannerItems: sortedListItems,
+                    hasVisibleEvents: !visibleItems.isEmpty
                 )
             } else {
-                SelectAllToggleView(visibleItems: visibleEvents)
+                SelectAllToggleView(visibleItems: visibleItems)
             }
         }
     }
 
-    // MARK: - View Builder
+    // MARK: - View Builders
 
     private func actionToolbar(scrollProxy: ScrollViewProxy) -> some View {
         var icons = ["info"]
 
-        if plannerEngine.activeEditor?.item.eKEventContext == nil {
+        // Flagging is Planner-only data. Calendar events don't support it.
+        if plannerEngine.activeEditor?.item.plannerEvent != nil {
             icons.append(
                 plannerEngine.activeEditor?.draft.isFlagged == true
                     ? "flag.fill" : "flag"
@@ -261,7 +221,7 @@ struct PlannerRootView: View {
         }
 
         return ListActionToolbarView<
-            PlannerEvent,
+            PlannerItem,
             SelectedEventActionsView
         >(
             keyboardAccessory: ListKeyboardAccessoryView(
@@ -274,17 +234,17 @@ struct PlannerRootView: View {
                 namespace: namespace
             ),
             createItem: {
-                createLowerEvent(scrollProxy: scrollProxy)
+                createLowerItem(scrollProxy: scrollProxy)
             }
         )
     }
 
     // MARK: - Functions
 
-    private func createEvent(at index: Int) {
-        plannerEngine.pendingFocusId = modelContext.createPlannerEvent(
+    private func createItem(at index: Int) {
+        plannerEngine.pendingFocusId = modelContext.createPlannerItem(
             at: index,
-            in: sortedPlannerEvents,
+            in: sortedListItems,
             startOfDay: startOfDay
         )
     }
@@ -293,7 +253,7 @@ struct PlannerRootView: View {
         if let activeEditor = plannerEngine.activeEditor {
             switch icon {
             case "info":
-                openEvent(activeEditor.item)
+                openItem(activeEditor.item)
             case "flag", "flag.fill":
                 activeEditor.draft.isFlagged.toggle()
             default:
@@ -302,24 +262,25 @@ struct PlannerRootView: View {
         }
     }
 
-    private func createLowerEvent(scrollProxy: ScrollViewProxy) {
+    private func createLowerItem(scrollProxy: ScrollViewProxy) {
         let targetIndex = getInsertionIndex(
-            pendingIndex: sortedPendingPlannerEvents.count,
-            sortedPendingItems: sortedPendingPlannerEvents,
-            sortedItems: sortedPlannerEvents
+            pendingIndex: sortedPendingListItems.count,
+            sortedPendingItems: sortedPendingListItems,
+            sortedItems: sortedListItems
         )
 
-        createEvent(at: targetIndex)
+        createItem(at: targetIndex)
         scrollProxy.scrollToBottomOfList()
     }
 
-    private func openEvent(_ event: PlannerEvent) {
-        plannerEngine.openSheet(for: event) {
-            eventSheetContext =
-                PlannerEventSheetContext(
-                    plannerEvent: event
-                )
+    private func openItem(_ item: PlannerItem) {
+        plannerEngine.openSheet(for: item) {
+            eventSheetContext = EventSheetContext(
+                item: item,
+                planner: planner,
+                ekEventStore: calendarService.ekEventStore,
+                settings: settings
+            )
         }
     }
-
 }

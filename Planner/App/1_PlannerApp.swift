@@ -21,8 +21,6 @@ struct PlannerApp: App {
 
             Planner.self,
             PlannerEvent.self,
-            EKEventContext.self,
-            RoutineEventRecordContext.self,
             PlannerWeather.self,
 
             ChecklistItem.self,
@@ -30,6 +28,12 @@ struct PlannerApp: App {
             Routine.self,
             RoutineEvent.self,
             RoutineEventContext.self,
+
+            EkEventPlannerState.self,
+
+            // Note: These are deprecated in favor of the new PlannerItem approach.
+            EKEventContext.self,
+            RoutineEventRecordContext.self,
         ])
 
         let configuration = ModelConfiguration(

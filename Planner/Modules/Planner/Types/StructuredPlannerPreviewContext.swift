@@ -17,7 +17,7 @@ struct StructuredPlannerPreviewContext {
         planner: Planner,
         activeQuery: PlannerSearchQuery? = nil,
         sortedBirthdayEvents: [PlannerEvent],
-        sortedEventChips: [PlannerEvent],
+        sortedChipItems: [PlannerEvent],
         sortedPlannerEvents: [PlannerEvent],
         maxPreviewSlots: Int = 5
     ) {
@@ -52,12 +52,12 @@ struct StructuredPlannerPreviewContext {
                 $0.searchQueryScore(activeQuery, in: datestamp) != nil
             }
 
-            filteredEventChips = sortedEventChips.filter {
+            filteredEventChips = sortedChipItems.filter {
                 $0.searchQueryScore(activeQuery, in: datestamp) != nil
             }
         } else {
             filteredBirthdayChips = sortedBirthdayEvents
-            filteredEventChips = sortedEventChips
+            filteredEventChips = sortedChipItems
         }
 
         // MARK: Filter Search Results for List Events

@@ -18,7 +18,7 @@ struct PlannerContentPreviewView: View {
         planner: Planner,
         activeQuery: PlannerSearchQuery? = nil,
         sortedBirthdayEvents: [PlannerEvent],
-        sortedEventChips: [PlannerEvent],
+        sortedChipItems: [PlannerEvent],
         sortedPlannerEvents: [PlannerEvent],
         settings: Settings
     ) {
@@ -29,7 +29,7 @@ struct PlannerContentPreviewView: View {
             planner: planner,
             activeQuery: activeQuery,
             sortedBirthdayEvents: sortedBirthdayEvents,
-            sortedEventChips: sortedEventChips,
+            sortedChipItems: sortedChipItems,
             sortedPlannerEvents: sortedPlannerEvents
         )
     }
@@ -85,7 +85,7 @@ struct PlannerContentPreviewView: View {
         ForEach(
             context.birthdayEvents
         ) {
-            BirthdayLabelView(
+            BirthdayLabelView_old(
                 plannerEvent: $0,
                 settings: settings
             )

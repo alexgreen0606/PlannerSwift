@@ -2,7 +2,7 @@
 //  SelectedEventActions.swift
 //  Planner
 //
-//  Created by Alex Green on 3/11/26.
+//  Created by Alex Green on 11/22/26.
 //
 
 import SwiftData
@@ -15,11 +15,11 @@ struct SelectedEventActionsView: View {
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarService: CalendarService
-    @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
+    @EnvironmentObject private var plannerEngine: ListEngine<PlannerItem>
 
     private var deleteConfig: ConfirmationConfig {
-        bulkDeletePlannerEventConfig(
-            events: plannerEngine.selectedItems,
+        bulkDeletePlannerItemConfig(
+            items: plannerEngine.selectedItems,
             delete: deleteSelectedEvents
         )
     }
@@ -28,13 +28,13 @@ struct SelectedEventActionsView: View {
 
     var body: some View {
         HStack {
-            DeleteSelectedButtonView<PlannerEvent>(
+            DeleteSelectedButtonView<PlannerItem>(
                 confirmationConfig: deleteConfig
             )
 
             Spacer()
 
-            TransferSelectedButtonView<PlannerEvent>(
+            TransferSelectedButtonView<PlannerItem>(
                 showTransferSheet: $showTransferSheet,
                 namespace: namespace
             )
@@ -50,7 +50,7 @@ struct SelectedEventActionsView: View {
         plannerEngine.clearSelections()
 
         DispatchQueue.main.async {
-            modelContext.deletePlannerEvents(
+            modelContext.deletePlannerItems(
                 selections,
                 ekEventStore: calendarService.ekEventStore
             )

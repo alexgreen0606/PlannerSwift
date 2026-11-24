@@ -2,7 +2,7 @@
 //  LocationChip.swift
 //  Planner
 //
-//  Created by Alex Green on 5/21/26.
+//  Created by Alex Green on 11/22/26.
 //
 
 import SwiftData
@@ -22,18 +22,20 @@ struct LocationChipView: View {
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var plannerService: PlannerService
-    @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
+    @EnvironmentObject private var plannerEngine: ListEngine<PlannerItem>
 
     private var locationIconConfig: IconConfig {
         let config = planner.locationIconConfig(
             settings: settings,
             accentColor: accentColor
         )
-        
+
         return IconConfig(
             name: config.name,
-            primaryColor: plannerEngine.selectModeDisabledColor ?? config.primaryColor,
-            secondaryColor: plannerEngine.selectModeDisabledColor ?? config.secondaryColor
+            primaryColor: plannerEngine.dimWhenSelecting
+                ?? config.primaryColor,
+            secondaryColor: plannerEngine.dimWhenSelecting
+                ?? config.secondaryColor
         )
     }
 
@@ -43,21 +45,23 @@ struct LocationChipView: View {
         AdornedValue(
             locationLabel,
             iconConfig: locationIconConfig,
-            color: plannerEngine.selectModeDisabledColor
+            color: plannerEngine.dimWhenSelecting
         )
         .glassChip(
-            color: plannerEngine.selectModeDisabledColor,
+            color: plannerEngine.dimWhenSelecting,
             height: PlannerLayout.CHIP_HEIGHT,
-            onTap: plannerEngine.isSelectMode ? nil : {
-                showLocationSheet = true
-            }
+            onTap: plannerEngine.isSelectMode
+                ? nil
+                : {
+                    showLocationSheet = true
+                }
         )
         .matchedTransitionSource(
             id: LOCATION_CHIP_ID,
             in: namespace
         )
 
-        // MARK: Location Search Form
+        // MARK: Location Form
 
         .sheet(isPresented: $showLocationSheet) {
             LocationFormView(

@@ -2,13 +2,12 @@
 //  ListItemToggle.swift
 //  Planner
 //
-//  Created by Alex Green on 12/1/25.
+//  Created by Alex Green on 11/22/26.
 //
 
-import SwiftData
 import SwiftUI
 
-struct ListItemToggleView<Item: ListItemDetails>: View {
+struct ListItemToggleView<Item: ListItem>: View {
     private let item: Item
     private let opacity: Double
     private let customToggleConfig: ToggleConfig?
@@ -37,7 +36,7 @@ struct ListItemToggleView<Item: ListItemDetails>: View {
 
     private var isChecked: Bool {
         if listEngine.isSelectMode {
-            return listEngine.selectedItemIds.contains(item.stableId)
+            return listEngine.selectedItemIds.contains(item.id)
         }
 
         return listEngine.isItemToggled(item)
@@ -45,7 +44,7 @@ struct ListItemToggleView<Item: ListItemDetails>: View {
 
     private var toggleConfig: ToggleConfig {
         if let customConfig = customToggleConfig,
-           !listEngine.isSelectMode
+            !listEngine.isSelectMode
         {
             return customConfig
         }

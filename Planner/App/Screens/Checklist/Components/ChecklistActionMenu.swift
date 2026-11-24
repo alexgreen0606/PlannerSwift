@@ -16,7 +16,7 @@ struct ChecklistActionMenuView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var listEngine: ListEngine<ChecklistItem>
+    @EnvironmentObject private var listEngine: ListEngine_old<ChecklistItem>
 
     @State private var showDeleteCompletedConfirmation = false
     @State private var showDeleteChecklistConfirmation = false
@@ -53,7 +53,7 @@ struct ChecklistActionMenuView: View {
                 }
             )
 
-            SelectItemsButtonView<ChecklistItem>(
+            SelectItemsButtonView_old<ChecklistItem>(
                 hasVisibleItem: !visibleItems.isEmpty
             )
 

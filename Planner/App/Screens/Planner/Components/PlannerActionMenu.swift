@@ -2,7 +2,7 @@
 //  PlannerActionMenu.swift
 //  Planner
 //
-//  Created by Alex Green on 3/11/26.
+//  Created by Alex Green on 11/22/26.
 //
 
 import SwiftData
@@ -11,19 +11,19 @@ import SwiftUI
 struct PlannerActionMenuView: View {
     @Binding var showLocationSheet: Bool
     let planner: Planner
-    let plannerEvents: [PlannerEvent]
+    let plannerItems: [PlannerItem]
     let hasVisibleEvents: Bool
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var plannerManager: ListEngine<PlannerEvent>
+    @EnvironmentObject private var plannerEngine: ListEngine<PlannerItem>
     @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var plannerService: PlannerService
 
     @State private var showDeleteCompletedConfirmation = false
 
-    private var rawCompletedEvents: [PlannerEvent] {
-        plannerEvents.filter { $0.isCompleted }
+    private var rawCompletedEvents: [PlannerItem] {
+        plannerItems.filter { $0.isCompleted }
     }
 
     private var dateLabel: String {
@@ -49,7 +49,7 @@ struct PlannerActionMenuView: View {
     }
 
     private var deleteCompletedConfig: ConfirmationConfig {
-        bulkDeleteCompletedPlannerEventConfig(
+        bulkDeleteCompletedPlannerItemConfig(
             completedEventCount: rawCompletedEvents.count,
             dateLabel: dateLabel,
             hasCalendarAccess: calendarService.hasCalendarAccess == true,
@@ -70,7 +70,7 @@ struct PlannerActionMenuView: View {
                 }
             )
 
-            SelectItemsButtonView<PlannerEvent>(
+            SelectItemsButtonView<PlannerItem>(
                 itemsLabel: "Events",
                 hasVisibleItem: hasVisibleEvents
             )
@@ -143,7 +143,7 @@ struct PlannerActionMenuView: View {
     private func deleteCompletedEvents() {
         // Note: Don't pass the EKEventStore here.
         // Calendar events are meant to survive mass-deletion so users can look back on their calendar.
-        modelContext.deletePlannerEvents(rawCompletedEvents)
+        modelContext.deletePlannerItems(rawCompletedEvents)
     }
 
     private func toggleRoutineExclusion() {

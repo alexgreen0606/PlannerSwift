@@ -68,7 +68,7 @@ struct PlannerListRootView: View {
                                     id: \.self
                                 ) {
                                     datestamp in
-                                    PlannerContextLoaderView(
+                                    PlannerContextLoaderView_old(
                                         datestamp: datestamp,
                                         settings: settings
                                     ) {
@@ -77,10 +77,10 @@ struct PlannerListRootView: View {
                                             planner: plannerContext.planner,
                                             sortedBirthdayEvents: plannerContext
                                                 .eventContext
-                                                .sortedBirthdayChips,
-                                            sortedEventChips: plannerContext
+                                                .sortedBirthdayItems,
+                                            sortedChipItems: plannerContext
                                                 .eventContext
-                                                .sortedEventChips,
+                                                .sortedChipItems,
                                             sortedPlannerEvents: plannerContext
                                                 .eventContext
                                                 .sortedPlannerEvents,

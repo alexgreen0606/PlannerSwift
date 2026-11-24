@@ -2,32 +2,30 @@
 //  PlannerContentsList.swift
 //  Planner
 //
-//  Created by Alex Green on 3/11/26.
+//  Created by Alex Green on 11/22/26.
 //
 
 import EventKit
 import SwiftData
 import SwiftDate
 import SwiftUI
-import WeatherKit
 
 struct PlannerContentsListView: View {
     @Binding var showLocationSheet: Bool
-    @Binding var eventSheetContext: PlannerEventSheetContext?
     let planner: Planner
     let startOfDay: DateInRegion
     let plannerLocation: Location?
-    let sortedPlannerEvents: [PlannerEvent]
-    let sortedPendingPlannerEvents: [PlannerEvent]
-    let sortedCompletePlannerEvents: [PlannerEvent]
-    let sortedEventChips: [PlannerEvent]
-    let sortedBirthdayChips: [PlannerEvent]
+    let sortedListItems: [PlannerItem]
+    let sortedPendingListItems: [PlannerItem]
+    let sortedCompleteListItems: [PlannerItem]
+    let sortedChipItems: [PlannerItem]
+    let sortedBirthdayItems: [PlannerBirthdayItem]
     let showCompleted: Bool
     let scrollProxy: ScrollViewProxy
     let settings: Settings
     let namespace: Namespace.ID
-    let createEvent: (Int) -> Void
-    let openEvent: (PlannerEvent) -> Void
+    let createItem: (Int) -> Void
+    let openItem: (PlannerItem) -> Void
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
@@ -36,23 +34,23 @@ struct PlannerContentsListView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarService: CalendarService
     @EnvironmentObject private var todayService: TodayService
-    @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
+    @EnvironmentObject private var plannerEngine: ListEngine<PlannerItem>
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
     // MARK: - Body
 
     var body: some View {
         SortableTextfieldListView(
-            sortedItems: sortedPlannerEvents,
+            sortedItems: sortedListItems,
             itemsLabel: "Plans",
             floatingInfo: chipSpread,
-            createItem: createEvent,
-            moveItem: moveUncheckedEvent,
-            deleteItem: deleteEvent,
-            onCommitItem: handleEventChange,
-            onAdornmentClick: openEvent,
-            sortedPendingItems: sortedPendingPlannerEvents,
-            sortedCompletedItems: sortedCompletePlannerEvents,
+            createItem: createItem,
+            moveItem: moveUncheckedItem,
+            deleteItem: deleteItem,
+            onCommitItem: handleItemChange,
+            onAdornmentClick: openItem,
+            sortedPendingItems: sortedPendingListItems,
+            sortedCompletedItems: sortedCompleteListItems,
             showCompleted: showCompleted,
             tint: { _ in accentColor.swiftUiColor },
             leftAdornment: { _ in EmptyView() },
@@ -72,32 +70,32 @@ struct PlannerContentsListView: View {
             planner: planner,
             startOfDay: startOfDay,
             plannerLocation: plannerLocation,
-            sortedEventChips: sortedEventChips,
-            sortedBirthdayChips: sortedBirthdayChips,
+            sortedChipItems: sortedChipItems,
+            sortedBirthdayItems: sortedBirthdayItems,
             settings: settings,
             namespace: namespace,
-            handleEventClick: { event in
+            handleItemClick: { item in
                 if plannerEngine.isSelectMode {
-                    plannerEngine.toggleItem(event)
+                    plannerEngine.toggleItem(item)
                     return
                 }
 
-                openEvent(event)
+                openItem(item)
             }
         )
     }
 
-    private func timeAdornment(event: PlannerEvent) -> some View {
-        PlannerEventTimeAdornmentView(
-            plannerEvent: event,
+    private func timeAdornment(item: PlannerItem) -> some View {
+        PlannerItemTimeAdornmentView(
+            item: item,
             plannerDatestamp: planner.datestamp,
             plannerRegion: startOfDay.region
         )
     }
 
-    private func bottomAdornment(event: PlannerEvent) -> some View {
-        return PlannerEventBottomAdornmentView(
-            plannerEvent: event,
+    private func bottomAdornment(item: PlannerItem) -> some View {
+        PlannerItemBottomAdornmentView(
+            item: item,
             planner: planner,
             settings: settings
         )
@@ -105,26 +103,26 @@ struct PlannerContentsListView: View {
 
     // MARK: - Functions
 
-    private func moveUncheckedEvent(from: Int, to: Int) {
-        modelContext.movePlannerEvent(
+    private func moveUncheckedItem(from: Int, to: Int) {
+        modelContext.movePlannerItem(
             initialIndex: from,
             targetIndex: to,
-            sortedPendingPlannerEvents: sortedPendingPlannerEvents,
-            sortedPlannerEvents: sortedPlannerEvents,
+            sortedPendingItems: sortedPendingListItems,
+            sortedItems: sortedListItems,
             startOfDay: startOfDay
         )
     }
 
-    private func deleteEvent(_ event: PlannerEvent) {
-        modelContext.deletePlannerEvent(
-            event,
+    private func deleteItem(_ item: PlannerItem) {
+        modelContext.deletePlannerItem(
+            item,
             ekEventStore: calendarService.ekEventStore
         )
     }
 
-    private func handleEventChange(event: PlannerEvent) {
-        modelContext.handlePlannerEventChange(
-            event,
+    private func handleItemChange(item: PlannerItem) {
+        modelContext.handlePlannerItemChange(
+            item,
             in: planner,
             startOfDay: startOfDay,
             plannerLocation: plannerLocation,

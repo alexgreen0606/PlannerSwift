@@ -81,7 +81,7 @@ struct TransferChecklistItemsFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.showToast) private var showToast
-    @EnvironmentObject private var listEngine: ListEngine<ChecklistItem>
+    @EnvironmentObject private var listEngine: ListEngine_old<ChecklistItem>
 
     @State private var destinationItem: ChecklistItem?
 

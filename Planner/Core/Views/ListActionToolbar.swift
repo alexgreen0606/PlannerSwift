@@ -2,19 +2,19 @@
 //  ListActionToolbar.swift
 //  Planner
 //
-//  Created by Alex Green on 5/28/26.
+//  Created by Alex Green on 11/22/26.
 //
 
 import SwiftUI
 
-struct ListActionToolbarView<Item: ListItemDetails, SelectedItemActions: View>: View {
-    private let keyboardAccessory: ListKeyboardAccessoryView<Item>?
+struct ListActionToolbarView<Item: ListItem, SelectedItemActions: View>: View {
+    private let keyboardAccessory: ListKeyboardAccessoryView?
     private let selectedItemActions: SelectedItemActions
     private let createItem: () -> Void
 
     init(
         accentColor: Color? = nil,
-        keyboardAccessory: ListKeyboardAccessoryView<Item>? = nil,
+        keyboardAccessory: ListKeyboardAccessoryView? = nil,
         selectedItemActions: SelectedItemActions,
         createItem: @escaping () -> Void
     ) {

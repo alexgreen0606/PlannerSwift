@@ -132,7 +132,7 @@ struct TripPreviewView: View {
                     Array(trip.sortedPlanners.enumerated()),
                     id: \.element.datestamp
                 ) { index, planner in
-                    PlannerEventContextLoaderView(
+                    PlannerEventContextLoaderView_old(
                         planner: planner,
                         plannerService: plannerService,
                         settings: settings
@@ -141,9 +141,9 @@ struct TripPreviewView: View {
                             planner: planner,
                             sortedPlannerEvents: eventContext
                                 .sortedPlannerEvents,
-                            sortedEventChips: eventContext.sortedEventChips,
-                            sortedBirthdayChips: eventContext
-                                .sortedBirthdayChips,
+                            sortedChipItems: eventContext.sortedChipItems,
+                            sortedBirthdayItems: eventContext
+                                .sortedBirthdayItems,
                             header: PlannerHeaderView(
                                 datestamp: planner.datestamp,
                                 iconType: .date,

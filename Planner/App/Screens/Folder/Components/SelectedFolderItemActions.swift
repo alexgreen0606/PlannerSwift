@@ -15,7 +15,7 @@ struct SelectedFolderItemActionsView: ToolbarContent {
     let namespace: Namespace.ID
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var listEngine: ListEngine<ChecklistItem>
+    @EnvironmentObject private var listEngine: ListEngine_old<ChecklistItem>
 
     @State private var showDeleteConfirmation = false
 
@@ -30,7 +30,7 @@ struct SelectedFolderItemActionsView: ToolbarContent {
 
     var body: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
-            SelectAllToggleView(visibleItems: items)
+            SelectAllToggleView_old(visibleItems: items)
         }
 
         ToolbarSpacer(.fixed, placement: .topBarTrailing)

@@ -2,33 +2,18 @@
 //  BirthdayLabel.swift
 //  Planner
 //
-//  Created by Alex Green on 4/1/26.
+//  Created by Alex Green on 11/22/26.
 //
 
-import Contacts
 import EventKit
 import SwiftUI
 
 struct BirthdayLabelView: View {
-    private let plannerEvent: PlannerEvent
-    private let disabled: Bool
-    private let lineLimit: Int?
-    private let scale: CGFloat
-    private let settings: Settings
-
-    init(
-        plannerEvent: PlannerEvent,
-        disabled: Bool = false,
-        lineLimit: Int? = nil,
-        scale: CGFloat = 1,
-        settings: Settings
-    ) {
-        self.plannerEvent = plannerEvent
-        self.disabled = disabled
-        self.lineLimit = lineLimit
-        self.scale = scale
-        self.settings = settings
-    }
+    let chip: PlannerBirthdayItem
+    var disabled: Bool = false
+    var lineLimit: Int? = nil
+    var scale: CGFloat = 1
+    let settings: Settings
 
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
@@ -38,9 +23,7 @@ struct BirthdayLabelView: View {
     }
 
     private var contactPhoto: UIImage? {
-        guard
-            let imageData = plannerEvent.eKEventContext?.birthdayThumbnailData
-        else {
+        guard let imageData = chip.thumbnailData else {
             return nil
         }
 
@@ -48,7 +31,7 @@ struct BirthdayLabelView: View {
     }
 
     private var calendarColor: Color {
-        plannerEvent.calendarColor(accentColor: accentColor)
+        chip.ekEvent.calendarColor(accentColor: accentColor)
     }
 
     // MARK: - Body
@@ -63,14 +46,14 @@ struct BirthdayLabelView: View {
                     .frame(width: 24 * scale, height: 24 * scale)
                     .clipShape(Circle())
 
-                Value(plannerEvent.title, color: disabledColor, scale: scale)
+                Value(chip.title, color: disabledColor, scale: scale)
                     .lineLimit(lineLimit)
             }
         } else {
             AdornedValue(
-                plannerEvent.title,
+                chip.title,
                 iconConfig: IconConfig(
-                    name: plannerEvent.calendarSystemImageName(
+                    name: chip.ekEvent.calendarSystemImageName(
                         settings: settings
                     ),
                     primaryColor: disabledColor ?? calendarColor,

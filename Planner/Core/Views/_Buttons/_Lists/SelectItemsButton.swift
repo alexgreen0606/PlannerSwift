@@ -2,12 +2,12 @@
 //  SelectItemsButton.swift
 //  Planner
 //
-//  Created by Alex Green on 5/22/26.
+//  Created by Alex Green on 11/22/26.
 //
 
 import SwiftUI
 
-struct SelectItemsButtonView<Item: ListItemDetails>: View {
+struct SelectItemsButtonView<Item: ListItem>: View {
     private let itemsLabel: String
     private let hasVisibleItem: Bool
 

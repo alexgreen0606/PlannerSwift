@@ -2,12 +2,12 @@
 //  ProminentListButton.swift
 //  Planner
 //
-//  Created by Alex Green on 5/22/26.
+//  Created by Alex Green on 11/22/26.
 //
 
 import SwiftUI
 
-struct ProminentListButtonView<Item: ListItemDetails>: View {
+struct ProminentListButtonView<Item: ListItem>: View {
     private let color: Color?
     private let createItem: () -> Void
 

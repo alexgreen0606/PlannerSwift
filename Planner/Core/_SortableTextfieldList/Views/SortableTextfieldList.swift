@@ -2,15 +2,20 @@
 //  SortableTextfieldList.swift
 //  Planner
 //
-//  Created by Alex Green on 12/1/25.
+//  Created by Alex Green on 11/22/26.
 //
 
 import Combine
 import SwiftData
 import SwiftUI
 
+/// Renders any `ListItem`. Items don't need to be
+/// SwiftData models, so a single list can mix data from multiple sources (ex: Planner events and
+/// EventKit events) without copying it into SwiftData.
+///
+/// Requires a `ListEngine<Item>` in the environment.
 struct SortableTextfieldListView<
-    Item: ListItemDetails,
+    Item: ListItem,
     FloatingInfo: View,
     PendingHeader: View,
     CompletedHeader: View,
@@ -26,7 +31,7 @@ struct SortableTextfieldListView<
     private let hideToggles: Bool
     private let createItem: (Int) -> Void
     private let moveItem: (Int, Int) -> Void
-    private let deleteItem: ((Item) -> Void)?
+    private let deleteItem: (Item) -> Void
     private let onCommitItem: ((Item) -> Void)?
     private let onAdornmentClick: ((Item) -> Void)?
 
@@ -46,6 +51,10 @@ struct SortableTextfieldListView<
     private let namespace: Namespace.ID?
     private let settings: Settings
 
+    /// - Parameters:
+    ///   - deleteItem: Called when an item's title is cleared while editing.
+    ///   - onCommitItem: Called after the item's draft has been committed to it. Use this to persist
+    ///     changes the draft can't save on its own (ex: saving an `EKEvent` to its store).
     init(
         sortedItems: [Item],
         itemsLabel: String = "Items",
@@ -55,7 +64,7 @@ struct SortableTextfieldListView<
         hideToggles: Bool = false,
         createItem: @escaping (Int) -> Void,
         moveItem: @escaping (Int, Int) -> Void,
-        deleteItem: ((Item) -> Void)? = nil,
+        deleteItem: @escaping (Item) -> Void,
         onCommitItem: ((Item) -> Void)? = nil,
         onAdornmentClick: ((Item) -> Void)? = nil,
         sortedPendingItems: [Item]? = nil,
@@ -95,9 +104,8 @@ struct SortableTextfieldListView<
         self.namespace = namespace
         self.settings = settings
     }
-    
+
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var listEngine: ListEngine<Item>
 
     private var emptyPendingLabel: LocalizedStringKey {
@@ -124,7 +132,6 @@ struct SortableTextfieldListView<
                     }
                     .reorderContainer(
                         for: Item.self,
-                        itemID: \.stableId,
                         move: handleRowReorder
                     )
                 }
@@ -195,7 +202,7 @@ struct SortableTextfieldListView<
             .listRowInsets(EdgeInsets())
             .discreetListItem()
 
-            let items = ForEach(sortedPendingItems, id: \.stableId) { item in
+            let items = ForEach(sortedPendingItems, id: \.id) { item in
                 RowView(
                     item: item,
                     index: indexOf(item, in: sortedPendingItems),
@@ -208,7 +215,7 @@ struct SortableTextfieldListView<
                     showCompleted: showCompleted,
                     namespace: namespace,
                     settings: settings,
-                    modelContext: modelContext,
+                    listEngine: listEngine,
                     createItem: attemptCreateItem,
                     deleteItem: deleteItem,
                     onCommit: onCommitItem,
@@ -257,7 +264,7 @@ struct SortableTextfieldListView<
     private var completedSection: some View {
         if showCompleted {
             Section {
-                ForEach(sortedCompletedItems, id: \.stableId) { item in
+                ForEach(sortedCompletedItems, id: \.id) { item in
                     RowView(
                         item: item,
                         index: indexOf(item, in: sortedCompletedItems),
@@ -269,7 +276,7 @@ struct SortableTextfieldListView<
                         bottomAdornment: bottomAdornment(item),
                         showCompleted: showCompleted,
                         settings: settings,
-                        modelContext: modelContext
+                        listEngine: listEngine
                     )
                 }
 
@@ -341,13 +348,14 @@ struct SortableTextfieldListView<
     @available(iOS 27, *)
     private func handleRowReorder(
         _ difference: ReorderDifference<
-            UUID,
+            Item.ID,
             ReorderableSingleCollectionIdentifier
         >
     ) {
         guard
+            let sourceId = difference.sources.first,
             let sourceIndex = sortedPendingItems.firstIndex(
-                where: { $0.stableId == difference.sources[0] }
+                where: { $0.id == sourceId }
             )
         else { return }
 
@@ -357,7 +365,7 @@ struct SortableTextfieldListView<
         case .before(let value):
             guard
                 let index = sortedPendingItems.firstIndex(where: {
-                    $0.stableId == value
+                    $0.id == value
                 })
             else { return }
 
@@ -390,9 +398,12 @@ struct SortableTextfieldListView<
         createItem(insertionIndex)
     }
 
-    private func indexOf(_ item: Item, in items: [Item]) -> Int {
+    private func indexOf(
+        _ item: Item,
+        in items: [Item]
+    ) -> Int {
         return items.firstIndex(
-            where: { $0.stableId == item.stableId }
+            where: { $0.id == item.id }
         ) ?? 0
     }
 }

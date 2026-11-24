@@ -57,7 +57,7 @@ struct CalendarPlannerPreviewView: View {
                 }
 
             if !isScrolling {
-                PlannerContextLoaderView(
+                PlannerContextLoaderView_old(
                     datestamp: datestamp,
                     settings: settings
                 ) { plannerContext in
@@ -159,7 +159,7 @@ struct CalendarPlannerPreviewView: View {
         ForEach(
             context.birthdayEvents
         ) {
-            BirthdayLabelView(
+            BirthdayLabelView_old(
                 plannerEvent: $0,
                 lineLimit: 1,
                 scale: TEXT_SCALE,
@@ -232,15 +232,15 @@ struct CalendarPlannerPreviewView: View {
     // MARK: - Functions
 
     func structuredPlannerPreviewContext(
-        for plannerContext: PlannerContext
+        for plannerContext: PlannerContext_old
     ) -> StructuredPlannerPreviewContext {
         StructuredPlannerPreviewContext(
             planner: plannerContext.planner,
             activeQuery: plannerService.activeQuery,
             sortedBirthdayEvents: plannerContext.eventContext
-                .sortedBirthdayChips,
-            sortedEventChips: plannerContext.eventContext
-                .sortedEventChips,
+                .sortedBirthdayItems,
+            sortedChipItems: plannerContext.eventContext
+                .sortedChipItems,
             sortedPlannerEvents: plannerContext.eventContext
                 .sortedPlannerEvents.filterOutRoutineUnlessSearching(
                     activeQuery: plannerService.activeQuery

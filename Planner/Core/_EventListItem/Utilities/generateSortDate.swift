@@ -11,6 +11,28 @@ import SwiftUI
 
 private let MINIMUM_SECONDS_GAP = 0.0001
 
+// MARK: Planner Item Caller
+@MainActor
+func generatePlannerItemSortDate(
+    at index: Int,
+    /// May or may not contain the event being placed.
+    in sortedItems: [PlannerItem],
+    startOfDay: DateInRegion,
+    modelContext: ModelContext
+) -> Date {
+    generateSortDate(
+        at: index,
+        in: sortedItems,
+        startOfDay: startOfDay,
+        getSortDate: {
+            $0.sortDate
+        },
+        setSortDate: { event, sortDate in
+            modelContext.setSortDate(sortDate, for: event)
+        }
+    )
+}
+
 // MARK: Planner Event Caller
 @MainActor
 func generatePlannerEventSortDate(
@@ -57,7 +79,7 @@ func generateRoutineEventSortDate(
 // MARK: - Generation Logic
 
 @MainActor
-private func generateSortDate<Event: PersistentModel>(
+private func generateSortDate<Event>(
     at index: Int,
     /// May or may not contain the event being placed.
     in sortedEvents: [Event],
@@ -104,7 +126,7 @@ private func midpoint(between a: Date, and b: Date) -> Date {
 }
 
 @MainActor
-private func normalizeSortDates<Event: PersistentModel>(
+private func normalizeSortDates<Event>(
     for events: [Event],
     startOfDay: DateInRegion,
     setSortDate: @MainActor (Event, Date) -> Void

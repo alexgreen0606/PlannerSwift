@@ -28,7 +28,7 @@ struct RoutineActionMenuView: View {
 
     var body: some View {
         Menu("", systemImage: "ellipsis") {
-            SelectItemsButtonView<RoutineEventContext>(
+            SelectItemsButtonView_old<RoutineEventContext>(
                 itemsLabel: "Events",
                 hasVisibleItem: !routineEvents.isEmpty
             )

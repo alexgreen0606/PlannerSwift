@@ -2,14 +2,14 @@
 //  Row.swift
 //  Planner
 //
-//  Created by Alex Green on 12/1/25.
+//  Created by Alex Green on 11/22/26.
 //
 
 import SwiftData
 import SwiftUI
 
 struct RowView<
-    Item: ListItemDetails,
+    Item: ListItem,
     LeftAdornment: View,
     RightAdornment: View,
     BottomAdornment: View
@@ -28,8 +28,6 @@ struct RowView<
     private let namespace: Namespace.ID?
     private let settings: Settings
     private let createItem: ((Int) -> Void)?
-    private let deleteItem: ((Item) -> Void)?
-    private let onCommit: ((Item) -> Void)?
     private let onAdornmentClick: ((Item) -> Void)?
 
     // MARK: Pending Items
@@ -45,9 +43,9 @@ struct RowView<
         showCompleted: Bool,
         namespace: Namespace.ID?,
         settings: Settings,
-        modelContext: ModelContext,
+        listEngine: ListEngine<Item>,
         createItem: @escaping (Int) -> Void,
-        deleteItem: ((Item) -> Void)?,
+        deleteItem: @escaping (Item) -> Void,
         onCommit: ((Item) -> Void)?,
         onAdornmentClick: ((Item) -> Void)?
     ) {
@@ -63,21 +61,18 @@ struct RowView<
         self.namespace = namespace
         self.settings = settings
         self.createItem = createItem
-        self.deleteItem = deleteItem
-        self.onCommit = onCommit
         self.onAdornmentClick = onAdornmentClick
 
         self.toggleOnly = false
 
+        self._listEngine = ObservedObject(wrappedValue: listEngine)
         self._editorSession = StateObject(
             wrappedValue: EditorSession(
                 item: item,
-                deleteItem: { item in
-                    if let deleteItem {
-                        deleteItem(item)
-                    } else {
-                        modelContext.safeDelete(item)
-                    }
+                draft: listEngine.draft(for: item),
+                deleteItem: { [weak listEngine] item in
+                    listEngine?.discardDraft(for: item.id)
+                    deleteItem(item)
                 },
                 onCommit: onCommit
             )
@@ -96,7 +91,7 @@ struct RowView<
         bottomAdornment: BottomAdornment,
         showCompleted: Bool,
         settings: Settings,
-        modelContext: ModelContext
+        listEngine: ListEngine<Item>
     ) {
         self.item = item
         self.index = index
@@ -111,20 +106,20 @@ struct RowView<
 
         self.toggleOnly = true
         self.namespace = nil
-        self.onCommit = nil
         self.createItem = nil
-        self.deleteItem = nil
         self.onAdornmentClick = nil
 
+        self._listEngine = ObservedObject(wrappedValue: listEngine)
         self._editorSession = StateObject(
             wrappedValue: EditorSession(
                 item: item,
+                draft: listEngine.draft(for: item),
                 deleteItem: { _ in }
             )
         )
     }
 
-    @EnvironmentObject private var listEngine: ListEngine<Item>
+    @ObservedObject private var listEngine: ListEngine<Item>
 
     @StateObject private var editorSession: EditorSession<Item>
 
@@ -136,16 +131,8 @@ struct RowView<
         toggleOnly || listEngine.isSelectMode
     }
 
-    private var isChecked: Bool {
-        if listEngine.isSelectMode {
-            return listEngine.selectedItemIds.contains(item.stableId)
-        }
-
-        return listEngine.isItemToggled(item)
-    }
-
     private var opacity: Double {
-        guard listEngine.fadingItemIds.contains(item.stableId), !showCompleted
+        guard listEngine.fadingItemIds.contains(item.id), !showCompleted
         else {
             return 1
         }
@@ -164,7 +151,7 @@ struct RowView<
 
                 content
             }
-            .id(item.stableId)
+            .id(item.id)
             .listRowInsets(EdgeInsets())
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal)
@@ -179,16 +166,16 @@ struct RowView<
             // MARK: Trigger focus for new items.
 
             .onAppear {
-                if listEngine.pendingFocusId == item.stableId {
+                if listEngine.pendingFocusId == item.id {
                     listEngine.pendingFocusId = nil
-                    listEngine.beginEditing(editorSession)
+                    beginEditing()
                 }
             }
 
         if let namespace {
             row
                 .matchedTransitionSource(
-                    id: item.stableId.uuidString,
+                    id: item.id,
                     in: namespace
                 )
         } else {
@@ -310,19 +297,31 @@ struct RowView<
         .fixedSize(horizontal: false, vertical: true)
     }
 
+    /// Displays the item's live title (not the draft) so that external changes
+    /// are always reflected while the row is not being edited.
     private var staticTitle: some View {
-        Text(editorSession.draft.title)
+        Text(item.title)
             .font(.system(size: ListLayout.FONT_SIZE))
             .lineLimit(nil)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
             .onTapGesture {
-                listEngine.beginEditing(editorSession)
+                if item.allowsEditing {
+                    beginEditing()
+                } else {
+                    // Read-only items open their details instead of editing inline.
+                    onAdornmentClick?(item)
+                }
             }
     }
 
     // MARK: - Functions
+
+    private func beginEditing() {
+        guard item.allowsEditing else { return }
+        listEngine.beginEditing(editorSession)
+    }
 
     private func safeCreateItem(at index: Int) {
         if let createItem {
@@ -337,7 +336,7 @@ struct RowView<
             return
         }
 
-        listEngine.beginEditing(editorSession)
+        beginEditing()
     }
 
 }

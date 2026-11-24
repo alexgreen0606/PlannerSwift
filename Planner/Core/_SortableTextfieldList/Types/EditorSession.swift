@@ -2,13 +2,13 @@
 //  EditorSession.swift
 //  Planner
 //
-//  Created by Alex Green on 9/9/26.
+//  Created by Alex Green on 11/22/26.
 //
 
 import Combine
 import Foundation
 
-final class EditorSession<Item: ListItemDetails>: ObservableObject {
+final class EditorSession<Item: ListItem>: ObservableObject {
     let item: Item
 
     private let deleteItem: (Item) -> Void
@@ -16,26 +16,27 @@ final class EditorSession<Item: ListItemDetails>: ObservableObject {
 
     init(
         item: Item,
+        draft: Item.Draft,
         deleteItem: @escaping (Item) -> Void,
         onCommit: ((Item) -> Void)? = nil
     ) {
         self.item = item
         self.deleteItem = deleteItem
         self.onCommit = onCommit
-        
-        self.draft = item.safeDraft
+
+        self.draft = draft
     }
 
     private var hasFinished = false
-    
-    @Published var draft: Item
+
+    @Published var draft: Item.Draft
 
     var hasEmptyTitle: Bool {
         draft.title.trimmed.isEmpty
     }
 
-    func belongs(to itemId: UUID) -> Bool {
-        item.stableId == itemId
+    func belongs(to itemId: Item.ID) -> Bool {
+        item.id == itemId
     }
 
     func invalidate() {
@@ -46,14 +47,10 @@ final class EditorSession<Item: ListItemDetails>: ObservableObject {
         guard !hasFinished else { return }
         hasFinished = true
 
-        let trimmedTitle = draft.title.trimmed
-
-        if trimmedTitle.isEmpty {
+        if hasEmptyTitle {
             deleteItem(item)
         } else {
-            item.commitDraft()
-            onCommit?(item)
-            item.syncDraft()
+            commitDraft()
         }
     }
 
@@ -61,9 +58,7 @@ final class EditorSession<Item: ListItemDetails>: ObservableObject {
         guard !hasFinished else { return }
         hasFinished = true
 
-        item.commitDraft()
-        onCommit?(item)
-        item.syncDraft()
+        commitDraft()
     }
 
     func delete() {
@@ -75,6 +70,20 @@ final class EditorSession<Item: ListItemDetails>: ObservableObject {
 
     /// Special handler called before creating new items.
     func commitTitle() {
-        item.title = draft.title.trimmed
+        draft.commitTitle(to: item)
+    }
+
+    /// Re-syncs the draft with its item. Called when editing begins so that external changes
+    /// (ex: an EventKit update) are never overwritten by a stale draft.
+    func syncDraft() {
+        draft.sync(from: item)
+    }
+
+    // MARK: - Helpers
+
+    private func commitDraft() {
+        draft.commit(to: item)
+        onCommit?(item)
+        draft.sync(from: item)
     }
 }

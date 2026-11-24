@@ -2,11 +2,11 @@
 //  getInsertionIndex.swift
 //  Planner
 //
-//  Created by Alex Green on 5/24/26.
+//  Created by Alex Green on 11/22/26.
 //
 
 @MainActor
-func getInsertionIndex<Item: ListItemDetails>(
+func getInsertionIndex<Item: ListItem>(
     pendingIndex: Int,
     sortedPendingItems: [Item],
     sortedItems: [Item]
@@ -19,7 +19,7 @@ func getInsertionIndex<Item: ListItemDetails>(
         let upperItem = sortedPendingItems[pendingIndex - 1]
 
         if let index = sortedItems.firstIndex(where: {
-            $0.stableId == upperItem.stableId
+            $0.id == upperItem.id
         }) {
             // Insert below upper pending item.
             return index + 1
@@ -30,7 +30,7 @@ func getInsertionIndex<Item: ListItemDetails>(
         let lowerItem = sortedPendingItems[pendingIndex]
 
         if let index = sortedItems.firstIndex(where: {
-            $0.stableId == lowerItem.stableId
+            $0.id == lowerItem.id
         }) {
             // Insert above lower pending item.
             return index

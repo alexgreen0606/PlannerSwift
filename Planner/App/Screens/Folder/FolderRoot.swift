@@ -32,13 +32,13 @@ struct FolderRootView: View {
         self.openItem = openItem
 
         self._itemSelectEngine = StateObject(
-            wrappedValue: ListEngine<ChecklistItem>(settings: settings)
+            wrappedValue: ListEngine_old<ChecklistItem>(settings: settings)
         )
     }
 
     @Environment(\.dismiss) private var dismiss
 
-    @StateObject private var itemSelectEngine: ListEngine<ChecklistItem>
+    @StateObject private var itemSelectEngine: ListEngine_old<ChecklistItem>
 
     @State private var showEditSheet = false
     @State private var showTransferSheet = false

@@ -29,9 +29,6 @@ final class PlannerEvent: EventListItem {
     /// No relation to the event's time.
     var sortDate: Date = Date.now
 
-    /// Datestamp of the planner where the event was completed.
-    var completedOn: String = ""
-
     var height: CGFloat = 0
 
     // MARK: Parent
@@ -106,7 +103,6 @@ final class PlannerEvent: EventListItem {
         datestamp = source.datestamp
         height = source.height
         isFlagged = source.isFlagged
-        completedOn = source.completedOn
     }
 
     @MainActor
@@ -118,7 +114,6 @@ final class PlannerEvent: EventListItem {
         draft.time = time
         draft.datestamp = datestamp
         draft.isFlagged = isFlagged
-        draft.completedOn = completedOn
         draft.height = height
     }
 
@@ -131,7 +126,6 @@ final class PlannerEvent: EventListItem {
         time = draft.time
         datestamp = draft.datestamp
         isFlagged = draft.isFlagged
-        completedOn = draft.completedOn
         height = draft.height
     }
 }

@@ -2,7 +2,7 @@
 //  TripChip.swift
 //  Planner
 //
-//  Created by Alex Green on 3/30/26.
+//  Created by Alex Green on 11/22/26.
 //
 
 import SwiftUI
@@ -18,7 +18,7 @@ struct TripChipView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @EnvironmentObject private var plannerEngine: ListEngine<PlannerEvent>
+    @EnvironmentObject private var plannerEngine: ListEngine<PlannerItem>
 
     @State private var showTripSheet = false
 
@@ -36,14 +36,14 @@ struct TripChipView: View {
                     .font(
                         .system(size: 16, weight: .semibold, design: .rounded)
                     )
-                    .foregroundStyle(plannerEngine.selectModeDisabledColor ?? Color.label)
+                    .foregroundStyle(plannerEngine.dimWhenSelecting ?? Color.label)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                 VStack(alignment: .trailing) {
                     TripProgressBarView(
                         trip: trip,
                         day: dayOfTrip,
-                        color: plannerEngine.selectModeDisabledColor
+                        color: plannerEngine.dimWhenSelecting
                     )
 
                     Text(
@@ -52,7 +52,7 @@ struct TripChipView: View {
                     .font(
                         .system(size: 9, weight: .heavy, design: .rounded)
                     )
-                    .foregroundStyle(plannerEngine.selectModeDisabledColor ?? Color.label)
+                    .foregroundStyle(plannerEngine.dimWhenSelecting ?? Color.label)
                 }
             }
             .padding(.horizontal)

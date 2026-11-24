@@ -12,8 +12,8 @@ import SwiftUI
 struct PlannerPreviewCardView<Header: View>: View {
     let planner: Planner
     let sortedPlannerEvents: [PlannerEvent]
-    let sortedEventChips: [PlannerEvent]
-    let sortedBirthdayChips: [PlannerEvent]
+    let sortedChipItems: [PlannerEvent]
+    let sortedBirthdayItems: [PlannerEvent]
     let header: Header
     let defaultLocationLabel: String?
     let transitionId: String
@@ -30,8 +30,8 @@ struct PlannerPreviewCardView<Header: View>: View {
 
             PlannerContentPreviewView(
                 planner: planner,
-                sortedBirthdayEvents: sortedBirthdayChips,
-                sortedEventChips: sortedEventChips,
+                sortedBirthdayEvents: sortedBirthdayItems,
+                sortedChipItems: sortedChipItems,
                 sortedPlannerEvents: sortedPlannerEvents,
                 settings: settings
             )

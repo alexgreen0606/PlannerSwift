@@ -21,7 +21,7 @@ struct FolderContentsListView: View {
         .blue
 
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var itemSelectEngine: ListEngine<ChecklistItem>
+    @EnvironmentObject private var itemSelectEngine: ListEngine_old<ChecklistItem>
 
     private var isSelectMode: Bool {
         itemSelectEngine.isSelectMode
@@ -58,7 +58,7 @@ struct FolderContentsListView: View {
                 ) {
                     // MARK: Toggle
 
-                    ListItemToggleView(
+                    ListItemToggleView_old(
                         item: item,
                         color: item.color.swiftUIColor(accentColor: accentColor),
                         opacity: isSelectMode ? 1 : 0

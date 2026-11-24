@@ -33,7 +33,7 @@ extension ModelContext {
                 planner: planner,
                 activeQuery: activeQuery,
                 sortedBirthdayEvents: getSortedBirthdayEvents(on: startOfDay),
-                sortedEventChips: getSortedEventChips(on: startOfDay),
+                sortedChipItems: getSortedEventChips(on: startOfDay),
                 sortedPlannerEvents: sortedPlannerEvents,
                 maxPreviewSlots: 4
             )

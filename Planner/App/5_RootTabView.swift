@@ -128,11 +128,10 @@ struct RootTabView: View {
             ) { context in
                 PlannerRootView(
                     planner: context.planner,
-                    sortedPlannerEvents: context.eventContext
-                        .sortedPlannerEvents,
-                    sortedEventChips: context.eventContext.sortedEventChips,
-                    sortedBirthdayChips: context.eventContext
-                        .sortedBirthdayChips,
+                    sortedListItems: context.itemContext.sortedListItems,
+                    sortedChipItems: context.itemContext.sortedChipItems,
+                    sortedBirthdayItems: context.itemContext
+                        .sortedBirthdayItems,
                     settings: settings
                 )
             }
@@ -149,12 +148,12 @@ struct RootTabView: View {
             ) { plannerContext in
                 PlannerRootView(
                     planner: plannerContext.planner,
-                    sortedPlannerEvents: plannerContext.eventContext
-                        .sortedPlannerEvents,
-                    sortedEventChips: plannerContext.eventContext
-                        .sortedEventChips,
-                    sortedBirthdayChips: plannerContext.eventContext
-                        .sortedBirthdayChips,
+                    sortedListItems: plannerContext.itemContext
+                        .sortedListItems,
+                    sortedChipItems: plannerContext.itemContext
+                        .sortedChipItems,
+                    sortedBirthdayItems: plannerContext.itemContext
+                        .sortedBirthdayItems,
                     settings: settings
                 )
                 .id(context.datestamp)
