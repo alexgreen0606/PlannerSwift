@@ -123,13 +123,26 @@ struct PlannerEventFormView: View {
             CancelButtonView {
                 isTitleFocused = false
 
-                if let plannerEvent = item.plannerEvent,
-                    plannerEvent.title.trimmed.isEmpty
-                {
-                    // The title was empty when this sheet was opened. Delete the event.
-                    modelContext.deletePlannerEvent(plannerEvent)
+                // The source event had an empty title. Delete it.
+                if item.title.trimmed.isEmpty {
+                    switch item.source {
+                    case .plannerEvent(let plannerEvent):
+                        modelContext.deletePlannerEvent(plannerEvent)
 
-                    // TODO: delete the ekevent from the original item if one exists
+                    case .ekEvent(let ekEvent, let state):
+                        _ = calendarService.ekEventStore.attemptDeleteEvent(
+                            ekEvent
+                        )
+
+                        modelContext.deleteEkEventPlannerState(
+                            for: ekEvent,
+                            existing: state
+                        )
+                    }
+
+                    modelContext.safeSave(
+                        "PlannerEventForm cancelButton"
+                    )
                 }
 
                 dismiss()

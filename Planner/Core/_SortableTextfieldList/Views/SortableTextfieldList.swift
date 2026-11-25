@@ -135,6 +135,7 @@ struct SortableTextfieldListView<
                         move: handleRowReorder
                     )
                 }
+                .background(Color.appBackground.edgesIgnoringSafeArea(.all))
             } else {
                 List {
                     pendingSection

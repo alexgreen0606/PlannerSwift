@@ -67,24 +67,39 @@ struct CalendarEventFormView: View {
             // Discard any draft values applied by the Planner form.
             ekEvent.rollback()
 
-            if let plannerEvent = item.plannerEvent,
-                plannerEvent.title.trimmed.isEmpty
-            {
-                // The source event had an empty title. Delete it.
-                modelContext.deletePlannerEvent(plannerEvent)
-            }
+            // The source event had an empty title. Delete it.
+            if item.title.trimmed.isEmpty {
+                switch item.source {
+                case .plannerEvent(let plannerEvent):
+                    modelContext.deletePlannerEvent(plannerEvent)
 
-        // TODO: delete calendar events that had an empty title at start
+                case .ekEvent(let ekEvent, let state):
+                    _ = calendarService.ekEventStore.attemptDeleteEvent(ekEvent)
+
+                    modelContext.deleteEkEventPlannerState(
+                        for: ekEvent,
+                        existing: state
+                    )
+                }
+
+                modelContext.safeSave(
+                    "CalendarEventForm handleCompletion canceled"
+                )
+            }
 
         case .deleted:
-            if case .ekEvent(let sourceEkEvent, let state) = item.source {
+            switch item.source {
+            case .plannerEvent(let plannerEvent):
+                modelContext.deletePlannerEvent(plannerEvent)
+
+            case .ekEvent(let ekEvent, let state):
                 modelContext.deleteEkEventPlannerState(
-                    for: sourceEkEvent,
+                    for: ekEvent,
                     existing: state
                 )
-
-                modelContext.safeSave("CalendarEventForm handleCompletion")
             }
+
+            modelContext.safeSave("CalendarEventForm handleCompletion deleted")
 
         case .saved:
             if let savedEvent {
@@ -122,13 +137,13 @@ struct CalendarEventFormView: View {
                     sortDate: sortDate
                 )
 
+                state.sortDate = sortDate
                 state.isCompleted = isCompleted
             }
 
         case .ekEvent(let sourceEkEvent, let state):
             // MARK: Existing calendar event edited.
 
-            // TODO: why doesnt this use ensureEkEventPlannerState?
             guard
                 let state = state
                     ?? modelContext.getEkEventPlannerState(for: sourceEkEvent)
@@ -138,7 +153,6 @@ struct CalendarEventFormView: View {
                 // Keep the state matched to the event if its occurrence date moved.
                 state.recurrenceOccurrenceDate = savedEvent.occurrenceDate
             } else {
-                // TODO: why delete the state? Does its new planner truly place it at the top?
                 // The event left this planner. Let it sort by its start time in its new planner.
                 modelContext.delete(state)
             }

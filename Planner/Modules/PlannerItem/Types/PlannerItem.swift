@@ -11,7 +11,7 @@ import Foundation
 /// The in-memory row model shared by Planner-owned and EventKit-owned events.
 struct PlannerItem: ListItem {
     typealias Draft = PlannerItemDraft
-    
+
     enum Source {
         case plannerEvent(PlannerEvent)
         case ekEvent(event: EKEvent, state: EkEventPlannerState?)
@@ -220,8 +220,6 @@ final class PlannerItemDraft: ListItemDraft {
             event.title = trimmedTitle
 
         case .ekEvent(let event, state: _):
-            // TODO: save the title here to event store?
-            // or update the list to look at drafts, not actual items
             guard event.calendar.allowsContentModifications else { return }
 
             if event.title != trimmedTitle {
