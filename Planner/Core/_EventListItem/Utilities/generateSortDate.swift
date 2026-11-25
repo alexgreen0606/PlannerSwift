@@ -33,6 +33,32 @@ func generatePlannerItemSortDate(
     )
 }
 
+// MARK: Bulk Planner Item Caller
+/// Generates evenly spaced sort dates for several items inserted together at the same index.
+/// The returned dates are ascending, in the order the items should appear.
+@MainActor
+func generatePlannerItemSortDates(
+    count: Int,
+    at index: Int,
+    /// Should not contain the items being placed.
+    in sortedItems: [PlannerItem],
+    startOfDay: DateInRegion,
+    modelContext: ModelContext
+) -> [Date] {
+    generateSortDates(
+        count: count,
+        at: index,
+        in: sortedItems,
+        startOfDay: startOfDay,
+        getSortDate: {
+            $0.sortDate
+        },
+        setSortDate: { event, sortDate in
+            modelContext.setSortDate(sortDate, for: event)
+        }
+    )
+}
+
 // MARK: Planner Event Caller
 @MainActor
 func generatePlannerEventSortDate(
@@ -87,21 +113,47 @@ private func generateSortDate<Event>(
     getSortDate: @MainActor (Event) -> Date,
     setSortDate: @MainActor (Event, Date) -> Void
 ) -> Date {
+    generateSortDates(
+        count: 1,
+        at: index,
+        in: sortedEvents,
+        startOfDay: startOfDay,
+        getSortDate: getSortDate,
+        setSortDate: setSortDate
+    )[0]
+}
+
+/// Evenly divides the gap at the index into `count + 1` intervals.
+/// Note: A single event in an empty day is placed at noon.
+@MainActor
+private func generateSortDates<Event>(
+    count: Int,
+    at index: Int,
+    in sortedEvents: [Event],
+    startOfDay: DateInRegion,
+    getSortDate: @MainActor (Event) -> Date,
+    setSortDate: @MainActor (Event, Date) -> Void
+) -> [Date] {
+    guard count > 0 else { return [] }
+
+    // Note: An empty day (or an index past the end) inserts between the last event and the end of the day.
+    let index = min(max(index, 0), sortedEvents.count)
+
     let dayStart = startOfDay.date
     let dayEnd = (startOfDay + 1.days).date
 
-    if sortedEvents.isEmpty {
-        // No events for the day. Place at noon.
-        return midpoint(between: dayStart, and: dayEnd)
+    func bounds() -> (prevDate: Date, nextDate: Date) {
+        (
+            index == 0 ? dayStart : getSortDate(sortedEvents[index - 1]),
+            index >= sortedEvents.count
+                ? dayEnd : getSortDate(sortedEvents[index])
+        )
     }
 
-    var prevDate = index == 0 ? dayStart : getSortDate(sortedEvents[index - 1])
-    var nextDate =
-        index >= sortedEvents.count ? dayEnd : getSortDate(sortedEvents[index])
+    var (prevDate, nextDate) = bounds()
+    var interval = nextDate.timeIntervalSince(prevDate) / Double(count + 1)
 
-    let secondsGap = nextDate.timeIntervalSince(prevDate)
-
-    if secondsGap < MINIMUM_SECONDS_GAP {
+    if interval < MINIMUM_SECONDS_GAP {
         // Interval too small. Normalize all events.
         normalizeSortDates(
             for: sortedEvents,
@@ -109,21 +161,16 @@ private func generateSortDate<Event>(
             setSortDate: setSortDate
         )
 
-        prevDate = index == 0 ? dayStart : getSortDate(sortedEvents[index - 1])
-        nextDate =
-            index >= sortedEvents.count
-            ? dayEnd : getSortDate(sortedEvents[index])
+        (prevDate, nextDate) = bounds()
+        interval = nextDate.timeIntervalSince(prevDate) / Double(count + 1)
     }
 
-    return midpoint(between: prevDate, and: nextDate)
+    return (1...count).map {
+        prevDate.addingTimeInterval(interval * Double($0))
+    }
 }
 
 // MARK: - Helper Functions
-
-private func midpoint(between a: Date, and b: Date) -> Date {
-    let interval = b.timeIntervalSince(a)
-    return a.addingTimeInterval(interval / 2)
-}
 
 @MainActor
 private func normalizeSortDates<Event>(

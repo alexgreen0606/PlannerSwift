@@ -11,10 +11,9 @@ import SwiftData
 extension ListItemToggleState where Item == PlannerItem {
     /// Toggles completion for both Planner-owned and EventKit-owned items.
     ///
-    /// Calendar events only receive an `EkEventPlannerState` once the user changes Planner-only data,
-    /// so one is created lazily (at the item's current position) the first time the event is toggled.
-    ///
-    /// // TODO: this isnt true. This state should be created immediately for new events so that they can be force-placed at the top of the planner.
+    /// Timed calendar events receive an `EkEventPlannerState` as soon as their planner loads
+    /// (see `ModelContext.placeNewEkEventItems`). As a fallback (e.g. a toggle before that state
+    /// is picked up), one is created at the item's current position.
     static func completion(
         modelContext: @escaping () -> ModelContext?
     ) -> ListItemToggleState<PlannerItem> {

@@ -50,6 +50,7 @@ struct PlannerItemContextLoaderView<Content: View>: View {
         )
     }
 
+    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarService: CalendarService
 
     @Query private var sortedPlannerEvents: [PlannerEvent]
@@ -97,13 +98,26 @@ struct PlannerItemContextLoaderView<Content: View>: View {
         EkEventPlannerStateLoaderView(
             ekEvents: ekEventLoader.sortedListEvents
         ) { ekEventItems in
+            let sortedListItems = mergeItems(ekEventItems)
+
             content(
                 PlannerItemContext(
-                    sortedListItems: mergeItems(ekEventItems),
+                    sortedListItems: sortedListItems,
                     sortedChipItems: chipItems,
                     sortedBirthdayItems: ekEventLoader.sortedBirthdayItems
                 )
             )
+            .onChange(
+                of: unplacedEkEventItemIds(ekEventItems),
+                initial: true
+            ) { _, unplacedIds in
+                guard !unplacedIds.isEmpty else { return }
+
+                modelContext.placeNewEkEventItems(
+                    in: sortedListItems,
+                    startOfDay: startOfDay
+                )
+            }
         }
         .onChange(of: ekEventReloadKey) { _, _ in
             ekEventLoader.update(startOfDay: startOfDay)
@@ -111,6 +125,15 @@ struct PlannerItemContextLoaderView<Content: View>: View {
     }
 
     // MARK: - Functions
+
+    /// Calendar events that don't have an `EkEventPlannerState` yet (i.e. newly-created events).
+    private func unplacedEkEventItemIds(_ ekEventItems: [PlannerItem])
+        -> [PlannerItemID]
+    {
+        ekEventItems
+            .filter { $0.ekEventPlannerState == nil }
+            .map(\.id)
+    }
 
     private func mergeItems(_ ekEventItems: [PlannerItem])
         -> [PlannerItem]

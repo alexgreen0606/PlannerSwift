@@ -40,6 +40,50 @@ extension ModelContext {
         return .plannerEvent(newEvent.stableId)
     }
 
+    /// Creates an `EkEventPlannerState` for every calendar event in the planner that doesn't have one yet.
+    ///
+    /// A calendar event without a state is assumed to be newly created, so it's placed at the top of the
+    /// first planner to load it. When several new events are placed at once, they're kept in chronological order.
+    @MainActor
+    func placeNewEkEventItems(
+        /// All of the planner's list items, sorted by sortDate. New EKEvents are sorted by startDate.
+        in sortedItems: [PlannerItem],
+        startOfDay: DateInRegion
+    ) {
+        var existingItems: [PlannerItem] = []
+        var newEkEvents: [EKEvent] = []
+
+        // Note: The item's state may be stale (e.g. inserted by another loader of this planner
+        // but not yet picked up by its query). Existing states keep their position.
+        for item in sortedItems {
+            guard case .ekEvent(let ekEvent, nil) = item.source,
+                getEkEventPlannerState(for: ekEvent) == nil
+            else {
+                existingItems.append(item)
+                continue
+            }
+
+            newEkEvents.append(ekEvent)
+        }
+
+        guard !newEkEvents.isEmpty else { return }
+
+        // Place the events together at the top, in chronological order.
+        let sortDates = generatePlannerItemSortDates(
+            count: newEkEvents.count,
+            at: 0,
+            in: existingItems,
+            startOfDay: startOfDay,
+            modelContext: self
+        )
+
+        for (ekEvent, sortDate) in zip(newEkEvents, sortDates) {
+            _ = ensureEkEventPlannerState(for: ekEvent, sortDate: sortDate)
+        }
+
+        safeSave("ModelContext+plannerItems placeNewEkEventItems")
+    }
+
     // MARK: - UPDATE
 
     @MainActor
@@ -95,12 +139,21 @@ extension ModelContext {
                 settings: settings
             )
 
-        case .ekEvent(let ekEvent, state: _):
+        case .ekEvent(let ekEvent, let state):
             // TODO: is it true that the list already wrote to the EKEvent?
 
             // The list has already written the draft to the EKEvent. Save it to the calendar.
-            guard ekEvent.hasChanges else { return }
-            _ = ekEventStore.attemptUpdateEvent(ekEvent)
+            guard ekEvent.hasChanges,
+                ekEventStore.attemptUpdateEvent(ekEvent)
+            else { return }
+
+            // Keep the state matched to the event if its occurrence date moved with its start time.
+            if let state = state ?? getEkEventPlannerState(for: ekEvent),
+                state.recurrenceOccurrenceDate != ekEvent.occurrenceDate
+            {
+                state.recurrenceOccurrenceDate = ekEvent.occurrenceDate
+                safeSave("ModelContext+plannerItems handlePlannerItemChange")
+            }
         }
     }
 
@@ -182,7 +235,14 @@ extension ModelContext {
             ekEvent.startDate = ekEvent.startDate + days
             ekEvent.endDate = ekEvent.endDate + days
 
-            return ekEventStore.attemptUpdateEvent(ekEvent)
+            guard ekEventStore.attemptUpdateEvent(ekEvent) else {
+                return false
+            }
+
+            // Drop the old position so the event is placed at the top of its new planner.
+            deleteEkEventPlannerState(for: ekEvent, existing: state)
+
+            return true
         }
     }
 
