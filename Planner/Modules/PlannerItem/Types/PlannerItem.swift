@@ -145,7 +145,6 @@ final class PlannerItemDraft: ListItemDraft {
     var time: Date?
     var datestamp: String?
     var isFlagged: Bool = false
-    var height: CGFloat = 0
 
     init(item: PlannerItem) {
         sync(from: item)
@@ -160,7 +159,6 @@ final class PlannerItemDraft: ListItemDraft {
             time = event.time
             datestamp = event.datestamp
             isFlagged = event.isFlagged
-            height = event.height
 
         case .ekEvent(let event, state: _):
             title = event.title ?? ""
@@ -168,7 +166,6 @@ final class PlannerItemDraft: ListItemDraft {
             time = event.startDate
             datestamp = nil
             isFlagged = false
-        // TODO: persist height to state
         }
     }
 
@@ -187,7 +184,6 @@ final class PlannerItemDraft: ListItemDraft {
             event.time = time
             event.datestamp = datestamp
             event.isFlagged = isFlagged
-            event.height = height
 
         case .ekEvent(let event, state: _):
             // TODO: check when this is called. Likely this isn't needed except for title persistence.

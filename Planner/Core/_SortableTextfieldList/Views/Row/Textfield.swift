@@ -11,7 +11,6 @@ import UIKit
 
 struct TextfieldView: UIViewRepresentable {
     @Binding var text: String
-    @Binding var height: CGFloat
     var tint: Color
     var shouldResign: Bool
     var isFocused: Bool
@@ -49,8 +48,6 @@ struct TextfieldView: UIViewRepresentable {
             uiView.text = text
         }
 
-        calculateHeight(view: uiView)
-
         if shouldResign, uiView.isFirstResponder {
             // List has requested blur. Resign the first responder.
             uiView.resignFirstResponder()
@@ -63,25 +60,25 @@ struct TextfieldView: UIViewRepresentable {
         }
     }
 
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
+    /// Sizes the text view to fit its text at SwiftUI's proposed width.
+    func sizeThatFits(
+        _ proposal: ProposedViewSize,
+        uiView: UITextView,
+        context: Context
+    ) -> CGSize? {
+        guard let width = proposal.width, width > 0, width.isFinite else {
+            return nil
+        }
 
-    /// Dynamically update the height as text grows/lines increase.
-    private func calculateHeight(view: UITextView) {
-        let width = view.bounds.width
-
-        guard width > 0 else { return }
-
-        let size = view.sizeThatFits(
+        let fittedSize = uiView.sizeThatFits(
             CGSize(width: width, height: .greatestFiniteMagnitude)
         )
 
-        guard size.height > 0, height != size.height else { return }
+        return CGSize(width: width, height: fittedSize.height)
+    }
 
-        DispatchQueue.main.async {
-            self.height = size.height
-        }
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
     }
 
     final class Coordinator: NSObject, UITextViewDelegate {
@@ -96,6 +93,8 @@ struct TextfieldView: UIViewRepresentable {
 
         func textViewDidChange(_ textView: UITextView) {
             parent.text = textView.text
+            // Ask SwiftUI to re-measure so the row grows/shrinks with the text.
+            textView.invalidateIntrinsicContentSize()
         }
 
         func textViewDidEndEditing(_: UITextView) {

@@ -67,9 +67,9 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         // Sync common data between planner and calendar events.
         title = ekEvent.title
         notes = ekEvent.notes ?? ""
-        location = ekEvent.location(
-            existingPlannerEvent: self
-        )
+//        location = ekEvent.location(
+//            existingPlannerEvent: self
+//        )
         time = ekEvent.startDate
         isFlagged = false
 

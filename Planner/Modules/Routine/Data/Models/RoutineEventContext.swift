@@ -18,8 +18,6 @@ final class RoutineEventContext: EventDetails {
     var notes: String = ""
     var time: Date?
 
-    var height: CGFloat = 0
-
     var version: Double = 1.0
 
     // MARK: Children
@@ -39,7 +37,6 @@ final class RoutineEventContext: EventDetails {
         stableId = source.stableId
         title = source.title
         notes = source.notes
-        height = source.height
     }
     
     @MainActor
@@ -49,7 +46,6 @@ final class RoutineEventContext: EventDetails {
         draft.title = title
         draft.notes = notes
         draft.time = time
-        draft.height = height
     }
     
     @MainActor
@@ -59,6 +55,5 @@ final class RoutineEventContext: EventDetails {
         title = draft.title.trimmed
         notes = draft.notes.trimmed
         time = draft.time
-        height = draft.height
     }
 }

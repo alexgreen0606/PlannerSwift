@@ -27,10 +27,7 @@ extension EKEvent {
         return settings.calendarIconMap[calendarIdentifier] ?? "calendar"
     }
 
-    // TODO: remove existingPlannerEvent. It isn't needed.
-    func location(
-        existingPlannerEvent: PlannerEvent? = nil
-    ) -> Location? {
+    func location() -> Location? {
         if let locationLabel = location,
             let structuredLocation,
             let latitude = structuredLocation.geoLocation?.coordinate
@@ -39,21 +36,12 @@ extension EKEvent {
                 .longitude,
             let timeZone = timeZone
         {
-            let newLocation = Location(
+            return Location(
                 name: locationLabel,
                 latitude: latitude,
                 longitude: longitude,
                 timeZoneIdentifier: timeZone.identifier
             )
-
-            guard let existingLocation = existingPlannerEvent?.location,
-                existingLocation.coordinateId == newLocation.coordinateId
-            else {
-                return newLocation
-            }
-
-            // Location in storage matches the event's location. Continue using it.
-            return existingLocation
         }
 
         return nil

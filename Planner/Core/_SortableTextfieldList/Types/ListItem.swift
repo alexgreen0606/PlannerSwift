@@ -43,7 +43,6 @@ protocol ListItemDraft: AnyObject, Observable {
     associatedtype Item
 
     var title: String { get set }
-    var height: CGFloat { get set }
 
     init(item: Item)
 

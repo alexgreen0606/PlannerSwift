@@ -289,7 +289,6 @@ struct RowView_old<
     private var titleTextfield: some View {
         TextfieldView(
             text: $editorSession.draft.title,
-            height: $editorSession.draft.height,
             tint: tint,
             shouldResign: !listEngine.isFocused,
             isFocused: isItemFocused,
@@ -305,7 +304,6 @@ struct RowView_old<
             }
         )
         .tint(tint)
-        .frame(height: editorSession.draft.height)
         .frame(maxWidth: .infinity, alignment: .leading)
         .fixedSize(horizontal: false, vertical: true)
     }

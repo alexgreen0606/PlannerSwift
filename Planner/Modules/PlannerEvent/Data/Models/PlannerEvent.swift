@@ -29,8 +29,6 @@ final class PlannerEvent: EventListItem {
     /// No relation to the event's time.
     var sortDate: Date = Date.now
 
-    var height: CGFloat = 0
-
     // MARK: Parent
     var routineEventRecordContext: RoutineEventRecordContext?
 
@@ -101,7 +99,6 @@ final class PlannerEvent: EventListItem {
         notes = source.notes
         time = source.time
         datestamp = source.datestamp
-        height = source.height
         isFlagged = source.isFlagged
     }
 
@@ -114,7 +111,6 @@ final class PlannerEvent: EventListItem {
         draft.time = time
         draft.datestamp = datestamp
         draft.isFlagged = isFlagged
-        draft.height = height
     }
 
     @MainActor
@@ -126,6 +122,5 @@ final class PlannerEvent: EventListItem {
         time = draft.time
         datestamp = draft.datestamp
         isFlagged = draft.isFlagged
-        height = draft.height
     }
 }

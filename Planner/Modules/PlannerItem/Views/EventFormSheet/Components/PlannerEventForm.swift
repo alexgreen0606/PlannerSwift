@@ -86,25 +86,25 @@ struct PlannerEventFormView: View {
                     hasAutoFocused: $hasTitleAutoFocused,
                     isFocused: $isTitleFocused
                 )
-                
+
                 detailsSection
-                
+
                 FormNotesFieldView(
                     notes: $draftPlannerEvent.notes,
                     isFocused: $isNotesFocused
                 )
-                
+
                 flagSection
             }
             .toolbar {
                 cancelButton
-                
+
                 FormSaveButtonView(canSave: canSave, save: savePlannerEvent)
-                
+
                 deleteButton
-                
+
                 ToolbarSpacer(placement: .bottomBar)
-                
+
                 addToCalendarButton
             }
             .safeAreaBar(edge: .bottom) {
@@ -128,7 +128,7 @@ struct PlannerEventFormView: View {
                 {
                     // The title was empty when this sheet was opened. Delete the event.
                     modelContext.deletePlannerEvent(plannerEvent)
-                    
+
                     // TODO: delete the ekevent from the original item if one exists
                 }
 
@@ -349,11 +349,10 @@ struct PlannerEventFormView: View {
             sourcePlannerEvent = plannerEvent
 
         case .ekEvent(let ekEvent, let state):
-            // The event is being removed from the calendar. Only continue if the deletion succeeds,
-            // otherwise the event would be duplicated.
-            // TODO: what does this do?
             ekEvent.rollback()
 
+            // The event is being removed from the calendar. Only continue if the deletion succeeds,
+            // otherwise the event would be duplicated.
             guard calendarService.ekEventStore.attemptDeleteEvent(ekEvent)
             else { return }
 

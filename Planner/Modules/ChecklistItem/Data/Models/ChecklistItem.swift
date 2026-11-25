@@ -29,8 +29,6 @@ final class ChecklistItem: ListItemDetails {
     var financeVariantRawValue: String = ChecklistItemFinanceVariant.none
         .rawValue
 
-    var height: CGFloat = 0
-
     var sortIndex: Double = ChecklistsData.SORT_INDEX_SPACING
 
     var showCompleted: Bool = false
@@ -109,7 +107,6 @@ final class ChecklistItem: ListItemDetails {
         day = source.day
         year = source.year
         hideToggles = source.hideToggles
-        height = source.height
         sortIndex = source.sortIndex
         showCompleted = source.showCompleted
 
@@ -133,7 +130,6 @@ final class ChecklistItem: ListItemDetails {
         draft.day = day
         draft.year = year
         draft.hideToggles = hideToggles
-        draft.height = height
     }
 
     @MainActor
@@ -150,6 +146,5 @@ final class ChecklistItem: ListItemDetails {
         day = draft.day
         year = draft.year
         hideToggles = draft.hideToggles
-        height = draft.height
     }
 }
