@@ -96,7 +96,7 @@ final class PlannerEkEventLoader: ObservableObject {
         )
 
         var listEvents: [EKEvent] = []
-        var eventChips: [EKEvent] = []
+        var chipEvents: [EKEvent] = []
         var birthdayEvents: [EKEvent] = []
 
         for ekEvent in ekEvents {
@@ -105,20 +105,16 @@ final class PlannerEkEventLoader: ObservableObject {
                 let endDate = ekEvent.endDate
             else { continue }
 
-            let isOnThisDay =
-                !ekEvent.isAllDay
-                || allDayRangeContains(
-                    datestamp: datestamp,
-                    startDate: startDate,
-                    endDate: endDate,
-                    timeZoneId: ekEvent.timeZone?.identifier
-                )
-
             if ekEvent.birthdayContactIdentifier != nil {
 
                 // MARK: Birthday events that exist on this day.
 
-                if isOnThisDay {
+                if !ekEvent.isAllDay || allDayRangeContains(
+                    datestamp: datestamp,
+                    startDate: startDate,
+                    endDate: endDate,
+                    timeZoneId: ekEvent.timeZone?.identifier
+                ) {
                     birthdayEvents.append(ekEvent)
                 }
 
@@ -126,8 +122,13 @@ final class PlannerEkEventLoader: ObservableObject {
 
                 // MARK: All-day events that exist on this day.
 
-                if isOnThisDay {
-                    eventChips.append(ekEvent)
+                if allDayRangeContains(
+                    datestamp: datestamp,
+                    startDate: startDate,
+                    endDate: endDate,
+                    timeZoneId: ekEvent.timeZone?.identifier
+                ) {
+                    chipEvents.append(ekEvent)
                 }
 
             } else if startDate >= dayStart && startDate < dayEnd {
@@ -136,19 +137,16 @@ final class PlannerEkEventLoader: ObservableObject {
 
                 listEvents.append(ekEvent)
 
-                // TODO: should multi-day events have chips and list events?
-            } else if (startDate < dayStart && endDate > dayStart)
-                || (startDate < dayEnd && endDate > dayEnd)
-            {
+            } else if startDate < dayStart && endDate > dayStart {
 
-                // MARK: Timed events that exist on this day and span outside of it.
+                // MARK: Timed events that exist on this day and start before it.
 
-                eventChips.append(ekEvent)
+                chipEvents.append(ekEvent)
             }
         }
 
         sortedListEvents = listEvents.sorted { $0.startDate < $1.startDate }
-        sortedChipEvents = eventChips.sorted(by: Self.titleOrder)
+        sortedChipEvents = chipEvents.sorted(by: Self.titleOrder)
         sortedBirthdayItems = makeBirthdayItems(
             birthdayEvents.sorted(by: Self.titleOrder)
         )

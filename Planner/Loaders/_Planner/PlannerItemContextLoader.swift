@@ -160,15 +160,8 @@ private struct EkEventPlannerStateLoaderView<Content: View>: View {
         self.ekEvents = ekEvents
         self.content = content
 
-        let externalIdentifiers = Array(
-            Set(ekEvents.compactMap(\.calendarItemExternalIdentifier))
-        )
-
-        // TODO: make this a predicate by itself
         _states = Query(
-            filter: #Predicate<EkEventPlannerState> { state in
-                externalIdentifiers.contains(state.externalIdentifier)
-            }
+            filter: EkEventPlannerState.matching(ekEvents: ekEvents)
         )
     }
 

@@ -11,6 +11,10 @@ import SwiftData
 
 @Model
 final class EkEventPlannerState {
+    #Index<EkEventPlannerState>([
+        \.externalIdentifier, \.recurrenceOccurrenceDate,
+    ])
+
     var externalIdentifier: String = ""
     var recurrenceOccurrenceDate: Date?
 

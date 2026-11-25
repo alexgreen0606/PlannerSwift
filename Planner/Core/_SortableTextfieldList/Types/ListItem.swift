@@ -25,12 +25,15 @@ protocol ListItem: Identifiable {
     var allowsEditing: Bool { get }
 }
 
-// TODO: why have this?
+// MARK: - Defaults
+
 extension ListItem {
     var allowsEditing: Bool {
         true
     }
 }
+
+// MARK: - Draft
 
 /// An in-memory editing buffer for a `ListItem`.
 ///
