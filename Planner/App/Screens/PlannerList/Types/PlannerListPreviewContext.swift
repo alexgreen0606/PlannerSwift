@@ -67,12 +67,9 @@ struct PlannerListPreviewContext {
         let calendarEvents = items.sortedEkEventItems.filter { item in
             guard let ekEvent = item.ekEvent else { return false }
 
+            // Note: Searches include completed events.
             guard let activeQuery else {
                 return !item.isCompleted
-            }
-
-            if activeQuery.text.isEmpty && item.isCompleted {
-                return false
             }
 
             return ekEvent.searchQueryScore(activeQuery, in: datestamp) != nil

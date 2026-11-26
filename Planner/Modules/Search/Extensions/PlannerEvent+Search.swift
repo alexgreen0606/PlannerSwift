@@ -9,16 +9,14 @@ import EventKit
 import SwiftDate
 
 extension PlannerEvent {
+    /// Note: Searches include completed events.
     static func searchablePlannerEvents(
-        within bounds: PlannerBounds,
-        matching query: PlannerSearchQuery
+        within bounds: PlannerBounds
     ) -> Predicate<PlannerEvent> {
         let minDatestamp = bounds.minStartOfDay.datestamp
         let maxDatestamp = bounds.maxStartOfDay.datestamp
         let minDate = bounds.minStartOfDay.date
         let endOfBounds = bounds.endOfBounds
-
-        let searchingText = !query.text.isEmpty
 
         return #Predicate<PlannerEvent> { plannerEvent in
             if plannerEvent.eKEventContext != nil {
@@ -28,17 +26,13 @@ extension PlannerEvent {
 
             } else if let time = plannerEvent.time {
 
-                // Timed planner events that exist within the bounds,
-                // are pending or we are searching for text.
+                // Timed planner events that exist within the bounds.
                 return time >= minDate && time < endOfBounds
-                    && (!plannerEvent.isCompleted || searchingText)
 
             } else if let datestamp = plannerEvent.datestamp {
 
-                // Untimed planner events that exist within the bounds,
-                // are pending or we are searching for text.
+                // Untimed planner events that exist within the bounds.
                 return datestamp >= minDatestamp && datestamp <= maxDatestamp
-                    && (!plannerEvent.isCompleted || searchingText)
 
             } else {
                 return false
@@ -63,13 +57,8 @@ extension PlannerEvent {
         }
 
         if query.text.isEmpty {
-            if isCompleted {
-                // No search text and event is complete. Exclude.
-                return nil
-            } else {
-                // No search text and event is pending. Include!
-                return 1.0
-            }
+            // No search text. Include! (Searches include completed events.)
+            return 1.0
         }
 
         var score = 0.0
