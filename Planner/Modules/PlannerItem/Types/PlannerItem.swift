@@ -141,9 +141,6 @@ extension PlannerItem {
 @Observable
 final class PlannerItemDraft: ListItemDraft {
     var title: String = ""
-    var notes: String = ""
-    var time: Date?
-    var datestamp: String?
     var isFlagged: Bool = false
 
     init(item: PlannerItem) {
@@ -155,16 +152,10 @@ final class PlannerItemDraft: ListItemDraft {
         switch item.source {
         case .plannerEvent(let event):
             title = event.title
-            notes = event.notes
-            time = event.time
-            datestamp = event.datestamp
             isFlagged = event.isFlagged
 
         case .ekEvent(let event, state: _):
             title = event.title ?? ""
-            notes = event.notes ?? ""
-            time = event.startDate
-            datestamp = nil
             isFlagged = false
         }
     }
@@ -175,38 +166,17 @@ final class PlannerItemDraft: ListItemDraft {
     /// `EKEventStore` is the responsibility of the list's `onCommitItem` handler.
     func commit(to item: PlannerItem) {
         let trimmedTitle = title.trimmed
-        let trimmedNotes = notes.trimmed
 
         switch item.source {
         case .plannerEvent(let event):
             event.title = trimmedTitle
-            event.notes = trimmedNotes
-            event.time = time
-            event.datestamp = datestamp
             event.isFlagged = isFlagged
 
         case .ekEvent(let event, state: _):
-            // TODO: check when this is called. Likely this isn't needed except for title persistence.
             guard event.calendar.allowsContentModifications else { return }
 
             if event.title != trimmedTitle {
                 event.title = trimmedTitle
-            }
-
-            if (event.notes ?? "") != trimmedNotes {
-                event.notes = trimmedNotes.isEmpty ? nil : trimmedNotes
-            }
-
-            if !event.isAllDay,
-                let time,
-                let startDate = event.startDate,
-                let endDate = event.endDate,
-                time != startDate
-            {
-                // Preserve the event's duration when its start time changes.
-                let duration = endDate.timeIntervalSince(startDate)
-                event.startDate = time
-                event.endDate = time.addingTimeInterval(duration)
             }
         }
     }

@@ -24,23 +24,6 @@ extension ModelContext {
         plannerCoverStore: PlannerCoverStore,
         settings: Settings
     ) {
-        if plannerEvent.eKEventContext != nil {
-            // MARK: Event is a calendar event. Update its title in the calendar.
-
-            guard
-                let ekEvent = ekEventStore.getEkEvent(for: plannerEvent),
-                ekEvent.calendar.allowsContentModifications
-            else {
-                return
-            }
-
-            ekEvent.title = plannerEvent.title
-
-            _ = ekEventStore.attemptUpdateEvent(ekEvent)
-
-            return
-        }
-
         if let plannerLocation,
             let (time, updatedText) = plannerEvent.title.extractTime(
                 for: startOfDay

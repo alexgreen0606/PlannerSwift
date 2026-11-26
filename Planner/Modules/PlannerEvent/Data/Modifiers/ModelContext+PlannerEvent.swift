@@ -288,11 +288,7 @@ extension ModelContext {
         ekEventStore: EKEventStore? = nil
     ) {
         for plannerEvent in plannerEvents {
-            deletePlannerEvent(
-                plannerEvent,
-                ekEventStore: ekEventStore,
-                skipSave: true
-            )
+            delete(plannerEvent)
         }
 
         safeSave("ModelContext+PlannerEvent deletePlannerEvents")

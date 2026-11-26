@@ -139,21 +139,11 @@ extension ModelContext {
                 settings: settings
             )
 
-        case .ekEvent(let ekEvent, let state):
-            // TODO: is it true that the list already wrote to the EKEvent?
-
+        case .ekEvent(let ekEvent, _):
             // The list has already written the draft to the EKEvent. Save it to the calendar.
             guard ekEvent.hasChanges,
                 ekEventStore.attemptUpdateEvent(ekEvent)
             else { return }
-
-            // Keep the state matched to the event if its occurrence date moved with its start time.
-            if let state = state ?? getEkEventPlannerState(for: ekEvent),
-                state.recurrenceOccurrenceDate != ekEvent.occurrenceDate
-            {
-                state.recurrenceOccurrenceDate = ekEvent.occurrenceDate
-                safeSave("ModelContext+plannerItems handlePlannerItemChange")
-            }
         }
     }
 
@@ -272,11 +262,7 @@ extension ModelContext {
     ) {
         switch item.source {
         case .plannerEvent(let plannerEvent):
-            deletePlannerEvent(
-                plannerEvent,
-                ekEventStore: ekEventStore,
-                skipSave: true
-            )
+            delete(plannerEvent)
 
         case .ekEvent(let ekEvent, let state):
             guard let ekEventStore else { return }

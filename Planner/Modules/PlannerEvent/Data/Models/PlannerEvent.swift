@@ -35,6 +35,7 @@ final class PlannerEvent: EventListItem {
     // MARK: Sibling
     var location: Location?
 
+    // MARK: Deprecated
     // MARK: Child
     @Relationship(
         deleteRule: .cascade,
@@ -44,18 +45,6 @@ final class PlannerEvent: EventListItem {
 
     @Transient
     var draft: PlannerEvent?
-
-    // MARK: Calendar Event
-    init(ekEvent: EKEvent, sortDate: Date) {
-        title = ekEvent.title
-        notes = ekEvent.notes ?? ""
-        time = ekEvent.startDate
-        location = ekEvent.location()
-        self.sortDate = sortDate
-
-        // Note: This initializer automatically attaches the EKEventContext to the PlannerEvent.
-        _ = EKEventContext(ekEvent: ekEvent, plannerEvent: self)
-    }
 
     // MARK: Routine Event
     init(

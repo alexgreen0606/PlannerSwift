@@ -67,7 +67,7 @@ struct PlannerItemContextLoaderView<Content: View>: View {
         sortedPlannerEvents.filter { $0.eKEventContext == nil }
     }
 
-    // TODO: why reload with this key type?
+    // Refreshes the calendar events when the planner's 24-hour window moves, and/or when the visible calendars change.
     private var ekEventReloadKey: String {
         // Note: Uses the same calendars as the loader, so the key is already stable on the first render
         // and doesn't trigger a reload when `CalendarService` finishes loading.

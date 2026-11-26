@@ -122,6 +122,11 @@ struct OnboardingView: View {
                 if !calendarService.isOnboardingCalendars {
                     calendarService.loadCalendars()
 
+                    // Must run before the planners load, so the migrated states keep their order.
+                    modelContext.migrateLegacyEkEventPlannerEvents(
+                        ekEventStore: calendarService.ekEventStore
+                    )
+
                     if canSyncPlanners {
                         plannerService.syncVisiblePlanners()
                     }
@@ -179,6 +184,11 @@ struct OnboardingView: View {
 
         .onChange(of: calendarService.hasCalendarAccess) { _, _ in
             calendarService.loadCalendars()
+
+            // Must run before the planners load, so the migrated states keep their order.
+            modelContext.migrateLegacyEkEventPlannerEvents(
+                ekEventStore: calendarService.ekEventStore
+            )
         }
 
         // MARK: Initialize planners after onboarding.

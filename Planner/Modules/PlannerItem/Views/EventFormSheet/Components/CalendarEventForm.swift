@@ -71,7 +71,7 @@ struct CalendarEventFormView: View {
             if item.title.trimmed.isEmpty {
                 switch item.source {
                 case .plannerEvent(let plannerEvent):
-                    modelContext.deletePlannerEvent(plannerEvent)
+                    modelContext.delete(plannerEvent)
 
                 case .ekEvent(let ekEvent, let state):
                     _ = calendarService.ekEventStore.attemptDeleteEvent(ekEvent)
@@ -90,7 +90,7 @@ struct CalendarEventFormView: View {
         case .deleted:
             switch item.source {
             case .plannerEvent(let plannerEvent):
-                modelContext.deletePlannerEvent(plannerEvent)
+                modelContext.delete(plannerEvent)
 
             case .ekEvent(let ekEvent, let state):
                 modelContext.deleteEkEventPlannerState(
@@ -129,7 +129,7 @@ struct CalendarEventFormView: View {
             let isCompleted = plannerEvent.isCompleted
             let sortDate = plannerEvent.sortDate
 
-            modelContext.deletePlannerEvent(plannerEvent, skipSave: true)
+            modelContext.delete(plannerEvent)
 
             if !savedEvent.isAllDay {
                 let state = modelContext.ensureEkEventPlannerState(

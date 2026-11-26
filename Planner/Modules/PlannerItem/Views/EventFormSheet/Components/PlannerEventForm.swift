@@ -127,7 +127,7 @@ struct PlannerEventFormView: View {
                 if item.title.trimmed.isEmpty {
                     switch item.source {
                     case .plannerEvent(let plannerEvent):
-                        modelContext.deletePlannerEvent(plannerEvent)
+                        modelContext.delete(plannerEvent)
 
                     case .ekEvent(let ekEvent, let state):
                         _ = calendarService.ekEventStore.attemptDeleteEvent(
@@ -384,9 +384,6 @@ struct PlannerEventFormView: View {
             sourcePlanner: planner,
             timeZone: region.timeZone,
             todayService: todayService,
-            plannerService: plannerService,
-            todaystamp: todayService.todaystamp,
-            ekEventStore: calendarService.ekEventStore,
             settings: settings
         )
 

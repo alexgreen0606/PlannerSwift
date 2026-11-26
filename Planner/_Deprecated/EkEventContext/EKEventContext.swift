@@ -10,6 +10,7 @@ import EventKit
 import SwiftData
 import SwiftUI
 
+// MARK: - Deprecated
 @Model
 class EKEventContext {
 
