@@ -19,7 +19,13 @@ extension PlannerEvent {
         let plannerDatestamp = startOfDay.datestamp
 
         return #Predicate<PlannerEvent> { event in
-            if let time = event.time {
+            if event.eKEventContext != nil {
+
+                // MARK: Legacy calendar-backed events. Skip.
+
+                return false
+
+            } else if let time = event.time {
 
                 // MARK: Timed planner events that exist on this day.
 

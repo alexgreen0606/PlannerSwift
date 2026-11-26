@@ -69,17 +69,11 @@ struct PlannerItemContextLoaderView<Content: View>: View {
 
     // Refreshes the calendar events when the planner's 24-hour window moves, and/or when the visible calendars change.
     private var ekEventReloadKey: String {
-        // Note: Uses the same calendars as the loader, so the key is already stable on the first render
-        // and doesn't trigger a reload when `CalendarService` finishes loading.
-        let calendarIds = PlannerEkEventLoader.visibleCalendars(
+        PlannerEkEventLoader.reloadKey(
+            startOfDay: startOfDay,
             calendarService: calendarService,
             settings: settings
         )
-        .map(\.calendarIdentifier)
-        .sorted()
-        .joined(separator: ",")
-
-        return "\(startOfDay.date.timeIntervalSince1970)|\(calendarIds)"
     }
 
     /// Chips carry no Planner-only data, so they never need an `EkEventPlannerState`.
@@ -149,7 +143,7 @@ struct PlannerItemContextLoaderView<Content: View>: View {
 // MARK: - Calendar Event Planner State Loader
 
 /// Pairs each calendar event with its persisted Planner state (if any).
-private struct EkEventPlannerStateLoaderView<Content: View>: View {
+struct EkEventPlannerStateLoaderView<Content: View>: View {
     private let ekEvents: [EKEvent]
     private let content: ([PlannerItem]) -> Content
 

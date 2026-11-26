@@ -229,6 +229,11 @@ actor SearchService {
                 )
             }
 
+            // TODO: Exclude completed calendar events when the query has no search text
+            // (mirrors `PlannerEvent.searchQueryScore`). Completion now lives in `EkEventPlannerState`,
+            // which `EKEvent.searchQueryScore` can't see. Batch-fetch the states for these events
+            // (see `EkEventPlannerState.matching(ekEvents:)`). Until then, a calendar-filtered search
+            // can return days whose only matches are completed, and their previews show "No plans".
             for datestamp in parentDatestamps {
                 if let score = ekEvent.searchQueryScore(
                     query,

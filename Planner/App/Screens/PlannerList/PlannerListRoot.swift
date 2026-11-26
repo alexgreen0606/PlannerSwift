@@ -68,22 +68,13 @@ struct PlannerListRootView: View {
                                     id: \.self
                                 ) {
                                     datestamp in
-                                    PlannerContextLoaderView_old(
+                                    PlannerListPreviewLoaderView(
                                         datestamp: datestamp,
                                         settings: settings
-                                    ) {
-                                        plannerContext in
+                                    ) { planner, previewContext in
                                         PlannerListPreviewView(
-                                            planner: plannerContext.planner,
-                                            sortedBirthdayEvents: plannerContext
-                                                .eventContext
-                                                .sortedBirthdayItems,
-                                            sortedChipItems: plannerContext
-                                                .eventContext
-                                                .sortedChipItems,
-                                            sortedPlannerEvents: plannerContext
-                                                .eventContext
-                                                .sortedPlannerEvents,
+                                            planner: planner,
+                                            context: previewContext,
                                             settings: settings,
                                             namespace: namespace
                                         )

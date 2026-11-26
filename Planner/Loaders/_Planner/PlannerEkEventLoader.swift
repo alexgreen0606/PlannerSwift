@@ -224,6 +224,27 @@ final class PlannerEkEventLoader: ObservableObject {
             }
     }
 
+    /// Changes when a planner's 24-hour window moves and/or when the visible calendars change.
+    /// Views observe this to know when to call `update(startOfDay:)`.
+    ///
+    /// Note: Uses the same calendars as the loader, so the key is already stable on the first render
+    /// and doesn't trigger a reload when `CalendarService` finishes loading.
+    static func reloadKey(
+        startOfDay: DateInRegion,
+        calendarService: CalendarService,
+        settings: Settings
+    ) -> String {
+        let calendarIds = visibleCalendars(
+            calendarService: calendarService,
+            settings: settings
+        )
+        .map(\.calendarIdentifier)
+        .sorted()
+        .joined(separator: ",")
+
+        return "\(startOfDay.date.timeIntervalSince1970)|\(calendarIds)"
+    }
+
     private static func titleOrder(_ lhs: EKEvent, _ rhs: EKEvent) -> Bool {
         (lhs.title ?? "").localizedStandardCompare(rhs.title ?? "")
             == .orderedAscending
