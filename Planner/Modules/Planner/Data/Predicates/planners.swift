@@ -23,9 +23,4 @@ extension Planner {
             datestamps.contains($0.datestamp)
         }
     }
-
-    static var plannersWithLocations: Predicate<Planner> =
-        #Predicate<Planner> {
-            $0.location != nil
-        }
 }

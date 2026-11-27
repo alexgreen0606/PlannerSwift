@@ -5,40 +5,11 @@
 //  Created by Alex Green on 3/8/26.
 //
 
-import EventKit
+import Foundation
 import SwiftData
 import SwiftDate
-import SwiftUI
 
 extension ModelContext {
-    // MARK: - CREATE
-
-    @MainActor
-    func createPlannerEvent(
-        at index: Int,
-        in sortedPlannerEvents: [PlannerEvent],
-        startOfDay: DateInRegion
-    ) -> /// The ID of the new event.
-        UUID?
-    {
-        let sortDate = generatePlannerEventSortDate(
-            at: index,
-            in: sortedPlannerEvents,
-            startOfDay: startOfDay
-        )
-
-        let newEvent = PlannerEvent(
-            datestamp: startOfDay.datestamp,
-            sortDate: sortDate
-        )
-
-        insert(newEvent)
-
-        safeSave("ModelContext+PlannerEvent createPlannerEvent")
-
-        return newEvent.stableId
-    }
-
     // MARK: - READ
 
     func getSortedListEvents(on startOfDay: DateInRegion)
@@ -64,58 +35,6 @@ extension ModelContext {
         return []
     }
 
-    func getSortedBirthdayEvents(on startOfDay: DateInRegion)
-        -> [PlannerEvent]
-    {
-        do {
-            return try fetch(
-                FetchDescriptor<PlannerEvent>(
-                    predicate: PlannerEvent.birthdayChips(
-                        on: startOfDay
-                    ),
-                    sortBy: [
-                        SortDescriptor(
-                            \PlannerEvent.title,
-                            comparator: .localizedStandard
-                        )
-                    ]
-                )
-            )
-        } catch {
-            assertionFailure(
-                "ERROR ModelContext+PlannerEvent getSortedBirthdayEvents: \(error)"
-            )
-        }
-
-        return []
-    }
-
-    func getSortedEventChips(on startOfDay: DateInRegion)
-        -> [PlannerEvent]
-    {
-        do {
-            return try fetch(
-                FetchDescriptor<PlannerEvent>(
-                    predicate: PlannerEvent.eventChips(
-                        on: startOfDay
-                    ),
-                    sortBy: [
-                        SortDescriptor(
-                            \PlannerEvent.title,
-                            comparator: .localizedStandard
-                        )
-                    ]
-                )
-            )
-        } catch {
-            assertionFailure(
-                "ERROR ModelContext+PlannerEvent getSortedEventChips: \(error)"
-            )
-        }
-
-        return []
-    }
-
     func getPlannerEvents(on startOfDay: DateInRegion)
         -> [PlannerEvent]
     {
@@ -128,24 +47,6 @@ extension ModelContext {
         } catch {
             assertionFailure(
                 "ERROR ModelContext+PlannerEvent getPlannerEvents: \(error)"
-            )
-        }
-
-        return []
-    }
-
-    func getCalendarRecords(on startOfDay: DateInRegion)
-        -> [PlannerEvent]
-    {
-        do {
-            return try fetch(
-                FetchDescriptor<PlannerEvent>(
-                    predicate: PlannerEvent.calendarRecords(on: startOfDay)
-                )
-            )
-        } catch {
-            assertionFailure(
-                "ERROR ModelContext+PlannerEvent getCalendarRecords startOfDay: \(error)"
             )
         }
 
@@ -259,40 +160,7 @@ extension ModelContext {
         return startsOfDaysSet
     }
 
-    @MainActor
-    func movePlannerEvent(
-        /// The initial index within sortedPendingPlannerEvents.
-        initialIndex: Int,
-        /// The target index within sortedPlannerEvents.
-        targetIndex: Int,
-        sortedPendingPlannerEvents: [PlannerEvent],
-        sortedPlannerEvents: [PlannerEvent],
-        startOfDay: DateInRegion
-    ) {
-        let movedEvent = sortedPendingPlannerEvents[initialIndex]
-
-        movedEvent.sortDate = generatePlannerEventSortDate(
-            at: targetIndex,
-            in: sortedPlannerEvents,
-            startOfDay: startOfDay
-        )
-
-        safeSave("ModelContext+PlannerEvent movePlannerEvent")
-    }
-
     // MARK: - DELETE
-
-    func deletePlannerEvents(
-        _ plannerEvents: [PlannerEvent],
-        /// Deletes calendar events if defined, otherwise they are preserved.
-        ekEventStore: EKEventStore? = nil
-    ) {
-        for plannerEvent in plannerEvents {
-            delete(plannerEvent)
-        }
-
-        safeSave("ModelContext+PlannerEvent deletePlannerEvents")
-    }
 
     @MainActor
     func deleteCalendarRecords(

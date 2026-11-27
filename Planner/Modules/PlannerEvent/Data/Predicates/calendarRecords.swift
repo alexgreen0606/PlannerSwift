@@ -23,42 +23,4 @@ extension PlannerEvent {
             }
         }
     }
-
-    static func calendarRecords(
-        on startOfDay: DateInRegion
-    ) -> Predicate<PlannerEvent> {
-        let startOfNextDay = (startOfDay + 1.days)
-
-        let plannerStart = startOfDay.date
-        let plannerEnd = startOfNextDay.date
-
-        // Note: iOS 27 no longer allows for "if let" on optional relationships.
-        if #available(iOS 27, *) {
-            return #Predicate<PlannerEvent> { event in
-                if event.eKEventContext != nil {
-
-                    // MARK: Calendar events that exist on this day.
-
-                    return event.eKEventContext!.startDate < plannerEnd
-                        && event.eKEventContext!.endDate > plannerStart
-
-                } else {
-                    return false
-                }
-            }
-        } else {
-            return #Predicate<PlannerEvent> { event in
-                if let eKEventContext = event.eKEventContext {
-
-                    // MARK: Calendar events that exist on this day.
-
-                    return eKEventContext.startDate < plannerEnd
-                        && eKEventContext.endDate > plannerStart
-
-                } else {
-                    return false
-                }
-            }
-        }
-    }
 }
