@@ -8,6 +8,13 @@
 //import EventKit
 //import SwiftData
 //import SwiftDate
+
+
+
+// TODO: find out if the new approach handles turning routine events into calendar events.
+
+
+
 //
 //extension ModelContext {
 //    @MainActor

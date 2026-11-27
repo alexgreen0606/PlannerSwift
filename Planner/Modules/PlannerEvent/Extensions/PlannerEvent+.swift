@@ -61,57 +61,6 @@ extension PlannerEvent: PlannerEventLocationHelpers {
     // MARK: - Synchronization
 
     @MainActor
-    func syncWithEkEvent(
-        _ ekEvent: EKEvent
-    ) {
-        // Sync common data between planner and calendar events.
-        title = ekEvent.title
-        notes = ekEvent.notes ?? ""
-//        location = ekEvent.location(
-//            existingPlannerEvent: self
-//        )
-        time = ekEvent.startDate
-        isFlagged = false
-
-        routineEventRecordContext?.isVariant = true
-
-        // Sync calendar-specific data.
-
-        guard let eKEventContext else {
-            // Note: This initializer automatically attaches the EKEventContext to the PlannerEvent.
-            _ = EKEventContext(ekEvent: ekEvent, plannerEvent: self)
-            syncDraft()
-            return
-        }
-
-        eKEventContext.startDate = ekEvent.startDate
-        eKEventContext.endDate = ekEvent.endDate
-        eKEventContext.isAllDay = ekEvent.isAllDay
-        eKEventContext.timeZoneIdentifier =
-            ekEvent.timeZone?.identifier
-
-        eKEventContext.calendarItemExternalIdentifier =
-            ekEvent.calendarItemExternalIdentifier
-        eKEventContext.calendarIdentifier =
-            ekEvent.calendar.calendarIdentifier
-        eKEventContext.calendarColorHex =
-            ekEvent.calendar.cgColor.hexString
-        eKEventContext.calendarAllowsContentModifications =
-            ekEvent.calendar.allowsContentModifications
-
-        eKEventContext.birthdayContactIdentifier =
-            ekEvent.birthdayContactIdentifier
-
-        eKEventContext.ekEvent = ekEvent
-
-        if ekEvent.isAllDay {
-            isCompleted = false
-        }
-
-        syncDraft()
-    }
-
-    @MainActor
     func syncWithRoutineEvent(on startOfDay: DateInRegion) {
         guard
             let routineEventRecordContext,
