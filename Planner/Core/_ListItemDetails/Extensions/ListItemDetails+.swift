@@ -1,5 +1,5 @@
 //
-//  ListItemDetails.swift
+//  ListItemDetails+.swift
 //  Planner
 //
 //  Created by Alex Green on 6/16/26.
