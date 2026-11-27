@@ -23,6 +23,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				_Documentation/Coding/Commenting.md,
+				_Documentation/Coding/FolderStructure.md,
 				_Documentation/Coding/Initialization.md,
 				_Documentation/Coding/NamingConventions.md,
 				_Documentation/Coding/SwiftData.md,
@@ -40,6 +41,7 @@
 			buildPhase = 07BB27D12EDDFB9400593DD0 /* Sources */;
 			membershipExceptions = (
 				_Documentation/Coding/Commenting.md,
+				_Documentation/Coding/FolderStructure.md,
 				_Documentation/Coding/Initialization.md,
 				_Documentation/Coding/NamingConventions.md,
 				_Documentation/Coding/SwiftData.md,
