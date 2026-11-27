@@ -5,15 +5,11 @@
 //  Created by Alex Green on 5/13/26.
 //
 
-import SwiftData
-import SwiftDate
 import SwiftUI
 
 struct PlannerPreviewCardView<Header: View>: View {
     let planner: Planner
-    let sortedPlannerEvents: [PlannerEvent]
-    let sortedChipItems: [PlannerEvent]
-    let sortedBirthdayItems: [PlannerEvent]
+    let context: PlannerListPreviewContext
     let header: Header
     let defaultLocationLabel: String?
     let transitionId: String
@@ -28,11 +24,9 @@ struct PlannerPreviewCardView<Header: View>: View {
         VStack(alignment: .leading) {
             header
 
-            PlannerContentPreviewView(
+            PlannerListContentPreviewView(
                 planner: planner,
-                sortedBirthdayEvents: sortedBirthdayItems,
-                sortedChipItems: sortedChipItems,
-                sortedPlannerEvents: sortedPlannerEvents,
+                context: context,
                 settings: settings
             )
             .frame(

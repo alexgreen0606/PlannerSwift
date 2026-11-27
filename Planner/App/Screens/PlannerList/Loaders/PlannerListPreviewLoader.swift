@@ -10,28 +10,35 @@ import SwiftData
 import SwiftDate
 import SwiftUI
 
-/// Loads everything a planner list preview needs and structures it into a `PlannerListPreviewContext`.
+/// Loads everything a planner preview needs and structures it into a `PlannerListPreviewContext`.
+/// Used by both the planner list and the trip day previews.
 ///
 /// Unlike `PlannerContextLoaderView`, this loader is read-only: it never creates
 /// `EkEventPlannerState`s for new calendar events. Placement happens when the planner is opened.
 struct PlannerListPreviewLoaderView<Content: View>: View {
     private let datestamp: String
+    private let activeQuery: PlannerSearchQuery?
+    private let includeTrip: Bool
     private let settings: Settings
     private let content: (Planner, PlannerListPreviewContext) -> Content
 
     init(
         datestamp: String,
+        activeQuery: PlannerSearchQuery? = nil,
+        /// False when the preview is already shown within its trip.
+        includeTrip: Bool = true,
         settings: Settings,
         @ViewBuilder content: @escaping (Planner, PlannerListPreviewContext) ->
             Content
     ) {
         self.datestamp = datestamp
+        self.activeQuery = activeQuery
+        self.includeTrip = includeTrip
         self.settings = settings
         self.content = content
     }
 
     @EnvironmentObject private var calendarService: CalendarService
-    @EnvironmentObject private var plannerService: PlannerService
 
     // MARK: - Body
 
@@ -46,8 +53,9 @@ struct PlannerListPreviewLoaderView<Content: View>: View {
                     planner,
                     PlannerListPreviewContext(
                         planner: planner,
-                        activeQuery: plannerService.activeQuery,
-                        items: items
+                        activeQuery: activeQuery,
+                        items: items,
+                        includeTrip: includeTrip
                     )
                 )
             }

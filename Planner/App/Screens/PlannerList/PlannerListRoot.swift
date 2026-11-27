@@ -70,6 +70,7 @@ struct PlannerListRootView: View {
                                     datestamp in
                                     PlannerListPreviewLoaderView(
                                         datestamp: datestamp,
+                                        activeQuery: plannerService.activeQuery,
                                         settings: settings
                                     ) { planner, previewContext in
                                         PlannerListPreviewView(

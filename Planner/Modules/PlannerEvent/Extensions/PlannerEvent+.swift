@@ -5,9 +5,8 @@
 //  Created by Alex Green on 12/27/25.
 //
 
-import EventKit
+import Foundation
 import SwiftDate
-import SwiftUI
 
 extension PlannerEvent: PlannerEventLocationHelpers {
     static let gregorianCalendar = Calendar(identifier: .gregorian)
@@ -17,46 +16,6 @@ extension PlannerEvent: PlannerEventLocationHelpers {
         calendar.timeZone = .gmt
         return calendar
     }()
-
-    /// Note: We can already assume that the event spans this planner at some point.
-    /// This is needed to ensure that floating all-day events truly belong here.
-    func belongsIn(datestamp: String) -> Bool {
-        guard let context = eKEventContext else {
-            return false
-        }
-
-        guard context.isAllDay else {
-            return true
-        }
-
-        return allDayRangeContains(
-            datestamp: datestamp,
-            startDate: context.startDate,
-            endDate: context.endDate,
-            timeZoneId: context.timeZoneIdentifier
-        )
-    }
-
-    // MARK: - UI
-
-    func calendarColor(accentColor: AccentColor) -> Color {
-        if let calendarColor = eKEventContext?.calendarColorHex.color {
-            return calendarColor
-        }
-
-        // Fallback to accent color.
-        return accentColor.swiftUiColor
-    }
-
-    func calendarSystemImageName(settings: Settings) -> String {
-        guard let eKEventContext else {
-            return ""
-        }
-
-        return settings.calendarIconMap[
-            eKEventContext.calendarIdentifier
-        ] ?? "calendar"
-    }
 
     // MARK: - Synchronization
 

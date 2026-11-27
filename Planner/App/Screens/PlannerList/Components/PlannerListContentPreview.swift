@@ -16,14 +16,12 @@ struct PlannerListContentPreviewView: View {
     @AppStorage("accentColor") var accentColor: AccentColor =
         .blue
 
-    @EnvironmentObject private var plannerService: PlannerService
-
     private var startOfDay: DateInRegion {
         planner.startOfDay(settings: settings)
     }
 
     private var isSearching: Bool {
-        plannerService.activeQuery != nil
+        context.isSearching
     }
 
     // MARK: - Body

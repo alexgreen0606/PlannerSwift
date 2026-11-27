@@ -11,7 +11,7 @@ import SwiftUI
 /// Selects which of a planner's items are shown in its list preview.
 ///
 /// Slots are allocated by priority:
-/// Trip → Birthdays → Chips → Calendar Events → Timed Unique → Untimed Unique → Timed Routine → Untimed Routine.
+/// Trip (optional) → Birthdays → Chips → Calendar Events → Timed Unique → Untimed Unique → Timed Routine → Untimed Routine.
 ///
 /// The selected list items are then displayed with all timed items first (sorted by time),
 /// followed by all untimed items (sorted by sortDate).
@@ -23,11 +23,14 @@ struct PlannerListPreviewContext {
     let listItems: [PlannerItem]
     let remainingItemCount: Int
     let hasItems: Bool
+    let isSearching: Bool
 
     init(
         planner: Planner,
         activeQuery: PlannerSearchQuery?,
         items: PlannerPreviewItems,
+        /// False when the preview is already shown within its trip.
+        includeTrip: Bool = true,
         maxPreviewSlots: Int = 5
     ) {
         let datestamp = planner.datestamp
@@ -35,7 +38,7 @@ struct PlannerListPreviewContext {
         // MARK: Trip
 
         let tripLabel: String? = {
-            guard let trip = planner.trip else {
+            guard includeTrip, let trip = planner.trip else {
                 return nil
             }
 
@@ -178,6 +181,7 @@ struct PlannerListPreviewContext {
         self.listItems = timedItems.map(\.item) + untimedItems
         self.remainingItemCount = totalItemCount - previewItemCount
         self.hasItems = totalItemCount > 0
+        self.isSearching = activeQuery != nil
     }
 
     // MARK: - Computed Properties
