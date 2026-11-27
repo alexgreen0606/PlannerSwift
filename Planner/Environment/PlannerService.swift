@@ -55,9 +55,6 @@ class PlannerService: ObservableObject {
 
     @AppStorage("lastRefresh") private var lastRefresh: Double = 0
 
-    /// Planner location keys that have synced with the calendar.
-    private var freshCalendarTimeZoneDateIds: Set<String> = []
-
     /// Panner datestamps that have synced with their routine.
     private var freshRoutineDatestamps: Set<String> = []
 
@@ -226,24 +223,6 @@ class PlannerService: ObservableObject {
                 }
             }
         }
-
-        guard
-            !calendarService.isOnboardingCalendars
-        else { return }
-
-        let timeZoneDateId = planner.timeZoneDateId
-
-        // Sync calendar.
-        if !freshCalendarTimeZoneDateIds.contains(timeZoneDateId) {
-            freshCalendarTimeZoneDateIds.insert(timeZoneDateId)
-
-            // TODO
-//            modelContext.syncCalendar(
-//                startOfDay: startOfDay,
-//                calendarService: calendarService,
-//                settings: settings
-//            )
-        }
     }
 
     func syncVisiblePlanners() {
@@ -265,13 +244,7 @@ class PlannerService: ObservableObject {
 
     func refresh() {
         invalidateRoutines()
-        invalidateCalendar()
         invalidateWeather()
-        syncVisiblePlanners()
-    }
-
-    func refreshCalendar() {
-        invalidateCalendar()
         syncVisiblePlanners()
     }
 
@@ -289,10 +262,6 @@ class PlannerService: ObservableObject {
 
     func invalidateRoutines() {
         freshRoutineDatestamps = []
-    }
-
-    private func invalidateCalendar() {
-        freshCalendarTimeZoneDateIds = []
     }
 
     private func invalidateWeather() {

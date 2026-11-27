@@ -153,7 +153,6 @@ struct OnboardingView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 calendarService.loadCalendars()
-                plannerService.refreshCalendar()
 
                 if appColorScheme == .system {
                     syncAppIconWithSettings(

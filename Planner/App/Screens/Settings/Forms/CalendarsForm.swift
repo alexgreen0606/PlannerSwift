@@ -39,7 +39,6 @@ struct CalendarsFormView: View {
 
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var calendarService: CalendarService
-    @EnvironmentObject private var plannerService: PlannerService
 
     // MARK: - Body
 
@@ -108,8 +107,7 @@ struct CalendarsFormView: View {
                     set: { _ in
                         modelContext.toggleCalendarVisibility(
                             in: settings,
-                            for: calendar,
-                            plannerService: plannerService
+                            for: calendar
                         )
                     }
                 )

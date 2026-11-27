@@ -91,8 +91,7 @@ extension ModelContext {
     @MainActor
     func toggleCalendarVisibility(
         in settings: Settings,
-        for calendar: EKCalendar,
-        plannerService: PlannerService
+        for calendar: EKCalendar
     ) {
         if settings.hiddenCalendarIds.contains(
             calendar.calendarIdentifier
@@ -107,7 +106,5 @@ extension ModelContext {
         }
 
         safeSave("ModelContext+Settings toggleCalendarVisibility")
-        
-        plannerService.refreshCalendar()
     }
 }

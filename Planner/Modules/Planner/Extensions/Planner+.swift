@@ -28,11 +28,6 @@ extension Planner {
 
     // MARK: - Location Variables
 
-    var timeZoneDateId: String {
-        let timeZoneKey = location?.timeZoneIdentifier ?? "HOME_LOCATION"
-        return "\(datestamp)-\(timeZoneKey)"
-    }
-
     func location(settings: Settings)
         /// nil means the device location is used and hasn't loaded yet.
         -> Location?
