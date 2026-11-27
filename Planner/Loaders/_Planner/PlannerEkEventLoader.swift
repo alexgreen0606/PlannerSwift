@@ -6,7 +6,6 @@
 //
 
 import Combine
-import Contacts
 import EventKit
 import Foundation
 import SwiftDate
@@ -30,16 +29,7 @@ final class PlannerEkEventLoader: ObservableObject {
 
         reload()
 
-        NotificationCenter.default
-            .publisher(
-                for: .EKEventStoreChanged,
-                object: calendarService.ekEventStore
-            )
-            .merge(
-                with: NotificationCenter.default.publisher(
-                    for: .CNContactStoreDidChange
-                )
-            )
+        calendarService.ekEventChangesPublisher
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 self?.reload()
@@ -66,33 +56,13 @@ final class PlannerEkEventLoader: ObservableObject {
     }
 
     func reload() {
-        guard calendarService.hasCalendarAccess == true else {
-            clear()
-            return
-        }
-
-        let calendars = Self.visibleCalendars(
-            calendarService: calendarService,
-            settings: settings
-        )
-
-        // Note: Passing an empty array to the predicate would search all calendars.
-        guard !calendars.isEmpty else {
-            clear()
-            return
-        }
-
         let dayStart = startOfDay.date
         let dayEnd = (startOfDay + 1.days).date
         let datestamp = startOfDay.datestamp
-        let ekEventStore = calendarService.ekEventStore
 
-        let ekEvents = ekEventStore.events(
-            matching: ekEventStore.predicateForEvents(
-                withStart: dayStart,
-                end: dayEnd,
-                calendars: calendars
-            )
+        let ekEvents = calendarService.fetchEkEvents(
+            in: DateInterval(start: dayStart, end: dayEnd),
+            settings: settings
         )
 
         var listEvents: [EKEvent] = []
@@ -147,102 +117,27 @@ final class PlannerEkEventLoader: ObservableObject {
 
         sortedListEvents = listEvents.sorted { $0.startDate < $1.startDate }
         sortedChipEvents = chipEvents.sorted(by: Self.titleOrder)
-        sortedBirthdayItems = makeBirthdayItems(
+        sortedBirthdayItems = calendarService.makeBirthdayItems(
             birthdayEvents.sorted(by: Self.titleOrder)
         )
     }
 
     // MARK: - Helpers
 
-    private func clear() {
-        sortedListEvents = []
-        sortedChipEvents = []
-        sortedBirthdayItems = []
-    }
-
-    /// Attaches contact thumbnails to birthday events.
-    /// Note: Only lightweight keys are fetched. The full contact is loaded when its sheet opens.
-    private func makeBirthdayItems(_ ekEvents: [EKEvent])
-        -> [PlannerBirthdayItem]
-    {
-        let contactIds = ekEvents.compactMap(\.birthdayContactIdentifier)
-        var thumbnailsByContactId: [String: Data] = [:]
-
-        if calendarService.hasContactsAccess == true, !contactIds.isEmpty {
-            do {
-                let contacts = try calendarService.cnContactStore
-                    .unifiedContacts(
-                        matching: CNContact.predicateForContacts(
-                            withIdentifiers: contactIds
-                        ),
-                        keysToFetch: [
-                            CNContactIdentifierKey,
-                            CNContactThumbnailImageDataKey,
-                        ] as [CNKeyDescriptor]
-                    )
-
-                for contact in contacts {
-                    thumbnailsByContactId[contact.identifier] =
-                        contact.thumbnailImageData
-                }
-            } catch {
-                assertionFailure(
-                    "ERROR PlannerEkEventLoader makeBirthdayItems: \(error)"
-                )
-            }
-        }
-
-        return ekEvents.compactMap { ekEvent in
-            guard let contactId = ekEvent.birthdayContactIdentifier else {
-                return nil
-            }
-
-            return PlannerBirthdayItem(
-                ekEvent: ekEvent,
-                contactIdentifier: contactId,
-                thumbnailData: thumbnailsByContactId[contactId]
-            )
-        }
-    }
-
-    /// The calendars to read events from.
-    /// Note: `CalendarService` loads its calendars shortly after launch. Until then, read them directly
-    /// from the event store so calendar events render in the same frame as Planner events.
-    static func visibleCalendars(
-        calendarService: CalendarService,
-        settings: Settings
-    ) -> [EKCalendar] {
-        guard calendarService.hasCalendarAccess == true else { return [] }
-
-        guard calendarService.sortedCalendars.isEmpty else {
-            return calendarService.sortedVisibleCalendars
-        }
-
-        return calendarService.ekEventStore.calendars(for: .event)
-            .filter {
-                !settings.isCalendarHidden(calendarId: $0.calendarIdentifier)
-            }
-    }
-
     /// Changes when a planner's 24-hour window moves and/or when the visible calendars change.
     /// Views observe this to know when to call `update(startOfDay:)`.
-    ///
-    /// Note: Uses the same calendars as the loader, so the key is already stable on the first render
-    /// and doesn't trigger a reload when `CalendarService` finishes loading.
     static func reloadKey(
         startOfDay: DateInRegion,
         calendarService: CalendarService,
         settings: Settings
     ) -> String {
-        let calendarIds = visibleCalendars(
-            calendarService: calendarService,
+        calendarService.ekEventReloadKey(
+            range: DateInterval(
+                start: startOfDay.date,
+                end: (startOfDay + 1.days).date
+            ),
             settings: settings
         )
-        .map(\.calendarIdentifier)
-        .sorted()
-        .joined(separator: ",")
-
-        return "\(startOfDay.date.timeIntervalSince1970)|\(calendarIds)"
     }
 
     private static func titleOrder(_ lhs: EKEvent, _ rhs: EKEvent) -> Bool {

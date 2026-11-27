@@ -43,6 +43,16 @@ extension EkEventPlannerState {
         return anyOf(predicates[...])
     }
 
+    /// Matches every state belonging to the given calendar event identifiers (any occurrence).
+    /// Note: Cheaper than `matching(ekEvents:)` for large sets. Match occurrences in memory.
+    static func matching(
+        externalIdentifiers: [String]
+    ) -> Predicate<EkEventPlannerState> {
+        #Predicate { state in
+            externalIdentifiers.contains(state.externalIdentifier)
+        }
+    }
+
     // MARK: - Helpers
 
     private static func anyOf(

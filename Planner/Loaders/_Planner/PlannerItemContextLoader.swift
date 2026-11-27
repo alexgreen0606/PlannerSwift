@@ -142,6 +142,16 @@ struct PlannerItemContextLoaderView<Content: View>: View {
 
 // MARK: - Calendar Event Planner State Loader
 
+/// How `EkEventPlannerStateLoaderView` queries the persisted states.
+enum EkEventPlannerStateMatching {
+    /// One exact (identifier, occurrence) predicate per event.
+    /// Precise, but the predicate grows with the event count. Best for a single planner.
+    case exactOccurrences
+    /// Every state for the events' identifiers (any occurrence), matched to occurrences in memory.
+    /// Keeps the predicate small for large ranges, such as a calendar month.
+    case externalIdentifiers
+}
+
 /// Pairs each calendar event with its persisted Planner state (if any).
 struct EkEventPlannerStateLoaderView<Content: View>: View {
     private let ekEvents: [EKEvent]
@@ -149,14 +159,29 @@ struct EkEventPlannerStateLoaderView<Content: View>: View {
 
     init(
         ekEvents: [EKEvent],
+        matching: EkEventPlannerStateMatching = .exactOccurrences,
         @ViewBuilder content: @escaping ([PlannerItem]) -> Content
     ) {
         self.ekEvents = ekEvents
         self.content = content
 
-        _states = Query(
-            filter: EkEventPlannerState.matching(ekEvents: ekEvents)
-        )
+        let predicate: Predicate<EkEventPlannerState> =
+            switch matching {
+            case .exactOccurrences:
+                EkEventPlannerState.matching(ekEvents: ekEvents)
+            case .externalIdentifiers:
+                EkEventPlannerState.matching(
+                    externalIdentifiers: Array(
+                        Set(
+                            ekEvents.compactMap(
+                                \.calendarItemExternalIdentifier
+                            )
+                        )
+                    )
+                )
+            }
+
+        _states = Query(filter: predicate)
     }
 
     @Query private var states: [EkEventPlannerState]

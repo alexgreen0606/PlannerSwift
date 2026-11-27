@@ -73,10 +73,6 @@ class PlannerService: ObservableObject {
 
     @Published private(set) var plannerListContext: PlannerListContext
 
-    /// Monthstamp -> Datestamp -> StructuredPlannerPreviewContext.
-    @Published var calendarContextCache:
-        [String: [String: StructuredPlannerPreviewContext]] = [:]
-    
     @Published var calendarMonthOffset = 0
 
     var activeQuery: PlannerSearchQuery? {
@@ -119,8 +115,6 @@ class PlannerService: ObservableObject {
         guard
             !calendarService.isOnboardingCalendars
         else { return }
-
-        calendarContextCache = [:]
 
         // No search params exist. Default the planner list and exit.
         guard !draftQuery.isDefault

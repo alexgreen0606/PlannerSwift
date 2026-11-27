@@ -25,9 +25,6 @@ struct CalendarRootView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var plannerService: PlannerService
 
-    @State private var isScrolling = false
-    @State private var scrollingTask: Task<Void, Never>?
-
     @FocusState private var isSearchFocused: Bool
 
     // MARK: - Body
@@ -45,20 +42,12 @@ struct CalendarRootView: View {
                         )
 
                         CalendarMonthTabView(
-                            contextCache: Binding(
-                                get: {
-                                    plannerService.calendarContextCache[stamp]
-                                        ?? [:]
-                                },
-                                set: {
-                                    plannerService.calendarContextCache[stamp] =
-                                        $0
-                                }
-                            ),
-                            monthstamp: stamp,
                             datestamps: calendarDatestamps(for: offset),
                             weekdayColumns: weekdayColumns,
-                            isScrolling: isScrolling,
+                            // Note: Only the visible month and its neighbours load content.
+                            isActive: abs(
+                                offset - plannerService.calendarMonthOffset
+                            ) <= 1,
                             settings: settings,
                             namespace: namespace
                         )
@@ -92,50 +81,24 @@ struct CalendarRootView: View {
                     .page(indexDisplayMode: .never)
                 )
                 .background(Color.appBackground.ignoresSafeArea())
-                .simultaneousGesture(
-                    DragGesture(minimumDistance: 10)
-                        .onChanged { _ in
-                            scrollingTask?.cancel()
-                            scrollingTask = nil
-
-                            isScrolling = true
-                        }
-                        .onEnded { _ in
-                            scrollingTask?.cancel()
-
-                            scrollingTask = Task { @MainActor in
-                                do {
-                                    try await Task.sleep(
-                                        for: .milliseconds(1000)
-                                    )
-                                } catch {
-                                    return
-                                }
-
-                                isScrolling = false
-                                scrollingTask = nil
-                            }
-                        }
-                )
             }
         }
-        .task(id: isScrolling) {
-            if !isScrolling {
-
-                // Note: Add preload here if desired.
-                // Currently not used due to lag.
-
-                pruneCache(around: plannerService.calendarMonthOffset)
-
-                // Sync planners for the opened month.
-                plannerService.syncPlanners(
-                    Set(
-                        calendarDatestamps(
-                            for: plannerService.calendarMonthOffset
-                        ).compactMap { $0 }
-                    )
-                )
+        .task(id: plannerService.calendarMonthOffset) {
+            // Wait for paging to settle before syncing.
+            do {
+                try await Task.sleep(for: .milliseconds(400))
+            } catch {
+                return
             }
+
+            // Sync planners for the opened month.
+            plannerService.syncPlanners(
+                Set(
+                    calendarDatestamps(
+                        for: plannerService.calendarMonthOffset
+                    ).compactMap { $0 }
+                )
+            )
         }
     }
 
@@ -149,29 +112,5 @@ struct CalendarRootView: View {
         CalendarDatestampCache.shared.datestamps(
             forMonthstamp: monthstamp(for: offset)
         )
-    }
-
-    private func neighbourOffsets(around offset: Int, radius: Int) -> [Int] {
-        Array((offset - radius)...(offset + radius))
-    }
-
-    /// Drops cached months that are far away from the current page's month.
-    private func pruneCache(
-        around offset: Int
-    ) {
-        guard plannerService.calendarContextCache.keys.count > 9 else {
-            return
-        }
-
-        let keep = Set(
-            neighbourOffsets(around: offset, radius: 4)
-                .filter { monthOffsets.contains($0) }
-                .map { monthstamp(for: $0) }
-        )
-
-        plannerService.calendarContextCache = plannerService
-            .calendarContextCache.filter {
-                keep.contains($0.key)
-            }
     }
 }

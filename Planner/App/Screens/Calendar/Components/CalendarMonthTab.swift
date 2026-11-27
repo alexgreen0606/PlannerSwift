@@ -9,11 +9,10 @@ import SwiftDate
 import SwiftUI
 
 struct CalendarMonthTabView: View {
-    @Binding var contextCache: [String: StructuredPlannerPreviewContext]
-    let monthstamp: String
     let datestamps: [String?]
     let weekdayColumns: [GridItem]
-    let isScrolling: Bool
+    /// When false, only the empty grid is drawn and nothing is loaded.
+    let isActive: Bool
     let settings: Settings
     let namespace: Namespace.ID
 
@@ -23,31 +22,38 @@ struct CalendarMonthTabView: View {
                 columns: weekdayColumns
             )
 
-            monthGrid
+            GeometryReader { geo in
+                let height = geo.size.height / 6
+
+                if isActive {
+                    CalendarMonthLoaderView(
+                        datestamps: datestamps,
+                        settings: settings
+                    ) { layout in
+                        monthGrid(layout: layout, height: height)
+                    }
+                } else {
+                    monthGrid(layout: nil, height: height)
+                }
+            }
         }
         .frame(maxHeight: .infinity, alignment: .top)
     }
 
     // MARK: - View Builders
 
-    private var monthGrid: some View {
-        GeometryReader { geo in
-            LazyVGrid(columns: weekdayColumns, spacing: 0) {
-                ForEach(datestamps.indices, id: \.self) { index in
-                    if let datestamp = datestamps[index] {
-                        CalendarPlannerPreviewView(
-                            contextCache: $contextCache,
-                            datestamp: datestamp,
-                            isScrolling: isScrolling,
-                            height: (geo.size.height - Layout.TOOLBAR_HEIGHT)
-                                / 6,
-                            settings: settings,
-                            namespace: namespace
-                        )
-                    } else {
-                        Color.clear
-                    }
-                }
+    private func monthGrid(layout: CalendarMonthLayout?, height: CGFloat)
+        -> some View
+    {
+        VStack(spacing: 0) {
+            ForEach(0..<(datestamps.count / 7), id: \.self) { week in
+                CalendarWeekRowView(
+                    datestamps: Array(datestamps[(week * 7)..<(week * 7 + 7)]),
+                    layout: layout?.week(week),
+                    height: height,
+                    settings: settings,
+                    namespace: namespace
+                )
             }
         }
     }
