@@ -1,5 +1,5 @@
 //
-//  PlannerListPreviewContext.swift
+//  PlannerPreviewContext.swift
 //  Planner
 //
 //  Created by Alex Green on 11/26/26.
@@ -8,14 +8,14 @@
 import EventKit
 import SwiftUI
 
-/// Selects which of a planner's items are shown in its list preview.
+/// Selects which of a planner's items are shown in its preview.
 ///
 /// Slots are allocated by priority:
 /// Trip (optional) → Birthdays → Chips → Calendar Events → Timed Unique → Untimed Unique → Timed Routine → Untimed Routine.
 ///
 /// The selected list items are then displayed with all timed items first (sorted by time),
 /// followed by all untimed items (sorted by sortDate).
-struct PlannerListPreviewContext {
+struct PlannerPreviewContext {
     let tripLabel: String?
     let birthdayItems: [PlannerBirthdayItem]
     let chipItems: [PlannerItem]

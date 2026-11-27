@@ -9,7 +9,7 @@ import SwiftUI
 
 struct PlannerPreviewCardView<Header: View>: View {
     let planner: Planner
-    let context: PlannerListPreviewContext
+    let context: PlannerPreviewContext
     let header: Header
     let defaultLocationLabel: String?
     let transitionId: String
@@ -24,7 +24,7 @@ struct PlannerPreviewCardView<Header: View>: View {
         VStack(alignment: .leading) {
             header
 
-            PlannerListContentPreviewView(
+            PlannerPreviewContentView(
                 planner: planner,
                 context: context,
                 settings: settings

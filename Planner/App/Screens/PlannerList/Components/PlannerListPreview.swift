@@ -12,7 +12,7 @@ import SwiftUI
 
 struct PlannerListPreviewView: View {
     let planner: Planner
-    let context: PlannerListPreviewContext
+    let context: PlannerPreviewContext
     let settings: Settings
     let namespace: Namespace.ID
 
@@ -72,7 +72,7 @@ struct PlannerListPreviewView: View {
             }
             .frame(maxWidth: .infinity)
 
-            PlannerListContentPreviewView(
+            PlannerPreviewContentView(
                 planner: planner,
                 context: context,
                 settings: settings

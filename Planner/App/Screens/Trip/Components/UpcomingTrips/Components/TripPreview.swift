@@ -132,7 +132,7 @@ struct TripPreviewView: View {
                     Array(trip.sortedPlanners.enumerated()),
                     id: \.element.datestamp
                 ) { index, planner in
-                    PlannerListPreviewLoaderView(
+                    PlannerPreviewLoaderView(
                         datestamp: planner.datestamp,
                         includeTrip: false,
                         settings: settings

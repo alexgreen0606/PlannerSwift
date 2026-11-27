@@ -68,7 +68,7 @@ struct PlannerListRootView: View {
                                     id: \.self
                                 ) {
                                     datestamp in
-                                    PlannerListPreviewLoaderView(
+                                    PlannerPreviewLoaderView(
                                         datestamp: datestamp,
                                         activeQuery: plannerService.activeQuery,
                                         settings: settings

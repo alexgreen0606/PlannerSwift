@@ -1,5 +1,5 @@
 //
-//  PlannerListContentPreview.swift
+//  PlannerPreviewContent.swift
 //  Planner
 //
 //  Created by Alex Green on 11/26/26.
@@ -8,9 +8,9 @@
 import SwiftDate
 import SwiftUI
 
-struct PlannerListContentPreviewView: View {
+struct PlannerPreviewContentView: View {
     let planner: Planner
-    let context: PlannerListPreviewContext
+    let context: PlannerPreviewContext
     let settings: Settings
 
     @AppStorage("accentColor") var accentColor: AccentColor =
@@ -31,7 +31,7 @@ struct PlannerListContentPreviewView: View {
             tripInfo
             birthdayList
             chipList
-            PlannerListItemPreviewList(
+            PlannerPreviewItemList(
                 plannerDatestamp: planner.datestamp,
                 plannerRegion: startOfDay.region,
                 items: context.listItems,
@@ -109,7 +109,7 @@ struct PlannerListContentPreviewView: View {
 
 // MARK: - List Item Preview List
 
-private struct PlannerListItemPreviewList: View {
+private struct PlannerPreviewItemList: View {
     let plannerDatestamp: String
     let plannerRegion: Region
     let items: [PlannerItem]
