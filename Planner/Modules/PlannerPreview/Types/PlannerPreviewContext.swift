@@ -16,6 +16,8 @@ import SwiftUI
 /// The selected list items are then displayed with all timed items first (sorted by time),
 /// followed by all untimed items (sorted by sortDate).
 struct PlannerPreviewContext {
+    static let DEFAULT_MAX_PREVIEW_SLOTS = 5
+
     let tripLabel: String?
     let birthdayItems: [PlannerBirthdayItem]
     let chipItems: [PlannerItem]
@@ -31,7 +33,7 @@ struct PlannerPreviewContext {
         items: PlannerPreviewItems,
         /// False when the preview is already shown within its trip.
         includeTrip: Bool = true,
-        maxPreviewSlots: Int = 5
+        maxPreviewSlots: Int = DEFAULT_MAX_PREVIEW_SLOTS
     ) {
         let datestamp = planner.datestamp
 

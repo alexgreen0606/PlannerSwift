@@ -28,13 +28,47 @@ struct CalendarWeekRowView: View {
     static let DAY_NUMBER_HEIGHT: CGFloat = 22
     /// Vertical padding around the item area: the gap between the day number and the first lane,
     /// and the gap between the remaining count and the bottom of the cell.
-    static let ITEM_AREA_VERTICAL_PADDING: CGFloat = 2
-    static let LANE_HEIGHT: CGFloat = 14
-    static let TEXT_SCALE = 0.6
+    static let ITEM_AREA_VERTICAL_PADDING: CGFloat = 4
+    /// Fixed scale for all calendar text. Font sizes are set explicitly, so they ignore Dynamic Type.
+    static let TEXT_SCALE = 0.7
+    static let TEXT_SIZE = Layout.TEXT * TEXT_SCALE
+    static let TEXT_WEIGHT: Font.Weight = .medium
+    static let TEXT_DESIGN: Font.Design = .rounded
+    static let SEGMENT_UNDERLINE_HEIGHT: CGFloat = 1
+    static let SEGMENT_BOTTOM_PADDING: CGFloat = 2
+    /// Fits one line of calendar text plus the segment's underline and bottom padding.
+    static let LANE_HEIGHT: CGFloat = ceil(
+        UIFont.systemFont(ofSize: TEXT_SIZE).lineHeight
+            + SEGMENT_UNDERLINE_HEIGHT
+            + SEGMENT_BOTTOM_PADDING
+    )
+
+    /// How many lanes fit in a row of the given height. One lane height is always reserved for
+    /// the remaining count, and partial lanes are rounded down.
+    static func laneCount(forRowHeight rowHeight: CGFloat) -> Int {
+        let fittingLanes = Int(
+            (itemAreaHeight(forRowHeight: rowHeight) / LANE_HEIGHT)
+                .rounded(.down)
+        )
+        return max(0, fittingLanes - 1)
+    }
+
+    /// Height of the item area (lanes + remaining count), inset by its vertical padding.
+    static func itemAreaHeight(forRowHeight rowHeight: CGFloat) -> CGFloat {
+        max(
+            0,
+            rowHeight - VERTICAL_PADDING * 2 - DAY_NUMBER_HEIGHT
+                - ITEM_AREA_VERTICAL_PADDING * 2
+        )
+    }
 
     /// The height inside each cell's vertical padding.
     private var contentHeight: CGFloat {
         max(0, height - Self.VERTICAL_PADDING * 2)
+    }
+
+    private var laneCount: Int {
+        Self.laneCount(forRowHeight: height)
     }
 
     /// Top of the item area, measured from the top of the row.
@@ -43,13 +77,8 @@ struct CalendarWeekRowView: View {
             + Self.ITEM_AREA_VERTICAL_PADDING
     }
 
-    /// Height of the item area (lanes + remaining count), inset by its vertical padding.
     private var itemAreaHeight: CGFloat {
-        max(
-            0,
-            contentHeight - Self.DAY_NUMBER_HEIGHT
-                - Self.ITEM_AREA_VERTICAL_PADDING * 2
-        )
+        Self.itemAreaHeight(forRowHeight: height)
     }
 
     // MARK: - Body
@@ -111,13 +140,14 @@ struct CalendarWeekRowView: View {
                 let count = layout.remainingCounts[column]
 
                 if count > 0 {
+                    // Note: Sits in the lane reserved just below the visible lanes.
                     Text("+\(count)")
-                        .font(.system(size: 10))
+                        .font(.system(size: Self.TEXT_SIZE))
                         .foregroundStyle(Color.secondary)
-                        .frame(width: columnWidth)
-                        .frame(maxHeight: .infinity, alignment: .bottom)
+                        .frame(width: columnWidth, height: Self.LANE_HEIGHT)
                         .offset(
-                            x: columnWidth * CGFloat(column)
+                            x: columnWidth * CGFloat(column),
+                            y: Self.LANE_HEIGHT * CGFloat(laneCount)
                         )
                 }
             }
@@ -148,15 +178,20 @@ private struct CalendarDayCellView: View {
     private var isToday: Bool {
         datestamp == todayService.todaystamp
     }
+
+    private var digitColor: Color {
+        if isToday { return Color.inverseLabel }
+        return datestamp.isWeekend ? Color.secondary : Color.label
+    }
     
     // MARK: Body
 
     var body: some View {
         VStack(spacing: 0) {
             Text(String(datestamp.dayDigit ?? 0))
-                .fontWeight(.heavy)
+                .fontWeight(.black)
                 .fontDesign(.rounded)
-                .foregroundStyle(isToday ? Color.inverseLabel : Color.label)
+                .foregroundStyle(digitColor)
                 .frame(maxWidth: .infinity)
                 .frame(height: CalendarWeekRowView.DAY_NUMBER_HEIGHT)
                 .background {
@@ -207,10 +242,9 @@ private struct CalendarSegmentView: View {
     let segment: CalendarSegment
     let settings: Settings
 
-    private let UNDERLINE_HEIGHT: CGFloat = 0.5
     private let HORIZONTAL_INSET: CGFloat = 2
     /// Fraction of a single day's width used to fade out the title (matches the old 0.7 → 1 mask).
-    private let FADE_FRACTION_OF_DAY = 0.3
+    private let FADE_FRACTION_OF_DAY = 0.15
 
     /// Where the fade begins, so it always covers the last 30% of the final day.
     private var fadeStart: Double {
@@ -224,8 +258,8 @@ private struct CalendarSegmentView: View {
         segment.item
     }
 
-    /// Sized to fit within a lane alongside the underline.
-    private let CONTACT_PHOTO_SIZE: CGFloat = 11
+    /// Matches the calendar text size so it fits within a lane alongside the underline.
+    private let CONTACT_PHOTO_SIZE = CalendarWeekRowView.TEXT_SIZE
 
     private var contactPhoto: UIImage? {
         guard case .birthday(let birthday) = item.kind,
@@ -307,11 +341,11 @@ private struct CalendarSegmentView: View {
 
             Rectangle()
                 .fill(underlineColor ?? .clear)
-                .frame(height: UNDERLINE_HEIGHT)
+                .frame(height: CalendarWeekRowView.SEGMENT_UNDERLINE_HEIGHT)
                 .clipShape(Capsule())
         }
         .padding(.horizontal, HORIZONTAL_INSET)
-        .padding(.bottom, 1)
+        .padding(.bottom, CalendarWeekRowView.SEGMENT_BOTTOM_PADDING)
     }
     
     // MARK: View Builders
@@ -325,7 +359,9 @@ private struct CalendarSegmentView: View {
                 Image(systemName: "checkmark")
                     .font(
                         .system(
-                            size: Layout.TEXT * CalendarWeekRowView.TEXT_SCALE
+                            size: CalendarWeekRowView.TEXT_SIZE,
+                            weight: CalendarWeekRowView.TEXT_WEIGHT,
+                            design: CalendarWeekRowView.TEXT_DESIGN
                         )
                     )
             }
@@ -343,7 +379,9 @@ private struct CalendarSegmentView: View {
                 Value(
                     item.title,
                     color: .label,
-                    scale: CalendarWeekRowView.TEXT_SCALE
+                    scale: CalendarWeekRowView.TEXT_SCALE,
+                    weight: CalendarWeekRowView.TEXT_WEIGHT,
+                    design: CalendarWeekRowView.TEXT_DESIGN
                 )
                 .lineLimit(1)
             } else {
@@ -352,7 +390,9 @@ private struct CalendarSegmentView: View {
                     iconConfig: iconConfig,
                     lineLimit: 1,
                     color: .label,
-                    scale: CalendarWeekRowView.TEXT_SCALE
+                    scale: CalendarWeekRowView.TEXT_SCALE,
+                    weight: CalendarWeekRowView.TEXT_WEIGHT,
+                    design: CalendarWeekRowView.TEXT_DESIGN
                 )
             }
         }

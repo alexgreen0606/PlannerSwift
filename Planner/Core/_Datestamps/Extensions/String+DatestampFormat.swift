@@ -61,6 +61,11 @@ extension String {
         formatted("EEEE")
     }
 
+    /// True when the datestamp lands on a Saturday or Sunday.
+    var isWeekend: Bool {
+        ["Saturday", "Sunday"].contains(weekday)
+    }
+
     /// Example: "June 6"
     var dateWithoutYear: String {
         formatted("MMMM d")

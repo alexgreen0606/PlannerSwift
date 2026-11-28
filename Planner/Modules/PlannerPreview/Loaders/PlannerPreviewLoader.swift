@@ -19,6 +19,7 @@ struct PlannerPreviewLoaderView<Content: View>: View {
     private let datestamp: String
     private let activeQuery: PlannerSearchQuery?
     private let includeTrip: Bool
+    private let maxPreviewSlots: Int
     private let settings: Settings
     private let content: (Planner, PlannerPreviewContext) -> Content
 
@@ -27,6 +28,7 @@ struct PlannerPreviewLoaderView<Content: View>: View {
         activeQuery: PlannerSearchQuery? = nil,
         /// False when the preview is already shown within its trip.
         includeTrip: Bool = true,
+        maxPreviewSlots: Int = PlannerPreviewContext.DEFAULT_MAX_PREVIEW_SLOTS,
         settings: Settings,
         @ViewBuilder content: @escaping (Planner, PlannerPreviewContext) ->
             Content
@@ -34,6 +36,7 @@ struct PlannerPreviewLoaderView<Content: View>: View {
         self.datestamp = datestamp
         self.activeQuery = activeQuery
         self.includeTrip = includeTrip
+        self.maxPreviewSlots = maxPreviewSlots
         self.settings = settings
         self.content = content
     }
@@ -55,7 +58,8 @@ struct PlannerPreviewLoaderView<Content: View>: View {
                         planner: planner,
                         activeQuery: activeQuery,
                         items: items,
-                        includeTrip: includeTrip
+                        includeTrip: includeTrip,
+                        maxPreviewSlots: maxPreviewSlots
                     )
                 )
             }

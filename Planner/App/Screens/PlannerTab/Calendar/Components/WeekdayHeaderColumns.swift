@@ -20,15 +20,27 @@ struct WeekdayHeaderColumnsView: View {
                     Text(weekday.initial)
                         .font(
                             .system(
-                                size: 14,
-                                weight: .bold,
+                                size: 10,
+                                weight: .medium,
                                 design: .rounded
                             )
                         )
+                        .foregroundStyle(color(for: weekday))
                         .frame(maxWidth: .infinity)
                 }
             }
-            .padding(.vertical)
+            .padding(.bottom, 4)
+        }
+    }
+
+    // MARK: - Functions
+
+    private func color(for weekday: Weekday) -> Color {
+        switch weekday {
+        case .Saturday, .Sunday:
+            Color.secondary
+        default:
+            Color.label
         }
     }
 }

@@ -64,7 +64,7 @@ struct RootTabView: View {
     @EnvironmentObject private var plannerService: PlannerService
     @EnvironmentObject private var plannerCoverStore: PlannerCoverStore
 
-    @State private var selectedTab: TabId = .plannerList
+    @State private var selectedTab: TabId = .planner
 
     @Namespace private var namespace
 
@@ -76,7 +76,8 @@ struct RootTabView: View {
 
             TabView(
                 selection: $selectedTab.onUpdate { oldTab, newTab in
-                    if newTab == .calendar && oldTab == .calendar {
+                    // Re-tapping the Planner tab returns the calendar to this month.
+                    if newTab == .planner && oldTab == .planner {
                         plannerService.calendarMonthOffset = 0
                     }
                 }
@@ -89,17 +90,10 @@ struct RootTabView: View {
                     TripRootView(settings: settings, namespace: namespace)
                 }
 
-                Tab("", systemImage: "calendar", value: .calendar) {
-                    CalendarRootView(
-                        settings: settings,
-                        namespace: namespace
-                    )
-                }
-
                 Tab(
                     "",
                     systemImage: todayService.todaystamp.calendarSymbolName,
-                    value: .plannerList,
+                    value: .planner,
                     role: {
                         if #available(iOS 27, *) {
                             .prominent
@@ -108,7 +102,7 @@ struct RootTabView: View {
                         }
                     }()
                 ) {
-                    PlannerListRootView(
+                    PlannerTabRootView(
                         settings: settings,
                         namespace: namespace
                     )

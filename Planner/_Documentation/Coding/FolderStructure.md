@@ -44,14 +44,15 @@ App/
 ├── 2_DataLoader.swift          Loads Settings
 ├── 3_EnvironmentLoader.swift   Creates services and injects them as environment objects
 ├── 4_Onboarding.swift          Onboarding gate, scene-phase and midnight hooks
-├── 5_RootTabView.swift         Root tabs
+├── 5_RootTabView.swift         Root tabs (Checklists, Trips, Planner)
 ├── Icons/                      Alternate app icons
 └── Screens/
-    ├── Calendar/
     ├── Checklist/
     ├── Folder/
-    ├── Planner/
-    ├── PlannerList/
+    ├── Planner/                A single day's planner (opened as a full-screen cover)
+    ├── PlannerTab/             The prominent Planner tab
+    │   ├── List/               Upcoming planners / search results
+    │   └── Calendar/           Paged month grid
     ├── Routine/
     ├── Settings/
     └── Trip/
@@ -60,6 +61,8 @@ App/
 The numbered files run in launch order.
 
 Each screen has a `<Screen>Root.swift` and optional subfolders: `Components/`, `Forms/`, `Loaders/`, `Types/`, `Layout/`, `Extensions/`. Everything in a screen folder is used only by that screen.
+
+When one screen switches between several views, as `PlannerTab` does between list and calendar, each view gets its own subfolder with the same optional subfolders inside.
 
 ---
 
@@ -78,7 +81,7 @@ Each screen has a `<Screen>Root.swift` and optional subfolders: `Components/`, `
 | **PlannerItem** | `PlannerItem`, the shared row model for PlannerEvents and calendar events. Includes the planner loaders (`PlannerContextLoader`, `PlannerItemContextLoader`, `EkEventPlannerStateLoader`), item changes, adornments, and the event form sheet. |
 | **PlannerPreview** | The read-only day preview shared by the planner list and trip cards (`PlannerPreviewLoaderView`, `PlannerPreviewContext`, `PlannerPreviewContentView`). |
 | **Routine** | Routines, routine events, and `syncRoutine` (applies a routine to a planner). |
-| **Search** | `SearchService`, search queries and results, and per-domain search scoring extensions. |
+| **Search** | `SearchService`, search queries and results, per-domain search scoring extensions, and the search UI (`PlannerSearchWrapperView` for the search bar, `PlannerSearchToolbarContent` for the filter, search, and reset buttons). |
 | **Settings** | `Settings` model and app preferences (accent color, color scheme, homepage). |
 | **Trip** | `Trip` model, `TripsContextLoader`, and trip UI helpers. |
 | **Weather** | `PlannerWeather` model, WeatherKit syncing, `PlannerWeatherLoader`, and weather views. |

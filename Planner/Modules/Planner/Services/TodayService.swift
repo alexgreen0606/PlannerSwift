@@ -54,7 +54,11 @@ final class TodayService: ObservableObject {
         timer?.invalidate()
     }
 
-    static let PLANNER_MONTH_RADIUS = 23
+    /// Number of months before the current month that the planner reaches.
+    static let PLANNER_MONTHS_BEHIND = 36
+
+    /// Number of months after the current month that the planner reaches.
+    static let PLANNER_MONTHS_AHEAD = 36
 
     private var timer: Timer?
 
@@ -66,10 +70,12 @@ final class TodayService: ObservableObject {
 
     @Published private(set) var next30Datestamps: [String]
 
+    /// Spans the full planner bounds, including all of the last day.
     var datePickerBounds: ClosedRange<Date> {
-        minStartOfDay.date...maxStartOfDay.date
+        minStartOfDay.date...maxStartOfDay.dateAtEndOf(.day).date
     }
 
+    /// Spans the full planner bounds, including all of the last day.
     var multiDatePickerBounds: Range<Date> {
         minStartOfDay.date..<maxStartOfDay.date
     }
@@ -86,6 +92,15 @@ final class TodayService: ObservableObject {
         maxPlanner.startOfDay(settings: settings)
     }
 
+    /// Search only looks from today forward, through the end of the
+    /// planner bounds.
+    var searchBounds: PlannerBounds {
+        PlannerBounds(
+            minStartOfDay: todayStartOfDay,
+            maxStartOfDay: maxStartOfDay
+        )
+    }
+
     var monthstamp: String {
         todaystamp.monthstamp
     }
@@ -99,8 +114,9 @@ final class TodayService: ObservableObject {
         )
     }
 
-    /// Keeps calendar-event searches safely within EventKit's four-year
-    /// predicate limit.
+    /// The planner spans from the start of the month three years ago to the
+    /// end of the month three years ahead. Searches run from today to the
+    /// max bound, which stays within EventKit's four-year predicate limit.
     private static func plannerBounds(
         around todaystamp: String
     ) -> (min: String, max: String) {
@@ -110,9 +126,9 @@ final class TodayService: ObservableObject {
             .dateAtStartOf(.month)
 
         return (
-            currentMonthStart.dateByAdding(-PLANNER_MONTH_RADIUS, .month)
+            currentMonthStart.dateByAdding(-PLANNER_MONTHS_BEHIND, .month)
                 .datestamp,
-            currentMonthStart.dateByAdding(PLANNER_MONTH_RADIUS + 1, .month)
+            currentMonthStart.dateByAdding(PLANNER_MONTHS_AHEAD + 1, .month)
                 .dateByAdding(-1, .day)
                 .datestamp
         )

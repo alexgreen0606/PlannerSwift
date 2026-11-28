@@ -136,10 +136,7 @@ class PlannerService: ObservableObject {
         Task {
             let searchResults = await searchService.search(
                 query: draftQuery,
-                plannerBounds: PlannerBounds(
-                    minStartOfDay: todayService.minStartOfDay,
-                    maxStartOfDay: todayService.maxStartOfDay
-                ),
+                plannerBounds: todayService.searchBounds,
                 todaystamp: todayService.todaystamp,
                 visibleCalendars: calendarService.sortedVisibleCalendars,
                 ekEventStore: calendarService.ekEventStore,

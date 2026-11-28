@@ -7,21 +7,17 @@
 
 import SwiftUI
 
-// Note: Ensure this is placed within a NavigationStack
+// Note: Ensure this is placed within a NavigationStack.
+// Note: Add `PlannerSearchToolbarContent` to the toolbar for the filter, search, and reset buttons.
 
 struct PlannerSearchWrapperView<Content: View>: View {
     var isSearchFocused: FocusState<Bool>.Binding
     let settings: Settings
     let content: () -> Content
 
-    @EnvironmentObject private var todayService: TodayService
     @EnvironmentObject private var plannerService: PlannerService
 
     @State private var searchTask: Task<Void, Never>?
-
-    private var activeQuery: PlannerSearchQuery? {
-        plannerService.activeQuery
-    }
 
     // MARK: - Body
 
@@ -29,41 +25,6 @@ struct PlannerSearchWrapperView<Content: View>: View {
         content()
             .safeAreaBar(edge: .bottom) {
                 searchBar
-            }
-            .toolbar {
-                if activeQuery?.filterCount != nil
-                    || activeQuery?.isSearchingText == true
-                {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button("Reset") {
-                            plannerService.draftQuery = PlannerSearchQuery(
-                                text: "",
-                                calendarIds: []
-                            )
-
-                            withAnimation {
-                                search()
-                            }
-                        }
-                    }
-                }
-
-                ToolbarSpacer(.fixed, placement: .topBarTrailing)
-
-                PlannerFilterToolbarView(
-                    draftQuery: $plannerService.draftQuery,
-                    filterCount: activeQuery?.filterCount,
-                    settings: settings
-                )
-
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("", systemImage: "magnifyingglass") {
-                        isSearchFocused.wrappedValue.toggle()
-                    }
-                    .badge(
-                        activeQuery?.isSearchingText == true ? "1" : nil
-                    )
-                }
             }
 
             // MARK: Schedule a search each time the draft query changes.

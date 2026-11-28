@@ -20,15 +20,19 @@ import os
 /// Like the planner list preview, this loader is read-only: it never creates `EkEventPlannerState`s.
 struct CalendarMonthLoaderView<Content: View>: View {
     private let datestamps: [String?]
+    /// Number of lanes each week row can show.
+    private let laneCount: Int
     private let settings: Settings
     private let content: (CalendarMonthLayout) -> Content
 
     init(
         datestamps: [String?],
+        laneCount: Int,
         settings: Settings,
         @ViewBuilder content: @escaping (CalendarMonthLayout) -> Content
     ) {
         self.datestamps = datestamps
+        self.laneCount = laneCount
         self.settings = settings
         self.content = content
 
@@ -74,6 +78,7 @@ struct CalendarMonthLoaderView<Content: View>: View {
     var body: some View {
         CalendarMonthEventLoaderView(
             days: days,
+            laneCount: laneCount,
             calendarService: calendarService,
             settings: settings,
             content: content
@@ -85,17 +90,20 @@ struct CalendarMonthLoaderView<Content: View>: View {
 
 private struct CalendarMonthEventLoaderView<Content: View>: View {
     private let days: [CalendarDay?]
+    private let laneCount: Int
     private let settings: Settings
     private let content: (CalendarMonthLayout) -> Content
     private let range: DateInterval?
 
     init(
         days: [CalendarDay?],
+        laneCount: Int,
         calendarService: CalendarService,
         settings: Settings,
         content: @escaping (CalendarMonthLayout) -> Content
     ) {
         self.days = days
+        self.laneCount = laneCount
         self.settings = settings
         self.content = content
 
@@ -155,6 +163,7 @@ private struct CalendarMonthEventLoaderView<Content: View>: View {
         ) { ekEventItems in
             CalendarMonthLayoutView(
                 days: days,
+                laneCount: laneCount,
                 ekEventItems: ekEventItems,
                 birthdayThumbnails: ekEventLoader.birthdayThumbnails,
                 plannerEvents: plannerEvents,
@@ -171,6 +180,7 @@ private struct CalendarMonthEventLoaderView<Content: View>: View {
 
 private struct CalendarMonthLayoutView<Content: View>: View {
     let days: [CalendarDay?]
+    let laneCount: Int
     let ekEventItems: [PlannerItem]
     let birthdayThumbnails: [String: Data]
     let plannerEvents: [PlannerEvent]
@@ -191,6 +201,7 @@ private struct CalendarMonthLayoutView<Content: View>: View {
             ekEventItems: ekEventItems,
             birthdayThumbnails: birthdayThumbnails,
             plannerEvents: plannerEvents,
+            laneCount: laneCount,
             activeQuery: plannerService.activeQuery
         )
     }

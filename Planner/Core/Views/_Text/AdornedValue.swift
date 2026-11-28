@@ -15,6 +15,8 @@ struct AdornedValue: View {
     private let lineLimit: Int?
     private let color: Color?
     private let scale: Double
+    private let weight: Font.Weight
+    private let design: Font.Design
 
     init(
         _ text: String? = nil,
@@ -23,7 +25,9 @@ struct AdornedValue: View {
         endAdorned: Bool = false,
         lineLimit: Int? = nil,
         color: Color? = nil,
-        scale: Double = 1
+        scale: Double = 1,
+        weight: Font.Weight = .regular,
+        design: Font.Design = .default
     ) {
         self.text = text
         self.iconConfig = iconConfig
@@ -32,6 +36,8 @@ struct AdornedValue: View {
         self.lineLimit = lineLimit
         self.color = color
         self.scale = scale
+        self.weight = weight
+        self.design = design
     }
 
     private var iconSize: CGFloat {
@@ -61,7 +67,13 @@ struct AdornedValue: View {
             }
 
             if let text {
-                Value(text, color: color, scale: scale)
+                Value(
+                    text,
+                    color: color,
+                    scale: scale,
+                    weight: weight,
+                    design: design
+                )
                     .lineLimit(lineLimit)
             }
 
@@ -83,6 +95,6 @@ struct AdornedValue: View {
                 }
             }
         }
-        .font(.system(size: iconSize, weight: .regular))
+        .font(.system(size: iconSize, weight: weight, design: design))
     }
 }

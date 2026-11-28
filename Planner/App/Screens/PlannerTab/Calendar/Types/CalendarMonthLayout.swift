@@ -124,8 +124,6 @@ struct CalendarMonthLayout {
 // MARK: - Builder
 
 enum CalendarMonthLayoutBuilder {
-    static let MAX_LANES = 4
-
     /// Builds the layout for a month grid.
     ///
     /// - Parameters:
@@ -134,12 +132,14 @@ enum CalendarMonthLayoutBuilder {
     ///     Planner state (used for completion).
     ///   - plannerEvents: Every planner event that may land in the grid.
     ///   - birthdayThumbnails: Contact thumbnails keyed by contact identifier.
+    ///   - laneCount: Number of lanes each week can show. The rest are counted as remaining.
     ///   - activeQuery: The active search query, if any.
     static func build(
         days: [CalendarDay?],
         ekEventItems: [PlannerItem],
         birthdayThumbnails: [String: Data],
         plannerEvents: [PlannerEvent],
+        laneCount: Int,
         activeQuery: PlannerSearchQuery?
     ) -> CalendarMonthLayout {
         let query = activeQuery?.isDefault == false ? activeQuery : nil
@@ -389,7 +389,8 @@ enum CalendarMonthLayoutBuilder {
         let weeks = (0..<weekCount).map { week in
             layoutWeek(
                 week: week,
-                occurrences: occurrences
+                occurrences: occurrences,
+                laneCount: laneCount
             )
         }
 
@@ -400,7 +401,8 @@ enum CalendarMonthLayoutBuilder {
 
     private static func layoutWeek(
         week: Int,
-        occurrences: [(item: CalendarItem, indices: [Int])]
+        occurrences: [(item: CalendarItem, indices: [Int])],
+        laneCount: Int
     ) -> CalendarWeekLayout {
         let weekStart = week * 7
         let weekRange = weekStart..<(weekStart + 7)
@@ -493,7 +495,7 @@ enum CalendarMonthLayoutBuilder {
                 totalCounts[column] += 1
             }
 
-            guard lane < MAX_LANES else { continue }
+            guard lane < laneCount else { continue }
 
             for column in columns {
                 visibleCounts[column] += 1

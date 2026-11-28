@@ -23,7 +23,7 @@ struct PlannerFilterToolbarView: ToolbarContent {
 
     var body: some ToolbarContent {
         if !hideCalendarSection {
-            ToolbarItemGroup(placement: .topBarTrailing) {
+            ToolbarItemGroup(placement: .topBarLeading) {
                 Menu("", systemImage: "line.3.horizontal.decrease") {
                     calendarSection
                 }
